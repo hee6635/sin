@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>처음 시작 설정 시안</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ecf1;padding:24px;display:flex;gap:22px;justify-content:center}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.cap{font-size:16.5px;font-weight:800;color:#1f2328;text-align:center;height:44px}
+.cap small{display:block;font-size:12px;font-weight:500;color:#6b7280;margin-top:2px}
+.phone{--fg:#1f2328;--muted:#8b919a;--line:#eceef1;--surface:#f5f6f8;--accent:#2f6bf0;--fam:#7b5cf0;--fam-bg:#f3f0ff;
+  --day:#cbd8de;--night:#d9cbc6;--rest:#e0455c;--sun:#d64560;--sat:#3b6fd6;--today:#1f8f75;--today-bg:#e3f6f0;
+  width:390px;height:844px;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column;color:var(--fg)}
+.prog{display:flex;gap:6px;padding:18px 20px 0}.prog i{flex:1;height:4px;border-radius:2px;background:#e3e6ea}.prog i.on{background:var(--accent)}
+.back{padding:14px 18px 0;font-size:22px;color:var(--muted);height:44px}
+.body{flex:1;padding:6px 20px 0;overflow:hidden}
+h2{font-size:23px;letter-spacing:-.4px;line-height:1.35}
+.sub{color:var(--muted);font-size:14px;margin-top:6px;line-height:1.5}
+.foot{padding:12px 20px 26px}
+.btn{height:54px;border-radius:16px;background:var(--accent);color:#fff;font-weight:800;font-size:16px;display:grid;place-items:center}
+.btn.g{background:#fff;color:var(--muted);box-shadow:none;height:40px;font-size:14px;font-weight:700}
+.opt{border-radius:16px;padding:13px 14px;margin-top:10px;box-shadow:inset 0 0 0 1.5px var(--line);display:flex;align-items:center;gap:12px}
+.opt.on{box-shadow:inset 0 0 0 2px var(--accent);background:#f5f8ff}
+.opt .tx{flex:1}.opt .tx b{font-size:15.5px;display:block}.opt .tx small{font-size:12px;color:var(--muted)}
+.rad{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 2px #c9ced6;flex:none}
+.opt.on .rad{box-shadow:inset 0 0 0 7px var(--accent)}
+.pat{display:flex;gap:3px;margin-top:6px}
+.b{display:inline-grid;place-items:center;border-radius:50%;font-weight:500}
+.b.d{background:var(--day)}.b.n{background:var(--night)}.b.r{color:var(--rest);font-weight:700}.b.x{background:#dcedc8}
+.pat .b{width:22px;height:22px;font-size:10.5px}
+.pos{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.pc{border-radius:14px;padding:10px 4px;text-align:center;box-shadow:inset 0 0 0 1.5px var(--line)}
+.pc .b{width:36px;height:36px;font-size:15px}
+.pc small{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.3}
+.pc.on{box-shadow:inset 0 0 0 2px var(--accent);background:#f5f8ff}.pc.on small{color:var(--accent);font-weight:800}
+.lbl{font-size:13px;font-weight:800;color:var(--muted);margin:20px 0 8px}
+.seg{display:flex;gap:6px}.seg span{flex:1;height:42px;border-radius:12px;background:var(--surface);display:grid;place-items:center;font-weight:800;color:var(--muted)}
+.seg span.on{background:#e8f0ff;color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px;background:var(--surface);border-radius:14px;padding:10px 6px}
+.week div{text-align:center;font-size:11px;color:var(--muted)}.week .b{width:28px;height:28px;font-size:12px;margin-top:4px}
+.week .t{color:var(--today);font-weight:800}
+.mcal{margin-top:14px;border-radius:16px;box-shadow:inset 0 0 0 1.5px var(--line);padding:8px 6px}
+.mcal .hd{text-align:center;font-weight:800;font-size:16px;padding:4px 0 6px}
+.mcal .g{display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px}
+.mcal .dw{text-align:center;font-size:11px;font-weight:700;color:var(--muted)}
+.mcal .c{display:flex;flex-direction:column;align-items:center;padding:3px 0;border-radius:8px}
+.mcal .c span{font-size:10.5px}.mcal .c .b{width:26px;height:26px;font-size:11.5px;margin-top:1px}
+.mcal .c.out{opacity:.3}.mcal .c.today{background:var(--today-bg);box-shadow:inset 0 0 0 2px var(--today)}
+.mcal .s{color:var(--sun)}.mcal .t2{color:var(--sat)}
+.ok{display:flex;align-items:center;gap:8px;background:var(--today-bg);color:var(--today);border-radius:12px;padding:10px 12px;font-size:13px;font-weight:700;margin-top:12px}
+.al{border-radius:16px;padding:14px;margin-top:10px;background:var(--surface);display:flex;align-items:center;gap:12px}
+.al .b{width:38px;height:38px;font-size:15px}
+.al .tx{flex:1}.al .tx b{font-size:22px;font-weight:400;letter-spacing:-.5px}.al .tx b em{font-style:normal;font-size:13px;margin-right:4px}
+.al .tx small{display:block;font-size:12px;color:var(--muted)}
+.sw{width:46px;height:28px;border-radius:14px;background:var(--accent);position:relative;flex:none}.sw::after{content:"";position:absolute;right:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff}
+.sw.off{background:#c9ced6}.sw.off::after{right:auto;left:3px}
+.perm{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px}
+.perm .ck{width:22px;height:22px;border-radius:50%;background:var(--today);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:900}
+.perm .ck.no{background:#fde8eb;color:var(--rest)}
+.perm span{flex:1}.perm small{color:var(--accent);font-weight:800}
+.hero{flex:1;display:flex;flex-direction:column;padding:70px 24px 30px;background:linear-gradient(180deg,#eef3ff,#fff 55%)}
+.logo{width:72px;height:72px;border-radius:20px;background:#2f6bf0;display:grid;place-items:center;color:#fff;font-size:30px;font-weight:900;box-shadow:0 8px 20px rgba(47,107,240,.3)}
+.hero h1{font-size:30px;margin-top:22px}.hero p{color:var(--muted);margin-top:8px;font-size:15px}
+.choice{background:#fff;border-radius:18px;padding:18px;margin-top:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;gap:14px;align-items:center}
+.choice .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;flex:none}
+.choice b{font-size:16px;display:block}.choice small{font-size:12.5px;color:var(--muted);display:block;margin-top:2px}
+.choice.on{box-shadow:0 0 0 2px var(--accent),0 6px 18px rgba(47,107,240,.18)}
+.done{text-align:center;padding-top:30px}
+.done .big{font-size:52px}
+</style></head><body>
+<script>
+const b=(s,c)=>`<span class="b ${s==='주'?'d':s==='야'?'n':s==='상'?'x':'r'}">${s}</span>`;
+const pat=a=>`<div class="pat">${a.map(x=>b(x)).join('')}</div>`;
+const prog=n=>`<div class="prog">${[1,2,3,4].map(i=>`<i class="${i<=n?'on':''}"></i>`).join('')}</div>`;
+const P=['주','주','휴','휴','야','야','휴','휴'];const anchor=Date.UTC(2026,8,28);
+const sh=d=>P[((Math.round((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-anchor)/864e5))%8+8)%8];
+const p0=`<div class="phone"><div class="hero"><div class="logo">쉬</div><h1>언제쉬어</h1><p>교대근무 가족이 함께 보는 근무표</p><div style="flex:1"></div>
+ <div class="choice on"><div class="ic" style="background:#e8f0ff">🗓</div><div><b>내 근무표 만들기</b><small>교대근무를 하는 본인이에요</small></div></div>
+ <div class="choice"><div class="ic" style="background:#f3f0ff">💜</div><div><b>초대 코드가 있어요</b><small>가족이 보낸 코드·링크로 같이 봐요</small></div></div></div></div>`;
+const p1=`<div class="phone">${prog(1)}<div class="back">‹</div><div class="body">
+ <h2>어떤 교대근무를<br>하고 있나요?</h2><div class="sub">가장 비슷한 걸 고르면 나중에 고칠 수 있어요</div>
+ <div class="opt on"><div class="tx"><b>4조 2교대</b><small>주주휴휴야야휴휴 · 8일 반복</small>${pat(['주','주','휴','휴','야','야','휴','휴'])}</div><div class="rad"></div></div>
+ <div class="opt"><div class="tx"><b>3조 2교대</b><small>주주주야야야휴휴휴 · 9일 반복</small>${pat(['주','주','주','야','야','야','휴','휴','휴'])}</div><div class="rad"></div></div>
+ <div class="opt"><div class="tx"><b>2교대 (주야 맞교대)</b><small>주야휴 · 3일 반복</small>${pat(['주','야','휴'])}</div><div class="rad"></div></div>
+ <div class="opt"><div class="tx"><b>4조 3교대</b><small>주주야야휴휴 등 회사마다 달라요</small></div><div class="rad"></div></div>
+ <div class="opt"><div class="tx"><b>✏️ 직접 만들기</b><small>칸을 눌러 내 패턴을 만들어요 (근무타입도 추가)</small></div><div class="rad"></div></div>
+</div><div class="foot"><div class="btn">다음</div></div></div>`;
+const T=new Date(2026,9,11);
+const wk=[0,1,2,3,4,5,6].map(i=>{const d=new Date(2026,9,11+i);return `<div class="${i===0?'t':''}">${i===0?'오늘':d.getDate()+'일'}${b(sh(d))}</div>`}).join('');
+const pos=[['주','주간 첫날'],['주','주간 둘째날'],['휴','주간 후 휴무 1'],['휴','주간 후 휴무 2'],['야','야간 첫날'],['야','야간 둘째날'],['휴','야간 후 휴무 1'],['휴','야간 후 휴무 2']];
+const p2=`<div class="phone">${prog(2)}<div class="back">‹</div><div class="body">
+ <h2>오늘(10월 11일 일)<br>근무는 뭐예요?</h2><div class="sub">오늘이 패턴의 몇 번째 날인지 골라주세요</div>
+ <div class="pos">${pos.map(([s,t],i)=>`<div class="pc ${i===5?'on':''}">${b(s)}<small>${t}</small></div>`).join('')}</div>
+ <div class="lbl">그러면 앞으로 7일은</div><div class="week">${wk}</div>
+ <div class="lbl">내 조 (동료근무 표에 쓰여요)</div>
+ <div class="seg"><span>A조</span><span>B조</span><span class="on">C조</span><span>D조</span></div>
+ <div class="sub" style="font-size:12px">모르면 건너뛰어도 돼요</div>
+</div><div class="foot"><div class="btn">다음</div></div></div>`;
+let g='<div class="dw s">일</div><div class="dw">월</div><div class="dw">화</div><div class="dw">수</div><div class="dw">목</div><div class="dw">금</div><div class="dw t2">토</div>';
+for(let i=0;i<35;i++){const d=new Date(2026,8,27+i),w=d.getDay();g+=`<div class="c ${d.getMonth()!==9?'out':''} ${d.getDate()===11&&d.getMonth()===9?'today':''}"><span class="${w===0?'s':w===6?'t2':''}">${d.getDate()}</span>${b(sh(d))}</div>`;}
+const p3=`<div class="phone">${prog(3)}<div class="back">‹</div><div class="body">
+ <h2>이렇게 맞나요?</h2><div class="sub">회사 근무표와 한 번 비교해 보세요</div>
+ <div class="mcal"><div class="hd">2026년 10월</div><div class="g">${g}</div></div>
+ <div class="ok">✓ 4조 2교대 · C조 · 오늘 야간 둘째날</div>
+ <div class="sub" style="font-size:12.5px">하루씩 어긋나 있으면 ‹ › 로 밀어서 맞춰요<br>특정 날짜만 다른 건 시작한 뒤 날짜를 눌러 고치면 돼요</div>
+ <div class="seg" style="margin-top:12px"><span>‹ 하루 앞으로</span><span>하루 뒤로 ›</span></div>
+</div><div class="foot"><div class="btn">맞아요</div></div></div>`;
+const p4=`<div class="phone">${prog(4)}<div class="back">‹</div><div class="body">
+ <h2>출근 알람도<br>맞춰 드릴까요?</h2><div class="sub">근무에 맞춰서만 울려요. 휴무날은 조용해요</div>
+ <div class="al">${b('주')}<div class="tx"><b><em>오전</em>05:50</b><small>주간 근무 날</small></div><div class="sw"></div></div>
+ <div class="al">${b('야')}<div class="tx"><b><em>오후</em>04:30</b><small>야간 근무 날</small></div><div class="sw"></div></div>
+ <div class="al" style="opacity:.6">${b('휴')}<div class="tx"><b><em>오전</em>08:00</b><small>휴무 날 (꺼짐)</small></div><div class="sw off"></div></div>
+ <div class="lbl">알람이 꼭 울리게 하려면</div>
+ <div class="perm"><div class="ck">✓</div><span>알림 허용</span></div>
+ <div class="perm"><div class="ck no">!</div><span>정확한 시간에 알람</span><small>켜기 ›</small></div>
+ <div class="perm"><div class="ck no">!</div><span>배터리 제한 없음 (삼성·샤오미)</span><small>켜기 ›</small></div>
+</div><div class="foot"><div class="btn">시작하기</div><div class="btn g">알람은 나중에</div></div></div>`;
+const p5=`<div class="phone"><div class="body done"><div class="big">🎉</div><h2 style="margin-top:10px">준비 끝!</h2>
+ <div class="sub">오늘은 <b style="color:var(--fg)">야간</b>, 내일은 <b style="color:var(--rest)">휴무</b>예요</div>
+ <div class="choice" style="margin-top:40px;text-align:left;box-shadow:0 0 0 2px var(--fam),0 6px 18px rgba(123,92,240,.18)"><div class="ic" style="background:#f3f0ff">💜</div><div><b>가족 초대하기</b><small>가족이 내 근무를 보고, 메모를 남길 수 있어요</small></div></div>
+ <div class="choice" style="text-align:left"><div class="ic" style="background:#e8f0ff">🔐</div><div><b>구글 계정 연결</b><small>폰을 바꿔도 근무표·가족이 그대로 (추천)</small></div></div>
+ <div class="choice" style="text-align:left"><div class="ic" style="background:#f5f6f8">📥</div><div><b>백업 불러오기</b><small>예전 폰에서 쓰던 기록 가져오기</small></div></div>
+</div><div class="foot"><div class="btn">달력 보러 가기</div></div></div>`;
+document.body.innerHTML=`
+<div class="wrap"><div class="cap">① 처음 열면<small>"내 근무표 만들기"</small></div>${p0}</div>
+<div class="wrap"><div class="cap">② 근무 형태 고르기<small>자주 쓰는 패턴 + 직접 만들기</small></div>${p1}</div>
+<div class="wrap"><div class="cap">③ 오늘 근무 + 내 조<small>오늘이 패턴 몇 번째 날인지만 고르기</small></div>${p2}</div>
+<div class="wrap"><div class="cap">④ 미리보기로 확인<small>어긋나면 하루씩 밀기</small></div>${p3}</div>
+<div class="wrap"><div class="cap">⑤ 출근 알람 + 권한<small>근무 맞춤 알람 바로 켜기</small></div>${p4}</div>
+<div class="wrap"><div class="cap">⑥ 준비 끝<small>가족 초대 · 구글 연결 · 백업 불러오기</small></div>${p5}</div>`;
+</script></body></html>
