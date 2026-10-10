@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>교대달력 C안</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Pretendard","Noto Sans KR",sans-serif;background:#e9ecf1;padding:24px;display:flex;gap:28px;justify-content:center;flex-wrap:wrap}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.cap{font-size:18px;font-weight:800;color:#1f2328;text-align:center}
+.cap small{display:block;font-size:13px;font-weight:500;color:#6b7280;margin-top:2px}
+.phone{--bg:#fffaf5;--card:#fff;--fg:#4a3b2f;--muted:#a8998b;--line:#f1e7dc;
+  --d:#fff1c4;--d-fg:#9a6a00;--n:#e4e1ff;--n-fg:#4b44a8;--r-fg:#b9aea3;
+  --sun:#e8697d;--sat:#5b8def;--accent:#ff8fa3;
+  --m-fam-bg:#ffdbe3;--m-fam:#c2255c;--m-my-bg:#efe8e0;--m-my:#6b5848;--m-req-bg:#ffe9b8;--m-req:#946200;
+  width:390px;height:820px;background:var(--bg);color:var(--fg);border-radius:28px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);display:flex;flex-direction:column;position:relative}
+.phone.dark{--bg:#17151a;--card:#211f25;--fg:#ece6df;--muted:#857b72;--line:#2b2830;
+  --d:#3a3220;--d-fg:#ffd877;--n:#2a2846;--n-fg:#b9b3ff;--r-fg:#6d655e;
+  --sun:#ff8a9b;--sat:#86a9ff;--accent:#ff8fa3;
+  --m-fam-bg:#4a2231;--m-fam:#ff9db4;--m-my-bg:#35302b;--m-my:#d8cdc2;--m-req-bg:#463a1c;--m-req:#ffd36b}
+.top{display:flex;align-items:center;padding:18px 18px 8px;gap:6px}
+.top h1{font-size:24px;font-weight:800;letter-spacing:-.5px;flex:1}
+.top .nb{width:34px;height:34px;display:grid;place-items:center;font-size:20px;color:var(--muted)}
+.top .today{height:32px;padding:0 12px;border-radius:16px;background:var(--card);font-size:13px;font-weight:700;display:grid;place-items:center;box-shadow:0 1px 0 var(--line)}
+.strip{margin:0 10px 6px;padding:10px 14px;border-radius:14px;background:var(--n);color:var(--n-fg);display:flex;align-items:center;gap:10px;font-size:13px}
+.strip b{font-size:15px}
+.strip span{color:var(--fg);opacity:.75}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:12px;font-weight:700;color:var(--muted);padding:4px 6px}
+.dow .s{color:var(--sun)}.dow .t{color:var(--sat)}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;padding:0 6px;flex:1;align-content:start}
+.c{height:110px;border-radius:12px;background:var(--card);box-shadow:0 1px 0 var(--line);padding:5px 4px 4px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.c.out{opacity:.35}
+.c .n{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:700;padding:0 2px;height:16px}
+.c .n em{font-style:normal;font-size:9px;font-weight:700;color:var(--sun);white-space:nowrap;overflow:hidden}
+.c.s .n b,.c.h .n b{color:var(--sun)}.c.t .n b{color:var(--sat)}
+.c.today{outline:2.5px solid var(--accent);outline-offset:-1px}
+.c.today .n b{background:var(--accent);color:#fff;border-radius:8px;padding:0 5px}
+.c .sh{font-size:13px;font-weight:800;text-align:center;padding:1px 0 2px}
+.c.d{background:var(--d)}.c.d .sh{color:var(--d-fg)}
+.c.nn{background:var(--n)}.c.nn .sh{color:var(--n-fg)}
+.c.r .sh{color:var(--r-fg);font-weight:600;font-size:12px}
+.m{font-size:9.5px;line-height:13px;padding:1px 4px;border-radius:5px;font-weight:700;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:keep-all;overflow-wrap:anywhere;flex:none}
+.m.one{-webkit-line-clamp:1;display:block;white-space:nowrap;text-overflow:ellipsis}
+.m.fam{background:var(--m-fam-bg);color:var(--m-fam)}
+.m.my{background:var(--m-my-bg);color:var(--m-my);font-weight:600}
+.m.req{background:var(--m-req-bg);color:var(--m-req)}
+.more{font-size:9px;color:var(--muted);text-align:center;font-weight:700}
+.nav{display:flex;border-top:1px solid var(--line);height:62px;flex:none;background:var(--bg)}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--muted);gap:3px}
+.nav div.on{color:var(--accent);font-weight:700}
+.nav i{width:20px;height:20px;border-radius:6px;border:2px solid currentColor;display:block}
+.fab{position:absolute;right:14px;bottom:74px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:24px;background:var(--accent);box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.pad{height:52px;flex:none}
+</style></head><body>
+<script>
+const P=['주','주','휴','휴','야','야','휴','휴'];
+const anchor=Date.UTC(2026,8,28);
+const sh=d=>P[((Math.round((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-anchor)/864e5))%8+8)%8];
+const HOL={'2026-10-03':'개천절','2026-10-05':'대체','2026-10-09':'한글날'};
+const MEMO={
+ '2026-10-07':[['my','치과 2시']],
+ '2026-10-13':[['my','차 정기점검']],
+ '2026-10-16':[['req','휴 요청']],
+ '2026-10-20':[['fam','애들이랑 에버랜드']],
+ '2026-10-24':[['fam','장모님 생신!'],['my','케이크 예약'],['my','꽃 사기']],
+ '2026-10-29':[['my','관리비 납부']],
+};
+const k=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const days=[];for(let i=0;i<35;i++)days.push(new Date(2026,8,27+i));
+function phone(dark){
+  let g='';
+  days.forEach(d=>{
+    const kk=k(d),s=sh(d),h=HOL[kk],ms=MEMO[kk]||[];
+    const c=[s==='주'?'d':s==='야'?'nn':'r',d.getMonth()!==9?'out':'',d.getDay()===0?'s':'',d.getDay()===6?'t':'',h?'h':'',kk==='2026-10-11'?'today':''].join(' ');
+    const one=ms.length>1;const shown=ms.slice(0,2).map(([t,x])=>`<div class="m ${t} ${one?'one':''}">${x}</div>`).join('');
+    g+=`<div class="c ${c}"><div class="n"><b>${d.getDate()}</b>${h?`<em>${h}</em>`:''}</div>
+      <div class="sh">${s==='주'?'주간':s==='야'?'야간':'휴무'}</div>${shown}${ms.length>2?`<div class="more">+${ms.length-2}</div>`:''}</div>`;
+  });
+  return `<div class="phone ${dark?'dark':''}">
+  <div class="top"><h1>2026. 10 ▾</h1><div class="nb">‹</div><div class="nb">›</div><div class="today">오늘</div></div>
+  <div class="strip"><b>오늘 야간</b><span>내일 휴무 · 다음 알람 오후 4:30</span></div>
+  <div class="dow"><span class="s">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="t">토</span></div>
+  <div class="grid">${g}</div><div class="fab">+</div>
+  <div class="nav"><div class="on"><i></i>달력</div><div><i></i>동료근무</div><div><i></i>알람</div><div><i></i>설정</div></div></div>`;
+}
+document.body.innerHTML=`<div class="wrap"><div class="cap">C안 · 라이트<small>근무색 카드 + 칸 안에 메모 2줄</small></div>${phone(false)}</div>
+<div class="wrap"><div class="cap">C안 · 다크 모드<small>밤에 볼 때 자동 전환</small></div>${phone(true)}</div>`;
+</script></body></html>
