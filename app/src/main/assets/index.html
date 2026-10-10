@@ -45,7 +45,7 @@ body{height:100%;margin:0;color:var(--fg);
   font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic","Segoe UI",Roboto,sans-serif;
   font-size:15px;overflow:hidden;-webkit-user-select:none;user-select:none;
   display:flex; justify-content:center;}
-#app{width:100%; max-width:768px; height:100%; background:var(--bg); box-shadow:0 0 30px rgba(0,0,0,0.1); display:flex;flex-direction:column; position:relative; overflow:hidden; overflow:clip;}
+#app{width:100%; height:100%; background:var(--bg); box-shadow:0 0 30px rgba(0,0,0,0.1); display:flex;flex-direction:column; position:relative; overflow:hidden; overflow:clip;}
 
 input,textarea,button,select{font:inherit;color:inherit;-webkit-user-select:text;user-select:text}
 button{border:0;background:none;padding:0;cursor:pointer}
@@ -110,7 +110,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .dow .s{color:var(--sun)}.dow .t{color:var(--sat)}
 .grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:1fr;border-top:1px solid var(--line)}
 
-.cell{position:relative;display:flex;flex-direction:column;align-items:center;border-bottom:1.5px solid var(--line);border-right:1px solid var(--line);cursor:pointer;padding-bottom:18px;container-type:inline-size;}
+.cell{position:relative;display:flex;flex-direction:column;align-items:center;border-bottom:1.5px solid var(--line);border-right:1px solid var(--line);cursor:pointer;min-height:0;overflow:hidden;container-type:size;--b:max(30px,min(76cqw,44px,calc(100cqh - 68px)));}
 .cell:nth-child(7n){border-right:0}
 .cell.out{background:var(--out-bg)}
 .cell.out>*{opacity:.4}
@@ -122,14 +122,14 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .cell.today::after{content:'';position:absolute;inset:0;border:4px solid var(--today);pointer-events:none;z-index:4}
 .cell.today .dn{padding-left:8px;padding-top:3px}
 
-.bwrap{flex:1;width:100%;position:relative;display:flex;align-items:center;justify-content:center; min-height:34px;}
-.band{position:absolute;top:50%;transform:translateY(-50%);height:var(--b);--b:min(86cqw,64px);left:50%;right:50%}
+.bwrap{flex:none;width:100%;height:calc(var(--b) + 2px);position:relative;display:flex;align-items:center;justify-content:center;}
+.band{position:absolute;top:50%;transform:translateY(-50%);height:var(--b);left:50%;right:50%}
 .band{background:color-mix(in srgb,var(--tb) 32%,var(--bg))}
 .band.jl{left:0}
 .band.jr{right:0}
 
 .badge{position:relative;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;flex:none}
-.bwrap .badge{--b:min(86cqw,64px);width:var(--b);height:var(--b);font-size:calc(var(--b)*.32);font-weight:500;z-index:1}
+.bwrap .badge{width:var(--b);height:var(--b);font-size:calc(var(--b)*.32);font-weight:500;z-index:1}
 .badge.c{background:var(--tb);color:var(--tf)}
 .badge.two{letter-spacing:-1px}
 .bwrap .badge.two{font-size:calc(var(--b)*.27)}
@@ -144,7 +144,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .badge.sm.r{font-size:11px; font-weight:700;}
 .badge .dot{position:absolute;top:-1px;right:-2px;width:8px;height:8px;border-radius:50%;background:#e5322d}
 
-.pill-wrap{position:absolute;bottom:2px;left:0;width:100%;display:flex;flex-direction:column;align-items:center;gap:1px;z-index:3;pointer-events:none;}
+.pill-wrap{flex:1;min-height:0;overflow:hidden;width:100%;display:flex;flex-direction:column;align-items:center;gap:1px;padding-top:2px;z-index:3;pointer-events:none;}
 .family-pill{width:calc(100% - 6px);background:var(--family-pink);color:#fff;font-size:9px;line-height:13px;height:13px;padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;}
 .shared-pill{width:calc(100% - 6px);background:var(--accent);color:#fff;font-size:9px;line-height:13px;height:13px;padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;}
 .pill{width:calc(100% - 6px);background:#3a3d43;color:#fff;font-size:9px;line-height:13px;height:13px;padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -364,10 +364,13 @@ textarea{resize:none;min-height:84px}
 .cal-top .today-btn{font-size:14.5px;padding:0 4px}
 /* 달력 칸 메모 */
 .pill-wrap{gap:1px}
+.pl.more{background:none;color:var(--muted);font-weight:700;text-align:center}
 .pl{width:calc(100% - 4px);font-size:9px;line-height:13px;height:13px;border-radius:3px;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl.fam{background:var(--fam);color:var(--fam-fg);font-weight:700}
 .pl.my{background:var(--my-bg);color:var(--my);box-shadow:inset 0 0 0 1px var(--my-line)}
 .pl.dd{background:color-mix(in srgb,var(--dd) 14%,var(--bg));color:var(--dd);font-weight:800}
+.pl,.req-pill{flex:none;text-overflow:clip;padding:0 2px}
+@media (min-width:600px){.cell{--b:max(30px,min(70cqw,54px,calc(100cqh - 84px)))}.pl,.req-pill{font-size:11px;line-height:15px;height:15px}}
 .dn.chol{background:var(--chol)}.dn.chol .num,.dn.chol .hn{color:var(--chol-fg)}
 .legend{display:flex;gap:12px;justify-content:center;padding:5px 0 4px;font-size:10.5px;color:var(--muted);flex:none}
 .legend span{display:flex;align-items:center;gap:4px}.legend i{width:20px;height:9px;border-radius:2px;display:inline-block}
@@ -1031,6 +1034,15 @@ function ddayLabel(x){
 }
 
 /* ================= 화면 ================= */
+// 칸에 들어갈 메모 줄 수: 폰 최대 3줄, 태블릿 최대 4줄. 가로 태블릿처럼 칸이 낮으면 들어가는 만큼만
+function memoLines(){
+  const tab=innerWidth>=600,g=document.querySelector('.grid');
+  const h=g&&g.clientHeight?g.clientHeight/6:(innerHeight-230)/6;
+  const fit=Math.floor((h-22-(tab?32:30))/(tab?16:14));
+  return Math.max(1,Math.min(tab?4:3,fit));
+}
+let lastLines=0;
+window.addEventListener('resize',()=>{const n=memoLines();if(n!==lastLines&&document.querySelector('.grid'))render();});
 function render(){
   expireOnceAlarms();
   const top=$('#top'),v=$('#view');
@@ -1080,6 +1092,7 @@ function calPanel(y,m){
   const rows=6;   // 항상 6주 (다음 달 첫 주까지 보여줌)
   const start=addDays(first,-lead),tk=fmt(new Date());
   let cells='';
+  const maxLines=lastLines=memoLines();
   for(let i=0;i<rows*7;i++){
     const d=addDays(start,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),ch=hol?'':compHol(k),ov=S.overrides[k],dow=d.getDay();
     const cls=hol||dow===0?'sun':dow===6?'sat':'';
@@ -1091,15 +1104,16 @@ function calPanel(y,m){
     const rq=S.requests.find(r=>r.date===k&&(r.st==='pending'||r.st==='accepted'||r.st==='rejected'));
     const pills=[];
     if(rq)pills.push(`<div class="req-pill ${rq.st}">${REQ_ST[rq.st].ic} ${esc(shiftLabel(rq.want))} 요청</div>`);
-    if(fam.length)pills.push(`<div class="pl fam">♥ ${esc(firstLine(fam[0].text))}${fam.length>1?` +${fam.length-1}`:''}</div>`);
-    if(mine.length)pills.push(`<div class="pl my">🔒 ${esc(firstLine(mine[0].text))}${mine.length>1?` +${mine.length-1}`:''}</div>`);
-    const dd=ddayHits(k);
-    if(dd.length)pills.push(`<div class="pl dd">D ${esc(dd[0].name)}</div>`);
+    fam.forEach(x=>pills.push(`<div class="pl fam">♥ ${esc(firstLine(x.text))}</div>`));
+    mine.forEach(x=>pills.push(`<div class="pl my">🔒 ${esc(firstLine(x.text))}</div>`));
+    ddayHits(k).forEach(x=>pills.push(`<div class="pl dd">D ${esc(x.name)}</div>`));
+    // 폰 3줄, 태블릿 4줄. 넘치면 마지막 줄을 +N 으로
+    if(pills.length>maxLines)pills.splice(maxLines-1,pills.length,`<div class="pl more">+${pills.length-maxLines+1}</div>`);
 
     cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''}" data-act="day" data-k="${k}">
       <div class="dn ${hol?'hol':ch?'chol':''} ${cls}"><span class="num">${d.getDate()}</span><span class="hn">${esc(shortHol(hol)||(ch?'🏢'+ch:''))}</span></div>
       <div class="bwrap">${band}${badge(sh,'',ov?'<i class="dot"></i>':'')}</div>
-      <div class="pill-wrap">${pills.slice(0,2).join('')}</div>
+      <div class="pill-wrap">${pills.join('')}</div>
     </div>`;
   }
   return `<div class="calwrap">
