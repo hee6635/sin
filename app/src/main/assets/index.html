@@ -2014,8 +2014,8 @@ function openBackupPage(){
           <div class="prow"><div class="pl2">자동 백업<small>바뀐 게 있으면 하루 한 번</small></div><label class="sw"><input type="checkbox" id="driveAuto" ${S.drive.auto?'checked':''}><i></i></label></div>
           ${files.length?files.slice(0,2).map(fileRow).join(''):`<div class="prow"><div class="pl2 muted">${driveFiles?'저장된 백업이 없어요':'백업 목록을 불러오는 중…'}</div></div>`}
           <div class="prow danger-row" data-act="drive-unlink" style="color:var(--muted);font-weight:600">연결 해제</div>`
-        :`<div class="prow"><div class="pl2">구글 드라이브에 백업<small>같은 구글 계정이면 새 폰에서 그대로 복원돼요. 백업은 최신 + 직전 2개만 남아요.</small></div></div>
-          <div class="prow"><button class="btn" style="width:100%" data-act="drive-link">구글 계정 연결하고 백업하기</button></div>`}
+        :`<div class="prow"><div class="pl2">구글 드라이브 백업 · 복원<small>연결하면 드라이브에 저장된 백업을 먼저 보여드려요. 앱을 다시 깔았거나 새 폰이면 거기서 "복원"을 누르세요.</small></div></div>
+          <div class="prow"><button class="btn" style="width:100%" data-act="drive-link" ${driveBusy?'disabled':''}>${driveBusy?'연결 중…':'구글 계정 연결하기'}</button></div>`}
       </div>
       <div class="pg-cap">파일로 백업 (고급)</div>
       <div class="pg-sec" style="margin-top:0;padding:14px 16px">
@@ -2056,7 +2056,7 @@ window.__onDrive=res=>{
     if(res.op==='backup'){S.drive.last=Date.now();S.drive.dirty=false;persist();if(!autoSilent)toast('☁️ 구글 드라이브에 백업했어요');}
     if(res.op==='restore'){
       let d;try{d=JSON.parse(res.data);}catch(e){toast('백업을 읽지 못했어요');return;}
-      if(applyBackup(d)){closePage();toast('백업을 불러왔어요');}
+      if(applyBackup(d)){S.drive.last=Date.now();S.drive.dirty=false;persist();closePage();toast('백업을 불러왔어요');}
       return;
     }
     persist();
@@ -2070,7 +2070,7 @@ window.__onDrive=res=>{
   if(pageMode==='backup')openBackupPage();
 };
 function autoBackup(){
-  if(!hasBridge('driveLinked')||!S.drive.auto||!S.drive.dirty)return;
+  if(!hasBridge('driveLinked')||!S.drive.auto||!S.drive.dirty||!S.drive.last)return;
   if(Date.now()-S.drive.last<20*3600e3)return;
   try{if(!window.AndroidBridge.driveLinked())return;}catch(e){return;}
   autoSilent=true;driveBackupNow(true);
@@ -2498,7 +2498,13 @@ document.addEventListener('click',e=>{
       S.companyHols.push({id:uid(),name,date,yearly});chDraft={date:'',name:'',yearly:true};
       save();openCompPage();toast('회사 휴무일을 추가했어요');break;}
     case 'comp-del':if(confirm('지울까요?')){S.companyHols=S.companyHols.filter(x=>x.id!==t.dataset.id);save();openCompPage();}break;
-    case 'drive-link':case 'drive-backup':driveBackupNow(false);break;
+    case 'drive-link':driveBusy=true;driveFiles=null;try{window.AndroidBridge.driveList(false);}catch(err){driveBusy=false;}openBackupPage();break;
+    case 'drive-backup':{
+      // 새로 깐 폰처럼 데이터가 적은데 백업하면 예전 백업이 밀려 지워질 수 있어서 한 번 더 묻는다
+      const f=(driveFiles||[])[0],rp=f&&f.appProperties||{},lm=backupMeta();
+      const remote=(+rp.memos||0)+(+rp.shifts||0),local=(+lm.memos||0)+(+lm.shifts||0);
+      if(f&&remote>local&&!confirm(`드라이브의 최신 백업(메모 ${rp.memos||0}개 · 근무 변경 ${rp.shifts||0}일)보다 지금 폰의 데이터가 적어요.\n\n백업은 2개만 남아서 예전 백업이 지워질 수 있어요. 먼저 "복원"을 하시는 게 안전해요.\n\n그래도 지금 백업할까요?`))break;
+      driveBackupNow(false);break;}
     case 'drive-restore':{
       if(!confirm('이 백업으로 지금 데이터를 모두 바꿀까요?\n\n지금 폰에 있는 근무 변경·메모·알람은 백업 내용으로 바뀌어요.'))break;
       driveBusy=true;window.AndroidBridge.driveRestore(t.dataset.id);toast('불러오는 중…');break;}
