@@ -112,7 +112,7 @@
 - [ ] (2차) 가족과 공유 (호스트가 정하면 가족 달력에도 보임, Firebase households/{hid}/companyHolidays)
 
 ### 백업: 구글 드라이브 (사용자 본인 드라이브의 앱 전용 숨김 폴더)
-- [ ] 준비(사용자): Google Cloud 프로젝트(나중에 Firebase 와 같은 프로젝트로 씀)에서 Drive API 켜기 + OAuth 동의 화면 + 안드로이드 OAuth 클라이언트(패키지 com.eonjeswieo.app + 고정 서명 키 SHA-1)
+- [x] 준비(사용자, 완료): Google Cloud 프로젝트(나중에 Firebase 와 같은 프로젝트로 씀)에서 Drive API 켜기 + OAuth 동의 화면 + 안드로이드 OAuth 클라이언트(패키지 com.eonjeswieo.app + 고정 서명 키 SHA-1)
       · 출시 전 테스트는 "테스트 사용자"로 바로 가능, 공개 출시 때 구글 앱 확인이 필요할 수 있음
 - [x] 네이티브 구글 로그인(Credential Manager) + 드라이브 권한(drive.appdata) → 같은 계정이면 새 폰에서 바로 복원
       · 이 로그인은 2차에서 Firebase 구글 로그인과 그대로 이어서 씀
