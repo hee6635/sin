@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:28px;display:flex;gap:24px;align-items:flex-start;color:#1d2330}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center}
+.cap{font-size:15px;font-weight:800;color:#3a4150}
+.sub{font-size:12px;color:#6b7280;margin-top:-6px;text-align:center;line-height:1.45}
+.ph{width:350px;height:780px;background:#f4f5f7;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330;position:relative}
+.hd{display:flex;align-items:center;gap:10px;padding:14px 16px 8px;background:#f4f5f7}
+.hd .bk{font-size:24px;color:#6b7280}.hd h1{font-size:22px;font-weight:900;flex:1}.hd b{font-size:17px;font-weight:900;flex:1;text-align:center}
+.b{flex:1;overflow:hidden;padding:0 14px 10px;display:flex;flex-direction:column;gap:8px}
+.cp{font-size:12px;font-weight:800;color:#6b7280;padding:6px 4px 0}
+.grp{background:#fff;border-radius:14px;overflow:hidden}
+.it{display:flex;align-items:center;gap:10px;padding:11px 12px;font-size:14px;font-weight:700;border-bottom:1px solid #eef0f2}
+.it:last-child{border-bottom:0}
+.it .e{width:22px;text-align:center}.it small{margin-left:auto;font-size:12px;color:#9aa1ad;font-weight:600;white-space:nowrap}
+.it.hl{background:#f3f0ff}
+.tagA{white-space:nowrap;font-size:10.5px;font-weight:800;border-radius:7px;padding:2px 6px;background:#fff5d6;color:#8a5a00;margin-left:6px}
+.tagS{font-size:10.5px;font-weight:800;border-radius:7px;padding:2px 6px;background:#dff1e6;color:#1f7a4f;margin-left:6px}
+.nav{display:flex;justify-content:space-around;padding:9px 0 13px;background:#2b2f3a;font-size:12px;color:#8e95a3;font-weight:800;flex:none}
+.nav span{display:flex;flex-direction:column;align-items:center;gap:3px}.nav .on{color:#fff}.nav i{font-style:normal;font-size:18px}
+.tip{font-size:12px;color:#6b7280;background:#fff;border-radius:12px;padding:9px 11px;line-height:1.5}
+/* ② 근무 시간 */
+.seg{display:flex;background:#e9ebef;border-radius:12px;padding:3px;font-size:13px;font-weight:800}
+.seg span{flex:1;text-align:center;padding:7px 0;border-radius:9px;color:#6b7280}.seg .on{background:#fff;color:#1d2330;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.tl{background:#fff;border-radius:14px;padding:12px 12px 10px}
+.tl .t{font-size:12px;font-weight:800;color:#6b7280;margin-bottom:8px;display:flex;justify-content:space-between}
+.bar{position:relative;height:26px;border-radius:8px;background:#eef0f2;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:800;color:#fff}
+.ticks{display:flex;justify-content:space-between;font-size:9.5px;color:#9aa1ad;font-weight:700;margin-top:3px}
+.rows{background:#fff;border-radius:14px;overflow:hidden}
+.r{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #eef0f2;font-size:14px;font-weight:700}
+.r:last-child{border-bottom:0}
+.r .e{width:22px;text-align:center}
+.r .v{margin-left:auto;display:flex;align-items:center;gap:6px}
+.r .tm{border:1.5px solid #d5d8de;border-radius:9px;padding:4px 9px;font-weight:900;font-size:14px;background:#fff}
+.r .tm.ed{border-color:#7b5cf0;color:#5b3fd0;background:#f6f3ff}
+.r small{font-size:11px;color:#9aa1ad;font-weight:600}
+.r .sw{width:38px;height:22px;border-radius:11px;background:#7b5cf0;position:relative;flex:none}.r .sw::after{content:'';position:absolute;right:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff}
+.r .sw.off{background:#d5d8de}.r .sw.off::after{right:auto;left:2px}
+.add{font-size:13px;font-weight:800;color:#7b5cf0;text-align:center;padding:10px 0;background:#fff;border-radius:14px}
+.rst{font-size:12.5px;color:#6b7280;font-weight:700;text-align:center}
+/* ③ 미리보기 */
+.pv{display:flex;flex-direction:column;gap:6px}
+.pc{border-radius:13px;padding:9px 12px;color:#fff;display:flex;align-items:center;gap:10px}
+.pc .tm2{font-size:11px;font-weight:800;opacity:.85;width:44px;flex:none}
+.pc b{font-size:14.5px;font-weight:900}.pc small{display:block;font-size:11px;opacity:.88;font-weight:700}
+.pc .ed{margin-left:auto;font-size:11px;font-weight:800;background:rgba(255,255,255,.2);border-radius:8px;padding:3px 7px}
+</style></head><body>
+
+<!-- ① 설정 -->
+<div class="col"><div class="cap">① 설정 — 새 항목 "근무 시간 · 상태"</div><div class="sub">처음엔 <b>대략(기본값)</b>으로 돌아가고<br>들어가서 고치면 <b>직접 설정</b>으로 바뀜</div>
+<div class="ph">
+  <div class="hd"><h1>설정</h1></div>
+  <div class="b">
+    <div class="cp">근무</div>
+    <div class="grp">
+      <div class="it"><span class="e">🔁</span>근무 패턴 · 근무타입<small>4조2교대 C조 ›</small></div>
+      <div class="it hl"><span class="e">🕐</span>근무 시간 · 상태<span class="tagA">대략</span><small>주간 07~19 ›</small></div>
+      <div class="it"><span class="e">⏰</span>알람<small>2개 켜짐 ›</small></div>
+      <div class="it"><span class="e">👥</span>동료 근무<small>›</small></div>
+      <div class="it"><span class="e">🏢</span>휴무일 · 기념일<small>3개 ›</small></div>
+      <div class="it"><span class="e">📊</span>근무 통계 · 수당<small>›</small></div>
+    </div>
+    <div class="cp">가족</div>
+    <div class="grp">
+      <div class="it"><span class="e">👪</span>가족 목록 · 같이 쉬는 날<small>3명 ›</small></div>
+      <div class="it"><span class="e">👁</span>가족에게 보이는 내 상태<small>켜짐 ›</small></div>
+    </div>
+    <div class="cp">화면 · 데이터</div>
+    <div class="grp">
+      <div class="it"><span class="e">🔤</span>글자 크기 · 메모 색<small>보통 ›</small></div>
+      <div class="it"><span class="e">☁️</span>백업 · 복원<small>방금 전 ›</small></div>
+    </div>
+    <div class="tip">💡 아무것도 안 고쳐도 근무타입의 흔한 시간으로 <b>대략</b> 계산해요. 정확하게 하고 싶을 때만 들어가서 고치세요.</div>
+  </div>
+  <div class="nav"><span><i>📅</i>달력</span><span><i>👪</i>가족</span><span class="on"><i>⚙️</i>설정</span></div>
+</div></div>
+
+<!-- ② 근무 시간 세부 -->
+<div class="col"><div class="cap">② 근무 시간 · 상태 — 근무타입별 세부 조정</div><div class="sub">출근 · 시작 · 점심/야식 · 끝 · 집 도착 · 수면<br>고친 칸은 보라, 안 고친 칸은 기본값</div>
+<div class="ph">
+  <div class="hd"><span class="bk">‹</span><b>근무 시간 · 상태</b><span style="width:24px"></span></div>
+  <div class="b">
+    <div class="seg"><span>☀️ 주간</span><span class="on">🌙 야간</span><span>상근</span></div>
+    <div class="tl">
+      <div class="t"><span>🌙 야간 하루 흐름</span><span class="tagS" style="margin:0">직접 설정</span></div>
+      <div class="bar">
+        <i style="left:0;width:6%;background:#f59e0b">🚗</i>
+        <i style="left:6%;width:28%;background:#5b4bd6">근무</i>
+        <i style="left:34%;width:6%;background:#ec4899">🍗</i>
+        <i style="left:40%;width:30%;background:#5b4bd6">근무</i>
+        <i style="left:70%;width:5%;background:#10b981">🏠</i>
+        <i style="left:78%;width:22%;background:#334155">😴</i>
+      </div>
+      <div class="ticks"><span>18시</span><span>21</span><span>0시</span><span>3</span><span>6</span><span>9</span><span>12</span><span>14시</span></div>
+    </div>
+    <div class="rows">
+      <div class="r"><span class="e">🚗</span>집에서 나서기<div class="v"><span class="tm ed">18:20</span></div></div>
+      <div class="r"><span class="e">🏭</span>근무 시작<div class="v"><span class="tm">19:00</span></div></div>
+      <div class="r"><span class="e">🍗</span>야식 시간<div class="v"><span class="tm ed">00:00</span><small>~</small><span class="tm ed">01:00</span></div></div>
+      <div class="r"><span class="e">🏁</span>근무 끝<div class="v"><span class="tm">07:00</span><small>다음 날</small></div></div>
+      <div class="r"><span class="e">🏠</span>집 도착<div class="v"><span class="tm ed">07:40</span></div></div>
+      <div class="r"><span class="e">😴</span>수면<div class="v"><span class="tm">09:00</span><small>~</small><span class="tm">14:00</span><span class="sw"></span></div></div>
+    </div>
+    <div class="add">＋ 쉬는 시간 추가 (교육 · 회의 등)</div>
+    <div class="rst">↺ 야간 기본값(대략)으로 되돌리기</div>
+  </div>
+</div></div>
+
+<!-- ③ 가족에게 보이는 내 상태 -->
+<div class="col"><div class="cap">③ 가족에게 보이는 내 상태</div><div class="sub">위 시간대로 하루가 이렇게 보여요 · 점심/야식엔 "전화 OK"<br>이모티콘 · 문구 바꾸기, 켜고 끄기</div>
+<div class="ph">
+  <div class="hd"><span class="bk">‹</span><b>가족에게 보이는 내 상태</b><span style="width:24px"></span></div>
+  <div class="b">
+    <div class="rows">
+      <div class="r">실시간 상태 보여주기<div class="v"><span class="sw"></span></div></div>
+    </div>
+    <div class="cp">미리보기 · 🌙 야간 날</div>
+    <div class="pv">
+      <div class="pc" style="background:#f59e0b"><span class="tm2">18:20</span><div><b>🚗 출근 중</b><small>전화 OK</small></div><span class="ed">바꾸기</span></div>
+      <div class="pc" style="background:#5b4bd6"><span class="tm2">19:00</span><div><b>🏥 환자 보는 중</b><small>메시지만 · 퇴근까지 남은 시간</small></div><span class="ed">바꾸기</span></div>
+      <div class="pc" style="background:#ec4899"><span class="tm2">00:00</span><div><b>🍗 야식 시간</b><small>전화 OK · 1시간</small></div><span class="ed">바꾸기</span></div>
+      <div class="pc" style="background:#10b981"><span class="tm2">07:40</span><div><b>🏠 집에 왔어요</b><small>가족에게 알림 보내기</small></div><span class="ed">바꾸기</span></div>
+      <div class="pc" style="background:#334155"><span class="tm2">09:00</span><div><b>😴 자는 중</b><small>깨우지 마세요 · 14시까지</small></div><span class="ed">바꾸기</span></div>
+    </div>
+    <div class="rows">
+      <div class="r">퇴근하면 가족에게 알림<div class="v"><span class="sw"></span></div></div>
+      <div class="r">"전화 OK / 메시지만" 표시<div class="v"><span class="sw"></span></div></div>
+      <div class="r">받은 응원 알림<div class="v"><small style="font-size:12.5px;color:#6b7280;font-weight:700">근무 중엔 조용히 ›</small></div></div>
+    </div>
+  </div>
+</div></div>
+
+</body></html>
