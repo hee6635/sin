@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:28px;display:flex;gap:26px;align-items:flex-start;color:#1d2330}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center}
+.cap{font-size:15px;font-weight:800;color:#3a4150}
+.sub{font-size:12px;color:#6b7280;margin-top:-6px}
+.ph{width:340px;height:720px;background:#fff;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330;position:relative}
+.nav{display:flex;justify-content:space-around;padding:9px 0 13px;background:#2b2f3a;font-size:12px;color:#8e95a3;font-weight:800;flex:none}
+.nav span{display:flex;flex-direction:column;align-items:center;gap:3px;position:relative}.nav .on{color:#fff}.nav i{font-style:normal;font-size:19px}
+.nav .bd{position:absolute;top:-4px;right:-10px;background:#e5484d;color:#fff;font-size:10px;border-radius:9px;padding:1px 5px;font-style:normal}
+/* 달력 */
+.ct{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px}
+.ct .m{font-size:23px;font-weight:900;display:flex;align-items:center;gap:8px}
+.ct .m small{font-size:15px;color:#9aa1ad}
+.ct .m .memo{font-size:11px;font-weight:800;background:#f3f0ff;color:#7b5cf0;border-radius:8px;padding:2px 6px}
+.ct .td{font-size:14px;font-weight:800;border:1.5px solid #d5d8de;border-radius:10px;padding:5px 10px}
+.sn{text-align:center;font-size:11.5px;color:#6b7280;margin-top:-2px}
+.dw{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11.5px;font-weight:800;padding:8px 0 4px;color:#4b5563}
+.g{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;flex:1;border-top:1px solid #eceef1}
+.c{border-bottom:1px solid #eceef1;border-right:1px solid #f1f2f4;display:flex;flex-direction:column;align-items:center;padding-top:2px;overflow:hidden;gap:2px}
+.c .n{align-self:flex-start;font-size:11px;font-weight:600;padding-left:4px}
+.c .k{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:12px}
+.k.D{background:#c9d6dd;color:#33505e}.k.N{background:#d8c9c2;color:#5a4038}.k.R{color:#e5484d;font-weight:700;font-size:11px}
+.c.o{opacity:.35}.c.t{background:#e9f7f1;box-shadow:inset 0 0 0 2.5px #1f9a76}
+.p{width:calc(100% - 4px);font-size:8.5px;line-height:12px;height:12px;border-radius:3px;padding:0 2px;white-space:nowrap;overflow:hidden;font-weight:700;color:#fff;background:#7b5cf0}
+.p.my{background:#6b7280}
+.sun{color:#e5484d}.sat{color:#3b6fd6}
+/* 시트 */
+.dim{position:absolute;inset:0;background:rgba(15,18,30,.4)}
+.sh{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;padding:10px 16px 14px;display:flex;flex-direction:column;gap:11px}
+.gr{width:36px;height:4px;border-radius:2px;background:#d5d8de;margin:0 auto}
+.sh h3{font-size:18px;font-weight:900;display:flex;align-items:center;gap:8px}
+.sh h3 small{font-size:12.5px;color:#6b7280;font-weight:700}
+.chips{display:flex;gap:7px}
+.chips span{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:600;opacity:.5}
+.chips .on{opacity:1;box-shadow:0 0 0 2.5px #fff,0 0 0 4.5px #1d2330}
+.chips .add{width:auto;padding:0 12px;border-radius:22px;background:#f1f2f4;color:#6b7280;opacity:1;font-size:13px}
+.mc{border-radius:12px;padding:10px 12px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.mc small{display:block;font-size:11px;color:#6b7280;font-weight:600;margin-top:1px}
+.mc.f{background:#f3f0ff;border-left:4px solid #7b5cf0}.mc.m{background:#f1f2f4;border-left:4px solid #6b7280}
+.mc .to{font-size:11px;font-weight:800;color:#7b5cf0;background:#fff;border-radius:8px;padding:3px 7px}
+.ib{display:flex;gap:6px;align-items:center}
+.ib .sw{display:flex;background:#f1f2f4;border-radius:10px;padding:3px;font-size:12px;font-weight:800}
+.ib .sw span{padding:6px 8px;border-radius:8px;color:#6b7280}.ib .sw .on{background:#7b5cf0;color:#fff}
+.ib .in{flex:1;border:2px solid #7b5cf0;border-radius:12px;padding:9px 10px;font-size:13px;color:#9aa1ad}
+.ib .go{background:#7b5cf0;color:#fff;border-radius:12px;padding:10px 12px;font-weight:900}
+.req{font-size:13px;font-weight:800;color:#f59e0b;text-align:center;border:1.5px dashed #f5c26b;border-radius:12px;padding:9px 0}
+/* 가족 */
+.hd{padding:16px 16px 6px;font-size:22px;font-weight:900;display:flex;justify-content:space-between;align-items:center}
+.hd .inv{font-size:13px;background:#7b5cf0;color:#fff;border-radius:12px;padding:7px 12px}
+.b{flex:1;padding:4px 16px 0;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.mem{display:flex;gap:12px}
+.mem div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:700}
+.mem i{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:18px;color:#fff;font-weight:800;position:relative}
+.mem i b{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:#22c55e;border:2px solid #fff}
+.mem small{font-size:10.5px;color:#6b7280;font-weight:600}
+.mine{border-radius:16px;padding:12px 14px;background:linear-gradient(135deg,#5b4bd6,#3b6fd6);color:#fff}
+.mine small{font-size:11.5px;opacity:.85;font-weight:700}.mine b{display:block;font-size:17px;font-weight:900;margin-top:2px}
+.tabs{display:flex;gap:6px;font-size:12.5px;font-weight:800}
+.tabs span{padding:6px 11px;border-radius:16px;background:#f1f2f4;color:#6b7280}.tabs .on{background:#1d2330;color:#fff}
+.fd{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:#f6f7f9;font-size:13.5px;position:relative}
+.fd .ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:15px;flex:none}
+.fd small{display:block;font-size:11.5px;color:#6b7280;margin-top:1px}
+.fd .dot{position:absolute;top:12px;right:12px;width:8px;height:8px;border-radius:50%;background:#e5484d}
+.fd .ab{display:flex;gap:6px;margin-top:7px}.fd .ab span{font-size:12px;font-weight:800;padding:5px 12px;border-radius:9px;background:#fff;border:1.5px solid #d5d8de}.fd .ab .y{background:#1f9a76;color:#fff;border-color:#1f9a76}
+/* 설정 */
+.sec{font-size:12px;font-weight:800;color:#6b7280;padding:4px 4px 0}
+.grp{background:#f6f7f9;border-radius:14px;overflow:hidden}
+.it{display:flex;align-items:center;gap:10px;padding:10.5px 12px;font-size:14px;font-weight:700;border-bottom:1px solid #eceef1}
+.it:last-child{border-bottom:0}
+.it .e{width:22px;text-align:center}.it small{margin-left:auto;font-size:12px;color:#9aa1ad;font-weight:600}
+.it .new{font-size:10px;font-weight:800;background:#fff0d6;color:#c2410c;border-radius:6px;padding:1px 5px;margin-left:4px}
+</style></head><body>
+
+<div class="col"><div class="cap">① 달력 — 위쪽은 월·오늘만</div><div class="sub">월 제목 누르면 월 메모·D-day · 아래 탭 3개</div>
+<div class="ph">
+  <div class="ct"><div class="m"><small>‹</small>2026.10<small>›</small><span class="memo">📝 2</span></div><span class="td">오늘</span></div>
+  <div class="sn">4조2교대 C조</div>
+  <div class="dw"><span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span></div>
+  <div class="g">
+    <div class="c o"><span class="n sun">27</span><span class="k R">휴</span></div><div class="c o"><span class="n">28</span><span class="k D">주</span></div><div class="c o"><span class="n">29</span><span class="k D">주</span></div><div class="c o"><span class="n">30</span><span class="k R">휴</span></div><div class="c"><span class="n">1</span><span class="k R">휴</span></div><div class="c"><span class="n">2</span><span class="k N">야</span><div class="p">♥ 엄마 생신</div></div><div class="c"><span class="n sun">3</span><span class="k N">야</span></div>
+    <div class="c"><span class="n sun">4</span><span class="k R">휴</span></div><div class="c"><span class="n sun">5</span><span class="k R">휴</span></div><div class="c"><span class="n">6</span><span class="k D">주</span></div><div class="c"><span class="n">7</span><span class="k D">주</span></div><div class="c"><span class="n">8</span><span class="k R">휴</span><div class="p">♥ 병원 3시</div><div class="p my">🔒 택배</div></div><div class="c"><span class="n sun">9</span><span class="k R">휴</span></div><div class="c"><span class="n sat">10</span><span class="k N">야</span></div>
+    <div class="c t"><span class="n sun">11</span><span class="k N">야</span></div><div class="c"><span class="n">12</span><span class="k R">휴</span></div><div class="c"><span class="n">13</span><span class="k R">휴</span></div><div class="c"><span class="n">14</span><span class="k D">주</span><div class="p">♥ 학교 상담</div></div><div class="c"><span class="n">15</span><span class="k D">주</span></div><div class="c"><span class="n">16</span><span class="k R">휴</span></div><div class="c"><span class="n sat">17</span><span class="k R">휴</span><div class="p">♥ 결혼식</div><div class="p my">🔒 축의금</div></div>
+    <div class="c"><span class="n sun">18</span><span class="k N">야</span></div><div class="c"><span class="n">19</span><span class="k N">야</span></div><div class="c"><span class="n">20</span><span class="k R">휴</span></div><div class="c"><span class="n">21</span><span class="k R">휴</span></div><div class="c"><span class="n">22</span><span class="k D">주</span><div class="p my">🔒 적금</div></div><div class="c"><span class="n">23</span><span class="k D">주</span></div><div class="c"><span class="n sat">24</span><span class="k R">휴</span></div>
+    <div class="c"><span class="n sun">25</span><span class="k R">휴</span></div><div class="c"><span class="n">26</span><span class="k N">야</span></div><div class="c"><span class="n">27</span><span class="k N">야</span><div class="p">♥ 가족 외식</div></div><div class="c"><span class="n">28</span><span class="k R">휴</span></div><div class="c"><span class="n">29</span><span class="k R">휴</span></div><div class="c"><span class="n">30</span><span class="k D">주</span></div><div class="c"><span class="n sat">31</span><span class="k D">주</span></div>
+  </div>
+  <div class="nav"><span class="on"><i>📅</i>달력</span><span><i>👪</i>가족<em class="bd">3</em></span><span><i>⚙️</i>설정</span></div>
+</div></div>
+
+<div class="col"><div class="cap">② 날짜 누르면 — 한 화면에 끝</div><div class="sub">메모 탭 없애고 색으로만 구분</div>
+<div class="ph">
+  <div class="ct"><div class="m"><small>‹</small>2026.10<small>›</small></div><span class="td">오늘</span></div>
+  <div class="dim"></div>
+  <div class="sh">
+    <div class="gr"></div>
+    <h3>10월 17일 (토) <small>휴무 · 원래 휴무</small></h3>
+    <div class="chips"><span class="k D" style="opacity:.5">주</span><span class="k N" style="opacity:.5">야</span><span class="on" style="color:#e5484d;background:#fdecee">휴</span><span style="background:#b8e994;color:#0a3d62">상</span><span class="add">＋</span></div>
+    <div class="mc f"><div>♥ 결혼식 12시<small>아내 · 어제</small></div></div>
+    <div class="mc m"><div>🔒 축의금 준비<small>나만 보기</small></div><span class="to">♥ 가족에게</span></div>
+    <div class="req">⏳ 가족이 이날 근무 변경을 요청하면 여기에 떠요</div>
+    <div class="ib"><div class="sw"><span>🔒</span><span class="on">♥ 가족</span></div><div class="in">가족 메모 남기기…</div><span class="go">↑</span></div>
+  </div>
+</div></div>
+
+<div class="col"><div class="cap">③ 가족 — 새 탭 (앱의 핵심)</div><div class="sub">소식 · 가족 목록 · 초대가 한 곳에</div>
+<div class="ph">
+  <div class="hd">가족<span class="inv">＋ 초대</span></div>
+  <div class="b">
+    <div class="mem">
+      <div><i style="background:#1d2330">나<b></b></i>나<small>호스트</small></div>
+      <div><i style="background:#7b5cf0">아<b></b></i>아내<small>메모·요청</small></div>
+      <div><i style="background:#f59e0b">딸</i>딸<small>보기만</small></div>
+    </div>
+    <div class="mine"><small>가족에게 지금 이렇게 보여요</small><b>🏭 근무 중 · 퇴근까지 7시간 48분</b></div>
+    <div class="tabs"><span class="on">전체</span><span>요청 1</span><span>메모</span><span>응원</span></div>
+    <div class="fd"><span class="ic" style="background:#fff0d6">🔄</span><div><b>아내가 24일(토) 휴무를 요청했어요</b><small>"친정 가는 날이에요" · 10분 전</small><div class="ab"><span class="y">수락</span><span>보류</span><span>거절</span></div></div><i class="dot"></i></div>
+    <div class="fd" style="background:#f3f0ff"><span class="ic" style="background:#7b5cf0;color:#fff">♥</span><div><b>17일 결혼식 12시</b><small>아내 · 가족 메모 · 어제</small></div><i class="dot"></i></div>
+    <div class="fd"><span class="ic" style="background:#fdf2e9">☕</span><div><b>딸이 응원을 보냈어요</b><small>"아빠 수고해!" · 어젯밤</small></div><i class="dot"></i></div>
+  </div>
+  <div class="nav"><span><i>📅</i>달력</span><span class="on"><i>👪</i>가족<em class="bd">3</em></span><span><i>⚙️</i>설정</span></div>
+</div></div>
+
+<div class="col"><div class="cap">④ 설정 — 나머지는 전부 여기</div><div class="sub">알람·동료근무도 탭에서 내려옴</div>
+<div class="ph">
+  <div class="hd">설정</div>
+  <div class="b" style="gap:6px">
+    <div class="sec">근무</div>
+    <div class="grp">
+      <div class="it"><span class="e">🔁</span>근무 패턴 · 근무타입<small>4조2교대 C조 ›</small></div>
+      <div class="it"><span class="e">⏰</span>알람<small>주간 05:50 · 야간 16:30 ›</small></div>
+      <div class="it"><span class="e">👥</span>동료 근무<small>4명 ›</small></div>
+      <div class="it"><span class="e">🏢</span>회사 휴무일<small>3개 ›</small></div>
+      <div class="it"><span class="e">📊</span>통계 · 수당<small>›</small></div>
+    </div>
+    <div class="sec">화면 · 데이터</div>
+    <div class="grp">
+      <div class="it"><span class="e">🔤</span>글자 크기 · 메모 색<small>보통 ›</small></div>
+      <div class="it"><span class="e">☁️</span>백업 · 복원<small>방금 전 ›</small></div>
+      <div class="it"><span class="e">🖼</span>달력 이미지로 공유<small>›</small></div>
+    </div>
+    <div class="sec">앱</div>
+    <div class="grp">
+      <div class="it"><span class="e">✉️</span>문의 · 오류 신고<small>›</small></div>
+      <div class="it"><span class="e">ℹ️</span>앱 정보 · 개인정보<small>v0.5 ›</small></div>
+    </div>
+  </div>
+  <div class="nav"><span><i>📅</i>달력</span><span><i>👪</i>가족<em class="bd">3</em></span><span class="on"><i>⚙️</i>설정</span></div>
+</div></div>
+
+</body></html>
