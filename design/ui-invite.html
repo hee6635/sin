@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>초대 시안</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ecf1;padding:24px;display:flex;gap:22px;justify-content:center}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.cap{font-size:16.5px;font-weight:800;color:#1f2328;text-align:center;height:44px}
+.cap small{display:block;font-size:12px;font-weight:500;color:#6b7280;margin-top:2px}
+.phone{--fg:#1f2328;--muted:#8b919a;--line:#eceef1;--surface:#f5f6f8;--accent:#2f6bf0;--fam:#7b5cf0;--fam-bg:#f3f0ff;--fam-line:#d3c8ff;
+  width:390px;height:844px;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column;color:var(--fg)}
+.hd{display:flex;align-items:center;gap:8px;padding:16px 16px 12px;background:#f7f7f8;border-bottom:1px solid var(--line)}
+.hd b{flex:1;text-align:center;font-size:17px;margin-right:24px}.hd span{font-size:22px;color:var(--muted);width:24px}
+.body{flex:1;overflow:hidden;padding:0 16px;background:var(--surface)}
+.sec{font-size:12.5px;font-weight:700;color:var(--muted);margin:18px 4px 8px}
+.card{background:#fff;border-radius:14px;padding:4px 14px}
+.it{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.it:last-child{border-bottom:0}
+.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none}
+.it .tx{flex:1}.it .tx b{display:block;font-size:15px}.it .tx small{font-size:12px;color:var(--muted)}
+.role{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:11px}
+.role.host{background:#e8f0ff;color:var(--accent)}.role.edit{background:var(--fam-bg);color:var(--fam)}.role.view{background:var(--surface);color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:#2fbf71;display:inline-block;margin-right:4px}
+.btn{height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:15px}
+.btn.p{background:var(--fam);color:#fff}.btn.g{background:#fff;color:var(--fg);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.k{background:#fee500;color:#191919}.btn.b{background:var(--accent);color:#fff}
+.slots{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);margin:10px 4px 0}
+.slots i{width:22px;height:6px;border-radius:3px;background:var(--fam)}.slots i.e{background:#dcdfe4}
+.note{font-size:12px;color:var(--muted);line-height:1.5;margin:10px 4px}
+.toggle{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.sw{width:46px;height:28px;border-radius:14px;background:var(--fam);position:relative}.sw::after{content:"";position:absolute;right:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff}
+/* 초대 코드 */
+.big{background:#fff;border-radius:18px;padding:18px 16px;text-align:center;margin-top:14px}
+.code{font-size:32px;font-weight:800;letter-spacing:4px;color:var(--fam);font-family:ui-monospace,Menlo,monospace}
+.exp{font-size:12.5px;color:var(--muted);margin-top:4px}
+.qr{width:150px;height:150px;margin:14px auto 4px;display:grid;grid-template-columns:repeat(25,1fr);background:#fff;padding:6px;border-radius:8px;box-shadow:inset 0 0 0 1px var(--line)}
+.qr i{background:#1f2328}.qr u{background:#fff}
+.seg{display:flex;gap:6px;margin-top:8px}.seg span{flex:1;height:40px;border-radius:12px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:700;color:var(--muted)}
+.seg span.on{background:var(--fam-bg);color:var(--fam);box-shadow:inset 0 0 0 1.5px var(--fam)}
+.lbl{font-size:12.5px;font-weight:700;color:var(--muted);margin:14px 2px 0;text-align:left}
+.inp{height:44px;border-radius:12px;background:var(--surface);display:flex;align-items:center;padding:0 14px;font-size:14.5px;margin-top:6px}
+/* 첫 화면 */
+.hero{flex:1;display:flex;flex-direction:column;padding:70px 24px 30px;background:linear-gradient(180deg,#f3f0ff,#fff 55%)}
+.logo{width:72px;height:72px;border-radius:20px;background:#2f6bf0;display:grid;place-items:center;color:#fff;font-size:30px;font-weight:900;box-shadow:0 8px 20px rgba(47,107,240,.3)}
+.hero h1{font-size:30px;margin-top:22px;letter-spacing:-.5px}.hero p{color:var(--muted);margin-top:8px;line-height:1.5;font-size:15px}
+.choice{background:#fff;border-radius:18px;padding:18px;margin-top:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;gap:14px;align-items:center}
+.choice .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;flex:none}
+.choice b{font-size:16px;display:block}.choice small{font-size:12.5px;color:var(--muted);line-height:1.4;display:block;margin-top:2px}
+.choice.f{box-shadow:0 0 0 2px var(--fam),0 6px 18px rgba(123,92,240,.18)}
+/* 코드 입력 */
+.boxes{display:flex;gap:5px;justify-content:center;margin-top:22px}
+.boxes span{width:36px;height:48px;border-radius:10px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);display:grid;place-items:center;font-size:21px;font-weight:800;font-family:ui-monospace,Menlo,monospace}
+.boxes span.f{box-shadow:inset 0 0 0 1.5px var(--fam);color:var(--fam)}
+.boxes em{width:8px;align-self:center;height:2px;background:var(--muted)}
+.ok{background:#fff;border-radius:16px;padding:16px;margin-top:18px;box-shadow:0 0 0 1.5px var(--fam-line)}
+.ok .t{font-size:12px;color:#2fbf71;font-weight:800}
+.ok b{display:block;font-size:17px;margin-top:6px}.ok small{color:var(--muted);font-size:12.5px}
+.mini{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px}
+.mini span{height:26px;border-radius:50%;display:grid;place-items:center;font-size:11px}
+.toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);background:#25282e;color:#fff;padding:10px 16px;border-radius:20px;font-size:13px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.push{position:absolute;left:10px;right:10px;top:10px;background:rgba(255,255,255,.97);border-radius:18px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.18);display:flex;gap:10px;z-index:5}
+.push .lg{width:36px;height:36px;border-radius:10px;background:#2f6bf0;color:#fff;display:grid;place-items:center;font-weight:900;flex:none}
+.push b{font-size:13.5px;display:block}.push small{font-size:12.5px;color:#4b5058}
+.push .tm{font-size:11px;color:var(--muted);margin-left:auto}
+.menu{position:absolute;left:12px;right:12px;bottom:12px;background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}
+.menu .mh{padding:14px 16px 10px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center}
+.menu .m{padding:14px 16px;font-size:15px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.menu .m small{color:var(--muted);font-size:13px}
+.menu .m.d{color:#e0455c}.menu .m:last-child{border-bottom:0}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+</style></head><body>
+<script>
+// 가짜 QR
+function qr(){let h='',seed=7;const r=()=>(seed=(seed*9301+49297)%233280)/233280;
+ for(let y=0;y<25;y++)for(let x=0;x<25;x++){
+  const f=(a,b)=>x>=a&&x<a+7&&y>=b&&y<b+7;const fin=f(0,0)||f(18,0)||f(0,18);
+  let on;if(fin){const fx=x%18>=0?(x>=18?x-18:x):x,fy=y>=18?y-18:y;const ex=fx,ey=fy;on=(ex===0||ex===6||ey===0||ey===6)||(ex>=2&&ex<=4&&ey>=2&&ey<=4);}
+  else on=r()>.52;h+=on?'<i></i>':'<u></u>';}
+ return `<div class="qr">${h}</div>`;}
+const av=(t,bg,fg)=>`<div class="av" style="background:${bg};color:${fg}">${t}</div>`;
+const p1=`<div class="phone"><div class="hd"><span>‹</span><b>가족 연결</b></div><div class="body">
+ <div class="sec">우리 가족 근무표 · 4조2교대 C조</div>
+ <div class="card">
+  <div class="it">${av('나','#e8f0ff','#2f6bf0')}<div class="tx"><b>나 (근무자)</b><small>구글 계정 연결됨 · abc***@gmail.com</small></div><span class="role host">호스트</span></div>
+  <div class="it">${av('아','#f3f0ff','#7b5cf0')}<div class="tx"><b>아내</b><small><span class="dot"></span>방금 전 확인</small></div><span class="role edit">메모·요청</span></div>
+  <div class="it">${av('엄','#f5f6f8','#8b919a')}<div class="tx"><b>엄마</b><small>3일 전 확인</small></div><span class="role view">보기만</span></div>
+ </div>
+ <div class="slots"><i></i><i></i><i class="e"></i>&nbsp;가족 2/3명</div>
+ <div style="margin-top:14px" class="btn p">＋ 가족 초대하기</div>
+ <div class="sec">공유 설정</div>
+ <div class="card">
+  <div class="toggle"><div><b style="font-size:14.5px">근무표 공유</b><div style="font-size:12px;color:var(--muted)">가족이 내 근무를 볼 수 있어요</div></div><div class="sw"></div></div>
+  <div class="toggle" style="border-top:1px solid var(--line)"><div><b style="font-size:14.5px">가족 메모 알림</b><div style="font-size:12px;color:var(--muted)">메모·요청이 오면 알려줘요</div></div><div class="sw"></div></div>
+ </div>
+ <div class="note">근무표는 호스트만 바꿀 수 있어요. 가족은 메모와 근무 변경 요청만 보낼 수 있어요.</div>
+</div></div>`;
+const p2=`<div class="phone"><div class="hd"><span>‹</span><b>가족 초대하기</b></div><div class="body">
+ <div class="lbl">누구를 초대하나요? (호칭)</div><div class="inp">아빠</div>
+ <div class="lbl">이 가족이 할 수 있는 것</div>
+ <div class="seg"><span class="on">메모·요청 보내기</span><span>보기만</span></div>
+ <div class="big"><div style="font-size:12.5px;color:var(--muted);font-weight:700">초대 코드</div>
+  <div class="code">K7MP-4QXH</div><div class="exp">7일 동안 쓸 수 있어요 · 10월 18일까지</div>
+  ${qr()}<div style="font-size:11.5px;color:var(--muted)">같이 있으면 상대 폰으로 찍기</div></div>
+ <div class="btn k" style="margin-top:12px">💬 카카오톡으로 보내기</div>
+ <div style="display:flex;gap:8px;margin-top:8px"><div class="btn g" style="flex:1">링크 복사</div><div class="btn g" style="flex:1">코드 다시 만들기</div></div>
+</div></div>`;
+const p3=`<div class="phone"><div class="hero">
+ <div class="logo">쉬</div><h1>언제쉬어</h1><p>교대근무 가족이 함께 보는 근무표</p>
+ <div style="flex:1"></div>
+ <div class="choice"><div class="ic" style="background:#e8f0ff">🗓</div><div><b>내 근무표 만들기</b><small>교대근무를 하는 본인이에요</small></div></div>
+ <div class="choice f"><div class="ic" style="background:#f3f0ff">💜</div><div><b>초대 코드가 있어요</b><small>가족이 보낸 코드·링크로 근무표를 같이 봐요</small></div></div>
+ <div style="text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px">카톡 링크로 들어오면 코드가 자동으로 입력돼요</div>
+</div></div>`;
+const shifts=['야','휴','휴','주','주','휴','휴'];
+const p4=`<div class="phone"><div class="hd"><span>‹</span><b>초대 코드 입력</b></div><div class="body">
+ <div class="note" style="text-align:center;margin-top:18px">가족에게 받은 8자리 코드를 넣어주세요</div>
+ <div class="boxes">${'K7MP'.split('').map(c=>`<span class="f">${c}</span>`).join('')}<em></em>${'4QXH'.split('').map(c=>`<span class="f">${c}</span>`).join('')}</div>
+ <div style="text-align:center;margin-top:10px"><span style="font-size:12.5px;color:var(--fam);font-weight:700">📋 붙여넣기</span></div>
+ <div class="ok"><div class="t">✓ 확인됐어요</div><b>홍길동님의 근무표</b><small>4조2교대 C조 · 가족 2명 참여 중</small>
+  <div class="mini">${shifts.map(s=>`<span style="${s==='주'?'background:#cbd8de':s==='야'?'background:#d9cbc6':'color:#e0455c;font-weight:700'}">${s}</span>`).join('')}</div>
+  <div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center">오늘부터 7일 미리보기</div></div>
+ <div class="lbl">내 호칭 (가족에게 보이는 이름)</div><div class="inp">아빠</div>
+ <div class="btn p" style="margin-top:16px">참여하기</div>
+ <div class="note" style="text-align:center">참여하면 근무표·가족 메모를 실시간으로 같이 봐요</div>
+</div></div>`;
+const p5=`<div class="phone">${p1.replace(/^<div class="phone">|<\/div>$/g,'')}
+ <div class="push"><div class="lg">쉬</div><div style="flex:1"><div style="display:flex"><b>언제쉬어</b><span class="tm">방금</span></div><small>💜 아빠님이 가족 근무표에 참여했어요</small></div></div>
+ <div class="dim"></div>
+ <div class="menu"><div class="mh">${av('엄','#f5f6f8','#8b919a')}<div><b>엄마</b><div style="font-size:12px;color:var(--muted)">10월 2일 참여</div></div></div>
+  <div class="m">호칭 바꾸기 <small>엄마 ›</small></div><div class="m">할 수 있는 것 <small>보기만 ›</small></div>
+  <div class="m d">가족에서 내보내기</div></div></div>`;
+document.body.innerHTML=`
+<div class="wrap"><div class="cap">① 설정 › 가족 연결 (호스트)<small>가족 목록 · 권한 · 남은 자리</small></div>${p1}</div>
+<div class="wrap"><div class="cap">② 가족 초대하기<small>호칭·권한 정하고 코드 보내기</small></div>${p2}</div>
+<div class="wrap"><div class="cap">③ 가족 폰: 처음 열면<small>"초대 코드가 있어요"</small></div>${p3}</div>
+<div class="wrap"><div class="cap">④ 코드 입력 → 미리보기 → 참여<small>카톡 링크면 자동 입력</small></div>${p4}</div>
+<div class="wrap"><div class="cap">⑤ 참여 알림 · 가족 관리<small>호칭·권한 변경, 내보내기</small></div>${p5}</div>`;
+</script></body></html>
