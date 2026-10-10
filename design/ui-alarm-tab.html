@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:28px;display:flex;gap:24px;align-items:flex-start;color:#1d2330}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center}
+.cap{font-size:15px;font-weight:800;color:#3a4150}
+.sub{font-size:12px;color:#6b7280;margin-top:-6px;text-align:center;line-height:1.45}
+.ph{width:350px;height:780px;background:#fff;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330;position:relative}
+.top{display:flex;align-items:center;padding:14px 16px 6px}
+.top h1{font-size:24px;font-weight:900;flex:1}.top .pl{font-size:26px;color:#3b6fd6;font-weight:300}
+.b{flex:1;overflow:hidden;padding:2px 14px 0;display:flex;flex-direction:column;gap:9px}
+.sec{font-size:12.5px;font-weight:800;color:#6b7280;display:flex;justify-content:space-between;margin-top:2px}
+.sec a{color:#7b5cf0}
+.hero{border-radius:20px;padding:14px 16px;background:linear-gradient(135deg,#3b2f7a,#5b4bd6);color:#fff}
+.hero .l{font-size:12.5px;opacity:.85;font-weight:700}
+.hero .t{font-size:38px;font-weight:900;letter-spacing:-1px;line-height:1.1;margin-top:2px}
+.hero .t small{font-size:15px;font-weight:700;opacity:.85;margin-left:6px;letter-spacing:0}
+.hero .s{font-size:13px;opacity:.92;margin-top:3px}
+.hero .chips{display:flex;gap:6px;margin-top:10px}
+.hero .chips span{font-size:11.5px;font-weight:800;background:rgba(255,255,255,.18);border-radius:9px;padding:4px 8px}
+.warn{border-radius:14px;padding:10px 12px;background:#fff7ed;border:1.5px solid #fed7aa;font-size:13px;font-weight:700;line-height:1.45}
+.warn .bt{display:flex;gap:6px;margin-top:7px}.warn .bt span{font-size:12px;font-weight:800;padding:5px 11px;border-radius:9px;background:#fff;border:1.5px solid #d5d8de}.warn .bt .y{background:#f97316;color:#fff;border-color:#f97316}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wd{border-radius:12px;padding:6px 0 7px;text-align:center;background:#f6f7f9}
+.wd .d{font-size:10.5px;color:#6b7280;font-weight:700}.wd .n{font-size:13.5px;font-weight:800}
+.wd .k{font-size:11px;font-weight:800;width:26px;height:26px;border-radius:50%;margin:3px auto;display:grid;place-items:center}
+.wd .a{font-size:10.5px;font-weight:900;color:#3b6fd6}.wd .a.off{color:#b4bac4;font-weight:700}
+.wd.today{outline:2.5px solid #1d2330}.wd.ch{background:#fff7ed}
+.k.D{background:#c9d6dd;color:#33505e}.k.N{background:#d8c9c2;color:#5a4038}.k.R{color:#e5484d;background:#fdecee}
+.rule{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;background:#f6f7f9}
+.rule .k{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;flex:none}
+.rule .tm{font-size:22px;font-weight:900;letter-spacing:-.5px}
+.rule .tm small{font-size:12px;color:#6b7280;font-weight:700;margin-left:4px}
+.rule .ds{font-size:11.5px;color:#6b7280;font-weight:600}
+.sw{width:42px;height:24px;border-radius:12px;background:#3b6fd6;position:relative;flex:none;margin-left:auto}.sw::after{content:'';position:absolute;right:2px;top:2px;width:20px;height:20px;border-radius:50%;background:#fff}
+.sw.off{background:#d5d8de}.sw.off::after{right:auto;left:2px}
+.rule.off .tm{color:#b4bac4}
+.nav{display:flex;justify-content:space-around;padding:9px 0 13px;background:#2b2f3a;font-size:11.5px;color:#8e95a3;font-weight:800;flex:none}
+.nav span{display:flex;flex-direction:column;align-items:center;gap:3px}.nav .on{color:#fff}.nav i{font-style:normal;font-size:18px}
+/* ② 편집 */
+.hd{display:flex;align-items:center;gap:10px;padding:14px 16px 8px}
+.hd .bk{font-size:24px;color:#6b7280}.hd b{flex:1;text-align:center;font-size:17px;font-weight:900}.hd .sv{color:#3b6fd6;font-weight:900;font-size:15px}
+.big{text-align:center;font-size:56px;font-weight:900;letter-spacing:-2px;padding:6px 0 0}
+.big small{display:block;font-size:13px;color:#6b7280;font-weight:700;letter-spacing:0}
+.lb{font-size:12.5px;font-weight:800;color:#6b7280;margin-bottom:-3px}
+.tc{display:flex;gap:7px}
+.tc span{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:600;opacity:.4}
+.tc span.on{opacity:1;box-shadow:0 0 0 2.5px #fff,0 0 0 4.5px #1d2330}
+.link{border-radius:14px;padding:11px 12px;background:#f3f0ff;font-size:13px;font-weight:700;line-height:1.5}
+.link b{color:#5b3fd0}
+.rows{background:#f6f7f9;border-radius:14px;overflow:hidden}
+.r{display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid #eceef1;font-size:14px;font-weight:700}
+.r:last-child{border-bottom:0}.r small{margin-left:auto;font-size:12.5px;color:#6b7280;font-weight:700}
+.r .sw{margin-left:auto}
+</style></head><body>
+
+<!-- ① 알람 탭 -->
+<div class="col"><div class="cap">① 알람 탭 — 열자마자 "다음 알람" 확인</div><div class="sub">다음 알람 크게 · 근무 바뀌면 경고 · 이번 주 근무+알람 한 줄<br>근무타입별 알람 규칙</div>
+<div class="ph">
+  <div class="top"><h1>알람</h1><span class="pl">＋</span></div>
+  <div class="b">
+    <div class="hero">
+      <div class="l">다음 알람 · 14일(수) 주간 출근</div>
+      <div class="t">05:50<small>2일 6시간 후</small></div>
+      <div class="s">☀️ 주간 07:00 시작 · 집에서 06:20 출발</div>
+      <div class="chips"><span>🔔 기본 벨소리</span><span>📈 점점 크게</span><span>💤 5분 · 3번</span></div>
+    </div>
+    <div class="warn">⚠️ <b>17일(토)</b> 근무가 주간 → <b>휴무</b>로 바뀌었어요.<br>그날 05:50 알람이 아직 켜져 있어요.
+      <div class="bt"><span class="y">그날만 끄기</span><span>그대로 두기</span></div></div>
+    <div class="sec">이번 주 <a>달력 ›</a></div>
+    <div class="wk">
+      <div class="wd today"><div class="d">일</div><div class="n">11</div><div class="k N">야</div><div class="a">16:30</div></div>
+      <div class="wd"><div class="d">월</div><div class="n">12</div><div class="k R">휴</div><div class="a off">끔</div></div>
+      <div class="wd"><div class="d">화</div><div class="n">13</div><div class="k R">휴</div><div class="a off">끔</div></div>
+      <div class="wd"><div class="d">수</div><div class="n">14</div><div class="k D">주</div><div class="a">05:50</div></div>
+      <div class="wd"><div class="d">목</div><div class="n">15</div><div class="k D">주</div><div class="a">05:50</div></div>
+      <div class="wd"><div class="d">금</div><div class="n">16</div><div class="k R">휴</div><div class="a off">끔</div></div>
+      <div class="wd ch"><div class="d" style="color:#3b6fd6">토</div><div class="n">17</div><div class="k R">휴</div><div class="a" style="color:#f97316">05:50!</div></div>
+    </div>
+    <div class="sec">근무별 알람</div>
+    <div class="rule"><span class="k D">주</span><div><div class="tm">05:50<small>+ 06:00</small></div><div class="ds">주간 근무 날 · 2개</div></div><span class="sw"></span></div>
+    <div class="rule"><span class="k N">야</span><div><div class="tm">16:30</div><div class="ds">야간 근무 날</div></div><span class="sw"></span></div>
+    <div class="rule off"><span class="k R">휴</span><div><div class="tm">09:00</div><div class="ds">휴무 날 · 꺼짐</div></div><span class="sw off"></span></div>
+    <div class="rule"><span class="k" style="background:#eef2ff;color:#3b6fd6;font-size:16px">1</span><div><div class="tm">07:30</div><div class="ds">한 번만 · 10/20(화) 병원</div></div><span class="sw"></span></div>
+  </div>
+  <div class="nav"><span><i>📅</i>달력</span><span><i>👪</i>가족</span><span class="on"><i>⏰</i>알람</span><span><i>⚙️</i>설정</span></div>
+</div></div>
+
+<!-- ② 알람 편집 -->
+<div class="col"><div class="cap">② 근무 맞춤 알람 고치기</div><div class="sub">어느 근무 날에 울릴지 고르고 · 출근 시간 기준으로 자동 제안</div>
+<div class="ph">
+  <div class="hd"><span class="bk">‹</span><b>야간 알람</b><span class="sv">저장</span></div>
+  <div class="b" style="gap:12px">
+    <div class="big">16:30<small>야간 근무 날마다 · 다음: 18일(일)</small></div>
+    <div class="lb">울릴 근무</div>
+    <div class="tc"><span class="k D" style="background:#c9d6dd;color:#33505e">주</span><span class="on" style="background:#d8c9c2;color:#5a4038">야</span><span style="color:#e5484d;background:#fdecee">휴</span><span style="background:#b8e994;color:#0a3d62">상</span></div>
+    <div class="link">💡 근무 시간 설정상 <b>18:20에 집에서 나서요</b>.<br>준비 시간 <b>1시간 50분</b> 전 = 16:30 · <span style="color:#3b6fd6;font-weight:800">근무 시간 바꾸기 ›</span></div>
+    <div class="rows">
+      <div class="r">🔔 소리<small>기본 벨소리 ›</small></div>
+      <div class="r">🔊 크기<small>80% ›</small></div>
+      <div class="r">📈 점점 크게<span class="sw"></span></div>
+      <div class="r">💤 다시 울림<small>5분 · 3번 ›</small></div>
+      <div class="r">📳 진동<span class="sw"></span></div>
+    </div>
+    <div class="rows">
+      <div class="r">⚠️ 근무가 바뀌면 물어보기<span class="sw"></span></div>
+    </div>
+  </div>
+</div></div>
+
+</body></html>
