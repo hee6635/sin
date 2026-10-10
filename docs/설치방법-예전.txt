@@ -1,0 +1,32 @@
+[교대달력 - 안드로이드 껍데기 앱 + 실제 알람]
+
+■ 준비
+- Android Studio 에서 New Project -> "Empty Activity" (Compose) 선택
+  Name: ShiftCal / Package name: com.example.shiftcal / Minimum SDK: API 26 이상
+  (1단계 때 만든 프로젝트가 있으면 그대로 써도 됩니다)
+
+■ 넣는 순서
+1) 예전 1단계 파일이 있으면 삭제: CalendarScreen.kt, ShiftStore.kt, Holidays.kt
+   (공휴일 계산은 이제 웹 화면 안에 들어 있어서 필요 없어요)
+2) app/src/main/ 안에 assets 폴더를 만들고, 이 압축파일의 index.html 을 넣습니다.
+   (Project 창에서 app > src > main 우클릭 > New > Directory > assets)
+3) app/src/main/java/com/example/shiftcal/ 에 .kt 파일 7개를 넣습니다.
+   MainActivity.kt 는 기존 것을 덮어쓰세요.
+4) AndroidManifest-추가내용.txt 를 보고 AndroidManifest.xml 에 두 덩어리를 붙여넣습니다.
+5) 폰을 USB 로 연결(개발자 옵션 > USB 디버깅)하고 실행(▶).
+
+■ 처음 실행하면
+- "알림 허용" 창이 뜨면 허용하세요.
+- 알람 탭 맨 위에 주황/분홍 안내(정확한 알람 권한, 잠금화면 표시 권한 등)가 보이면
+  "설정 열기"를 눌러 켜주세요. 다 켜면 안내가 사라집니다.
+
+■ 알람 시험하는 법
+1) 알람 탭에서 + 를 눌러 지금부터 2~3분 뒤 시각으로 알람을 만듭니다.
+   근무에 반복 = "매일" 로 하면 오늘 근무와 상관없이 울려서 시험하기 좋아요.
+2) 저장 후 홈 버튼을 누르고, 최근 앱에서 이 앱을 위로 밀어 완전히 종료하세요.
+3) 시각이 되면 소리·진동과 함께 "끄기" 화면이 떠야 합니다. 화면을 꺼두고도 시험해보세요.
+
+■ 알람이 안 울리거나 늦으면
+- 삼성/샤오미/오포 등은 설정 > 앱 > 교대달력 > 배터리 를 "제한 없음"으로 바꿔주세요.
+- 알람 소리는 "알람 볼륨"을 따릅니다. 알람 볼륨이 0 이면 진동만 울려요.
+- 앱을 두 달 넘게 한 번도 안 열면 알람 목록이 끊깁니다. 앱을 열면 다시 채워져요.
