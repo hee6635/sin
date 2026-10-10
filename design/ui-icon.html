@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>앱 아이콘 시안</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ecf1;padding:30px 30px 40px;color:#1f2328;width:1500px}
+h1{font-size:22px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:22px}
+.card{background:#fff;border-radius:22px;padding:20px 14px 16px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.card svg{width:150px;height:150px;border-radius:34px;box-shadow:0 6px 16px rgba(0,0,0,.15)}
+.card b{display:block;margin-top:14px;font-size:16px}
+.card small{display:block;font-size:12.5px;color:#6b7280;margin-top:4px;line-height:1.45}
+.home{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.scr{border-radius:26px;padding:26px 22px;display:grid;grid-template-columns:repeat(6,1fr);gap:18px 10px}
+.scr.l{background:linear-gradient(160deg,#7fa7c9,#a9c3a0 50%,#d9b48a)}
+.scr.d{background:linear-gradient(160deg,#1b2233,#2b2440 60%,#3a2b2b)}
+.app{display:flex;flex-direction:column;align-items:center;gap:6px}
+.app svg,.app i{width:60px;height:60px;border-radius:16px;display:block;box-shadow:0 3px 8px rgba(0,0,0,.2)}
+.app i{background:rgba(255,255,255,.75)}
+.app span{font-size:11.5px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);white-space:nowrap}
+.cap{font-size:14px;font-weight:800;margin:0 0 8px 4px}
+</style></head><body>
+<h1>언제쉬어 · 앱 아이콘 시안</h1>
+<div class="grid" id="g"></div>
+<div class="home"><div><div class="cap">밝은 배경화면</div><div class="scr l" id="h1"></div></div><div><div class="cap">어두운 배경화면</div><div class="scr d" id="h2"></div></div></div>
+<script>
+const I={
+A:`<svg viewBox="0 0 108 108"><rect width="108" height="108" fill="#2f6bf0"/>
+ <rect x="22" y="28" width="64" height="58" rx="12" fill="#fff"/><rect x="22" y="28" width="64" height="16" rx="12" fill="#cfe0ff"/><rect x="22" y="38" width="64" height="6" fill="#cfe0ff"/>
+ <rect x="35" y="20" width="6" height="14" rx="3" fill="#fff"/><rect x="67" y="20" width="6" height="14" rx="3" fill="#fff"/>
+ <circle cx="54" cy="65" r="15" fill="none" stroke="#e0455c" stroke-width="3.5"/><text x="54" y="71.5" font-size="17" font-weight="900" text-anchor="middle" fill="#e0455c" font-family="Apple SD Gothic Neo,Noto Sans KR,sans-serif">휴</text></svg>`,
+B:`<svg viewBox="0 0 108 108"><rect width="108" height="108" fill="#ffffff"/>
+ <path d="M54 22a32 32 0 0 0 0 64z" fill="#ffc53d"/><path d="M54 22a32 32 0 0 1 0 64z" fill="#34437a"/>
+ <circle cx="62" cy="46" r="3" fill="#fff"/><circle cx="70" cy="58" r="2" fill="#fff"/>
+ <path d="M66 36a14 14 0 1 0 8 25 12 12 0 0 1-8-25z" fill="#fff" opacity=".0"/></svg>`,
+C:`<svg viewBox="0 0 108 108"><defs><linearGradient id="gc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b5cf0"/><stop offset="1" stop-color="#2f6bf0"/></linearGradient></defs>
+ <rect width="108" height="108" fill="url(#gc)"/><text x="50" y="74" font-size="50" font-weight="900" text-anchor="middle" fill="#fff" font-family="Apple SD Gothic Neo,Noto Sans KR,sans-serif">쉬</text>
+ <path d="M84 18a9 9 0 1 0 8 13 7.5 7.5 0 0 1-8-13z" fill="#ffd66b"/></svg>`,
+D:`<svg viewBox="0 0 108 108"><rect width="108" height="108" fill="#1f8f75"/>
+ <path d="M22 52 54 26l32 26" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+ <rect x="30" y="50" width="48" height="36" rx="8" fill="#fff"/>
+ <path d="M54 80s-12-7.5-12-15a6.5 6.5 0 0 1 12-3.5A6.5 6.5 0 0 1 66 65c0 7.5-12 15-12 15z" fill="#7b5cf0"/></svg>`,
+E:`<svg viewBox="0 0 108 108"><rect width="108" height="108" fill="#34437a"/>
+ <circle cx="54" cy="56" r="26" fill="#ffc53d"/><circle cx="66" cy="46" r="24" fill="#34437a"/>
+ <text x="78" y="36" font-size="13" font-weight="900" fill="#cfd8ff" font-family="sans-serif">z</text><text x="86" y="27" font-size="10" font-weight="900" fill="#cfd8ff" font-family="sans-serif">z</text>
+ <rect x="24" y="84" width="60" height="6" rx="3" fill="#ffffff" opacity=".25"/></svg>`,
+F:`<svg viewBox="0 0 108 108"><rect width="108" height="108" fill="#f7f7f8"/>
+ <g font-family="Apple SD Gothic Neo,Noto Sans KR,sans-serif" font-size="12" font-weight="700" text-anchor="middle">
+ <circle cx="30" cy="34" r="11" fill="#cbd8de"/><text x="30" y="38.5" fill="#1c2a31">주</text>
+ <circle cx="54" cy="34" r="11" fill="#d9cbc6"/><text x="54" y="38.5" fill="#2b1f1b">야</text>
+ <text x="78" y="38.5" fill="#e0455c">휴</text>
+ <text x="30" y="62.5" fill="#e0455c">휴</text>
+ <circle cx="54" cy="58" r="11" fill="#cbd8de"/><text x="54" y="62.5" fill="#1c2a31">주</text>
+ <circle cx="78" cy="58" r="11" fill="#d9cbc6"/><text x="78" y="62.5" fill="#2b1f1b">야</text>
+ <circle cx="30" cy="82" r="11" fill="#d9cbc6"/><text x="30" y="86.5" fill="#2b1f1b">야</text>
+ <rect x="42" y="70" width="24" height="24" rx="6" fill="none" stroke="#1f8f75" stroke-width="3"/><text x="54" y="86.5" fill="#e0455c">휴</text>
+ <text x="78" y="86.5" fill="#e0455c">휴</text></g></svg>`};
+const info={A:['A. 휴무 도장','달력에 빨간 "휴" 동그라미. 앱 이름과 바로 연결, 지금 앱 색(파랑)'],
+B:['B. 낮과 밤','반은 해(주간) 반은 밤(야간). 교대근무를 가장 단순하게, 작게 봐도 또렷'],
+C:['C. "쉬" 글자','보라→파랑 그라데이션에 큰 "쉬"와 작은 달. 이름이 바로 읽혀서 찾기 쉬움'],
+D:['D. 가족 집','지붕 + 달력 + 보라 하트. "가족이 함께 보는 근무표" 강조'],
+E:['E. 달과 쉼','초승달 + zz. 쉬는 날·야간 느낌, 어두운 배경에서 특히 예쁨'],
+F:['F. 근무표 그대로','주·야·휴 동그라미 3×3, 가운데 오늘 테두리. 앱 화면과 똑같은 인상']};
+document.getElementById('g').innerHTML=Object.keys(I).map(k=>`<div class="card">${I[k]}<b>${info[k][0]}</b><small>${info[k][1]}</small></div>`).join('');
+const others='<div class="app"><i></i><span>카카오톡</span></div><div class="app"><i></i><span>캘린더</span></div><div class="app"><i></i><span>사진</span></div>';
+const row=Object.keys(I).map(k=>`<div class="app">${I[k]}<span>언제쉬어 ${k}</span></div>`).join('')+others+others;
+document.getElementById('h1').innerHTML=row;document.getElementById('h2').innerHTML=row;
+</script></body></html>
