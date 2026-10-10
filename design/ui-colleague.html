@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>동료근무 시안</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ecf1;padding:24px;display:flex;gap:28px;justify-content:center}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.cap{font-size:18px;font-weight:800;color:#1f2328}
+.phone{--bg:#fff;--fg:#1f2328;--muted:#8b919a;--line:#eceef1;--head:#f7f7f8;--me:#fdf6dc;--today:#1f8f75;--today-bg:#e3f6f0;
+  --day:#cbd8de;--day-fg:#1c2a31;--night:#d9cbc6;--night-fg:#2b1f1b;--rest:#e0455c;--sat:#3b6fd6;--sun:#d64560;--hol:#f8d5d9;--nav:#42424f;--navfg:#a7a7b4;
+  width:390px;height:844px;background:var(--bg);color:var(--fg);border-radius:28px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);display:flex;flex-direction:column}
+.phone.dark{--bg:#111318;--fg:#e8eaee;--muted:#8a909b;--line:#262a33;--head:#15171c;--me:#2a2617;--today:#35b894;--today-bg:#173229;
+  --day:#4d6068;--day-fg:#eef3f5;--night:#65554f;--night-fg:#f6ece9;--rest:#ff6b81;--sat:#7ea2ff;--sun:#ff7a8c;--hol:#4a2129;--nav:#23252c;--navfg:#8a8d98}
+.top{display:grid;grid-template-columns:56px 1fr 56px;align-items:center;padding:10px 6px 8px;background:var(--head)}
+.gear{width:44px;height:44px;display:grid;place-items:center}.gear svg{width:24px;height:24px;fill:var(--fg)}
+.mid{text-align:center}.ym{display:flex;justify-content:center;align-items:center;gap:6px}
+.ym b{font-size:26px;font-weight:800;letter-spacing:-.3px}.ym i{font-style:normal;font-size:22px;color:var(--muted)}
+.sub{font-size:12.5px;color:var(--muted);font-weight:600}
+.tb{font-size:16px;font-weight:700;text-align:center}
+.tbl{flex:1;overflow:hidden;position:relative}
+.row{display:grid;grid-template-columns:62px repeat(4,1fr);height:44px;border-bottom:1px solid var(--line)}
+.row>div{display:flex;align-items:center;justify-content:center;border-right:1px solid var(--line)}
+.row>div:last-child{border-right:0}
+.hd{height:38px;background:var(--bg);font-size:13.5px;font-weight:600;color:var(--muted);border-bottom:1.5px solid var(--line)}
+.hd .me{color:var(--fg);font-weight:800}
+.me{background:var(--me)}
+.dt{font-size:14px;font-weight:500}
+.dt.sat{color:var(--sat)}.dt.sun{color:var(--sun)}.dt.hol{background:var(--hol);color:var(--sun)}
+.row.today{background:var(--today-bg);box-shadow:inset 0 2.5px 0 var(--today),inset 0 -2.5px 0 var(--today)}
+.row.today .me{background:transparent}
+.row.today .dt{font-weight:800}
+.b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:500}
+.b.d{background:var(--day);color:var(--day-fg)}.b.n{background:var(--night);color:var(--night-fg)}
+.b.r{color:var(--rest);font-weight:600;font-size:13.5px}
+.nav{display:flex;background:var(--nav);height:62px;flex:none}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12.5px;color:var(--navfg);gap:4px}
+.nav div.on{color:#fff;font-weight:800}
+.nav i{width:20px;height:18px;border-radius:5px;border:2px solid currentColor}
+</style></head><body>
+<script>
+const P=['주','주','휴','휴','야','야','휴','휴'];
+const anchor=Date.UTC(2026,8,28);
+const me=d=>P[((Math.round((Date.UTC(2026,9,d)-anchor)/864e5))%8+8)%8];
+const OFF=[6,4,0,2];   // A, B, C(나), D
+const HOL={3:'개천절',5:'대체',9:'한글날'};
+const DOW='일월화수목금토';
+const b=s=>`<span class="b ${s==='주'?'d':s==='야'?'n':'r'}">${s}</span>`;
+function phone(dark){
+  let rows=`<div class="row hd"><div></div>${['A조','B조','C조','D조'].map((n,i)=>`<div class="${i===2?'me':''}">${n}</div>`).join('')}</div>`;
+  for(let d=1;d<=17;d++){
+    const w=new Date(2026,9,d).getDay();
+    const cls=HOL[d]?'hol':w===0?'sun':w===6?'sat':'';
+    rows+=`<div class="row ${d===11?'today':''}"><div class="dt ${cls}">${d}.${DOW[w]}</div>${OFF.map((o,i)=>`<div class="${i===2?'me':''}">${b(me(d+o))}</div>`).join('')}</div>`;
+  }
+  return `<div class="phone ${dark?'dark':''}">
+   <div class="top"><div class="gear"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></div>
+   <div class="mid"><div class="ym"><i>‹</i><b>2026.10</b><i>›</i></div><div class="sub">4조2교대 C조</div></div><div class="tb">오늘</div></div>
+   <div class="tbl">${rows}</div>
+   <div class="nav"><div><i></i>근무일정</div><div class="on"><i></i>동료근무</div><div><i></i>알람</div><div><i></i>더 보기</div></div></div>`;
+}
+document.body.innerHTML=`<div class="wrap"><div class="cap">라이트</div>${phone(false)}</div><div class="wrap"><div class="cap">다크 모드</div>${phone(true)}</div>`;
+</script></body></html>
