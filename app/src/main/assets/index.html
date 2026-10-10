@@ -125,8 +125,8 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .bwrap{flex:1;width:100%;position:relative;display:flex;align-items:center;justify-content:center; min-height:34px;}
 .band{position:absolute;top:50%;transform:translateY(-50%);height:var(--b);--b:min(86cqw,64px);left:50%;right:50%}
 .band{background:color-mix(in srgb,var(--tb) 32%,var(--bg))}
-.band.pl{left:0}
-.band.nl{right:0}
+.band.jl{left:0}
+.band.jr{right:0}
 
 .badge{position:relative;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;flex:none}
 .bwrap .badge{--b:min(86cqw,64px);width:var(--b);height:var(--b);font-size:calc(var(--b)*.32);font-weight:500;z-index:1}
@@ -1085,7 +1085,7 @@ function calPanel(y,m){
     const cls=hol||dow===0?'sun':dow===6?'sat':'';
     const ps=shiftOf(addDays(d,-1)),ns=shiftOf(addDays(d,1));
     const tc=tColors(typeOf(sh));
-    const band=tc&&!isRest(sh)&&(ps===sh||ns===sh)?`<i class="band ${ps===sh?'pl':''} ${ns===sh?'nl':''}" style="--tb:${tc.bg}"></i>`:'';
+    const band=tc&&!isRest(sh)&&(ps===sh||ns===sh)?`<i class="band ${ps===sh?'jl':''} ${ns===sh?'jr':''}" style="--tb:${tc.bg}"></i>`:'';
 
     const vm=visibleMemos(k),fam=vm.filter(x=>x.shared),mine=vm.filter(x=>!x.shared);
     const rq=S.requests.find(r=>r.date===k&&(r.st==='pending'||r.st==='accepted'||r.st==='rejected'));
@@ -2254,7 +2254,7 @@ document.addEventListener('click',e=>{
     /* 날짜 메모 */
     case 'memo-tab':memoTab=t.dataset.v;openDay(sheetKey);break;
     case 'memo-mode':{const i=$('#memoInput');if(i)memoText=i.value;memoMode=t.dataset.v;openDay(sheetKey);const j=$('#memoInput');if(j)j.focus();break;}
-    case 'memo-send':memoSubmit();break;
+    case 'memo-send':afterCompose('#memoInput',memoSubmit);break;
     case 'memo-cancel':memoEdit=null;memoText='';openDay(sheetKey);break;
     case 'memo-tap':{
       if(e.target.closest('.conv'))break;
@@ -2339,7 +2339,7 @@ document.addEventListener('click',e=>{
     /* 월 메모 */
     case 'board-kind':{const i=$('#boardInput');if(i)boardDraft.text=i.value;boardDraft.kind=t.dataset.v;openBoard();break;}
     case 'board-share':{const i=$('#boardInput');if(i)boardDraft.text=i.value;boardDraft.shared=t.dataset.v==='1';openBoard();break;}
-    case 'board-add':boardSubmit();break;
+    case 'board-add':afterCompose('#boardInput',boardSubmit);break;
     case 'board-cancel':boardEdit=null;boardDraft.text='';openBoard();break;
     case 'board-edit':{
       if(e.target.closest('.xbtn'))break;
@@ -2471,6 +2471,11 @@ document.addEventListener('click',e=>{
     case 'ob-done':obClose();break;
   }
 });
+/* 한글 입력 중(조합 중)인 글자가 있으면 조합을 끝낸 뒤에 보내기 */
+function afterCompose(sel,fn){
+  const el=$(sel);
+  if(el&&document.activeElement===el){el.blur();setTimeout(fn,60);}else fn();
+}
 function applyRequest(r){
   const d=parse(r.date),prev=shiftOf(d);
   r.prev=prev;
