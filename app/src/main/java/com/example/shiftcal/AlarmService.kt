@@ -23,9 +23,12 @@ class AlarmService : Service() {
     companion object {
         const val ACTION_START = "com.example.shiftcal.ALARM_START"
         const val ACTION_STOP = "com.example.shiftcal.ALARM_STOP"
+        const val ACTION_SNOOZE = "com.example.shiftcal.ALARM_SNOOZE"
         const val ACTION_STOPPED = "com.example.shiftcal.ALARM_STOPPED"
         const val EXTRA_TITLE = "title"
         const val EXTRA_TIME = "time"
+        const val EXTRA_SOUND = "sound"
+        const val EXTRA_VIB = "vib"
         private const val CHANNEL_ID = "shiftcal_alarm"
         private const val NOTIF_ID = 1001
         private const val AUTO_STOP_MS = 3 * 60 * 1000L
@@ -36,6 +39,11 @@ class AlarmService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private val autoStop = Runnable { stopAlarm() }
 
+    // 지금 울리는 알람 정보 (다시 울림 예약에 사용)
+    private var curTitle = "알람"
+    private var curSound = true
+    private var curVib = true
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -43,11 +51,19 @@ class AlarmService : Service() {
             stopAlarm()
             return START_NOT_STICKY
         }
+        if (intent?.action == ACTION_SNOOZE) {
+            AlarmScheduler.snooze(this, curTitle, curSound, curVib)
+            stopAlarm()
+            return START_NOT_STICKY
+        }
         val title = intent?.getStringExtra(EXTRA_TITLE) ?: "알람"
         val time = intent?.getStringExtra(EXTRA_TIME) ?: ""
+        curTitle = title
+        curSound = intent?.getBooleanExtra(EXTRA_SOUND, true) ?: true
+        curVib = intent?.getBooleanExtra(EXTRA_VIB, true) ?: true
 
         showNotification(title, time)
-        startSoundAndVibration()
+        startSoundAndVibration(curSound, curVib)
 
         handler.removeCallbacks(autoStop)
         handler.postDelayed(autoStop, AUTO_STOP_MS)
@@ -75,6 +91,10 @@ class AlarmService : Service() {
         stopIntent.action = ACTION_STOP
         val stopPi = PendingIntent.getService(this, 1, stopIntent, PendingIntent.FLAG_IMMUTABLE)
 
+        val snoozeIntent = Intent(this, AlarmService::class.java)
+        snoozeIntent.action = ACTION_SNOOZE
+        val snoozePi = PendingIntent.getService(this, 2, snoozeIntent, PendingIntent.FLAG_IMMUTABLE)
+
         @Suppress("DEPRECATION")
         val notification = Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
@@ -84,6 +104,7 @@ class AlarmService : Service() {
             .setOngoing(true)
             .setContentIntent(ringPi)
             .setFullScreenIntent(ringPi, true)
+            .addAction(android.R.drawable.ic_popup_reminder, "${AlarmScheduler.SNOOZE_MIN}분 뒤 다시", snoozePi)
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "끄기", stopPi)
             .build()
 
@@ -94,9 +115,9 @@ class AlarmService : Service() {
         }
     }
 
-    private fun startSoundAndVibration() {
+    private fun startSoundAndVibration(sound: Boolean, vib: Boolean) {
         stopSound()
-        try {
+        if (sound) try {
             val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
             val mp = MediaPlayer()
@@ -114,7 +135,7 @@ class AlarmService : Service() {
         } catch (e: Exception) {
             // 소리를 못 내도 진동과 화면은 계속
         }
-        try {
+        if (vib) try {
             @Suppress("DEPRECATION")
             val v = getSystemService(Vibrator::class.java)
             v?.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 800, 600), 0))

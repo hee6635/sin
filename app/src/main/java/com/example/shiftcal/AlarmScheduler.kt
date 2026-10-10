@@ -9,8 +9,15 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Calendar
 
-/** 울려야 할 알람 한 건 */
-class Ring(val id: String, val at: Long, val label: String, val shift: String)
+/** 울려야 할 알람 한 건 (sound/vib: 소리·진동 켜짐 여부) */
+class Ring(
+    val id: String,
+    val at: Long,
+    val label: String,
+    val shift: String,
+    val sound: Boolean = true,
+    val vib: Boolean = true
+)
 
 /**
  * 웹이 보내준 알람 목록을 폰에 저장해 두고, 항상 "가장 가까운 알람 1개"만 AlarmManager 에 예약한다.
@@ -22,6 +29,8 @@ object AlarmScheduler {
     const val EXTRA_AT = "at"
     private const val PREFS = "alarm_list"
     private const val KEY = "json"
+    private const val KEY_SNOOZE = "snooze"      // "다시 울림"으로 만든 알람 (웹 목록과 따로 보관)
+    const val SNOOZE_MIN = 5
     private const val REQ_NEXT = 4242
 
     private fun manager(ctx: Context): AlarmManager =
@@ -36,23 +45,35 @@ object AlarmScheduler {
         scheduleNext(ctx)
     }
 
-    private fun readList(ctx: Context): MutableList<Ring> {
+    private fun readKey(ctx: Context, key: String): MutableList<Ring> {
         val out = ArrayList<Ring>()
-        val s = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null) ?: return out
+        val s = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(key, null) ?: return out
         try {
             val arr = JSONArray(s)
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
-                out.add(Ring(o.getString("id"), o.getLong("at"), o.optString("label", ""), o.optString("shift", "")))
+                out.add(
+                    Ring(
+                        o.getString("id"), o.getLong("at"), o.optString("label", ""), o.optString("shift", ""),
+                        o.optBoolean("sound", true), o.optBoolean("vib", true)
+                    )
+                )
             }
         } catch (e: Exception) {
             // 깨진 데이터는 무시
         }
+        return out
+    }
+
+    /** 웹 목록 + 다시 울림 목록을 시간 순으로 */
+    private fun readList(ctx: Context): MutableList<Ring> {
+        val out = readKey(ctx, KEY)
+        out.addAll(readKey(ctx, KEY_SNOOZE))
         out.sortBy { it.at }
         return out
     }
 
-    private fun writeList(ctx: Context, list: List<Ring>) {
+    private fun writeKey(ctx: Context, key: String, list: List<Ring>) {
         val arr = JSONArray()
         for (r in list) {
             arr.put(
@@ -61,9 +82,20 @@ object AlarmScheduler {
                     .put("at", r.at)
                     .put("label", r.label)
                     .put("shift", r.shift)
+                    .put("sound", r.sound)
+                    .put("vib", r.vib)
             )
         }
-        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY, arr.toString()).apply()
+        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(key, arr.toString()).apply()
+    }
+
+    /** 지금 울린 알람을 [SNOOZE_MIN]분 뒤에 한 번 더 울리게 예약 */
+    fun snooze(ctx: Context, title: String, sound: Boolean, vib: Boolean) {
+        val at = System.currentTimeMillis() + SNOOZE_MIN * 60_000L
+        val list = readKey(ctx, KEY_SNOOZE).filter { it.at > System.currentTimeMillis() }.toMutableList()
+        list.add(Ring("snooze_$at", at, title, "", sound, vib))
+        writeKey(ctx, KEY_SNOOZE, list)
+        scheduleNext(ctx)
     }
 
     private fun pending(ctx: Context, at: Long): PendingIntent {
@@ -98,10 +130,12 @@ object AlarmScheduler {
      * 그보다 지난 알람은 목록에서 정리한 뒤 다음 알람을 예약한다.
      */
     fun consumeDue(ctx: Context, at: Long): List<Ring> {
-        val list = readList(ctx)
-        val due = list.filter { it.at >= at - 60_000 && it.at <= at + 60_000 }
-        val rest = list.filter { it.at > at + 60_000 }
-        writeList(ctx, rest)
+        val isDue = { r: Ring -> r.at >= at - 60_000 && r.at <= at + 60_000 }
+        val main = readKey(ctx, KEY)
+        val snoozed = readKey(ctx, KEY_SNOOZE)
+        val due = (main + snoozed).filter(isDue).sortedBy { it.at }
+        writeKey(ctx, KEY, main.filter { it.at > at + 60_000 })
+        writeKey(ctx, KEY_SNOOZE, snoozed.filter { it.at > at + 60_000 })
         scheduleNext(ctx)
         return due
     }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 교대달력 v2: 이번 달 메모 · 메모 가족 공유 · 근무 요청 수락(변경/유지) · 하루 5건 한도·광고·구독 -->
+<!-- 교대달력 v3: v2 + 동료근무(내 패턴 기준·내 조 선택) · 대근 수당 계산 · 알람 소리/진동 선택 · 화면 이미지 공유 · 백업/복원 -->
 <html lang="ko">
 <head>
 <meta charset="utf-8">
@@ -80,6 +80,8 @@ button{border:0;background:none;padding:0;cursor:pointer}
 
 #share-action-bar { display: none; padding: 16px; background: var(--bg); border-top: 1px solid var(--line); position: absolute; bottom: 0; left: 0; right: 0; z-index: 50; flex-direction: row; gap: 8px; animation: slideUp 0.3s ease; }
 .share-mode #share-action-bar { display: flex; }
+.capturing #share-action-bar { display: none !important; }
+.capturing #toast { display: none !important; }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
 .notice-banner{display:flex; align-items:center; justify-content:space-between; background:color-mix(in srgb, var(--family-pink) 14%, var(--bg)); color:var(--family-pink); padding:9px 14px; margin:0 12px 6px; border-radius:10px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid color-mix(in srgb, var(--family-pink) 30%, transparent);}
@@ -133,7 +135,8 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .req-pill.rejected{background:var(--st-rejected)}
 
 /* FAB */
-.fab-wrapper {position:absolute; bottom:20px; right:20px; z-index:9; display:flex; flex-direction:column; align-items:flex-end; gap:12px;}
+.fab-wrapper {position:absolute; bottom:20px; right:20px; z-index:9; display:flex; flex-direction:column; align-items:flex-end; gap:12px; pointer-events:none;}
+.fab-main {pointer-events:auto;}
 .fab-menu {display:flex; flex-direction:column; gap:10px; align-items:flex-end; opacity:0; pointer-events:none; transform:translateY(20px); transition:all 0.2s ease;}
 .fab-wrapper.open .fab-menu {opacity:1; pointer-events:auto; transform:translateY(0);}
 .fab-item {display:flex; align-items:center; gap:8px; cursor:pointer;}
@@ -154,6 +157,8 @@ button{border:0;background:none;padding:0;cursor:pointer}
 /* 동료근무 */
 .col-header {display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); text-align:center; padding:12px 0; border-bottom:1px solid var(--line); font-size:12px; font-weight:600; color:var(--muted); position:sticky; top:0; background:var(--bg); z-index:5;}
 .col-row {display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); text-align:center; padding:8px 0; border-bottom:1px solid var(--line); align-items:center;}
+.col-header .me {color:var(--accent); background:color-mix(in srgb,var(--accent) 10%,var(--bg));}
+.col-cell.me {background:color-mix(in srgb,var(--accent) 6%,transparent);}
 .col-row.today {background:color-mix(in srgb,var(--accent) 8%,transparent);}
 .col-date {font-size:12px; display:flex; flex-direction:column;}
 .col-date .s {color:var(--sun);} .col-date .t {color:var(--sat);}
@@ -434,11 +439,22 @@ const defaults=()=>({
   familyMemos:{'2026-09-24':'장모님 생신! 연차 쓰지 마 무조건 빼!','2026-09-20':'애들 데리고 에버랜드 가기로 함'},
   requests:[{id:uid(),date:'2026-09-24',want:'휴',msg:'장모님 생신이라 24일에 쉴 수 있을까?',st:'pending',reply:'',prev:null,t:Date.now()-1800000,tu:Date.now()-1800000}],
   events:[{id:uid(),to:'host',kind:'req',k:'2026-09-24',text:'📩 9/24 휴무 요청이 도착했어요',seen:false,t:Date.now()-1800000}],
-  syncSettings:{isGuestMode:false,shareMyShift:true,receiveFamilyMemo:true,shareMyMemos:true,isPro:false},
+  syncSettings:{isGuestMode:false,shareMyShift:true,receiveFamilyMemo:true,shareMyMemos:true,isPro:false,nightNotice:true},
+  pay:{wage:0,hours:12},   // 대근 시급, 대근 1번 근무시간
+  myTeam:2,                // 동료근무 표에서 내 조 (0=A ~ 3=D)
   board:{'2026-09':[{id:uid(),text:'우유 사기',done:false},{id:uid(),text:'세제 보충',done:false},{id:uid(),text:'주말 여행용품 준비',done:true}]}
 });
+function normalize(o){
+  const d=defaults(),s=Object.assign(d,o);
+  s.syncSettings=Object.assign(defaults().syncSettings,o&&o.syncSettings);
+  s.pay=Object.assign({wage:0,hours:12},o&&o.pay);
+  if(!Array.isArray(s.pattern)||s.pattern.length<2)s.pattern=d.pattern;
+  if(!Array.isArray(s.alarms))s.alarms=[];
+  if(![0,1,2,3].includes(s.myTeam))s.myTeam=2;
+  return s;
+}
 function load(){
-  try{const j=localStorage.getItem(KEY);if(j)return Object.assign(defaults(),JSON.parse(j));}catch(e){}
+  try{const j=localStorage.getItem(KEY);if(j)return normalize(JSON.parse(j));}catch(e){}
   return defaults();
 }
 let S=load();
@@ -461,7 +477,7 @@ function nativeIssues(){
 function pushAlarmsToNative(){
   try{
     if(window.AndroidBridge&&typeof window.AndroidBridge.setAlarms==='function'){
-      const list=buildSchedule(60).map(x=>({id:`${x.a.id}_${fmt(x.d)}`,at:x.at.getTime(),label:x.a.label||'',shift:x.sh,time:x.a.time}));
+      const list=buildSchedule(60).map(x=>({id:`${x.a.id}_${fmt(x.d)}`,at:x.at.getTime(),label:x.a.label||'',shift:x.sh,time:x.a.time,sound:x.a.sound!==false,vib:x.a.vib!==false}));
       window.AndroidBridge.setAlarms(JSON.stringify(list));
     }
   }catch(e){}
@@ -505,6 +521,7 @@ let draft=null;         // 알람 편집 중
 let reqDraft={want:'휴',msg:''};   // 게스트가 쓰는 요청
 let pendingSend=null;    // 무료 횟수를 다 써서 광고를 보고 있는 동안 잠시 보관하는 요청/메모
 let replyDraft=null;    // 호스트가 쓰는 답장
+let memoSnap=null;      // 날짜 시트를 열 때의 메모 (저장 시 '새로 공유됐는지' 비교용)
 let tempPickerYear=cur.y;
 
 const role=()=>S.syncSettings.isGuestMode?'guest':'host';
@@ -702,31 +719,30 @@ function slideTo(dir){
 }
 
 /* ================= 동료근무 ================= */
+const TEAMS=['A조','B조','C조','D조'];
+/* 4조 교대: 내 패턴을 (패턴 길이 ÷ 4)일씩 밀어서 다른 조 근무를 만든다 */
+function teamShift(d,g){
+  if(g===S.myTeam)return shiftOf(d);
+  const step=Math.max(1,Math.round(S.pattern.length/4));
+  return baseShift(addDays(d,(g-S.myTeam)*step));
+}
 function renderColleague(){
   const y=cur.y,m=cur.m;
   const daysInMonth=new Date(y,m+1,0).getDate();
   const tk=fmt(new Date());
   let html=`<div class="col-header">
-    <div>날짜</div><div>A조</div><div>B조</div><div style="background:var(--surface);">C조</div><div>D조</div>
+    <div>날짜</div>${TEAMS.map((n,g)=>`<div class="${g===S.myTeam?'me':''}">${n}${g===S.myTeam?' (나)':''}</div>`).join('')}
   </div>`;
-  const shiftVal=(d,offset)=>{
-    const p=['주','주','휴','휴','야','야','휴','휴'];
-    return p[((dayNum(d)+offset)%8+8)%8];
-  };
+  const b=s=>`<div class="badge sm ${SHIFT[s]?SHIFT[s].cls:'r'}">${s}</div>`;
   for(let i=1;i<=daysInMonth;i++){
-    const d=new Date(y,m,i);
-    const cls=d.getDay()===0?'s':d.getDay()===6?'t':'';
-    const isToday=fmt(d)===tk?'today':'';
-    const b=s=>`<div class="badge sm ${SHIFT[s]?SHIFT[s].cls:'r'}">${s}</div>`;
-    html+=`<div class="col-row ${isToday}">
+    const d=new Date(y,m,i),k=fmt(d);
+    const cls=holName(k)||d.getDay()===0?'s':d.getDay()===6?'t':'';
+    html+=`<div class="col-row ${k===tk?'today':''}">
       <div class="col-date"><span class="${cls}">${i}</span><span style="font-size:10px;color:var(--muted);">${DOW[d.getDay()]}</span></div>
-      <div class="col-cell">${b(shiftVal(d,0))}</div>
-      <div class="col-cell">${b(shiftVal(d,2))}</div>
-      <div class="col-cell" style="background:color-mix(in srgb,var(--surface) 50%,transparent);">${b(shiftVal(d,4))}</div>
-      <div class="col-cell">${b(shiftVal(d,6))}</div>
+      ${TEAMS.map((n,g)=>`<div class="col-cell ${g===S.myTeam?'me':''}">${b(teamShift(d,g))}</div>`).join('')}
     </div>`;
   }
-  return `<div style="padding-bottom:30px;">${html}</div>`;
+  return `<div style="padding-bottom:30px;">${html}<div class="hint" style="padding:0 16px">다른 조 근무는 내 근무 패턴을 ${Math.max(1,Math.round(S.pattern.length/4))}일씩 밀어서 계산해요. 내 조는 설정에서 바꿀 수 있어요.</div></div>`;
 }
 
 /* ================= 알람 ================= */
@@ -754,11 +770,12 @@ function renderAlarm(){
     const t=ampm(a.time),sh=a.shift==='*'?'매일':a.shift;
     const isPrev=a.offset<0;
     const iColor=a.on?'var(--icon-on)':'var(--icon-off)';
+    const vibOn=a.on&&a.vib!==false,sndOn=a.on&&a.sound!==false;
 
-    const vibSvg=a.on
+    const vibSvg=vibOn
       ?`<svg viewBox="0 0 24 24" fill="none" stroke="${iColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><path d="M1 12h2M21 12h2M3 8h1M20 8h1M3 16h1M20 16h1"></path></svg>`
       :`<svg viewBox="0 0 24 24" fill="none" stroke="${iColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="2" y1="2" x2="22" y2="22"></line></svg>`;
-    const sndSvg=a.on
+    const sndSvg=sndOn
       ?`<svg viewBox="0 0 24 24" fill="none" stroke="${iColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`
       :`<svg viewBox="0 0 24 24" fill="none" stroke="${iColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="1" x2="1" y2="23"></line></svg>`;
 
@@ -774,7 +791,7 @@ function renderAlarm(){
           ${isPrev?`<span style="font-size:13px; font-weight:600; color:${iColor}; margin-right:4px;">전날</span>`:''}
           ${vibSvg}
           ${sndSvg}
-          <div class="vol-bar" style="background:${a.on?'var(--icon-on)':'var(--icon-off)'};"></div>
+          <div class="vol-bar" style="background:${sndOn?'var(--icon-on)':'var(--icon-off)'};"></div>
         </div>
         ${a.label?`<div class="am">${esc(a.label)}</div>`:''}
       </div>
@@ -823,9 +840,19 @@ function renderSet(){
               <b>야간근무 전날 알림 받기</b>
               <span>야간 출근 전날 미리 푸시 알림을 받습니다</span>
             </div>
-            <label class="sw"><input type="checkbox" checked><i></i></label>
+            <label class="sw"><input type="checkbox" id="nightNotice" ${sync.nightNotice!==false?'checked':''}><i></i></label>
           </div>
         </div>
+        <h3>데이터 백업</h3>
+        <div class="card">
+          <div class="hint" style="margin-top:0">근무 패턴·변경·메모·알람을 파일로 저장해 두었다가 새 폰에서 불러올 수 있어요.</div>
+          <div class="row">
+            <button class="btn ghost sm grow" data-act="backup-export">백업 파일 만들기</button>
+            <button class="btn ghost sm grow" data-act="backup-import">백업 불러오기</button>
+          </div>
+          <input type="file" id="backupFile" accept=".json,application/json,text/plain" style="display:none">
+        </div>
+        <div class="hint" style="text-align:center;margin-top:18px">교대달력 v3</div>
       </div>`;
   }
   return `
@@ -880,16 +907,32 @@ function renderSet(){
 
         <h3>급여/수당 통계 설정</h3>
         <div class="card">
-          <div class="setting-item" style="border-bottom:none; padding:4px 0;">
+          <div class="setting-item" style="padding:4px 0 12px;">
             <div class="setting-label">
-              <b>초과근무(대근) 시급 설정</b>
-              <span>통계 탭에서 예상 추가 수당을 계산해 줍니다</span>
+              <b>초과근무(대근) 시급</b>
+              <span>통계에서 예상 추가 수당을 계산해 줍니다</span>
             </div>
             <div style="display:flex; align-items:center;">
-              <input type="number" placeholder="15000" style="width:90px; text-align:right; padding:6px 10px; font-size:14px; background:var(--bg); border:1px solid var(--line);">
+              <input type="number" id="payWage" inputmode="numeric" min="0" step="10" value="${S.pay.wage||''}" placeholder="15000" style="width:96px; text-align:right; padding:6px 10px; font-size:14px; background:var(--bg); border:1px solid var(--line);">
               <span style="font-size:13px; color:var(--muted); margin-left:6px;">원</span>
             </div>
           </div>
+          <div class="setting-item" style="border-bottom:none; padding:12px 0 4px;">
+            <div class="setting-label">
+              <b>대근 1번 근무시간</b>
+              <span>주간·야간 한 번 출근할 때 일하는 시간</span>
+            </div>
+            <div style="display:flex; align-items:center;">
+              <input type="number" id="payHours" inputmode="decimal" min="1" max="24" step="0.5" value="${S.pay.hours}" style="width:96px; text-align:right; padding:6px 10px; font-size:14px; background:var(--bg); border:1px solid var(--line);">
+              <span style="font-size:13px; color:var(--muted); margin-left:6px;">시간</span>
+            </div>
+          </div>
+        </div>
+
+        <h3>동료근무 표</h3>
+        <div class="card">
+          <div class="lbl" style="margin-top:0;">내 조</div>
+          <div class="seg">${TEAMS.map((n,g)=>`<button class="${S.myTeam===g?'on':''}" data-act="setteam" data-g="${g}">${n}</button>`).join('')}</div>
         </div>
 
         <h3>근무 패턴 설정</h3>
@@ -902,12 +945,22 @@ function renderSet(){
             <button class="btn ghost danger sm" data-act="clearov" style="width:100%;">수동 변경된 근무 ${ovN}일 초기화</button>
           </div>
         </div>
+        <h3>데이터 백업</h3>
+        <div class="card">
+          <div class="hint" style="margin-top:0">근무 패턴·변경·메모·알람을 파일로 저장해 두었다가 새 폰에서 불러올 수 있어요.</div>
+          <div class="row">
+            <button class="btn ghost sm grow" data-act="backup-export">백업 파일 만들기</button>
+            <button class="btn ghost sm grow" data-act="backup-import">백업 불러오기</button>
+          </div>
+          <input type="file" id="backupFile" accept=".json,application/json,text/plain" style="display:none">
+        </div>
+        <div class="hint" style="text-align:center;margin-top:18px">교대달력 v3</div>
       </div>`;
 }
 
 /* ================= 시트 ================= */
 function openSheet(html){$('#sheet').innerHTML=html;$('#sheet').classList.add('open');$('#scrim').classList.add('open');}
-function closeSheet(){$('#sheet').classList.remove('open');$('#scrim').classList.remove('open');sheetKey=null;sheetMode=null;draft=null;replyDraft=null;}
+function closeSheet(){$('#sheet').classList.remove('open');$('#scrim').classList.remove('open');sheetKey=null;sheetMode=null;draft=null;replyDraft=null;memoSnap=null;}
 function reopen(){
   if(sheetMode==='requests')openRequests();
   else if(sheetMode==='day'&&sheetKey)openDay(sheetKey);
@@ -979,6 +1032,17 @@ function openStats(){
       }
     }
   }
+  const won=n=>Math.round(n).toLocaleString('ko-KR')+'원';
+  const per=(S.pay.wage||0)*(S.pay.hours||0);
+  const payHtml=per>0?`
+    <div class="lbl" style="font-weight:700; color:var(--fg); margin-top:20px;">예상 대근 수당</div>
+    <div class="stat-box">
+      <div class="stat-item"><div class="num" style="font-size:20px;color:var(--stat-dae);">${won(mDae*per)}</div><p class="lbl">이번 달</p></div>
+      <div class="stat-divider"></div>
+      <div class="stat-item"><div class="num" style="font-size:20px;color:var(--stat-dae);">${won(cDae*per)}</div><p class="lbl">올해 누적</p></div>
+    </div>
+    <div class="hint">대근 1번 = ${S.pay.hours}시간 × ${won(S.pay.wage)} 기준이에요. (세금·가산율 제외)</div>`
+    :`<div class="hint" style="margin-top:16px">설정에서 대근 시급을 넣으면 예상 수당도 계산해 드려요.</div>`;
   openSheet(`
     <div class="sh-head">
       <b style="font-size:18px;">📊 근무 통계 대시보드</b>
@@ -1003,6 +1067,7 @@ function openStats(){
       <div class="stat-divider"></div>
       <div class="stat-item"><div class="num" style="color:var(--stat-edu);">${cEdu}</div><p class="lbl">교육</p></div>
     </div>
+    ${payHtml}
     <button class="btn ghost" style="width:100%; margin-top:10px;" data-act="close">닫기</button>
   `);
 }
@@ -1219,6 +1284,7 @@ function openReply(id,st,mode){
 
 /* ---------- 날짜 시트 ---------- */
 function openDay(k){
+  if(sheetKey!==k||!memoSnap||memoSnap.k!==k)memoSnap=Object.assign({k},memoOf(k));
   sheetKey=k;sheetMode='day';
   const d=parse(k),base=baseShift(d),c=shiftOf(d),hol=holName(k),ov=S.overrides[k];
   const fMemo=S.familyMemos[k]||'';
@@ -1313,6 +1379,10 @@ function openAlarm(){
       <div class="seg" style="padding:0 8px; margin-bottom:12px;">
         ${chips([[0,'당일'],[-1,'전날']],a.offset,'doff')}
       </div>
+      <div class="lbl" style="padding:0 8px;">울리는 방식</div>
+      <div class="seg" style="padding:0 8px; margin-bottom:12px;">
+        ${chips([['both','소리+진동'],['sound','소리만'],['vib','진동만']],(a.sound!==false&&a.vib!==false)?'both':a.sound!==false?'sound':'vib','dmode')}
+      </div>
       <div class="lbl" style="padding:0 8px;">라벨</div>
       <div style="padding:0 8px; margin-bottom:8px;"><input type="text" id="al" value="${esc(a.label)}" placeholder="예: 도시락"></div>
       <div class="hint" style="padding:0 8px;">근무가 바뀌면(예: 요청이 적용돼 휴무가 되면) 그 날 알람은 자동으로 빠져요.</div>
@@ -1366,7 +1436,7 @@ document.addEventListener('click',e=>{
       const memoEl=$('#dm'),shareEl=$('#dmShare');
       if(memoEl&&sheetKey){
         const val=memoEl.value.trim(),shared=!!(shareEl&&shareEl.checked);
-        const before=memoOf(sheetKey);
+        const before=(memoSnap&&memoSnap.k===sheetKey)?memoSnap:memoOf(sheetKey);
         setMemo(sheetKey,val,shared);
         if(val&&shared&&!(before.shared&&before.text===val)){
           pushEvent('guest','memo',sheetKey,`📌 ${md(sheetKey)}에 공유 메모가 올라왔어요: "${val.split('\n')[0].slice(0,24)}"`);
@@ -1475,18 +1545,16 @@ document.addEventListener('click',e=>{
 
     case 'quick-share':{$('#app').classList.add('share-mode');closeSheet();break;}
     case 'cancel-share':{$('#app').classList.remove('share-mode');break;}
-    case 'do-share':{
-      toast('깔끔한 달력 이미지가 카카오톡으로 전송됩니다!');
-      setTimeout(()=>$('#app').classList.remove('share-mode'),1500);
-      break;}
+    case 'do-share':shareScreen();break;
 
     /* 알람 */
-    case 'aadd':draft={isNew:true,id:uid(),label:'',time:'06:00',shift:'주',offset:0,on:true};openAlarm();break;
+    case 'aadd':draft={isNew:true,id:uid(),label:'',time:'06:00',shift:'주',offset:0,on:true,sound:true,vib:true};openAlarm();break;
     case 'aedit':{const f=S.alarms.find(x=>x.id===t.dataset.id);if(f){draft=Object.assign({isNew:false},f);openAlarm();}break;}
     case 'dshift':draft.shift=t.dataset.v;openAlarm();break;
     case 'doff':draft.offset=Number(t.dataset.v);openAlarm();break;
+    case 'dmode':{const v=t.dataset.v;draft.sound=v!=='vib';draft.vib=v!=='sound';openAlarm();break;}
     case 'asave':{
-      const item={id:draft.id,label:draft.label.trim(),time:draft.time||'06:00',shift:draft.shift,offset:draft.offset,on:draft.on};
+      const item={id:draft.id,label:draft.label.trim(),time:draft.time||'06:00',shift:draft.shift,offset:draft.offset,on:draft.on,sound:draft.sound!==false,vib:draft.vib!==false};
       const i=S.alarms.findIndex(x=>x.id===item.id);
       if(i>=0)S.alarms[i]=item;else if(S.alarms.length<99)S.alarms.push(item);
       save();closeSheet();render();break;}
@@ -1498,6 +1566,9 @@ document.addEventListener('click',e=>{
     case 'padd':if(S.pattern.length<21){S.pattern.push('휴');save();render();}break;
     case 'pdel':if(S.pattern.length>2){S.pattern.pop();save();render();}break;
     case 'clearov':S.overrides={};save();render();toast('수동 변경을 초기화했어요');break;
+    case 'setteam':S.myTeam=Number(t.dataset.g);save();render();break;
+    case 'backup-export':exportBackup();break;
+    case 'backup-import':{const f=$('#backupFile');if(f){f.value='';f.click();}break;}
     case 'nativefix':{try{window.AndroidBridge.openSettings(t.dataset.k);}catch(e){}break;}
     case 'copy-code':{
       const code=$('#myCode').textContent;
@@ -1518,6 +1589,14 @@ document.addEventListener('change',e=>{
     S.syncSettings.receiveFamilyMemo=t.checked;save();render();toast(t.checked?'상대방의 메모를 달력에 표시합니다':'상대방의 메모를 달력에서 숨깁니다');
   }else if(t.id==='shareMyMemos'){
     S.syncSettings.shareMyMemos=t.checked;save();toast(t.checked?'내가 쓴 메모도 상대방에게 공유됩니다':'이제 상대방은 내 개인 메모를 볼 수 없습니다');
+  }else if(t.id==='nightNotice'){
+    S.syncSettings.nightNotice=t.checked;save();toast(t.checked?'야간근무 전날 알림을 받아요':'야간근무 전날 알림을 끕니다');
+  }else if(t.id==='payWage'){
+    S.pay.wage=Math.max(0,Math.round(Number(t.value)||0));save();toast('대근 시급을 저장했어요');
+  }else if(t.id==='payHours'){
+    const h=Number(t.value);S.pay.hours=(h>0&&h<=24)?h:12;t.value=S.pay.hours;save();toast('근무시간을 저장했어요');
+  }else if(t.id==='backupFile'&&t.files&&t.files[0]){
+    importBackup(t.files[0]);
   }else if(t.id==='guestModeToggle'){
     if(!t.checked){
       const ok=confirm("⚠️ 게스트 모드를 해제하시겠습니까?\n\n(실제 서비스에서는 해제 시 연결이 끊기고, 다시 연결하려면 새 초대 코드가 필요합니다)");
@@ -1534,7 +1613,7 @@ document.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='dm'&&sheetKey){
     const val=t.value.trim();
-    if(val)S.memos[sheetKey]=val;else delete S.memos[sheetKey];
+    setMemo(sheetKey,val,memoOf(sheetKey).shared);
     save();
   }else if(t.id==='rqm'){reqDraft.msg=t.value;}
   else if(t.id==='rpm'&&replyDraft){replyDraft.text=t.value;}
@@ -1580,6 +1659,55 @@ V.addEventListener('touchend',()=>{
   tr.style.transform=`translateX(${dir>0?'-66.6667%':dir<0?'0%':'-33.3333%'})`;
   if(dir){busy=true;setTimeout(()=>{busy=false;shiftMonth(dir);},250);}
 },{passive:true});
+
+/* ================= 화면 공유 · 백업 ================= */
+function shareScreen(){
+  const app=$('#app');
+  const done=()=>setTimeout(()=>{app.classList.remove('capturing');app.classList.remove('share-mode');},400);
+  if(window.AndroidBridge&&typeof window.AndroidBridge.shareScreen==='function'){
+    app.classList.add('capturing');
+    // 하단 버튼이 사라진 화면이 그려진 뒤에 찍는다
+    requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{
+      try{window.AndroidBridge.shareScreen();}catch(e){toast('공유하지 못했어요');}
+      done();
+    },120)));
+  }else{
+    toast('앱에서는 이 화면이 이미지로 카카오톡 등에 공유돼요');
+    done();
+  }
+}
+const BACKUP_KEYS=['pattern','anchor','overrides','memos','alarms','familyMemos','requests','board','syncSettings','pay','myTeam'];
+function exportBackup(){
+  const data={app:'shiftcal',ver:3,at:new Date().toISOString()};
+  BACKUP_KEYS.forEach(k=>{data[k]=S[k];});
+  const json=JSON.stringify(data,null,1);
+  const name=`shiftcal-backup-${fmt(new Date())}.json`;
+  if(window.AndroidBridge&&typeof window.AndroidBridge.shareFile==='function'){
+    try{window.AndroidBridge.shareFile(name,json);return;}catch(e){}
+  }
+  try{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+    a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+    toast('백업 파일을 저장했어요');
+  }catch(e){toast('백업 파일을 만들지 못했어요');}
+}
+function importBackup(file){
+  const rd=new FileReader();
+  rd.onload=()=>{
+    let d;
+    try{d=JSON.parse(String(rd.result));}catch(e){toast('백업 파일을 읽지 못했어요');return;}
+    if(!d||d.app!=='shiftcal'||!Array.isArray(d.pattern)){toast('교대달력 백업 파일이 아니에요');return;}
+    if(!confirm(`${d.at?d.at.slice(0,10)+' 에 만든 ':''}백업으로 지금 데이터를 모두 바꿀까요?\n\n(지금 폰에 있는 근무 변경·메모·알람은 사라져요)`))return;
+    const next={};
+    BACKUP_KEYS.forEach(k=>{if(d[k]!==undefined)next[k]=d[k];});
+    S=normalize(Object.assign({},S,next));
+    save();closeSheet();render();toast('백업을 불러왔어요');
+  };
+  rd.onerror=()=>toast('백업 파일을 읽지 못했어요');
+  rd.readAsText(file);
+}
 
 /* 안드로이드 앱이 부르는 훅 */
 window.__onBack=()=>{

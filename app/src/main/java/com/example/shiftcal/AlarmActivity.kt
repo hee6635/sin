@@ -78,8 +78,18 @@ class AlarmActivity : Activity() {
         stopBtn.textSize = 28f
         stopBtn.setTextColor(Color.WHITE)
         stopBtn.setBackgroundColor(0xFFD9455F.toInt())
-        stopBtn.setOnClickListener { stopAlarm() }
+        stopBtn.setOnClickListener { sendToService(AlarmService.ACTION_STOP) }
         root.addView(stopBtn, LinearLayout.LayoutParams(dp(220), dp(96)))
+
+        val snoozeBtn = Button(this)
+        snoozeBtn.text = "${AlarmScheduler.SNOOZE_MIN}분 뒤 다시 울림"
+        snoozeBtn.textSize = 18f
+        snoozeBtn.setTextColor(Color.WHITE)
+        snoozeBtn.setBackgroundColor(0xFF3A3D43.toInt())
+        snoozeBtn.setOnClickListener { sendToService(AlarmService.ACTION_SNOOZE) }
+        val snoozeLp = LinearLayout.LayoutParams(dp(220), dp(64))
+        snoozeLp.topMargin = dp(16)
+        root.addView(snoozeBtn, snoozeLp)
 
         setContentView(root)
 
@@ -91,9 +101,9 @@ class AlarmActivity : Activity() {
         }
     }
 
-    private fun stopAlarm() {
+    private fun sendToService(action: String) {
         val i = Intent(this, AlarmService::class.java)
-        i.action = AlarmService.ACTION_STOP
+        i.action = action
         startService(i)
         finish()
     }

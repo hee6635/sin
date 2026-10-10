@@ -3,18 +3,27 @@ package com.example.shiftcal
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.webkit.JsResult
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -27,12 +36,22 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
 
+    // 웹의 <input type="file"> (백업 불러오기) 에 고른 파일을 돌려주는 통로
+    private var fileCallback: ValueCallback<Array<Uri>>? = null
+    private val pickFile = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        fileCallback?.onReceiveValue(if (uri != null) arrayOf(uri) else null)
+        fileCallback = null
+    }
+
+    private fun isNight(): Boolean =
+        (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val root = FrameLayout(this)
-        root.setBackgroundColor(Color.WHITE)
+        root.setBackgroundColor(if (isNight()) Color.parseColor("#111318") else Color.WHITE)
         webView = WebView(this)
         root.addView(
             webView,
@@ -43,7 +62,7 @@ class MainActivity : ComponentActivity() {
         )
         setContentView(root)
 
-        // 상태바·내비게이션바를 피해서 그리기, 아이콘은 어두운 색
+        // 상태바·내비게이션바를 피해서 그리기, 아이콘 색은 다크 모드에 맞춰서
         ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
@@ -52,8 +71,9 @@ class MainActivity : ComponentActivity() {
             WindowInsetsCompat.CONSUMED
         }
         val controller = WindowCompat.getInsetsController(window, root)
-        controller.isAppearanceLightStatusBars = true
-        controller.isAppearanceLightNavigationBars = true
+        controller.isAppearanceLightStatusBars = !isNight()
+        controller.isAppearanceLightNavigationBars = !isNight()
+        webView.setBackgroundColor(Color.TRANSPARENT)
 
         webView.settings.apply {
             javaScriptEnabled = true
@@ -95,6 +115,20 @@ class MainActivity : ComponentActivity() {
                     .show()
                 return true
             }
+
+            override fun onShowFileChooser(
+                view: WebView?, callback: ValueCallback<Array<Uri>>?, params: FileChooserParams?
+            ): Boolean {
+                fileCallback?.onReceiveValue(null)
+                fileCallback = callback
+                try {
+                    pickFile.launch("*/*")
+                } catch (e: Exception) {
+                    fileCallback = null
+                    return false
+                }
+                return true
+            }
         }
 
         // 뒤로가기: 웹 화면이 먼저 처리(시트 닫기, 달력으로 돌아가기), 처리할 게 없으면 앱 종료
@@ -122,6 +156,46 @@ class MainActivity : ComponentActivity() {
         // 설정 화면에서 권한을 바꾸고 돌아왔을 수 있으니 알람 예약을 다시 확인하고 화면을 새로 고침
         AlarmScheduler.scheduleNext(this)
         webView.evaluateJavascript("window.__refresh&&window.__refresh()", null)
+    }
+
+    /** 지금 보이는 화면을 PNG 로 저장하고 공유 시트 열기 */
+    fun shareScreenshot() {
+        if (webView.width == 0 || webView.height == 0) return
+        try {
+            val bmp = Bitmap.createBitmap(webView.width, webView.height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bmp)
+            canvas.drawColor(if (isNight()) Color.parseColor("#111318") else Color.WHITE)
+            webView.draw(canvas)
+            val file = shareDir().resolve("shiftcal.png")
+            file.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            bmp.recycle()
+            share(file, "image/png", "달력 공유")
+        } catch (e: Exception) {
+            Toast.makeText(this, "화면을 저장하지 못했어요", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /** 글자 파일(백업)을 만들어 공유 시트 열기 */
+    fun shareTextFile(name: String, content: String) {
+        try {
+            val safe = name.replace(Regex("[^A-Za-z0-9._-]"), "_").ifEmpty { "backup.json" }
+            val file = shareDir().resolve(safe)
+            file.writeText(content)
+            share(file, "application/json", "백업 파일 보내기")
+        } catch (e: Exception) {
+            Toast.makeText(this, "백업 파일을 만들지 못했어요", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun shareDir() = cacheDir.resolve("share").apply { mkdirs() }
+
+    private fun share(file: java.io.File, mime: String, title: String) {
+        val uri = FileProvider.getUriForFile(this, "$packageName.files", file)
+        val send = Intent(Intent.ACTION_SEND)
+            .setType(mime)
+            .putExtra(Intent.EXTRA_STREAM, uri)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        startActivity(Intent.createChooser(send, title))
     }
 
     override fun onPause() {

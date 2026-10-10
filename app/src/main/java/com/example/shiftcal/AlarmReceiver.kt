@@ -17,6 +17,8 @@ class AlarmReceiver : BroadcastReceiver() {
         svc.action = AlarmService.ACTION_START
         svc.putExtra(AlarmService.EXTRA_TITLE, due.joinToString(" · ") { AlarmScheduler.title(it) })
         svc.putExtra(AlarmService.EXTRA_TIME, AlarmScheduler.timeText(at))
+        svc.putExtra(AlarmService.EXTRA_SOUND, due.any { it.sound })
+        svc.putExtra(AlarmService.EXTRA_VIB, due.any { it.vib })
         context.startForegroundService(svc)
     }
 }
