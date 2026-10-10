@@ -1,5 +1,10 @@
 # 나중에 한꺼번에 만들 것
 
+## ★★ 가장 먼저 (다른 것보다 앞서)
+- [ ] 패키지 이름 확정 (com.example 은 스토어 불가, Firebase 등록 뒤 못 바꿈)
+- [ ] 서명 키 고정: GitHub Secrets 키스토어로 서명 → 업데이트해도 데이터 유지, 구글 로그인 SHA-1 고정
+- [ ] WebViewAssetLoader 로 https 출처에서 앱 열기 (Firebase Auth · IndexedDB 전제)
+
 ## 메모 입력 시 키보드에 가려지는 문제 (①+② 둘 다)
 
 ### ① 기본 수정
@@ -72,7 +77,7 @@
 - [ ] 앱에서 근무·메모를 바꾸면 위젯 바로 갱신, 자정에 자동으로 날짜 넘김 (새로고침 버튼은 빼기)
 - [ ] 앱이 위젯에 지난달~3개월 뒤까지 근무·메모·공휴일을 넘겨줌 (그 밖의 달은 "앱을 열어주세요")
 
-## ★ 가족 실시간 공유 (Firebase) — 앱의 핵심 기능
+## ★ 가족 실시간 공유 (Firebase) — 앱의 핵심 기능 · 상세 설계: docs/firebase-design.md
 ### 준비 (사용자가 할 일)
 - [ ] Firebase 프로젝트 만들기, 안드로이드 앱 등록(패키지 com.example.shiftcal), google-services.json 전달
 - [ ] Authentication(익명 + 구글 로그인), Firestore 켜기
