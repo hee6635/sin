@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>위젯 시안</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ecf1;padding:24px;display:flex;gap:28px;justify-content:center}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.cap{font-size:18px;font-weight:800;color:#1f2328}
+.home{width:390px;height:844px;border-radius:28px;overflow:hidden;position:relative;box-shadow:0 10px 30px rgba(0,0,0,.15);
+  background:linear-gradient(160deg,#7fa7c9 0%,#a9c3a0 45%,#d9b48a 75%,#8a6f5a 100%);padding:44px 16px 0}
+.home::after{content:"";position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(transparent,rgba(0,0,0,.25))}
+.dock{position:absolute;left:0;right:0;bottom:22px;display:flex;justify-content:space-around;padding:0 26px;z-index:1}
+.dock i{width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,.85);display:block}
+.lbl{color:#fff;font-size:11px;text-align:center;margin:4px 0 14px;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.w{--bg:255,255,255;--a:1;--fg:#1f2328;--muted:#8b919a;--line:#eceef1;--day:#cbd8de;--day-fg:#1c2a31;--night:#d9cbc6;--night-fg:#2b1f1b;--rest:#e0455c;--sun:#d64560;--sat:#3b6fd6;--today:#1f8f75;--today-bg:#e3f6f0;--memo:#3a3d43;
+  background:rgba(var(--bg),var(--a));border-radius:20px;color:var(--fg);box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.w.dark{--bg:22,24,30;--a:.82;--fg:#e8eaee;--muted:#8a909b;--line:rgba(255,255,255,.08);--day:#4d6068;--day-fg:#eef3f5;--night:#65554f;--night-fg:#f6ece9;--rest:#ff6b81;--sun:#ff7a8c;--sat:#7ea2ff;--today:#35b894;--today-bg:rgba(53,184,148,.18);--memo:#4a4e57}
+.b{display:inline-grid;place-items:center;border-radius:50%;font-weight:500}
+.b.d{background:var(--day);color:var(--day-fg)}.b.n{background:var(--night);color:var(--night-fg)}.b.r{color:var(--rest);font-weight:600}
+.row{display:flex;gap:12px}
+/* 1칸 */
+.w1{width:84px;height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.w1 .dt{font-size:11px;color:var(--muted);font-weight:600}
+.w1 .b{width:34px;height:34px;font-size:15px}
+.w1 .m{font-size:9.5px;color:var(--muted);max-width:76px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 2칸 */
+.w2{width:180px;height:84px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr auto;padding:7px 6px 5px}
+.w2 .c{display:flex;flex-direction:column;align-items:center;gap:3px}
+.w2 .c+.c{border-left:1px solid var(--line)}
+.w2 .t{font-size:10.5px;font-weight:700}.w2 .t span{color:var(--muted);font-weight:500}
+.w2 .b{width:28px;height:28px;font-size:13px}
+.w2 .al{grid-column:1/3;text-align:center;font-size:10px;color:var(--muted);border-top:1px solid var(--line);padding-top:3px;margin-top:3px}
+/* 7일 */
+.w7{width:358px;height:96px;display:grid;grid-template-columns:repeat(7,1fr);padding:8px 4px}
+.w7 .c{display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:12px;padding-top:2px}
+.w7 .c.today{background:var(--today-bg);box-shadow:inset 0 0 0 2px var(--today)}
+.w7 .d1{font-size:11px;font-weight:700}.w7 .d2{font-size:9.5px;color:var(--muted);margin-top:-3px}
+.w7 .b{width:28px;height:28px;font-size:13px}
+.w7 .m{font-size:8.5px;color:#fff;background:var(--memo);border-radius:3px;padding:0 3px;max-width:46px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sun{color:var(--sun)!important}.sat{color:var(--sat)!important}
+/* 한 달 */
+.wm{width:358px;padding:10px 6px 8px}
+.wm .hd{display:flex;align-items:center;justify-content:space-between;padding:0 8px 4px}
+.wm .hd b{font-size:17px;font-weight:700}.wm .hd i{font-style:normal;color:var(--muted);font-size:16px;margin:0 10px}
+.wm .hd .g{width:18px;height:18px;fill:var(--muted)}
+.wm .sub{font-size:10px;color:var(--muted);text-align:center;margin:-2px 0 4px}
+.wm .dow,.wm .grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.wm .dow span{text-align:center;font-size:10.5px;font-weight:600;color:var(--muted);padding:2px 0}
+.wm .c{height:62px;display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:2px;border-top:1px solid var(--line);position:relative}
+.wm .c.out{opacity:.35}
+.wm .c.today{background:var(--today-bg);box-shadow:inset 0 0 0 2px var(--today);border-radius:6px}
+.wm .n{font-size:10.5px;font-weight:600;white-space:nowrap;max-width:100%;overflow:hidden}
+.wm .n em{font-style:normal;font-size:8.5px;margin-left:2px}
+.wm .b{width:24px;height:24px;font-size:11.5px}
+.wm .b.r{font-size:11px}
+.wm .m{font-size:8px;color:#fff;background:var(--memo);border-radius:2px;padding:0 2px;width:calc(100% - 4px);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wm .ch .b{box-shadow:0 0 0 1.5px var(--fg)}
+</style></head><body>
+<script>
+const P=['주','주','휴','휴','야','야','휴','휴'];
+const anchor=Date.UTC(2026,8,28);
+const sh=d=>P[((Math.round((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-anchor)/864e5))%8+8)%8];
+const HOL={'2026-10-03':'개천절','2026-10-05':'대체','2026-10-09':'한글날'};
+const MEMO={'2026-10-11':'아이 학원','2026-10-13':'차 정기점검','2026-10-16':'10시 치과','2026-10-17':'봉사활동','2026-10-20':'에버랜드','2026-10-29':'관리비'};
+const DOW='일월화수목금토';
+const k=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const b=s=>`<span class="b ${s==='주'?'d':s==='야'?'n':'r'}">${s}</span>`;
+const T=new Date(2026,9,11);
+const add=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+const wc=d=>{const w=d.getDay();return HOL[k(d)]||w===0?'sun':w===6?'sat':''};
+function w1(dark){return `<div class="w w1 ${dark?'dark':''}"><div class="dt">10.11 (일)</div>${b(sh(T))}<div class="m">${MEMO[k(T)]}</div></div>`;}
+function w2(dark){const t2=add(T,1);return `<div class="w w2 ${dark?'dark':''}">
+  <div class="c"><div class="t">오늘 <span>11(일)</span></div>${b(sh(T))}</div>
+  <div class="c"><div class="t">내일 <span>12(월)</span></div>${b(sh(t2))}</div>
+  <div class="al">⏰ 다음 알람 오후 4:30</div></div>`;}
+function w7(dark){let h='';for(let i=0;i<7;i++){const d=add(T,i),m=MEMO[k(d)];
+  h+=`<div class="c ${i===0?'today':''}"><div class="d1 ${wc(d)}">${d.getMonth()+1}.${d.getDate()}</div><div class="d2 ${wc(d)}">${DOW[d.getDay()]}</div>${b(sh(d))}${m?`<div class="m">${m}</div>`:''}</div>`;}
+  return `<div class="w w7 ${dark?'dark':''}">${h}</div>`;}
+function wm(dark){let h='';const s0=new Date(2026,8,27);
+  for(let i=0;i<35;i++){const d=add(s0,i),kk=k(d),m=MEMO[kk],hol=HOL[kk];
+    h+=`<div class="c ${d.getMonth()!==9?'out':''} ${kk==='2026-10-11'?'today':''} ${kk==='2026-10-13'?'ch':''}"><div class="n ${wc(d)}">${d.getDate()}${hol?`<em>${hol}</em>`:''}</div>${b(kk==='2026-10-13'?'주':sh(d))}${m?`<div class="m">${m}</div>`:''}</div>`;}
+  return `<div class="w wm ${dark?'dark':''}"><div class="hd"><svg class="g" viewBox="0 0 24 24"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><div><i>‹</i><b>2026. 10</b><i>›</i></div><span style="width:18px"></span></div>
+  <div class="dow">${[...DOW].map((x,i)=>`<span class="${i===0?'sun':i===6?'sat':''}">${x}</span>`).join('')}</div><div class="grid">${h}</div></div>`;}
+const dock='<div class="dock"><i></i><i></i><i></i><i></i><i></i></div>';
+document.body.innerHTML=`
+<div class="wrap"><div class="cap">1칸 · 2칸 · 7일 위젯</div><div class="home">
+  <div class="row">${w1(false)}${w2(false)}${w1(true)}</div><div class="lbl" style="margin-bottom:28px">1칸 (흰색) · 2칸 · 1칸 (다크)</div>
+  ${w7(false)}<div class="lbl">7일 위젯 (흰색)</div>
+  ${w7(true)}<div class="lbl">7일 위젯 (다크 · 반투명)</div>${dock}</div></div>
+<div class="wrap"><div class="cap">한 달 위젯 (흰색)</div><div class="home">${wm(false)}<div class="lbl">13일: 변경 근무 강조 (테두리)</div>${dock}</div></div>
+<div class="wrap"><div class="cap">한 달 위젯 (다크 · 반투명)</div><div class="home">${wm(true)}${dock}</div></div>`;
+</script></body></html>
