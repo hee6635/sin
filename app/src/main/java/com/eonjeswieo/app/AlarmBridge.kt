@@ -82,6 +82,12 @@ class AlarmBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun driveUnlink() = activity.drive.unlink()
 
+    /** 기념일 전날 알림 같은 조용한 알림 목록 [{id, at, title, text}] */
+    @JavascriptInterface
+    fun setReminders(json: String) {
+        Reminders.saveList(context, json)
+    }
+
     /** 웹이 계산한 "앞으로 울릴 알람 목록"(JSON)을 받아서 저장하고 가장 가까운 알람을 예약 */
     @JavascriptInterface
     fun setAlarms(json: String) {
