@@ -96,7 +96,6 @@ const p1=`<div class="phone">${hdr('bell')}${cal()}<div style="height:56px;backg
 const p2=`<div class="phone">${hdr()}${cal()}<div style="height:56px;background:#fff;flex:none"></div>${nav}<div class="dim"></div>
  <div class="acts">
   <div class="act"><span>메모 추가<small>나만 / 가족 골라서</small></span><i style="background:#7b5cf0">${I.memo}</i></div>
-  <div class="act"><span>근무 바꾸기<small>가족은 "근무 변경 요청"</small></span><i style="background:#1f8f75">${I.swap}</i></div>
   <div class="act"><span>이번 달 할 일<small>장보기·준비물</small></span><i style="background:#f08c00">${I.todo}</i></div>
   <div class="act"><span>D-day 추가<small>기념일·연차</small></span><i style="background:#3b6fd6">${I.dday}</i></div>
  </div><div class="fab x">+</div></div>`;
@@ -126,7 +125,7 @@ const p4=`<div class="phone">${hdr()}${cal()}${nav}<div class="dim"></div>
  </div></div></div>`;
 document.body.innerHTML=`
 <div class="wrap"><div class="cap">① 달력: 보는 건 위로<small>왼쪽 공유 · 오른쪽 🔔 가족 소식(배지) · 작아진 +</small></div>${p1}</div>
-<div class="wrap"><div class="cap">② + 누르면: 만드는 것만<small>메모 · 근무 바꾸기 · 할 일 · D-day</small></div>${p2}</div>
+<div class="wrap"><div class="cap">② + 누르면: 만드는 것만<small>메모 · 할 일 · D-day</small></div>${p2}</div>
 <div class="wrap"><div class="cap">③ 🔔 가족 소식<small>요청·메모·참여를 한곳에, 바로 수락/거절</small></div>${p3}</div>
 <div class="wrap"><div class="cap">④ + › 메모 추가<small>날짜 · 나만/가족 골라 바로 쓰기</small></div>${p4}</div>`;
 </script></body></html>
