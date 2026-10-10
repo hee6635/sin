@@ -2,6 +2,10 @@
 
 ## ★★ 가장 먼저 (다른 것보다 앞서)
 - [ ] 앱 이름 "언제쉬어" 로 변경 (홈 화면 아이콘 이름, 앱 안 제목, 알림·알람 화면, README)
+- [ ] 앱 아이콘 **L-2 (달력 카드)** 확정 — 시안: design/ui-icon3.png
+      · 보라(#8a6cf6)→파랑(#4f7cff) 그라데이션 바탕 + 흰 달력 카드(빨간 머리 #ff5c7a, 고리 2개) + 남색 "쉬"
+      · 안드로이드 적응형 아이콘(배경/전경 분리, 안전 영역 안), 모노크롬(테마 아이콘) 버전, 알림 작은 아이콘(흰색 실루엣)
+      · 첫 화면 로고·스플래시도 같은 그림
 - [ ] 패키지 이름 변경: **com.eonjeswieo.app** (확정) — applicationId·namespace·코틀린 패키지·FileProvider·액션 이름 전부
 - [ ] 서명 키 고정: GitHub Secrets 키스토어로 서명 → 업데이트해도 데이터 유지, 구글 로그인 SHA-1 고정
 - [ ] WebViewAssetLoader 로 https 출처에서 앱 열기 (Firebase Auth · IndexedDB 전제)
