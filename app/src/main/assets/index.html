@@ -144,7 +144,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .badge.sm.r{font-size:11px; font-weight:700;}
 .badge .dot{position:absolute;top:-1px;right:-2px;width:8px;height:8px;border-radius:50%;background:#e5322d}
 
-.pill-wrap{flex:1;min-height:0;overflow:hidden;width:100%;display:flex;flex-direction:column;align-items:center;gap:1px;padding-top:2px;z-index:3;pointer-events:none;}
+.pill-wrap{flex:none;width:100%;display:flex;flex-direction:column;align-items:center;gap:1px;padding-top:2px;z-index:3;pointer-events:none;--lh:14px;margin-top:min(0px,calc(100cqh - 22px - var(--b) - 2px - var(--n,0)*var(--lh)));}
 .family-pill{width:calc(100% - 6px);background:var(--family-pink);color:#fff;font-size:9px;line-height:13px;height:13px;padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;}
 .shared-pill{width:calc(100% - 6px);background:var(--accent);color:#fff;font-size:9px;line-height:13px;height:13px;padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;}
 .pill{width:calc(100% - 6px);background:#3a3d43;color:#fff;font-size:9px;line-height:13px;height:13px;padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -367,10 +367,10 @@ textarea{resize:none;min-height:84px}
 .pl.more{background:none;color:var(--muted);font-weight:700;text-align:center}
 .pl{width:calc(100% - 4px);font-size:9px;line-height:13px;height:13px;border-radius:3px;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl.fam{background:var(--fam);color:var(--fam-fg);font-weight:700}
-.pl.my{background:var(--my-bg);color:var(--my);box-shadow:inset 0 0 0 1px var(--my-line)}
+.pl.my{background:var(--my);color:#fff;font-weight:700}
 .pl.dd{background:color-mix(in srgb,var(--dd) 14%,var(--bg));color:var(--dd);font-weight:800}
 .pl,.req-pill{flex:none;text-overflow:clip;padding:0 2px}
-@media (min-width:600px){.cell{--b:max(30px,min(70cqw,54px,calc(100cqh - 84px)))}.pl,.req-pill{font-size:11px;line-height:15px;height:15px}}
+@media (min-width:600px){.cell{--b:min(70cqw,54px)}.pill-wrap{--lh:16px}.pl,.req-pill{font-size:11px;line-height:15px;height:15px}}
 .dn.chol{background:var(--chol)}.dn.chol .num,.dn.chol .hn{color:var(--chol-fg)}
 .legend{display:flex;gap:12px;justify-content:center;padding:5px 0 4px;font-size:10.5px;color:var(--muted);flex:none}
 .legend span{display:flex;align-items:center;gap:4px}.legend i{width:20px;height:9px;border-radius:2px;display:inline-block}
@@ -1038,7 +1038,7 @@ function ddayLabel(x){
 function memoLines(){
   const tab=innerWidth>=600,g=document.querySelector('.grid');
   const h=g&&g.clientHeight?g.clientHeight/6:(innerHeight-230)/6;
-  const fit=Math.floor((h-22-(tab?32:30))/(tab?16:14));
+  const fit=tab?Math.floor((h-24)/16):Math.floor((h-22-30)/14);
   return Math.max(1,Math.min(tab?4:3,fit));
 }
 let lastLines=0;
@@ -1113,7 +1113,7 @@ function calPanel(y,m){
     cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''}" data-act="day" data-k="${k}">
       <div class="dn ${hol?'hol':ch?'chol':''} ${cls}"><span class="num">${d.getDate()}</span><span class="hn">${esc(shortHol(hol)||(ch?'🏢'+ch:''))}</span></div>
       <div class="bwrap">${band}${badge(sh,'',ov?'<i class="dot"></i>':'')}</div>
-      <div class="pill-wrap">${pills.join('')}</div>
+      <div class="pill-wrap" style="--n:${pills.length}">${pills.join('')}</div>
     </div>`;
   }
   return `<div class="calwrap">
@@ -1125,7 +1125,7 @@ function renderCal(){
   const mk=cur.y*12+cur.m;
   const at=v=>calPanel(Math.floor(v/12),v%12);
   return `<div class="track" id="track"><div class="panel">${mk>MIN_M?at(mk-1):''}</div><div class="panel">${calPanel(cur.y,cur.m)}</div><div class="panel">${mk<MAX_M?at(mk+1):''}</div></div>
-    <div class="legend"><span><i style="background:var(--fam)"></i>♥ 가족 메모</span><span><i style="background:var(--my-bg);box-shadow:inset 0 0 0 1px var(--my-line)"></i>🔒 나만 보는 메모</span></div>`;
+    <div class="legend"><span><i style="background:var(--fam)"></i>♥ 가족 메모</span><span><i style="background:var(--my)"></i>🔒 나만 보는 메모</span></div>`;
 }
 let busy=false;
 function slideTo(dir){
