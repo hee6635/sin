@@ -1,4 +1,4 @@
-package com.example.shiftcal
+package com.eonjeswieo.app
 
 import android.content.BroadcastReceiver
 import android.content.Context

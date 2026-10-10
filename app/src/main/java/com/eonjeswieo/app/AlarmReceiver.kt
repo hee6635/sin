@@ -1,4 +1,4 @@
-package com.example.shiftcal
+package com.eonjeswieo.app
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -13,12 +13,10 @@ class AlarmReceiver : BroadcastReceiver() {
         val due = AlarmScheduler.consumeDue(context, at)
         if (due.isEmpty()) return
 
+        val ring = AlarmScheduler.merge(due, at)
         val svc = Intent(context, AlarmService::class.java)
         svc.action = AlarmService.ACTION_START
-        svc.putExtra(AlarmService.EXTRA_TITLE, due.joinToString(" · ") { AlarmScheduler.title(it) })
-        svc.putExtra(AlarmService.EXTRA_TIME, AlarmScheduler.timeText(at))
-        svc.putExtra(AlarmService.EXTRA_SOUND, due.any { it.sound })
-        svc.putExtra(AlarmService.EXTRA_VIB, due.any { it.vib })
+        svc.putExtra(AlarmService.EXTRA_RING, ring.toJson().toString())
         context.startForegroundService(svc)
     }
 }

@@ -1,4 +1,4 @@
-package com.example.shiftcal
+package com.eonjeswieo.app
 
 import android.app.Activity
 import android.content.BroadcastReceiver
@@ -18,6 +18,12 @@ import android.widget.TextView
 
 /** 알람이 울릴 때 잠금화면 위에 뜨는 큰 "끄기" 화면 */
 class AlarmActivity : Activity() {
+
+    companion object {
+        const val EXTRA_TITLE = "title"
+        const val EXTRA_TIME = "time"
+        const val EXTRA_SNOOZE_MIN = "snoozeMin"   // 0 이면 다시 울림 버튼 숨김 (최대 횟수 다 씀)
+    }
 
     private val stopped = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -42,8 +48,9 @@ class AlarmActivity : Activity() {
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        val title = intent.getStringExtra(AlarmService.EXTRA_TITLE) ?: "알람"
-        val time = intent.getStringExtra(AlarmService.EXTRA_TIME) ?: ""
+        val title = intent.getStringExtra(EXTRA_TITLE) ?: "알람"
+        val time = intent.getStringExtra(EXTRA_TIME) ?: ""
+        val snoozeMin = intent.getIntExtra(EXTRA_SNOOZE_MIN, 0)
 
         val root = LinearLayout(this)
         root.orientation = LinearLayout.VERTICAL
@@ -81,8 +88,9 @@ class AlarmActivity : Activity() {
         stopBtn.setOnClickListener { sendToService(AlarmService.ACTION_STOP) }
         root.addView(stopBtn, LinearLayout.LayoutParams(dp(220), dp(96)))
 
+        if (snoozeMin > 0) {
         val snoozeBtn = Button(this)
-        snoozeBtn.text = "${AlarmScheduler.SNOOZE_MIN}분 뒤 다시 울림"
+        snoozeBtn.text = "${snoozeMin}분 뒤 다시 울림"
         snoozeBtn.textSize = 18f
         snoozeBtn.setTextColor(Color.WHITE)
         snoozeBtn.setBackgroundColor(0xFF3A3D43.toInt())
@@ -90,6 +98,7 @@ class AlarmActivity : Activity() {
         val snoozeLp = LinearLayout.LayoutParams(dp(220), dp(64))
         snoozeLp.topMargin = dp(16)
         root.addView(snoozeBtn, snoozeLp)
+        }
 
         setContentView(root)
 

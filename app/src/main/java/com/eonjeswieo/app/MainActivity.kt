@@ -1,4 +1,4 @@
-package com.example.shiftcal
+package com.eonjeswieo.app
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -9,6 +9,7 @@ import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -16,25 +17,36 @@ import android.webkit.JsResult
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.webkit.WebViewAssetLoader
+import org.json.JSONObject
 
 /**
- * 교대달력 화면(assets/index.html)을 WebView 로 보여주는 껍데기 앱.
+ * 언제쉬어 화면(assets/index.html)을 WebView 로 보여주는 껍데기 앱.
  * 화면은 웹이 그리고, 알람은 안드로이드(AlarmManager)가 울립니다.
  */
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        /** 앱 화면 주소. file:// 대신 https 주소로 열어야 로그인·저장소(IndexedDB)가 제대로 동작 */
+        const val HOST = "appassets.androidplatform.net"
+        const val START_URL = "https://$HOST/assets/index.html"
+    }
+
     private lateinit var webView: WebView
+    lateinit var drive: DriveBackup
 
     // 웹의 <input type="file"> (백업 불러오기) 에 고른 파일을 돌려주는 통로
     private var fileCallback: ValueCallback<Array<Uri>>? = null
@@ -43,12 +55,36 @@ class MainActivity : ComponentActivity() {
         fileCallback = null
     }
 
+    // 알람음 고르기 창
+    private var toneReq = ""
+    private val pickTone = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+        if (res.resultCode != RESULT_OK) return@registerForActivityResult
+        @Suppress("DEPRECATION")
+        val uri: Uri? = res.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+        val title = if (uri == null) "무음" else try {
+            RingtoneManager.getRingtone(this, uri)?.getTitle(this) ?: "알람음"
+        } catch (e: Exception) { "알람음" }
+        val o = JSONObject().put("req", toneReq).put("uri", uri?.toString() ?: "").put("title", title)
+        js("window.__onTone&&window.__onTone($o)")
+    }
+
+    // 구글 드라이브 허용 창
+    private val consent = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { res ->
+        drive.onAuthResult(res.data)
+    }
+
     private fun isNight(): Boolean =
         (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
+    /** 웹 화면의 자바스크립트 실행 (어느 스레드에서 불러도 됨) */
+    fun js(code: String) {
+        webView.post { webView.evaluateJavascript(code, null) }
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val root = FrameLayout(this)
         root.setBackgroundColor(if (isNight()) Color.parseColor("#111318") else Color.WHITE)
@@ -62,12 +98,14 @@ class MainActivity : ComponentActivity() {
         )
         setContentView(root)
 
-        // 상태바·내비게이션바를 피해서 그리기, 아이콘 색은 다크 모드에 맞춰서
+        // 상태바·내비게이션바·키보드를 피해서 그리기
+        // (키보드가 올라오면 그 높이만큼 화면을 줄여서 입력칸이 가려지지 않게)
         ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
             )
-            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            v.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, ime.bottom))
             WindowInsetsCompat.CONSUMED
         }
         val controller = WindowCompat.getInsetsController(window, root)
@@ -79,15 +117,34 @@ class MainActivity : ComponentActivity() {
             javaScriptEnabled = true
             domStorageEnabled = true   // 웹 화면의 localStorage 저장에 필요
             allowContentAccess = false
+            allowFileAccess = false
         }
 
-        // 웹 화면 → 안드로이드 통로 (알람 등록, 권한 상태)
+        drive = DriveBackup(this)
+        drive.launchConsent = { pi ->
+            consent.launch(IntentSenderRequest.Builder(pi.intentSender).build())
+        }
+
+        // 웹 화면 → 안드로이드 통로 (알람 등록, 권한 상태, 공유, 백업 …)
         webView.addJavascriptInterface(AlarmBridge(this), "AndroidBridge")
 
-        // 내 화면(assets) 밖으로 나가는 링크는 막기
+        // 앱 안의 assets 폴더를 https://appassets.androidplatform.net/assets/ 주소로 열기
+        val assets = WebViewAssetLoader.Builder()
+            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+            .build()
+
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
+                assets.shouldInterceptRequest(request.url)
+
+            // 내 화면 밖으로 나가는 링크는 막기 (메일 쓰기만 메일 앱으로)
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                return !request.url.toString().startsWith("file:///android_asset/")
+                val u = request.url
+                if (u.scheme == "mailto") {
+                    try { startActivity(Intent(Intent.ACTION_SENDTO, u)) } catch (e: Exception) {}
+                    return true
+                }
+                return u.host != HOST
             }
         }
 
@@ -147,7 +204,7 @@ class MainActivity : ComponentActivity() {
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
         }
 
-        webView.loadUrl("file:///android_asset/index.html")
+        webView.loadUrl(START_URL)
     }
 
     override fun onResume() {
@@ -158,6 +215,39 @@ class MainActivity : ComponentActivity() {
         webView.evaluateJavascript("window.__refresh&&window.__refresh()", null)
     }
 
+    /** 글자 크기 (100 = 보통) */
+    fun setTextZoom(pct: Int) {
+        webView.post { webView.settings.textZoom = pct.coerceIn(80, 160) }
+    }
+
+    /** 폰의 알람음 목록 창 열기 */
+    fun openTonePicker(req: String, current: String) {
+        toneReq = req
+        val i = Intent(RingtoneManager.ACTION_RINGTONE_PICKER)
+            .putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM)
+            .putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "알람음 선택")
+            .putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+            .putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+            .putExtra(
+                RingtoneManager.EXTRA_RINGTONE_EXISTING_URI,
+                if (current.isEmpty()) RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM) else Uri.parse(current)
+            )
+        try { pickTone.launch(i) } catch (e: Exception) {
+            Toast.makeText(this, "알람음 목록을 열 수 없어요", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /** 메일 앱으로 문의 보내기 */
+    fun sendMail(to: String, subject: String, body: String) {
+        val i = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
+            .putExtra(Intent.EXTRA_EMAIL, if (to.isEmpty()) arrayOf() else arrayOf(to))
+            .putExtra(Intent.EXTRA_SUBJECT, subject)
+            .putExtra(Intent.EXTRA_TEXT, body)
+        try { startActivity(Intent.createChooser(i, "문의하기")) } catch (e: Exception) {
+            Toast.makeText(this, "메일 앱이 없어요", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     /** 지금 보이는 화면을 PNG 로 저장하고 공유 시트 열기 */
     fun shareScreenshot() {
         if (webView.width == 0 || webView.height == 0) return
@@ -166,7 +256,7 @@ class MainActivity : ComponentActivity() {
             val canvas = Canvas(bmp)
             canvas.drawColor(if (isNight()) Color.parseColor("#111318") else Color.WHITE)
             webView.draw(canvas)
-            val file = shareDir().resolve("shiftcal.png")
+            val file = shareDir().resolve("eonjeswieo.png")
             file.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
             bmp.recycle()
             share(file, "image/png", "달력 공유")
