@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:28px;display:flex;gap:24px;align-items:flex-start;color:#1d2330}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center}
+.cap{font-size:15px;font-weight:800;color:#3a4150}
+.sub{font-size:12px;color:#6b7280;margin-top:-6px;text-align:center;line-height:1.45}
+.ph{width:350px;height:740px;background:#f4f5f7;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330}
+.ph.dk{background:#16181d;color:#e8eaee}
+.top{display:flex;align-items:center;justify-content:center;position:relative;padding:16px 16px 12px;background:#fafafa;border-bottom:1px solid #e5e7eb}
+.dk .top{background:#1d2027;border-color:#2c3038}
+.top h1{font-size:19px;font-weight:800}
+.top .pl{position:absolute;right:16px;font-size:24px;color:#4b5563}
+.dk .top .pl{color:#cfd3da}
+.list{background:#fff}
+.dk .list{background:#1d2027}
+.r{display:flex;align-items:center;padding:13px 18px;border-bottom:1px solid #eceef1}
+.dk .r{border-color:#2c3038}
+.r .ap{font-size:13px;font-weight:600;margin-right:4px;align-self:flex-end;margin-bottom:6px}
+.r .tm{font-size:34px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.r .k{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;margin-left:10px}
+.k.D{background:#d3dbe1;color:#33505e}.k.N{background:#ddd0ca;color:#5a4038}
+.dk .k.D{background:#3b4a55;color:#d3e2ea}.dk .k.N{background:#55463f;color:#efdcd3}
+.r .sub2{display:flex;align-items:center;gap:8px;margin-top:3px;font-size:12px;color:#8a63c9;font-weight:700}
+.r .sub2 .ic{color:#8a63c9;font-size:13px}
+.r .sub2 .vol{width:56px;height:5px;border-radius:3px;background:#8a63c9}
+.r .sub2 .muted{color:#b4bac4}
+.r .left{display:flex;align-items:center;font-size:12.5px;font-weight:800;color:#3b6fd6;margin-top:4px}
+.dk .r .left{color:#8fb0ff}
+.r .sw{width:46px;height:26px;border-radius:13px;background:#8a63c9;position:relative;margin-left:auto;flex:none}
+.r .sw::after{content:'';position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff}
+.r .sw.off{background:#d5d8de}.r .sw.off::after{right:auto;left:3px}
+.dk .r .sw.off{background:#3a3f48}
+.r.off .tm,.r.off .ap{color:#b4bac4}.r.off .left{color:#b4bac4}
+.dk .r.off .tm,.dk .r.off .ap{color:#5b616c}
+.note{margin:14px 16px;font-size:12px;color:#6b7280;line-height:1.6}
+.dk .note{color:#8a909b}
+.nav{margin-top:auto;display:flex;justify-content:space-around;padding:9px 0 13px;background:#2b2f3a;font-size:11.5px;color:#8e95a3;font-weight:800}
+.nav span{display:flex;flex-direction:column;align-items:center;gap:3px}.nav .on{color:#fff}.nav i{font-style:normal;font-size:18px}
+</style></head><body>
+
+<div class="col"><div class="cap">알람 탭 — 보내준 화면 정도로 간단하게</div><div class="sub">시간 · 근무 · 진동/소리 · "○ 후에 울려요" · 스위치<br>휴무로 바뀐 날은 자동으로 안 울림 (경고 없음)</div>
+<div class="ph">
+  <div class="top"><h1>알람</h1><span class="pl">⏰⁺</span></div>
+  <div class="list">
+    <div class="r"><div><div style="display:flex;align-items:center"><span class="ap">오후</span><span class="tm">04:30</span><span class="k N">야</span></div>
+      <div class="sub2"><span class="ic">📳</span><span class="ic">🔊</span><span class="vol"></span></div>
+      <div class="left">⏱ 4시간 후에 울려요</div></div><span class="sw"></span></div>
+    <div class="r"><div><div style="display:flex;align-items:center"><span class="ap">오전</span><span class="tm">05:50</span><span class="k D">주</span></div>
+      <div class="sub2"><span class="ic">📳</span><span class="ic">🔊</span><span class="vol"></span></div>
+      <div class="left">⏱ 2일 후에 울려요</div></div><span class="sw"></span></div>
+    <div class="r"><div><div style="display:flex;align-items:center"><span class="ap">오후</span><span class="tm">09:00</span><span class="k D">주</span></div>
+      <div class="sub2"><span>전날</span><span class="muted">📴</span><span class="muted">🔇</span></div>
+      <div class="left">⏱ 1일 후에 울려요</div></div><span class="sw"></span></div>
+    <div class="r off"><div><div style="display:flex;align-items:center"><span class="ap">오전</span><span class="tm">09:30</span><span class="k" style="background:#eef2ff;color:#3b6fd6;font-size:12px">1</span></div>
+      <div class="sub2" style="color:#9aa1ad">한 번만 · 10/20 병원</div>
+      <div class="left">꺼짐</div></div><span class="sw off"></span></div>
+  </div>
+  <div class="note">· 알람은 <b>근무에 붙어 있어요</b>. 주간 알람은 주간 근무 날에만 울리고, 그날이 휴무로 바뀌면 <b>저절로 안 울려요</b>.<br>· 누르면 시간 · 근무 · 소리 · 진동 · 전날 울림을 고쳐요.</div>
+  <div class="nav"><span><i>📅</i>달력</span><span><i>👪</i>가족</span><span class="on"><i>⏰</i>알람</span><span><i>⚙️</i>설정</span></div>
+</div></div>
+
+<div class="col"><div class="cap">다크 모드</div><div class="sub">&nbsp;</div>
+<div class="ph dk">
+  <div class="top"><h1>알람</h1><span class="pl">⏰⁺</span></div>
+  <div class="list">
+    <div class="r"><div><div style="display:flex;align-items:center"><span class="ap">오후</span><span class="tm">04:30</span><span class="k N">야</span></div>
+      <div class="sub2"><span class="ic">📳</span><span class="ic">🔊</span><span class="vol"></span></div>
+      <div class="left">⏱ 4시간 후에 울려요</div></div><span class="sw"></span></div>
+    <div class="r"><div><div style="display:flex;align-items:center"><span class="ap">오전</span><span class="tm">05:50</span><span class="k D">주</span></div>
+      <div class="sub2"><span class="ic">📳</span><span class="ic">🔊</span><span class="vol"></span></div>
+      <div class="left">⏱ 2일 후에 울려요</div></div><span class="sw"></span></div>
+    <div class="r"><div><div style="display:flex;align-items:center"><span class="ap">오후</span><span class="tm">09:00</span><span class="k D">주</span></div>
+      <div class="sub2"><span>전날</span><span class="muted">📴</span><span class="muted">🔇</span></div>
+      <div class="left">⏱ 1일 후에 울려요</div></div><span class="sw"></span></div>
+  </div>
+  <div class="nav"><span><i>📅</i>달력</span><span><i>👪</i>가족</span><span class="on"><i>⏰</i>알람</span><span><i>⚙️</i>설정</span></div>
+</div></div>
+
+</body></html>
