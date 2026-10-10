@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>메모 구분 시안</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ecf1;padding:24px;display:flex;gap:26px;justify-content:center}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.cap{font-size:17px;font-weight:800;color:#1f2328;text-align:center}
+.cap small{display:block;font-size:12.5px;font-weight:500;color:#6b7280;margin-top:2px}
+.phone{--fg:#1f2328;--muted:#8b919a;--line:#eceef1;--surface:#f5f6f8;--my:#3a3d43;--my-bg:#f1f2f4;--fam:#ff4d6d;--fam-bg:#fff0f3;--fam-line:#ffc2cf;
+  --day:#cbd8de;--night:#d9cbc6;--rest:#e0455c;--sun:#d64560;--sat:#3b6fd6;--today:#1f8f75;--today-bg:#e3f6f0;
+  width:390px;height:844px;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column;color:var(--fg)}
+.phone.v-purple{--fam:#7b5cf0;--fam-bg:#f3f0ff;--fam-line:#d3c8ff}
+.phone.v-orange{--fam:#f08c00;--fam-bg:#fff4e3;--fam-line:#ffd59a}
+.phone.v-purple .inp.fam{color:#8e78e8}.phone.v-orange .inp.fam{color:#c27a1c}
+.ico{width:12px;height:12px;display:inline-block;vertical-align:-1px;fill:currentColor}
+/* ── 달력 ── */
+.top{display:grid;grid-template-columns:50px 1fr 50px;align-items:center;padding:12px 6px 6px;background:#f7f7f8;text-align:center}
+.top b{font-size:24px;font-weight:800}.top small{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:12px;font-weight:600;padding:4px 0;background:#f7f7f8}
+.dow .s{color:var(--sun)}.dow .t{color:var(--sat)}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));flex:1}
+.c{border-right:1px solid var(--line);border-bottom:1.5px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:2px 2px 3px;gap:2px;position:relative;min-height:0}
+.c:nth-child(7n){border-right:0}
+.c .n{align-self:flex-start;font-size:12px;padding-left:4px}
+.c.s .n{color:var(--sun)}.c.t .n{color:var(--sat)}
+.c.today{background:var(--today-bg)}.c.today::after{content:"";position:absolute;inset:0;border:3px solid var(--today)}
+.bd{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:13px;margin:4px 0 2px}
+.bd.d{background:var(--day)}.bd.n{background:var(--night)}.bd.r{color:var(--rest);font-weight:600;font-size:12px}
+.pl{width:100%;font-size:9px;line-height:13px;height:13px;border-radius:3px;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:2px}
+.pl .ico{width:8px;height:8px;flex:none}
+.pl.my{background:var(--my-bg);color:var(--my);box-shadow:inset 0 0 0 1px #dfe2e6}
+.pl.fam{background:var(--fam);color:#fff;font-weight:700}
+.legend{display:flex;gap:14px;justify-content:center;padding:8px 0 6px;font-size:11.5px;color:var(--muted);background:#fff;border-top:1px solid var(--line)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:26px;height:12px;border-radius:3px;display:inline-block}
+.nav{display:flex;background:#42424f;height:58px;flex:none}
+.nav div{flex:1;display:grid;place-items:center;font-size:12px;color:#a7a7b4}.nav .on{color:#fff;font-weight:800}
+/* ── 날짜 시트 ── */
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.42)}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:96px;background:#fff;border-radius:20px 20px 0 0;display:flex;flex-direction:column}
+.sh-h{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px}
+.sh-h b{font-size:17px}
+.chips{display:flex;gap:8px;padding:4px 16px 12px;border-bottom:8px solid var(--surface)}
+.chip{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:14px;opacity:.45}
+.chip.on{opacity:1;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--fg)}
+.tabs{display:flex;gap:6px;padding:12px 16px 6px}
+.tab{height:30px;padding:0 12px;border-radius:15px;background:var(--surface);font-size:12.5px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:5px}
+.tab.on{background:var(--fg);color:#fff}
+.tab .k{font-weight:800}
+.list{flex:1;overflow:hidden;padding:4px 16px;display:flex;flex-direction:column;gap:8px}
+.sec-l{font-size:12px;font-weight:700;color:var(--muted);margin:8px 0 0;display:flex;align-items:center;gap:5px}
+.sec-l.f{color:var(--fam)}
+.m{border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;position:relative}
+.m .t{flex:1;font-size:14.5px;line-height:1.4}
+.m .meta{font-size:11px;color:var(--muted);margin-top:3px;display:flex;gap:6px;align-items:center}
+.m.my{background:var(--my-bg)}
+.m.my .lk{color:var(--my)}
+.m.fam{background:var(--fam-bg);box-shadow:inset 3px 0 0 var(--fam)}
+.m.fam .lk{color:var(--fam)}
+.who{font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:8px;background:var(--fam);color:#fff}
+.who.me{background:#fff;color:var(--fam);box-shadow:inset 0 0 0 1px var(--fam-line)}
+.sw{font-size:11px;font-weight:700;height:26px;padding:0 9px;border-radius:13px;display:flex;align-items:center;gap:4px;flex:none;white-space:nowrap}
+.sw.to-fam{background:#fff;color:var(--fam);box-shadow:inset 0 0 0 1px var(--fam-line)}
+.sw.to-my{background:#fff;color:var(--my);box-shadow:inset 0 0 0 1px #d6d9de}
+.m.sel{outline:2px solid var(--fam);outline-offset:1px}
+/* 입력바 */
+.bar{border-top:1px solid var(--line);padding:8px 10px;display:flex;align-items:center;gap:8px;background:#fff}
+.mode{display:flex;background:var(--surface);border-radius:18px;padding:3px;flex:none}
+.mode span{height:30px;padding:0 10px;border-radius:15px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:4px;color:var(--muted)}
+.mode span.on.my{background:var(--my);color:#fff}
+.mode span.on.fam{background:var(--fam);color:#fff}
+.inp{flex:1;height:38px;border-radius:19px;padding:0 14px;display:flex;align-items:center;font-size:14px;color:var(--muted)}
+.inp.my{background:var(--my-bg)}.inp.fam{background:var(--fam-bg);color:#d26a82;box-shadow:inset 0 0 0 1.5px var(--fam-line)}
+.inp.typing{color:var(--fg)}
+.send{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none}
+.send svg{width:18px;height:18px;fill:#fff}
+.send.my{background:var(--my)}.send.fam{background:var(--fam)}
+.kb{height:250px;background:#d6d9de;flex:none;display:grid;grid-template-rows:repeat(4,1fr);gap:7px;padding:10px 6px}
+.kb div{display:grid;grid-template-columns:repeat(10,1fr);gap:5px}
+.kb i{background:#fff;border-radius:6px;box-shadow:0 1px 0 #a9adb3}
+.hint{font-size:11px;color:var(--muted);text-align:center;padding:0 0 6px;background:#fff}
+.hint.f{color:var(--fam)}
+/* 메뉴 */
+.menu{position:absolute;left:12px;right:12px;bottom:12px;background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}
+.menu .mh{padding:14px 16px 10px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--line)}
+.menu .mh b{color:var(--fg);font-size:14.5px;display:block;margin-top:2px}
+.menu .it{padding:15px 16px;font-size:15px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+.menu .it.f{color:var(--fam);font-weight:800}
+.menu .it.d{color:var(--rest)}
+.menu .it:last-child{border-bottom:0}
+</style></head><body>
+<script>
+const lock='<svg class="ico" viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>';
+const heart='<svg class="ico" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.1 5.2 3 1.6-1.9 3.1-3 5.2-3 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg>';
+const sendI='<svg viewBox="0 0 24 24"><path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z"/></svg>';
+const P=['주','주','휴','휴','야','야','휴','휴'];const anchor=Date.UTC(2026,8,28);
+const sh=d=>P[((Math.round((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-anchor)/864e5))%8+8)%8];
+const MY={'2026-10-07':['치과 2시'],'2026-10-13':['차 정기점검','병원 예약'],'2026-10-29':['관리비']};
+const FAM={'2026-10-13':['아빠 생신 저녁'],'2026-10-20':['에버랜드'],'2026-10-24':['장모님 생신!'],'2026-10-16':['학부모 상담']};
+const k=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+function cal(v){let g='';const s0=new Date(2026,9,4);
+  for(let i=0;i<28;i++){const d=new Date(2026,9,4+i),kk=k(d),s=sh(d),w=d.getDay();
+    const f=(FAM[kk]||[]).map(x=>`<div class="pl fam">${heart}${x}</div>`).join('');
+    const m=(MY[kk]||[]).slice(0,1).map(x=>`<div class="pl my">${lock}${x}${(MY[kk]||[]).length>1?' +1':''}</div>`).join('');
+    g+=`<div class="c ${w===0?'s':w===6?'t':''} ${kk==='2026-10-13'?'today':''}"><div class="n">${d.getDate()}</div><div class="bd ${s==='주'?'d':s==='야'?'n':'r'}">${s}</div>${f}${m}</div>`;}
+  return `<div class="phone ${v||''}"><div class="top"><span></span><div><b>2026.10</b><small>4조2교대 C조</small></div><span></span></div>
+  <div class="dow"><span class="s">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="t">토</span></div>
+  <div class="grid">${g}</div>
+  <div class="legend"><span><i style="background:var(--fam)"></i>♥ 가족 메모 (가족이 다 봄)</span><span><i style="background:#f1f2f4;box-shadow:inset 0 0 0 1px #dfe2e6"></i>🔒 개인 메모 (나만)</span></div>
+  <div class="nav"><div class="on">근무일정</div><div>동료근무</div><div>알람</div><div>더 보기</div></div></div>`;}
+function chips(){return `<div class="chips">${[['주','#cbd8de'],['야','#d9cbc6'],['휴',''],['상','#dcedc8'],['교','#ffe0b2']].map(([x,c],i)=>`<div class="chip ${i===2?'on':''}" style="${c?`background:${c}`:'color:#e0455c;font-weight:700'}">${x}</div>`).join('')}</div>`;}
+const memos=(sel)=>`
+  <div class="sec-l f">${heart} 가족 메모 · 가족 모두 봐요</div>
+  <div class="m fam"><div class="t">아빠 생신 저녁 7시, 케이크는 내가 살게<div class="meta"><span class="who">아내</span>어제 21:40</div></div></div>
+  <div class="sec-l">${lock} 개인 메모 · 나만 봐요</div>
+  <div class="m my ${sel?'sel':''}"><div class="t">차 정기점검<div class="meta">오늘 09:12</div></div><span class="sw to-fam">${heart} 가족에게</span></div>
+  <div class="m my"><div class="t">병원 예약 (10시)<div class="meta">오늘 09:15</div></div><span class="sw to-fam">${heart} 가족에게</span></div>`;
+function day(mode,typing,v){
+  const fam=mode==='fam';
+  return `<div class="phone ${v||''}">${cal(v).replace(/^<div class="phone[^"]*">|<\/div>$/g,'')}<div class="dim"></div>
+  <div class="sheet"><div class="sh-h"><b>10월 13일 (화)</b><span style="font-size:18px">✕</span></div>${chips()}
+   <div class="tabs"><span class="tab on">전체 <span class="k">3</span></span><span class="tab">${heart} 가족 <span class="k">1</span></span><span class="tab">${lock} 개인 <span class="k">2</span></span></div>
+   <div class="list">${memos(false)}</div>
+   <div class="hint ${fam?'f':''}">${fam?'♥ 가족 모두에게 보여요 · 상대에게 알림이 가요':'🔒 나만 볼 수 있어요 · 나중에 가족 메모로 바꿀 수 있어요'}</div>
+   <div class="bar"><div class="mode"><span class="${fam?'':'on my'}">${lock} 나만</span><span class="${fam?'on fam':''}">${heart} 가족</span></div>
+     <div class="inp ${fam?'fam':'my'} ${typing?'typing':''}">${typing||(fam?'가족에게 남길 메모':'나만 보는 메모')}</div>
+     <div class="send ${fam?'fam':'my'}">${sendI}</div></div>
+   <div class="kb">${'<div>'+'<i></i>'.repeat(10)+'</div>'}${'<div>'+'<i></i>'.repeat(10)+'</div>'}${'<div>'+'<i></i>'.repeat(10)+'</div>'}${'<div>'+'<i></i>'.repeat(10)+'</div>'}</div>
+  </div></div>`;}
+function menu(){
+  return `<div class="phone">${cal(v).replace(/^<div class="phone[^"]*">|<\/div>$/g,'')}<div class="dim"></div>
+  <div class="sheet"><div class="sh-h"><b>10월 13일 (화)</b><span style="font-size:18px">✕</span></div>${chips()}
+   <div class="tabs"><span class="tab on">전체 <span class="k">3</span></span><span class="tab">${heart} 가족 <span class="k">1</span></span><span class="tab">${lock} 개인 <span class="k">2</span></span></div>
+   <div class="list">${memos(true)}</div></div>
+  <div class="dim" style="top:96px;border-radius:20px 20px 0 0"></div>
+  <div class="menu"><div class="mh">개인 메모 <b>차 정기점검</b></div>
+   <div class="it f">${heart.replace('ico','ico" style="width:16px;height:16px')} 가족 메모로 바꾸기</div>
+   <div class="it">✏️ 수정</div><div class="it">📅 다른 날로 옮기기</div><div class="it d">🗑 삭제</div></div></div>`;}
+document.body.innerHTML=`
+<div class="wrap"><div class="cap">A. 보라 (추천)<small>빨강(휴무·일요일)·파랑(토요일)·초록(오늘)과 안 겹침</small></div>${cal('v-purple')}</div>
+<div class="wrap"><div class="cap">A. 보라 · 가족 모드로 쓰는 중</div>${day('fam','오늘 저녁 늦어요 |','v-purple')}</div>
+<div class="wrap"><div class="cap">B. 주황<small>따뜻한 느낌, 빨강과 조금 가까움</small></div>${cal('v-orange')}</div>
+<div class="wrap"><div class="cap">B. 주황 · 가족 모드로 쓰는 중</div>${day('fam','오늘 저녁 늦어요 |','v-orange')}</div>`;
+</script></body></html>
