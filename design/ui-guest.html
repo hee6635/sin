@@ -64,6 +64,23 @@ body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;b
 .lg i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:4px}
 .sum{background:#fff6e0;border-radius:14px;padding:11px 13px;font-size:13.5px;line-height:1.5}
 .sum b{color:#c81e3a}
+
+.cal2{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid #eceef1}
+.cal2 .h{font-size:11px;font-weight:800;text-align:center;color:#6b7280;padding:4px 0}
+.q{height:84px;border-bottom:1px solid #eceef1;display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:3px;overflow:hidden}
+.q .n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:800;color:#b4bac4;flex:none}
+.q.r .n{background:#e5484d;color:#fff}
+.q.r.wk .n{background:#c81e3a;box-shadow:0 0 0 2px #ffd166}
+.q.t{background:#f3f6ff}
+.q.o{opacity:.35}
+.q .p{width:calc(100% - 4px);font-size:10px;line-height:12.5px;max-height:27px;border-radius:4px;padding:1px 3px;overflow:hidden;word-break:break-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-weight:700;background:#7b5cf0;color:#fff;flex:none;letter-spacing:-.3px}
+.q .p.req{background:#f59e0b}
+.q .hn{font-size:8.5px;color:#e5484d;font-weight:800;line-height:10px}
+.sheet{background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -6px 20px rgba(0,0,0,.12);padding:12px 14px 6px;margin:0 -16px}
+.sheet .gr{width:36px;height:4px;border-radius:2px;background:#d5d8de;margin:0 auto 8px}
+.sheet h4{font-size:15px;font-weight:900;display:flex;align-items:center;gap:6px}
+.sheet .mc{background:#f3f0ff;border-left:4px solid #7b5cf0;border-radius:10px;padding:9px 11px;margin-top:7px;font-size:14px;font-weight:700}
+.sheet .mc small{display:block;font-size:11.5px;color:#6b7280;font-weight:600;margin-top:2px}
 </style></head><body>
 
 <div class="col"><div class="cap">① 게스트 홈 (앱 켜면 바로)</div><div class="sub">"오늘 쉬어? 다음엔 언제 쉬어?"에 바로 답</div>
@@ -74,6 +91,7 @@ body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;b
       <div class="l">10월 11일 (일) · 오늘</div>
       <div class="t">아빠는 야간 근무 🌙</div>
       <div class="s">19:00 출근 → 내일 07:00 퇴근</div>
+      <div style="margin-top:10px;background:#fff;color:#c81e3a;border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:800">🔄 방금 17일(토)이 휴무로 바뀌었어요</div>
       <div class="nx"><div><span>다음 쉬는 날</span><br><b>내일 · 12일(월)부터 2일</b></div><span class="dd">D-1</span></div>
     </div>
     <div class="sec">이번 주 <a>달력 보기 ›</a></div>
@@ -86,32 +104,26 @@ body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;b
       <div class="wd rest"><div class="d">금</div><div class="n">16</div><div class="k">휴</div></div>
       <div class="wd rest"><div class="d" style="color:#3b6fd6">토</div><div class="n">17</div><div class="k">휴</div></div>
     </div>
-    <div class="sec">소식</div>
+    <div class="sec">다가오는 가족 메모 <a>전체 ›</a></div>
     <div class="list">
-      <div class="row"><span class="ic" style="background:#fff0d6">🔄</span><div><b>17일(토) 근무 → 휴무로 변경</b><small>아빠 · 10분 전</small></div><span class="tag" style="background:#fdecee;color:#c81e3a">NEW</span></div>
-      <div class="row memo"><span class="ic" style="background:#7b5cf0;color:#fff">♥</span><div><b>17일 결혼식 12시</b><small>엄마가 남긴 가족 메모</small></div></div>
+      <div class="row memo"><span class="ic" style="background:#7b5cf0;color:#fff;font-size:12px;font-weight:900">14</span><div><b>아이 학교 상담</b><small>수요일 · 3일 뒤 · 아빠 근무(주간)</small></div></div>
+      <div class="row memo"><span class="ic" style="background:#7b5cf0;color:#fff;font-size:12px;font-weight:900">17</span><div><b>결혼식 12시 · 축의금 준비</b><small>토요일 · 6일 뒤 · 아빠 <b style="color:#c81e3a">휴무</b></small></div></div>
     </div>
     <div class="btns"><div class="btn p">이날 쉬어? 요청</div><div class="btn g">♥ 메모 남기기</div></div>
   </div>
   <div class="nav"><span class="on"><i>🏠</i>홈</span><span><i>📅</i>달력</span><span><i>💬</i>소식</span><span><i>⚙️</i>설정</span></div>
 </div></div>
 
-<div class="col"><div class="cap">② 게스트 달력 ("쉬는 날" 강조)</div><div class="sub">근무는 흐리게, 쉬는 날만 진하게</div>
+<div class="col"><div class="cap">② 게스트 달력 (쉬는 날 + 메모)</div><div class="sub">날짜는 위 동그라미, 아래는 전부 메모 / 누르면 바로 펼침</div>
 <div class="ph">
   <div class="top"><div class="who"><span class="av on"><i>아</i>아빠</span><span class="av"><i>엄</i>엄마</span><span class="av"><i>👪</i>같이</span></div><span class="bell">🔔</span></div>
   <div class="b">
     <div class="mh">‹ 2026년 10월 ›</div>
-    <div class="seg"><span class="on">쉬는 날만</span><span>전체 근무</span></div>
-    <div class="sum">이번 달 쉬는 날 <b>15일</b> · 주말에 쉬는 날 <b>4일</b><br>4일(일) · 17일(토) · 24일(토) · 25일(일)</div>
-    <div class="cal">
-      <div class="h" style="color:#e5484d">일</div><div class="h">월</div><div class="h">화</div><div class="h">수</div><div class="h">목</div><div class="h">금</div><div class="h" style="color:#3b6fd6">토</div>
-      <div class="c r o">27</div><div class="c o">28</div><div class="c o">29</div><div class="c r o">30</div><div class="c r">1</div><div class="c">2</div><div class="c">3<small>개천절</small></div>
-      <div class="c r wk">4</div><div class="c r">5<span class="hl">대체</span></div><div class="c">6</div><div class="c">7</div><div class="c r">8<i class="mm"></i></div><div class="c r">9<span class="hl">한글날</span></div><div class="c">10</div>
-      <div class="c t">11</div><div class="c r">12</div><div class="c r">13</div><div class="c">14<i class="mm"></i></div><div class="c">15</div><div class="c r">16</div><div class="c r wk">17<i class="mm"></i></div>
-      <div class="c">18</div><div class="c">19</div><div class="c r">20</div><div class="c r">21</div><div class="c">22</div><div class="c">23</div><div class="c r wk">24</div>
-      <div class="c r wk">25</div><div class="c">26</div><div class="c">27<i class="mm"></i></div><div class="c r">28</div><div class="c r">29</div><div class="c">30</div><div class="c">31</div>
-    </div>
-    <div class="lg"><span><i style="background:#e5484d"></i>쉬는 날</span><span><i style="background:#c81e3a;box-shadow:0 0 0 2px #ffd166 inset"></i>주말·공휴일 휴무</span><span><i style="background:#7b5cf0;border-radius:50%"></i>메모</span></div>
+    
+    <div class="sum">쉬는 날 <b>15일</b> · 주말 휴무 <b>4·17·24·25일</b></div>
+    <div class="cal2"><div class="h" style="color:#e5484d">일</div><div class="h">월</div><div class="h">화</div><div class="h">수</div><div class="h">목</div><div class="h">금</div><div class="h" style="color:#3b6fd6">토</div><div class="q r o"><div class="n">27</div></div><div class="q o"><div class="n">28</div></div><div class="q o"><div class="n">29</div></div><div class="q r o"><div class="n">30</div></div><div class="q r"><div class="n">1</div></div><div class="q "><div class="n">2</div><div class="p">♥ 엄마 생신</div></div><div class="q "><div class="n">3</div><div class=hn>개천절</div></div><div class="q r wk"><div class="n">4</div></div><div class="q r"><div class="n">5</div><div class=hn>대체</div></div><div class="q "><div class="n">6</div></div><div class="q "><div class="n">7</div></div><div class="q r"><div class="n">8</div><div class="p">♥ 병원 3시</div></div><div class="q r"><div class="n">9</div><div class=hn>한글날</div></div><div class="q "><div class="n">10</div></div><div class="q t"><div class="n">11</div></div><div class="q r"><div class="n">12</div></div><div class="q r"><div class="n">13</div></div><div class="q "><div class="n">14</div><div class="p">♥ 아이 학교 상담</div></div><div class="q "><div class="n">15</div></div><div class="q r"><div class="n">16</div></div><div class="q r wk"><div class="n">17</div><div class="p">♥ 결혼식 12시</div><div class="p">♥ 축의금</div></div><div class="q "><div class="n">18</div></div><div class="q "><div class="n">19</div></div><div class="q r"><div class="n">20</div></div><div class="q r"><div class="n">21</div></div><div class="q "><div class="n">22</div></div><div class="q "><div class="n">23</div></div><div class="q r wk"><div class="n">24</div><div class="p req">⏳ 휴무 요청</div></div><div class="q r wk"><div class="n">25</div></div><div class="q "><div class="n">26</div></div><div class="q "><div class="n">27</div><div class="p">♥ 가족 외식</div><div class="p">♥ 예약 확인</div></div><div class="q r"><div class="n">28</div></div><div class="q r"><div class="n">29</div></div><div class="q "><div class="n">30</div></div><div class="q "><div class="n">31</div></div></div>
+    <div class="lg"><span><i style="background:#e5484d"></i>쉬는 날</span><span><i style="background:#c81e3a;box-shadow:0 0 0 2px #ffd166 inset"></i>주말·공휴일 휴무</span><span><i style="background:#7b5cf0"></i>가족 메모</span></div>
+    <div class="sheet"><div class="gr"></div><h4><span style="background:#c81e3a;color:#fff;border-radius:50%;width:24px;height:24px;display:grid;place-items:center;font-size:12px">17</span>10월 17일 (토) · 아빠 휴무</h4><div class="mc">♥ 결혼식 12시<small>엄마 · 어제</small></div><div class="mc">♥ 축의금 준비<small>아빠 · 2시간 전</small></div></div>
   </div>
   <div class="nav"><span><i>🏠</i>홈</span><span class="on"><i>📅</i>달력</span><span><i>💬</i>소식</span><span><i>⚙️</i>설정</span></div>
 </div></div>
