@@ -53,3 +53,6 @@
 3. 초대 코드·참여, 요청 트랜잭션(수락·거절·취소·되돌리기)
 4. Blaze 전환 후 Cloud Functions: 사용량 검증, 광고 보상, 구독 검증, FCM, 가구 삭제
 5. 네이티브: 구글 로그인(Credential Manager → ID 토큰 → JS linkWithCredential), FCM 토큰, 광고 SDK, 결제
+
+## 변경: 백업은 Firestore 대신 사용자 구글 드라이브(appDataFolder)
+- users/{uid}/backups 는 쓰지 않음. 백업은 최신 + 직전 2개만, 복원은 무료(광고 게이트 없음).
