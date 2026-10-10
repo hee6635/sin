@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>L 아이콘 다듬기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ecf1;padding:30px;color:#1f2328;width:1500px}
+h1{font-size:22px;margin-bottom:6px}.lead{color:#6b7280;font-size:14px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.card{background:#fff;border-radius:22px;padding:22px 16px 18px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.big{width:170px;height:170px;border-radius:38px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.shapes{display:flex;justify-content:center;gap:12px;margin-top:16px;align-items:center}
+.shapes svg{width:54px;height:54px;box-shadow:0 3px 8px rgba(0,0,0,.18)}
+.s1{border-radius:50%}.s2{border-radius:16px}.s3{border-radius:30% 30% 30% 30%/30% 30% 30% 30%}.s4{border-radius:8px}
+.card b{display:block;margin-top:16px;font-size:16.5px}
+.card small{display:block;font-size:12.5px;color:#6b7280;margin-top:4px;line-height:1.45}
+.home{margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.scr{border-radius:26px;padding:26px 30px;display:flex;justify-content:space-around}
+.scr.l{background:linear-gradient(160deg,#7fa7c9,#a9c3a0 50%,#d9b48a)}.scr.d{background:linear-gradient(160deg,#1b2233,#2b2440 60%,#3a2b2b)}
+.app{display:flex;flex-direction:column;align-items:center;gap:6px}
+.app svg{width:60px;height:60px;border-radius:50%;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+.app span{font-size:11.5px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.cap{font-size:14px;font-weight:800;margin:0 0 8px 4px}
+</style></head><body>
+<h1>L 아이콘 다듬기</h1><div class="lead">아래 작은 4개는 폰마다 다른 아이콘 모양(동그라미 · 둥근 사각형 · 물방울 · 사각형)으로 잘렸을 때예요.</div>
+<div class="grid" id="g"></div>
+<div class="home"><div><div class="cap">밝은 배경화면 (동그라미 모양 폰)</div><div class="scr l" id="h1"></div></div><div><div class="cap">어두운 배경화면</div><div class="scr d" id="h2"></div></div></div>
+<script>
+const F='font-family="Apple SD Gothic Neo,Noto Sans KR,sans-serif"';
+let n=0;const id=()=>'x'+(n++);
+const V={
+L1:()=>{const a=id();return `<svg viewBox="0 0 108 108"><defs><linearGradient id="${a}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a6cf6"/><stop offset="1" stop-color="#5a43c9"/></linearGradient></defs>
+ <rect width="108" height="108" fill="url(#${a})"/>
+ <rect x="26" y="27" width="56" height="56" rx="16" fill="#000" opacity=".12" transform="translate(0 3)"/>
+ <rect x="26" y="26" width="56" height="56" rx="16" fill="#fff"/>
+ <text x="54" y="64" font-size="32" font-weight="900" text-anchor="middle" fill="#2b2f6b" ${F}>쉬</text>
+ <path d="M40 73h28" stroke="#ffc53d" stroke-width="4.5" stroke-linecap="round"/>
+ <circle cx="79" cy="29" r="10" fill="#ff5c7a" stroke="#fff" stroke-width="2.5"/><text x="79" y="33.5" font-size="11.5" font-weight="900" text-anchor="middle" fill="#fff" font-family="sans-serif">D</text></svg>`},
+L2:()=>{const a=id();return `<svg viewBox="0 0 108 108"><defs><linearGradient id="${a}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a6cf6"/><stop offset="1" stop-color="#4f7cff"/></linearGradient></defs>
+ <rect width="108" height="108" fill="url(#${a})"/>
+ <rect x="26" y="30" width="56" height="52" rx="14" fill="#000" opacity=".12" transform="translate(0 3)"/>
+ <rect x="26" y="30" width="56" height="52" rx="14" fill="#fff"/>
+ <path d="M26 44V44a14 14 0 0 1 14-14h28a14 14 0 0 1 14 14z" fill="#ff5c7a"/>
+ <rect x="38" y="24" width="5" height="12" rx="2.5" fill="#fff"/><rect x="65" y="24" width="5" height="12" rx="2.5" fill="#fff"/>
+ <text x="54" y="73" font-size="27" font-weight="900" text-anchor="middle" fill="#2b2f6b" ${F}>쉬</text></svg>`},
+L3:()=>{const a=id();return `<svg viewBox="0 0 108 108"><defs><linearGradient id="${a}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a6cf6"/><stop offset="1" stop-color="#5a43c9"/></linearGradient></defs>
+ <rect width="108" height="108" fill="url(#${a})"/>
+ <rect x="26" y="26" width="56" height="56" rx="16" fill="#fff"/>
+ <text x="52" y="66" font-size="34" font-weight="900" text-anchor="middle" fill="#2b2f6b" ${F}>쉬</text>
+ <path d="M80 20a10 10 0 1 0 9 14 8.5 8.5 0 0 1-9-14z" fill="#ffd36b"/></svg>`},
+L4:()=>{const a=id();return `<svg viewBox="0 0 108 108"><defs><linearGradient id="${a}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b2f6b"/><stop offset="1" stop-color="#4b3aa8"/></linearGradient></defs>
+ <rect width="108" height="108" fill="url(#${a})"/>
+ <rect x="26" y="26" width="56" height="56" rx="16" fill="#fff"/>
+ <text x="54" y="64" font-size="32" font-weight="900" text-anchor="middle" fill="#5a43c9" ${F}>쉬</text>
+ <path d="M40 73h28" stroke="#ffc53d" stroke-width="4.5" stroke-linecap="round"/>
+ <circle cx="79" cy="29" r="10" fill="#ff5c7a" stroke="#2b2f6b" stroke-width="2.5"/><text x="79" y="33.5" font-size="11.5" font-weight="900" text-anchor="middle" fill="#fff" font-family="sans-serif">D</text></svg>`}};
+const info={L1:['L-1. 기본 다듬기','그림자로 카드가 떠 보이게, D 배지에 흰 테두리, 노란 줄 정리'],
+L2:['L-2. 달력 카드','카드 위를 빨간 달력 머리로 + 고리. "달력 앱"이라는 게 더 분명'],
+L3:['L-3. 달 버전','D 배지 대신 노란 초승달. 더 차분하고 "쉼" 느낌'],
+L4:['L-4. 밤하늘 버전','남색→보라 진한 바탕, 글자를 보라로. 고급스럽고 어두운 배경에 강함']};
+document.getElementById('g').innerHTML=Object.keys(V).map(k=>{const big=V[k]().replace('<svg','<svg class="big"');
+ return `<div class="card">${big}<div class="shapes">${['s1','s2','s3','s4'].map(c=>V[k]().replace('<svg',`<svg class="${c}"`)).join('')}</div><b>${info[k][0]}</b><small>${info[k][1]}</small></div>`}).join('');
+const row=Object.keys(V).map(k=>`<div class="app">${V[k]()}<span>언제쉬어 ${k.slice(1)}</span></div>`).join('');
+document.getElementById('h1').innerHTML=row;document.getElementById('h2').innerHTML=row;
+</script></body></html>
