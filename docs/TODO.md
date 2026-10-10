@@ -2,7 +2,7 @@
 
 ## ★★ 가장 먼저 (다른 것보다 앞서)
 - [ ] 앱 이름 "언제쉬어" 로 변경 (홈 화면 아이콘 이름, 앱 안 제목, 알림·알람 화면, README)
-- [ ] 패키지 이름 확정 (com.example 은 스토어 불가, Firebase 등록 뒤 못 바꿈) — 후보: com.eonjeswieo.app
+- [ ] 패키지 이름 변경: **com.eonjeswieo.app** (확정) — applicationId·namespace·코틀린 패키지·FileProvider·액션 이름 전부
 - [ ] 서명 키 고정: GitHub Secrets 키스토어로 서명 → 업데이트해도 데이터 유지, 구글 로그인 SHA-1 고정
 - [ ] WebViewAssetLoader 로 https 출처에서 앱 열기 (Firebase Auth · IndexedDB 전제)
 
