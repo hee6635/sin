@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>교대달력 UI 시안</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Pretendard","Noto Sans KR",sans-serif;background:#e9ecf1;padding:24px;display:flex;gap:28px;justify-content:center;flex-wrap:wrap}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.cap{font-size:18px;font-weight:800;color:#1f2328}
+.cap small{display:block;font-size:13px;font-weight:500;color:#6b7280;text-align:center;margin-top:2px}
+.phone{width:390px;height:800px;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.12);display:flex;flex-direction:column;position:relative}
+.top{display:flex;align-items:center;padding:18px 18px 10px;gap:6px}
+.top h1{font-size:24px;font-weight:800;letter-spacing:-.5px;flex:1}
+.top .nb{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:20px;color:#555}
+.top .today{height:32px;padding:0 12px;border-radius:16px;background:#f2f4f6;font-size:13px;font-weight:700;display:grid;place-items:center}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:12px;font-weight:700;color:#8b919a;padding:6px 0}
+.dow .s{color:#e5484d}.dow .t{color:#3b6fd6}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);flex:1}
+.nav{display:flex;border-top:1px solid #eef0f3;height:62px;flex:none}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:#9aa0a8;gap:3px}
+.nav div.on{color:#2f6bf0;font-weight:700}
+.nav i{width:20px;height:20px;border-radius:6px;border:2px solid currentColor;display:block}
+.fab{position:absolute;right:16px;bottom:76px;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:24px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+
+/* ===== A: 색 막대 ===== */
+.A .card{margin:0 14px 8px;padding:14px 16px;border-radius:16px;background:#f5f7fb;display:flex;align-items:center;gap:12px}
+.A .card .ic{width:44px;height:44px;border-radius:12px;background:#2e3a6b;color:#fff;display:grid;place-items:center;font-size:22px;flex:none}
+.A .card b{font-size:16px;display:block}
+.A .card span{font-size:12.5px;color:#6b7280}
+.A .legend{display:flex;gap:12px;justify-content:flex-end;padding:0 16px 4px;font-size:11px;color:#8b919a}
+.A .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.A .c{border-top:1px solid #f0f2f5;height:88px;position:relative;padding-top:4px}
+.A .c .n{font-size:13px;font-weight:600;padding-left:7px;color:#1f2328;display:flex;justify-content:space-between;align-items:center;padding-right:4px}
+.A .c .n em{font-style:normal;font-size:9.5px;color:#e5484d;font-weight:600}
+.A .c.out{opacity:.35}
+.A .c.s .n b,.A .c.h .n b{color:#e5484d}.A .c.t .n b{color:#3b6fd6}
+.A .c.today .n b{background:#2f6bf0;color:#fff;border-radius:9px;padding:0 6px}
+.A .c.today{background:#f3f7ff}
+.A .bar{position:absolute;left:3px;right:3px;bottom:10px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800}
+.A .bar.d{background:#ffcf5c;color:#5a3d00}
+.A .bar.n{background:#34437a;color:#fff}
+.A .bar.jl{left:0;border-top-left-radius:0;border-bottom-left-radius:0}
+.A .bar.jr{right:0;border-top-right-radius:0;border-bottom-right-radius:0}
+.A .rest{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-size:12px;color:#b4b9c1;font-weight:600}
+.A .memo{position:absolute;left:3px;right:3px;bottom:40px;font-size:9.5px;line-height:14px;height:14px;padding:0 4px;border-radius:4px;background:#ffe3ea;color:#d6336c;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.A .fab{background:#2f6bf0}
+
+/* ===== B: 컬러 블록 ===== */
+.B .c{border-top:1px solid #fff;border-left:1px solid #fff;height:104px;position:relative;padding:5px 6px}
+.B .c .n{font-size:13px;font-weight:700;display:flex;justify-content:space-between}
+.B .c .n em{font-style:normal;font-size:9.5px;font-weight:600}
+.B .c .lb{position:absolute;left:0;right:0;top:40px;text-align:center;font-size:20px;font-weight:900}
+.B .c.d{background:#ffe7a8;color:#6a4700}
+.B .c.n{background:#2e3a6b;color:#fff}
+.B .c.r{background:#fff;color:#1f2328}
+.B .c.r .lb{color:#c3c8cf;font-size:15px;font-weight:700}
+.B .c.r.s .n b,.B .c.r.h .n b{color:#e5484d}.B .c.r.t .n b{color:#3b6fd6}
+.B .c.h .n em{color:inherit;opacity:.9}.B .c.r.h .n em{color:#e5484d}
+.B .c.out{opacity:.35}
+.B .c.today{box-shadow:inset 0 0 0 3px #2f6bf0}
+.B .memo{position:absolute;left:3px;right:3px;bottom:5px;font-size:9.5px;line-height:14px;padding:0 4px;border-radius:4px;background:#ff4d6d;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.B .fab{background:#2f6bf0}
+
+/* ===== C: 다이어리 ===== */
+.C.phone{background:#fffaf5}
+.C .top h1{color:#5b4636}
+.C .grid{gap:4px;padding:0 6px}
+.C .c{height:92px;border-radius:14px;position:relative;padding:5px 7px;background:#fff;box-shadow:0 1px 0 #f1e7dc}
+.C .c .n{font-size:12.5px;font-weight:700;color:#5b4636;display:flex;justify-content:space-between}
+.C .c .n em{font-style:normal;font-size:9px;color:#e8697d}
+.C .c.s .n b,.C .c.h .n b{color:#e8697d}.C .c.t .n b{color:#5b8def}
+.C .c.out{opacity:.35}
+.C .c.d{background:#fff4cf}
+.C .c.n{background:#e6e4ff}
+.C .c .em{position:absolute;left:0;right:0;top:28px;text-align:center;font-size:24px}
+.C .c .lb{position:absolute;left:0;right:0;top:58px;text-align:center;font-size:11px;font-weight:700;color:#8a7461}
+.C .c.today{outline:2.5px solid #ff8fa3}
+.C .memo{position:absolute;left:3px;right:3px;bottom:3px;font-size:9px;line-height:13px;padding:0 4px;border-radius:6px;background:#ffd6de;color:#c2255c;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.C .c.has-memo .lb{display:none}
+.C .fab{background:#ff8fa3}
+.C .nav div.on{color:#ff6b88}
+</style></head><body>
+<script>
+const P=['주','주','휴','휴','야','야','휴','휴'];
+const anchor=Date.UTC(2026,8,28);
+const sh=d=>P[((Math.round((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-anchor)/864e5))%8+8)%8];
+const HOL={'2026-10-03':'개천절','2026-10-05':'대체','2026-10-09':'한글날'};
+const MEMO={'2026-10-20':'❤️ 에버랜드','2026-10-24':'❤️ 장모님 생신'};
+const k=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const days=[];for(let i=0;i<35;i++)days.push(new Date(2026,8,27+i));
+const TODAY='2026-10-11';
+const base=(v)=>`<div class="top"><h1>2026. 10 ▾</h1><div class="nb">‹</div><div class="nb">›</div><div class="today">오늘</div></div>`;
+const nav=`<div class="nav"><div class="on"><i></i>달력</div><div><i></i>동료근무</div><div><i></i>알람</div><div><i></i>설정</div></div>`;
+const dow=`<div class="dow"><span class="s">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="t">토</span></div>`;
+function cls(d){const kk=k(d);return [d.getMonth()!==9?'out':'',d.getDay()===0?'s':'',d.getDay()===6?'t':'',HOL[kk]?'h':'',kk===TODAY?'today':''].join(' ');}
+function num(d){const h=HOL[k(d)];return `<div class="n"><b>${d.getDate()}</b>${h?`<em>${h}</em>`:''}</div>`;}
+function memo(d){const m=MEMO[k(d)];return m?`<div class="memo">${m}</div>`:'';}
+
+function A(){
+  let g='';
+  days.forEach((d,i)=>{
+    const s=sh(d),prev=i%7>0&&sh(days[i-1])===s,next=i%7<6&&i<34&&sh(days[i+1])===s;
+    let body;
+    if(s==='휴')body=`<div class="rest">휴</div>`;
+    else body=`<div class="bar ${s==='주'?'d':'n'} ${prev?'jl':''} ${next?'jr':''}">${prev?'':(s==='주'?'☀ 주간':'☾ 야간')}</div>`;
+    g+=`<div class="c ${cls(d)}">${num(d)}${memo(d)}${body}</div>`;
+  });
+  return `<div class="phone A">${base()}
+  <div class="card"><div class="ic">☾</div><div><b>오늘 야간 근무</b><span>내일 휴무 · 다음 알람 오후 4:30 (5시간 후)</span></div></div>
+  <div class="legend"><span><i style="background:#ffcf5c"></i>주간</span><span><i style="background:#34437a"></i>야간</span><span><i style="background:#e6e8ec"></i>휴무</span></div>
+  ${dow}<div class="grid">${g}</div><div class="fab">+</div>${nav}</div>`;
+}
+function B(){
+  let g='';
+  days.forEach(d=>{const s=sh(d);
+    g+=`<div class="c ${s==='주'?'d':s==='야'?'n':'r'} ${cls(d)}">${num(d)}<div class="lb">${s}</div>${memo(d)}</div>`;});
+  return `<div class="phone B">${base()}${dow}<div class="grid">${g}</div><div class="fab">+</div>${nav}</div>`;
+}
+function C(){
+  let g='';
+  days.forEach(d=>{const s=sh(d),m=MEMO[k(d)];
+    g+=`<div class="c ${s==='주'?'d':s==='야'?'n':''} ${cls(d)} ${m?'has-memo':''}">${num(d)}<div class="em">${s==='주'?'☀️':s==='야'?'🌙':'☕'}</div><div class="lb">${s==='주'?'주간':s==='야'?'야간':'휴무'}</div>${memo(d)}</div>`;});
+  return `<div class="phone C">${base()}${dow}<div class="grid">${g}</div><div class="fab">+</div>${nav}</div>`;
+}
+const v=new URLSearchParams(location.search).get('v');
+const all=[['A','A. 색 막대 (추천)','깔끔·오늘 카드·연속 근무가 이어짐',A],['B','B. 컬러 블록','칸 전체를 근무색으로 칠함',B],['C','C. 다이어리','파스텔·이모지·말랑한 느낌',C]];
+document.body.innerHTML=all.filter(x=>!v||x[0]===v).map(([id,t,s,f])=>`<div class="wrap" id="${id}"><div class="cap">${t}<small>${s}</small></div>${f()}</div>`).join('');
+</script></body></html>
