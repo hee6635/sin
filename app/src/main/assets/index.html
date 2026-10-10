@@ -124,16 +124,20 @@ button{border:0;background:none;padding:0;cursor:pointer}
 
 .bwrap{flex:1;width:100%;position:relative;display:flex;align-items:center;justify-content:center; min-height:34px;}
 .band{position:absolute;top:50%;transform:translateY(-50%);height:var(--b);--b:min(86cqw,64px);left:50%;right:50%}
-.band.d{background:var(--band-d)}.band.n{background:var(--band-n)}
+.band{background:color-mix(in srgb,var(--tb) 32%,var(--bg))}
 .band.pl{left:0}
 .band.nl{right:0}
 
 .badge{position:relative;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;flex:none}
-.bwrap .badge{--b:min(86cqw,64px);width:var(--b);height:var(--b);font-size:calc(var(--b)*.36);font-weight:700;z-index:1}
+.bwrap .badge{--b:min(86cqw,64px);width:var(--b);height:var(--b);font-size:calc(var(--b)*.32);font-weight:500;z-index:1}
+.badge.c{background:var(--tb);color:var(--tf)}
+.badge.two{letter-spacing:-1px}
+.bwrap .badge.two{font-size:calc(var(--b)*.27)}
+.badge.sm.two{font-size:10.5px}
 .badge.d{background:var(--day);color:var(--day-fg)}
 .badge.n{background:var(--night);color:var(--night-fg)}
 .badge.r{background:none;color:var(--rest);border-radius:0}
-.bwrap .badge.r{font-size:calc(var(--b)*.36);font-weight:800}
+.bwrap .badge.r{font-size:calc(var(--b)*.28);font-weight:600}
 .badge.s-sang{background:#b8e994;color:#0a3d62;}
 .badge.s-edu{background:#f8c291;color:#b71540;}
 .badge.sm{width:26px;height:26px;font-size:13px;margin:0;}
@@ -292,6 +296,39 @@ textarea{resize:none;min-height:84px}
 .setting-label span{font-size:12px; color:var(--muted);}
 .demo-note{font-size:12px;line-height:1.5;color:var(--muted);background:color-mix(in srgb,var(--accent) 8%,var(--bg));border-radius:12px;padding:10px 12px;margin-top:8px}
 
+/* 날짜 시트: 근무타입 · 메모 */
+.sec{background:var(--bg);border-top:8px solid var(--surface);margin:0 -16px;padding:14px 16px}
+.sec-t{font-size:14px;color:var(--muted);font-weight:600;margin-bottom:10px}
+.sec-t span{font-weight:400;font-size:12px}
+.tchips{display:flex;flex-wrap:wrap;gap:10px 8px}
+.tchip{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:48px;-webkit-touch-callout:none}
+.tchip small{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.badge.tc{width:46px;height:46px;font-size:17px;font-weight:500;opacity:.45}
+.badge.tc.r{font-size:15px;font-weight:600;border-radius:50%;background:var(--surface)}
+.badge.tc.two{font-size:13px}
+.tchip.on .badge.tc{opacity:1;box-shadow:0 0 0 2.5px var(--bg),0 0 0 4.5px var(--fg)}
+.tchip.on small{color:var(--fg);font-weight:700}
+.badge.tc.add{width:auto;padding:0 14px;border-radius:23px;background:var(--surface);color:var(--muted);font-size:15px;opacity:1}
+.mrow{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:2px 0}
+.mrow .mt{font-weight:700;color:var(--muted);width:16px;text-align:center}
+.mrow .minput{flex:1;background:none;border-radius:0;padding:11px 2px;font-size:15px}
+.mshare{position:relative;width:32px;height:32px;display:grid;place-items:center;border-radius:8px;filter:grayscale(1);opacity:.35;font-size:15px}
+.mshare.on{filter:none;opacity:1;background:color-mix(in srgb,var(--family-pink) 14%,var(--bg))}
+.mshare input{position:absolute;inset:0;opacity:0;margin:0}
+.mdel{width:32px;height:32px;display:grid;place-items:center;color:var(--muted)}
+.mdel svg{width:20px;height:20px;fill:currentColor}
+.madd{display:flex;align-items:center;gap:14px;padding:12px 0 4px;color:var(--muted);font-size:15px}
+.madd span{font-size:20px;width:16px;text-align:center}
+.pk-g{display:flex;align-items:center;gap:8px;margin:14px 0 2px;font-size:12px;color:var(--muted)}
+.pk-g::after{content:"";flex:1;height:1px;background:var(--line)}
+.pk-i{display:block;width:100%;text-align:left;padding:14px 4px;border-bottom:1px solid var(--line);font-size:16px}
+.pk-i small{color:var(--muted);font-size:13px}
+.pk-i.new{color:var(--accent);font-weight:700;border-bottom:0;margin-top:6px}
+.badge.big{width:64px;height:64px;font-size:24px;font-weight:600}
+.pal{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;justify-items:center}
+.pal button{width:36px;height:36px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.pal button.on{box-shadow:0 0 0 2.5px var(--bg),0 0 0 4.5px var(--fg)}
+.pal .sw0{background:var(--surface);color:var(--rest);font-weight:700;font-size:13px}
 /* sheet */
 #scrim{position:fixed;inset:0;background:rgba(0,0,0,.42);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
 #scrim.open{opacity:1;pointer-events:auto}
@@ -423,15 +460,42 @@ const shortHol=n=>n==='부처님오신날'?'부처님':n==='대체공휴일'?'�
 //#HOL_END
 
 /* ================= 근무 종류 ================= */
-const SHIFT={
-  '주':{name:'주간',cls:'d'},
-  '야':{name:'야간',cls:'n'},
-  '상':{name:'상주',cls:'s-sang'},
-  '교':{name:'교육',cls:'s-edu'},
-  '휴':{name:'휴무',cls:'r'}
-};
-const NEXT={'주':'야','야':'휴','휴':'주'};
-const shiftLabel=s=>SHIFT[s]?SHIFT[s].name:s;
+/* 근무타입은 S.types 에 저장 (사용자가 추가·편집 가능)
+ * k: 달력에 보이는 글자(1~2자), name: 이름, color: 'v:day' 처럼 테마 색 또는 '#hex', 빈 값이면 빨간 글자만
+ * rest: 쉬는 날 종류인지 (통계·대근 계산에 사용) */
+const PALETTE=['#37474f','#546e7a','#ba68c8','#7986cb','#3f51b5',
+  '#795548','#e91e63','#2196f3','#fbc02d','#8bc34a',
+  '#cfd8dc','#d7ccc8','#ffe0b2','#dcedc8','#bbdefb',
+  '#c5cae9','#e1bee7','#f8bbd0','#ffccbc','#b2dfdb'];
+const DEFAULT_TYPES=()=>[
+  {k:'주',name:'주간',color:'v:day',rest:false},
+  {k:'야',name:'야간',color:'v:night',rest:false},
+  {k:'휴',name:'휴무',color:'',rest:true},
+  {k:'상',name:'상주',color:'#dcedc8',rest:false},
+  {k:'교',name:'교육',color:'#ffe0b2',rest:false}
+];
+/* "+추가"에서 고를 수 있는 기본 목록 [글자, 이름, 설명] */
+const PRESETS=[
+  {group:'근무',rest:false,items:[['주','주간'],['야','야간'],['상','상주'],['교','교육'],['당','당직'],['대','대근'],['출','출장'],['특','특근']]},
+  {group:'휴무',rest:true,items:[['월차','월차'],['연차','연차'],['연가','연가'],['반차','반차'],['휴','휴무'],['지휴','지휴','지정휴가'],['보휴','보휴','보건휴가'],['병가','병가'],['경조','경조','경조휴가']]}
+];
+const BUILTIN=['주','야','휴'];
+const typeOf=k=>(S.types||[]).find(t=>t.k===k)||{k,name:k,color:'#cfd8dc',rest:false};
+const shiftLabel=k=>typeOf(k).name;
+const isRest=k=>!!typeOf(k).rest;
+function tColors(t){
+  if(!t.color)return null;
+  if(t.color==='v:day')return {bg:'var(--day)',fg:'var(--day-fg)'};
+  if(t.color==='v:night')return {bg:'var(--night)',fg:'var(--night-fg)'};
+  const h=t.color.replace('#',''),R=parseInt(h.slice(0,2),16),G=parseInt(h.slice(2,4),16),B=parseInt(h.slice(4,6),16);
+  return {bg:t.color,fg:(R*299+G*587+B*114)/1000>150?'#1f2328':'#ffffff'};
+}
+/* 근무 동그라미 html. extra: 'sm' 등 추가 클래스 */
+function badge(k,extra,inner){
+  const t=typeOf(k),c=tColors(t),two=String(k).length>1?' two':'';
+  if(!c)return `<span class="badge r${two} ${extra||''}">${esc(k)}${inner||''}</span>`;
+  return `<span class="badge c${two} ${extra||''}" style="--tb:${c.bg};--tf:${c.fg}">${esc(k)}${inner||''}</span>`;
+}
 const MIN_M=2026*12, MAX_M=2030*12+11;   // 공휴일 데이터가 있는 범위
 
 /* ================= 요청 상태 ================= */
@@ -458,6 +522,7 @@ const defaults=()=>({
   pay:{wage:0,hours:12},   // 대근 시급, 대근 1번 근무시간
   myTeam:2,                // 동료근무 표에서 내 조 (0=A ~ 3=D)
   patternName:'4조2교대',  // 달력 위에 보이는 근무 이름
+  types:DEFAULT_TYPES(),
   board:{'2026-09':[{id:uid(),text:'우유 사기',done:false},{id:uid(),text:'세제 보충',done:false},{id:uid(),text:'주말 여행용품 준비',done:true}]}
 });
 function normalize(o){
@@ -467,6 +532,16 @@ function normalize(o){
   if(!Array.isArray(s.pattern)||s.pattern.length<2)s.pattern=d.pattern;
   if(!Array.isArray(s.alarms))s.alarms=[];
   if(![0,1,2,3].includes(s.myTeam))s.myTeam=2;
+  if(!Array.isArray(s.types)||!s.types.length)s.types=DEFAULT_TYPES();
+  BUILTIN.forEach((k,i)=>{if(!s.types.some(t=>t.k===k))s.types.splice(i,0,DEFAULT_TYPES()[i]);});
+  // 메모: 예전(문자열 / {text,shared}) → 지금(여러 개 목록)
+  const mm={};
+  for(const [k,v] of Object.entries(s.memos||{})){
+    const list=Array.isArray(v)?v:typeof v==='string'?[{text:v,shared:false}]:[{text:(v&&v.text)||'',shared:!!(v&&v.shared)}];
+    const clean=list.filter(x=>x&&x.text).map(x=>({id:x.id||uid(),text:String(x.text),shared:!!x.shared}));
+    if(clean.length)mm[k]=clean;
+  }
+  s.memos=mm;
   return s;
 }
 function load(){
@@ -493,7 +568,7 @@ function nativeIssues(){
 function pushAlarmsToNative(){
   try{
     if(window.AndroidBridge&&typeof window.AndroidBridge.setAlarms==='function'){
-      const list=buildSchedule(60).map(x=>({id:`${x.a.id}_${fmt(x.d)}`,at:x.at.getTime(),label:x.a.label||'',shift:x.sh,time:x.a.time,sound:x.a.sound!==false,vib:x.a.vib!==false}));
+      const list=buildSchedule(60).map(x=>({id:`${x.a.id}_${fmt(x.d)}`,at:x.at.getTime(),label:x.a.label||'',shift:x.sh,shiftName:shiftLabel(x.sh),time:x.a.time,sound:x.a.sound!==false,vib:x.a.vib!==false}));
       window.AndroidBridge.setAlarms(JSON.stringify(list));
     }
   }catch(e){}
@@ -537,7 +612,7 @@ let draft=null;         // 알람 편집 중
 let reqDraft={want:'휴',msg:''};   // 게스트가 쓰는 요청
 let pendingSend=null;    // 무료 횟수를 다 써서 광고를 보고 있는 동안 잠시 보관하는 요청/메모
 let replyDraft=null;    // 호스트가 쓰는 답장
-let memoSnap=null;      // 날짜 시트를 열 때의 메모 (저장 시 '새로 공유됐는지' 비교용)
+let typeDraft=null;     // 근무타입 편집 중
 let tempPickerYear=cur.y;
 
 const role=()=>S.syncSettings.isGuestMode?'guest':'host';
@@ -550,15 +625,14 @@ const baseShift=d=>{
 };
 const shiftOf=d=>S.overrides[fmt(d)]||baseShift(d);
 
-/* S.memos[날짜]는 예전엔 문자열이었고 지금은 {text, shared} 객체입니다. 둘 다 안전하게 읽는 도우미 */
-function memoOf(k){
-  const v=S.memos[k];
-  if(!v)return {text:'',shared:false};
-  if(typeof v==='string')return {text:v,shared:false};
-  return {text:v.text||'',shared:!!v.shared};
-}
-function setMemo(k,text,shared){
-  if(text)S.memos[k]={text,shared:!!shared};else delete S.memos[k];
+/* S.memos[날짜] = [{id,text,shared}, ...]  하루에 메모 여러 개 */
+const memosOf=k=>Array.isArray(S.memos[k])?S.memos[k]:[];
+const sharedMemos=k=>S.syncSettings.shareMyMemos===false?[]:memosOf(k).filter(m=>m.shared&&m.text.trim());
+/* 내용 없는 메모 정리 */
+function tidyMemos(k){
+  if(!k||!S.memos[k])return;
+  S.memos[k]=S.memos[k].filter(m=>m.text.trim());
+  if(!S.memos[k].length)delete S.memos[k];
 }
 
 function buildSchedule(days){
@@ -658,21 +732,23 @@ function calPanel(y,m){
   let cells='';
   for(let i=0;i<rows*7;i++){
     const d=addDays(start,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),ov=S.overrides[k],dow=d.getDay();
-    const mv=memoOf(k),isGuestView=S.syncSettings.isGuestMode;
+    const ms=memosOf(k).filter(x=>x.text.trim()),isGuestView=S.syncSettings.isGuestMode;
     const cls=hol||dow===0?'sun':dow===6?'sat':'';
     const ps=shiftOf(addDays(d,-1)),ns=shiftOf(addDays(d,1));
-    const band=(sh==='주'||sh==='야')&&(ps===sh||ns===sh)?`<i class="band ${SHIFT[sh].cls} ${ps===sh?'pl':''} ${ns===sh?'nl':''}"></i>`:'';
+    const tc=tColors(typeOf(sh));
+    const band=tc&&!isRest(sh)&&(ps===sh||ns===sh)?`<i class="band ${ps===sh?'pl':''} ${ns===sh?'nl':''}" style="--tb:${tc.bg}"></i>`:'';
 
     const fMemo=(S.syncSettings.receiveFamilyMemo!==false)?S.familyMemos[k]:null;
     const familyPill=fMemo?`<div class="family-pill">❤️ ${esc(fMemo)}</div>`:'';
     const rq=S.requests.find(r=>r.date===k&&(r.st==='pending'||r.st==='accepted'||r.st==='rejected'));
     const reqPill=rq?`<div class="req-pill ${rq.st}">${REQ_ST[rq.st].ic} ${shiftLabel(rq.want)} 요청</div>`:'';
-    const myPill=(!isGuestView&&mv.text)?`<div class="pill">${esc(mv.text.split('\n')[0])}</div>`:'';
-    const sharedPill=(isGuestView&&mv.shared&&mv.text&&S.syncSettings.shareMyMemos!==false)?`<div class="shared-pill">📌 ${esc(mv.text.split('\n')[0])}</div>`:'';
+    const myPill=(!isGuestView&&ms.length)?`<div class="pill">${esc(ms[0].text.split('\n')[0])}${ms.length>1?` +${ms.length-1}`:''}</div>`:'';
+    const sm=isGuestView?sharedMemos(k):[];
+    const sharedPill=sm.length?`<div class="shared-pill">📌 ${esc(sm[0].text.split('\n')[0])}${sm.length>1?` +${sm.length-1}`:''}</div>`:'';
 
     cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''}" data-act="day" data-k="${k}">
       <div class="dn ${hol?'hol':''} ${cls}"><span class="num">${d.getDate()}</span><span class="hn">${esc(shortHol(hol))}</span></div>
-      <div class="bwrap">${band}<div class="badge ${SHIFT[sh]?SHIFT[sh].cls:'r'}">${sh}${ov?'<i class="dot"></i>':''}</div></div>
+      <div class="bwrap">${band}${badge(sh,'',ov?'<i class="dot"></i>':'')}</div>
       <div class="pill-wrap">${familyPill}${reqPill}${myPill}${sharedPill}</div>
     </div>`;
   }
@@ -758,7 +834,7 @@ function renderColleague(){
   let html=`<div class="col-header">
     <div>날짜</div>${TEAMS.map((n,g)=>`<div class="${g===S.myTeam?'me':''}">${n}${g===S.myTeam?' (나)':''}</div>`).join('')}
   </div>`;
-  const b=s=>`<div class="badge sm ${SHIFT[s]?SHIFT[s].cls:'r'}">${s}</div>`;
+  const b=s=>badge(s,'sm');
   for(let i=1;i<=daysInMonth;i++){
     const d=new Date(y,m,i),k=fmt(d);
     const cls=holName(k)||d.getDay()===0?'s':d.getDay()===6?'t':'';
@@ -778,7 +854,7 @@ function renderAlarm(){
 
   const nextHtml=n?`
     <div class="next">
-      <div class="badge ${SHIFT[n.sh]?SHIFT[n.sh].cls:'r'}">${n.sh}</div>
+      ${badge(n.sh)}
       <div class="big">${remain(n.at-new Date())} 후에 울려요</div>
     </div>`
     :`<div class="next"><div class="big">켜진 알람이 없어요</div><div class="sub muted">오른쪽 위 + 로 추가해보세요</div></div>`;
@@ -810,7 +886,7 @@ function renderAlarm(){
         <div class="acard-top">
           <span class="ap">${t.ap}</span>
           <span class="tm">${t.tm}</span>
-          <span class="badge sm ${SHIFT[sh]?SHIFT[sh].cls:'r'}" style="margin-left:4px;">${sh}</span>
+          ${a.shift==='*'?'<span class="badge sm r" style="margin-left:4px;">매일</span>':badge(a.shift,'sm','')}
         </div>
         <div class="icon-row">
           ${isPrev?`<span style="font-size:13px; font-weight:600; color:${iColor}; margin-right:4px;">전날</span>`:''}
@@ -962,7 +1038,7 @@ function renderSet(){
 
         <h3>근무 패턴 설정</h3>
         <div class="card">
-          <div class="row wrap">${S.pattern.map((s,i)=>`<button class="pc" data-act="pcycle" data-i="${i}"><small>${i+1}</small><span class="badge sm ${SHIFT[s].cls}">${s}</span></button>`).join('')}</div>
+          <div class="row wrap">${S.pattern.map((s,i)=>`<button class="pc" data-act="pcycle" data-i="${i}"><small>${i+1}</small>${badge(s,'sm')}</button>`).join('')}</div>
           <div class="row" style="margin-top:10px"><button class="btn ghost sm" data-act="padd">칸 추가</button><button class="btn ghost sm" data-act="pdel">칸 삭제</button></div>
           <div class="lbl">근무 이름 (달력 위에 표시)</div>
           <input type="text" id="patternName" value="${esc(S.patternName||'')}" placeholder="예: 4조2교대" maxlength="20">
@@ -987,7 +1063,7 @@ function renderSet(){
 
 /* ================= 시트 ================= */
 function openSheet(html){$('#sheet').innerHTML=html;$('#sheet').classList.add('open');$('#scrim').classList.add('open');}
-function closeSheet(){$('#sheet').classList.remove('open');$('#scrim').classList.remove('open');sheetKey=null;sheetMode=null;draft=null;replyDraft=null;memoSnap=null;}
+function closeSheet(){if(sheetKey){tidyMemos(sheetKey);save();render();}$('#sheet').classList.remove('open');$('#scrim').classList.remove('open');sheetKey=null;sheetMode=null;draft=null;replyDraft=null;typeDraft=null;}
 function reopen(){
   if(sheetMode==='requests')openRequests();
   else if(sheetMode==='day'&&sheetKey)openDay(sheetKey);
@@ -1046,7 +1122,7 @@ function daeDays(y,m){
   let n=0;
   for(const [k,sh] of Object.entries(S.overrides)){
     const d=parse(k);
-    if(d.getFullYear()===y&&d.getMonth()===m&&baseShift(d)==='휴'&&(sh==='주'||sh==='야'||sh==='상'))n++;
+    if(d.getFullYear()===y&&d.getMonth()===m&&isRest(baseShift(d))&&!isRest(sh)&&sh!=='교')n++;
   }
   return n;
 }
@@ -1057,8 +1133,8 @@ function openStats(){
     if(d.getFullYear()===cur.y){
       const base=baseShift(d);
       let isDae=false,isVac=false,isEdu=false;
-      if(base==='휴'&&(sh==='주'||sh==='야'||sh==='상'))isDae=true;
-      if((base==='주'||base==='야'||base==='상')&&sh==='휴')isVac=true;
+      if(isRest(base)&&!isRest(sh)&&sh!=='교')isDae=true;
+      if(!isRest(base)&&isRest(sh))isVac=true;
       if(sh==='교')isEdu=true;
       if(d.getMonth()<=cur.m){
         if(isDae)cDae++;if(isVac)cVac++;if(isEdu)cEdu++;
@@ -1320,11 +1396,10 @@ function openReply(id,st,mode){
 
 /* ---------- 날짜 시트 ---------- */
 function openDay(k){
-  if(sheetKey!==k||!memoSnap||memoSnap.k!==k)memoSnap=Object.assign({k},memoOf(k));
+  if(sheetKey&&sheetKey!==k)tidyMemos(sheetKey);
   sheetKey=k;sheetMode='day';
   const d=parse(k),base=baseShift(d),c=shiftOf(d),hol=holName(k),ov=S.overrides[k];
   const fMemo=S.familyMemos[k]||'';
-  const mv=memoOf(k);
   const isGuest=S.syncSettings.isGuestMode;
   const dayReqs=S.requests.filter(r=>r.date===k).sort((a,b)=>b.t-a.t);
   const reqHtml=dayReqs.map(reqCard).join('');
@@ -1336,17 +1411,17 @@ function openDay(k){
 
   if(isGuest){
     const canAsk=!dayReqs.some(r=>r.st==='pending'||r.st==='accepted');
-    const wantBtns=['휴','주','야'].map(s=>`<button class="${reqDraft.want===s?'on':''}" data-act="rqwant" data-s="${s}"><span class="badge sm ${SHIFT[s].cls}">${s}</span>${shiftLabel(s)}</button>`).join('');
+    const wantBtns=S.types.slice(0,4).map(x=>x.k).map(s=>`<button class="${reqDraft.want===s?'on':''}" data-act="rqwant" data-s="${esc(s)}">${badge(s,'sm')}${esc(shiftLabel(s))}</button>`).join('');
     openSheet(`
       ${head}
       <div class="lbl">근무 일정 (조회 전용)</div>
       <div class="card" style="padding:14px; margin-bottom:14px; text-align:center; font-size:16px; font-weight:700; background:var(--bg); border:1px solid var(--line);">
-         <span class="badge sm ${SHIFT[c]?SHIFT[c].cls:'r'}" style="display:inline-flex; vertical-align:middle; margin-right:6px;">${c}</span> ${shiftLabel(c)}
+         ${badge(c,'sm','')} <span style="vertical-align:middle;margin-left:6px">${esc(shiftLabel(c))}</span>
       </div>
 
       <div class="lbl">📌 가족과 공유된 메모</div>
       <div class="card" style="padding:14px; margin-bottom:14px; background:var(--bg); color:var(--muted); font-size:14px; border:1px solid var(--line); min-height:44px;">
-        ${(mv.shared&&mv.text&&S.syncSettings.shareMyMemos!==false)?esc(mv.text):'공유된 메모가 없어요.'}
+        ${sharedMemos(k).length?sharedMemos(k).map(m=>`<div style="color:var(--fg);padding:2px 0">• ${esc(m.text)}</div>`).join(''):'공유된 메모가 없어요.'}
       </div>
 
       <div class="lbl" style="color:var(--accent);">📩 근무 변경 요청</div>
@@ -1372,26 +1447,137 @@ function openDay(k){
         <p>"${esc(fMemo)}"</p>
         <div style="font-size:11px; color:var(--muted); margin-top:4px;">근무 변경 시 주의하세요.</div>
       </div>`:'';
-    const shiftBtns=['주','야','상','교','휴'].map(s=>`<button class="${c===s?'on':''}" data-act="setshift" data-s="${s}"><span class="badge sm ${SHIFT[s].cls}">${s}</span>${SHIFT[s].name}</button>`).join('');
+    const shiftBtns=S.types.map(x=>`<button class="tchip ${c===x.k?'on':''}" data-act="setshift" data-s="${esc(x.k)}" data-hold="type-edit">
+        ${badge(x.k,'tc')}<small>${x.k===base?'본근무':esc(x.name)}</small></button>`).join('');
+    const memoRows=memosOf(k).map(m=>`
+      <div class="mrow">
+        <span class="mt">T</span>
+        <input type="text" class="minput" data-mid="${m.id}" value="${esc(m.text)}" placeholder="메모">
+        <label class="mshare ${m.shared?'on':''}" title="가족과 공유"><input type="checkbox" data-act="memo-share" data-mid="${m.id}" ${m.shared?'checked':''}>📌</label>
+        <button class="mdel" data-act="memo-del" data-mid="${m.id}" aria-label="삭제"><svg viewBox="0 0 24 24"><path d="M6 7h12l-1 13H7zM9 4h6l1 2H8z"/></svg></button>
+      </div>`).join('');
 
     openSheet(`
       ${head}
       ${warningHtml}
       ${dayReqs.length?`<div class="lbl" style="color:var(--accent);margin-top:0;">📩 이 날의 근무 요청</div>${reqHtml}`:''}
 
-      <div class="lbl">실제 출근한 근무 (대근/연차는 자동 통계반영)</div>
-      <div class="seg" style="display:grid; grid-template-columns:repeat(5,1fr); gap:6px;">${shiftBtns}</div>
-      <div class="hint">예정된 패턴: ${SHIFT[base].name}${ov?` · 변경됨 <a data-act="resetshift">되돌리기</a>`:''}</div>
+      <div class="sec">
+        <div class="sec-t">근무타입 <span>(길게 누르면 편집)</span></div>
+        <div class="tchips">${shiftBtns}<button class="tchip add" data-act="type-pick"><span class="badge tc add">+추가</span></button></div>
+        ${ov?`<div class="hint" style="margin:6px 0 0">원래 근무: ${esc(shiftLabel(base))} · <a data-act="resetshift">되돌리기</a></div>`:''}
+      </div>
 
-      <div class="lbl" style="margin-top:14px;">내 개인 메모 (횟수 제한 없이 무료)</div>
-      <textarea id="dm" placeholder="메모를 입력하세요">${esc(mv.text)}</textarea>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--muted)">
-        <input type="checkbox" id="dmShare" ${mv.shared?'checked':''}> 📌 가족과 공유하기
-      </label>
-      <div class="row" style="margin-top:14px"><span class="grow"></span><button class="btn" data-act="saveday">저장</button></div>
+      <div class="sec">
+        <div class="sec-t">메모</div>
+        <div id="memoList">${memoRows}</div>
+        <button class="madd" data-act="memo-add"><span>＋</span> 메모 추가</button>
+      </div>
+      <div class="hint" style="text-align:center">📌 를 켠 메모는 가족 달력에도 보여요 · 입력하면 바로 저장돼요</div>
     `);
   }
 }
+
+/* ---------- 근무타입 고르기 / 편집 ---------- */
+function applyShift(s){
+  const d=parse(sheetKey);
+  if(s===baseShift(d))delete S.overrides[sheetKey];else S.overrides[sheetKey]=s;
+  save();render();openDay(sheetKey);
+}
+function openTypePick(){
+  const have=new Set(S.types.map(x=>x.k));
+  const groups=PRESETS.map(g=>{
+    const items=g.items.filter(([k])=>!have.has(k));
+    if(!items.length)return '';
+    return `<div class="pk-g"><span>${g.group}</span></div>`+items.map(([k,name,sub])=>
+      `<button class="pk-i" data-act="type-preset" data-k="${esc(k)}" data-name="${esc(name)}" data-rest="${g.rest?1:0}" data-q="${esc(name+(sub||'')+k)}">${esc(name)}${sub?` <small>(${esc(sub)})</small>`:''}</button>`).join('');
+  }).join('');
+  openSheet(`
+    <div class="sh-head">
+      <button class="ib" data-act="type-back" style="font-size:15px;width:auto;padding:0;color:var(--muted)">뒤로</button>
+      <b>근무타입 추가</b><span style="width:36px"></span>
+    </div>
+    <input type="text" id="typeSearch" placeholder="🔍 검색">
+    <button class="pk-i new" data-act="type-new">＋ 새 근무타입 만들기</button>
+    <div id="pkList">${groups||'<div class="hint">기본 목록은 모두 추가했어요</div>'}</div>
+  `);
+}
+function filterTypePick(q){
+  q=q.trim();
+  document.querySelectorAll('#pkList .pk-i').forEach(b=>{b.style.display=!q||b.dataset.q.includes(q)?'':'none';});
+}
+function typePreview(){
+  const t=typeDraft,c=tColors(t),k=t.k||'?';
+  return c?`<span id="tdPrev" class="badge c big" style="--tb:${c.bg};--tf:${c.fg}">${esc(k)}</span>`:`<span id="tdPrev" class="badge r big">${esc(k)}</span>`;
+}
+function openTypeEdit(){
+  const t=typeDraft;
+  const used=!t.isNew&&(S.pattern.includes(t.orig)||Object.values(S.overrides).includes(t.orig));
+  openSheet(`
+    <div class="sh-head">
+      <button class="ib" data-act="type-back" style="font-size:15px;width:auto;padding:0;color:var(--muted)">취소</button>
+      <b>${t.isNew?'새 근무타입':'근무타입 편집'}</b>
+      <button class="ib" data-act="type-save" style="font-size:15px;color:var(--accent);width:auto;padding:0;font-weight:700">확인</button>
+    </div>
+    <div style="display:flex;justify-content:center;padding:6px 0 16px">${typePreview()}</div>
+    <div class="row">
+      <div style="width:90px"><div class="lbl" style="margin-top:0">달력 글자</div><input type="text" id="tdK" value="${esc(t.k)}" maxlength="2" placeholder="예: 연" ${BUILTIN.includes(t.orig)?'disabled':''}></div>
+      <div class="grow"><div class="lbl" style="margin-top:0">이름</div><input type="text" id="tdName" value="${esc(t.name)}" maxlength="12" placeholder="예: 연차"></div>
+    </div>
+    <div class="lbl">종류</div>
+    <div class="seg">
+      <button class="${!t.rest?'on':''}" data-act="type-kind" data-v="0">근무하는 날</button>
+      <button class="${t.rest?'on':''}" data-act="type-kind" data-v="1">쉬는 날</button>
+    </div>
+    <div class="lbl">색</div>
+    <div class="pal">
+      <button class="sw0 ${!t.color?'on':''}" data-act="type-color" data-c="" title="색 없음(빨간 글자)">휴</button>
+      ${PALETTE.map(c=>`<button class="${t.color===c?'on':''}" data-act="type-color" data-c="${c}" style="background:${c}"></button>`).join('')}
+    </div>
+    ${t.isNew||BUILTIN.includes(t.orig)?'':`<button class="btn ghost danger" data-act="type-del" style="width:100%;margin-top:18px" ${used?'disabled':''}>${used?'근무표에서 쓰는 중이라 삭제할 수 없어요':'이 근무타입 삭제'}</button>`}
+  `);
+}
+function saveType(){
+  const t=typeDraft;if(!t)return;
+  const k=(t.k||'').trim(),name=(t.name||'').trim()||k;
+  if(!k){toast('달력에 보일 글자를 1~2자 넣어주세요');return;}
+  if(S.types.some(x=>x.k===k&&x.k!==t.orig)){toast('이미 있는 글자예요');return;}
+  const item={k,name,color:t.color,rest:!!t.rest};
+  if(t.isNew){S.types.push(item);typeDraft=null;applyShift(k);toast('근무타입을 추가했어요');return;}
+  const i=S.types.findIndex(x=>x.k===t.orig);
+  if(i>=0)S.types[i]=item;
+  if(k!==t.orig){   // 글자를 바꾸면 패턴·변경·알람도 같이 바꿈
+    S.pattern=S.pattern.map(x=>x===t.orig?k:x);
+    for(const d in S.overrides)if(S.overrides[d]===t.orig)S.overrides[d]=k;
+    S.alarms.forEach(a=>{if(a.shift===t.orig)a.shift=k;});
+  }
+  typeDraft=null;save();render();openDay(sheetKey);toast('저장했어요');
+}
+function deleteType(){
+  const t=typeDraft;if(!t||BUILTIN.includes(t.orig))return;
+  if(!confirm(`'${t.name}' 근무타입을 삭제할까요?`))return;
+  S.types=S.types.filter(x=>x.k!==t.orig);
+  typeDraft=null;save();render();openDay(sheetKey);
+}
+/* 근무타입 칩을 길게 누르면 편집 */
+let holdTimer=null,held=false;
+document.addEventListener('pointerdown',e=>{
+  held=false;clearTimeout(holdTimer);
+  const b=e.target.closest('[data-hold="type-edit"]');if(!b)return;
+  holdTimer=setTimeout(()=>{
+    held=true;
+    const x=typeOf(b.dataset.s);
+    typeDraft={isNew:false,orig:x.k,k:x.k,name:x.name,color:x.color,rest:!!x.rest};
+    try{navigator.vibrate&&navigator.vibrate(20);}catch(err){}
+    openTypeEdit();
+  },500);
+});
+['pointerup','pointercancel','pointerleave','pointermove'].forEach(ev=>document.addEventListener(ev,e=>{
+  if(ev==='pointermove'&&(Math.abs(e.movementX)+Math.abs(e.movementY))<6)return;
+  clearTimeout(holdTimer);
+},true));
+document.addEventListener('click',e=>{if(held){held=false;e.stopPropagation();e.preventDefault();}},true);
+document.addEventListener('contextmenu',e=>{if(e.target.closest('[data-hold]'))e.preventDefault();});
 
 /* ---------- 알람 시트 ---------- */
 function openAlarm(){
@@ -1408,8 +1594,8 @@ function openAlarm(){
     </div>
     <div class="card" style="padding:0; background:transparent;">
       <div class="lbl" style="padding:0 8px;">근무에 반복</div>
-      <div class="seg" style="padding:0 8px; margin-bottom:20px;">
-        ${chips([['주','주간'],['야','야간'],['휴','휴무'],['*','매일']],a.shift,'dshift')}
+      <div class="seg" style="padding:0 8px; margin-bottom:20px; flex-wrap:wrap;">
+        ${chips([...S.types.map(x=>[x.k,x.name]),['*','매일']],a.shift,'dshift')}
       </div>
       <div class="lbl" style="padding:0 8px;">알람일</div>
       <div class="seg" style="padding:0 8px; margin-bottom:12px;">
@@ -1464,22 +1650,9 @@ document.addEventListener('click',e=>{
         const ok=confirm(`⚠️ 가족 메모: "${fMemo}"\n\n정말 근무를 변경하시겠습니까?`);
         if(!ok)return;
       }
-      const d=parse(sheetKey),s=t.dataset.s;
-      if(s===baseShift(d))delete S.overrides[sheetKey];else S.overrides[sheetKey]=s;
-      save();openDay(sheetKey);render();break;}
+      applyShift(t.dataset.s);break;}
     case 'resetshift':delete S.overrides[sheetKey];save();openDay(sheetKey);render();break;
-    case 'saveday':{
-      const memoEl=$('#dm'),shareEl=$('#dmShare');
-      if(memoEl&&sheetKey){
-        const val=memoEl.value.trim(),shared=!!(shareEl&&shareEl.checked);
-        const before=(memoSnap&&memoSnap.k===sheetKey)?memoSnap:memoOf(sheetKey);
-        setMemo(sheetKey,val,shared);
-        if(val&&shared&&!(before.shared&&before.text===val)){
-          pushEvent('guest','memo',sheetKey,`📌 ${md(sheetKey)}에 공유 메모가 올라왔어요: "${val.split('\n')[0].slice(0,24)}"`);
-        }
-        save();
-      }
-      closeSheet();render();toast('저장되었습니다');break;}
+
 
     /* 게스트: 가족 메모 (하루 무료 횟수 게이트 통과) */
     case 'savefamily':doSaveFamily();break;
@@ -1598,10 +1771,35 @@ document.addEventListener('click',e=>{
     case 'alloff':S.alarms.forEach(x=>{x.on=false;});save();render();toast('모든 알람을 껐어요');break;
 
     /* 패턴 편집 */
-    case 'pcycle':{const i=Number(t.dataset.i);S.pattern[i]=NEXT[S.pattern[i]]||'주';save();render();break;}
+    case 'pcycle':{const i=Number(t.dataset.i),ks=S.types.map(x=>x.k),j=ks.indexOf(S.pattern[i]);S.pattern[i]=ks[(j+1)%ks.length];save();render();break;}
     case 'padd':if(S.pattern.length<21){S.pattern.push('휴');save();render();}break;
     case 'pdel':if(S.pattern.length>2){S.pattern.pop();save();render();}break;
     case 'clearov':S.overrides={};save();render();toast('수동 변경을 초기화했어요');break;
+    case 'memo-add':{
+      if(!sheetKey)break;
+      const list=S.memos[sheetKey]||(S.memos[sheetKey]=[]);
+      const last=list[list.length-1];
+      if(!last||last.text.trim())list.push({id:uid(),text:'',shared:false});
+      openDay(sheetKey);
+      const ins=document.querySelectorAll('#memoList .minput');if(ins.length)ins[ins.length-1].focus();
+      break;}
+    case 'memo-del':{
+      if(!sheetKey)break;
+      S.memos[sheetKey]=memosOf(sheetKey).filter(x=>x.id!==t.dataset.mid);
+      tidyMemos(sheetKey);save();render();openDay(sheetKey);break;}
+    case 'type-pick':openTypePick();break;
+    case 'type-preset':{
+      const k=t.dataset.k;
+      if(!S.types.some(x=>x.k===k)){
+        S.types.push({k,name:t.dataset.name,color:t.dataset.rest==='1'?'':PALETTE[(S.types.length*3)%PALETTE.length],rest:t.dataset.rest==='1'});
+      }
+      applyShift(k);break;}
+    case 'type-new':typeDraft={isNew:true,k:'',name:'',color:'#7986cb',rest:false};openTypeEdit();break;
+    case 'type-color':if(typeDraft){typeDraft.color=t.dataset.c;openTypeEdit();}break;
+    case 'type-kind':if(typeDraft){typeDraft.rest=t.dataset.v==='1';openTypeEdit();}break;
+    case 'type-save':saveType();break;
+    case 'type-del':deleteType();break;
+    case 'type-back':openDay(sheetKey);break;
     case 'go-set':tab='set';closeSheet();render();break;
     case 'setteam':S.myTeam=Number(t.dataset.g);save();render();break;
     case 'backup-export':exportBackup();break;
@@ -1617,7 +1815,15 @@ document.addEventListener('click',e=>{
 
 document.addEventListener('change',e=>{
   const t=e.target;
-  if(t.dataset&&t.dataset.act==='atoggle'){
+  if(t.dataset&&t.dataset.act==='memo-share'&&sheetKey){
+    const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);
+    if(m){
+      m.shared=t.checked;
+      t.parentElement.classList.toggle('on',t.checked);
+      if(m.shared&&m.text.trim())pushEvent('guest','memo',sheetKey,`📌 ${md(sheetKey)}에 공유 메모가 올라왔어요: "${m.text.split('\n')[0].slice(0,24)}"`);
+      save();render();toast(t.checked?'가족과 공유해요':'나만 볼 수 있어요');
+    }
+  }else if(t.dataset&&t.dataset.act==='atoggle'){
     const f=S.alarms.find(x=>x.id===t.dataset.id);if(f){f.on=t.checked;save();render();}
   }else if(t.id==='anchor'&&t.value){S.anchor=t.value;save();render();}
   else if(t.id==='shareMyShift'){
@@ -1650,11 +1856,13 @@ document.addEventListener('change',e=>{
 
 document.addEventListener('input',e=>{
   const t=e.target;
-  if(t.id==='dm'&&sheetKey){
-    const val=t.value.trim();
-    setMemo(sheetKey,val,memoOf(sheetKey).shared);
-    save();
-  }else if(t.id==='rqm'){reqDraft.msg=t.value;}
+  if(t.classList&&t.classList.contains('minput')&&sheetKey){
+    const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);
+    if(m){m.text=t.value;save();render();}
+  }else if(t.id==='tdK'&&typeDraft){typeDraft.k=t.value.trim().slice(0,2);const pv=$('#tdPrev');if(pv)pv.outerHTML=typePreview();}
+  else if(t.id==='tdName'&&typeDraft){typeDraft.name=t.value;}
+  else if(t.id==='typeSearch'){filterTypePick(t.value);}
+  else if(t.id==='rqm'){reqDraft.msg=t.value;}
   else if(t.id==='rpm'&&replyDraft){replyDraft.text=t.value;}
   else if(draft&&t.id==='at')draft.time=t.value;
   else if(draft&&t.id==='al')draft.label=t.value;
@@ -1715,7 +1923,7 @@ function shareScreen(){
     done();
   }
 }
-const BACKUP_KEYS=['pattern','anchor','overrides','memos','alarms','familyMemos','requests','board','syncSettings','pay','myTeam','patternName'];
+const BACKUP_KEYS=['pattern','anchor','overrides','memos','alarms','familyMemos','requests','board','syncSettings','pay','myTeam','patternName','types'];
 function exportBackup(){
   const data={app:'shiftcal',ver:3,at:new Date().toISOString()};
   BACKUP_KEYS.forEach(k=>{data[k]=S[k];});

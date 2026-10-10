@@ -16,7 +16,8 @@ class Ring(
     val label: String,
     val shift: String,
     val sound: Boolean = true,
-    val vib: Boolean = true
+    val vib: Boolean = true,
+    val shiftName: String = ""
 )
 
 /**
@@ -55,7 +56,8 @@ object AlarmScheduler {
                 out.add(
                     Ring(
                         o.getString("id"), o.getLong("at"), o.optString("label", ""), o.optString("shift", ""),
-                        o.optBoolean("sound", true), o.optBoolean("vib", true)
+                        o.optBoolean("sound", true), o.optBoolean("vib", true),
+                        o.optString("shiftName", "")
                     )
                 )
             }
@@ -84,6 +86,7 @@ object AlarmScheduler {
                     .put("shift", r.shift)
                     .put("sound", r.sound)
                     .put("vib", r.vib)
+                    .put("shiftName", r.shiftName)
             )
         }
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(key, arr.toString()).apply()
@@ -142,7 +145,7 @@ object AlarmScheduler {
 
     fun title(r: Ring): String {
         if (r.label.isNotBlank()) return r.label
-        val name = when (r.shift) {
+        val name = if (r.shiftName.isNotBlank()) r.shiftName else when (r.shift) {
             "주" -> "주간"
             "야" -> "야간"
             "상" -> "상주"
