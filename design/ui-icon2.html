@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>앱 아이콘 시안 2</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ecf1;padding:30px 30px 40px;color:#1f2328;width:1500px}
+h1{font-size:22px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:22px}
+.card{background:#fff;border-radius:22px;padding:20px 14px 16px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.card svg{width:150px;height:150px;border-radius:34px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.card b{display:block;margin-top:14px;font-size:16px}
+.card small{display:block;font-size:12.5px;color:#6b7280;margin-top:4px;line-height:1.45}
+.home{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.scr{border-radius:26px;padding:26px 22px;display:grid;grid-template-columns:repeat(6,1fr);gap:18px 10px}
+.scr.l{background:linear-gradient(160deg,#7fa7c9,#a9c3a0 50%,#d9b48a)}
+.scr.d{background:linear-gradient(160deg,#1b2233,#2b2440 60%,#3a2b2b)}
+.app{display:flex;flex-direction:column;align-items:center;gap:6px}
+.app svg{width:60px;height:60px;border-radius:16px;display:block;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+.app span{font-size:11.5px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);white-space:nowrap}
+.cap{font-size:14px;font-weight:800;margin:0 0 8px 4px}
+</style></head><body>
+<h1>언제쉬어 · 아이콘 2차 시안</h1>
+<div class="grid" id="g"></div>
+<div class="home"><div><div class="cap">밝은 배경화면</div><div class="scr l" id="h1"></div></div><div><div class="cap">어두운 배경화면</div><div class="scr d" id="h2"></div></div></div>
+<script>
+const F='font-family="Apple SD Gothic Neo,Noto Sans KR,sans-serif"';
+const I={
+G:`<svg viewBox="0 0 108 108"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a5a"/><stop offset=".45" stop-color="#7b5cf0"/><stop offset="1" stop-color="#23295a"/></linearGradient></defs>
+ <rect width="108" height="108" fill="url(#g1)"/>
+ <path d="M18 44c0-9 7-16 16-16h40c9 0 16 7 16 16v18c0 9-7 16-16 16H50l-14 12v-12h-2c-9 0-16-7-16-16z" fill="#fff"/>
+ <text x="54" y="61" font-size="15" font-weight="900" text-anchor="middle" fill="#3b2e8f" ${F}>언제쉬어?</text>
+ <path d="M80 16a7 7 0 1 0 6 10 6 6 0 0 1-6-10z" fill="#fff3c4"/></svg>`,
+H:`<svg viewBox="0 0 108 108"><defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3f9e"/><stop offset="1" stop-color="#1c2150"/></linearGradient></defs>
+ <rect width="108" height="108" fill="url(#g2)"/>
+ <circle cx="54" cy="56" r="30" fill="#ffd36b"/>
+ <path d="M40 54q5 5 10 0M58 54q5 5 10 0" fill="none" stroke="#5a3d00" stroke-width="3.2" stroke-linecap="round"/>
+ <circle cx="40" cy="64" r="4" fill="#ffab70" opacity=".8"/><circle cx="68" cy="64" r="4" fill="#ffab70" opacity=".8"/>
+ <path d="M50 68q4 3 8 0" fill="none" stroke="#5a3d00" stroke-width="2.6" stroke-linecap="round"/>
+ <path d="M30 34q10-14 24-12" fill="none" stroke="#fff" stroke-width="0"/>
+ <text x="80" y="30" font-size="15" font-weight="900" fill="#cfd4ff" font-family="sans-serif">z</text><text x="89" y="20" font-size="11" font-weight="900" fill="#cfd4ff" font-family="sans-serif">z</text>
+ <path d="M24 34 30 22 36 34" fill="#7b5cf0"/><circle cx="30" cy="21" r="3" fill="#fff"/></svg>`,
+I2:`<svg viewBox="0 0 108 108"><defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f7cff"/><stop offset="1" stop-color="#7b5cf0"/></linearGradient></defs>
+ <rect width="108" height="108" fill="url(#g3)"/>
+ <rect x="20" y="24" width="68" height="64" rx="14" fill="#fff"/>
+ <rect x="20" y="24" width="68" height="18" rx="14" fill="#e5e9ff"/><rect x="20" y="34" width="68" height="8" fill="#e5e9ff"/>
+ <g fill="#dfe3ea"><circle cx="34" cy="54" r="4.5"/><circle cx="48" cy="54" r="4.5"/><circle cx="62" cy="54" r="4.5"/><circle cx="76" cy="54" r="4.5"/><circle cx="34" cy="74" r="4.5"/><circle cx="76" cy="74" r="4.5"/></g>
+ <circle cx="55" cy="72" r="13" fill="#ffd36b"/><path d="M60 62a11 11 0 1 0 6 18 9 9 0 0 1-6-18z" fill="#7b5cf0"/></svg>`,
+J:`<svg viewBox="0 0 108 108"><defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#ffc55a"/></linearGradient></defs>
+ <rect width="108" height="108" fill="url(#g4)"/>
+ <rect x="20" y="52" width="68" height="22" rx="9" fill="#7b5cf0"/>
+ <rect x="16" y="46" width="16" height="34" rx="8" fill="#6a4ce0"/><rect x="76" y="46" width="16" height="34" rx="8" fill="#6a4ce0"/>
+ <rect x="26" y="38" width="56" height="20" rx="9" fill="#8d72f5"/>
+ <rect x="24" y="78" width="6" height="8" rx="2" fill="#5a3fc4"/><rect x="78" y="78" width="6" height="8" rx="2" fill="#5a3fc4"/>
+ <text x="54" y="31" font-size="16" font-weight="900" text-anchor="middle" fill="#5a3d00" ${F}>쉬는 날</text></svg>`,
+K:`<svg viewBox="0 0 108 108"><rect width="108" height="108" fill="#fff"/>
+ <circle cx="54" cy="54" r="34" fill="none" stroke="#eef0f4" stroke-width="10"/>
+ <path d="M54 20a34 34 0 0 1 0 68" fill="none" stroke="#34437a" stroke-width="10" stroke-linecap="round"/>
+ <path d="M54 88a34 34 0 0 1-32-22" fill="none" stroke="#ffc53d" stroke-width="10" stroke-linecap="round"/>
+ <text x="54" y="66" font-size="34" font-weight="900" text-anchor="middle" fill="#e0455c" ${F}>휴</text></svg>`,
+L:`<svg viewBox="0 0 108 108"><defs><linearGradient id="g5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b5cf0"/><stop offset="1" stop-color="#4f3bb8"/></linearGradient></defs>
+ <rect width="108" height="108" fill="url(#g5)"/>
+ <rect x="22" y="22" width="64" height="64" rx="18" fill="#fff"/>
+ <text x="54" y="66" font-size="38" font-weight="900" text-anchor="middle" fill="#2b2f6b" ${F}>쉬</text>
+ <circle cx="80" cy="28" r="12" fill="#ff5c7a"/><text x="80" y="33" font-size="13" font-weight="900" text-anchor="middle" fill="#fff" font-family="sans-serif">D</text>
+ <path d="M34 78h40" stroke="#ffd36b" stroke-width="5" stroke-linecap="round"/></svg>`};
+const info={G:['G. "언제쉬어?" 말풍선','가족이 묻는 바로 그 말. 노을→밤 하늘 배경, 이름 자체가 아이콘'],
+H:['H. 꿀잠 얼굴','눈 감고 자는 달 얼굴 + zz. 귀엽고 기억에 남는 캐릭터형'],
+I2:['I. 달력 속 쉬는 날','달력 한 칸이 해+달(교대) 표시. 깔끔하고 무슨 앱인지 바로 보임'],
+J:['J. 쉬는 날 소파','노란 배경에 보라 소파. "쉬다"를 그림으로, 밝고 친근함'],
+K:['K. 교대 시계','주간(노랑)·야간(남색)이 도는 고리 + 가운데 "휴". 교대근무 느낌 강함'],
+L:['L. "쉬" 카드 + D','보라 바탕 흰 카드에 "쉬", 빨간 D 배지. 앱 안 디자인과 통일']};
+document.getElementById('g').innerHTML=Object.keys(I).map(k=>`<div class="card">${I[k]}<b>${info[k][0]}</b><small>${info[k][1]}</small></div>`).join('');
+const row=Object.keys(I).map(k=>`<div class="app">${I[k]}<span>언제쉬어 ${k[0]}</span></div>`).join('');
+document.getElementById('h1').innerHTML=row;document.getElementById('h2').innerHTML=row;
+</script></body></html>
