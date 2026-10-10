@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:28px;display:flex;gap:28px;align-items:flex-start;color:#1d2330}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center}
+.cap{font-size:15px;font-weight:800;color:#3a4150}
+.sub{font-size:12px;color:#6b7280;margin-top:-6px}
+.ph{width:360px;height:760px;background:#fff;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px}
+.who{display:flex;gap:6px}
+.av{display:flex;align-items:center;gap:6px;padding:5px 11px 5px 5px;border-radius:20px;background:#f1f2f4;font-size:13px;font-weight:700;color:#6b7280}
+.av i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;color:#fff;background:#94a3b8}
+.av.on{background:#1d2330;color:#fff}.av.on i{background:#7b5cf0}
+.bell{font-size:20px}
+.b{flex:1;overflow:hidden;padding:4px 16px 0;display:flex;flex-direction:column;gap:12px}
+.hero{border-radius:22px;padding:18px;background:linear-gradient(135deg,#5b4bd6,#3b6fd6);color:#fff}
+.hero .l{font-size:13px;opacity:.85;font-weight:600}
+.hero .t{font-size:27px;font-weight:900;margin:4px 0 2px;letter-spacing:-.5px}
+.hero .s{font-size:13.5px;opacity:.92}
+.hero .nx{margin-top:14px;background:rgba(255,255,255,.18);border-radius:14px;padding:11px 13px;display:flex;justify-content:space-between;align-items:center}
+.hero .nx b{font-size:17px}
+.hero .nx span{font-size:12.5px;opacity:.9}
+.dd{background:#fff;color:#3b4fd6;font-weight:900;border-radius:10px;padding:5px 9px;font-size:14px}
+.sec{font-size:13px;font-weight:800;color:#6b7280;display:flex;justify-content:space-between}
+.sec a{color:#7b5cf0;font-weight:700}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wd{border-radius:12px;padding:7px 0 8px;text-align:center;background:#f6f7f9}
+.wd .d{font-size:11px;color:#6b7280;font-weight:700}
+.wd .n{font-size:15px;font-weight:800;margin:1px 0 5px}
+.wd .k{font-size:12.5px;font-weight:800;width:30px;height:30px;border-radius:50%;margin:0 auto;display:grid;place-items:center}
+.wd.rest{background:#fdecee}
+.wd.rest .k{background:#e5484d;color:#fff}
+.wd.today{outline:2.5px solid #1d2330}
+.k.D{background:#c9d6dd;color:#33505e}.k.N{background:#d8c9c2;color:#5a4038}
+.list{display:flex;flex-direction:column;gap:6px}
+.row{display:flex;align-items:center;gap:10px;background:#f6f7f9;border-radius:14px;padding:10px 12px;font-size:14px}
+.row .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:15px;flex:none}
+.row b{font-weight:800}.row small{display:block;color:#6b7280;font-size:12px;margin-top:1px}
+.tag{margin-left:auto;font-size:11.5px;font-weight:800;padding:3px 8px;border-radius:8px}
+.memo{background:#f3f0ff}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{border-radius:14px;padding:13px 0;text-align:center;font-weight:800;font-size:14.5px}
+.btn.p{background:#7b5cf0;color:#fff}.btn.g{background:#f1f2f4;color:#1d2330}
+.nav{display:flex;justify-content:space-around;padding:10px 0 14px;border-top:1px solid #eceef1;font-size:11.5px;color:#9aa1ad;font-weight:700}
+.nav span{display:flex;flex-direction:column;align-items:center;gap:3px}.nav .on{color:#1d2330}
+.nav i{font-style:normal;font-size:18px}
+/* 휴무 강조 달력 */
+.mh{text-align:center;font-size:20px;font-weight:900;padding:2px 0 0}
+.seg{display:flex;background:#f1f2f4;border-radius:12px;padding:3px;margin:0 auto;font-size:12.5px;font-weight:800}
+.seg span{padding:6px 12px;border-radius:9px;color:#6b7280}.seg .on{background:#fff;color:#1d2330;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal .h{font-size:11px;font-weight:800;text-align:center;color:#6b7280;padding-bottom:2px}
+.c{height:52px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:13px;font-weight:700;color:#b4bac4;background:#fafbfc}
+.c small{font-size:10px;font-weight:700}
+.c.r{background:#e5484d;color:#fff}
+.c.r.wk{background:#c81e3a;box-shadow:0 0 0 2px #ffd166 inset}
+.c.o{opacity:.35}
+.c.t{outline:2.5px solid #1d2330}
+.c .hl{font-size:9px;font-weight:800;color:#fff;opacity:.9}
+.c .mm{width:6px;height:6px;border-radius:50%;background:#7b5cf0}
+.c.r .mm{background:#fff}
+.lg{display:flex;gap:10px;justify-content:center;font-size:11.5px;color:#6b7280;font-weight:700}
+.lg i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:4px}
+.sum{background:#fff6e0;border-radius:14px;padding:11px 13px;font-size:13.5px;line-height:1.5}
+.sum b{color:#c81e3a}
+</style></head><body>
+
+<div class="col"><div class="cap">① 게스트 홈 (앱 켜면 바로)</div><div class="sub">"오늘 쉬어? 다음엔 언제 쉬어?"에 바로 답</div>
+<div class="ph">
+  <div class="top"><div class="who"><span class="av on"><i>아</i>아빠</span><span class="av"><i>엄</i>엄마</span></div><span class="bell">🔔</span></div>
+  <div class="b">
+    <div class="hero">
+      <div class="l">10월 11일 (일) · 오늘</div>
+      <div class="t">아빠는 야간 근무 🌙</div>
+      <div class="s">19:00 출근 → 내일 07:00 퇴근</div>
+      <div class="nx"><div><span>다음 쉬는 날</span><br><b>내일 · 12일(월)부터 2일</b></div><span class="dd">D-1</span></div>
+    </div>
+    <div class="sec">이번 주 <a>달력 보기 ›</a></div>
+    <div class="week">
+      <div class="wd today"><div class="d">일</div><div class="n">11</div><div class="k N">야</div></div>
+      <div class="wd rest"><div class="d">월</div><div class="n">12</div><div class="k">휴</div></div>
+      <div class="wd rest"><div class="d">화</div><div class="n">13</div><div class="k">휴</div></div>
+      <div class="wd"><div class="d">수</div><div class="n">14</div><div class="k D">주</div></div>
+      <div class="wd"><div class="d">목</div><div class="n">15</div><div class="k D">주</div></div>
+      <div class="wd rest"><div class="d">금</div><div class="n">16</div><div class="k">휴</div></div>
+      <div class="wd rest"><div class="d" style="color:#3b6fd6">토</div><div class="n">17</div><div class="k">휴</div></div>
+    </div>
+    <div class="sec">소식</div>
+    <div class="list">
+      <div class="row"><span class="ic" style="background:#fff0d6">🔄</span><div><b>17일(토) 근무 → 휴무로 변경</b><small>아빠 · 10분 전</small></div><span class="tag" style="background:#fdecee;color:#c81e3a">NEW</span></div>
+      <div class="row memo"><span class="ic" style="background:#7b5cf0;color:#fff">♥</span><div><b>17일 결혼식 12시</b><small>엄마가 남긴 가족 메모</small></div></div>
+    </div>
+    <div class="btns"><div class="btn p">이날 쉬어? 요청</div><div class="btn g">♥ 메모 남기기</div></div>
+  </div>
+  <div class="nav"><span class="on"><i>🏠</i>홈</span><span><i>📅</i>달력</span><span><i>💬</i>소식</span><span><i>⚙️</i>설정</span></div>
+</div></div>
+
+<div class="col"><div class="cap">② 게스트 달력 ("쉬는 날" 강조)</div><div class="sub">근무는 흐리게, 쉬는 날만 진하게</div>
+<div class="ph">
+  <div class="top"><div class="who"><span class="av on"><i>아</i>아빠</span><span class="av"><i>엄</i>엄마</span><span class="av"><i>👪</i>같이</span></div><span class="bell">🔔</span></div>
+  <div class="b">
+    <div class="mh">‹ 2026년 10월 ›</div>
+    <div class="seg"><span class="on">쉬는 날만</span><span>전체 근무</span></div>
+    <div class="sum">이번 달 쉬는 날 <b>15일</b> · 주말에 쉬는 날 <b>4일</b><br>4일(일) · 17일(토) · 24일(토) · 25일(일)</div>
+    <div class="cal">
+      <div class="h" style="color:#e5484d">일</div><div class="h">월</div><div class="h">화</div><div class="h">수</div><div class="h">목</div><div class="h">금</div><div class="h" style="color:#3b6fd6">토</div>
+      <div class="c r o">27</div><div class="c o">28</div><div class="c o">29</div><div class="c r o">30</div><div class="c r">1</div><div class="c">2</div><div class="c">3<small>개천절</small></div>
+      <div class="c r wk">4</div><div class="c r">5<span class="hl">대체</span></div><div class="c">6</div><div class="c">7</div><div class="c r">8<i class="mm"></i></div><div class="c r">9<span class="hl">한글날</span></div><div class="c">10</div>
+      <div class="c t">11</div><div class="c r">12</div><div class="c r">13</div><div class="c">14<i class="mm"></i></div><div class="c">15</div><div class="c r">16</div><div class="c r wk">17<i class="mm"></i></div>
+      <div class="c">18</div><div class="c">19</div><div class="c r">20</div><div class="c r">21</div><div class="c">22</div><div class="c">23</div><div class="c r wk">24</div>
+      <div class="c r wk">25</div><div class="c">26</div><div class="c">27<i class="mm"></i></div><div class="c r">28</div><div class="c r">29</div><div class="c">30</div><div class="c">31</div>
+    </div>
+    <div class="lg"><span><i style="background:#e5484d"></i>쉬는 날</span><span><i style="background:#c81e3a;box-shadow:0 0 0 2px #ffd166 inset"></i>주말·공휴일 휴무</span><span><i style="background:#7b5cf0;border-radius:50%"></i>메모</span></div>
+  </div>
+  <div class="nav"><span><i>🏠</i>홈</span><span class="on"><i>📅</i>달력</span><span><i>💬</i>소식</span><span><i>⚙️</i>설정</span></div>
+</div></div>
+
+<div class="col"><div class="cap">③ 위젯 / 알림 (앱 안 열어도)</div><div class="sub">가족은 앱을 자주 안 여니까</div>
+<div class="ph" style="background:linear-gradient(160deg,#9fb6d8,#c9b8e8)">
+  <div style="padding:40px 18px 0;color:#fff;text-align:center"><div style="font-size:52px;font-weight:300">9:41</div><div style="font-size:14px">10월 11일 일요일</div></div>
+  <div style="margin:22px 16px 0;display:flex;flex-direction:column;gap:10px">
+    <div style="background:rgba(255,255,255,.92);border-radius:18px;padding:12px 14px;display:flex;gap:10px;align-items:center">
+      <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#7b5cf0,#3b6fd6);color:#fff;display:grid;place-items:center;font-weight:900">쉬</div>
+      <div style="font-size:13.5px"><b>언제쉬어</b> · 지금<br>아빠가 <b>17일(토)</b>을 <b style="color:#c81e3a">휴무</b>로 바꿨어요</div></div>
+    <div style="background:rgba(255,255,255,.92);border-radius:18px;padding:12px 14px;display:flex;gap:10px;align-items:center">
+      <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#7b5cf0,#3b6fd6);color:#fff;display:grid;place-items:center;font-weight:900">쉬</div>
+      <div style="font-size:13.5px"><b>언제쉬어</b> · 오전 8:00<br>오늘 아빠 <b>야간</b> · 내일부터 <b style="color:#c81e3a">2일 휴무</b></div></div>
+  </div>
+  <div style="margin:18px 16px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div style="background:#fff;border-radius:22px;padding:14px;height:150px;display:flex;flex-direction:column;justify-content:space-between">
+      <div style="font-size:12px;color:#6b7280;font-weight:700">아빠 · 오늘</div>
+      <div style="width:56px;height:56px;border-radius:50%;background:#d8c9c2;color:#5a4038;display:grid;place-items:center;font-size:22px;font-weight:800">야</div>
+      <div style="font-size:13px;font-weight:800">다음 휴무 <span style="color:#c81e3a">D-1</span></div></div>
+    <div style="background:#fff;border-radius:22px;padding:14px;height:150px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:12px;color:#6b7280;font-weight:700">같이 쉬는 날 👪</div>
+      <div style="font-size:15px;font-weight:900;color:#c81e3a">17일(토)</div>
+      <div style="font-size:15px;font-weight:900;color:#c81e3a">25일(일)</div>
+      <div style="font-size:11.5px;color:#6b7280">아빠·엄마 둘 다 휴무</div></div>
+  </div>
+</div></div>
+
+</body></html>
