@@ -1,0 +1,15 @@
+{
+  "name": "eonjeswieo-firebase-sdk",
+  "private": true,
+  "type": "module",
+  "description": "앱 안에 넣는 Firebase 웹 SDK 묶음 만들기 (npm run build → app/src/main/assets/firebase/fb-sdk.js)",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "firebase": "^11.10.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

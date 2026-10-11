@@ -6,6 +6,8 @@ on:
       - 'data/**'
       - 'design/**'
       - 'docs/**'
+      - 'firebase/**'
+      - 'scripts/**'
   workflow_dispatch:
 
 jobs:

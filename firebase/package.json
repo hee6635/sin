@@ -1,0 +1,14 @@
+{
+  "name": "eonjeswieo-firebase-rules",
+  "private": true,
+  "type": "module",
+  "description": "Firestore 보안 규칙 시험 (에뮬레이터). npm test",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project demo-eonjeswieo \"node test/rules.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.10.0",
+    "firebase-tools": "^14.0.0"
+  }
+}

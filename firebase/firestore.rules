@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 연결 시험: 로그인한 사람은 자기 문서(ping/내 uid)만 쓰고 읽기
+    match /ping/{uid} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['t', 'v', 'ua'])
+        && request.resource.data.t == request.time
+        && request.resource.data.v is string && request.resource.data.v.size() <= 20
+        && request.resource.data.ua is string && request.resource.data.ua.size() <= 200;
+    }
+
+    // 그 밖의 모든 곳은 막기. 가족 기능(가족방 · 초대 코드 · 근무 · 메모 · 요청)을 만들 때 하나씩 엽니다.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

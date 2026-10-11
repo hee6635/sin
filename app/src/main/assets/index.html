@@ -3278,7 +3278,7 @@ function renderMore(){
       ${item('✉️','문의하기 · 오류 신고','more-mail')}
       ${item('🔒','개인정보처리방침','more-privacy')}
       ${item('🗑','내 데이터 모두 지우기','more-wipe')}
-      <div class="mi2" style="cursor:default"><span class="e">${lineIcon('ℹ️')}</span><span>앱 정보</span><small>언제쉬어 ${appVersion()}</small></div>
+      <div class="mi2" data-act="about-tap" style="cursor:default"><span class="e">${lineIcon('ℹ️')}</span><span>앱 정보</span><small>언제쉬어 ${appVersion()}</small></div>
     </div>
   </div>`;
 }
@@ -4170,6 +4170,9 @@ document.addEventListener('click',e=>{
     case 'paint-k':paint.k=t.dataset.s;render();break;
     case 'paint-done':paint=null;render();toast('칠하기를 마쳤어요');break;
     case 'exit-ok':{closePop();if(hasBridge('exitApp'))window.AndroidBridge.exitApp();else toast('앱에서는 여기서 종료돼요');break;}
+    case 'about-tap':{aboutTaps++;clearTimeout(aboutT);aboutT=setTimeout(()=>{aboutTaps=0;},3000);if(aboutTaps>=7){aboutTaps=0;toast('🔧 개발자 메뉴');openFirebasePage();}break;}
+    case 'fb-test':{FBX.ping=null;const pr=fbPing();openFirebasePage();pr.then(()=>{if(pageMode==='fb')openFirebasePage();});break;}
+    case 'fb-out':fbSignOut().then(()=>{if(pageMode==='fb')openFirebasePage();});break;
     case 'pcell':openPatCell(Number(t.dataset.i));break;
     case 'pset':{const i=Number(t.dataset.i);if(i<S.pattern.length){S.pattern[i]=t.dataset.s;save();}closePop();openPatternPage();break;}
     case 'padd':if(S.pattern.length<PAT_MAX){S.pattern.push(restKey());save();openPatternPage();}break;
@@ -4424,6 +4427,84 @@ function importBackup(file){
   rd.readAsText(file);
 }
 
+/* ================= Firebase (가족 연결용) =================
+ * 지금은 "연결 시험"까지만. 설정(firebase/config.js)이 없으면 아무 일도 안 하고, 화면에도 안 보여요.
+ * (설정 › 앱 정보를 7번 누르면 개발자용 시험 화면이 열려요)
+ * 원칙: 로컬 우선. 달력 · 알람은 Firebase 없이 동작해요. SDK 는 앱 안(assets/firebase/fb-sdk.js)에 있고 필요할 때만 불러와요. */
+const FBX={st:'off',uid:'',err:'',cfg:false,busy:false,ping:null};
+const fbLoadJs=src=>new Promise((ok,no)=>{const e=document.createElement('script');e.src=src;e.async=true;e.onload=()=>ok();e.onerror=()=>{e.remove();no(new Error('load:'+src));};document.head.appendChild(e);});
+function fbErrText(e){
+  const c=String((e&&e.code)||(e&&e.message)||e);
+  if(c.includes('operation-not-allowed')||c.includes('admin-restricted'))return '익명 로그인이 꺼져 있어요 (Firebase 콘솔 › Authentication › 로그인 방법 › 익명 켜기)';
+  if(c.includes('permission-denied')||c.includes('insufficient permissions'))return '보안 규칙이 막고 있어요 (firebase/firestore.rules 를 콘솔 › Firestore › 규칙 에 붙여 넣었는지 확인)';
+  if(c.includes('invalid-api-key')||c.includes('api-key-not-valid'))return '설정의 apiKey 가 올바르지 않아요';
+  if(c.includes('unavailable')||c.includes('network')||c.includes('offline'))return '서버에 연결하지 못했어요 (인터넷 확인)';
+  if(c.includes('load:'))return 'Firebase 파일을 못 불러왔어요';
+  return c.slice(0,140);
+}
+async function fbConnect(){
+  if(FBX.st==='ok')return true;
+  if(FBX.busy)return false;
+  FBX.busy=true;FBX.st='loading';FBX.err='';
+  try{
+    if(window.FIREBASE_CONFIG===undefined){try{await fbLoadJs('firebase/config.js');}catch(e){}}
+    const cfg=window.FIREBASE_CONFIG;FBX.cfg=!!cfg;
+    if(!cfg){FBX.st='off';FBX.err='설정이 아직 없어요 (firebase/config.js)';return false;}
+    if(!window.FB)await fbLoadJs('firebase/fb-sdk.js');
+    const {emulator,...web}=cfg,{auth:A,fs:F}=window.FB;
+    const app=window.FB.initializeApp(web);
+    const auth=A.initializeAuth(app,{persistence:[A.indexedDBLocalPersistence,A.browserLocalPersistence]});
+    if(emulator&&emulator.auth)A.connectAuthEmulator(auth,emulator.auth,{disableWarnings:true});
+    await new Promise(res=>{const un=A.onAuthStateChanged(auth,u=>{un();res(u);});});   // 저장된 로그인 복원 기다림
+    if(!auth.currentUser)await A.signInAnonymously(auth);
+    let db;
+    try{db=F.initializeFirestore(app,{localCache:F.persistentLocalCache({tabManager:F.persistentSingleTabManager()})});}   // 오프라인 저장
+    catch(e){db=F.getFirestore(app);}
+    if(emulator&&emulator.firestore)F.connectFirestoreEmulator(db,emulator.firestore[0],emulator.firestore[1]);
+    FBX.app=app;FBX.auth=auth;FBX.db=db;FBX.uid=auth.currentUser.uid;FBX.st='ok';
+    if(emulator)window.__fbx=FBX;   // 에뮬레이터 시험용 (실제 서버에서는 안 열림)
+    return true;
+  }catch(e){FBX.st='error';FBX.err=fbErrText(e);return false;}
+  finally{FBX.busy=false;}
+}
+// 서버에 한 줄 쓰고 다시 읽어서 시간 재기 (보안 규칙의 ping/{내 uid} 만 허용)
+async function fbPing(){
+  if(!(await fbConnect()))return null;
+  const F=window.FB.fs,t0=performance.now();
+  try{
+    const ref=F.doc(FBX.db,'ping',FBX.uid);
+    await F.setDoc(ref,{t:F.serverTimestamp(),v:appVersion(),ua:navigator.userAgent.slice(0,120)});
+    const snap=await F.getDocFromServer(ref);
+    FBX.ping={ok:snap.exists(),ms:Math.round(performance.now()-t0),at:Date.now()};
+  }catch(e){FBX.ping={ok:false,err:fbErrText(e),at:Date.now()};}
+  return FBX.ping;
+}
+async function fbSignOut(){
+  if(FBX.st!=='ok')return;
+  try{await window.FB.auth.signOut(FBX.auth);}catch(e){}
+  FBX.uid='';FBX.ping=null;FBX.st='off';FBX.err='로그아웃했어요 (앱을 다시 켜면 새 익명 계정으로 들어가요)';
+}
+function openFirebasePage(){
+  const f=FBX,ok=f.st==='ok',pg=f.ping;
+  const row=(t,sm,v,c)=>`<div class="prow"><div class="pl2">${t}${sm?`<small>${sm}</small>`:''}</div><span class="pv" ${c?`style="color:${c};font-weight:700"`:''}>${v}</span></div>`;
+  openPage(`
+    ${pageHead('Firebase 연결 시험')}
+    <div class="pg-b">
+      <div class="hint" style="padding:12px 16px 0">가족 연결(서버)을 만들기 위한 준비 화면이에요. 설정 방법은 저장소의 docs/firebase-setup.md 에 있어요.</div>
+      <div class="pg-sec">
+        ${row('설정 파일','firebase/config.js',f.cfg?'있음':'없음',f.cfg?'var(--today)':'var(--muted)')}
+        ${row('로그인 (익명)','',f.uid?esc(f.uid.slice(0,8))+'…':'아직',ok?'var(--today)':'')}
+        ${row('서버 시험','서버에 쓰고 다시 읽기',pg?(pg.ok?`✓ ${pg.ms}ms`:'✕ 실패'):'아직 안 함',pg?(pg.ok?'var(--today)':'var(--danger)'):'')}
+      </div>
+      ${f.err?`<div class="hint" style="color:var(--danger);padding:10px 16px 0">${esc(f.err)}</div>`:''}
+      ${pg&&!pg.ok&&pg.err?`<div class="hint" style="color:var(--danger);padding:10px 16px 0">${esc(pg.err)}</div>`:''}
+      <div class="pg-sec" style="margin-top:14px;padding:14px 16px">
+        <button class="btn" style="width:100%" data-act="fb-test" ${f.busy?'disabled':''}>${f.busy?'연결 중…':'연결 시험하기'}</button>
+        ${ok?'<button class="btn ghost" style="width:100%;margin-top:8px" data-act="fb-out">익명 로그아웃</button>':''}
+      </div>
+    </div>`,'fb');
+}
+let aboutTaps=0,aboutT=null;
 /* 안드로이드 앱이 부르는 훅 */
 /* 종료 확인: 첫 화면(달력)에서 뒤로가기 → 바로 안 꺼지고 한 번 물어봄. 가운데 .adslot 은 나중에 광고를 붙일 자리(지금은 숨김) */
 let exitTimer=null;
