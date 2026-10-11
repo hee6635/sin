@@ -299,6 +299,16 @@ textarea{resize:none;min-height:84px}
 .rbtn small{font-size:9.5px;font-weight:700;line-height:1.1;white-space:nowrap;color:var(--accent)}
 .remc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.remc button{font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:16px;background:var(--surface);color:var(--muted)}.remc button.on{background:var(--accent);color:#fff}
 .bwrap .badge.holtag{color:var(--sun);letter-spacing:-.5px}
+.bwrap .badge.r:not(.holtag){opacity:.8}
+/* 날짜 누르는 느낌 · 칠하기 */
+.cell{transition:transform .12s ease,background-color .14s ease,box-shadow .2s ease}
+.cell.press{transform:scale(.955);background-color:color-mix(in srgb,var(--accent) 9%,var(--bg))}
+.cell.sel{z-index:3;transform:scale(1.03);box-shadow:0 6px 18px rgba(20,24,40,.22)}
+.cell.pt{background-color:color-mix(in srgb,var(--accent) 12%,var(--bg))}
+.badge.pop{animation:badgepop .2s ease-out}
+@keyframes badgepop{0%{transform:scale(.68)}60%{transform:scale(1.14)}100%{transform:scale(1)}}
+.pghost{position:fixed;left:0;top:0;z-index:60;pointer-events:none;display:none;opacity:.95;filter:drop-shadow(0 4px 8px rgba(0,0,0,.28))}
+@media (prefers-reduced-motion:reduce){.cell,.cell.press,.cell.sel{transition:none}.cell.press,.cell.sel{transform:none}.badge.pop{animation:none}}
 .adslot{margin:12px 16px 0;min-height:100px;border-radius:12px;background:var(--surface);display:grid;place-items:center;color:var(--muted);font-size:12px}
 .adslot[hidden]{display:none}
 .paintbar{display:flex;align-items:center;gap:8px;padding:6px 10px calc(6px);border-top:1px solid var(--line);background:var(--bg);flex:none}
@@ -521,7 +531,9 @@ textarea{resize:none;min-height:84px}
 .danger-row{justify-content:center;color:var(--danger);font-weight:700;cursor:pointer}
 .mlist .mi2{display:flex;align-items:center;gap:12px;min-height:54px;padding:6px 16px;border-bottom:1px solid var(--line);cursor:pointer;background:var(--bg)}
 .mlist .mi2:last-child{border-bottom:0}
-.mlist .mi2 .e{width:28px;text-align:center;font-size:18px;flex:none}
+.mlist .mi2 .e{width:28px;text-align:center;font-size:18px;flex:none;display:grid;place-items:center;color:var(--icon-on)}
+.mlist .mi2 .e svg,.e-in svg{display:block}
+.e-in{display:inline-grid;place-items:center;width:28px;margin-right:12px;vertical-align:middle;color:var(--icon-on)}
 .mlist .mi2 span{flex:1;font-size:15px}
 .mlist .mi2 small{color:var(--muted);font-size:12.5px}
 .policy{background:var(--bg);margin-top:10px;padding:14px 16px;font-size:14px;line-height:1.65}
@@ -1581,6 +1593,15 @@ function holTagName(k,hol){
   return holShort(hol);
 }
 /* ================= 메인 달력 ================= */
+// 달력 칸의 근무 동그라미(+ 이어지는 띠). pop 이면 "톡" 튀어나오는 효과
+function bwrapHtml(d,k,pop){
+  const sh=shiftOf(d),hol=holName(k),ov=S.overrides[k];
+  const ps=shiftOf(addDays(d,-1)),ns=shiftOf(addDays(d,1));
+  const tc=tColors(typeOf(sh));
+  const band=tc&&!isRest(sh)&&(ps===sh||ns===sh)?`<i class="band ${ps===sh?'jl':''} ${ns===sh?'jr':''}" style="--tb:${tc.bg}"></i>`:'';
+  const holTag=S.holRest&&hol&&isRest(sh)&&ov==null?holTagName(k,hol):'';
+  return `${band}${holTag?`<span class="badge r two holtag ${pop?'pop':''}">${esc(holTag)}</span>`:badge(sh,pop?'pop':'',ov?'<i class="dot"></i>':'')}`;
+}
 function calPanel(y,m){
   const first=new Date(y,m,1),lead=first.getDay();
   const rows=6;   // 항상 6주 (다음 달 첫 주까지 보여줌)
@@ -1590,10 +1611,6 @@ function calPanel(y,m){
   for(let i=0;i<rows*7;i++){
     const d=addDays(start,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),chI=hol?null:compHolItem(k),ch=chI?chI.name:'',ov=S.overrides[k],dow=d.getDay();
     const cls=hol||dow===0?'sun':dow===6?'sat':'';
-    const ps=shiftOf(addDays(d,-1)),ns=shiftOf(addDays(d,1));
-    const tc=tColors(typeOf(sh));
-    const band=tc&&!isRest(sh)&&(ps===sh||ns===sh)?`<i class="band ${ps===sh?'jl':''} ${ns===sh?'jr':''}" style="--tb:${tc.bg}"></i>`:'';
-
     const vm=visibleMemos(k),fam=vm.filter(x=>x.shared),mine=vm.filter(x=>!x.shared);
     const rq=S.requests.find(r=>r.date===k&&(r.st==='pending'||r.st==='accepted'||r.st==='rejected'));
     const pills=[];
@@ -1614,7 +1631,7 @@ function calPanel(y,m){
 
     cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''}" data-act="day" data-k="${k}">
       <i class="stz" data-act="stamp-dn" data-k="${k}"></i><div class="dn ${hol?'hol':ch?'chol':''} ${cls}"><span class="num">${d.getDate()}</span>${st0.length?`<span class="stp">${st0.map(x=>stampIcon(x,13)).join('')}</span>`:''}${showHn?`<span class="hn">${hnHtml}</span>`:''}</div>
-      <div class="bwrap">${band}${holTag?`<span class="badge r two holtag">${esc(holTag)}</span>`:badge(sh,'',ov?'<i class="dot"></i>':'')}</div>
+      <div class="bwrap">${bwrapHtml(d,k)}</div>
       <div class="pill-wrap" style="--n:${pills.length}">${pills.join('')}</div>
     </div>`;
   }
@@ -1641,31 +1658,66 @@ function paintStart(k){
   paint={k};closeSheet();if(pageMode)closePage();tab='cal';render();toast('날짜를 누르거나 쭉 그으면 칠해져요 · 한 번 더 누르면 원래대로');
 }
 // 손가락으로 쭉 그으면 지나간 날을 칠하기 (같은 날을 다시 지나가도 지워지지 않음)
-let pdrag=null;
+let pdrag=null,pghost=null,lastBuzz=0;
+const reduceMotion=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}};
+// 아주 짧은 진동 (애니메이션 줄이기를 켠 폰에서는 안 함)
+function buzz(ms){if(reduceMotion())return;const t=performance.now();if(t-lastBuzz<40)return;lastBuzz=t;try{navigator.vibrate&&navigator.vibrate(ms);}catch(e){}}
+const cellOf=k=>document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"]`);
 function paintSet(k){const base=baseShift(parse(k));if(paint.k===base)delete S.overrides[k];else S.overrides[k]=paint.k;}
+// 바뀐 칸과 양옆 칸(이어지는 띠)만 다시 그리기 → 달력 전체를 다시 그리지 않아 부드러움
+function paintRefresh(k,pop){
+  const d=parse(k);
+  [-1,0,1].forEach(n=>{const kk=fmt(addDays(d,n)),c=cellOf(kk),w=c&&c.querySelector('.bwrap');if(w)w.innerHTML=bwrapHtml(parse(kk),kk,n===0&&pop&&!reduceMotion());});
+}
 function paintCellAt(x,y){const el=document.elementFromPoint(x,y),c=el&&el.closest&&el.closest('.track .panel:nth-child(2) .cell[data-k]');return c?c.dataset.k:null;}
+// 손가락 옆에 따라다니는 근무 동그라미 (붓 · 도장 느낌)
+function ghostMove(x,y){
+  if(!pghost){pghost=document.createElement('div');pghost.className='pghost';document.body.appendChild(pghost);}
+  if(pghost.dataset.k!==paint.k){pghost.innerHTML=badge(paint.k,'sm');pghost.dataset.k=paint.k;}
+  pghost.style.display='block';pghost.style.transform=`translate(${x-50}px,${y-74}px)`;
+}
+function ghostHide(){if(pghost)pghost.style.display='none';}
+function paintTouch(k){
+  paintSet(k);const c=cellOf(k);if(c){c.classList.add('pt');pdrag.cells.push(c);}
+  paintRefresh(k,true);buzz(6);
+}
 document.addEventListener('pointerdown',e=>{
   if(!paint||tab!=='cal'||role()!=='host'||pageMode||$('#pop').classList.contains('open'))return;
   const k=paintCellAt(e.clientX,e.clientY);if(!k)return;
   try{e.target.releasePointerCapture&&e.target.releasePointerCapture(e.pointerId);}catch(err){}
-  pdrag={id:e.pointerId,start:k,last:k,moved:false};
+  pdrag={id:e.pointerId,start:k,last:k,moved:false,cells:[]};
 });
 document.addEventListener('pointermove',e=>{
   if(!pdrag||e.pointerId!==pdrag.id||!paint)return;
+  ghostMove(e.clientX,e.clientY);
   const k=paintCellAt(e.clientX,e.clientY);if(!k||k===pdrag.last)return;
-  if(!pdrag.moved){pdrag.moved=true;paintSet(pdrag.start);}
-  pdrag.last=k;paintSet(k);render();
+  if(!pdrag.moved){pdrag.moved=true;paintTouch(pdrag.start);}
+  pdrag.last=k;paintTouch(k);
 });
 ['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,e=>{
   if(!pdrag||e.pointerId!==pdrag.id)return;
-  const moved=pdrag.moved;pdrag=null;
-  if(moved){held=true;save();render();}
+  const d=pdrag;pdrag=null;ghostHide();
+  setTimeout(()=>d.cells.forEach(c=>c.classList.remove('pt')),260);
+  if(d.moved){held=true;save();}
 }));
 function paintDay(k){
   const d=parse(k),base=baseShift(d);
   if(S.overrides[k]===paint.k||paint.k===base)delete S.overrides[k];
   else S.overrides[k]=paint.k;
-  save();render();
+  save();paintRefresh(k,true);buzz(8);
+}
+/* 날짜 칸 누르는 느낌: 살짝 눌렸다 돌아오고, 날짜 창이 열려 있는 동안은 떠 있는 카드처럼 */
+let pressCell=null,pressX=0,pressY=0,pressT=0;
+function pressOff(){const c=pressCell;pressCell=null;if(!c)return;const wait=Math.max(0,100-(performance.now()-pressT));setTimeout(()=>c.classList.remove('press'),wait);}
+document.addEventListener('pointerdown',e=>{
+  const c=e.target.closest&&e.target.closest('.cell');if(!c||e.target.closest('.stz'))return;
+  pressCell=c;pressX=e.clientX;pressY=e.clientY;pressT=performance.now();c.classList.add('press');
+},true);
+document.addEventListener('pointermove',e=>{if(pressCell&&(Math.abs(e.clientX-pressX)+Math.abs(e.clientY-pressY))>12)pressOff();},true);
+['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,pressOff,true));
+function markSel(k){
+  document.querySelectorAll('.cell.sel').forEach(c=>c.classList.remove('sel'));
+  const c=k&&cellOf(k);if(c)c.classList.add('sel');
 }
 let busy=false;
 function slideTo(dir){
@@ -2188,7 +2240,7 @@ function openSheet(html){const top=!!pageMode;$('#sheet').innerHTML=html;$('#she
 function closeSheet(){
   if(sheetKey){tidyMemos(sheetKey);save();render();}
   $('#sheet').classList.remove('open');$('#scrim').classList.remove('open');
-  sheetKey=null;sheetMode=null;replyDraft=null;typeDraft=null;memoEdit=null;ddDraft=null;
+  sheetKey=null;sheetMode=null;replyDraft=null;typeDraft=null;memoEdit=null;ddDraft=null;markSel(null);
 }
 function reopen(){
   if(sheetMode==='requests')openRequests();
@@ -2988,7 +3040,7 @@ function openMemoMenu(mid){
 /* ---------- 날짜 시트 ---------- */
 function openDay(k){
   if(sheetKey&&sheetKey!==k){tidyMemos(sheetKey);memoEdit=null;memoText='';}
-  sheetKey=k;sheetMode='day';
+  sheetKey=k;sheetMode='day';markSel(k);
   const d=parse(k),base=baseShift(d),c=shiftOf(d),hol=holName(k)||compHol(k),ov=S.overrides[k];
   const isGuest=S.syncSettings.isGuestMode;
   const dayReqs=S.requests.filter(r=>r.date===k).sort((a,b)=>b.t-a.t);
@@ -3189,9 +3241,12 @@ window.__onTone=o=>{
 };
 
 /* ================= 더 보기 ================= */
+/* 설정 목록 아이콘: 이모티콘 대신 같은 굵기 · 같은 색(보라) 선 아이콘 */
+const LINE_ICON={'🔁':'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>','🕐':'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>','👥':'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>','🏢':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>','💊':'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>','📊':'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>','👪':'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>','👁':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>','🎨':'<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>','🖼':'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>','☁️':'<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>','✉️':'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>','🔒':'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>','🗑':'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>','ℹ️':'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>','🔤':'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>'};
+const lineIcon=e=>LINE_ICON[e]?`<svg class="li" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LINE_ICON[e]}</svg>`:e;
 function renderMore(){
   const guest=role()==='guest';
-  const item=(e,t,act,v)=>`<div class="mi2" data-act="${act}"><span class="e">${e}</span><span>${t}</span><small>${v||''} ›</small></div>`;
+  const item=(e,t,act,v)=>`<div class="mi2" data-act="${act}"><span class="e">${lineIcon(e)}</span><span>${t}</span><small>${v||''} ›</small></div>`;
   const fs=S.fontScale||100;
   const lastB=S.drive.last?rel(S.drive.last):'';
   const issues=nativeIssues();
@@ -3216,14 +3271,14 @@ function renderMore(){
     </div>
     ${cap('앱')}
     <div class="pg-sec" style="margin-top:0">
-      <div class="prow"><div class="pl2">🔤 글자 크기</div><div class="chips">
+      <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('🔤')}</span>글자 크기</div><div class="chips">
         <button class="${fs===100?'on':''}" data-act="font" data-v="100">보통</button><button class="${fs===115?'on':''}" data-act="font" data-v="115">크게</button><button class="${fs===130?'on':''}" data-act="font" data-v="130">아주 크게</button></div></div>
       ${item('🖼','달력 이미지로 공유','more-share')}
       ${item('☁️','백업 · 복원','more-backup',lastB)}
       ${item('✉️','문의하기 · 오류 신고','more-mail')}
       ${item('🔒','개인정보처리방침','more-privacy')}
       ${item('🗑','내 데이터 모두 지우기','more-wipe')}
-      <div class="mi2" style="cursor:default"><span class="e">ℹ️</span><span>앱 정보</span><small>언제쉬어 ${appVersion()}</small></div>
+      <div class="mi2" style="cursor:default"><span class="e">${lineIcon('ℹ️')}</span><span>앱 정보</span><small>언제쉬어 ${appVersion()}</small></div>
     </div>
   </div>`;
 }
@@ -3785,7 +3840,7 @@ document.addEventListener('click',e=>{
     case 'prev':slideTo(-1);break;
     case 'next':slideTo(1);break;
     case 'today':{const n=new Date();setCur(n.getFullYear(),n.getMonth());render();break;}
-    case 'day':if(paint){if(role()==='host')paintDay(t.dataset.k);break;}reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(t.dataset.k);break;
+    case 'day':if(paint){if(role()==='host')paintDay(t.dataset.k);break;}buzz(8);reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(t.dataset.k);break;
     case 'close':closeSheet();break;
     case 'page-close':closePage();break;
     case 'pop-close':closePop();break;
@@ -4064,7 +4119,7 @@ document.addEventListener('click',e=>{
     case 'more-times':openTimesPage();break;
     case 'more-stamps':closeSheet();openStampPage();break;
     case 'stamp-tap':stampTap(t.dataset.id,t.dataset.k);break;
-    case 'stamp-dn':e.stopPropagation();if(paint){if(role()==='host')paintDay(t.dataset.k);break;}openStampDay(t.dataset.k);break;
+    case 'stamp-dn':e.stopPropagation();if(paint){if(role()==='host')paintDay(t.dataset.k);break;}buzz(8);openStampDay(t.dataset.k);break;
     case 'sd-done':case 'sd-undo':{
       const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;
       const n=stampCnt(k,s.id),v=a==='sd-done'?(s.kind==='pill'?Math.min(s.times,n+1):1):(s.kind==='pill'?n-1:0);
