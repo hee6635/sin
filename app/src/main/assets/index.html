@@ -750,6 +750,8 @@ textarea{resize:none;min-height:84px}
 .tbtn.ed{box-shadow:inset 0 0 0 1.5px var(--fam);color:var(--fam);background:var(--fam-bg)}
 .tbtn input,#page .tbtn input{position:absolute;inset:0;width:100%;height:100%;opacity:0;padding:0;margin:0;border:0;cursor:pointer}
 .tt-lb{cursor:pointer}.tt-lb small{color:var(--fam)!important}
+.nc .tedit{display:inline-block;margin-top:6px;margin-right:6px;font-size:11px;font-weight:800;background:rgba(255,255,255,.2);border-radius:8px;padding:3px 8px}
+.nc[data-act]{cursor:pointer}
 </style>
 </head>
 <body>
@@ -1753,11 +1755,12 @@ function renderFamily(){
   // 받은 응원 (오늘)
   const cheers=S.events.filter(e=>e.kind==='cheer'&&e.to===role()&&fmt(new Date(e.t))===fmt(today));
   const workerName=isHost?'나':'근무자';
-  const meCard=`<div class="nc w ${st.key==='sleep'?'sl':''}">
+  const meCard=`<div class="nc w ${st.key==='sleep'?'sl':''}" ${isHost?'data-act="fam-mytime"':''}>
       <div class="who"><i style="background:#1d2330">${isHost?'나':'근'}</i>${workerName}</div>
       <div class="st">${st.e} ${esc(st.t)}</div>
       ${st.prog!==undefined?`<div class="bar"><i style="width:${Math.round(st.prog*100)}%"></i></div>`:''}
       <div class="sm">${esc(st.sub||'')}${S.status.phone&&st.key!=='rest'?` · ${st.phone?'전화 OK':'메시지만'}`:''}</div>
+      ${isHost?'<span class="tedit">🕐 시간 고치기 ›</span>':''}
       ${isHost&&cheers.length?`<span class="got">${cheers.slice(-3).map(c=>esc(c.text.split(' ')[0])).join(' ')} 응원 ${cheers.length}</span>`:''}
     </div>`;
   const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);return `<div class="nc ${l==='자는 중'?'sl':''}" data-act="fam-edit" data-id="${m.id}"><div class="who"><i style="background:${m.color||FAM_COL[i%6]}">${esc(m.name.slice(0,1))}</i>${esc(m.name)}</div><div class="st">${e} ${esc(l)}</div><div class="sm">${esc(sub)}</div></div>`;}).join('');
@@ -1807,6 +1810,7 @@ function openFamSetPage(){
         <div class="prow"><div class="pl2">가족 보기 (체험)<small>${g?'지금 가족 화면이에요':'가족 폰에서 보이는 화면으로 바꿔요'}</small></div><label class="sw"><input type="checkbox" id="guestModeToggle" ${g?'checked':''}><i></i></label></div>
       </div>
       <div class="pg-sec">
+        <div class="prow" data-act="more-times"><div class="pl2">🕐 내 근무 시간 · 상태<small>출근 · 점심/야식 · 퇴근 · 수면 시간</small></div><span class="muted">›</span></div>
         <div class="prow" data-act="more-status"><div class="pl2">👁 가족에게 보이는 내 상태</div><span class="muted">›</span></div>
         <div class="prow" data-act="fam-cheer-edit"><div class="pl2">💌 응원 버튼 바꾸기<small>가족 화면에서 근무자에게 보내는 버튼</small></div><span class="muted">${cheerList().map(c=>c[0]).join('')} ›</span></div>
         <div class="prow" data-act="fam-invite"><div class="pl2">📨 가족 초대 (폰끼리 연결)<small>다음 업데이트에서 열려요</small></div><span class="muted">›</span></div>
@@ -3012,6 +3016,7 @@ document.addEventListener('click',e=>{
     case 'go-colleague':tab='colleague';render();requestAnimationFrame(()=>{const r=$('.crow.today');if(r)r.scrollIntoView({block:'center'});});break;
     case 'feed-sheet':feedTab='all';openFeed();break;
     case 'fam-set':openFamSetPage();break;
+    case 'fam-mytime':{const d=new Date();let k=shiftOf(d);if(isRest(k)){for(let i=1;i<10;i++){const k2=shiftOf(addDays(d,i));if(!isRest(k2)){k=k2;break;}}}if(!isRest(k))timesTab=k;openTimesPage();break;}
     case 'fam-wk':famWeek+=+t.dataset.v;render();break;
     case 'fam-day':{const k=t.dataset.k,d=parse(k);tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
     case 'fam-add':{const n=(S.family||[]).length;famDraft={id:uid(),name:'',color:FAM_COL[n%6],kind:'office',days:[1,2,3,4,5],start:'09:00',end:'18:00',holOff:true,vac:[],team:S.myTeam};openFamEdit();break;}
