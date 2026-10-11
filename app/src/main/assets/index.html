@@ -311,6 +311,10 @@ textarea{resize:none;min-height:84px}
 @media (prefers-reduced-motion:reduce){.cell,.cell.press,.cell.sel{transition:none}.cell.press,.cell.sel{transform:none}.badge.pop{animation:none}}
 .adslot{margin:12px 16px 0;min-height:100px;border-radius:12px;background:var(--surface);display:grid;place-items:center;color:var(--muted);font-size:12px}
 .adslot[hidden]{display:none}
+.lav{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;flex:none}
+.codebig{font-size:32px;font-weight:900;letter-spacing:3px;font-variant-numeric:tabular-nums;padding:14px 0 4px;font-family:ui-monospace,Menlo,Consolas,monospace}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px}
+.codein{width:100%;font-size:26px;letter-spacing:3px;text-align:center;text-transform:uppercase;padding:12px 8px}
 .paintbar{display:flex;align-items:center;gap:8px;padding:6px 10px calc(6px);border-top:1px solid var(--line);background:var(--bg);flex:none}
 .paintbar .pb-ic{font-size:18px;display:flex;flex-direction:column;align-items:center;line-height:1.1}.paintbar .pb-ic small{font-size:9.5px;color:var(--muted);font-weight:700;white-space:nowrap}
 .paint-on .track .cell{touch-action:none}.paintbar .pb-t{flex:1;display:flex;gap:6px;overflow-x:auto;padding:3px}
@@ -965,6 +969,7 @@ button.tbtn{cursor:pointer}
 <div id="onboard"></div>
 <input type="file" id="icoFile" accept="image/*" style="display:none">
 
+<script src="firebase/config.js"></script>
 <script>
 (()=>{
 'use strict';
@@ -1153,6 +1158,7 @@ const defaults=()=>({
   teamStyle:'abc',         // 조 이름: 'abc'(A조) · 'num'(1조) · 'team'(1팀) · 'custom'(teamNames)
   teamNames:[],            // 직접 고친 조 이름
   holRest:false,           // 공휴일엔 쉼 (상주 · 평일 근무)
+  link:null,               // 가족방 연결 {hid, role:'host'|'guest', name, perm} (이 폰의 로그인 번호에 묶여서 백업에는 안 넣음)
   patternName:'4조2교대',  // 달력 위에 보이는 근무 이름
   types:DEFAULT_TYPES(),
   /* 월 메모: S.board['2026-10'] = [{id, kind('todo'|'note'), text, done, doneBy, shared, by, t}] */
@@ -1190,6 +1196,7 @@ function normalize(o){
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
   s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
+  s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write'}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},o&&o.memoColors);
   s.drive=Object.assign(defaults().drive,o&&o.drive);
   s.status=Object.assign(defaults().status,o&&o.status);if(!s.status.labels||typeof s.status.labels!=='object')s.status.labels={};
@@ -2548,7 +2555,7 @@ function openFamSetPage(){
         <div class="prow" data-act="more-times"><div class="pl2">🕐 내 근무 시간 · 상태<small>출근 · 점심/야식 · 퇴근 · 수면 시간</small></div><span class="muted">›</span></div>
         <div class="prow" data-act="more-status"><div class="pl2">👁 가족에게 보이는 내 상태</div><span class="muted">›</span></div>
         <div class="prow" data-act="fam-cheer-edit"><div class="pl2">💌 응원 버튼 바꾸기<small>가족 화면에서 근무자에게 보내는 버튼</small></div><span class="muted">${cheerList().map(c=>ico(c[0])).join('')} ›</span></div>
-        <div class="prow" data-act="fam-invite"><div class="pl2">📨 가족 초대 (폰끼리 연결)<small>다음 업데이트에서 열려요</small></div><span class="muted">›</span></div>
+        <div class="prow" data-act="link-open"><div class="pl2">📨 가족 연결 (폰끼리)<small>${fbCfg()?'초대 코드로 가족 폰과 연결해요':'준비 중이에요'}</small></div><span class="muted">›</span></div>
       </div>
     </div>`,'famset');
 }
@@ -3242,7 +3249,7 @@ window.__onTone=o=>{
 
 /* ================= 더 보기 ================= */
 /* 설정 목록 아이콘: 이모티콘 대신 같은 굵기 · 같은 색(보라) 선 아이콘 */
-const LINE_ICON={'🔁':'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>','🕐':'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>','👥':'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>','🏢':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>','💊':'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>','📊':'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>','👪':'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>','👁':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>','🎨':'<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>','🖼':'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>','☁️':'<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>','✉️':'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>','🔒':'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>','🗑':'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>','ℹ️':'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>','🔤':'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>'};
+const LINE_ICON={'🔗':'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>','🔁':'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>','🕐':'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>','👥':'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>','🏢':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>','💊':'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>','📊':'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>','👪':'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>','👁':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>','🎨':'<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>','🖼':'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>','☁️':'<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>','✉️':'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>','🔒':'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>','🗑':'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>','ℹ️':'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>','🔤':'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>'};
 const lineIcon=e=>LINE_ICON[e]?`<svg class="li" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LINE_ICON[e]}</svg>`:e;
 function renderMore(){
   const guest=role()==='guest';
@@ -3265,6 +3272,7 @@ function renderMore(){
     </div>`}
     ${cap('가족')}
     <div class="pg-sec" style="margin-top:0">
+      ${!guest&&fbCfg()?item('🔗','가족 연결 (폰끼리)','link-open',S.link?(S.link.role==='host'?'내 가족방':'참여 중'):'초대'):''}
       ${item('👪','가족 목록 · 같이 쉬는 날','fam-set',`${(S.family||[]).length}명`)}
       ${guest?'':item('👁','가족에게 보이는 내 상태','more-status',S.status.show?'켜짐':'꺼짐')}
       ${item('🎨','메모 색','more-colors',`<span style="color:var(--fam)">♥</span>`)}
@@ -3681,6 +3689,8 @@ function openPrivacyPage(){
 function wipeAll(){
   if(!confirm('근무표·메모·알람·설정을 모두 지울까요?\n\n지우면 되돌릴 수 없어요.'))return;
   if(!confirm('정말 모두 지울까요?'))return;
+  const L=S.link;
+  if(L&&fbCfg()){(L.role==='host'?famDissolve(L.hid):famRemoveMember(L.hid,FBX.uid)).catch(()=>{});}   // 서버의 가족방 · 구성원 정리 (실패해도 계속)
   try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY);}catch(e){}
   S=defaults();save();
   try{if(hasBridge('setAlarms'))window.AndroidBridge.setAlarms('[]');}catch(e){}
@@ -3929,7 +3939,25 @@ document.addEventListener('click',e=>{
     case 'cheer-del':{const l=cheerPull();l.splice(+t.dataset.i,1);S.famCheer=l.length?l:null;openCheerEdit();break;}
     case 'cheer-reset':S.famCheer=null;save();closePop();if(pageMode==='famset')openFamSetPage();toast('기본 응원 버튼으로 되돌렸어요');break;
     case 'cheer-save':S.famCheer=cheerPull();save();closePop();if(pageMode==='famset')openFamSetPage();render();toast('응원 버튼을 저장했어요');break;
-    case 'fam-invite':toast('가족 초대는 다음 업데이트에서 열려요. 지금은 아래 "가족 보기(체험)"로 미리 써 보세요');break;
+    case 'link-open':if(!fbCfg()){toast('가족 연결은 준비 중이에요');break;}openLinkPage();break;
+    case 'link-retry':famRefresh();break;
+    case 'link-invite':openInvitePop();break;
+    case 'link-join':openJoinPop();break;
+    case 'inv-perm':invPull();invDraft.perm=t.dataset.v;renderInvitePop();break;
+    case 'inv-make':invMake();break;
+    case 'inv-share':famShare(t.dataset.c);break;
+    case 'inv-copy':copyText(famFmt(t.dataset.c));break;
+    case 'inv-del':famDo(async()=>{const {F,db}=await famReady();await F.deleteDoc(F.doc(db,'invites',t.dataset.c));},'코드를 지웠어요');break;
+    case 'join-check':joinCheck();break;
+    case 'join-back':openJoinPop();break;
+    case 'join-go':joinGo();break;
+    case 'mem-menu':openMemberMenu(t.dataset.u);break;
+    case 'mem-rename':openRename(t.dataset.u);break;
+    case 'mem-save':memSave();break;
+    case 'mem-perm':{const m=famUi.members.find(x=>x.uid===t.dataset.u);if(m){closePop();famDo(()=>famEdit(S.link.hid,m.uid,{perm:m.perm==='read'?'write':'read'}),'권한을 바꿨어요');}break;}
+    case 'mem-kick':{const m=famUi.members.find(x=>x.uid===t.dataset.u);if(m&&confirm(`${m.name}님을 가족방에서 내보낼까요?`)){closePop();famDo(()=>famRemoveMember(S.link.hid,m.uid),'내보냈어요');}break;}
+    case 'link-leave':if(confirm('이 가족방에서 나갈까요?\n(다시 들어오려면 새 초대 코드가 필요해요)'))famDo(async()=>{await famRemoveMember(S.link.hid,FBX.uid);S.link=null;save();},'가족방에서 나왔어요');break;
+    case 'link-dissolve':if(confirm('가족방을 없앨까요?\n가족은 모두 나가지고 초대 코드도 사라져요.\n(내 근무표는 그대로예요)')&&confirm('정말 없앨까요?'))famDo(async()=>{await famDissolve(S.link.hid);S.link=null;save();},'가족방을 없앴어요');break;
     case 'feed-tab':feedTab=t.dataset.v;openFeed();break;
     case 'feed-allread':markSeen(()=>true);render();openFeed();break;
     case 'feed-open':{
@@ -4228,7 +4256,10 @@ document.addEventListener('click',e=>{
 
     /* 처음 시작 설정 */
     case 'ob-mine':ob.step=1;renderOb();break;
-    case 'ob-invite':toast('가족 연결은 다음 업데이트에서 열려요. 지금은 내 근무표로 시작해요');if(ob.step===0){ob.step=1;renderOb();}break;
+    case 'ob-invite':
+      if(!fbCfg()){toast('가족 연결은 준비 중이에요. 지금은 내 근무표로 시작해요');if(ob.step===0){ob.step=1;renderOb();}break;}
+      if(ob.step===0)openJoinPop();else{obClose();openLinkPage();}
+      break;
     case 'ob-restore':{
       if(hasBridge('driveList')){S.onboarded=true;save();obClose();driveFiles=null;openBackupPage();}
       else{S.onboarded=true;save();obClose();openBackupPage();}
@@ -4317,6 +4348,7 @@ document.addEventListener('change',e=>{
 document.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='memoInput'){memoText=t.value;}
+  else if(t.id==='joinCode'){const n=famNorm(t.value).slice(0,8);t.value=n.length>4?n.slice(0,4)+'-'+n.slice(4):n;}
   else if((t.id==='piText'||t.id==='piTitle')&&piEd){const n=piTarget();if(n){piPull();const sg=$('#piSug');if(sg)sg.innerHTML=piSug(n);}}
   else if(t.id==='tdK'&&typeDraft){typeDraft.k=t.value.trim().slice(0,2);const pv=$('#tdPrev');if(pv)pv.outerHTML=typePreview();}
   else if(t.id==='tdName'&&typeDraft){typeDraft.name=t.value;}
@@ -4504,6 +4536,272 @@ function openFirebasePage(){
       </div>
     </div>`,'fb');
 }
+/* ================= 가족 연결 (Firebase) · 1단계: 가족방 · 초대 코드 · 참여 · 가족 관리 =================
+ * 가족방 번호(hid) = 호스트(근무자)의 Firebase 로그인 번호(uid).
+ * 구조 · 규칙: firebase/firestore.rules (households / members / invites)
+ * 아직 근무표 · 메모 · 요청은 안 주고받아요 (2단계 이후). 설정(firebase/config.js)이 없으면 이 화면은 안 보여요. */
+const FAM_ALPHA='ABCDEFGHJKMNPQRSTUVWXYZ23456789',FAM_MAX=3,FAM_DAYS=7;   // 헷갈리는 0 O 1 I L 빼고
+const fbCfg=()=>!!window.FIREBASE_CONFIG;
+const famRe=/^[A-HJKMNP-Z2-9]{8}$/;
+const famFmt=c=>c?c.slice(0,4)+'-'+c.slice(4):'';
+const famNorm=t=>String(t||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const famPermTxt=p=>p==='read'?'보기만':'메모 · 요청 보내기';
+function famNewCode(){const a=new Uint32Array(8);crypto.getRandomValues(a);return Array.from(a,v=>FAM_ALPHA[v%FAM_ALPHA.length]).join('');}
+const famErr=e=>{const c=String((e&&e.code)||(e&&e.message)||e);return c.includes('permission-denied')?'권한이 없어요. 코드가 방금 사용됐거나 자리가 가득 찼을 수 있어요':fbErrText(e);};
+async function famReady(){
+  if(!fbCfg())throw new Error('Firebase 설정이 없어요');
+  if(!(await fbConnect()))throw new Error(FBX.err||'서버에 연결하지 못했어요');
+  return {F:window.FB.fs,db:FBX.db,uid:FBX.uid};
+}
+const famMember=(F,db,hid,uid)=>F.doc(db,'households',hid,'members',uid);
+// 서버가 기준: 내가 어느 가족방 구성원인지 확인해서 S.link 를 바로잡음
+async function famSync(){
+  const {F,db,uid}=await famReady();
+  const hid=S.link?S.link.hid:uid;   // 링크가 없어도 내 번호의 가족방(호스트)이 있는지 확인
+  const snap=await F.getDoc(famMember(F,db,hid,uid));
+  const had=!!S.link;
+  if(snap.exists()){const d=snap.data();S.link={hid,role:d.role,name:d.name,perm:d.perm};}
+  else S.link=null;
+  save();
+  return {had,link:S.link};
+}
+async function famMembers(hid){
+  const {F,db}=await famReady();
+  const s=await F.getDocs(F.collection(db,'households',hid,'members'));
+  return s.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>(a.role==='host'?-1:0)-(b.role==='host'?-1:0)||(a.joinedAt&&b.joinedAt?a.joinedAt.toMillis()-b.joinedAt.toMillis():0));
+}
+// 내가 만든 쓸 수 있는 초대 코드 (쓴 것 · 기간 지난 것은 지움)
+async function famMyInvites(){
+  const {F,db,uid}=await famReady();
+  const s=await F.getDocs(F.query(F.collection(db,'invites'),F.where('ownerUid','==',uid)));
+  const now=Date.now(),out=[];
+  s.docs.forEach(d=>{const v=d.data(),exp=v.expireAt.toMillis();
+    if(v.usedBy||exp<now){F.deleteDoc(d.ref).catch(()=>{});return;}
+    out.push({code:d.id,name:v.name,perm:v.perm,exp});});
+  return out.sort((a,b)=>a.exp-b.exp);
+}
+// 가족방이 없으면 만들기 (호스트 구성원 문서와 한 묶음)
+async function famEnsureHouse(hostName){
+  const {F,db,uid}=await famReady();
+  const me=await F.getDoc(famMember(F,db,uid,uid));
+  if(me.exists()){const d=me.data();S.link={hid:uid,role:'host',name:d.name,perm:'write'};save();return;}
+  const b=F.writeBatch(db);
+  b.set(F.doc(db,'households',uid),{ownerUid:uid,createdAt:F.serverTimestamp(),guestCount:0});
+  b.set(famMember(F,db,uid,uid),{role:'host',name:hostName,perm:'write',joinedAt:F.serverTimestamp()});
+  await b.commit();
+  S.link={hid:uid,role:'host',name:hostName,perm:'write'};save();
+}
+async function famCreateInvite(perm,name){
+  const {F,db,uid}=await famReady();
+  for(let i=0;i<5;i++){
+    const code=famNewCode(),exp=Date.now()+FAM_DAYS*864e5;
+    try{
+      await F.setDoc(F.doc(db,'invites',code),{hid:uid,ownerUid:uid,perm,name:name||'',hostName:S.link.name,patternName:(S.patternName||'').slice(0,20),createdAt:F.serverTimestamp(),expireAt:F.Timestamp.fromMillis(exp),usedBy:null});
+      return {code,exp};
+    }catch(e){if(i===4)throw e;}   // 코드가 겹쳤으면 다시
+  }
+}
+async function famLookup(code){
+  const {F,db,uid}=await famReady();
+  const snap=await F.getDoc(F.doc(db,'invites',code));
+  if(!snap.exists())return {err:'없는 코드예요. 다시 확인해 주세요'};
+  const d=snap.data();
+  if(d.hid===uid)return {err:'내가 만든 코드예요. 가족 폰에서 넣어 주세요'};
+  if(d.usedBy)return {err:'이미 사용된 코드예요. 새 코드를 요청해 주세요'};
+  if(d.expireAt.toMillis()<Date.now())return {err:'기간이 지난 코드예요. 새 코드를 요청해 주세요'};
+  return {ok:true,hid:d.hid,perm:d.perm,name:d.name,hostName:d.hostName,patternName:d.patternName};
+}
+async function famJoin(code,info,name){
+  const {F,db,uid}=await famReady();
+  const b=F.writeBatch(db);
+  b.set(famMember(F,db,info.hid,uid),{role:'guest',name,perm:info.perm,joinedAt:F.serverTimestamp(),inviteCode:code});
+  b.update(F.doc(db,'invites',code),{usedBy:uid,usedAt:F.serverTimestamp()});
+  b.update(F.doc(db,'households',info.hid),{guestCount:F.increment(1)});
+  await b.commit();
+  S.link={hid:info.hid,role:'guest',name,perm:info.perm};save();
+}
+async function famRemoveMember(hid,uid){   // 나가기(본인) · 내보내기(호스트)
+  const {F,db}=await famReady();
+  const b=F.writeBatch(db);
+  b.delete(famMember(F,db,hid,uid));
+  b.update(F.doc(db,'households',hid),{guestCount:F.increment(-1)});
+  await b.commit();
+}
+async function famDissolve(hid){   // 가족방 없애기: 코드 · 구성원 · 가족방을 한 묶음으로
+  const {F,db,uid}=await famReady();
+  const b=F.writeBatch(db);
+  const inv=await F.getDocs(F.query(F.collection(db,'invites'),F.where('ownerUid','==',uid)));
+  inv.docs.forEach(d=>b.delete(d.ref));
+  const mem=await F.getDocs(F.collection(db,'households',hid,'members'));
+  mem.docs.filter(d=>d.id!==uid).forEach(d=>b.delete(d.ref));
+  b.delete(famMember(F,db,hid,uid));
+  b.delete(F.doc(db,'households',hid));
+  await b.commit();
+}
+async function famEdit(hid,uid,patch){
+  const {F,db}=await famReady();
+  await F.updateDoc(famMember(F,db,hid,uid),patch);
+}
+function copyText(t){
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast('복사했어요'),()=>copyOld(t));return;}}catch(e){}
+  copyOld(t);
+}
+function copyOld(t){try{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast('복사했어요');}catch(e){toast('복사하지 못했어요');}}
+const famShareMsg=(code,host)=>`[언제쉬어] ${host}님이 근무표 가족방에 초대했어요 💜\n\n초대 코드: ${famFmt(code)}\n(${FAM_DAYS}일 안에 사용해 주세요)\n\n앱을 설치하고 처음 화면에서 "초대 코드가 있어요"를 눌러 코드를 넣어 주세요.`;
+function famShare(code){
+  const msg=famShareMsg(code,S.link?S.link.name:'근무자');
+  if(hasBridge('shareText')){window.AndroidBridge.shareText('가족 초대',msg);return;}
+  if(navigator.share){navigator.share({text:msg}).catch(()=>{});return;}
+  copyText(msg);
+}
+const daysLeft=ms=>Math.max(0,Math.ceil((ms-Date.now())/864e5));
+
+/* ----- 가족 연결 화면 ----- */
+let famUi={st:'idle',members:[],invites:[],err:'',lastLink:null};
+async function famRefresh(){
+  famUi.st='loading';famUi.err='';
+  try{
+    const r=await famSync();
+    if(r.had&&!r.link)toast('가족방에서 나온 상태예요 (내보내졌거나 없어졌어요)');
+    famUi.members=S.link?await famMembers(S.link.hid):[];
+    famUi.invites=S.link&&S.link.role==='host'?await famMyInvites():[];
+    famUi.st='ok';
+  }catch(e){famUi.st='err';famUi.err=famErr(e);}
+  if(pageMode==='link')renderLinkPage();
+}
+function openLinkPage(){famUi.st='loading';renderLinkPage();famRefresh();}
+function lav(n,i){const h=[...String(n)].reduce((a,c)=>a+c.charCodeAt(0),i||0)*47%360;return `<span class="lav" style="background:hsl(${h} 55% 52%)">${esc(String(n).slice(0,1)||'?')}</span>`;}
+function renderLinkPage(){
+  const L=S.link,u=famUi,host=L&&L.role==='host';
+  const guests=u.members.filter(m=>m.role==='guest');
+  let body='';
+  if(u.st==='loading')body=`<div class="hint" style="padding:30px 16px;text-align:center">불러오는 중…</div>`;
+  else if(u.st==='err')body=`<div class="hint" style="padding:16px;color:var(--danger)">${esc(u.err)}</div><div style="padding:0 16px"><button class="btn" style="width:100%" data-act="link-retry">다시 시도</button></div>`;
+  else if(!L)body=`<div class="pg-sec" style="margin-top:12px;padding:18px 16px">
+      <b style="font-size:16px">가족과 같이 보려면</b>
+      <div class="hint" style="padding:6px 0 14px">근무자(나)가 가족방을 만들고 <b>초대 코드</b>를 보내요. 가족은 앱에서 코드를 넣고 참여해요. 가족방은 4명(나 + 가족 3명)까지예요.</div>
+      <button class="btn" style="width:100%" data-act="link-invite">가족 초대하기</button>
+      <button class="btn ghost" style="width:100%;margin-top:8px" data-act="link-join">초대 코드가 있어요</button>
+    </div>`;
+  else if(host)body=`<div class="pg-cap">내 가족방 · 가족 ${guests.length}/${FAM_MAX}명</div>
+    <div class="pg-sec" style="margin-top:0">${u.members.map((m,i)=>`<div class="prow ${m.role==='host'?'':'tap'}" ${m.role==='host'?'':`data-act="mem-menu" data-u="${esc(m.uid)}"`}>${lav(m.name,i)}<div class="pl2">${esc(m.name)}<small>${m.role==='host'?'근무자 (나)':famPermTxt(m.perm)}</small></div>${m.role==='host'?'':'<span class="muted">›</span>'}</div>`).join('')}
+      ${guests.length<FAM_MAX?`<div class="prow" data-act="link-invite" style="color:var(--accent);font-weight:700;justify-content:center">＋ 가족 초대하기</div>`:'<div class="prow"><div class="pl2 muted" style="text-align:center">가족 자리가 가득 찼어요</div></div>'}
+    </div>
+    ${u.invites.length?`<div class="pg-cap">보낸 초대 코드 (쓰면 사라져요)</div><div class="pg-sec" style="margin-top:0">${u.invites.map(v=>`<div class="prow"><div class="pl2"><b class="mono">${famFmt(v.code)}</b><small>${esc(v.name||'호칭 미정')} · ${famPermTxt(v.perm)} · ${daysLeft(v.exp)}일 남음</small></div><button class="btn ghost sm" data-act="inv-share" data-c="${v.code}">보내기</button><button class="xbtn" data-act="inv-del" data-c="${v.code}" aria-label="코드 지우기">✕</button></div>`).join('')}</div>`:''}
+    <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기<small>가족에게 보이는 내 이름</small></div><span class="muted">${esc(L.name)} ›</span></div>
+      <div class="prow danger-row" data-act="link-dissolve">가족방 없애기</div></div>`;
+  else{
+    const hostM=u.members.find(m=>m.role==='host');
+    body=`<div class="pg-cap">참여 중인 가족방</div>
+    <div class="pg-sec" style="margin-top:0">${u.members.map((m,i)=>`<div class="prow">${lav(m.name,i)}<div class="pl2">${esc(m.name)}${m.uid===FBX.uid?' (나)':''}<small>${m.role==='host'?'근무자':famPermTxt(m.perm)}</small></div></div>`).join('')}</div>
+    <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기</div><span class="muted">${esc(L.name)} ›</span></div>
+      <div class="prow danger-row" data-act="link-leave">${hostM?esc(hostM.name)+'님의 ':''}가족방에서 나가기</div></div>
+    <div class="hint" style="padding:10px 16px">근무표 · 메모 · 요청을 주고받는 기능은 다음 업데이트에서 열려요.</div>`;
+  }
+  openPage(`${pageHead('가족 연결')}<div class="pg-b">${body}${u.st==='ok'&&L&&host?'<div class="hint" style="padding:10px 16px">근무표 · 메모 · 요청을 주고받는 기능은 다음 업데이트에서 열려요. 지금은 가족방과 초대까지 시험할 수 있어요.</div>':''}</div>`,'link');
+}
+/* ----- 초대 코드 만들기 (호스트) ----- */
+let invDraft={perm:'write',name:'',host:''};
+function openInvitePop(){
+  const need=!(S.link&&S.link.role==='host');
+  invDraft={perm:invDraft.perm||'write',name:'',host:need?'':S.link.name};
+  renderInvitePop();
+}
+function renderInvitePop(){
+  const need=!(S.link&&S.link.role==='host');
+  openPop(`<div class="mh">가족 초대<b>초대 코드 만들기</b></div>
+    ${need?`<div class="mi" style="display:block"><div class="icn-lb">가족에게 보일 내 이름</div><input type="text" id="invHost" maxlength="12" placeholder="예: 아빠" value="${esc(invDraft.host)}" style="width:100%;margin-top:6px"></div>`:''}
+    <div class="mi" style="display:block"><div class="icn-lb">초대할 가족 호칭 <small>(없어도 돼요 · 참여할 때 정할 수 있어요)</small></div><input type="text" id="invName" maxlength="12" placeholder="예: 아내" value="${esc(invDraft.name)}" style="width:100%;margin-top:6px"></div>
+    <div class="mi" style="display:block"><div class="icn-lb">권한</div><div class="remc"><button class="${invDraft.perm==='write'?'on':''}" data-act="inv-perm" data-v="write">메모 · 요청 보내기</button><button class="${invDraft.perm==='read'?'on':''}" data-act="inv-perm" data-v="read">보기만</button></div></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">취소</button><button class="btn grow" data-act="inv-make">코드 만들기</button></div>`);
+}
+function invPull(){const a=$('#invHost'),b=$('#invName');if(a)invDraft.host=a.value.trim();if(b)invDraft.name=b.value.trim();}
+async function invMake(){
+  invPull();const need=!(S.link&&S.link.role==='host');
+  if(need&&!invDraft.host){toast('가족에게 보일 내 이름을 써 주세요 (예: 아빠)');return;}
+  if(S.link&&S.link.role==='guest'){toast('이미 다른 가족방에 참여 중이에요');return;}
+  const btn=document.querySelector('#pop [data-act="inv-make"]');if(btn){btn.disabled=true;btn.textContent='만드는 중…';}
+  try{
+    if(need)await famEnsureHouse(invDraft.host);
+    const members=await famMembers(S.link.hid);
+    if(members.filter(m=>m.role==='guest').length>=FAM_MAX){closePop();toast('가족 자리가 가득 찼어요');famRefresh();return;}
+    const r=await famCreateInvite(invDraft.perm,invDraft.name);
+    showCodePop(r.code);
+    if(pageMode==='link')famRefresh();else if(!pageMode)openLinkPage();
+  }catch(e){if(btn){btn.disabled=false;btn.textContent='코드 만들기';}toast(famErr(e));}
+}
+function showCodePop(code){
+  openPop(`<div class="mh">초대 코드<b>${FAM_DAYS}일 안에 가족이 넣으면 돼요</b></div>
+    <div class="mi" style="display:block;text-align:center"><div class="codebig">${famFmt(code)}</div><div class="hint" style="padding:6px 0 0">한 번 쓰면 사라지는 코드예요 (1회용)</div></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="inv-copy" data-c="${code}">코드 복사</button><button class="btn grow" data-act="inv-share" data-c="${code}" style="background:#fee500;color:#191919">카카오톡으로 보내기</button></div>
+    <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);
+}
+/* ----- 초대 코드로 참여 (가족) ----- */
+let joinDraft={code:'',info:null,name:''};
+function openJoinPop(msg){
+  if(S.link){toast('이미 가족방이 있어요. 먼저 나가기를 해 주세요');return;}
+  openPop(`<div class="mh">가족 폰 연결<b>초대 코드를 넣어 주세요</b></div>
+    <div class="mi" style="display:block"><input type="text" id="joinCode" class="mono codein" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="9" placeholder="XXXX-XXXX" value="${famFmt(joinDraft.code)}"><div class="warnline" id="joinErr" style="min-height:18px;margin-top:8px">${esc(msg||'')}</div></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">취소</button><button class="btn grow" data-act="join-check">확인</button></div>`);
+  setTimeout(()=>{const i=$('#joinCode');if(i)i.focus();},60);
+}
+async function joinCheck(){
+  const code=famNorm(($('#joinCode')||{}).value);joinDraft.code=code;
+  if(!famRe.test(code)){const e=$('#joinErr');if(e)e.textContent='코드는 8자리예요 (영문 · 숫자). 0 O 1 I L 은 안 써요';return;}
+  const btn=document.querySelector('#pop [data-act="join-check"]');if(btn){btn.disabled=true;btn.textContent='확인 중…';}
+  try{
+    const r=await famLookup(code);
+    if(!r.ok){openJoinPop(r.err);return;}
+    joinDraft.info=r;joinDraft.name=r.name||'';
+    renderJoinPreview();
+  }catch(e){openJoinPop(famErr(e));}
+}
+function renderJoinPreview(){
+  const i=joinDraft.info;
+  openPop(`<div class="mh">${esc(i.hostName)}님의 근무표<b>${esc(i.patternName||'교대근무')}</b></div>
+    <div class="mi" style="display:block"><div class="hint" style="padding:0 0 10px">참여하면 <b>${famPermTxt(i.perm)}</b> 가족으로 들어가요.</div><div class="icn-lb">내 호칭 <small>(근무자에게 보여요)</small></div><input type="text" id="joinName" maxlength="12" placeholder="예: 아내" value="${esc(joinDraft.name)}" style="width:100%;margin-top:6px"><div class="warnline" id="joinErr" style="min-height:18px;margin-top:8px"></div></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="join-back">뒤로</button><button class="btn grow" data-act="join-go">참여하기</button></div>`);
+}
+async function joinGo(){
+  const name=(($('#joinName')||{}).value||'').trim();joinDraft.name=name;
+  if(!name){const e=$('#joinErr');if(e)e.textContent='내 호칭을 써 주세요';return;}
+  const btn=document.querySelector('#pop [data-act="join-go"]');if(btn){btn.disabled=true;btn.textContent='참여하는 중…';}
+  try{
+    await famJoin(joinDraft.code,joinDraft.info,name);
+    const host=joinDraft.info.hostName;joinDraft={code:'',info:null,name:''};
+    closePop();
+    if(ob){S.onboarded=true;save();obClose();}
+    render();openLinkPage();toast(`${host}님의 가족방에 참여했어요 💜`);
+  }catch(e){const er=$('#joinErr');if(er)er.textContent='참여하지 못했어요. '+famErr(e);if(btn){btn.disabled=false;btn.textContent='참여하기';}}
+}
+/* ----- 가족 관리 ----- */
+function openMemberMenu(uid){
+  const m=famUi.members.find(x=>x.uid===uid);if(!m)return;
+  openPop(`<div class="mh">${famPermTxt(m.perm)}<b>${esc(m.name)}</b></div>
+    <button class="mi" data-act="mem-rename" data-u="${esc(uid)}">✏️ 호칭 고치기</button>
+    <button class="mi" data-act="mem-perm" data-u="${esc(uid)}">${m.perm==='read'?'💬 메모 · 요청도 보낼 수 있게':'👁 보기만 하게'}</button>
+    <button class="mi" data-act="mem-kick" data-u="${esc(uid)}" style="color:var(--danger)">내보내기</button>
+    <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);
+}
+let renameFor=null;
+function openRename(uid){
+  const self=uid==='self';const m=self?{name:S.link.name}:famUi.members.find(x=>x.uid===uid);if(!m)return;
+  renameFor=self?FBX.uid:uid;
+  openPop(`<div class="mh">호칭 고치기<b>${self?'내 호칭':esc(m.name)}</b></div>
+    <div class="mi" style="display:block"><input type="text" id="renameIn" maxlength="12" value="${esc(m.name)}" style="width:100%"></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">취소</button><button class="btn grow" data-act="mem-save">저장</button></div>`);
+  setTimeout(()=>{const i=$('#renameIn');if(i){i.focus();i.select();}},60);
+}
+async function memSave(){
+  const n=(($('#renameIn')||{}).value||'').trim();if(!n){toast('호칭을 써 주세요');return;}
+  try{
+    await famEdit(S.link.hid,renameFor,{name:n});
+    if(renameFor===FBX.uid){S.link.name=n;save();}
+    closePop();famRefresh();
+  }catch(e){toast(famErr(e));}
+}
+async function famDo(fn,okMsg){try{await fn();if(okMsg)toast(okMsg);}catch(e){toast(famErr(e));}famRefresh();}
+
 let aboutTaps=0,aboutT=null;
 /* 안드로이드 앱이 부르는 훅 */
 /* 종료 확인: 첫 화면(달력)에서 뒤로가기 → 바로 안 꺼지고 한 번 물어봄. 가운데 .adslot 은 나중에 광고를 붙일 자리(지금은 숨김) */

@@ -19,6 +19,8 @@
 - Firestore Database › **규칙** 탭 → 안의 글을 모두 지우고 `firebase/firestore.rules` 파일 내용을 그대로 붙여 넣기 → **게시**
 - (지금은 연결 시험용 `ping` 만 열려 있고 나머지는 모두 막혀 있어요. 가족 기능을 만들 때 하나씩 열어요.)
 
+> **규칙이 바뀔 때마다(가족 기능이 늘 때마다) 4번을 다시 해야 해요**: `firebase/firestore.rules` 의 새 내용을 규칙 탭에 붙여 넣고 **게시**. (v0.16: 가족방 · 구성원 · 초대 코드 규칙이 들어갔어요. 게시하지 않으면 가족 연결 화면에서 "권한이 없어요"가 나와요.)
+
 ## 5. 웹 앱 등록하고 설정 복사
 1. 프로젝트 설정(톱니바퀴) › **내 앱 › 웹(</>) 앱 추가** → 이름 아무거나, Hosting 은 **체크 안 함**
 2. 나오는 `firebaseConfig = { apiKey: "...", ... }` 를 복사해서 **`app/src/main/assets/firebase/config.js`** 의 `window.FIREBASE_CONFIG = null;` 자리에 붙여 넣기:

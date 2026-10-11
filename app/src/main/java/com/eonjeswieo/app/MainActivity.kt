@@ -446,6 +446,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** 글을 공유 시트로 보내기 (카카오톡 · 문자 등) */
+    fun shareText(title: String, text: String) {
+        try {
+            val send = Intent(Intent.ACTION_SEND)
+                .setType("text/plain")
+                .putExtra(Intent.EXTRA_TEXT, text)
+            startActivity(Intent.createChooser(send, title))
+        } catch (e: Exception) {
+            Toast.makeText(this, "공유 창을 열 수 없어요", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun shareDir() = cacheDir.resolve("share").apply { mkdirs() }
 
     private fun share(file: java.io.File, mime: String, title: String) {

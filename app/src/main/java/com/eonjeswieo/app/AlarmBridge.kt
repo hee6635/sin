@@ -31,6 +31,12 @@ class AlarmBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun setTextZoom(pct: Int) = activity.setTextZoom(pct)
 
+    /** 글(초대 문구 등)을 카카오톡 등으로 보내기 */
+    @JavascriptInterface
+    fun shareText(title: String, text: String) {
+        activity.runOnUiThread { activity.shareText(title, text) }
+    }
+
     /** 앱 종료 (종료 확인 팝업에서 [종료]) */
     @JavascriptInterface
     fun exitApp() {

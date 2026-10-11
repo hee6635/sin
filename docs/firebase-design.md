@@ -56,3 +56,19 @@
 
 ## 변경: 백업은 Firestore 대신 사용자 구글 드라이브(appDataFolder)
 - users/{uid}/backups 는 쓰지 않음. 백업은 최신 + 직전 2개만, 복원은 무료(광고 게이트 없음).
+
+
+## 1단계 구현 (v0.16): 가족방 · 초대 코드 · 참여 · 가족 관리
+데이터 구조 (규칙: `firebase/firestore.rules`, 시험 49개: `firebase/test/rules.test.mjs`)
+- `households/{호스트uid}` : `{ownerUid, createdAt, guestCount(0~3)}` — 가족방 번호 = 호스트 uid (사람당 가족방 1개, 겹칠 일 없음)
+- `households/{hid}/members/{uid}` : `{role:'host'|'guest', name(1~12자), perm:'write'|'read', joinedAt, inviteCode?}`
+- `invites/{8자리 코드}` : `{hid, ownerUid, perm, name, hostName, patternName, createdAt, expireAt(최대 8일), usedBy:null|uid, usedAt?}`
+  · 코드 글자: ABCDEFGHJKMNPQRSTUVWXYZ23456789 (0 O 1 I L 뺌) · 하나씩 읽기(get)만, 목록은 호스트가 자기 것만
+묶음(batch) 규칙
+- 가족방 만들기: households + 호스트 member 문서 한 묶음
+- 참여: 내 member 문서 + 초대 코드 usedBy 표시 + guestCount +1 한 묶음 (코드 1회용 · 만료 · 가족 3명 상한 · 권한 일치를 규칙이 확인)
+- 나가기 · 내보내기: member 문서 삭제 + guestCount -1 한 묶음, 가족방 없애기: 코드 · 구성원 · 가족방 한 묶음
+알려진 한계 (다음 단계에서)
+- 코드는 8자리(약 8.5e11 가지)라 훑어보기는 어렵지만 요청 횟수 제한은 없음 → App Check(앱 확인) 붙이기
+- 호스트가 폰을 바꾸면 익명 uid 가 바뀌어 가족방을 잃음 → 구글 로그인 연결(익명 → 구글 linkWithCredential)로 uid 유지
+- 아직 근무표 · 메모 · 요청은 안 주고받음 (2~3단계)
