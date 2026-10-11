@@ -1,0 +1,72 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:26px;display:flex;gap:24px;align-items:flex-start;color:#1d2330;width:1180px}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center}
+.cap{font-size:15px;font-weight:800;color:#3a4150}.sub{font-size:12px;color:#6b7280;margin-top:-6px;text-align:center;line-height:1.45}
+.ph{width:360px;height:740px;background:#f4f5f7;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330;position:relative}
+.hd{display:flex;align-items:center;justify-content:center;padding:16px;font-size:17px;font-weight:800;background:#f7f7f8;border-bottom:1px solid #e5e7eb;position:relative}
+.hd::before{content:"‹";position:absolute;left:16px;font-size:24px;font-weight:400}
+.lbl{font-size:12.5px;font-weight:800;color:#8a909b;padding:16px 18px 8px}
+.sec{background:#fff}
+.rw{display:flex;align-items:center;padding:15px 18px;border-bottom:1px solid #eef0f2;font-size:15px}
+.rw .v{margin-left:auto;color:#6b7280;font-weight:700;display:flex;align-items:center;gap:6px}
+.rw small{display:block;font-size:12px;color:#9aa1ad;margin-top:3px}
+.card{margin:0 14px;border-radius:18px;padding:16px;color:#fff;background:linear-gradient(135deg,#5b4bdb,#4a6fe0)}
+.card .t{font-size:12px;font-weight:800;opacity:.85}
+.card .m{font-size:22px;font-weight:900;margin:6px 0 4px}
+.card .s{font-size:13px;font-weight:700;opacity:.9}
+.card .bar{height:5px;border-radius:3px;background:rgba(255,255,255,.3);margin:12px 0 0;overflow:hidden}.card .bar i{display:block;width:62%;height:100%;background:#ffd166}
+.card .btns{display:flex;gap:8px;margin-top:14px}
+.card .btns span{background:rgba(255,255,255,.2);border-radius:10px;padding:7px 11px;font-size:12.5px;font-weight:800}
+.next{margin:10px 14px 0;font-size:12.5px;color:#6b7280;line-height:1.6;background:#fff;border-radius:14px;padding:10px 14px}
+.next b{color:#1d2330}
+.sw{width:44px;height:25px;border-radius:13px;background:#3b6fd6;position:relative;margin-left:auto}.sw::after{content:'';position:absolute;right:3px;top:3px;width:19px;height:19px;border-radius:50%;background:#fff}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.pop{position:absolute;left:14px;right:14px;top:150px;background:#fff;border-radius:20px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.pop h3{font-size:15px;font-weight:900;margin-bottom:12px}
+.g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.g div{background:#f3f4f6;border-radius:12px;padding:10px 0;text-align:center;font-size:12.5px;font-weight:700;color:#4b5563}
+.g div i{display:block;font-style:normal;font-size:24px;margin-bottom:3px}
+.g .on{background:#eeeafd;box-shadow:inset 0 0 0 2px #7b5cf0;color:#1d2330}
+.note{font-size:11.5px;color:#9aa1ad;padding:8px 18px 0;line-height:1.5}
+</style></head><body>
+
+<div class="col"><div class="cap">바꾼 뒤 — 지금 상태 하나만</div><div class="sub">직장은 한 줄로 접고, 미리보기는 "지금" 카드 하나<br>[시간 고치기 ›] 누르면 근무 시간 화면으로</div>
+<div class="ph">
+ <div class="hd">가족에게 보이는 내 상태</div>
+ <div class="lbl">내 직장</div>
+ <div class="sec"><div class="rw">근무 중일 때 아이콘<span class="v">🏭 공장 ›</span></div></div>
+ <div class="lbl">지금 가족에게 이렇게 보여요</div>
+ <div class="card"><div class="t">나 · 야간</div><div class="m">🏭 근무 중</div><div class="s">메시지만 · 퇴근까지 3시간 20분</div><div class="bar"><i></i></div>
+  <div class="btns"><span>🕐 시간 고치기 ›</span><span>✏️ 문구 바꾸기</span></div></div>
+ <div class="next">다음: <b>🚗 퇴근 중</b> 07:00 → <b>🏠 집에 왔어요</b> 07:30 → <b>😴 자는 중</b> 08:30</div>
+ <div class="lbl">보이는 것</div>
+ <div class="sec"><div class="rw">"전화 OK / 메시지만" 표시<span class="sw"></span></div></div>
+ <div class="note">✏️ 문구 바꾸기는 <b>지금 상태</b>(근무 중)의 이모티콘 · 문구만 바꿔요.</div>
+</div></div>
+
+<div class="col"><div class="cap">"내 직장" 누르면</div><div class="sub">고르는 창이 뜨고, 고르면 바로 닫힘</div>
+<div class="ph">
+ <div class="hd">가족에게 보이는 내 상태</div>
+ <div class="lbl">내 직장</div>
+ <div class="sec"><div class="rw">근무 중일 때 아이콘<span class="v">🏭 공장 ›</span></div></div>
+ <div class="lbl">지금 가족에게 이렇게 보여요</div>
+ <div class="card"><div class="t">나 · 야간</div><div class="m">🏭 근무 중</div><div class="s">메시지만 · 퇴근까지 3시간 20분</div><div class="bar"><i></i></div><div class="btns"><span>🕐 시간 고치기 ›</span><span>✏️ 문구 바꾸기</span></div></div>
+ <div class="dim"></div>
+ <div class="pop"><h3>내 직장 (근무 중 표시)</h3><div class="g">
+  <div class="on"><i>🏭</i>공장</div><div><i>🏥</i>병원</div><div><i>🚒</i>소방</div><div><i>👮</i>경찰</div><div><i>⚡</i>발전소</div><div><i>🏪</i>매장</div><div><i>✈️</i>공항</div><div><i>🚇</i>교통</div><div><i>🏢</i>회사</div></div></div>
+</div></div>
+
+<div class="col"><div class="cap">쉬는 날이면</div><div class="sub">그 순간 상태가 그대로 보임</div>
+<div class="ph">
+ <div class="hd">가족에게 보이는 내 상태</div>
+ <div class="lbl">내 직장</div>
+ <div class="sec"><div class="rw">근무 중일 때 아이콘<span class="v">🏭 공장 ›</span></div></div>
+ <div class="lbl">지금 가족에게 이렇게 보여요</div>
+ <div class="card" style="background:linear-gradient(135deg,#64748b,#56657a)"><div class="t">나 · 휴무</div><div class="m">🙂 쉬는 중</div><div class="s">다음 근무: 목요일 주간 07:00</div>
+  <div class="btns"><span>🕐 시간 고치기 ›</span><span>✏️ 문구 바꾸기</span></div></div>
+ <div class="next">다음: <b>🚗 출근 중</b> 목 06:30 → <b>🏭 근무 중</b> 07:00</div>
+ <div class="lbl">보이는 것</div>
+ <div class="sec"><div class="rw">"전화 OK / 메시지만" 표시<span class="sw"></span></div></div>
+</div></div>
+</body></html>
