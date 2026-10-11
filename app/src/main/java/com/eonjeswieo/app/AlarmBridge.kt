@@ -36,6 +36,12 @@ class AlarmBridge(private val activity: MainActivity) {
         activity.runOnUiThread { activity.openTonePicker(req, current) }
     }
 
+    /** 사진 고르기 → 결과는 window.__onImage(data URL, 취소면 '', 실패면 null) */
+    @JavascriptInterface
+    fun pickImage() {
+        activity.runOnUiThread { activity.openImagePicker() }
+    }
+
     /** 메일 앱으로 문의 보내기 */
     @JavascriptInterface
     fun sendMail(to: String, subject: String, body: String) {

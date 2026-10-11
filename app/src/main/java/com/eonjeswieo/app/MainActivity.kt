@@ -7,12 +7,16 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Base64
 import android.webkit.JsResult
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -25,6 +29,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
@@ -32,6 +37,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.webkit.WebViewAssetLoader
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 
 /**
  * 언제쉬어 화면(assets/index.html)을 WebView 로 보여주는 껍데기 앱.
@@ -53,6 +59,18 @@ class MainActivity : ComponentActivity() {
     private val pickFile = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         fileCallback?.onReceiveValue(if (uri != null) arrayOf(uri) else null)
         fileCallback = null
+    }
+
+    // 사진 고르기 (이모티콘 대신 쓸 사진): 안드로이드 사진 선택 창 → 1024px 로 줄여서 웹에 넘김
+    private val pickImage = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri == null) {
+            js("window.__onImage&&window.__onImage('')")
+            return@registerForActivityResult
+        }
+        Thread {
+            val data = loadImageDataUrl(uri)
+            js("window.__onImage&&window.__onImage(${if (data.isEmpty()) "null" else JSONObject.quote(data)})")
+        }.start()
     }
 
     // 알람음 고르기 창
@@ -218,6 +236,47 @@ class MainActivity : ComponentActivity() {
     /** 글자 크기 (100 = 보통) */
     fun setTextZoom(pct: Int) {
         webView.post { webView.settings.textZoom = pct.coerceIn(80, 160) }
+    }
+
+    /** 사진 선택 창 열기 (권한을 묻지 않는 안드로이드 사진 선택 창) */
+    fun openImagePicker() {
+        try {
+            pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        } catch (e: Exception) {
+            Toast.makeText(this, "사진을 고를 수 없어요", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /** 고른 사진을 긴 쪽 1024px 이하로 줄이고 방향을 바로잡아 JPEG data URL 로 */
+    private fun loadImageDataUrl(uri: Uri): String {
+        return try {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+            var sample = 1
+            while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= 1024) sample *= 2
+            var bmp = contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
+            } ?: return ""
+            val rot = try {
+                contentResolver.openInputStream(uri)?.use {
+                    when (ExifInterface(it).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+                        ExifInterface.ORIENTATION_ROTATE_90 -> 90
+                        ExifInterface.ORIENTATION_ROTATE_180 -> 180
+                        ExifInterface.ORIENTATION_ROTATE_270 -> 270
+                        else -> 0
+                    }
+                } ?: 0
+            } catch (e: Exception) { 0 }
+            // 긴 쪽 1024px 로 맞추고 방향 바로잡기
+            val scale = minOf(1f, 1024f / maxOf(bmp.width, bmp.height))
+            if (rot != 0 || scale < 1f) {
+                val m = Matrix().apply { postScale(scale, scale); postRotate(rot.toFloat()) }
+                bmp = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, m, true)
+            }
+            val out = ByteArrayOutputStream()
+            bmp.compress(Bitmap.CompressFormat.JPEG, 88, out)
+            "data:image/jpeg;base64," + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+        } catch (e: Exception) { "" }
     }
 
     /** 폰의 알람음 목록 창 열기 */
