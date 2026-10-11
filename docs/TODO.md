@@ -342,7 +342,8 @@
 - [x] 익명 로그인 · 오프라인 저장(Firestore) 연결, 로그인 유지 확인
 - [x] 보안 규칙 (firebase/firestore.rules): 지금은 연결 시험 ping 만 열고 나머지는 모두 막음 + 에뮬레이터 시험 14개
 - [x] 개발자용 "Firebase 연결 시험" 화면 (설정 › 앱 정보 7번 누르기)
-- [ ] 사용자: Firebase 프로젝트(서울) · 익명 로그인 · Firestore · 규칙 게시 · 웹 설정을 config.js 에 붙여 넣기 → docs/firebase-setup.md
+- [x] 사용자: Firebase 프로젝트 eonjeswie(서울 asia-northeast3) · 익명 로그인 · Firestore · 규칙 게시 · 웹 설정을 config.js 에 넣음 → 진짜 서버로 연결 시험 성공 (익명 로그인 · 쓰고 읽기)
+- [ ] 사용자: 안드로이드 앱 등록(패키지 com.eonjeswieo.app, SHA-1) — 구글 로그인 · 푸시 알림 만들 때
 - [ ] 다음: 가족방 · 초대 코드 · 근무 · 메모 · 요청 동기화 (docs/firebase-design.md 개발 순서 2~3번)
 
 ### ✅ v0.14.5 만듦 — 설정 선 아이콘

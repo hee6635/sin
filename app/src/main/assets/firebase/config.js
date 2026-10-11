@@ -11,4 +11,11 @@
 //     appId: "..."
 //   };
 // (이 값들은 공개돼도 되는 값이에요. 접근은 Firestore 보안 규칙이 막습니다.)
-window.FIREBASE_CONFIG = null;
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCZUmJdQHzw9bk_dko5z7T0pSoOBL-c430",
+  authDomain: "eonjeswie.firebaseapp.com",
+  projectId: "eonjeswie",
+  storageBucket: "eonjeswie.firebasestorage.app",
+  messagingSenderId: "80537956713",
+  appId: "1:80537956713:web:54681b097428eaf3e28df8"
+};
