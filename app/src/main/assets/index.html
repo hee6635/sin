@@ -82,7 +82,11 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .share-mode #nav { display: none !important; }
 .share-mode .fab-wrapper { display: none !important; }
 .share-mode .notice-banner { display: none !important; }
-.share-mode .pill-wrap { display: none !important; }
+.share-mode:not(.share-memo) .pill-wrap { display: none !important; }
+.share-mode .legend { display: none !important; }
+.shm { width: 100%; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; padding: 0 2px 4px; }
+.shm input { width: 18px; height: 18px; accent-color: var(--accent); }
+.shm small { font-weight: 400; font-size: 11.5px; color: var(--muted); margin-left: auto; }
 .share-mode #top .ib, .share-mode #top .pill-btn { display: none !important; }
 .share-mode #top .gear, .share-mode #top .today-btn { visibility: hidden; }
 .share-mode #top h1 svg { display: none !important; }
@@ -90,7 +94,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .share-mode .title-btn { pointer-events: none; }
 .share-mode #view { padding-bottom: 76px; }
 
-#share-action-bar { display: none; padding: 16px; background: var(--bg); border-top: 1px solid var(--line); position: absolute; bottom: 0; left: 0; right: 0; z-index: 50; flex-direction: row; gap: 8px; animation: slideUp 0.3s ease; }
+#share-action-bar { display: none; flex-wrap: wrap; padding: 12px 16px 16px; background: var(--bg); border-top: 1px solid var(--line); position: absolute; bottom: 0; left: 0; right: 0; z-index: 50; flex-direction: row; gap: 8px; animation: slideUp 0.3s ease; }
 .share-mode #share-action-bar { display: flex; }
 .capturing #share-action-bar { display: none !important; }
 .capturing #toast { display: none !important; }
@@ -295,7 +299,8 @@ textarea{resize:none;min-height:84px}
 .rbtn small{font-size:9.5px;font-weight:700;line-height:1.1;white-space:nowrap;color:var(--accent)}
 .remc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.remc button{font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:16px;background:var(--surface);color:var(--muted)}.remc button.on{background:var(--accent);color:#fff}
 .paintbar{display:flex;align-items:center;gap:8px;padding:6px 10px calc(6px);border-top:1px solid var(--line);background:var(--bg);flex:none}
-.paintbar .pb-ic{font-size:18px}.paintbar .pb-t{flex:1;display:flex;gap:6px;overflow-x:auto;padding:3px}
+.paintbar .pb-ic{font-size:18px;display:flex;flex-direction:column;align-items:center;line-height:1.1}.paintbar .pb-ic small{font-size:9.5px;color:var(--muted);font-weight:700;white-space:nowrap}
+.paint-on .track .cell{touch-action:none}.paintbar .pb-t{flex:1;display:flex;gap:6px;overflow-x:auto;padding:3px}
 .paintbar .pb-t button{border-radius:50%;padding:2px;flex:none}.paintbar .pb-t button.on{box-shadow:0 0 0 2px var(--accent)}
 .paint-lk{float:right;font-size:12px;font-weight:700;color:var(--accent)}
 .pgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
@@ -362,6 +367,7 @@ textarea{resize:none;min-height:84px}
 #sheet{position:absolute;width:100%;bottom:0;left:0;max-height:92%;overflow-y:auto;background:var(--bg);border-radius:20px 20px 0 0;
   padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));transform:translateY(105%);transition:transform .22s ease;z-index:11;box-shadow:none}
 #sheet.open{transform:translateY(0);box-shadow:0 -10px 30px rgba(0,0,0,.2)}
+#scrim.top{z-index:16}#sheet.top{z-index:17}
 .sh-head{display:flex;align-items:center;justify-content:space-between; margin-bottom:16px;}
 .sh-head b{font-size:16px;}
 .tag{font-size:12px;color:var(--sun);background:var(--hol-bg);padding:2px 8px;border-radius:10px}
@@ -930,6 +936,7 @@ button.tbtn{cursor:pointer}
   </nav>
 
   <div id="share-action-bar">
+    <label class="shm"><input type="checkbox" id="shareMemo"> 📝 메모도 넣기 <small>🔒 나만 보는 메모는 빠져요</small></label>
     <button class="btn ghost grow" data-act="cancel-share">취소</button>
     <button class="btn grow" data-act="do-share" style="background:#fee500; color:#191919;">카카오톡 공유하기</button>
   </div>
@@ -1151,7 +1158,7 @@ const defaults=()=>({
   fontScale:100,
   drive:{last:0,dirty:false,email:'',auto:true}
 });
-const REM_DAYS=[7,2,1,0],REM_SHORT={7:'1주',2:'2일',1:'전날',0:'당일'},REM_LABEL={7:'1주 전',2:'2일 전',1:'전날',0:'당일'},REM_AT=['08:00','12:00','20:00','22:00'];
+const REM_DAYS=[7,3,2,1,0],REM_SHORT={7:'1주',3:'3일',2:'2일',1:'전날',0:'당일'},REM_LABEL={7:'1주 전',3:'3일 전',2:'2일 전',1:'전날',0:'당일'},REM_AT=['08:00','12:00','20:00','22:00'];
 function normalize(o){
   const d=defaults(),s=Object.assign(d,o);
   s.syncSettings=Object.assign(defaults().syncSettings,o&&o.syncSettings);
@@ -1166,7 +1173,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.holRest=!!s.holRest;
+  s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},o&&o.memoColors);
   s.drive=Object.assign(defaults().drive,o&&o.drive);
   s.status=Object.assign(defaults().status,o&&o.status);if(!s.status.labels||typeof s.status.labels!=='object')s.status.labels={};
@@ -1279,7 +1286,7 @@ function pushRemindersToNative(){
           if(at<=now)return;
           const text=b===0?`${ic} 오늘은 ${x.name}${iyeyo(x.name)}${off?' (회사 휴무)':''}`
             :b===1?`${ic} 내일은 ${x.name}${iyeyo(x.name)} (${off}${when})`
-            :`${ic} ${x.name}까지 ${b===7?'일주일':b===2?'이틀':b+'일'} 남았어요 (${off}${when})`;
+            :`${ic} ${x.name}까지 ${b===7?'일주일':b===3?'사흘':b===2?'이틀':b+'일'} 남았어요 (${off}${when})`;
           out.push({id:`h_${x.id}_${k}_${b}`,at,title:'언제쉬어',text});
         });
       });
@@ -1522,6 +1529,7 @@ function render(){
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===navTab));
   const un=unseenCount(),fb=$('#famBadge');if(fb){fb.textContent=un?(un>9?'9+':un):'';fb.style.display=un?'':'none';}
   top.className=(tab==='cal'||tab==='colleague')?'cal-top':'';
+  $('#app').classList.toggle('paint-on',!!paint&&tab==='cal');
   v.className=tab==='cal'?'calv':'';
   const mk=cur.y*12+cur.m;
   // "오늘" 버튼은 다른 달을 볼 때만
@@ -1578,11 +1586,11 @@ function calPanel(y,m){
     const vm=visibleMemos(k),fam=vm.filter(x=>x.shared),mine=vm.filter(x=>!x.shared);
     const rq=S.requests.find(r=>r.date===k&&(r.st==='pending'||r.st==='accepted'||r.st==='rejected'));
     const pills=[];
-    if(rq)pills.push(`<div class="req-pill ${rq.st}">${REQ_ST[rq.st].ic} ${esc(shiftLabel(rq.want))} 요청</div>`);
+    if(rq&&!sharing)pills.push(`<div class="req-pill ${rq.st}">${REQ_ST[rq.st].ic} ${esc(shiftLabel(rq.want))} 요청</div>`);
     // 가족 · 나만은 색으로 구분 (♥ · 🔒 는 아래 설명 줄에 한 번만)
     fam.forEach(x=>pills.push(`<div class="pl fam">${esc(firstLine(x.text))}</div>`));
-    mine.forEach(x=>pills.push(`<div class="pl my">${esc(firstLine(x.text))}</div>`));
-    boardOnDate(k).forEach(n=>pills.push(`<div class="pl ${n.shared?'fam':'my'}">📝 ${esc(piLabel(n))}</div>`));
+    if(!sharing)mine.forEach(x=>pills.push(`<div class="pl my">${esc(firstLine(x.text))}</div>`));
+    boardOnDate(k).filter(n=>!sharing||n.shared).forEach(n=>pills.push(`<div class="pl ${n.shared?'fam':'my'}">📝 ${esc(piLabel(n))}</div>`));
     ddayHits(k).forEach(x=>pills.push(`<div class="pl dd">${ico(x.emoji||'⭐')} ${esc(x.name)}</div>`));
     // 폰 3줄, 태블릿 4줄. 넘치면 마지막 줄을 +N 으로
     if(pills.length>maxLines)pills.splice(maxLines-1,pills.length,`<div class="pl more">+${pills.length-maxLines+1}</div>`);
@@ -1613,11 +1621,36 @@ function renderCal(){
 }
 /* 칠하기: 근무타입을 고르고 날짜를 쭉 누르면 한 번에 바뀜 */
 let paint=null;
-function paintBar(){return `<div class="paintbar"><span class="pb-ic">🖌</span><div class="pb-t">${S.types.map(x=>`<button class="${paint.k===x.k?'on':''}" data-act="paint-k" data-s="${esc(x.k)}">${badge(x.k,'sm')}</button>`).join('')}</div><button class="btn sm" data-act="paint-done">끝</button></div>`;}
+/* 이미지 공유 중: 🔒 나만 보는 메모 · 요청은 빼고 그림 */
+let sharing=false;
+function shareStart(){paint=null;tab='cal';sharing=true;const a=$('#app');a.classList.add('share-mode');a.classList.toggle('share-memo',!!S.shareMemo);const c=$('#shareMemo');if(c)c.checked=!!S.shareMemo;render();}
+function shareEnd(){sharing=false;const a=$('#app');a.classList.remove('share-mode','share-memo');render();}
+function paintBar(){return `<div class="paintbar"><span class="pb-ic">🖌<small>쭉 그어요</small></span><div class="pb-t">${S.types.map(x=>`<button class="${paint.k===x.k?'on':''}" data-act="paint-k" data-s="${esc(x.k)}">${badge(x.k,'sm')}</button>`).join('')}</div><button class="btn sm" data-act="paint-done">끝</button></div>`;}
 function paintStart(k){
   if(!S.types.some(x=>x.k===k))k=(S.types.find(x=>!x.rest)||S.types[0]).k;
-  paint={k};closeSheet();if(pageMode)closePage();tab='cal';render();toast('날짜를 누르면 칠해져요 · 한 번 더 누르면 원래대로');
+  paint={k};closeSheet();if(pageMode)closePage();tab='cal';render();toast('날짜를 누르거나 쭉 그으면 칠해져요 · 한 번 더 누르면 원래대로');
 }
+// 손가락으로 쭉 그으면 지나간 날을 칠하기 (같은 날을 다시 지나가도 지워지지 않음)
+let pdrag=null;
+function paintSet(k){const base=baseShift(parse(k));if(paint.k===base)delete S.overrides[k];else S.overrides[k]=paint.k;}
+function paintCellAt(x,y){const el=document.elementFromPoint(x,y),c=el&&el.closest&&el.closest('.track .panel:nth-child(2) .cell[data-k]');return c?c.dataset.k:null;}
+document.addEventListener('pointerdown',e=>{
+  if(!paint||tab!=='cal'||role()!=='host'||pageMode||$('#pop').classList.contains('open'))return;
+  const k=paintCellAt(e.clientX,e.clientY);if(!k)return;
+  try{e.target.releasePointerCapture&&e.target.releasePointerCapture(e.pointerId);}catch(err){}
+  pdrag={id:e.pointerId,start:k,last:k,moved:false};
+});
+document.addEventListener('pointermove',e=>{
+  if(!pdrag||e.pointerId!==pdrag.id||!paint)return;
+  const k=paintCellAt(e.clientX,e.clientY);if(!k||k===pdrag.last)return;
+  if(!pdrag.moved){pdrag.moved=true;paintSet(pdrag.start);}
+  pdrag.last=k;paintSet(k);render();
+});
+['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,e=>{
+  if(!pdrag||e.pointerId!==pdrag.id)return;
+  const moved=pdrag.moved;pdrag=null;
+  if(moved){held=true;save();render();}
+}));
 function paintDay(k){
   const d=parse(k),base=baseShift(d);
   if(S.overrides[k]===paint.k||paint.k===base)delete S.overrides[k];
@@ -2141,7 +2174,7 @@ function renderAlarm(){
 }
 
 /* ================= 시트 · 페이지 · 작은 메뉴 ================= */
-function openSheet(html){$('#sheet').innerHTML=html;$('#sheet').classList.add('open');$('#scrim').classList.add('open');}
+function openSheet(html){const top=!!pageMode;$('#sheet').innerHTML=html;$('#sheet').classList.add('open');$('#sheet').classList.toggle('top',top);$('#scrim').classList.add('open');$('#scrim').classList.toggle('top',top);}
 function closeSheet(){
   if(sheetKey){tidyMemos(sheetKey);save();render();}
   $('#sheet').classList.remove('open');$('#scrim').classList.remove('open');
@@ -3150,31 +3183,28 @@ function renderMore(){
   const alOn=(S.alarms||[]).filter(x=>x.on).length;
   const cap=t=>`<div class="pg-cap">${t}</div>`;
   return `<div class="mlist" style="padding-bottom:20px">
-    ${guest?'':cap('근무')}
+    ${issues.length?`<div class="pg-sec">${item('⚠️','알람이 잘 울리게 (권한)','more-perm',`<span style="color:var(--danger)">${issues.length}개 꺼짐</span>`)}</div>`:''}
+    ${guest?'':cap('내 근무')}
     ${guest?'':`<div class="pg-sec" style="margin-top:0">
-      ${item('🔁','근무 패턴 · 근무타입','more-pattern',`${esc(S.patternName||'')} ${esc(myTeamLabel())}`)}
+      ${item('🔁','근무 패턴 · 조','more-pattern',`${esc(S.patternName||'')} ${esc(myTeamLabel())}`)}
       ${item('🕐',`근무 시간 · 상태 <span class="${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'tagS':'tagA'}">${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'직접':'대략'}</span>`,'more-times')}
       ${item('👥','동료 근무','go-colleague')}
-      ${item('💊','도장 (약 · 운동)','more-stamps',`${S.stamps.defs.filter(x=>x.kind==='pill').length?'약 '+S.stamps.defs.filter(x=>x.kind==='pill').length+' · ':''}${S.stamps.defs.filter(x=>x.kind==='mark').length}개`)}
       ${item('🏢','휴무일 · 기념일','more-comp',`${(S.companyHols||[]).length}개`)}
+      ${item('💊','도장 (약 · 운동)','more-stamps',`${S.stamps.defs.filter(x=>x.kind==='pill').length?'약 '+S.stamps.defs.filter(x=>x.kind==='pill').length+' · ':''}${S.stamps.defs.filter(x=>x.kind==='mark').length}개`)}
       ${item('📊','근무 통계 · 수당','more-stats',`대근 ${daeDays(cur.y,cur.m)}일`)}
-      ${issues.length?item('⚠️','알람이 잘 울리게 (권한)','more-perm',`<span style="color:var(--danger)">${issues.length}개 꺼짐</span>`):''}
     </div>`}
     ${cap('가족')}
     <div class="pg-sec" style="margin-top:0">
       ${item('👪','가족 목록 · 같이 쉬는 날','fam-set',`${(S.family||[]).length}명`)}
       ${guest?'':item('👁','가족에게 보이는 내 상태','more-status',S.status.show?'켜짐':'꺼짐')}
-    </div>
-    ${cap('화면 · 데이터')}
-    <div class="pg-sec" style="margin-top:0">
-      <div class="prow"><div class="pl2">🔤 글자 크기</div><div class="chips">
-        <button class="${fs===100?'on':''}" data-act="font" data-v="100">보통</button><button class="${fs===115?'on':''}" data-act="font" data-v="115">크게</button><button class="${fs===130?'on':''}" data-act="font" data-v="130">아주 크게</button></div></div>
       ${item('🎨','메모 색','more-colors',`<span style="color:var(--fam)">♥</span>`)}
-      ${item('☁️','백업 · 복원','more-backup',lastB)}
-      ${item('🖼','달력 이미지로 공유','more-share')}
     </div>
     ${cap('앱')}
     <div class="pg-sec" style="margin-top:0">
+      <div class="prow"><div class="pl2">🔤 글자 크기</div><div class="chips">
+        <button class="${fs===100?'on':''}" data-act="font" data-v="100">보통</button><button class="${fs===115?'on':''}" data-act="font" data-v="115">크게</button><button class="${fs===130?'on':''}" data-act="font" data-v="130">아주 크게</button></div></div>
+      ${item('🖼','달력 이미지로 공유','more-share')}
+      ${item('☁️','백업 · 복원','more-backup',lastB)}
       ${item('✉️','문의하기 · 오류 신고','more-mail')}
       ${item('🔒','개인정보처리방침','more-privacy')}
       ${item('🗑','내 데이터 모두 지우기','more-wipe')}
@@ -3308,7 +3338,7 @@ function openPatternPage(){
   openPage(`
     ${pageHead('근무 패턴 · 조')}
     <div class="pg-b">
-      <div class="pg-cap pcap">근무타입 <span>길게 누르면 고치기</span></div>
+      <div class="pg-cap pcap">근무타입 <span>누르면 고쳐요</span></div>
       <div class="pg-sec" style="margin-top:0;padding:14px 16px">
         <div class="tchips">${S.types.map(x=>`<button class="tchip" data-act="type-edit-page" data-s="${esc(x.k)}">${badge(x.k,'tc')}<small>${esc(x.name)}</small></button>`).join('')}<button class="tchip add" data-act="type-new-page"><span class="badge tc add">+추가</span></button></div>
       </div>
@@ -3408,7 +3438,7 @@ function openCompPage(){
   openPage(`
     ${pageHead('휴무일 · 기념일')}
     <div class="pg-b">
-      <div class="hint" style="padding:12px 16px 0">🏢 <b>휴무</b> = 회사가 쉬는 날(달력 날짜가 빨갛게) · 🎂 <b>메모만</b> = 생일·기념일처럼 이름만 보여요(근무는 그대로). 🔔 를 누르면 언제 알려줄지 골라요 (1주 전 · 전날 · 당일 …).</div>
+      <div class="hint" style="padding:12px 16px 0">🏢 <b>휴무</b> = 회사가 쉬는 날(달력 날짜가 빨갛게) · 🎂 <b>메모만</b> = 생일·기념일처럼 이름만 보여요(근무는 그대로). 🔔 를 누르면 언제 알려줄지 골라요 (1주 전 · 3일 전 · 전날 · 당일 …).</div>
       <div class="pg-sec">${list.map(row).join('')||'<div class="prow"><div class="pl2 muted">아직 없어요</div></div>'}</div>
       ${chOpen?`<div class="pg-cap">추가하기</div>
       <div class="pg-sec" style="margin-top:0;padding:14px 16px">
@@ -3481,7 +3511,7 @@ function openBackupPage(){
     </div>`,'backup');
   if(linked&&driveFiles===null&&!driveBusy){driveBusy=true;window.AndroidBridge.driveList(true);}
 }
-const BACKUP_KEYS=['onboarded','pattern','anchor','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
+const BACKUP_KEYS=['onboarded','pattern','anchor','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -3986,7 +4016,7 @@ document.addEventListener('click',e=>{
 
     /* 더 보기 */
     case 'more-stats':openStatsPage();break;
-    case 'more-share':tab='cal';render();$('#app').classList.add('share-mode');break;
+    case 'more-share':shareStart();break;
     case 'more-family':openFamilyPage();break;
     case 'more-colors':openColorsPage();break;
     case 'more-pattern':openPatternPage();break;
@@ -4093,7 +4123,7 @@ document.addEventListener('click',e=>{
     case 'nativefix':{try{window.AndroidBridge.openSettings(t.dataset.k);}catch(err){}break;}
 
     /* 공유 */
-    case 'cancel-share':$('#app').classList.remove('share-mode');break;
+    case 'cancel-share':shareEnd();break;
     case 'do-share':shareScreen();break;
 
     /* 처음 시작 설정 */
@@ -4161,6 +4191,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='st_home'){S.status.homeAlert=t.checked;save();openStatusPage();
   }else if(t.id==='piDate'){const n=piTarget();if(n)n.dateAuto=t.checked;
   }else if(t.id==='anchor'&&t.value){S.anchor=t.value;save();openPatternPage();}
+  else if(t.id==='shareMemo'){S.shareMemo=t.checked;save();$('#app').classList.toggle('share-memo',t.checked);render();}
   else if(t.id==='holRest'){S.holRest=t.checked;save();toast(t.checked?'공휴일 근무 칸을 휴무로 보여요':'공휴일도 패턴대로 보여요');}
   else if(t.id==='receiveFamilyMemo'){S.syncSettings.receiveFamilyMemo=t.checked;save();if(tab==='cal')render();toast(t.checked?'가족 메모를 달력에 표시해요':'가족 메모를 달력에서 숨겨요');}
   else if(t.id==='patternName'){S.patternName=t.value.trim().slice(0,20);save();toast('근무 이름을 저장했어요');}
@@ -4228,6 +4259,7 @@ window.addEventListener('resize',()=>{
 let sx=null,sy=0,dx=0,lock=null,st=0;
 const V=$('#view');
 V.addEventListener('touchstart',e=>{
+  if(paint){sx=null;return;}
   if((tab!=='cal'&&tab!=='colleague')||busy||$('#sheet').classList.contains('open')){sx=null;return;}
   sx=e.touches[0].clientX;sy=e.touches[0].clientY;dx=0;lock=null;st=Date.now();
 },{passive:true});
@@ -4261,7 +4293,7 @@ V.addEventListener('touchend',()=>{
 /* ================= 화면 공유 · 파일 백업 ================= */
 function shareScreen(){
   const app=$('#app');
-  const done=()=>setTimeout(()=>{app.classList.remove('capturing');app.classList.remove('share-mode');},400);
+  const done=()=>setTimeout(()=>{app.classList.remove('capturing');shareEnd();},400);
   if(hasBridge('shareScreen')){
     app.classList.add('capturing');
     requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{
@@ -4300,7 +4332,7 @@ window.__onBack=()=>{
   if($('#pop').classList.contains('open')){popBack();return true;}
   if(ob){if(ob.step>0&&ob.step<5){ob.step--;renderOb();return true;}return false;}
   if(paint){paint=null;render();return true;}
-  if($('#app').classList.contains('share-mode')){$('#app').classList.remove('share-mode');return true;}
+  if($('#app').classList.contains('share-mode')){shareEnd();return true;}
   if($('#sheet').classList.contains('open')){closeSheet();return true;}
   if(pageMode){closePage();return true;}
   if(tab==='colleague'){tab='set';render();return true;}
