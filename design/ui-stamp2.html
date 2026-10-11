@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:28px;display:flex;gap:24px;align-items:flex-start;color:#1d2330}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center}
+.cap{font-size:15px;font-weight:800;color:#3a4150}
+.sub{font-size:12px;color:#6b7280;margin-top:-6px;text-align:center;line-height:1.45}
+.ph{width:350px;height:760px;background:#fff;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330;position:relative}
+.ct{display:grid;grid-template-columns:50px 1fr 60px;align-items:center;padding:10px 8px 4px;background:#f6f7f9}
+.ct .m{text-align:center;font-size:22px;font-weight:900}.ct .m small{display:block;font-size:11px;color:#6b7280;font-weight:600}
+.ct .pi{width:30px;height:30px;background:#fff3a8;border-radius:3px 3px 9px 3px;display:grid;place-items:center;transform:rotate(-4deg);margin-left:8px}
+.ct .td{justify-self:end;font-size:13px;font-weight:800;border:1.5px solid #d5d8de;border-radius:9px;padding:4px 8px;margin-right:6px}
+.dw{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;font-weight:800;padding:6px 0 3px;background:#f6f7f9}
+.g{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:88px;border-top:1px solid #eceef1}
+.c{border-bottom:1px solid #eceef1;border-right:1px solid #f1f2f4;display:flex;flex-direction:column;align-items:center;overflow:hidden;position:relative}
+.c .dn{align-self:stretch;display:flex;align-items:center;font-size:11px;font-weight:600;padding:2px 3px 0;height:20px;position:relative}
+.c .dn .st{margin-left:auto;display:flex;gap:1px;align-items:center;font-size:11px}
+.c .k{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:11.5px;margin-top:3px}
+.k.D{background:#c9d6dd;color:#33505e}.k.N{background:#d8c9c2;color:#5a4038}.k.R{color:#e5484d;font-weight:700}
+.todo{filter:grayscale(1);opacity:.4}
+.hit{position:absolute;left:0;right:0;top:0;height:20px;background:rgba(123,92,240,.18);border:1.5px dashed #7b5cf0;border-radius:4px}
+.tap{position:absolute;right:-6px;top:10px;font-size:20px}
+.c.t{background:#e9f7f1;box-shadow:inset 0 0 0 2.5px #1f9a76}
+.sun{color:#e5484d}.sat{color:#3b6fd6}
+.dim{position:absolute;inset:0;background:rgba(15,18,30,.42)}
+.sh{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;padding:10px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.gr{width:36px;height:4px;border-radius:2px;background:#d5d8de;margin:0 auto}
+.sh h3{font-size:17px;font-weight:900;display:flex;justify-content:space-between;align-items:center}
+.sh h3 small{font-size:12px;color:#6b7280;font-weight:700}
+.lb{font-size:12px;font-weight:800;color:#6b7280}
+.emo{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.emo div{border-radius:13px;background:#f6f7f9;padding:7px 0 5px;text-align:center;font-size:11px;font-weight:700;color:#6b7280}
+.emo div span{display:block;font-size:22px;height:26px;display:grid;place-items:center}
+.emo .on{background:#f3f0ff;box-shadow:inset 0 0 0 2px #7b5cf0;color:#1d2330}
+.seg{display:flex;background:#f1f2f4;border-radius:11px;padding:3px;font-size:12.5px;font-weight:800}
+.seg span{flex:1;text-align:center;padding:7px 0;border-radius:9px;color:#6b7280;white-space:nowrap}.seg .on{background:#fff;color:#1d2330;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.days{display:flex;gap:5px}
+.days span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:800;background:#f1f2f4;color:#6b7280}
+.days .on{background:#7b5cf0;color:#fff}
+.row{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700}
+.row .v{margin-left:auto;display:flex;gap:5px;align-items:center}
+.tb{border-radius:9px;padding:6px 10px;background:#f6f7f9;font-weight:800;font-size:13px;box-shadow:inset 0 0 0 1.5px #e5e7eb}
+.sw{width:40px;height:23px;border-radius:12px;background:#7b5cf0;position:relative}.sw::after{content:'';position:absolute;right:2px;top:2px;width:19px;height:19px;border-radius:50%;background:#fff}
+.sw.off{background:#d5d8de}.sw.off::after{right:auto;left:2px}
+.btn{background:#7b5cf0;color:#fff;border-radius:13px;padding:12px 0;text-align:center;font-weight:900;font-size:15px}
+.hint{font-size:11.5px;color:#6b7280;background:#f6f7f9;border-radius:10px;padding:7px 10px;line-height:1.45}
+/* ③ 팝 */
+.pop{position:absolute;left:12px;right:12px;bottom:14px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+.pop .hd{padding:12px 14px 8px;font-size:12.5px;color:#6b7280;font-weight:700;border-bottom:1px solid #eceef1}
+.pop .hd b{display:block;font-size:15px;color:#1d2330}
+.pr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #eceef1}
+.pr .ic{width:30px;height:30px;display:grid;place-items:center;font-size:22px}
+.pr .nm{font-size:14.5px;font-weight:800}.pr .nm small{display:block;font-size:11.5px;color:#6b7280;font-weight:600}
+.pr .bs{margin-left:auto;display:flex;gap:6px}
+.pr .bs span{font-size:13px;font-weight:800;padding:8px 12px;border-radius:11px;background:#f1f2f4;color:#4b5563;white-space:nowrap}
+.pr .bs .ok{background:#1f9a76;color:#fff}
+.pr .bs .un{background:#fff;box-shadow:inset 0 0 0 1.5px #d5d8de}
+.pf{display:flex;justify-content:space-between;align-items:center;padding:11px 14px}
+.pf span{font-size:13.5px;font-weight:800;color:#7b5cf0}.pf a{font-size:13.5px;font-weight:800;color:#6b7280}
+.toast{position:absolute;left:50%;transform:translateX(-50%);top:120px;background:#1d2330;color:#fff;font-size:13px;font-weight:700;border-radius:20px;padding:8px 14px;white-space:nowrap;z-index:5}
+.toast b{color:#9fd3ff;margin-left:8px}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"></svg>
+
+<div class="col"><div class="cap">① 도장 없는 날 — 날짜 줄 누르면 바로 등록</div><div class="sub">점선 = 누르는 곳 (날짜 줄) · 나머지는 지금처럼 날짜 화면<br>도장 고르고 → "이날만"이면 바로 끝</div>
+<div class="ph">
+  <div class="ct"><span class="pi">📝</span><div class="m">2026.10<small>4조2교대 C조</small></div><span class="td">오늘</span></div>
+  <div class="dw"><span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span></div>
+  <div class="g" id="cal1"></div>
+  <div class="dim"></div>
+  <div class="sh">
+    <div class="gr"></div>
+    <h3>10월 16일 (금) 도장 등록 <small>휴무</small></h3>
+    <div class="emo">
+      <div><span id="p1"></span>약</div><div class="on"><span>👟</span>런닝</div><div><span>💪</span>운동</div><div><span>💧</span>물</div><div><span style="font-size:18px">＋</span>직접</div>
+    </div>
+    <div class="lb">얼마나</div>
+    <div class="seg"><span class="on">이날만</span><span>매일</span><span>요일</span><span>근무 맞춤</span></div>
+    <div class="btn">👟 찍기</div>
+    <div class="hint">"이날만"은 바로 완료로 찍혀요. 반복은 ②처럼 더 고를 수 있어요.</div>
+  </div>
+</div></div>
+
+<div class="col"><div class="cap">② 반복 고르면 — 세부까지</div><div class="sub">요일(월 수 금) · 근무 맞춤(휴무 날만 / 근무 날만)<br>기간 · 공휴일 빼기 · 약은 하루 횟수</div>
+<div class="ph">
+  <div class="ct"><span class="pi">📝</span><div class="m">2026.10<small>4조2교대 C조</small></div><span class="td">오늘</span></div>
+  <div class="g" style="grid-auto-rows:88px" id="cal2"></div>
+  <div class="dim"></div>
+  <div class="sh">
+    <div class="gr"></div>
+    <h3>도장 등록 <small>👟 런닝</small></h3>
+    <div class="lb">얼마나</div>
+    <div class="seg"><span>이날만</span><span>매일</span><span class="on">요일</span><span>근무 맞춤</span></div>
+    <div class="days"><span>일</span><span class="on">월</span><span>화</span><span class="on">수</span><span>목</span><span class="on">금</span><span>토</span></div>
+    <div class="lb">세부</div>
+    <div class="row">📅 기간<div class="v"><span class="tb">10/16</span>~<span class="tb">끝 없음</span></div></div>
+    <div class="row">🎌 공휴일엔 빼기<div class="v"><span class="sw"></span></div></div>
+    <div class="row">🌙 야간 근무 날엔 빼기<div class="v"><span class="sw off"></span></div></div>
+    <div class="hint">💊 약을 고르면 여기에 "하루 1 · 2 · 3번"과 먹을 시간 알림이 나와요.</div>
+    <div class="btn">등록하기</div>
+  </div>
+</div></div>
+
+<div class="col"><div class="cap">③ 도장 있는 날 — 완료 / 건너뛰기 · 관리</div><div class="sub">완료 전: [✓ 완료] [건너뛰기] · 완료 후: [완료 취소]<br>"＋ 도장 추가"(2개까지) · 맨 오른쪽 "관리 ›"</div>
+<div class="ph">
+  <div class="ct"><span class="pi">📝</span><div class="m">2026.10<small>4조2교대 C조</small></div><span class="td">오늘</span></div>
+  <div class="dw"><span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span></div>
+  <div class="g" id="cal3"></div>
+  <div class="dim"></div>
+  <div class="toast">👟 런닝 완료 <b>되돌리기</b></div>
+  <div class="pop">
+    <div class="hd">10월 14일 (수) · 주간<b>오늘 도장</b></div>
+    <div class="pr"><span class="ic" id="p2"></span><div class="nm">비타민<small>하루 3번 · 2번 먹음</small></div><div class="bs"><span class="ok">✓ 먹음 (3/3)</span><span>건너뛰기</span></div></div>
+    <div class="pr"><span class="ic">👟</span><div class="nm">런닝<small>월 · 수 · 금 · 완료</small></div><div class="bs"><span class="un">완료 취소</span></div></div>
+    <div class="pf"><span style="color:#b4bac4">＋ 도장 추가 (2개 다 참)</span><a>관리 ›</a></div>
+  </div>
+</div></div>
+
+<script>
+function pill(n,k,px){const RED='#ef4d5a',r=7,cx=9,cy=9;let p='';
+  if(n===1)p=`<circle cx="9" cy="9" r="7" fill="${k?RED:'#fff'}"/>`;else for(let i=0;i<n;i++){const a0=-Math.PI/2+i*2*Math.PI/n,a1=a0+2*Math.PI/n;p+=`<path d="M${cx} ${cy}L${cx+r*Math.cos(a0)} ${cy+r*Math.sin(a0)}A${r} ${r} 0 0 1 ${cx+r*Math.cos(a1)} ${cy+r*Math.sin(a1)}Z" fill="${i<k?RED:'#fff'}" stroke="#fff" stroke-width=".8"/>`;}
+  return `<svg width="${px}" height="${px}" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.6" fill="#fff"/>${p}<circle cx="9" cy="9" r="7.6" fill="none" stroke="${RED}" stroke-width="1.4"/></svg>`;}
+document.getElementById('p1').innerHTML=pill(3,1,24);document.getElementById('p2').innerHTML=pill(3,2,26);
+function cal(id,opt){
+  const start=new Date(2026,9,11);let h='';const sh=['야','휴','휴','주','주','휴','휴','야','야','휴','휴','주','주','휴'];
+  for(let i=0;i<14;i++){const d=new Date(start);d.setDate(11+i);const day=d.getDate(),w=d.getDay(),s=sh[i],k=s==='주'?'D':s==='야'?'N':'R';
+    let st='';
+    if(opt==='run'&&[12,14,16,19,21,23].includes(day))st+=`<span class="${day<14?'':'todo'}">👟</span>`;
+    if(opt==='full'){if(day>=12&&day<=24)st+=pill(3,day<14?3:day===14?2:0,13);if([12,14,16,19,21,23].includes(day))st+=`<span class="${day<=14?'':'todo'}">👟</span>`;}
+    const hit=(opt==='hit'&&day===16)||(opt==='full'&&day===14)?'<span class="hit"></span><span class="tap">👆</span>':'';
+    h+=`<div class="c ${day===14?'t':''}"><div class="dn"><span class="${w===0?'sun':w===6?'sat':''}">${day}</span><span class="st">${st}</span>${hit}</div><span class="k ${k}">${s}</span></div>`;}
+  document.getElementById(id).innerHTML=h;}
+cal('cal1','hit');cal('cal2','run');cal('cal3','full');
+</script>
+</body></html>
