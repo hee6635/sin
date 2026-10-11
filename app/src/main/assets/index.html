@@ -781,6 +781,30 @@ textarea{resize:none;min-height:84px}
 .sdays{display:flex;gap:3px;margin-top:5px}
 .sdays button{width:24px;height:24px;border-radius:50%;font-size:11px;font-weight:700;background:var(--surface);color:var(--muted)}
 .sdays button.on{background:var(--fam);color:#fff}
+
+/* 도장: 날짜 줄 누르기 */
+.cell .dn[data-act]{cursor:pointer}
+#pop .sdr{gap:10px}
+#pop .sdr .nm{flex:1;min-width:0;font-size:14.5px;font-weight:700}
+#pop .sdr .nm small{display:block;font-size:11.5px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pop .sdr .bs{display:flex;gap:6px;flex:none}
+#pop .sdr .bs button{font-size:13px;font-weight:700;padding:8px 11px;border-radius:11px;background:var(--surface);color:var(--fg);white-space:nowrap}
+#pop .sdr .bs .ok{background:#1f9a76;color:#fff}
+#pop .sdr .bs .un{background:var(--bg);box-shadow:inset 0 0 0 1.5px var(--line)}
+#pop .sdr .todo{filter:grayscale(1);opacity:.4}
+#pop .sdf{justify-content:space-between}
+#pop .sdf button{font-size:14px;font-weight:700;color:var(--fam)}
+#pop .sdf button.dis{color:var(--muted);opacity:.6}
+#pop .sdf button:last-child{color:var(--muted)}
+.sr-emo{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:8px}
+.sr-emo button{border-radius:13px;background:var(--surface);padding:7px 0 5px;font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.sr-emo button span{height:28px;display:grid;place-items:center;font-size:22px}
+.sr-emo button.on{background:var(--fam-bg);box-shadow:inset 0 0 0 2px var(--fam);color:var(--fg)}
+.hseg.big button{white-space:nowrap}
+.sdays.big{margin-top:8px;gap:6px}.sdays.big button{width:36px;height:36px;font-size:13px}
+.srule{display:block;margin-top:3px;font-size:12px;font-weight:600;color:var(--fam);text-align:left;padding:0}
+#toast.act{pointer-events:auto;cursor:pointer}
+#toast .tu{color:#9fd3ff;margin-left:6px}
 </style>
 </head>
 <body>
@@ -1023,7 +1047,7 @@ function normalize(o){
   s.status=Object.assign(defaults().status,o&&o.status);if(!s.status.labels||typeof s.status.labels!=='object')s.status.labels={};
   if(!s.shiftTimes||typeof s.shiftTimes!=='object')s.shiftTimes={};
   if(!Array.isArray(s.family))s.family=[];
-  s.stamps=Object.assign(defaultStamps(),s.stamps||{});(s.stamps.defs||[]).forEach(x=>{if(x&&x.id==='s_run'&&x.emoji==='🏃')x.emoji='👟';});if(!Array.isArray(s.stamps.defs))s.stamps.defs=defaultStamps().defs;if(!s.stamps.log||typeof s.stamps.log!=='object')s.stamps.log={};
+  s.stamps=Object.assign(defaultStamps(),s.stamps||{});(s.stamps.defs||[]).forEach(x=>{if(!x)return;if(x.id==='s_run'&&x.emoji==='🏃')x.emoji='👟';if(!x.rep)x.rep=x.kind==='pill'?'daily':(Array.isArray(x.days)&&x.days.length?'dow':'none');if(!Array.isArray(x.dates))x.dates=[];if(!Array.isArray(x.skip))x.skip=[];});if(!Array.isArray(s.stamps.defs))s.stamps.defs=defaultStamps().defs;if(!s.stamps.log||typeof s.stamps.log!=='object')s.stamps.log={};
   s.alarms=s.alarms.map(a=>Object.assign({noHol:false,skipAt:0},a));
   ['ddays','companyHols','requests','events'].forEach(k=>{if(!Array.isArray(s[k]))s[k]=[];});
   // 휴무일 · 기념일: kind 'off'(휴무로 표시) | 'memo'(메모만), remind = 전날 알림
@@ -1244,7 +1268,7 @@ function markSeen(pred){
 }
 
 /* ================= 작은 도우미 ================= */
-function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2600);}
+function toast(msg){const t=$('#toast');t.classList.remove('act');toast._undo=null;t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2600);}
 function remain(ms){
   const min=Math.floor(ms/60000);
   if(min<1)return '1분 미만';
@@ -1397,7 +1421,7 @@ function calPanel(y,m){
     if(pills.length>maxLines)pills.splice(maxLines-1,pills.length,`<div class="pl more">+${pills.length-maxLines+1}</div>`);
 
     cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''}" data-act="day" data-k="${k}">
-      <div class="dn ${hol?'hol':ch?'chol':''} ${cls}"><span class="num">${d.getDate()}</span>${(()=>{const st=stampsOn(k);return st.length?`<span class="stp">${st.map(x=>stampIcon(x,13)).join('')}</span>`:'';})()}<span class="hn">${esc(shortHol(hol)||(ch?'🏢'+ch:''))}</span></div>
+      <div class="dn ${hol?'hol':ch?'chol':''} ${cls}" data-act="stamp-dn" data-k="${k}"><span class="num">${d.getDate()}</span>${(()=>{const st=stampsOn(k);return st.length?`<span class="stp">${st.map(x=>stampIcon(x,13)).join('')}</span>`:'';})()}<span class="hn">${esc(shortHol(hol)||(ch?'🏢'+ch:''))}</span></div>
       <div class="bwrap">${band}${badge(sh,'',ov?'<i class="dot"></i>':'')}</div>
       <div class="pill-wrap" style="--n:${pills.length}">${pills.join('')}</div>
     </div>`;
@@ -1623,15 +1647,115 @@ function pillSvg(n,k,px){
     p+=`<path d="M${cx} ${cy}L${(cx+r*Math.cos(a0)).toFixed(2)} ${(cy+r*Math.sin(a0)).toFixed(2)}A${r} ${r} 0 0 1 ${(cx+r*Math.cos(a1)).toFixed(2)} ${(cy+r*Math.sin(a1)).toFixed(2)}Z" fill="${i<k?RED:'#fff'}" stroke="#fff" stroke-width=".8"/>`;}
   return `<svg class="pillic" width="${px}" height="${px}" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.6" fill="#fff"/>${p}<circle cx="9" cy="9" r="7.6" fill="none" stroke="${RED}" stroke-width="1.4"/><ellipse cx="6.5" cy="5.6" rx="2.2" ry="1.1" fill="#fff" opacity=".5"/></svg>`;
 }
-const pillActive=(s,k)=>s.kind==='pill'&&(!s.from||k>=s.from)&&(!s.to||k<=s.to);
-// 기록 도장도 요일을 정하면 그날엔 흐린 도장(할 일)이 깔리고, 하면 진하게
-const markPlanned=(s,k)=>s.kind==='mark'&&Array.isArray(s.days)&&s.days.length>0&&s.days.includes(parse(k).getDay())&&(!s.from||k>=s.from)&&(!s.to||k<=s.to);
+// 도장이 그날 "할 일"로 깔리는지: 이날만(dates) · 매일 · 요일 · 근무 맞춤(휴무 날만/근무 날만) + 기간 · 공휴일 빼기 · 야간 날 빼기 · 건너뛴 날(skip)
+function stampPlanned(s,k){
+  if((s.skip||[]).includes(k))return false;
+  if((s.dates||[]).includes(k))return true;
+  if(!((!s.from||k>=s.from)&&(!s.to||k<=s.to)))return false;
+  const d=parse(k);let on=false;
+  if(s.rep==='daily')on=true;
+  else if(s.rep==='dow')on=(s.days||[]).includes(d.getDay());
+  else if(s.rep==='work'){const r=isRest(shiftOf(d));on=s.workMode==='work'?!r:r;}
+  if(on&&s.noHol&&(holName(k)||compHol(k)))on=false;
+  if(on&&s.noNight){const sh=shiftOf(d);if(!isRest(sh)&&tm2m(timesOf(sh).start)>=15*60)on=false;}
+  return on;
+}
+const pillActive=(s,k)=>s.kind==='pill'&&stampPlanned(s,k);
+const markPlanned=(s,k)=>s.kind==='mark'&&stampPlanned(s,k);
+function stampRule(s){
+  const r=s.rep==='daily'?'매일':s.rep==='dow'?([1,2,3,4,5,6,0].filter(w=>(s.days||[]).includes(w)).map(w=>DOW[w]).join('·')||'요일 없음'):s.rep==='work'?(s.workMode==='work'?'근무 날만':'휴무 날만'):'이날만';
+  const ex=[s.noHol?'공휴일 빼기':'',s.noNight?'야간 빼기':'',s.to&&s.rep!=='none'&&s.rep!=='once'?`~${+s.to.slice(5,7)}/${+s.to.slice(8)}`:''].filter(Boolean).join(' · ');
+  return (s.kind==='pill'?`하루 ${s.times}번 · `:'')+r+(ex?' · '+ex:'');
+}
+/* ---- 달력 날짜 줄을 누르면: 도장 있으면 완료 창, 없으면 등록 창 ---- */
+function openStampDay(k){
+  const list=stampsOn(k);
+  if(!list.length){openStampReg(k);return;}
+  const d=parse(k),sh=shiftOf(d);
+  const row=({s,n})=>{
+    let b='';
+    if(s.kind==='pill'){
+      b=n<s.times?`<button class="ok" data-act="sd-done" data-id="${s.id}" data-k="${k}">✓ 먹음 (${n+1}/${s.times})</button>`:'';
+      b+=n?`<button class="un" data-act="sd-undo" data-id="${s.id}" data-k="${k}">${n>=s.times?'완료 취소':'한 번 취소'}</button>`:`<button data-act="sd-skip" data-id="${s.id}" data-k="${k}">건너뛰기</button>`;
+    }else b=n?`<button class="un" data-act="sd-undo" data-id="${s.id}" data-k="${k}">완료 취소</button>`:`<button class="ok" data-act="sd-done" data-id="${s.id}" data-k="${k}">✓ 완료</button><button data-act="sd-skip" data-id="${s.id}" data-k="${k}">건너뛰기</button>`;
+    const st=s.kind==='pill'?`${n}번 먹음`:n?'완료':'아직';
+    return `<div class="mi sdr"><span class="sic">${s.kind==='pill'?pillSvg(s.times,n,26):`<span class="${n?'':'todo'}">${s.emoji}</span>`}</span><div class="nm">${esc(s.name)}<small>${esc(stampRule(s))} · ${st}</small></div><div class="bs">${b}</div></div>`;
+  };
+  const full=list.length>=STAMP_MAX;
+  openPop(`<div class="mh">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]}) · ${esc(shiftLabel(sh))}<b>도장</b></div>
+    ${list.map(row).join('')}
+    <div class="mi sdf"><button class="${full?'dis':''}" data-act="sd-add" data-k="${k}">＋ 도장 추가${full?` (${STAMP_MAX}개 다 참)`:''}</button><button data-act="sd-manage">관리 ›</button></div>`);
+}
+function toastUndo(msg,fn){
+  const t=$('#toast');t.innerHTML=`${esc(msg)} <b class="tu">되돌리기</b>`;t.classList.add('show','act');
+  toast._undo=fn;clearTimeout(toast._t);toast._t=setTimeout(()=>{t.classList.remove('show','act');toast._undo=null;},3500);
+}
+function stampSet(id,k,v){
+  const lg=S.stamps.log[k]||(S.stamps.log[k]={});
+  if(v>0)lg[id]=v;else delete lg[id];
+  if(!Object.keys(lg).length)delete S.stamps.log[k];
+}
+/* ---- 도장 등록 · 고치기 ---- */
+let stDraft=null;
+function openStampReg(k,id,back){
+  if(pageMode==='stamps'){closePage();back='stamps';}
+  const s=id&&id!=='__newpill'?S.stamps.defs.find(x=>x.id===id):null;
+  stDraft={k,back:back||'',edit:!!(s&&back),id:s?s.id:(id==='__newpill'?'__newpill':((S.stamps.defs.find(x=>x.kind==='mark')||{}).id||'__newpill')),name:s?s.name:'약',times:s?(s.times||1):1,
+    rep:s&&back?(s.rep&&s.rep!=='none'?s.rep:'dow'):'once',days:s&&s.days?s.days.slice():[parse(k).getDay()],workMode:(s&&s.workMode)||'rest',
+    from:(s&&back&&s.from)||k,to:(s&&back&&s.to)||'',noHol:!!(s&&s.noHol),noNight:!!(s&&s.noNight)};
+  renderStampReg();
+}
+function srPull(){const d=stDraft;if(!d)return;const n=$('#srName');if(n)d.name=n.value.trim().slice(0,12)||d.name;}
+function renderStampReg(){
+  const d=stDraft,day=parse(d.k),cur0=S.stamps.defs.find(x=>x.id===d.id),isPill=d.id==='__newpill'||(cur0&&cur0.kind==='pill');
+  const pick=S.stamps.defs.map(s=>`<button class="${d.id===s.id?'on':''}" data-act="sr-pick" data-id="${s.id}"><span>${s.kind==='pill'?pillSvg(s.times,1,24):s.emoji}</span>${esc(s.name)}</button>`).join('')
+    +`<button class="${d.id==='__newpill'?'on':''}" data-act="sr-pick" data-id="__newpill"><span>${pillSvg(3,1,24)}</span>새 약</button><button data-act="sr-own"><span style="font-size:20px">＋</span>직접</button>`;
+  const seg=(v,l)=>`<button class="${d.rep===v?'on':''}" data-act="sr-rep" data-v="${v}">${l}</button>`;
+  const sw=(id,on,l)=>`<div class="prow"><div class="pl2">${l}</div><label class="sw"><input type="checkbox" id="${id}" ${on?'checked':''}><i></i></label></div>`;
+  openSheet(`
+    ${sheetHead(d.edit?`${esc(cur0?cur0.name:'')} 고치기`:`${day.getMonth()+1}월 ${day.getDate()}일 (${DOW[day.getDay()]}) 도장 등록`)}
+    ${d.edit?'':`<div class="sr-emo">${pick}</div>`}
+    ${isPill?`<div class="prow"><div class="pl2">💊 약 이름</div><input type="text" class="inl" id="srName" value="${esc(d.id==='__newpill'?d.name:(cur0?cur0.name:d.name))}" maxlength="12"></div>
+      <div class="prow"><div class="pl2">하루 몇 번</div><div class="hseg">${[1,2,3].map(n=>`<button class="${d.times===n?'on':''}" data-act="sr-times" data-v="${n}">${n}번</button>`).join('')}</div></div>`:''}
+    <div class="lbl" style="margin-top:6px">얼마나</div>
+    <div class="hseg big">${d.edit?seg('none','반복 없음'):seg('once','이날만')}${seg('daily','매일')}${seg('dow','요일')}${seg('work','근무 맞춤')}</div>
+    ${d.rep==='dow'?`<div class="sdays big">${[1,2,3,4,5,6,0].map(w=>`<button class="${d.days.includes(w)?'on':''}" data-act="sr-day" data-v="${w}">${DOW[w]}</button>`).join('')}</div>`:''}
+    ${d.rep==='work'?`<div class="hseg big" style="margin-top:8px"><button class="${d.workMode==='rest'?'on':''}" data-act="sr-work" data-v="rest">휴무 날만</button><button class="${d.workMode==='work'?'on':''}" data-act="sr-work" data-v="work">근무 날만</button></div>`:''}
+    ${d.rep==='none'?'<div class="hint" style="margin-top:8px">반복 없이 찍은 날에만 보여요.</div>':d.rep!=='once'?`<div class="lbl" style="margin-top:10px">세부</div>
+      <div class="prow"><div class="pl2">📅 기간</div>${tpick('srFrom',d.from,'','date')}<span class="tsep">~</span>${tpick('srTo',d.to,'','date').replace('<span>날짜</span>','<span>끝 없음</span>')}${d.to?'<button class="xbtn" data-act="sr-noend" aria-label="끝 없음">✕</button>':''}</div>
+      ${sw('srHol',d.noHol,'🎌 공휴일엔 빼기')}${sw('srNight',d.noNight,'🌙 야간 근무 날엔 빼기')}`:`<div class="hint" style="margin-top:8px">${isPill?'이날만 빈 알약이 깔려요. 먹을 때마다 날짜 줄을 눌러 채워요.':'이날 바로 완료로 찍혀요.'}</div>`}
+    <button class="btn" style="width:100%;margin-top:12px" data-act="sr-save">${d.rep==='once'&&!isPill?'✓ 찍기':d.edit?'저장':'등록하기'}</button>
+    ${d.edit?'<button class="btn ghost danger" style="width:100%;margin-top:8px" data-act="sr-del">이 도장 지우기</button>':''}`);
+  sheetMode='stampreg';
+}
+function stampRegSave(){
+  srPull();const d=stDraft;if(!d)return;
+  let s=S.stamps.defs.find(x=>x.id===d.id);
+  if(d.id==='__newpill'){s={id:uid(),kind:'pill',emoji:'💊',name:d.name||'약',times:d.times,rep:'none',from:'',to:'',days:[],dates:[],skip:[]};S.stamps.defs.unshift(s);}
+  if(!s)return;
+  if(s.kind==='pill'){s.times=d.times;if(d.name)s.name=d.name;}
+  const k=d.k;
+  if(d.rep==='once'){
+    const shown=stampsOn(k).map(x=>x.s.id);
+    if(!shown.includes(s.id)&&shown.length>=STAMP_MAX){toast(`도장은 하루 ${STAMP_MAX}개까지예요`);return;}
+    s.skip=(s.skip||[]).filter(x=>x!==k);
+    if(s.kind==='pill'){if(!stampPlanned(s,k))(s.dates=s.dates||[]).push(k);}
+    else stampSet(s.id,k,1);
+  }else{
+    Object.assign(s,{rep:d.rep,days:d.days.slice(),workMode:d.workMode,from:d.from||'',to:d.to||'',noHol:d.noHol,noNight:d.noNight});
+    if(s.to&&s.from&&s.from>s.to)[s.from,s.to]=[s.to,s.from];
+  }
+  const back=d.back;stDraft=null;save();closeSheet();render();
+  if(back==='stamps')openStampPage();
+  toast(d.rep==='once'?(s.kind==='pill'?`💊 ${s.name} 이날 등록했어요`:`${s.emoji} ${s.name} 찍었어요`):`${s.kind==='pill'?'💊':s.emoji} ${s.name} · ${stampRule(s)}`);
+}
+
 const stampCnt=(k,id)=>((S.stamps.log[k]||{})[id])||0;
 // 그 날짜에 보일 도장 (약은 복용 기간이면 빈 알약도, 기록 도장은 찍은 것만), 최대 2개
 function stampsOn(k){
   const out=[];
   S.stamps.defs.forEach(s=>{
-    if(s.kind==='pill'){if(pillActive(s,k))out.push({s,n:stampCnt(k,s.id)});}
+    if(s.kind==='pill'){const n=stampCnt(k,s.id);if(n||pillActive(s,k))out.push({s,n});}
     else{const n=stampCnt(k,s.id);if(n||markPlanned(s,k))out.push({s,n:n?1:0});}
   });
   return out.slice(0,STAMP_MAX);
@@ -1678,19 +1802,19 @@ function openStampPage(){
       ${sum?`<div class="pg-cap">${m+1}월 요약</div><div class="pg-sec ssum" style="margin-top:0">${sum}</div>`:''}
       <div class="pg-cap">💊 약 (복용 기간 동안 달력에 빈 알약이 보이고, 먹은 만큼 칠해져요)</div>
       <div class="pg-sec" style="margin-top:0">
-        ${pills.map(s=>`<div class="prow stp"><span class="sic">${pillSvg(s.times,Math.ceil(s.times/2),24)}</span><div class="pl2"><input type="text" class="inl" id="stpN_${s.id}" value="${esc(s.name)}" maxlength="12"><div class="stpd">${tpick('stpF_'+s.id,s.from,'','date')}<span class="tsep">~</span>${tpick('stpT_'+s.id,s.to,'','date')}</div></div>${seg(s)}<button class="xbtn" data-act="stp-del" data-id="${s.id}" aria-label="삭제">✕</button></div>`).join('')}
+        ${pills.map(s=>`<div class="prow stp"><span class="sic">${pillSvg(s.times,Math.ceil(s.times/2),24)}</span><div class="pl2"><input type="text" class="inl" id="stpN_${s.id}" value="${esc(s.name)}" maxlength="12"><button class="srule" data-act="sr-edit" data-id="${s.id}">${esc(stampRule(s))} ›</button></div><button class="xbtn" data-act="stp-del" data-id="${s.id}" aria-label="삭제">✕</button></div>`).join('')}
         <div class="prow" data-act="stp-add-pill" style="justify-content:center;color:var(--accent);font-weight:700">＋ 약 추가</div>
       </div>
       <div class="pg-sec">
         <div class="prow"><div class="pl2">💊 약 먹을 시간 알림<small>복용 기간 동안 하루 횟수만큼 (1번: 첫 시각만)</small></div><label class="sw"><input type="checkbox" id="stpRemind" ${st.remind?'checked':''}><i></i></label></div>
         ${st.remind?`<div class="prow"><div class="pl2">시각</div>${st.pillTimes.map((t,i)=>tpick('stpPT'+i,t)).join('')}</div>`:''}
       </div>
-      <div class="pg-cap">기록 도장 (요일을 고르면 그날 흐린 도장이 깔리고, 하면 진해져요)</div>
+      <div class="pg-cap">기록 도장 (반복을 정하면 그날 흐린 도장이 깔리고, 하면 진해져요)</div>
       <div class="pg-sec" style="margin-top:0">
-        ${marks.map(s=>`<div class="prow"><button class="sic big" data-act="stp-emo" data-id="${s.id}">${s.emoji}</button><div class="pl2"><input type="text" class="inl" id="stpN_${s.id}" value="${esc(s.name)}" maxlength="12"><div class="sdays">${[1,2,3,4,5,6,0].map(w=>`<button class="${(s.days||[]).includes(w)?'on':''}" data-act="stp-day" data-id="${s.id}" data-v="${w}">${DOW[w]}</button>`).join('')}</div></div><span class="muted" style="font-size:12.5px;white-space:nowrap">${m+1}월 ${ks.filter(k=>stampCnt(k,s.id)).length}일</span><button class="xbtn" data-act="stp-del" data-id="${s.id}" aria-label="삭제">✕</button></div>`).join('')}
+        ${marks.map(s=>`<div class="prow"><button class="sic big" data-act="stp-emo" data-id="${s.id}">${s.emoji}</button><div class="pl2"><input type="text" class="inl" id="stpN_${s.id}" value="${esc(s.name)}" maxlength="12"><button class="srule" data-act="sr-edit" data-id="${s.id}">${s.rep&&s.rep!=='none'?esc(stampRule(s)):'반복 없음 (찍은 날만)'} ›</button></div><span class="muted" style="font-size:12.5px;white-space:nowrap">${m+1}월 ${ks.filter(k=>stampCnt(k,s.id)).length}일</span><button class="xbtn" data-act="stp-del" data-id="${s.id}" aria-label="삭제">✕</button></div>`).join('')}
         <div class="prow" data-act="stp-add-mark" style="justify-content:center;color:var(--accent);font-weight:700">＋ 도장 추가</div>
       </div>
-      <div class="hint" style="padding:8px 16px 20px">달력 날짜 옆에는 하루 ${STAMP_MAX}개까지 보여요. 약이 먼저, 그다음 기록 도장 순서예요.</div>
+      <div class="hint" style="padding:8px 16px 20px">💡 달력에서 <b>날짜 숫자 줄</b>을 누르면 도장을 찍거나 완료해요. 하루 ${STAMP_MAX}개까지, 약이 먼저 보여요.</div>
     </div>`,'stamps');
 }
 function openStampEmo(id){
@@ -1754,6 +1878,7 @@ function reopen(){
   else if(sheetMode==='board')openBoard();
   else if(sheetMode==='dday')openDday();
   else if(sheetMode==='feed')openFeed();
+  else if(sheetMode==='stampreg'&&stDraft)renderStampReg();
   else closeSheet();
 }
 let pageMode=null;
@@ -2483,7 +2608,7 @@ function openDay(k){
         ${ov?`<div class="hint" style="margin:6px 0 0">원래 근무: ${esc(shiftLabel(base))} · <a data-act="resetshift">되돌리기</a></div>`:''}
       </div>`;
   }
-  openSheet(`${head}${stampRow(k)}${topPart}${memoSection(k)}`);
+  openSheet(`${head}${topPart}${memoSection(k)}`);
 }
 
 /* ---------- 근무타입 고르기 / 편집 ---------- */
@@ -2593,7 +2718,8 @@ document.addEventListener('pointerdown',e=>{
   if(ev==='pointermove'&&(Math.abs(e.movementX)+Math.abs(e.movementY))<6)return;
   clearTimeout(holdTimer);
 },true));
-document.addEventListener('click',e=>{if(held){held=false;e.stopPropagation();e.preventDefault();}},true);
+document.addEventListener('click',e=>{
+  if(e.target.closest&&e.target.closest('#toast.act')){const f=toast._undo;const t=$('#toast');t.classList.remove('show','act');toast._undo=null;if(f)f();return;}if(held){held=false;e.stopPropagation();e.preventDefault();}},true);
 document.addEventListener('contextmenu',e=>{if(e.target.closest('[data-hold]'))e.preventDefault();});
 
 /* ================= 알람 설정 (전체 화면) ================= */
@@ -3365,15 +3491,36 @@ document.addEventListener('click',e=>{
     case 'more-times':openTimesPage();break;
     case 'more-stamps':closeSheet();openStampPage();break;
     case 'stamp-tap':stampTap(t.dataset.id,t.dataset.k);break;
+    case 'stamp-dn':e.stopPropagation();openStampDay(t.dataset.k);break;
+    case 'sd-done':case 'sd-undo':{
+      const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;
+      const n=stampCnt(k,s.id),v=a==='sd-done'?(s.kind==='pill'?Math.min(s.times,n+1):1):(s.kind==='pill'?n-1:0);
+      stampSet(s.id,k,v);save();closePop();render();
+      const msg=a==='sd-undo'?`${s.kind==='pill'?'💊':s.emoji} ${s.name} 취소했어요`:s.kind==='pill'?(v>=s.times?`💊 ${s.name} 오늘 다 먹었어요`:`💊 ${s.name} ${v}/${s.times} 먹음`):`${s.emoji} ${s.name} 완료`;
+      toastUndo(msg,()=>{stampSet(s.id,k,n);save();render();});break;}
+    case 'sd-skip':{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;(s.skip=s.skip||[]).push(k);s.dates=(s.dates||[]).filter(x=>x!==k);save();closePop();render();toastUndo(`${s.kind==='pill'?'💊':s.emoji} ${s.name} 이날은 건너뛰어요`,()=>{s.skip=s.skip.filter(x=>x!==k);save();render();});break;}
+    case 'sd-add':if(t.classList.contains('dis')){toast(`도장은 하루 ${STAMP_MAX}개까지예요`);break;}closePop();openStampReg(t.dataset.k);break;
+    case 'sd-manage':closePop();openStampPage();break;
+    case 'sr-pick':srPull();{const s=S.stamps.defs.find(x=>x.id===t.dataset.id);stDraft.id=t.dataset.id;if(s){stDraft.times=s.times||1;stDraft.name=s.name;}else if(t.dataset.id==='__newpill'){stDraft.name='약';stDraft.times=1;}}renderStampReg();break;
+    case 'sr-own':srPull();openStampEmo('reg');break;
+    case 'sr-rep':srPull();stDraft.rep=t.dataset.v;renderStampReg();break;
+    case 'sr-day':{srPull();const w=+t.dataset.v,d=stDraft.days;stDraft.days=d.includes(w)?d.filter(x=>x!==w):[...d,w];renderStampReg();break;}
+    case 'sr-work':srPull();stDraft.workMode=t.dataset.v;renderStampReg();break;
+    case 'sr-times':srPull();stDraft.times=+t.dataset.v;renderStampReg();break;
+    case 'sr-noend':srPull();stDraft.to='';renderStampReg();break;
+    case 'sr-save':afterCompose('#srName',stampRegSave);break;
+    case 'sr-edit':openStampReg(fmt(new Date()),t.dataset.id,'stamps');break;
+    case 'sr-del':{const s=S.stamps.defs.find(x=>x.id===stDraft.id);if(s&&confirm(`"${s.name}" 도장을 지울까요? (찍은 기록도 지워져요)`)){S.stamps.defs=S.stamps.defs.filter(y=>y!==s);Object.values(S.stamps.log).forEach(l=>delete l[s.id]);const b=stDraft.back;stDraft=null;save();closeSheet();render();if(b==='stamps')openStampPage();}break;}
     case 'stp-times':{const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x){x.times=+t.dataset.v;save();render();openStampPage();}break;}
     case 'stp-del':{const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x&&confirm(`"${x.name}" 도장을 지울까요? (찍은 기록도 지워져요)`)){S.stamps.defs=S.stamps.defs.filter(y=>y!==x);Object.values(S.stamps.log).forEach(l=>delete l[x.id]);save();render();openStampPage();}break;}
     case 'stp-day':{const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(!x)break;const w=+t.dataset.v,d=x.days||[];x.days=d.includes(w)?d.filter(v=>v!==w):[...d,w];if(!x.from&&x.days.length)x.from=fmt(new Date());save();render();openStampPage();break;}
-    case 'stp-add-pill':{const n=new Date();S.stamps.defs.unshift({id:uid(),kind:'pill',emoji:'💊',name:'약',times:1,from:fmt(n),to:fmt(addDays(n,13))});save();render();openStampPage();toast('💊 약을 추가했어요. 이름 · 횟수 · 기간을 맞춰 주세요');break;}
+    case 'stp-add-pill':openStampReg(fmt(new Date()),'__newpill','stamps');stDraft.rep='daily';stDraft.edit=false;renderStampReg();break;
     case 'stp-add-mark':openStampEmo('new');break;
     case 'stp-emo':openStampEmo(t.dataset.id);break;
     case 'stp-emo-pick':case 'stp-emo-own':{
       const e1=a==='stp-emo-pick'?t.dataset.v:($('#stpE').value||'').trim();if(!e1){toast('이모티콘을 넣어주세요');break;}
-      if(t.dataset.id==='new')S.stamps.defs.push({id:uid(),kind:'mark',emoji:e1,name:'새 도장'});
+      if(t.dataset.id==='reg'&&stDraft){const nd={id:uid(),kind:'mark',emoji:e1,name:'새 도장',rep:'none',days:[],dates:[],skip:[]};S.stamps.defs.push(nd);stDraft.id=nd.id;save();closePop();renderStampReg();break;}
+      if(t.dataset.id==='new')S.stamps.defs.push({id:uid(),kind:'mark',emoji:e1,name:'새 도장',rep:'none',days:[],dates:[],skip:[]});
       else{const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x)x.emoji=e1;}
       save();closePop();render();openStampPage();break;}
     case 'more-status':openStatusPage();break;
@@ -3483,6 +3630,10 @@ document.addEventListener('change',e=>{
   }else if(t.id==='famDayToo'){S.famDayToo=t.checked;save();render();
   }else if(t.id&&t.id.startsWith('stpN_')){const x=S.stamps.defs.find(y=>y.id===t.id.slice(5));if(x){x.name=t.value.trim().slice(0,12)||x.name;save();render();}
   }else if(t.id&&(t.id.startsWith('stpF_')||t.id.startsWith('stpT_'))){const x=S.stamps.defs.find(y=>y.id===t.id.slice(5));if(x&&t.value){x[t.id[3]==='F'?'from':'to']=t.value;if(x.from&&x.to&&x.from>x.to)[x.from,x.to]=[x.to,x.from];save();render();openStampPage();}
+  }else if(t.id==='srFrom'&&stDraft){stDraft.from=t.value;
+  }else if(t.id==='srTo'&&stDraft){stDraft.to=t.value;renderStampReg();
+  }else if(t.id==='srHol'&&stDraft){stDraft.noHol=t.checked;
+  }else if(t.id==='srNight'&&stDraft){stDraft.noNight=t.checked;
   }else if(t.id==='stpRemind'){S.stamps.remind=t.checked;save();openStampPage();
   }else if(t.id&&t.id.startsWith('stpPT')){const i=+t.id.slice(5);if(t.value){S.stamps.pillTimes[i]=t.value;save();}
   }else if(t.id==='st_show'){S.status.show=t.checked;save();
