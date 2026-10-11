@@ -752,6 +752,30 @@ textarea{resize:none;min-height:84px}
 .tt-lb{cursor:pointer}.tt-lb small{color:var(--fam)!important}
 .nc .tedit{display:inline-block;margin-top:6px;margin-right:6px;font-size:11px;font-weight:800;background:rgba(255,255,255,.2);border-radius:8px;padding:3px 8px}
 .nc[data-act]{cursor:pointer}
+
+/* 도장 */
+.dn .stp{display:inline-flex;gap:1px;align-items:center;margin-left:2px;flex:none}
+.dn .stp .se{line-height:1}
+.dn .stp svg{display:block}
+.stamps .srow{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.sbtn{flex:none;width:70px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;border-radius:14px;background:var(--surface);font-size:11.5px;font-weight:700;color:var(--muted)}
+.sbtn .ic{height:30px;display:grid;place-items:center;font-size:23px}
+.sbtn small{font-size:10px;font-weight:800;color:var(--fam);min-height:12px}
+.sbtn.on{background:var(--fam-bg);box-shadow:inset 0 0 0 2px var(--fam);color:var(--fg)}
+.sbtn.dis{opacity:.35}
+.ssum{display:flex;flex-wrap:wrap;gap:8px;padding:12px}
+.ssum div{flex:1;min-width:90px;text-align:center;font-size:12px;color:var(--muted);font-weight:700}
+.ssum div svg{vertical-align:-3px}
+.ssum b{display:block;font-size:20px;color:var(--fg);font-weight:800;margin-top:2px}
+.sic{width:34px;height:34px;display:grid;place-items:center;flex:none;font-size:22px;border-radius:10px}
+.sic.big{background:var(--surface)}
+.prow.stp{align-items:center}
+.stpd{display:flex;align-items:center;gap:2px;margin-top:6px}
+.prow .pl2 input.inl{width:100%;text-align:left;font-weight:700;font-size:15px;padding:2px 0}
+
+.askip-btn{margin-top:6px;font-size:12px;font-weight:700;color:var(--muted);background:var(--surface);border-radius:9px;padding:5px 10px}
+.askip{margin-top:6px;font-size:12px;font-weight:700;color:#c2410c;display:flex;align-items:center;gap:6px}
+.askip button{font-size:12px;font-weight:700;color:var(--accent);background:var(--surface);border-radius:8px;padding:3px 8px}
 </style>
 </head>
 <body>
@@ -964,6 +988,7 @@ const defaults=()=>({
   /* 월 메모: S.board['2026-10'] = [{id, kind('todo'|'note'), text, done, doneBy, shared, by, t}] */
   board:{},
   boardCarry:{},           // 달 넘김을 물어본 달
+  stamps:defaultStamps(),  // 도장 (약 · 운동)
   family:[],               // 직접 추가한 가족 (같이 쉬는 날 계산)
   famCheer:null,           // 응원 버튼 (없으면 기본)
   famDayToo:true,          // 야간 전 낮도 같이로 보기
@@ -993,6 +1018,8 @@ function normalize(o){
   s.status=Object.assign(defaults().status,o&&o.status);if(!s.status.labels||typeof s.status.labels!=='object')s.status.labels={};
   if(!s.shiftTimes||typeof s.shiftTimes!=='object')s.shiftTimes={};
   if(!Array.isArray(s.family))s.family=[];
+  s.stamps=Object.assign(defaultStamps(),s.stamps||{});if(!Array.isArray(s.stamps.defs))s.stamps.defs=defaultStamps().defs;if(!s.stamps.log||typeof s.stamps.log!=='object')s.stamps.log={};
+  s.alarms=s.alarms.map(a=>Object.assign({noHol:false,skipAt:0},a));
   ['ddays','companyHols','requests','events'].forEach(k=>{if(!Array.isArray(s[k]))s[k]=[];});
   // 휴무일 · 기념일: kind 'off'(휴무로 표시) | 'memo'(메모만), remind = 전날 알림
   s.companyHols=s.companyHols.map(x=>Object.assign({kind:'off',emoji:'',remind:false},x));
@@ -1083,6 +1110,17 @@ function pushRemindersToNative(){
         if(at<=now)return;
         const ic=x.kind==='memo'?(x.emoji||'⭐'):'🏢';
         out.push({id:`h_${x.id}_${k}`,at,title:'언제쉬어',text:`${ic} 내일은 ${x.name}${x.kind==='memo'?'이에요':' (회사 휴무)이에요'} (${d.getMonth()+1}월 ${d.getDate()}일)`});
+      });
+    }
+    if(S.stamps&&S.stamps.remind){
+      S.stamps.defs.filter(x=>x.kind==='pill').forEach(x=>{
+        for(let i=0;i<=14;i++){
+          const d=addDays(new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()),i),k=fmt(d);
+          if(!pillActive(x,k))continue;
+          const tl=x.times===1?[S.stamps.pillTimes[0]]:x.times===2?[S.stamps.pillTimes[0],S.stamps.pillTimes[2]]:S.stamps.pillTimes;
+          tl.forEach((tm,j)=>{const [h,mi]=tm.split(':').map(Number),at=new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,mi).getTime();
+            if(at>now&&stampCnt(k,x.id)<=j)out.push({id:`p_${x.id}_${k}_${j}`,at,title:'💊 약 먹을 시간',text:`${x.name} (${j+1}/${x.times}) · 먹으면 달력에 도장 찍어 주세요`});});
+        }
       });
     }
     window.AndroidBridge.setReminders(JSON.stringify(out));
@@ -1176,6 +1214,8 @@ function buildSchedule(days,only){
       const at=new Date(d.getFullYear(),d.getMonth(),d.getDate()+(a.offset||0),h,mi,0,0);
       if(at<=now)return;
       if(a.once&&a.until&&at.getTime()>a.until)return;
+      if(a.noHol){const kk=fmt(at);if(holName(kk)||compHol(kk))return;}
+      if(a.skipAt&&at.getTime()===a.skipAt)return;
       out.push({at,a,d,idx,sh});
     });
   }
@@ -1352,7 +1392,7 @@ function calPanel(y,m){
     if(pills.length>maxLines)pills.splice(maxLines-1,pills.length,`<div class="pl more">+${pills.length-maxLines+1}</div>`);
 
     cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''}" data-act="day" data-k="${k}">
-      <div class="dn ${hol?'hol':ch?'chol':''} ${cls}"><span class="num">${d.getDate()}</span><span class="hn">${esc(shortHol(hol)||(ch?'🏢'+ch:''))}</span></div>
+      <div class="dn ${hol?'hol':ch?'chol':''} ${cls}"><span class="num">${d.getDate()}</span>${(()=>{const st=stampsOn(k);return st.length?`<span class="stp">${st.map(x=>stampIcon(x,13)).join('')}</span>`:'';})()}<span class="hn">${esc(shortHol(hol)||(ch?'🏢'+ch:''))}</span></div>
       <div class="bwrap">${band}${badge(sh,'',ov?'<i class="dot"></i>':'')}</div>
       <div class="pill-wrap" style="--n:${pills.length}">${pills.join('')}</div>
     </div>`;
@@ -1561,6 +1601,94 @@ function openStatusEdit(key){
     <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="st-edit-reset" data-k="${key}">기본값 (${key==='work'?S.status.work||d[0]:d[0]} ${d[1]})</button><button class="btn grow" data-act="st-edit-save" data-k="${key}">저장</button></div>`);
 }
 
+/* ================= 도장 (💊 약 · 🏃 운동) ================= */
+/* S.stamps = {defs:[{id, kind('pill'|'mark'), emoji, name, times(약: 하루 1~3번), from, to(약: 복용 기간)}],
+ *             log:{'2026-10-14':{id: 횟수}}, remind(약 시간 알림), pillTimes:['08:00','13:00','20:00']} */
+const STAMP_MAX=2;
+const STAMP_EMO=['🏃','💪','🧘','💧','🚴','🏊','🚶','🥗','📖','😴','🦷','🧴','⚖️','🎯'];
+function defaultStamps(){return {defs:[
+  {id:'s_run',kind:'mark',emoji:'🏃',name:'조깅'},{id:'s_gym',kind:'mark',emoji:'💪',name:'운동'},
+  {id:'s_yoga',kind:'mark',emoji:'🧘',name:'요가'},{id:'s_water',kind:'mark',emoji:'💧',name:'물'}],
+  log:{},remind:false,pillTimes:['08:00','13:00','20:00']};}
+// 둥근 알약: 하루 n번 중 k번 먹으면 n조각 중 k조각 칠함
+function pillSvg(n,k,px){
+  n=Math.max(1,Math.min(3,n||1));px=px||14;const RED='#ef4d5a',r=7,cx=9,cy=9;let p='';
+  if(n===1)p=`<circle cx="9" cy="9" r="7" fill="${k?RED:'#fff'}"/>`;
+  else for(let i=0;i<n;i++){const a0=-Math.PI/2+i*2*Math.PI/n,a1=a0+2*Math.PI/n;
+    p+=`<path d="M${cx} ${cy}L${(cx+r*Math.cos(a0)).toFixed(2)} ${(cy+r*Math.sin(a0)).toFixed(2)}A${r} ${r} 0 0 1 ${(cx+r*Math.cos(a1)).toFixed(2)} ${(cy+r*Math.sin(a1)).toFixed(2)}Z" fill="${i<k?RED:'#fff'}" stroke="#fff" stroke-width=".8"/>`;}
+  return `<svg class="pillic" width="${px}" height="${px}" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.6" fill="#fff"/>${p}<circle cx="9" cy="9" r="7.6" fill="none" stroke="${RED}" stroke-width="1.4"/><ellipse cx="6.5" cy="5.6" rx="2.2" ry="1.1" fill="#fff" opacity=".5"/></svg>`;
+}
+const pillActive=(s,k)=>s.kind==='pill'&&(!s.from||k>=s.from)&&(!s.to||k<=s.to);
+const stampCnt=(k,id)=>((S.stamps.log[k]||{})[id])||0;
+// 그 날짜에 보일 도장 (약은 복용 기간이면 빈 알약도, 기록 도장은 찍은 것만), 최대 2개
+function stampsOn(k){
+  const out=[];
+  S.stamps.defs.forEach(s=>{
+    if(s.kind==='pill'){if(pillActive(s,k))out.push({s,n:stampCnt(k,s.id)});}
+    else if(stampCnt(k,s.id))out.push({s,n:1});
+  });
+  return out.slice(0,STAMP_MAX);
+}
+const stampIcon=(x,px)=>x.s.kind==='pill'?pillSvg(x.s.times,x.n,px):`<span class="se" style="font-size:${(px||14)-2}px">${x.s.emoji}</span>`;
+// 날짜 화면 맨 위 도장 줄
+function stampRow(k){
+  const shown=stampsOn(k),used=shown.length,ids=shown.map(x=>x.s.id);
+  const btns=S.stamps.defs.filter(s=>s.kind==='mark'||pillActive(s,k)).map(s=>{
+    const n=stampCnt(k,s.id),on=ids.includes(s.id),dis=!on&&used>=STAMP_MAX;
+    const sub=s.kind==='pill'?`${n}/${s.times} 먹음`:(n?'✓':'');
+    return `<button class="sbtn ${on&&(s.kind==='mark'||n)?'on':''} ${dis?'dis':''}" data-act="stamp-tap" data-id="${s.id}" data-k="${k}">
+      <span class="ic">${s.kind==='pill'?pillSvg(s.times,n,26):s.emoji}</span>${esc(s.name)}<small>${sub}</small></button>`;
+  }).join('');
+  return `<div class="sec stamps"><div class="sec-t" style="display:flex;justify-content:space-between">도장 <small style="font-weight:600;color:var(--muted)">(하루 ${STAMP_MAX}개까지)</small><a data-act="more-stamps" style="margin-left:auto;color:var(--fam);font-weight:700;font-size:13px">도장 관리 ›</a></div><div class="srow">${btns}</div></div>`;
+}
+function stampTap(id,k){
+  const s=S.stamps.defs.find(x=>x.id===id);if(!s)return;
+  const lg=S.stamps.log[k]||(S.stamps.log[k]={}),n=lg[id]||0;
+  const shown=stampsOn(k).map(x=>x.s.id);
+  if(!shown.includes(id)&&shown.length>=STAMP_MAX){toast(`도장은 하루 ${STAMP_MAX}개까지예요`);return;}
+  if(s.kind==='pill'){lg[id]=n>=s.times?0:n+1;if(lg[id]===s.times)toast(`💊 ${s.name} 오늘 다 먹었어요`);}
+  else lg[id]=n?0:1;
+  if(!lg[id])delete lg[id];
+  if(!Object.keys(lg).length)delete S.stamps.log[k];
+  save();render();openDay(k);
+}
+/* ---- 설정 › 도장 ---- */
+function openStampPage(){
+  const y=cur.y,m=cur.m,days=new Date(y,m+1,0).getDate(),st=S.stamps;
+  const ks=[...Array(days)].map((_,i)=>fmt(new Date(y,m,i+1)));
+  const sum=st.defs.map(s=>{
+    if(s.kind==='pill'){const act=ks.filter(k=>pillActive(s,k));if(!act.length)return '';const full=act.filter(k=>stampCnt(k,s.id)>=s.times).length;return `<div>${pillSvg(s.times,s.times,16)} ${esc(s.name)}<b>${full}/${act.length}</b>일 다 먹음</div>`;}
+    const n=ks.filter(k=>stampCnt(k,s.id)).length;return n?`<div>${s.emoji} ${esc(s.name)}<b>${n}</b>일</div>`:'';
+  }).join('');
+  const pills=st.defs.filter(s=>s.kind==='pill'),marks=st.defs.filter(s=>s.kind==='mark');
+  const seg=s=>`<div class="hseg">${[1,2,3].map(n=>`<button class="${s.times===n?'on':''}" data-act="stp-times" data-id="${s.id}" data-v="${n}">${n}번</button>`).join('')}</div>`;
+  openPage(`
+    ${pageHead('도장 · 약 · 운동')}
+    <div class="pg-b">
+      ${sum?`<div class="pg-cap">${m+1}월 요약</div><div class="pg-sec ssum" style="margin-top:0">${sum}</div>`:''}
+      <div class="pg-cap">💊 약 (복용 기간 동안 달력에 빈 알약이 보이고, 먹은 만큼 칠해져요)</div>
+      <div class="pg-sec" style="margin-top:0">
+        ${pills.map(s=>`<div class="prow stp"><span class="sic">${pillSvg(s.times,Math.ceil(s.times/2),24)}</span><div class="pl2"><input type="text" class="inl" id="stpN_${s.id}" value="${esc(s.name)}" maxlength="12"><div class="stpd">${tpick('stpF_'+s.id,s.from,'','date')}<span class="tsep">~</span>${tpick('stpT_'+s.id,s.to,'','date')}</div></div>${seg(s)}<button class="xbtn" data-act="stp-del" data-id="${s.id}" aria-label="삭제">✕</button></div>`).join('')}
+        <div class="prow" data-act="stp-add-pill" style="justify-content:center;color:var(--accent);font-weight:700">＋ 약 추가</div>
+      </div>
+      <div class="pg-sec">
+        <div class="prow"><div class="pl2">💊 약 먹을 시간 알림<small>복용 기간 동안 하루 횟수만큼 (1번: 첫 시각만)</small></div><label class="sw"><input type="checkbox" id="stpRemind" ${st.remind?'checked':''}><i></i></label></div>
+        ${st.remind?`<div class="prow"><div class="pl2">시각</div>${st.pillTimes.map((t,i)=>tpick('stpPT'+i,t)).join('')}</div>`:''}
+      </div>
+      <div class="pg-cap">기록 도장 (날짜 화면에서 탭하면 찍혀요)</div>
+      <div class="pg-sec" style="margin-top:0">
+        ${marks.map(s=>`<div class="prow"><button class="sic big" data-act="stp-emo" data-id="${s.id}">${s.emoji}</button><div class="pl2"><input type="text" class="inl" id="stpN_${s.id}" value="${esc(s.name)}" maxlength="12"></div><span class="muted" style="font-size:12.5px;white-space:nowrap">${m+1}월 ${ks.filter(k=>stampCnt(k,s.id)).length}일</span><button class="xbtn" data-act="stp-del" data-id="${s.id}" aria-label="삭제">✕</button></div>`).join('')}
+        <div class="prow" data-act="stp-add-mark" style="justify-content:center;color:var(--accent);font-weight:700">＋ 도장 추가</div>
+      </div>
+      <div class="hint" style="padding:8px 16px 20px">달력 날짜 옆에는 하루 ${STAMP_MAX}개까지 보여요. 약이 먼저, 그다음 기록 도장 순서예요.</div>
+    </div>`,'stamps');
+}
+function openStampEmo(id){
+  openPop(`<div class="mh">도장 이모티콘<b>고르거나 직접 넣기</b></div>
+    <div class="mi"><div class="emo" style="flex:1">${STAMP_EMO.map(e=>`<button data-act="stp-emo-pick" data-id="${id}" data-v="${e}">${e}</button>`).join('')}</div></div>
+    <div class="mi"><input type="text" id="stpE" maxlength="4" placeholder="직접" style="flex:none;width:70px;text-align:center;font-size:20px"><button class="btn grow" data-act="stp-emo-own" data-id="${id}">이걸로</button></div>`);
+}
+
 /* ================= 알람 목록 ================= */
 const OFF_NAME={'-1':'전날','0':'','1':'다음날'};
 function renderAlarm(){
@@ -1590,7 +1718,9 @@ function renderAlarm(){
           <div class="vol-bar" style="width:${vol}px;background:${sndOn?'var(--icon-on)':'var(--icon-off)'};"></div>
         </div>
         ${a.label?`<div class="am">${esc(a.label)}</div>`:''}
-        <div class="aleft">${!a.on?'꺼짐':nextFire[a.id]?`⏱ ${remain(nextFire[a.id]-now0)} 후에 울려요`:'두 달 안에 울릴 날이 없어요'}</div>
+        <div class="aleft">${!a.on?'꺼짐':nextFire[a.id]?`⏱ ${remain(nextFire[a.id]-now0)} 후에 울려요`:'두 달 안에 울릴 날이 없어요'}${a.noHol?' · 공휴일 쉼':''}</div>
+        ${a.on&&a.skipAt>now0?`<div class="askip">⏭ ${(()=>{const x=new Date(a.skipAt);return `${x.getMonth()+1}/${x.getDate()} ${ampm(a.time).ap} ${ampm(a.time).tm}`;})()} 한 번 건너뜀 <button data-act="askip-undo" data-id="${a.id}">되돌리기</button></div>`
+          :a.on&&nextFire[a.id]&&!a.once?`<button class="askip-btn" data-act="askip" data-id="${a.id}">이번만 끄기</button>`:''}
       </div>
       <label class="sw"><input type="checkbox" data-act="atoggle" data-id="${a.id}" ${a.on?'checked':''}><i></i></label>
     </div>`;
@@ -2343,7 +2473,7 @@ function openDay(k){
         ${ov?`<div class="hint" style="margin:6px 0 0">원래 근무: ${esc(shiftLabel(base))} · <a data-act="resetshift">되돌리기</a></div>`:''}
       </div>`;
   }
-  openSheet(`${head}${topPart}${memoSection(k)}`);
+  openSheet(`${head}${stampRow(k)}${topPart}${memoSection(k)}`);
 }
 
 /* ---------- 근무타입 고르기 / 편집 ---------- */
@@ -2469,6 +2599,7 @@ function openAlarmPage(){
         <div class="prow col"><div class="pl2">근무타입</div><div class="chips left">${ch([...S.types.map(x=>[x.k,x.name]),['*','매일']],a.shift,'dshift')}</div></div>
         <div class="prow"><div class="pl2">알람일</div><div class="chips">${ch([[-1,'전날'],[0,'당일'],[1,'다음날']],a.offset||0,'doff')}</div></div>
         <div class="prow"><div class="pl2">알람시간</div><label class="timebox"><em>${t.ap}</em>${t.tm}<input type="time" id="at" value="${a.time}"></label></div>
+        <div class="prow"><div class="pl2">공휴일엔 안 울리기<small>공휴일 · 대체공휴일 · 회사 휴무일에는 쉬어요</small></div><label class="sw"><input type="checkbox" id="aNoHol" ${a.noHol?'checked':''}><i></i></label></div>
         <div class="prow"><div class="pl2">알람반복<small>${a.once?'다음 한 번만 울리고 꺼져요':'근무가 돌아올 때마다 울려요'}</small></div><label class="sw"><input type="checkbox" id="aRepeat" ${a.once?'':'checked'}><i></i></label></div>
       </div>
       <div class="pg-sec">
@@ -2508,6 +2639,7 @@ function renderMore(){
       ${item('🔁','근무 패턴 · 근무타입','more-pattern',`${esc(S.patternName||'')} ${TEAMS[S.myTeam]||''}`)}
       ${item('🕐',`근무 시간 · 상태 <span class="${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'tagS':'tagA'}">${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'직접':'대략'}</span>`,'more-times')}
       ${item('👥','동료 근무','go-colleague')}
+      ${item('💊','도장 (약 · 운동)','more-stamps',`${S.stamps.defs.filter(x=>x.kind==='pill').length?'약 '+S.stamps.defs.filter(x=>x.kind==='pill').length+' · ':''}${S.stamps.defs.filter(x=>x.kind==='mark').length}개`)}
       ${item('🏢','휴무일 · 기념일','more-comp',`${(S.companyHols||[]).length}개`)}
       ${item('📊','근무 통계 · 수당','more-stats',`대근 ${daeDays(cur.y,cur.m)}일`)}
       ${issues.length?item('⚠️','알람이 잘 울리게 (권한)','more-perm',`<span style="color:var(--danger)">${issues.length}개 꺼짐</span>`):''}
@@ -2724,7 +2856,7 @@ function openBackupPage(){
     </div>`,'backup');
   if(linked&&driveFiles===null&&!driveBusy){driveBusy=true;window.AndroidBridge.driveList(true);}
 }
-const BACKUP_KEYS=['onboarded','pattern','anchor','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','shiftTimes','status','family','famCheer','famDayToo'];
+const BACKUP_KEYS=['onboarded','pattern','anchor','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','shiftTimes','status','family','famCheer','famDayToo','stamps'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -3208,6 +3340,9 @@ document.addEventListener('click',e=>{
       toast(n?`${remain(n.at-new Date())} 후에 울려요`:'이 근무가 60일 안에 없어요');
       break;}
     case 'adel':if(confirm('이 알람을 지울까요?')){S.alarms=S.alarms.filter(x=>x.id!==draft.id);save();closePage();}break;
+    case 'askip':{const f=S.alarms.find(x=>x.id===t.dataset.id);if(!f)break;const n=buildSchedule(60,[Object.assign({},f,{skipAt:0})])[0];if(!n)break;f.skipAt=n.at.getTime();save();render();
+      const n2=buildSchedule(60,[f])[0];toast(`이번 알람은 안 울려요${n2?` · 다음은 ${remain(n2.at-new Date())} 후`:''}`);break;}
+    case 'askip-undo':{const f=S.alarms.find(x=>x.id===t.dataset.id);if(f){f.skipAt=0;save();render();toast('다시 울려요');}break;}
     case 'alloff':S.alarms.forEach(x=>{x.on=false;});save();render();toast('모든 알람을 껐어요');break;
 
     /* 더 보기 */
@@ -3218,6 +3353,18 @@ document.addEventListener('click',e=>{
     case 'more-pattern':openPatternPage();break;
     case 'more-comp':openCompPage();break;
     case 'more-times':openTimesPage();break;
+    case 'more-stamps':closeSheet();openStampPage();break;
+    case 'stamp-tap':stampTap(t.dataset.id,t.dataset.k);break;
+    case 'stp-times':{const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x){x.times=+t.dataset.v;save();render();openStampPage();}break;}
+    case 'stp-del':{const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x&&confirm(`"${x.name}" 도장을 지울까요? (찍은 기록도 지워져요)`)){S.stamps.defs=S.stamps.defs.filter(y=>y!==x);Object.values(S.stamps.log).forEach(l=>delete l[x.id]);save();render();openStampPage();}break;}
+    case 'stp-add-pill':{const n=new Date();S.stamps.defs.unshift({id:uid(),kind:'pill',emoji:'💊',name:'약',times:1,from:fmt(n),to:fmt(addDays(n,13))});save();render();openStampPage();toast('💊 약을 추가했어요. 이름 · 횟수 · 기간을 맞춰 주세요');break;}
+    case 'stp-add-mark':openStampEmo('new');break;
+    case 'stp-emo':openStampEmo(t.dataset.id);break;
+    case 'stp-emo-pick':case 'stp-emo-own':{
+      const e1=a==='stp-emo-pick'?t.dataset.v:($('#stpE').value||'').trim();if(!e1){toast('이모티콘을 넣어주세요');break;}
+      if(t.dataset.id==='new')S.stamps.defs.push({id:uid(),kind:'mark',emoji:e1,name:'새 도장'});
+      else{const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x)x.emoji=e1;}
+      save();closePop();render();openStampPage();break;}
     case 'more-status':openStatusPage();break;
     case 'tt-tab':timesTab=t.dataset.k;openTimesPage();break;
     case 'tt-reset':if(confirm('기본값(대략)으로 되돌릴까요?')){delete S.shiftTimes[timesTab];save();openTimesPage();}break;
@@ -3323,6 +3470,10 @@ document.addEventListener('change',e=>{
     else if(id==='tt_sf'&&v)ttSet('sleep',{from:v});else if(id==='tt_st'&&v)ttSet('sleep',{to:v});else if(id==='tt_son')ttSet('sleep',{on:t.checked});
     else if(/^tt_b[ft]\d+$/.test(id)&&v){const i=+id.slice(5),b=cur0.breaks.map(x=>Object.assign({},x));if(b[i]){b[i][id[4]==='f'?'from':'to']=v;ttSet('breaks',b);}}
   }else if(t.id==='famDayToo'){S.famDayToo=t.checked;save();render();
+  }else if(t.id&&t.id.startsWith('stpN_')){const x=S.stamps.defs.find(y=>y.id===t.id.slice(5));if(x){x.name=t.value.trim().slice(0,12)||x.name;save();render();}
+  }else if(t.id&&(t.id.startsWith('stpF_')||t.id.startsWith('stpT_'))){const x=S.stamps.defs.find(y=>y.id===t.id.slice(5));if(x&&t.value){x[t.id[3]==='F'?'from':'to']=t.value;if(x.from&&x.to&&x.from>x.to)[x.from,x.to]=[x.to,x.from];save();render();openStampPage();}
+  }else if(t.id==='stpRemind'){S.stamps.remind=t.checked;save();openStampPage();
+  }else if(t.id&&t.id.startsWith('stpPT')){const i=+t.id.slice(5);if(t.value){S.stamps.pillTimes[i]=t.value;save();}
   }else if(t.id==='st_show'){S.status.show=t.checked;save();
   }else if(t.id==='st_phone'){S.status.phone=t.checked;save();openStatusPage();
   }else if(t.id==='st_home'){S.status.homeAlert=t.checked;save();openStatusPage();
@@ -3337,6 +3488,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='backupFile'&&t.files&&t.files[0]){importBackup(t.files[0]);}
   else if(t.id==='aRepeat'&&draft){draft.once=!t.checked;openAlarmPage();}
   else if(t.id==='aRamp'&&draft){draft.ramp=t.checked;}
+  else if(t.id==='aNoHol'&&draft){draft.noHol=t.checked;}
   else if(t.id==='at'&&draft){draft.time=t.value||draft.time;openAlarmPage();}
   else if(t.id==='obDay'&&ob){ob.dayT=t.value||ob.dayT;renderOb();}
   else if(t.id==='obNight'&&ob){ob.nightT=t.value||ob.nightT;renderOb();}
