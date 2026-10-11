@@ -1,0 +1,35 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:24px;width:1240px;color:#1d2330}
+h1{font-size:21px;font-weight:900;margin-bottom:4px}.sub{font-size:13px;color:#6b7280;margin-bottom:16px}
+.wrap{display:flex;gap:22px;align-items:flex-start}
+.col{display:flex;flex-direction:column;align-items:center;gap:8px}
+.cap{font-size:15px;font-weight:900}
+.ph{width:330px;border-radius:26px;overflow:hidden;border:7px solid #1d2330;box-shadow:0 10px 26px rgba(0,0,0,.15);position:relative}
+.ph img{width:100%;display:block}
+.ph i{position:absolute;width:24px;height:24px;border-radius:50%;background:#7b5cf0;color:#fff;font-style:normal;font-size:13px;font-weight:900;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.list{flex:1;display:flex;flex-direction:column;gap:10px}
+.it{background:#fff;border-radius:16px;padding:12px 16px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.it h3{font-size:15px;font-weight:900;display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.it h3 b{width:24px;height:24px;border-radius:50%;background:#7b5cf0;color:#fff;font-size:13px;display:grid;place-items:center;flex:none}
+.it h3 b.r{background:#ef4d5a}
+.it p{font-size:12.5px;color:#6b7280;line-height:1.5}
+.dk{width:100%;height:58px;border-radius:10px;margin-top:8px;background:url(cl_dark.png) no-repeat;background-size:780px auto;background-position:-200px -838px;border:1px solid #333}
+.done{font-size:12px;color:#9aa1ad;line-height:1.6;padding:2px 4px}
+</style></head><body>
+<h1>더 깔끔하게 — 달력 정리</h1>
+<div class="sub">왼쪽 지금 · 가운데 정리한 뒤 (이미 정한 회색 약 · 반투명 도장도 같이 넣은 모습)</div>
+<div class="wrap">
+ <div class="col"><div class="cap">지금</div><div class="ph"><img src="cl_before.png"></div></div>
+ <div class="col"><div class="cap">정리한 뒤</div><div class="ph"><img src="cl_after.png">
+   <i style="left:246px;top:300px">1</i><i style="left:300px;top:82px">2</i><i style="left:282px;top:14px">3</i><i style="left:146px;top:646px">4</i></div></div>
+ <div class="list">
+  <div class="it"><h3><b>1</b>칸 안 메모의 ♥ · 🔒 빼기</h3><p>색(보라 = 가족 · 회색 = 나만)으로 이미 구분돼요. 아래 설명 줄에 한 번만 → 메모 글자가 2자 더 보여요<br>"장모님 생" → <b>"장모님 생신"</b>, "케이크 픽" → <b>"케이크 픽업"</b></p></div>
+  <div class="it"><h3><b>2</b>공휴일 이름은 "…" 없이 짧게</h3><p>"개천…" "한글…" → <b>개천 · 한글</b> (태블릿처럼 넓으면 전체 이름)</p></div>
+  <div class="it"><h3><b>3</b>"오늘" 버튼은 다른 달을 볼 때만</h3><p>이번 달을 보고 있으면 누를 일이 없어요</p></div>
+  <div class="it"><h3><b>4</b>아래 탭 막대를 밝게 (밝은 화면일 때)</h3><p>진한 회색 덩어리가 없어져서 화면이 가벼워 보여요 · 다크 모드에선 지금처럼 어둡게</p></div>
+  <div class="it"><h3><b class="r">🐞</b>다크 모드: 회사 휴무일 날짜 줄만 하얗게 빛남</h3><p>20일(창립기념일) — 다크 모드 색을 안 정해 둬서 생긴 작은 고장</p><div class="dk"></div></div>
+  <div class="done">이미 할 일에 있는 것도 같이 보이게 했어요: 약 회색 테두리 · 도장 반투명 · 흐린 도장 밑 회색 줄 없앰</div>
+ </div>
+</div>
+</body></html>
