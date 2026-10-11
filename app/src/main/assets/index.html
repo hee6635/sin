@@ -307,9 +307,9 @@ textarea{resize:none;min-height:84px}
 .pgrid .pc{width:auto;height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 .pgrid .pc small{position:static;font-size:9.5px}
 .pgrid .pc.pnow{box-shadow:inset 0 0 0 2px var(--accent)}.pgrid .pc.pnow small{color:var(--accent);font-weight:800}
-.tnames{display:flex;gap:6px;flex-wrap:wrap}
-.tnames button{font-size:13px;font-weight:700;padding:7px 11px;border-radius:15px;background:var(--surface);color:var(--muted)}
-.tnames button.on{background:var(--accent);color:#fff}
+.ted{gap:8px!important;padding:10px 16px!important}.ted input{flex:1;min-width:0}
+.ted .tstar{font-size:20px;width:30px;flex:none;color:var(--muted)}.ted .tmy{width:36px;flex:none;font-size:11.5px;font-weight:800;color:var(--accent);text-align:center}
+.ted .xbtn{width:36px;flex:none}
 .tgrid{display:grid;grid-template-columns:52px repeat(var(--cols),1fr) 46px;align-items:center;row-gap:6px}
 .tgrid .th{font-size:10px;text-align:center;color:var(--muted);font-weight:700;line-height:1.25;padding:2px 0;border-radius:6px}
 .tgrid .th.t{color:var(--bg);background:var(--fg)}
@@ -3323,7 +3323,6 @@ const PAT_MAX=60,TEAM_MAX=8;
 const patPos=d=>{const n=S.pattern.length;return((dayNum(d)-dayNum(parse(S.anchor)))%n+n)%n;};
 // 조 g 의 오늘 칸 번호
 const teamPos=(g,d)=>{const n=S.pattern.length,o=S.teamOffsets;return((patPos(d)+(o[g]||0)-(o[S.myTeam]||0))%n+n)%n;};
-const teamStyleLabel=st=>{const c=teamCount(),f=TEAM_STYLE[st];return [...Array(c)].map((_,i)=>f(i).replace(/[조팀]$/,'')).join('·')+f(0).slice(-1);};
 function openPatternPage(){
   const ovN=Object.keys(S.overrides).length,n=S.pattern.length,t0=new Date(),cp=patPos(t0),lb=posLabels(S.pattern);
   const tc=teamCount(),cols=Math.min(n,10);
@@ -3354,13 +3353,10 @@ function openPatternPage(){
         <div class="prow"><div class="pl2">공휴일엔 쉬어요<small>상주(평일) 근무 · 빨간 날 근무 칸이 휴무로</small></div><label class="sw"><input type="checkbox" id="holRest" ${S.holRest?'checked':''}><i></i></label></div>
         <div class="prow tap" data-act="paint-open"><div class="pl2">🖌 달력에 칠하기<small>매달 근무표가 새로 나오면 · 근무를 골라 날짜를 쭉 눌러요</small></div><div class="pv">›</div></div>
       </div>
-      <div class="pg-cap">조 이름</div>
-      <div class="pg-sec" style="margin-top:0;padding:12px 16px">
-        <div class="tnames">${['abc','num','team'].map(st=>`<button class="${S.teamStyle===st?'on':''}" data-act="tstyle" data-v="${st}">${teamStyleLabel(st)}</button>`).join('')}<button class="${S.teamStyle==='custom'?'on':''}" data-act="tstyle" data-v="custom">✏️ 직접</button></div>
-      </div>
-      <div class="pg-cap pcap">조별 근무 ${tc<TEAM_MAX?'<button data-act="tadd">＋ 조 추가</button>':''}</div>
-      <div class="pg-sec" style="margin-top:0;padding:8px 6px 10px"><div class="tgrid" style="--cols:${cols}">${tg}</div></div>
-      <div class="hint" style="padding:8px 16px 0">· 줄을 누르면 "오늘 이 조 근무는?"으로 한 번에 맞춰요<br>· 회사 근무표와 다르면 ‹ › 로 하루씩 밀어요<br>· 이름을 길게 누르면 내 조로 바꾸거나 이름을 고쳐요</div>
+      <div class="pg-cap">조별 근무</div>
+      <div class="pg-sec" style="margin-top:0;padding:8px 6px 10px"><div class="tgrid" style="--cols:${cols}">${tg}</div>
+        <button class="btn ghost sm" style="margin:10px 6px 0" data-act="tedit">✏️ 조 이름 · 개수 고치기</button></div>
+      <div class="hint" style="padding:8px 16px 0">· 줄을 누르면 "오늘 이 조 근무는?"으로 한 번에 맞춰요<br>· 회사 근무표와 다르면 ‹ › 로 하루씩 밀어요</div>
       <div class="pg-sec">
         <div class="prow tap" data-act="redo-onboard"><div class="pl2">처음 시작 설정 다시 하기</div><div class="pv">›</div></div>
         <div class="prow danger-row" data-act="clearov">수동 변경된 근무 ${ovN}일 초기화</div>
@@ -3394,21 +3390,40 @@ function openTeamMenu(g){
   const me=g===S.myTeam;
   openPop(`<div class="mh">조<b>${esc(teamName(g))}</b></div>
     ${me?'':`<button class="mi" data-act="tmine" data-g="${g}">⭐ 내 조로 하기</button>`}
-    <button class="mi" data-act="tnames" data-g="${g}">✏️ 이름 고치기</button>
+    <button class="mi" data-act="tedit" data-g="${g}">✏️ 이름 고치기</button>
     ${me||teamCount()<2?'':`<button class="mi" data-act="tdel" data-g="${g}" style="color:var(--danger)">－ 이 조 빼기</button>`}
     <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);
 }
-function openTeamNames(focus){
-  openPop(`<div class="mh">조 이름 직접 쓰기<b>회사에서 부르는 이름으로 (예: 5팀)</b></div>
-    ${[...Array(teamCount())].map((_,g)=>`<div class="mi"><span style="width:56px;color:var(--muted);font-size:13px">${g===S.myTeam?'내 조':(g+1)+'번째'}</span><input type="text" class="tnm" data-g="${g}" value="${esc(teamName(g))}" maxlength="6" style="flex:1"></div>`).join('')}
-    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">취소</button><button class="btn grow" data-act="tnames-save">저장</button></div>`);
-  const f=document.querySelector(`.tnm[data-g="${focus}"]`);if(f&&focus!=null)f.focus();
+/* 조 이름 · 개수: 이름은 직접 쓰고, ✕ 로 빼고, ＋ 로 넣고, ⭐ 로 내 조 */
+let tEd=null;
+function openTeamEdit(focus){
+  tEd={rows:[...Array(teamCount())].map((_,g)=>({name:teamName(g),off:S.teamOffsets[g]||0,orig:g})),my:S.myTeam};
+  renderTeamEdit(focus);
 }
-function teamAdd(){
-  const n=S.pattern.length,o=S.teamOffsets,used=new Set(o.map(x=>((x%n)+n)%n));
+function tEdPull(){if(!tEd)return;document.querySelectorAll('#pop .tnm').forEach(x=>{const r=tEd.rows[+x.dataset.i];if(r)r.name=x.value;});}
+function renderTeamEdit(focus){
+  const r=tEd.rows;
+  openPop(`<div class="mh">조 이름 · 개수<b>회사에서 부르는 이름으로 (예: 5팀)</b></div>
+    ${r.map((x,i)=>`<div class="mi ted"><button class="tstar ${i===tEd.my?'on':''}" data-act="ted-my" data-i="${i}" aria-label="내 조">${i===tEd.my?'⭐':'☆'}</button><input type="text" class="tnm" data-i="${i}" value="${esc(x.name)}" maxlength="6" placeholder="조 이름">${i===tEd.my?'<span class="tmy">내 조</span>':r.length>1?`<button class="xbtn" data-act="ted-del" data-i="${i}" aria-label="빼기">✕</button>`:'<span class="tmy"></span>'}</div>`).join('')}
+    ${r.length<TEAM_MAX?'<button class="mi" data-act="ted-add" style="justify-content:center;color:var(--accent);font-weight:700">＋ 조 추가</button>':''}
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">취소</button><button class="btn grow" data-act="ted-save">저장</button></div>`);
+  const f=focus!=null&&document.querySelector(`#pop .tnm[data-i="${focus}"]`);if(f)f.focus();
+}
+function teamEdAdd(){
+  tEdPull();const n=S.pattern.length,r=tEd.rows,used=new Set(r.map(x=>((x.off%n)+n)%n));
   let v=0;for(let i=0;i<n;i++){if(!used.has(i)){v=i;break;}}
-  o.push(v);if(S.teamStyle==='custom')S.teamNames[o.length-1]='';
-  save();openPatternPage();toast(`${teamName(o.length-1)}을 넣었어요 · 줄을 눌러 맞춰 주세요`);
+  const names=new Set(r.map(x=>x.name.trim()));let j=0;while(names.has(String.fromCharCode(65+j)+'조'))j++;
+  r.push({name:String.fromCharCode(65+j)+'조',off:v,orig:null});renderTeamEdit(r.length-1);
+}
+function teamEdSave(){
+  tEdPull();const r=tEd.rows,my=tEd.my;
+  const names=r.map((x,i)=>x.name.trim().slice(0,6)||String.fromCharCode(65+i)+'조');
+  const added=r.some(x=>x.orig==null);
+  S.teamOffsets=r.map(x=>x.off);S.teamNames=names;S.teamStyle='custom';S.myTeam=my;
+  // 가족 중 교대근무: 원래 조를 따라감 (빠진 조였으면 내 조로)
+  (S.family||[]).forEach(m=>{if(m.team==null)return;const i=r.findIndex(x=>x.orig===m.team);m.team=i<0?null:i;});
+  tEd=null;save();closePop();openPatternPage();
+  toast(added?'새 조는 줄을 눌러 오늘 근무를 맞춰 주세요':'조를 저장했어요');
 }
 function teamDel(g){
   if(g===S.myTeam||teamCount()<2)return;
@@ -4083,10 +4098,11 @@ document.addEventListener('click',e=>{
     case 'trow':openTeamToday(Number(t.dataset.g));break;
     case 'tpos':setTeamPos(Number(t.dataset.g),Number(t.dataset.p));break;
     case 'tmine':{const g=Number(t.dataset.g);S.myTeam=g;save();closePop();openPatternPage();toast(`${teamName(g)}을(를) 내 조로 했어요`);break;}
-    case 'tnames':openTeamNames(Number(t.dataset.g));break;
-    case 'tnames-save':{const nm=[...Array(teamCount())].map((_,g)=>teamName(g));document.querySelectorAll('.tnm').forEach(x=>{const v=x.value.trim().slice(0,6);if(v)nm[+x.dataset.g]=v;});S.teamNames=nm;S.teamStyle='custom';save();closePop();openPatternPage();break;}
-    case 'tstyle':{const v=t.dataset.v;if(v==='custom'){openTeamNames(null);break;}S.teamStyle=v;save();openPatternPage();break;}
-    case 'tadd':if(teamCount()<TEAM_MAX)teamAdd();break;
+    case 'tedit':openTeamEdit(t.dataset.g!=null?Number(t.dataset.g):null);break;
+    case 'ted-my':tEdPull();tEd.my=Number(t.dataset.i);renderTeamEdit();break;
+    case 'ted-del':{tEdPull();const i=Number(t.dataset.i);if(i===tEd.my||tEd.rows.length<2)break;tEd.rows.splice(i,1);if(tEd.my>i)tEd.my--;renderTeamEdit();break;}
+    case 'ted-add':if(tEd.rows.length<TEAM_MAX)teamEdAdd();break;
+    case 'ted-save':teamEdSave();break;
     case 'tdel':teamDel(Number(t.dataset.g));break;
     case 'redo-onboard':closePage();startOnboarding();break;
     case 'comp-open':chOpen=true;openCompPage();break;
