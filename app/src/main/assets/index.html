@@ -298,6 +298,7 @@ textarea{resize:none;min-height:84px}
 .rbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:36px;height:36px;border-radius:10px;font-size:15px;flex:none;color:var(--muted)}
 .rbtn small{font-size:9.5px;font-weight:700;line-height:1.1;white-space:nowrap;color:var(--accent)}
 .remc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.remc button{font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:16px;background:var(--surface);color:var(--muted)}.remc button.on{background:var(--accent);color:#fff}
+.bwrap .badge.holtag{color:var(--sun);letter-spacing:-.5px}
 .paintbar{display:flex;align-items:center;gap:8px;padding:6px 10px calc(6px);border-top:1px solid var(--line);background:var(--bg);flex:none}
 .paintbar .pb-ic{font-size:18px;display:flex;flex-direction:column;align-items:center;line-height:1.1}.paintbar .pb-ic small{font-size:9.5px;color:var(--muted);font-weight:700;white-space:nowrap}
 .paint-on .track .cell{touch-action:none}.paintbar .pb-t{flex:1;display:flex;gap:6px;overflow-x:auto;padding:3px}
@@ -1060,7 +1061,7 @@ function compHolItem(k){
 function compHol(k){const h=compHolItem(k);return h?h.name:'';}
 const shortHol=n=>!n?'':n==='부처님오신날'?'부처님':n.startsWith('대체')?'대체':n.includes('선거')?'선거':n==='임시공휴일'?'임시휴일':n.split('·')[0];
 // 폰처럼 좁은 칸: "개천…" 대신 짧은 이름 (… 없이)
-const HOL2={'삼일절':'삼일','노동절':'노동','어린이날':'어린이','부처님오신날':'부처님','현충일':'현충','제헌절':'제헌','광복절':'광복','개천절':'개천','한글날':'한글','성탄절':'성탄','대체공휴일':'대체','임시공휴일':'임시'};
+const HOL2={'삼일절':'삼일','노동절':'노동','어린이날':'어린','부처님오신날':'부처','현충일':'현충','제헌절':'제헌','광복절':'광복','개천절':'개천','한글날':'한글','성탄절':'성탄','대체공휴일':'대체','임시공휴일':'임시'};
 const holShort=n=>{if(!n)return '';const a=n.split('·')[0];return a.includes('선거')?'선거':(HOL2[a]||a.slice(0,2));};
 //#HOL_END
 
@@ -1242,7 +1243,9 @@ function load(){
 let S=load();
 
 /* 안드로이드 앱이 알려주는 알람 권한 상태 (브라우저에서는 빈 목록) */
-const ISSUE_TXT={exact:'정확한 알람 권한이 필요해요',notif:'알림을 허용해야 알람이 떠요',fsi:'잠금화면에 알람 화면을 띄우는 권한이 필요해요'};
+const ISSUE_TXT={exact:'정확한 알람 권한이 필요해요',notif:'알림을 허용해야 알람이 떠요',fsi:'잠금화면에 알람 화면을 띄우는 권한이 필요해요',batt:'배터리를 "제한 없음"으로 해야 알람이 안 늦어요'};
+const PERM_KEYS=['notif','exact','fsi','batt'],PERM_NAME={notif:'알림 허용',exact:'정확한 시간에 알람',fsi:'잠금화면에 알람 화면',batt:'배터리 제한 없음'};
+const SAMSUNG_TIP='삼성: 설정 › 배터리 › 백그라운드 사용 제한 › 절전 예외 앱에도 언제쉬어를 넣어 주세요';
 function nativeIssues(){
   try{
     if(window.AndroidBridge&&typeof window.AndroidBridge.status==='function'){
@@ -1569,6 +1572,11 @@ function render(){
   }
 }
 
+// 상주 공휴일 칸 이름: 연휴 앞뒤 날("연휴")은 가운데 날 이름으로 (추석 · 설날)
+function holTagName(k,hol){
+  if(hol.split('·')[0]==='연휴')for(const n of [1,-1,2,-2]){const h=holName(addK(k,n));if(h&&h.split('·')[0]!=='연휴'&&!h.startsWith('대체'))return holShort(h);}
+  return holShort(hol);
+}
 /* ================= 메인 달력 ================= */
 function calPanel(y,m){
   const first=new Date(y,m,1),lead=first.getDay();
@@ -1597,11 +1605,13 @@ function calPanel(y,m){
     // 날짜 줄: 숫자 · 도장 · 공휴일 이름. 좁은 칸에서 도장과 겹치면 이름은 빼기 (날짜 줄 색으로 이미 보임)
     const st0=stampsOn(k);
     const hnHtml=hol?esc(narrow?holShort(hol):shortHol(hol)):chI?ico(chI.emoji||'🏢')+(narrow?'':esc(ch)):'';
-    const showHn=!!hnHtml&&(!narrow||!st0.length||(!hol&&st0.length<2));
+    // "공휴일엔 쉬어요"(상주): 쉬는 공휴일은 "휴" 자리에 공휴일 이름 (두 글자) → 날짜 줄엔 이름 안 씀
+    const holTag=S.holRest&&hol&&isRest(sh)&&ov==null?holTagName(k,hol):'';
+    const showHn=!!hnHtml&&!holTag&&(!narrow||!st0.length||(!hol&&st0.length<2));
 
     cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''}" data-act="day" data-k="${k}">
       <i class="stz" data-act="stamp-dn" data-k="${k}"></i><div class="dn ${hol?'hol':ch?'chol':''} ${cls}"><span class="num">${d.getDate()}</span>${st0.length?`<span class="stp">${st0.map(x=>stampIcon(x,13)).join('')}</span>`:''}${showHn?`<span class="hn">${hnHtml}</span>`:''}</div>
-      <div class="bwrap">${band}${badge(sh,'',ov?'<i class="dot"></i>':'')}</div>
+      <div class="bwrap">${band}${holTag?`<span class="badge r two holtag">${esc(holTag)}</span>`:badge(sh,'',ov?'<i class="dot"></i>':'')}</div>
       <div class="pill-wrap" style="--n:${pills.length}">${pills.join('')}</div>
     </div>`;
   }
@@ -2196,7 +2206,7 @@ function openPage(html,mode){
   p.innerHTML=html;p.classList.add('open');
   if(same){const b=p.querySelector('.pg-b');if(b)b.scrollTop=sc;}
 }
-function closePage(){$('#page').classList.remove('open');pageMode=null;draft=null;render();}
+function closePage(){if(pageMode==='alarm')try{if(hasBridge('stopPreview'))window.AndroidBridge.stopPreview();}catch(e){}$('#page').classList.remove('open');pageMode=null;draft=null;render();}
 function pageHead(title,right){return `<div class="pg-h"><button class="bk" data-act="page-close" aria-label="뒤로">‹</button><b>${title}</b>${right||'<span style="min-width:56px"></span>'}</div>`;}
 function openPop(html){$('#pop').innerHTML=`<div class="menu">${html}</div>`;$('#pop').classList.add('open');}
 function closePop(){$('#pop').className='';$('#pop').innerHTML='';tpk=null;icn=null;crp=null;}
@@ -2495,7 +2505,7 @@ function openFamEdit(){
   const m=famDraft,isNew=!S.family.some(x=>x.id===m.id);
   const dayBtns=[1,2,3,4,5,6,0].map(w=>`<button class="${(m.days||[]).includes(w)?'on':''}" data-act="fe-day" data-v="${w}">${DOW[w]}</button>`).join('');
   let extra='';
-  if(m.kind==='shift')extra=`<div class="pg-cap">어느 조예요? (내 근무 패턴과 같은 교대)</div><div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${teamList().map((n,g)=>`<button class="${(m.team??S.myTeam)===g?'on':''}" data-act="fe-team" data-v="${g}">${esc(n)}${g===S.myTeam?' (나랑 같음)':''}</button>`).join('')}</div><div class="hint" style="margin-top:8px">다른 패턴으로 일하면 다음 업데이트의 "가족 초대"로 그 사람 근무표를 연결해요.</div></div>`;
+  if(m.kind==='shift'&&teamCount()>1)extra=`<div class="pg-cap">어느 조예요? (내 근무 패턴과 같은 교대)</div><div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${teamList().map((n,g)=>`<button class="${(m.team??S.myTeam)===g?'on':''}" data-act="fe-team" data-v="${g}">${esc(n)}${g===S.myTeam?' (나랑 같음)':''}</button>`).join('')}</div><div class="hint" style="margin-top:8px">다른 패턴으로 일하면 다음 업데이트의 "가족 초대"로 그 사람 근무표를 연결해요.</div></div>`;
   if(m.kind==='office')extra=`<div class="pg-cap">일하는 요일 · 시간</div><div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${dayBtns}</div>
     <div class="prow" style="padding:10px 0 0"><div class="pl2">출근 ~ 퇴근</div>${tpick('feS',m.start||'09:00')}<span class="tsep">~</span>${tpick('feE',m.end||'18:00')}</div></div>`;
   if(m.kind==='student')extra=`<div class="pg-cap">학교 · 방학</div><div class="pg-sec" style="margin-top:0;padding:12px 14px">
@@ -3159,7 +3169,7 @@ function openAlarmPage(){
           <button class="${a.sound?'on':''}" data-act="dsound">소리</button><button class="${a.vib?'on':''}" data-act="dvib">진동</button><button class="${kind?'on':''}" data-act="dsilent">무음</button></div></div>
         <div class="prow col"><div class="pl2">볼륨 <small>알람 볼륨 기준 ${a.vol}%</small></div><input type="range" id="aVol" min="10" max="100" step="5" value="${a.vol}" ${a.sound?'':'disabled'}></div>
         <div class="prow"><div class="pl2">점점 커지는 소리<small>작게 시작해서 30초 동안 커져요</small></div><label class="sw"><input type="checkbox" id="aRamp" ${a.ramp?'checked':''} ${a.sound?'':'disabled'}><i></i></label></div>
-        <div class="prow tap" data-act="dtone"><div class="pl2">알람음 선택</div><div class="pv">♩ ${esc(a.toneName||'기본 알람음')} ›</div></div>
+        <div class="prow tap" data-act="dtone"><div class="pl2">알람음 선택</div>${isFileTone(a.tone)&&hasBridge('previewTone')?'<button class="btn ghost sm" data-act="dtone-play">▶ 듣기</button>':''}<div class="pv" style="max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${isFileTone(a.tone)?'🎵':'♩'} ${esc(a.toneName||'기본 알람음')} ›</div></div>
         <div class="prow"><div class="pl2">다시 울림 간격</div><div class="chips">${ch([[5,'5분'],[10,'10분'],[15,'15분']],a.snMin,'dsnmin')}</div></div>
         <div class="prow col"><div class="pl2">다시 울림 횟수</div><div class="chips left">${ch([[0,'끔'],[1,'1번'],[3,'3번'],[5,'5번'],[-1,'계속']],a.snMax,'dsnmax')}</div></div>`:''}
       </div>
@@ -3167,7 +3177,11 @@ function openAlarmPage(){
       ${a.isNew?'':'<div class="pg-sec"><div class="prow danger-row" data-act="adel">🗑 삭제</div></div>'}
     </div>`,'alarm');
 }
+const isFileTone=u=>/^file:/.test(u||'');
+// 알람에서 안 쓰는 내 음악 파일은 앱 안에서 지우기
+function cleanTones(){try{if(hasBridge('cleanTones'))window.AndroidBridge.cleanTones(JSON.stringify((S.alarms||[]).map(a=>a.tone).filter(isFileTone)));}catch(e){}}
 window.__onTone=o=>{
+  if(o&&o.error){toast(o.error);return;}
   if(!draft||!o||o.req!==draft.id)return;
   draft.tone=o.uri||'';draft.toneName=o.title||'기본 알람음';
   if(pageMode==='alarm')openAlarmPage();
@@ -3188,7 +3202,7 @@ function renderMore(){
     ${guest?'':`<div class="pg-sec" style="margin-top:0">
       ${item('🔁','근무 패턴 · 조','more-pattern',`${esc(S.patternName||'')} ${esc(myTeamLabel())}`)}
       ${item('🕐',`근무 시간 · 상태 <span class="${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'tagS':'tagA'}">${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'직접':'대략'}</span>`,'more-times')}
-      ${item('👥','동료 근무','go-colleague')}
+      ${teamCount()>1?item('👥','동료 근무','go-colleague'):''}
       ${item('🏢','휴무일 · 기념일','more-comp',`${(S.companyHols||[]).length}개`)}
       ${item('💊','도장 (약 · 운동)','more-stamps',`${S.stamps.defs.filter(x=>x.kind==='pill').length?'약 '+S.stamps.defs.filter(x=>x.kind==='pill').length+' · ':''}${S.stamps.defs.filter(x=>x.kind==='mark').length}개`)}
       ${item('📊','근무 통계 · 수당','more-stats',`대근 ${daeDays(cur.y,cur.m)}일`)}
@@ -3353,10 +3367,11 @@ function openPatternPage(){
         <div class="prow"><div class="pl2">공휴일엔 쉬어요<small>상주(평일) 근무 · 빨간 날 근무 칸이 휴무로</small></div><label class="sw"><input type="checkbox" id="holRest" ${S.holRest?'checked':''}><i></i></label></div>
         <div class="prow tap" data-act="paint-open"><div class="pl2">🖌 달력에 칠하기<small>매달 근무표가 새로 나오면 · 근무를 골라 날짜를 쭉 눌러요</small></div><div class="pv">›</div></div>
       </div>
-      <div class="pg-cap">조별 근무</div>
+      ${tc>1?`<div class="pg-cap">조별 근무</div>
       <div class="pg-sec" style="margin-top:0;padding:8px 6px 10px"><div class="tgrid" style="--cols:${cols}">${tg}</div>
         <button class="btn ghost sm" style="margin:10px 6px 0" data-act="tedit">✏️ 조 이름 · 개수 고치기</button></div>
-      <div class="hint" style="padding:8px 16px 0">· 줄을 누르면 "오늘 이 조 근무는?"으로 한 번에 맞춰요<br>· 회사 근무표와 다르면 ‹ › 로 하루씩 밀어요</div>
+      <div class="hint" style="padding:8px 16px 0">· 줄을 누르면 "오늘 이 조 근무는?"으로 한 번에 맞춰요<br>· 회사 근무표와 다르면 ‹ › 로 하루씩 밀어요</div>`:`<div class="pg-cap">조</div>
+      <div class="pg-sec" style="margin-top:0;padding:10px 10px"><button class="btn ghost sm" data-act="tedit">✏️ 조 이름 · 개수 고치기</button></div>`}
       <div class="pg-sec">
         <div class="prow tap" data-act="redo-onboard"><div class="pl2">처음 시작 설정 다시 하기</div><div class="pv">›</div></div>
         <div class="prow danger-row" data-act="clearov">수동 변경된 근무 ${ovN}일 초기화</div>
@@ -3583,9 +3598,9 @@ function openPermPage(){
   openPage(`
     ${pageHead('알람이 잘 울리게')}
     <div class="pg-b"><div class="pg-sec">
-      ${['notif','exact','fsi'].map(k=>`<div class="prow"><div class="pl2">${{notif:'알림 허용',exact:'정확한 시간에 알람',fsi:'잠금화면에 알람 화면'}[k]}</div>${issues.includes(k)?`<button class="btn sm" data-act="nativefix" data-k="${k}">켜기</button>`:'<span style="color:var(--today);font-weight:800">✓ 켜짐</span>'}</div>`).join('')}
+      ${PERM_KEYS.map(k=>`<div class="prow"><div class="pl2">${PERM_NAME[k]}</div>${issues.includes(k)?`<button class="btn sm" data-act="nativefix" data-k="${k}">켜기</button>`:'<span style="color:var(--today);font-weight:800">✓ 켜짐</span>'}</div>`).join('')}
     </div>
-    <div class="hint" style="padding:10px 16px">삼성·샤오미 폰은 설정 › 앱 › 언제쉬어 › 배터리를 "제한 없음"으로 바꾸면 알람이 늦지 않아요.</div></div>`,'perm');
+    <div class="hint" style="padding:10px 16px">${SAMSUNG_TIP}</div></div>`,'perm');
 }
 function sendInquiry(){
   let info={};try{if(hasBridge('appInfo'))info=JSON.parse(window.AndroidBridge.appInfo());}catch(e){}
@@ -3681,8 +3696,8 @@ function renderOb(){
     body=`<h2>출근 알람도<br>맞춰 드릴까요?</h2><div class="ob-sub">근무에 맞춰서만 울려요. 휴무날은 조용해요</div>
       ${obAlarms().map(([k,a],i)=>{const tt=ampm(a.t);return `<div class="alrow">${obBadge(k)}<button type="button" class="tx" data-act="tpk" data-id="obT_${i}" data-type="time"><b><small style="display:inline;font-size:13px;margin-right:4px">${tt.ap}</small>${tt.tm}</b><small>${esc(shiftNameOf(k))} 근무 날</small></button><input type="hidden" id="obT_${i}" value="${a.t}"><label class="sw"><input type="checkbox" id="obOn_${i}" ${a.on?'checked':''}><i></i></label></div>`;}).join('')}
       ${hasBridge('status')?`<div class="lbl">알람이 꼭 울리게 하려면</div>
-      ${['notif','exact','fsi'].map(k=>`<div class="perm"><div class="ck ${issues.includes(k)?'no':''}">${issues.includes(k)?'!':'✓'}</div><span>${{notif:'알림 허용',exact:'정확한 시간에 알람',fsi:'잠금화면에 알람 화면'}[k]}</span>${issues.includes(k)?`<button data-act="nativefix" data-k="${k}">켜기 ›</button>`:''}</div>`).join('')}
-      <div class="ob-sub" style="font-size:12px">삼성·샤오미는 설정 › 앱 › 언제쉬어 › 배터리를 "제한 없음"으로</div>`:''}`;
+      ${PERM_KEYS.map(k=>`<div class="perm"><div class="ck ${issues.includes(k)?'no':''}">${issues.includes(k)?'!':'✓'}</div><span>${PERM_NAME[k]}</span>${issues.includes(k)?`<button data-act="nativefix" data-k="${k}">켜기 ›</button>`:''}</div>`).join('')}
+      <div class="ob-sub" style="font-size:12px">${SAMSUNG_TIP}</div>`:''}`;
     foot=`<button class="btn" data-act="ob-finish" data-v="1">시작하기</button><button class="lk" data-act="ob-finish" data-v="0">알람은 나중에</button>`;
   }else{
     const t=new Date(),a=shiftOf(t),b=shiftOf(addDays(t,1));
@@ -4011,7 +4026,16 @@ document.addEventListener('click',e=>{
     case 'dsilent':draft.sound=false;draft.vib=false;openAlarmPage();break;
     case 'dsnmin':draft.snMin=Number(t.dataset.v);openAlarmPage();break;
     case 'dsnmax':draft.snMax=Number(t.dataset.v);openAlarmPage();break;
-    case 'dtone':if(hasBridge('pickTone'))window.AndroidBridge.pickTone(draft.id,draft.tone||'');else toast('앱에서 폰 알람음 목록을 고를 수 있어요');break;
+    case 'dtone':
+      if(!hasBridge('pickTone')){toast('앱에서 폰 알람음 · 음악 파일을 고를 수 있어요');break;}
+      if(!hasBridge('pickToneFile')){window.AndroidBridge.pickTone(draft.id,draft.tone||'');break;}
+      openPop(`<div class="mh">알람음<b>어디서 고를까요?</b></div>
+        <button class="mi" data-act="dtone-sys">🔔 기본 알람음<small style="margin-left:auto;color:var(--muted);font-size:12px">폰에 있는 알람음 목록</small></button>
+        <button class="mi" data-act="dtone-file">🎵 내 음악 파일<small style="margin-left:auto;color:var(--muted);font-size:12px">mp3 · m4a 등 (10MB까지)</small></button>
+        <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);break;
+    case 'dtone-sys':closePop();if(draft)window.AndroidBridge.pickTone(draft.id,isFileTone(draft.tone)?'':(draft.tone||''));break;
+    case 'dtone-file':closePop();if(draft)window.AndroidBridge.pickToneFile(draft.id);break;
+    case 'dtone-play':if(draft&&hasBridge('previewTone')){const on=window.AndroidBridge.previewTone(draft.tone||'');t.textContent=on?'■ 멈춤':'▶ 듣기';}break;
     case 'asave':{
       const item=Object.assign({},draft,{label:(draft.label||'').trim(),time:draft.time||'06:00'});
       delete item.isNew;
@@ -4019,11 +4043,11 @@ document.addEventListener('click',e=>{
       item.on=true;
       const i=S.alarms.findIndex(x=>x.id===item.id);
       if(i>=0)S.alarms[i]=item;else if(S.alarms.length<99)S.alarms.push(item);
-      save();closePage();
+      save();closePage();cleanTones();
       const n=buildSchedule(60,[item])[0];
       toast(n?`${remain(n.at-new Date())} 후에 울려요`:'이 근무가 60일 안에 없어요');
       break;}
-    case 'adel':if(confirm('이 알람을 지울까요?')){S.alarms=S.alarms.filter(x=>x.id!==draft.id);save();closePage();}break;
+    case 'adel':if(confirm('이 알람을 지울까요?')){S.alarms=S.alarms.filter(x=>x.id!==draft.id);save();closePage();cleanTones();}break;
     case 'askip':{const f=S.alarms.find(x=>x.id===t.dataset.id);if(!f)break;const n=buildSchedule(60,[Object.assign({},f,{skipAt:0})])[0];if(!n)break;f.skipAt=n.at.getTime();save();render();
       const n2=buildSchedule(60,[f])[0];toast(`이번 알람은 안 울려요${n2?` · 다음은 ${remain(n2.at-new Date())} 후`:''}`);break;}
     case 'askip-undo':{const f=S.alarms.find(x=>x.id===t.dataset.id);if(f){f.skipAt=0;save();render();toast('다시 울려요');}break;}
@@ -4358,6 +4382,8 @@ window.__onBack=()=>{
 window.__refresh=()=>{
   expireOnceAlarms();
   if(tab==='alarm'||tab==='set')render();
+  // 권한 화면에서 돌아오면 바로 ✓ 로
+  if(ob&&ob.step===4)renderOb();else if(pageMode==='perm')openPermPage();
   pushAlarmsToNative();refreshHolidays();autoBackup();
 };
 

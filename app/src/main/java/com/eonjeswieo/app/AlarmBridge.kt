@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import android.webkit.JavascriptInterface
 import org.json.JSONObject
@@ -35,6 +36,23 @@ class AlarmBridge(private val activity: MainActivity) {
     fun pickTone(req: String, current: String) {
         activity.runOnUiThread { activity.openTonePicker(req, current) }
     }
+
+    /** 폰에 있는 음악 파일에서 알람음 고르기 → 앱 안에 복사한 뒤 window.__onTone({req, uri, title}) */
+    @JavascriptInterface
+    fun pickToneFile(req: String) {
+        activity.runOnUiThread { activity.openToneFilePicker(req) }
+    }
+
+    /** 알람음 미리 듣기 (켜지면 true, 멈추면 false) */
+    @JavascriptInterface
+    fun previewTone(uri: String): Boolean = activity.togglePreview(uri)
+
+    @JavascriptInterface
+    fun stopPreview() = activity.stopPreview()
+
+    /** 알람에서 쓰는 음악 파일(JSON 배열)만 남기고 나머지 복사본은 지우기 */
+    @JavascriptInterface
+    fun cleanTones(keepJson: String) = activity.cleanTones(keepJson)
 
     /** 사진 고르기 → 결과는 window.__onImage(data URL, 취소면 '', 실패면 null) */
     @JavascriptInterface
@@ -110,6 +128,9 @@ class AlarmBridge(private val activity: MainActivity) {
         if (!nm.areNotificationsEnabled()) missing.add("notif")
 
         if (Build.VERSION.SDK_INT >= 34 && !nm.canUseFullScreenIntent()) missing.add("fsi")
+
+        val pm = context.getSystemService(PowerManager::class.java)
+        if (pm != null && !pm.isIgnoringBatteryOptimizations(context.packageName)) missing.add("batt")
         return missing.joinToString(",")
     }
 
@@ -125,6 +146,8 @@ class AlarmBridge(private val activity: MainActivity) {
                     .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
             "fsi" ->
                 if (Build.VERSION.SDK_INT >= 34) Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, pkg) else null
+            // "배터리 사용 제한 없음으로 할까요?" 창 (안 되는 기기면 배터리 최적화 목록 화면)
+            "batt" -> Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, pkg)
             else -> null
         }
         if (intent != null) {
@@ -132,7 +155,10 @@ class AlarmBridge(private val activity: MainActivity) {
             try {
                 context.startActivity(intent)
             } catch (e: Exception) {
-                // 설정 화면을 열 수 없는 기기면 무시
+                // 허용 창이 없는 기기면 배터리 최적화 목록 화면으로, 그것도 없으면 무시
+                if (kind == "batt") try {
+                    context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                } catch (e2: Exception) {}
             }
         }
     }

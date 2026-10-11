@@ -11,11 +11,14 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
+import android.media.AudioAttributes
 import android.media.ExifInterface
+import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.util.Base64
 import android.webkit.JsResult
 import android.webkit.ValueCallback
@@ -38,6 +41,11 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.webkit.WebViewAssetLoader
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.File
+import org.json.JSONArray
+
+/** 알람음으로 쓸 내 음악 파일 크기 한도 */
+private const val TONE_MAX = 10L * 1024 * 1024
 
 /**
  * 언제쉬어 화면(assets/index.html)을 WebView 로 보여주는 껍데기 앱.
@@ -84,6 +92,108 @@ class MainActivity : ComponentActivity() {
         } catch (e: Exception) { "알람음" }
         val o = JSONObject().put("req", toneReq).put("uri", uri?.toString() ?: "").put("title", title)
         js("window.__onTone&&window.__onTone($o)")
+    }
+
+    // 내 음악 파일 고르기 → 앱 안(files/tones)에 복사 (원본을 지워도 울리게)
+    private val pickToneFileLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri == null) return@registerForActivityResult
+        val req = toneReq
+        Thread {
+            val o = JSONObject().put("req", req)
+            try {
+                var name = "내 음악"
+                var size = -1L
+                contentResolver.query(uri, null, null, null, null)?.use { c ->
+                    if (c.moveToFirst()) {
+                        val ni = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                        val si = c.getColumnIndex(OpenableColumns.SIZE)
+                        if (ni >= 0) c.getString(ni)?.let { name = it }
+                        if (si >= 0 && !c.isNull(si)) size = c.getLong(si)
+                    }
+                }
+                if (size > TONE_MAX) {
+                    o.put("error", "10MB 보다 작은 파일을 골라 주세요")
+                } else {
+                    val dir = File(filesDir, "tones").apply { mkdirs() }
+                    val ext = name.substringAfterLast('.', "").take(5).filter { it.isLetterOrDigit() }
+                    val f = File(dir, "t" + System.currentTimeMillis() + if (ext.isEmpty()) "" else ".$ext")
+                    var total = 0L
+                    contentResolver.openInputStream(uri)!!.use { inp ->
+                        f.outputStream().use { out ->
+                            val buf = ByteArray(64 * 1024)
+                            while (true) {
+                                val n = inp.read(buf)
+                                if (n < 0) break
+                                total += n
+                                if (total > TONE_MAX) throw IllegalStateException("big")
+                                out.write(buf, 0, n)
+                            }
+                        }
+                    }
+                    // 소리가 나는 파일인지 확인
+                    val ok = try {
+                        MediaPlayer().run { setDataSource(f.path); prepare(); release() }; true
+                    } catch (e: Exception) { false }
+                    if (!ok) {
+                        f.delete()
+                        o.put("error", "이 파일은 소리로 틀 수 없어요")
+                    } else {
+                        o.put("uri", Uri.fromFile(f).toString()).put("title", name.substringBeforeLast('.'))
+                    }
+                }
+            } catch (e: Exception) {
+                o.put("error", if (e.message == "big") "10MB 보다 작은 파일을 골라 주세요" else "파일을 읽지 못했어요")
+            }
+            js("window.__onTone&&window.__onTone($o)")
+        }.start()
+    }
+
+    // 알람음 미리 듣기
+    private var preview: MediaPlayer? = null
+
+    @Synchronized
+    fun togglePreview(uri: String): Boolean {
+        if (preview != null) { stopPreview(); return false }
+        return try {
+            val mp = MediaPlayer()
+            mp.setAudioAttributes(
+                AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
+            )
+            val u = if (uri.isEmpty()) RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM) else Uri.parse(uri)
+            mp.setDataSource(this, u)
+            mp.prepare()
+            mp.setOnCompletionListener { stopPreview() }
+            mp.start()
+            preview = mp
+            webView.postDelayed({ stopPreview() }, 15000)
+            true
+        } catch (e: Exception) {
+            stopPreview(); false
+        }
+    }
+
+    @Synchronized
+    fun stopPreview() {
+        try { preview?.stop() } catch (e: Exception) {}
+        try { preview?.release() } catch (e: Exception) {}
+        preview = null
+    }
+
+    fun cleanTones(keepJson: String) {
+        try {
+            val keep = HashSet<String>()
+            val a = JSONArray(keepJson)
+            for (i in 0 until a.length()) Uri.parse(a.getString(i)).path?.let { keep.add(File(it).name) }
+            File(filesDir, "tones").listFiles()?.forEach { if (it.name !in keep) it.delete() }
+        } catch (e: Exception) {}
+    }
+
+    fun openToneFilePicker(req: String) {
+        toneReq = req
+        try { pickToneFileLauncher.launch("audio/*") } catch (e: Exception) {
+            Toast.makeText(this, "음악 파일을 고를 수 없어요", Toast.LENGTH_SHORT).show()
+        }
     }
 
     // 구글 드라이브 허용 창
@@ -348,6 +458,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onPause() {
+        stopPreview()
         webView.onPause()
         super.onPause()
     }
