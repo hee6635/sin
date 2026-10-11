@@ -745,6 +745,11 @@ textarea{resize:none;min-height:84px}
 
 .acard .aleft{font-size:12.5px;font-weight:700;color:var(--accent);margin-top:4px}
 .acard.off .aleft{color:var(--muted)}
+
+.tbtn{position:relative;display:inline-flex;align-items:center;flex:none;padding:8px 11px;border-radius:10px;background:var(--surface);color:var(--fg);font-weight:800;font-size:14px;white-space:nowrap;box-shadow:inset 0 0 0 1.5px var(--line)}
+.tbtn.ed{box-shadow:inset 0 0 0 1.5px var(--fam);color:var(--fam);background:var(--fam-bg)}
+.tbtn input,#page .tbtn input{position:absolute;inset:0;width:100%;height:100%;opacity:0;padding:0;margin:0;border:0;cursor:pointer}
+.tt-lb{cursor:pointer}.tt-lb small{color:var(--fam)!important}
 </style>
 </head>
 <body>
@@ -1425,7 +1430,7 @@ function dayPlan(d,k){
   let lv=tm2m(t.leave);if(lv>s)lv-=1440;
   let hm=tm2m(t.home);while(hm<e)hm+=1440;
   const inShift=(f,to)=>{let a=tm2m(f),b=tm2m(to);while(a<s)a+=1440;while(b<=a)b+=1440;return [at(a),at(b)];};
-  const p={k,t,leave:at(lv),start:at(s),end:at(e),home:at(hm),meal:t.meal.on?inShift(t.meal.from,t.meal.to):null,breaks:(t.breaks||[]).map(b=>inShift(b.from,b.to)),sleep:null};
+  const p={k,t,leave:at(lv),start:at(s),end:at(e),home:at(hm),meal:t.meal.on?inShift(t.meal.from,t.meal.to):null,breaks:(t.breaks||[]).map(b=>Object.assign(inShift(b.from,b.to),{icon:b.icon,name:b.name})),sleep:null};
   if(t.sleep.on){let a=tm2m(t.sleep.from)+1440*Math.floor(e/1440),b=tm2m(t.sleep.to)+1440*Math.floor(e/1440);if(a<e)a+=1440;while(b<=a)b+=1440;p.sleep=[at(a),at(b)];}
   return p;
 }
@@ -1440,8 +1445,8 @@ function myStatus(now){
     if(now>=p.leave&&now<p.start)return mk('commute',`${nm} ${p.t.start} 시작`,{phone:true});
     if(now>=p.start&&now<p.end){
       const prog=(now-p.start)/(p.end-p.start),left=`퇴근까지 ${remain(p.end-now)}`;
-      if(p.meal&&now>=p.meal[0]&&now<p.meal[1]){const isNight=new Date(p.meal[0]).getHours()<5||new Date(p.meal[0]).getHours()>=21;return mk(isNight?'night':'meal',`${hhmm(p.meal[1])}까지 · 전화 OK`,{phone:true,prog});}
-      const br=p.breaks.find(b=>now>=b[0]&&now<b[1]);if(br)return mk('brk',`${hhmm(br[1])}까지 · 전화 OK`,{phone:true,prog});
+      if(p.meal&&now>=p.meal[0]&&now<p.meal[1]){const m=mealOf(p.t),r=mk(m.night?'night':'meal',`${hhmm(p.meal[1])}까지 · 전화 OK`,{phone:true,prog});if(p.t.meal.icon)r.e=p.t.meal.icon;if(p.t.meal.name)r.t=p.t.meal.name;return r;}
+      const br=p.breaks.find(b=>now>=b[0]&&now<b[1]);if(br){const r=mk('brk',`${hhmm(br[1])}까지 · 전화 OK`,{phone:true,prog});if(br.icon)r.e=br.icon;if(br.name)r.t=br.name;return r;}
       return mk('work',`${nm} · ${left}`,{phone:false,prog,startT:p.t.start,endT:p.t.end});
     }
     if(now>=p.end&&now<p.home)return mk('back',`${hhmm(p.home)} 도착 예정`,{phone:true});
@@ -1457,6 +1462,12 @@ function myStatus(now){
   }
   return mk('rest','',{phone:true});
 }
+/* 시간 · 날짜 고르기 버튼: 보이는 글자는 우리가 그리고, 투명한 진짜 입력칸을 위에 겹쳐 폰 기본 선택창을 띄움 */
+const tfmt=v=>{if(!v)return '--:--';const [h,m]=v.split(':').map(Number);return `${h<12?'오전':'오후'} ${h%12===0?12:h%12}:${pad(m)}`;};
+const dfmt=v=>v?`${+v.slice(5,7)}/${+v.slice(8)}`:'날짜';
+function tpick(id,v,cls,type){type=type||'time';return `<label class="tbtn ${cls||''}"><span>${type==='date'?dfmt(v):tfmt(v)}</span><input type="${type}" id="${id}" value="${v||''}"></label>`;}
+const MEAL_EMO=['🍗','🍱','☕','🍜','🥪','🍙','😴','🚬','📖','🧘'];
+const mealOf=t=>{const n=tm2m(t.meal.from)<5*60||tm2m(t.meal.from)>=21*60;return {icon:t.meal.icon||(n?'🍗':'🍱'),name:t.meal.name||(n?'야식 시간':'점심 시간'),night:n};};
 /* ---- 설정 › 근무 시간 · 상태 ---- */
 let timesTab='';
 function openTimesPage(){
@@ -1464,15 +1475,15 @@ function openTimesPage(){
   if(!wt.some(t=>t.k===timesTab))timesTab=(wt.find(t=>t.k==='야')||wt[0]).k;
   const k=timesTab,t=timesOf(k),d=defaultTimes(k),c=(S.shiftTimes||{})[k]||{};
   const ed=f=>c[f]!==undefined?'ed':'';
-  const tin=(id,v,cls)=>`<input type="time" class="tmi ${cls||''}" id="${id}" value="${v}">`;
+  const tin=(id,v,cls)=>tpick(id,v,cls);
   // 하루 흐름 막대 (나서기 ~ 수면 끝)
   const p=dayPlan(new Date(2026,0,5),k),from=p.leave,to=Math.max(p.home+3600e3,p.sleep?p.sleep[1]:0),W=to-from;
   const seg=(a,b,cls,lb)=>`<i class="${cls}" style="left:${(a-from)/W*100}%;width:${Math.max(1.5,(b-a)/W*100)}%">${lb}</i>`;
   let bar=seg(p.leave,p.start,'cm','🚗')+seg(p.start,p.end,'wk','근무');
-  if(p.meal)bar+=seg(p.meal[0],p.meal[1],'ml',new Date(p.meal[0]).getHours()<5?'🍗':'🍱');
-  p.breaks.forEach(b=>bar+=seg(b[0],b[1],'ml','☕'));
+  if(p.meal)bar+=seg(p.meal[0],p.meal[1],'ml',mealOf(t).icon);
+  p.breaks.forEach(b=>bar+=seg(b[0],b[1],'ml',b.icon||'☕'));
   bar+=seg(p.end,p.home,'bk','🏠');if(p.sleep)bar+=seg(p.sleep[0],p.sleep[1],'sl','😴');
-  const night=tm2m(t.meal.from)<5*60||tm2m(t.meal.from)>=21*60;
+  const ml=mealOf(t);
   openPage(`
     ${pageHead('근무 시간 · 상태')}
     <div class="pg-b">
@@ -1482,8 +1493,8 @@ function openTimesPage(){
       <div class="pg-sec">
         <div class="prow"><div class="pl2">🚗 집에서 나서기</div>${tin('tt_leave',t.leave,ed('leave'))}</div>
         <div class="prow"><div class="pl2">🏭 근무 시작</div>${tin('tt_start',t.start,ed('start'))}</div>
-        <div class="prow"><div class="pl2">${night?'🍗 야식':'🍱 점심'} 시간</div>${t.meal.on?`${tin('tt_mf',t.meal.from,c.meal?'ed':'')}<span class="tsep">~</span>${tin('tt_mt',t.meal.to,c.meal?'ed':'')}`:'<span class="muted" style="font-size:13px">없음</span>'}<label class="sw sm"><input type="checkbox" id="tt_mon" ${t.meal.on?'checked':''}><i></i></label></div>
-        ${t.breaks.map((b,i)=>`<div class="prow"><div class="pl2">☕ 쉬는 시간</div>${tin('tt_bf'+i,b.from,'ed')}<span class="tsep">~</span>${tin('tt_bt'+i,b.to,'ed')}<button class="xbtn" data-act="tt-bdel" data-i="${i}">✕</button></div>`).join('')}
+        <div class="prow"><div class="pl2 tt-lb" data-act="tt-icon" data-i="m">${ml.icon} ${esc(ml.name)}<small>✏️ 아이콘 · 이름</small></div>${t.meal.on?`${tin('tt_mf',t.meal.from,c.meal?'ed':'')}<span class="tsep">~</span>${tin('tt_mt',t.meal.to,c.meal?'ed':'')}`:'<span class="muted" style="font-size:13px">없음</span>'}<label class="sw sm"><input type="checkbox" id="tt_mon" ${t.meal.on?'checked':''}><i></i></label></div>
+        ${t.breaks.map((b,i)=>`<div class="prow"><div class="pl2 tt-lb" data-act="tt-icon" data-i="${i}">${b.icon||'☕'} ${esc(b.name||'쉬는 시간')}<small>✏️ 아이콘 · 이름</small></div>${tin('tt_bf'+i,b.from,'ed')}<span class="tsep">~</span>${tin('tt_bt'+i,b.to,'ed')}<button class="xbtn" data-act="tt-bdel" data-i="${i}">✕</button></div>`).join('')}
         <div class="prow"><div class="pl2">🏁 근무 끝${tm2m(t.end)<=tm2m(t.start)?'<small>다음 날</small>':''}</div>${tin('tt_end',t.end,ed('end'))}</div>
         <div class="prow"><div class="pl2">🏠 집 도착</div>${tin('tt_home',t.home,ed('home'))}</div>
         <div class="prow"><div class="pl2">😴 수면<small>가족에게 "깨우지 마세요"</small></div>${t.sleep.on?`${tin('tt_sf',t.sleep.from,c.sleep?'ed':'')}<span class="tsep">~</span>${tin('tt_st',t.sleep.to,c.sleep?'ed':'')}`:''}<label class="sw sm"><input type="checkbox" id="tt_son" ${t.sleep.on?'checked':''}><i></i></label></div>
@@ -1492,6 +1503,17 @@ function openTimesPage(){
       ${timesCustom(k)?`<div class="pg-sec"><div class="prow danger-row" data-act="tt-reset" style="color:var(--muted);font-weight:600">↺ ${esc(shiftLabel(k))} 기본값(대략)으로 되돌리기</div></div>`:''}
       <div class="pg-sec"><div class="prow" data-act="more-status"><div class="pl2">👁 가족에게 보이는 내 상태<small>지금: ${(()=>{const m=myStatus();return `${m.e} ${esc(m.t)}`;})()}</small></div><span class="muted">›</span></div></div>
     </div>`,'times');
+}
+function openTtIcon(i){
+  const t=timesOf(timesTab),isM=i==='m',cur0=isM?mealOf(t):{icon:t.breaks[+i].icon||'☕',name:t.breaks[+i].name||'쉬는 시간'};
+  openPop(`<div class="mh">${cur0.icon} ${esc(cur0.name)}<b>아이콘 · 이름 바꾸기 (${esc(shiftLabel(timesTab))})</b></div>
+    <div class="mi"><div class="emo" style="flex:1">${MEAL_EMO.map(e=>`<button class="${cur0.icon===e?'on':''}" data-act="tt-icon-pick" data-v="${e}">${e}</button>`).join('')}</div></div>
+    <div class="mi"><input type="text" id="ttIcE" value="${esc(cur0.icon)}" maxlength="4" style="flex:none;width:56px;text-align:center;font-size:20px"><input type="text" id="ttIcN" value="${esc(cur0.name)}" maxlength="12" placeholder="이름 (예: 휴게 시간)"></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="tt-icon-reset" data-i="${i}">기본값</button><button class="btn grow" data-act="tt-icon-save" data-i="${i}">저장</button></div>`);
+}
+function ttIconSet(i,icon,name){
+  if(i==='m')ttSet('meal',{icon,name});
+  else{const b=timesOf(timesTab).breaks.map(x=>Object.assign({},x));if(b[+i]){b[+i].icon=icon;b[+i].name=name;ttSet('breaks',b);}}
 }
 function ttSet(field,val){
   const k=timesTab,c=((S.shiftTimes=S.shiftTimes||{})[k]=S.shiftTimes[k]||{});
@@ -1757,7 +1779,7 @@ function renderFamily(){
     :(myReq.length?`<div class="fsec">내 요청</div>${myReq.map(r=>`<div class="frq g"><b>${mdw(r.date)} ${esc(shiftLabel(r.want))} 요청 · ${REQ_ST[r.st].ic} ${r.st==='pending'?'답장 기다리는 중':REQ_ST[r.st].name}</b>${r.msg?`<small>"${esc(r.msg)}"</small>`:''}</div>`).join('')}`:'');
   return `<div class="famv">
     <div class="fsec">지금</div>
-    <div class="now ${isHost?'':'one'}">${meCard}${isHost?memCards:''}</div>
+    <div class="now ${isHost&&fam.length?'':'one'}">${meCard}${isHost?memCards:''}</div>
     ${cheerBtns}
     <div class="fsec">이번 주 가족 시간표 <button class="lnk" data-act="fam-add">＋ 가족 추가</button></div>
     <div class="ftt">
@@ -1798,10 +1820,10 @@ function openFamEdit(){
   let extra='';
   if(m.kind==='shift')extra=`<div class="pg-cap">어느 조예요? (내 근무 패턴과 같은 교대)</div><div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${TEAMS.map((n,g)=>`<button class="${(m.team??S.myTeam)===g?'on':''}" data-act="fe-team" data-v="${g}">${n}${g===S.myTeam?' (나랑 같음)':''}</button>`).join('')}</div><div class="hint" style="margin-top:8px">다른 패턴으로 일하면 다음 업데이트의 "가족 초대"로 그 사람 근무표를 연결해요.</div></div>`;
   if(m.kind==='office')extra=`<div class="pg-cap">일하는 요일 · 시간</div><div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${dayBtns}</div>
-    <div class="prow" style="padding:10px 0 0"><div class="pl2">출근 ~ 퇴근</div><input type="time" class="tmi" id="feS" value="${m.start||'09:00'}"><span class="tsep">~</span><input type="time" class="tmi" id="feE" value="${m.end||'18:00'}"></div></div>`;
+    <div class="prow" style="padding:10px 0 0"><div class="pl2">출근 ~ 퇴근</div>${tpick('feS',m.start||'09:00')}<span class="tsep">~</span>${tpick('feE',m.end||'18:00')}</div></div>`;
   if(m.kind==='student')extra=`<div class="pg-cap">학교 · 방학</div><div class="pg-sec" style="margin-top:0;padding:12px 14px">
-    <div class="prow" style="padding:0 0 10px"><div class="pl2">등교 ~ 하교</div><input type="time" class="tmi" id="feS" value="${m.start||'08:30'}"><span class="tsep">~</span><input type="time" class="tmi" id="feE" value="${m.end||'15:00'}"></div>
-    ${(m.vac||[]).map((v,i)=>`<div class="prow" style="padding:6px 0"><div class="pl2">🏖 방학</div><input type="date" class="tmi" id="feVf${i}" value="${v.from||''}"><span class="tsep">~</span><input type="date" class="tmi" id="feVt${i}" value="${v.to||''}"><button class="xbtn" data-act="fe-vdel" data-i="${i}">✕</button></div>`).join('')}
+    <div class="prow" style="padding:0 0 10px"><div class="pl2">등교 ~ 하교</div>${tpick('feS',m.start||'08:30')}<span class="tsep">~</span>${tpick('feE',m.end||'15:00')}</div>
+    ${(m.vac||[]).map((v,i)=>`<div class="prow" style="padding:6px 0"><div class="pl2">🏖 방학</div>${tpick('feVf'+i,v.from,'','date')}<span class="tsep">~</span>${tpick('feVt'+i,v.to,'','date')}<button class="xbtn" data-act="fe-vdel" data-i="${i}">✕</button></div>`).join('')}
     <button class="btn ghost sm" style="margin-top:6px" data-act="fe-vadd">＋ 방학 기간 추가</button></div>`;
   openPage(`
     ${pageHead(isNew?'가족 추가':'가족 고치기','<button class="ib" data-act="fe-save" style="width:auto;font-size:16px;color:var(--accent);font-weight:700;padding-right:8px">저장</button>')}
@@ -3194,6 +3216,10 @@ document.addEventListener('click',e=>{
     case 'more-status':openStatusPage();break;
     case 'tt-tab':timesTab=t.dataset.k;openTimesPage();break;
     case 'tt-reset':if(confirm('기본값(대략)으로 되돌릴까요?')){delete S.shiftTimes[timesTab];save();openTimesPage();}break;
+    case 'tt-icon':openTtIcon(t.dataset.i);break;
+    case 'tt-icon-pick':{const e1=$('#ttIcE');if(e1)e1.value=t.dataset.v;t.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===t));break;}
+    case 'tt-icon-save':{const e1=($('#ttIcE').value||'').trim(),n1=($('#ttIcN').value||'').trim();closePop();ttIconSet(t.dataset.i,e1,n1);break;}
+    case 'tt-icon-reset':closePop();ttIconSet(t.dataset.i,'','');break;
     case 'tt-badd':{const b=timesOf(timesTab).breaks.slice();b.push({from:'15:00',to:'15:30'});ttSet('breaks',b);break;}
     case 'tt-bdel':{const b=timesOf(timesTab).breaks.slice();b.splice(+t.dataset.i,1);ttSet('breaks',b);break;}
     case 'st-work':S.status.work=t.dataset.v;save();openStatusPage();break;
@@ -3281,6 +3307,7 @@ function applyRequest(r){
 
 document.addEventListener('change',e=>{
   const t=e.target;
+  if(t.closest&&t.closest('.tbtn')){const sp=t.closest('.tbtn').querySelector('span');if(sp)sp.textContent=t.type==='date'?dfmt(t.value):tfmt(t.value);}
   if(t.dataset&&t.dataset.act==='atoggle'){
     const f=S.alarms.find(x=>x.id===t.dataset.id);
     if(f){f.on=t.checked;if(f.on&&f.once)f.until=firstFire(f);save();render();}
