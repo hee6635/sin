@@ -31,6 +31,12 @@ class AlarmBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun setTextZoom(pct: Int) = activity.setTextZoom(pct)
 
+    /** 앱 종료 (종료 확인 팝업에서 [종료]) */
+    @JavascriptInterface
+    fun exitApp() {
+        activity.runOnUiThread { activity.finish() }
+    }
+
     /** 폰 알람음 목록에서 고르기 → 결과는 window.__onTone({req, uri, title}) */
     @JavascriptInterface
     fun pickTone(req: String, current: String) {

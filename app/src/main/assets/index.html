@@ -299,6 +299,8 @@ textarea{resize:none;min-height:84px}
 .rbtn small{font-size:9.5px;font-weight:700;line-height:1.1;white-space:nowrap;color:var(--accent)}
 .remc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.remc button{font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:16px;background:var(--surface);color:var(--muted)}.remc button.on{background:var(--accent);color:#fff}
 .bwrap .badge.holtag{color:var(--sun);letter-spacing:-.5px}
+.adslot{margin:12px 16px 0;min-height:100px;border-radius:12px;background:var(--surface);display:grid;place-items:center;color:var(--muted);font-size:12px}
+.adslot[hidden]{display:none}
 .paintbar{display:flex;align-items:center;gap:8px;padding:6px 10px calc(6px);border-top:1px solid var(--line);background:var(--bg);flex:none}
 .paintbar .pb-ic{font-size:18px;display:flex;flex-direction:column;align-items:center;line-height:1.1}.paintbar .pb-ic small{font-size:9.5px;color:var(--muted);font-weight:700;white-space:nowrap}
 .paint-on .track .cell{touch-action:none}.paintbar .pb-t{flex:1;display:flex;gap:6px;overflow-x:auto;padding:3px}
@@ -1131,6 +1133,7 @@ const defaults=()=>({
   alarms:[],
   requests:[],
   events:[],
+  tipMemo:false,
   syncSettings:{isGuestMode:false,shareMyShift:true,receiveFamilyMemo:true,shareMyMemos:true,isPro:false,nightNotice:true},
   pay:{wage:0,hours:12},   // 대근 시급, 대근 1번 근무시간
   myTeam:2,                // 동료근무 표에서 내 조 (0번째 조부터)
@@ -1174,7 +1177,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;
+  s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},o&&o.memoColors);
   s.drive=Object.assign(defaults().drive,o&&o.drive);
   s.status=Object.assign(defaults().status,o&&o.status);if(!s.status.labels||typeof s.status.labels!=='object')s.status.labels={};
@@ -1623,11 +1626,8 @@ function calPanel(y,m){
 function renderCal(){
   const mk=cur.y*12+cur.m;
   const at=v=>calPanel(Math.floor(v/12),v%12);
-  // 메모 색 설명 줄은 이 달에 메모가 있을 때만
-  const days=new Date(cur.y,cur.m+1,0).getDate();let hasMemo=false;
-  for(let i=1;i<=days&&!hasMemo;i++){const k=fmt(new Date(cur.y,cur.m,i));if(visibleMemos(k).length||boardOnDate(k).length)hasMemo=true;}
   return `<div class="track" id="track"><div class="panel">${mk>MIN_M?at(mk-1):''}</div><div class="panel">${calPanel(cur.y,cur.m)}</div><div class="panel">${mk<MAX_M?at(mk+1):''}</div></div>
-    ${paint?paintBar():hasMemo?'<div class="legend"><span><i style="background:var(--fam)"></i>♥ 가족 메모</span><span><i style="background:var(--my)"></i>🔒 나만 보는 메모</span></div>':''}`;
+    ${paint?paintBar():''}`;
 }
 /* 칠하기: 근무타입을 고르고 날짜를 쭉 누르면 한 번에 바뀜 */
 let paint=null;
@@ -2944,7 +2944,8 @@ function memoSubmit(){
   memoText='';
   render();openDay(k);
   const i=$('#memoInput');if(i)i.focus();
-  toast(fam?'♥ 가족 메모를 남겼어요':'🔒 나만 보는 메모를 남겼어요');
+  if(!S.tipMemo){S.tipMemo=true;save();toast('보라색은 가족에게 보이는 메모, 회색은 나만 보는 메모예요');}
+  else toast(fam?'♥ 가족 메모를 남겼어요':'🔒 나만 보는 메모를 남겼어요');
 }
 function memoCard(m,k){
   const own=m.by===role(),cls=m.shared?'fam':'my';
@@ -3736,7 +3737,7 @@ function obClose(){
   tab='cal';const n=new Date();setCur(n.getFullYear(),n.getMonth());render();
   if(custom){openPatternPage();toast('칸을 눌러 내 패턴을 만들어 주세요');}
 }
-const LOGO=`<svg class="logo-ic" viewBox="0 0 108 108"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8A6CF6"/><stop offset="1" stop-color="#4F7CFF"/></linearGradient></defs><rect width="108" height="108" rx="24" fill="url(#lg)"/><path fill="rgba(0,0,0,.15)" d="M40,33h28a14,14 0,0 1,14 14v24a14,14 0,0 1,-14 14h-28a14,14 0,0 1,-14 -14v-24a14,14 0,0 1,14 -14z"/><path fill="#fff" d="M40,30h28a14,14 0,0 1,14 14v24a14,14 0,0 1,-14 14h-28a14,14 0,0 1,-14 -14v-24a14,14 0,0 1,14 -14z"/><path fill="#FF5C7A" d="M26,44a14,14 0,0 1,14 -14h28a14,14 0,0 1,14 14z"/><path fill="#fff" d="M40.5,24a2.5,2.5 0,0 1,2.5 2.5v7a2.5,2.5 0,0 1,-5 0v-7a2.5,2.5 0,0 1,2.5 -2.5zM67.5,24a2.5,2.5 0,0 1,2.5 2.5v7a2.5,2.5 0,0 1,-5 0v-7a2.5,2.5 0,0 1,2.5 -2.5z"/><g stroke="#2B2F6B" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M46,48 L36,61 M42.5,53 L55,61"/><path d="M34,67 L58,67 M46,67 L46,78"/><path d="M66,47 L66,80"/></g></svg>`;
+const LOGO=`<svg class="logo-ic" viewBox="0 0 108 108"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#252A66"/><stop offset="1" stop-color="#3B3F9E"/></linearGradient></defs><rect width="108" height="108" rx="24" fill="url(#lg)"/><g fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"><path d="M38,28h32a13,13 0,0 1,13 13v30a13,13 0,0 1,-13 13h-32a13,13 0,0 1,-13 -13v-30a13,13 0,0 1,13 -13z"/><path d="M25,46h58"/></g><path fill="#fff" d="M40.5,22h0a2.5,2.5 0,0 1,2.5 2.5v8a2.5,2.5 0,0 1,-5 0v-8a2.5,2.5 0,0 1,2.5 -2.5zM67.5,22h0a2.5,2.5 0,0 1,2.5 2.5v8a2.5,2.5 0,0 1,-5 0v-8a2.5,2.5 0,0 1,2.5 -2.5z"/><path fill="#fff" d="M49.26,51.02A15,15 0,1 0 63.82,71.82A12.75,12.75 0,0 1 49.26,51.02z"/><path fill="#FFD36B" d="M70,52.5L71.65,56.35L75.5,58L71.65,59.65L70,63.5L68.35,59.65L64.5,58L68.35,56.35z"/></svg>`;
 
 /* ================= 공휴일 받아오기 ================= */
 function refreshHolidays(force){
@@ -4113,6 +4114,7 @@ document.addEventListener('click',e=>{
     case 'paint-open':paintStart(t.dataset.k);break;
     case 'paint-k':paint.k=t.dataset.s;render();break;
     case 'paint-done':paint=null;render();toast('칠하기를 마쳤어요');break;
+    case 'exit-ok':{closePop();if(hasBridge('exitApp'))window.AndroidBridge.exitApp();else toast('앱에서는 여기서 종료돼요');break;}
     case 'pcell':openPatCell(Number(t.dataset.i));break;
     case 'pset':{const i=Number(t.dataset.i);if(i<S.pattern.length){S.pattern[i]=t.dataset.s;save();}closePop();openPatternPage();break;}
     case 'padd':if(S.pattern.length<PAT_MAX){S.pattern.push(restKey());save();openPatternPage();}break;
@@ -4368,6 +4370,16 @@ function importBackup(file){
 }
 
 /* 안드로이드 앱이 부르는 훅 */
+/* 종료 확인: 첫 화면(달력)에서 뒤로가기 → 바로 안 꺼지고 한 번 물어봄. 가운데 .adslot 은 나중에 광고를 붙일 자리(지금은 숨김) */
+let exitTimer=null;
+function openExitAsk(){
+  openPop(`<div class="mh">언제쉬어<b>종료할까요?</b></div>
+    <div class="adslot" id="adSlot" hidden></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">취소</button><button class="btn grow" id="exitOk" data-act="exit-ok" disabled>종료</button></div>`);
+  clearTimeout(exitTimer);
+  // 뒤로가기를 연달아 눌러 실수로 꺼지지 않게 0.5초 뒤에 [종료]가 눌림
+  exitTimer=setTimeout(()=>{const b=$('#exitOk');if(b)b.disabled=false;},500);
+}
 window.__onBack=()=>{
   if($('#pop').classList.contains('open')){popBack();return true;}
   if(ob){if(ob.step>0&&ob.step<5){ob.step--;renderOb();return true;}return false;}
@@ -4377,7 +4389,7 @@ window.__onBack=()=>{
   if(pageMode){closePage();return true;}
   if(tab==='colleague'){tab='set';render();return true;}
   if(tab!=='cal'){tab='cal';render();return true;}
-  return false;
+  openExitAsk();return true;
 };
 window.__refresh=()=>{
   expireOnceAlarms();
