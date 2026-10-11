@@ -289,6 +289,32 @@ textarea{resize:none;min-height:84px}
 /* 설정 */
 .pc{width:44px;height:52px;display:grid;place-items:center;border-radius:12px;background:var(--surface);position:relative}
 .pc small{position:absolute;top:2px;left:5px;font-size:9px;color:var(--muted)}
+/* 근무 패턴 · 조 (v0.14) */
+.pcap{display:flex;justify-content:space-between;align-items:center}.pcap span{font-weight:600;color:var(--accent);font-size:12px}.pcap button{font-weight:800;color:var(--accent);font-size:12.5px}
+.rbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:36px;height:36px;border-radius:10px;font-size:15px;flex:none;color:var(--muted)}
+.rbtn small{font-size:9.5px;font-weight:700;line-height:1.1;white-space:nowrap;color:var(--accent)}
+.remc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.remc button{font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:16px;background:var(--surface);color:var(--muted)}.remc button.on{background:var(--accent);color:#fff}
+.paintbar{display:flex;align-items:center;gap:8px;padding:6px 10px calc(6px);border-top:1px solid var(--line);background:var(--bg);flex:none}
+.paintbar .pb-ic{font-size:18px}.paintbar .pb-t{flex:1;display:flex;gap:6px;overflow-x:auto;padding:3px}
+.paintbar .pb-t button{border-radius:50%;padding:2px;flex:none}.paintbar .pb-t button.on{box-shadow:0 0 0 2px var(--accent)}
+.paint-lk{float:right;font-size:12px;font-weight:700;color:var(--accent)}
+.pgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.pgrid .pc{width:auto;height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.pgrid .pc small{position:static;font-size:9.5px}
+.pgrid .pc.pnow{box-shadow:inset 0 0 0 2px var(--accent)}.pgrid .pc.pnow small{color:var(--accent);font-weight:800}
+.tnames{display:flex;gap:6px;flex-wrap:wrap}
+.tnames button{font-size:13px;font-weight:700;padding:7px 11px;border-radius:15px;background:var(--surface);color:var(--muted)}
+.tnames button.on{background:var(--accent);color:#fff}
+.tgrid{display:grid;grid-template-columns:52px repeat(var(--cols),1fr) 46px;align-items:center;row-gap:6px}
+.tgrid .th{font-size:10px;text-align:center;color:var(--muted);font-weight:700;line-height:1.25;padding:2px 0;border-radius:6px}
+.tgrid .th.t{color:var(--bg);background:var(--fg)}
+.tgrid .tn{font-size:12.5px;font-weight:800;color:var(--fg);text-align:left;padding:6px 0 6px 7px;height:36px;-webkit-touch-callout:none;user-select:none;line-height:1.1}
+.tgrid .tn small{display:block;font-size:9.5px;color:var(--accent)}
+.tgrid .tn.me{box-shadow:inset 3px 0 0 var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--bg))}
+.tgrid .tc{display:grid;place-items:center;height:36px}.tgrid .tc.me{background:color-mix(in srgb,var(--accent) 9%,var(--bg))}
+.badge.xs{width:24px;height:24px;font-size:11px}.badge.xs.r{font-size:11px;font-weight:700}.badge.xs.two{font-size:9px}
+.tgrid .ta{display:flex;justify-content:flex-end}.tgrid .ta button{width:22px;height:30px;font-size:17px;color:var(--muted);border-radius:6px}.tgrid .ta button:active{background:var(--surface)}
+
 .share-box{display:flex; align-items:center; justify-content:space-between; background:color-mix(in srgb, var(--accent) 10%, var(--bg)); border:1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius:12px; padding:12px 14px; margin-bottom:12px;}
 .share-code{font-size:20px; font-weight:800; letter-spacing:2px; color:var(--accent);}
 .setting-item{display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--line);}
@@ -1099,8 +1125,11 @@ const defaults=()=>({
   events:[],
   syncSettings:{isGuestMode:false,shareMyShift:true,receiveFamilyMemo:true,shareMyMemos:true,isPro:false,nightNotice:true},
   pay:{wage:0,hours:12},   // 대근 시급, 대근 1번 근무시간
-  myTeam:2,                // 동료근무 표에서 내 조 (0=A ~ 3=D)
-  teamOffsets:[6,4,0,2],   // 조별로 기준(C조)보다 며칠 밀린 근무인지 (4조2교대 기본)
+  myTeam:2,                // 동료근무 표에서 내 조 (0번째 조부터)
+  teamOffsets:[6,4,0,2],   // 조별로 기준(C조)보다 며칠 밀린 근무인지 (4조2교대 기본) · 길이 = 조 개수
+  teamStyle:'abc',         // 조 이름: 'abc'(A조) · 'num'(1조) · 'team'(1팀) · 'custom'(teamNames)
+  teamNames:[],            // 직접 고친 조 이름
+  holRest:false,           // 공휴일엔 쉼 (상주 · 평일 근무)
   patternName:'4조2교대',  // 달력 위에 보이는 근무 이름
   types:DEFAULT_TYPES(),
   /* 월 메모: S.board['2026-10'] = [{id, kind('todo'|'note'), text, done, doneBy, shared, by, t}] */
@@ -1122,16 +1151,22 @@ const defaults=()=>({
   fontScale:100,
   drive:{last:0,dirty:false,email:'',auto:true}
 });
+const REM_DAYS=[7,2,1,0],REM_SHORT={7:'1주',2:'2일',1:'전날',0:'당일'},REM_LABEL={7:'1주 전',2:'2일 전',1:'전날',0:'당일'},REM_AT=['08:00','12:00','20:00','22:00'];
 function normalize(o){
   const d=defaults(),s=Object.assign(d,o);
   s.syncSettings=Object.assign(defaults().syncSettings,o&&o.syncSettings);
   s.pay=Object.assign({wage:0,hours:12},o&&o.pay);
   if(!Array.isArray(s.pattern)||s.pattern.length<2)s.pattern=d.pattern;
   if(!Array.isArray(s.alarms))s.alarms=[];
-  if(![0,1,2,3].includes(s.myTeam))s.myTeam=2;
+
   if(!Array.isArray(s.types)||!s.types.length)s.types=DEFAULT_TYPES();
   BUILTIN.forEach((k,i)=>{if(!s.types.some(t=>t.k===k))s.types.splice(i,0,DEFAULT_TYPES()[i]);});
-  if(!Array.isArray(s.teamOffsets)||s.teamOffsets.length!==4)s.teamOffsets=[6,4,0,2];
+  if(!Array.isArray(s.teamOffsets)||!s.teamOffsets.length||s.teamOffsets.length>8)s.teamOffsets=[6,4,0,2];
+  s.teamOffsets=s.teamOffsets.map(x=>Number(x)||0);
+  if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
+  if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
+  if(!Array.isArray(s.teamNames))s.teamNames=[];
+  s.holRest=!!s.holRest;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},o&&o.memoColors);
   s.drive=Object.assign(defaults().drive,o&&o.drive);
   s.status=Object.assign(defaults().status,o&&o.status);if(!s.status.labels||typeof s.status.labels!=='object')s.status.labels={};
@@ -1148,6 +1183,13 @@ function normalize(o){
     s.ddays.forEach(x=>{if(x&&x.name&&x.date)s.companyHols.push({id:x.id||uid(),name:x.name,date:x.date,yearly:!!x.yearly,kind:'memo',emoji:x.emoji||'⭐',remind:true});});
     s.ddays=[];
   }
+  // 알림: 예전 "전날 알림" 체크 → 며칠 전 여러 개 + 시각
+  s.companyHols.forEach(x=>{
+    if(!Array.isArray(x.rem))x.rem=x.remind?[1]:[];
+    x.rem=[...new Set(x.rem.map(Number))].filter(v=>REM_DAYS.includes(v)).sort((a,b)=>b-a);
+    if(!/^\d\d:\d\d$/.test(x.remAt||''))x.remAt='20:00';
+    x.remind=x.rem.length>0;
+  });
   // 메모: 예전(문자열 / {text,shared}) → 지금(여러 개 목록)
   const mm={};
   for(const [k,v] of Object.entries(s.memos||{})){
@@ -1217,19 +1259,29 @@ function pushAlarmsToNative(){
   }catch(e){}
 }
 /* 기념일 전날 알림 (조용한 알림 한 줄) */
+function iyeyo(w){const c=String(w).replace(/[^가-힣]+$/,'').slice(-1).charCodeAt(0);return c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28===0?'예요':'이에요';}
+function remAtLabel(t){const [h,m]=(t||'20:00').split(':').map(Number),h12=h%12===0?12:h%12;return `${h<5?'새벽':h<11?'아침':h<17?'낮':h<21?'저녁':'밤'} ${h12}시${m?` ${m}분`:''}`;}
+function remShort(x){return (x.rem||[]).length?x.rem.map(v=>REM_SHORT[v]).join(' · '):'';}
 function pushRemindersToNative(){
   try{
     if(!(window.AndroidBridge&&typeof window.AndroidBridge.setReminders==='function'))return;
     const out=[],t0=new Date(),now=Date.now();
-    for(let i=0;i<=62;i++){
+    for(let i=0;i<=70;i++){
       const d=addDays(new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()),i),k=fmt(d);
       (S.companyHols||[]).forEach(x=>{
-        if(!x.remind)return;
+        if(!(x.rem||[]).length)return;
         if(!(x.date===k||(x.yearly&&x.date.slice(5)===k.slice(5)&&k>=x.date)))return;
-        const at=new Date(d.getFullYear(),d.getMonth(),d.getDate()-1,20,0,0).getTime();
-        if(at<=now)return;
+        const [h,mi]=(x.remAt||'20:00').split(':').map(Number);
         const ic=icoTxt(x.emoji||(x.kind==='memo'?'⭐':'🏢'),x.kind==='memo'?'🎉':'🏢');
-        out.push({id:`h_${x.id}_${k}`,at,title:'언제쉬어',text:`${ic} 내일은 ${x.name}${x.kind==='memo'?'이에요':' (회사 휴무)이에요'} (${d.getMonth()+1}월 ${d.getDate()}일)`});
+        const when=`${d.getMonth()+1}월 ${d.getDate()}일`,off=x.kind==='memo'?'':'회사 휴무 · ';
+        x.rem.forEach(b=>{
+          const at=new Date(d.getFullYear(),d.getMonth(),d.getDate()-b,h,mi,0).getTime();
+          if(at<=now)return;
+          const text=b===0?`${ic} 오늘은 ${x.name}${iyeyo(x.name)}${off?' (회사 휴무)':''}`
+            :b===1?`${ic} 내일은 ${x.name}${iyeyo(x.name)} (${off}${when})`
+            :`${ic} ${x.name}까지 ${b===7?'일주일':b===2?'이틀':b+'일'} 남았어요 (${off}${when})`;
+          out.push({id:`h_${x.id}_${k}_${b}`,at,title:'언제쉬어',text});
+        });
       });
     }
     if(S.stamps&&S.stamps.remind){
@@ -1292,11 +1344,16 @@ let tempPickerYear=cur.y;
 const role=()=>S.syncSettings.isGuestMode?'guest':'host';
 
 /* ================= 근무 계산 ================= */
-const baseShift=d=>{
+// 패턴 그대로의 근무
+const patShift=d=>{
   const n=S.pattern.length;
   const i=((dayNum(d)-dayNum(parse(S.anchor)))%n+n)%n;
   return S.pattern[i];
 };
+// "공휴일엔 쉬어요"를 켜면 공휴일의 근무 날은 쉬는 날로
+const restKey=()=>((S.types||[]).find(t=>t.rest)||{k:'휴'}).k;
+const holAdj=(d,b)=>S.holRest&&!isRest(b)&&holName(fmt(d))?restKey():b;
+const baseShift=d=>holAdj(d,patShift(d));
 const shiftOf=d=>S.overrides[fmt(d)]||baseShift(d);
 
 /* S.memos[날짜] = [{id,text,shared}, ...]  하루에 메모 여러 개 */
@@ -1476,7 +1533,7 @@ function render(){
           <h1 data-act="open-month-picker">${cur.y}.${pad(cur.m+1)}</h1>
           <button class="ib" data-act="next" ${mk>=MAX_M?'disabled':''}>›</button>
         </div>
-        <div class="sub"><b>${esc(S.patternName||'교대근무')} ${TEAMS[S.myTeam]||''}</b>${role()==='guest'?' · 가족 보기':''}</div>
+        <div class="sub"><b>${esc(S.patternName||'교대근무')} ${esc(myTeamLabel())}</b>${role()==='guest'?' · 가족 보기':''}</div>
       </div>`;
   if(tab==='cal'){
     const todoN=boardLeft(boardKey());
@@ -1552,7 +1609,20 @@ function renderCal(){
   const days=new Date(cur.y,cur.m+1,0).getDate();let hasMemo=false;
   for(let i=1;i<=days&&!hasMemo;i++){const k=fmt(new Date(cur.y,cur.m,i));if(visibleMemos(k).length||boardOnDate(k).length)hasMemo=true;}
   return `<div class="track" id="track"><div class="panel">${mk>MIN_M?at(mk-1):''}</div><div class="panel">${calPanel(cur.y,cur.m)}</div><div class="panel">${mk<MAX_M?at(mk+1):''}</div></div>
-    ${hasMemo?'<div class="legend"><span><i style="background:var(--fam)"></i>♥ 가족 메모</span><span><i style="background:var(--my)"></i>🔒 나만 보는 메모</span></div>':''}`;
+    ${paint?paintBar():hasMemo?'<div class="legend"><span><i style="background:var(--fam)"></i>♥ 가족 메모</span><span><i style="background:var(--my)"></i>🔒 나만 보는 메모</span></div>':''}`;
+}
+/* 칠하기: 근무타입을 고르고 날짜를 쭉 누르면 한 번에 바뀜 */
+let paint=null;
+function paintBar(){return `<div class="paintbar"><span class="pb-ic">🖌</span><div class="pb-t">${S.types.map(x=>`<button class="${paint.k===x.k?'on':''}" data-act="paint-k" data-s="${esc(x.k)}">${badge(x.k,'sm')}</button>`).join('')}</div><button class="btn sm" data-act="paint-done">끝</button></div>`;}
+function paintStart(k){
+  if(!S.types.some(x=>x.k===k))k=(S.types.find(x=>!x.rest)||S.types[0]).k;
+  paint={k};closeSheet();if(pageMode)closePage();tab='cal';render();toast('날짜를 누르면 칠해져요 · 한 번 더 누르면 원래대로');
+}
+function paintDay(k){
+  const d=parse(k),base=baseShift(d);
+  if(S.overrides[k]===paint.k||paint.k===base)delete S.overrides[k];
+  else S.overrides[k]=paint.k;
+  save();render();
 }
 let busy=false;
 function slideTo(dir){
@@ -1567,22 +1637,27 @@ function slideTo(dir){
 }
 
 /* ================= 동료근무 ================= */
-const TEAMS=['A조','B조','C조','D조'];
+// 조 이름: 회사마다 다르게 (A조 · 1조 · 1팀 · 직접)
+const TEAM_STYLE={abc:i=>String.fromCharCode(65+i)+'조',num:i=>(i+1)+'조',team:i=>(i+1)+'팀'};
+const teamCount=()=>(S.teamOffsets||[]).length||1;
+function teamName(g){const c=S.teamStyle==='custom'&&(S.teamNames||[])[g];return c||(TEAM_STYLE[S.teamStyle]||TEAM_STYLE.abc)(g);}
+const teamList=()=>[...Array(teamCount())].map((_,g)=>teamName(g));
+const myTeamLabel=()=>teamCount()>1?teamName(S.myTeam):'';
 /* 조마다 기준(C조)보다 며칠 밀린 근무인지 S.teamOffsets 에 들어 있음 (4조2교대: A+6, B+4, C 0, D+2) */
 function teamShift(d,g){
-  if(g===S.myTeam)return shiftOf(d);
+  if(g===S.myTeam||g==null||g>=teamCount())return shiftOf(d);
   const o=S.teamOffsets;
-  return baseShift(addDays(d,(o[g]||0)-(o[S.myTeam]||0)));
+  return holAdj(d,patShift(addDays(d,(o[g]||0)-(o[S.myTeam]||0))));
 }
 function renderColleague(){
   const y=cur.y,m=cur.m,days=new Date(y,m+1,0).getDate(),tk=fmt(new Date());
-  let h=`<div class="crow hd"><div></div>${TEAMS.map((n,g)=>`<div class="${g===S.myTeam?'me':''}" data-act="setteam-ask" data-g="${g}">${n}</div>`).join('')}</div>`;
+  let h=`<div class="crow hd"><div></div>${teamList().map((n,g)=>`<div class="${g===S.myTeam?'me':''}" data-act="setteam-ask" data-g="${g}">${n}</div>`).join('')}</div>`;
   for(let i=1;i<=days;i++){
     const d=new Date(y,m,i),k=fmt(d),w=d.getDay(),hol=holName(k),ch=compHol(k);
     const cls=hol?'hol':ch?'chol':w===0?'sun':w===6?'sat':'';
-    h+=`<div class="crow ${k===tk?'today':''}"><div class="dt ${cls}" data-act="col-day" data-k="${k}">${i}.${DOW[w]}</div>${TEAMS.map((n,g)=>`<div class="${g===S.myTeam?'me':''}">${badge(teamShift(d,g),'sm')}</div>`).join('')}</div>`;
+    h+=`<div class="crow ${k===tk?'today':''}"><div class="dt ${cls}" data-act="col-day" data-k="${k}">${i}.${DOW[w]}</div>${teamList().map((n,g)=>`<div class="${g===S.myTeam?'me':''}">${badge(teamShift(d,g),'sm')}</div>`).join('')}</div>`;
   }
-  return `<div class="ctbl">${h}</div><div class="hint" style="padding:6px 16px 20px">조 이름을 누르면 내 조를 바꿀 수 있어요. 조 순서가 회사와 다르면 더 보기 › 근무 패턴에서 맞춰주세요.</div>`;
+  return `<div class="ctbl" style="--tc:${teamCount()}">${h}</div><div class="hint" style="padding:6px 16px 20px">조 이름을 누르면 내 조를 바꿀 수 있어요. 조 순서가 회사와 다르면 더 보기 › 근무 패턴에서 맞춰주세요.</div>`;
 }
 
 /* ================= 근무 시간 · 지금 상태 ================= */
@@ -2367,7 +2442,7 @@ function openFamSetPage(){
     ${pageHead('가족')}
     <div class="pg-b">
       <div class="pg-cap">가족 목록 (같이 쉬는 날 계산용)</div>
-      <div class="pg-sec" style="margin-top:0">${fam.map((m,i)=>`<div class="prow" data-act="fam-edit" data-id="${m.id}"><span class="fav">${famAv(m,i)}</span><div class="pl2">${esc(m.name)}<small>${FAM_KIND[m.kind][0]} ${FAM_KIND[m.kind][1]}${m.kind==='shift'?` · ${TEAMS[m.team??S.myTeam]}`:''}</small></div><span class="muted">›</span></div>`).join('')}
+      <div class="pg-sec" style="margin-top:0">${fam.map((m,i)=>`<div class="prow" data-act="fam-edit" data-id="${m.id}"><span class="fav">${famAv(m,i)}</span><div class="pl2">${esc(m.name)}<small>${FAM_KIND[m.kind][0]} ${FAM_KIND[m.kind][1]}${m.kind==='shift'?` · ${esc(teamName(m.team??S.myTeam))}`:''}</small></div><span class="muted">›</span></div>`).join('')}
         <div class="prow" data-act="fam-add" style="color:var(--accent);font-weight:700;justify-content:center">＋ 가족 추가</div></div>
       <div class="pg-sec">
         <div class="prow"><div class="pl2">☀️ 야간 전 낮도 "같이"로 보기<small>야간 근무 날 출근 전 낮에 같이 있을 수 있으면 연하게 표시</small></div><label class="sw"><input type="checkbox" id="famDayToo" ${S.famDayToo!==false?'checked':''}><i></i></label></div>
@@ -2387,7 +2462,7 @@ function openFamEdit(){
   const m=famDraft,isNew=!S.family.some(x=>x.id===m.id);
   const dayBtns=[1,2,3,4,5,6,0].map(w=>`<button class="${(m.days||[]).includes(w)?'on':''}" data-act="fe-day" data-v="${w}">${DOW[w]}</button>`).join('');
   let extra='';
-  if(m.kind==='shift')extra=`<div class="pg-cap">어느 조예요? (내 근무 패턴과 같은 교대)</div><div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${TEAMS.map((n,g)=>`<button class="${(m.team??S.myTeam)===g?'on':''}" data-act="fe-team" data-v="${g}">${n}${g===S.myTeam?' (나랑 같음)':''}</button>`).join('')}</div><div class="hint" style="margin-top:8px">다른 패턴으로 일하면 다음 업데이트의 "가족 초대"로 그 사람 근무표를 연결해요.</div></div>`;
+  if(m.kind==='shift')extra=`<div class="pg-cap">어느 조예요? (내 근무 패턴과 같은 교대)</div><div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${teamList().map((n,g)=>`<button class="${(m.team??S.myTeam)===g?'on':''}" data-act="fe-team" data-v="${g}">${esc(n)}${g===S.myTeam?' (나랑 같음)':''}</button>`).join('')}</div><div class="hint" style="margin-top:8px">다른 패턴으로 일하면 다음 업데이트의 "가족 초대"로 그 사람 근무표를 연결해요.</div></div>`;
   if(m.kind==='office')extra=`<div class="pg-cap">일하는 요일 · 시간</div><div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${dayBtns}</div>
     <div class="prow" style="padding:10px 0 0"><div class="pl2">출근 ~ 퇴근</div>${tpick('feS',m.start||'09:00')}<span class="tsep">~</span>${tpick('feE',m.end||'18:00')}</div></div>`;
   if(m.kind==='student')extra=`<div class="pg-cap">학교 · 방학</div><div class="pg-sec" style="margin-top:0;padding:12px 14px">
@@ -2903,7 +2978,7 @@ function openDay(k){
     topPart=`${warn}
       ${dayReqs.length?`<div class="lbl" style="color:var(--accent);margin-top:0;">📩 이 날의 근무 요청</div>${reqHtml}`:''}
       <div class="sec">
-        <div class="sec-t">근무타입 <span>(길게 누르면 편집)</span></div>
+        <div class="sec-t">근무타입 <span>(길게 누르면 편집)</span><button class="paint-lk" data-act="paint-open" data-k="${esc(c)}">🖌 여러 날 칠하기</button></div>
         <div class="tchips">${shiftBtns}<button class="tchip add" data-act="type-pick"><span class="badge tc add">+추가</span></button></div>
         ${ov?`<div class="hint" style="margin:6px 0 0">원래 근무: ${esc(shiftLabel(base))} · <a data-act="resetshift">되돌리기</a></div>`:''}
       </div>`;
@@ -3013,6 +3088,8 @@ document.addEventListener('pointerdown',e=>{
       openMemoMenu(b.dataset.mid);
     }else if(b.dataset.hold==='ico'){
       icoDelete(b.dataset.id);
+    }else if(b.dataset.hold==='team'){
+      openTeamMenu(Number(b.dataset.g));
     }
   },500);
 });
@@ -3075,7 +3152,7 @@ function renderMore(){
   return `<div class="mlist" style="padding-bottom:20px">
     ${guest?'':cap('근무')}
     ${guest?'':`<div class="pg-sec" style="margin-top:0">
-      ${item('🔁','근무 패턴 · 근무타입','more-pattern',`${esc(S.patternName||'')} ${TEAMS[S.myTeam]||''}`)}
+      ${item('🔁','근무 패턴 · 근무타입','more-pattern',`${esc(S.patternName||'')} ${esc(myTeamLabel())}`)}
       ${item('🕐',`근무 시간 · 상태 <span class="${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'tagS':'tagA'}">${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'직접':'대략'}</span>`,'more-times')}
       ${item('👥','동료 근무','go-colleague')}
       ${item('💊','도장 (약 · 운동)','more-stamps',`${S.stamps.defs.filter(x=>x.kind==='pill').length?'약 '+S.stamps.defs.filter(x=>x.kind==='pill').length+' · ':''}${S.stamps.defs.filter(x=>x.kind==='mark').length}개`)}
@@ -3199,41 +3276,121 @@ function openColorsPage(){
     </div>`,'colors');
 }
 
-/* ---------- 근무 패턴 · 근무타입 ---------- */
+/* ---------- 근무 패턴 · 근무타입 · 조 ---------- */
+// 같은 근무가 이어지는 칸에 "첫날·둘째날" 이름 붙이기
+function posLabels(pat,nm){
+  nm=nm||shiftLabel;const out=[];
+  for(let i=0;i<pat.length;i++){
+    const s=pat[i];let start=i;while(start>0&&pat[start-1]===s)start--;
+    let end=i;while(end<pat.length-1&&pat[end+1]===s)end++;
+    const n=i-start+1,len=end-start+1;
+    const name=isRest(s)?(start>0?`${nm(pat[start-1])} 후 ${nm(s)}`:nm(s)):nm(s);
+    out.push(len>1?`${name} ${['첫날','둘째날','셋째날','넷째날','다섯째날','여섯째날'][n-1]||n+'일째'}`:name);
+  }
+  return out;
+}
+const PAT_MAX=60,TEAM_MAX=8;
+const patPos=d=>{const n=S.pattern.length;return((dayNum(d)-dayNum(parse(S.anchor)))%n+n)%n;};
+// 조 g 의 오늘 칸 번호
+const teamPos=(g,d)=>{const n=S.pattern.length,o=S.teamOffsets;return((patPos(d)+(o[g]||0)-(o[S.myTeam]||0))%n+n)%n;};
+const teamStyleLabel=st=>{const c=teamCount(),f=TEAM_STYLE[st];return [...Array(c)].map((_,i)=>f(i).replace(/[조팀]$/,'')).join('·')+f(0).slice(-1);};
 function openPatternPage(){
-  const ovN=Object.keys(S.overrides).length;
+  const ovN=Object.keys(S.overrides).length,n=S.pattern.length,t0=new Date(),cp=patPos(t0),lb=posLabels(S.pattern);
+  const tc=teamCount(),cols=Math.min(n,10);
+  const days=[...Array(cols)].map((_,i)=>addDays(t0,i));
+  let tg=`<span></span>${days.map((d,i)=>`<span class="th ${i===0?'t':''}">${i===0?'오늘':DOW[d.getDay()]}<br>${d.getDate()}</span>`).join('')}<span></span>`;
+  for(let g=0;g<tc;g++){
+    const me=g===S.myTeam,p=teamPos(g,t0);
+    tg+=`<button class="tn ${me?'me':''}" data-act="trow" data-g="${g}" data-hold="team">${esc(teamName(g))}${me?'<small>내 조</small>':''}</button>`
+      +days.map((d,i)=>`<span class="tc ${me?'me':''}" data-act="trow" data-g="${g}">${badge(S.pattern[(p+i)%n],'xs')}</span>`).join('')
+      +(me?'<span></span>':`<span class="ta"><button data-act="toff" data-g="${g}" data-v="1" aria-label="왼쪽으로">‹</button><button data-act="toff" data-g="${g}" data-v="-1" aria-label="오른쪽으로">›</button></span>`);
+  }
   openPage(`
-    ${pageHead('근무 패턴 · 근무타입')}
+    ${pageHead('근무 패턴 · 조')}
     <div class="pg-b">
-      <div class="pg-cap">근무 패턴 (칸을 누르면 바뀌어요)</div>
-      <div class="pg-sec" style="margin-top:0;padding:14px 16px">
-        <div class="row wrap">${S.pattern.map((s,i)=>`<button class="pc" data-act="pcycle" data-i="${i}"><small>${i+1}</small>${badge(s,'sm')}</button>`).join('')}</div>
-        <div class="row" style="margin-top:10px"><button class="btn ghost sm" data-act="padd">칸 추가</button><button class="btn ghost sm" data-act="pdel">칸 삭제</button></div>
-        <div class="lbl">근무 이름 (달력 위에 표시)</div>
-        <input type="text" id="patternName" value="${esc(S.patternName||'')}" placeholder="예: 4조2교대" maxlength="20">
-        <div class="lbl">패턴 1번째 칸이 시작되는 날</div>
-        <input type="date" id="anchor" value="${S.anchor}">
-      </div>
-      <div class="pg-cap">동료근무 · 조</div>
-      <div class="pg-sec" style="margin-top:0;padding:14px 16px">
-        <div class="lbl" style="margin-top:0">내 조</div>
-        <div class="seg">${TEAMS.map((n,g)=>`<button class="${S.myTeam===g?'on':''}" data-act="setteam" data-g="${g}">${n}</button>`).join('')}</div>
-        <div class="lbl">조별 근무 맞추기 <span style="font-weight:400">(회사 근무표와 다르면 하루씩 밀기)</span></div>
-        ${TEAMS.map((n,g)=>g===S.myTeam?'':`<div class="row" style="justify-content:space-between;padding:4px 0"><b style="width:44px">${n}</b><span class="muted grow">${(S.teamOffsets[g]-S.teamOffsets[S.myTeam])>=0?'+':''}${S.teamOffsets[g]-S.teamOffsets[S.myTeam]}일</span><button class="btn ghost sm" data-act="toff" data-g="${g}" data-v="-1">‹ 하루 앞</button><button class="btn ghost sm" data-act="toff" data-g="${g}" data-v="1">하루 뒤 ›</button></div>`).join('')}
-      </div>
-      <div class="pg-cap">근무타입 (누르면 편집)</div>
+      <div class="pg-cap pcap">근무타입 <span>길게 누르면 고치기</span></div>
       <div class="pg-sec" style="margin-top:0;padding:14px 16px">
         <div class="tchips">${S.types.map(x=>`<button class="tchip" data-act="type-edit-page" data-s="${esc(x.k)}">${badge(x.k,'tc')}<small>${esc(x.name)}</small></button>`).join('')}<button class="tchip add" data-act="type-new-page"><span class="badge tc add">+추가</span></button></div>
       </div>
+      <div class="pg-cap pcap">근무 패턴 · ${n}일 반복 <span>칸을 누르면 바꿔요</span></div>
+      <div class="pg-sec" style="margin-top:0;padding:12px 12px 14px">
+        <div class="pgrid">${S.pattern.map((s,i)=>`<button class="pc ${i===cp?'pnow':''}" data-act="pcell" data-i="${i}">${badge(s,'sm')}<small>${i+1}</small></button>`).join('')}</div>
+        <div class="row" style="margin-top:10px;gap:8px">${n<PAT_MAX?'<button class="btn ghost sm" data-act="padd">＋ 칸 추가</button>':''}${n>2?'<button class="btn ghost sm" data-act="pdel">－ 칸 빼기</button>':''}</div>
+      </div>
+      <div class="hint" style="padding:8px 16px 0">오늘(${t0.getMonth()+1}/${t0.getDate()})은 ${cp+1}번째 칸 · ${esc(lb[cp])}이에요</div>
+      <div class="pg-sec">
+        <div class="prow"><div class="pl2">근무 이름<small>달력 위에 보여요</small></div><input type="text" class="inl" id="patternName" value="${esc(S.patternName||'')}" placeholder="예: 4조2교대" maxlength="20"></div>
+        <div class="prow"><div class="pl2">1번째 칸 시작 날</div>${tpick('anchor',S.anchor,'','date')}</div>
+        <div class="prow"><div class="pl2">공휴일엔 쉬어요<small>상주(평일) 근무 · 빨간 날 근무 칸이 휴무로</small></div><label class="sw"><input type="checkbox" id="holRest" ${S.holRest?'checked':''}><i></i></label></div>
+        <div class="prow tap" data-act="paint-open"><div class="pl2">🖌 달력에 칠하기<small>매달 근무표가 새로 나오면 · 근무를 골라 날짜를 쭉 눌러요</small></div><div class="pv">›</div></div>
+      </div>
+      <div class="pg-cap">조 이름</div>
+      <div class="pg-sec" style="margin-top:0;padding:12px 16px">
+        <div class="tnames">${['abc','num','team'].map(st=>`<button class="${S.teamStyle===st?'on':''}" data-act="tstyle" data-v="${st}">${teamStyleLabel(st)}</button>`).join('')}<button class="${S.teamStyle==='custom'?'on':''}" data-act="tstyle" data-v="custom">✏️ 직접</button></div>
+      </div>
+      <div class="pg-cap pcap">조별 근무 ${tc<TEAM_MAX?'<button data-act="tadd">＋ 조 추가</button>':''}</div>
+      <div class="pg-sec" style="margin-top:0;padding:8px 6px 10px"><div class="tgrid" style="--cols:${cols}">${tg}</div></div>
+      <div class="hint" style="padding:8px 16px 0">· 줄을 누르면 "오늘 이 조 근무는?"으로 한 번에 맞춰요<br>· 회사 근무표와 다르면 ‹ › 로 하루씩 밀어요<br>· 이름을 길게 누르면 내 조로 바꾸거나 이름을 고쳐요</div>
       <div class="pg-sec">
         <div class="prow tap" data-act="redo-onboard"><div class="pl2">처음 시작 설정 다시 하기</div><div class="pv">›</div></div>
         <div class="prow danger-row" data-act="clearov">수동 변경된 근무 ${ovN}일 초기화</div>
       </div>
     </div>`,'pattern');
 }
+// 패턴 칸 누르면: 어떤 근무로 할까요?
+function openPatCell(i){
+  const n=S.pattern.length,t0=new Date(),d=addDays(t0,((i-patPos(t0))%n+n)%n);
+  openPop(`<div class="mh">${i+1}번째 칸 (${d.getMonth()+1}/${d.getDate()} ${DOW[d.getDay()]})<b>어떤 근무로 할까요?</b></div>
+    <div class="mi"><div class="tchips">${S.types.map(x=>`<button class="tchip ${S.pattern[i]===x.k?'on':''}" data-act="pset" data-i="${i}" data-s="${esc(x.k)}">${badge(x.k,'tc')}<small>${esc(x.name)}</small></button>`).join('')}</div></div>
+    <div class="mi"><button class="btn ghost grow" data-act="pop-close">닫기</button></div>`);
+}
+// 줄 누르면: 오늘 이 조 근무는?
+function openTeamToday(g){
+  const t0=new Date(),p=teamPos(g,t0),lb=posLabels(S.pattern);
+  openPop(`<div class="mh">${esc(teamName(g))}${g===S.myTeam?' (내 조)':''}<b>오늘(${t0.getMonth()+1}/${t0.getDate()}) ${esc(teamName(g))} 근무는?</b></div>
+    <div class="mi" style="display:block"><div class="pos" style="margin-top:0">${S.pattern.map((k,i)=>`<button class="${i===p?'on':''}" data-act="tpos" data-g="${g}" data-p="${i}">${badge(k)}<small>${esc(lb[i])}</small></button>`).join('')}</div></div>
+    <div class="mi"><button class="btn ghost grow" data-act="pop-close">닫기</button></div>`);
+}
+function setTeamPos(g,p){
+  const n=S.pattern.length,t0=new Date(),o=S.teamOffsets,cur=teamPos(g,t0);
+  if(p===cur){closePop();return;}
+  if(g===S.myTeam){
+    if(!confirm('내 조 근무를 바꾸면 내 달력 근무도 같이 바뀌어요.\n바꿀까요?'))return;
+    const delta=p-cur;S.anchor=addK(S.anchor,-delta);o[g]=(o[g]||0)+delta;
+  }else o[g]=(((o[g]||0)+p-cur)%n+n)%n;
+  save();closePop();openPatternPage();toast(`${teamName(g)} 오늘 근무를 맞췄어요`);
+}
+function openTeamMenu(g){
+  const me=g===S.myTeam;
+  openPop(`<div class="mh">조<b>${esc(teamName(g))}</b></div>
+    ${me?'':`<button class="mi" data-act="tmine" data-g="${g}">⭐ 내 조로 하기</button>`}
+    <button class="mi" data-act="tnames" data-g="${g}">✏️ 이름 고치기</button>
+    ${me||teamCount()<2?'':`<button class="mi" data-act="tdel" data-g="${g}" style="color:var(--danger)">－ 이 조 빼기</button>`}
+    <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);
+}
+function openTeamNames(focus){
+  openPop(`<div class="mh">조 이름 직접 쓰기<b>회사에서 부르는 이름으로 (예: 5팀)</b></div>
+    ${[...Array(teamCount())].map((_,g)=>`<div class="mi"><span style="width:56px;color:var(--muted);font-size:13px">${g===S.myTeam?'내 조':(g+1)+'번째'}</span><input type="text" class="tnm" data-g="${g}" value="${esc(teamName(g))}" maxlength="6" style="flex:1"></div>`).join('')}
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">취소</button><button class="btn grow" data-act="tnames-save">저장</button></div>`);
+  const f=document.querySelector(`.tnm[data-g="${focus}"]`);if(f&&focus!=null)f.focus();
+}
+function teamAdd(){
+  const n=S.pattern.length,o=S.teamOffsets,used=new Set(o.map(x=>((x%n)+n)%n));
+  let v=0;for(let i=0;i<n;i++){if(!used.has(i)){v=i;break;}}
+  o.push(v);if(S.teamStyle==='custom')S.teamNames[o.length-1]='';
+  save();openPatternPage();toast(`${teamName(o.length-1)}을 넣었어요 · 줄을 눌러 맞춰 주세요`);
+}
+function teamDel(g){
+  if(g===S.myTeam||teamCount()<2)return;
+  if(!confirm(`${teamName(g)}을(를) 뺄까요?`))return;
+  S.teamOffsets.splice(g,1);if(Array.isArray(S.teamNames))S.teamNames.splice(g,1);
+  if(S.myTeam>g)S.myTeam--;
+  (S.family||[]).forEach(m=>{if(m.team==null)return;if(m.team===g)m.team=S.myTeam;else if(m.team>g)m.team--;});
+  save();closePop();openPatternPage();
+}
 
 /* ---------- 회사 휴무일 ---------- */
-let chDraft={date:'',name:'',yearly:true,kind:'memo',emoji:'🎂',remind:true},chOpen=false;
+let chDraft={date:'',name:'',yearly:true,kind:'memo',emoji:'🎂',rem:[1],remAt:'20:00'},chOpen=false,remEd=null;
 const ANNIV_EMOJI=['🎂','💍','🎉','🕯','⭐','🌸','🎁','🏥','✈️','📌'];
 const OFF_EMOJI=['🏢','🏭','🏬','🎌','🏖','📌'];
 function holNext(x){return ddayNext(x);}
@@ -3245,13 +3402,13 @@ function openCompPage(){
       <button class="hic" data-act="comp-ico" data-id="${x.id}" aria-label="아이콘 바꾸기">${ico(x.emoji||(x.kind==='memo'?'⭐':'🏢'))}</button>
       <div class="pl2">${esc(x.name)}<small>${when(x)} · ${left(x)}</small></div>
       <div class="hseg"><button class="${x.kind!=='memo'?'on off':''}" data-act="comp-kind" data-id="${x.id}" data-v="off">휴무</button><button class="${x.kind==='memo'?'on':''}" data-act="comp-kind" data-id="${x.id}" data-v="memo">메모만</button></div>
-      <button class="xbtn ${x.remind?'on':''}" data-act="comp-remind" data-id="${x.id}" aria-label="전날 알림" title="전날 알림">${x.remind?'🔔':'🔕'}</button>
+      <button class="rbtn ${x.rem.length?'on':''}" data-act="rem-open" data-id="${x.id}" aria-label="알림">${x.rem.length?`🔔<small>${remShort(x)}</small>`:'🔕'}</button>
       <button class="xbtn" data-act="comp-del" data-id="${x.id}" aria-label="삭제">✕</button></div>`;
   const d=chDraft,memo=d.kind==='memo';
   openPage(`
     ${pageHead('휴무일 · 기념일')}
     <div class="pg-b">
-      <div class="hint" style="padding:12px 16px 0">🏢 <b>휴무</b> = 회사가 쉬는 날(달력 날짜가 빨갛게) · 🎂 <b>메모만</b> = 생일·기념일처럼 이름만 보여요(근무는 그대로). 🔔 를 켜면 전날 저녁 8시에 알려줘요.</div>
+      <div class="hint" style="padding:12px 16px 0">🏢 <b>휴무</b> = 회사가 쉬는 날(달력 날짜가 빨갛게) · 🎂 <b>메모만</b> = 생일·기념일처럼 이름만 보여요(근무는 그대로). 🔔 를 누르면 언제 알려줄지 골라요 (1주 전 · 전날 · 당일 …).</div>
       <div class="pg-sec">${list.map(row).join('')||'<div class="prow"><div class="pl2 muted">아직 없어요</div></div>'}</div>
       ${chOpen?`<div class="pg-cap">추가하기</div>
       <div class="pg-sec" style="margin-top:0;padding:14px 16px">
@@ -3259,7 +3416,7 @@ function openCompPage(){
         <div class="row" style="margin-top:10px"><button class="chi" data-act="ch-ico" aria-label="아이콘">${ico(d.emoji||(memo?'🎂':'🏢'))}</button><input type="text" id="chName" placeholder="${memo?'이름 (예: 결혼기념일)':'이름 (예: 창립기념일)'}" value="${esc(d.name)}" maxlength="20" style="flex:1"></div>
         <div class="prow" style="padding:10px 0 0;min-height:0;border:0"><div class="pl2">📅 날짜</div>${tpick('chDate',d.date,'','date')}</div>
         <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px"><input type="checkbox" id="chYearly" ${d.yearly?'checked':''}> 매년 반복</label>
-        <label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px"><input type="checkbox" id="chRemind" ${d.remind?'checked':''}> 🔔 전날 알림</label>
+        <div class="prow" style="padding:8px 0 0;min-height:0;border:0"><div class="pl2">🔔 알림</div><button class="tbtn" data-act="rem-open" data-id="__draft"><span>${d.rem.length?`${remShort(d)} · ${remAtLabel(d.remAt)}`:'안 받음'}</span></button></div>
         <button class="btn" style="width:100%;margin-top:12px" data-act="comp-add">추가</button>
       </div>`:`<div class="pg-sec"><div class="prow" data-act="comp-open" style="justify-content:center;color:var(--accent);font-weight:700">＋ 휴무일 · 기념일 추가</div></div>`}
       <div class="pg-sec">
@@ -3267,7 +3424,29 @@ function openCompPage(){
       </div>
     </div>`,'comp');
 }
-function chPull(){const n=$('#chName'),y=$('#chYearly'),r=$('#chRemind'),dt=$('#chDate');if(n)chDraft.name=n.value;if(y)chDraft.yearly=y.checked;if(r)chDraft.remind=r.checked;if(dt)chDraft.date=dt.value;}
+function chPull(){const n=$('#chName'),y=$('#chYearly'),dt=$('#chDate');if(n)chDraft.name=n.value;if(y)chDraft.yearly=y.checked;if(dt)chDraft.date=dt.value;}
+// 알림 고르기 창: 며칠 전(여러 개) + 시각
+function openRem(id){
+  if(id==='__draft')chPull();
+  const x=id==='__draft'?chDraft:(S.companyHols||[]).find(y=>y.id===id);if(!x)return;
+  remEd={id,rem:[...(x.rem||[])],at:x.remAt||'20:00',name:x.name};
+  renderRem();
+}
+function renderRem(){
+  const r=remEd;if(!r)return;
+  openPop(`<div class="mh">${esc(r.name||'휴무일 · 기념일')}<b>언제 알려드릴까요?</b></div>
+    <div class="mi" style="display:block"><div class="icn-lb">며칠 전 <small>여러 개 골라도 돼요</small></div><div class="remc">${REM_DAYS.map(v=>`<button class="${r.rem.includes(v)?'on':''}" data-act="rem-t" data-v="${v}">${REM_LABEL[v]}</button>`).join('')}</div></div>
+    <div class="mi" style="display:block"><div class="icn-lb">시각</div><div class="remc">${REM_AT.map(t=>`<button class="${r.at===t?'on':''}" data-act="rem-at" data-v="${t}">${remAtLabel(t)}</button>`).join('')}</div></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="rem-off">알림 끄기</button><button class="btn grow" data-act="rem-save">저장</button></div>`);
+}
+function remSave(off){
+  const r=remEd;if(!r)return;
+  const x=r.id==='__draft'?chDraft:(S.companyHols||[]).find(y=>y.id===r.id);remEd=null;closePop();if(!x)return;
+  x.rem=off?[]:r.rem.slice().sort((a,b)=>b-a);x.remAt=r.at;x.remind=x.rem.length>0;
+  if(r.id!=='__draft')save();
+  openCompPage();
+  if(r.id!=='__draft')toast(x.rem.length?`🔔 ${remShort(x)} · ${remAtLabel(x.remAt)}에 알려드려요`:'알림을 껐어요');
+}
 
 /* ---------- 백업 · 복원 ---------- */
 let driveFiles=null,driveBusy=false;
@@ -3302,7 +3481,7 @@ function openBackupPage(){
     </div>`,'backup');
   if(linked&&driveFiles===null&&!driveBusy){driveBusy=true;window.AndroidBridge.driveList(true);}
 }
-const BACKUP_KEYS=['onboarded','pattern','anchor','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
+const BACKUP_KEYS=['onboarded','pattern','anchor','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -3395,30 +3574,24 @@ function wipeAll(){
 /* ================= 처음 시작 설정 ================= */
 const OB_PRESETS=[
   {id:'4-2',name:'4조 2교대',sub:'주주휴휴야야휴휴 · 8일 반복',pat:['주','주','휴','휴','야','야','휴','휴'],off:[6,4,0,2]},
-  {id:'3-2',name:'3조 2교대',sub:'주주주야야야휴휴휴 · 9일 반복',pat:['주','주','주','야','야','야','휴','휴','휴'],off:[6,3,0,0]},
-  {id:'2',name:'2교대 (주야 맞교대)',sub:'주야휴 · 3일 반복',pat:['주','야','휴'],off:[2,1,0,0]},
+  {id:'3-2',name:'3조 2교대',sub:'주주주야야야휴휴휴 · 9일 반복',pat:['주','주','주','야','야','야','휴','휴','휴'],off:[6,3,0]},
+  {id:'2',name:'2교대 (주야 맞교대)',sub:'주야휴 · 3일 반복',pat:['주','야','휴'],off:[2,1,0]},
   {id:'4-3',name:'4조 3교대',sub:'주주오오야야휴휴 · 8일 반복',pat:['주','주','오','오','야','야','휴','휴'],off:[6,4,0,2],add:{k:'오',name:'오후',color:'#ffe0b2',rest:false}},
+  {id:'week',name:'상주 (월~금 근무)',sub:'토·일 · 공휴일 쉬어요',pat:['상','상','상','상','상','휴','휴'],off:[0],hol:true,add:{k:'상',name:'상주',color:'#dcedc8',rest:false}},
   {id:'custom',name:'✏️ 직접 만들기',sub:'칸을 눌러 내 패턴을 만들어요 (근무타입도 추가)',pat:null}
 ];
 let ob=null;
 function startOnboarding(){
-  ob={step:0,preset:'4-2',pos:0,team:2,shift:0,dayT:'05:50',nightT:'16:30',dayOn:true,nightOn:true};
+  ob={step:0,preset:'4-2',pos:0,team:2,shift:0,al:{}};
   $('#onboard').classList.add('open');renderOb();
 }
+const OB_AL_T={주:'05:50',야:'16:30',오:'13:30',상:'07:30'};
+// 패턴에 들어 있는 근무 날마다 알람 한 줄
+function obAlarms(){const ks=[...new Set(obPattern())].filter(k=>{const p=obPreset();return p.add&&p.add.k===k?!p.add.rest:!isRest(k);});return ks.map(k=>{if(!ob.al[k])ob.al[k]={t:OB_AL_T[k]||'08:00',on:true};return [k,ob.al[k]];});}
+function obTeams(){return (obPreset().off||[6,4,0,2]).length;}
 function obPreset(){return OB_PRESETS.find(p=>p.id===ob.preset)||OB_PRESETS[0];}
 function obPattern(){const p=obPreset();return p.pat||['주','주','휴','휴','야','야','휴','휴'];}
-function obPosLabels(pat){
-  // 같은 근무가 이어지는 칸에 "첫날·둘째날" 이름 붙이기
-  const out=[];
-  for(let i=0;i<pat.length;i++){
-    const s=pat[i];let start=i;while(start>0&&pat[start-1]===s)start--;
-    let end=i;while(end<pat.length-1&&pat[end+1]===s)end++;
-    const n=i-start+1,len=end-start+1;
-    const nm=s==='휴'?(start>0?`${shiftNameOf(pat[start-1])} 후 휴무`:'휴무'):shiftNameOf(s);
-    out.push(len>1?`${nm} ${['첫날','둘째날','셋째날','넷째날'][n-1]||n+'일째'}`:nm);
-  }
-  return out;
-}
+function obPosLabels(pat){return ob&&ob.preset==='week'?['월','화','수','목','금','토','일'].map((w,i)=>`${w}요일 · ${shiftNameOf(pat[i])}`):posLabels(pat,shiftNameOf);}
 function shiftNameOf(k){const p=obPreset();if(p.add&&p.add.k===k)return p.add.name;return shiftLabel(k);}
 function obBadge(k){const p=obPreset();if(p.add&&p.add.k===k&&!S.types.some(t=>t.k===k)){const c=tColors(p.add);return `<span class="badge c" style="--tb:${c.bg};--tf:${c.fg}">${esc(k)}</span>`;}return badge(k);}
 function obAnchor(){return addK(fmt(new Date()),-ob.pos+ob.shift);}
@@ -3443,9 +3616,9 @@ function renderOb(){
     body=`<h2>오늘(${t.getMonth()+1}월 ${t.getDate()}일 ${DOW[t.getDay()]})<br>근무는 뭐예요?</h2><div class="ob-sub">오늘이 패턴의 몇 번째 날인지 골라주세요</div>
       <div class="pos">${pat.map((k,i)=>`<button class="${ob.pos===i?'on':''}" data-act="ob-pos" data-v="${i}">${obBadge(k)}<small>${lb[i]}</small></button>`).join('')}</div>
       <div class="lbl">그러면 앞으로 7일은</div><div class="week7">${wk}</div>
-      <div class="lbl">내 조 (동료근무 표에 쓰여요)</div>
-      <div class="seg">${TEAMS.map((n,g)=>`<button class="${ob.team===g?'on':''}" data-act="ob-team" data-v="${g}">${n}</button>`).join('')}</div>
-      <div class="ob-sub" style="font-size:12px">모르면 그대로 두셔도 돼요</div>`;
+      ${obTeams()>1?`<div class="lbl">내 조 (동료근무 표에 쓰여요)</div>
+      <div class="seg">${[...Array(obTeams())].map((_,g)=>`<button class="${ob.team===g?'on':''}" data-act="ob-team" data-v="${g}">${esc(teamName(g))}</button>`).join('')}</div>
+      <div class="ob-sub" style="font-size:12px">모르면 그대로 두셔도 돼요 · 조 이름은 나중에 바꿀 수 있어요</div>`:''}`;
     foot=`<button class="btn" data-act="ob-next">다음</button>`;
   }else if(s===3){
     const now=new Date(),y=now.getFullYear(),m=now.getMonth(),first=new Date(y,m,1),start=addDays(first,-first.getDay()),tk=fmt(now);
@@ -3454,16 +3627,14 @@ function renderOb(){
     for(let i=0;i<rows*7;i++){const d=addDays(start,i),k=fmt(d);g+=`<div class="c ${d.getMonth()!==m?'out':''} ${k===tk?'today':''}"><span style="${(holName(k)||d.getDay()===0)?'color:var(--sun)':d.getDay()===6?'color:var(--sat)':''}">${d.getDate()}</span>${obBadge(obShiftOn(d))}</div>`;}
     body=`<h2>이렇게 맞나요?</h2><div class="ob-sub">회사 근무표와 한 번 비교해 보세요</div>
       <div class="mcal"><div class="hd">${y}년 ${m+1}월</div><div class="g">${g}</div></div>
-      <div class="okline">✓ ${obPreset().name} · ${TEAMS[ob.team]} · 오늘 ${obPosLabels(obPattern())[((ob.pos-ob.shift)%obPattern().length+obPattern().length)%obPattern().length]}</div>
+      <div class="okline">✓ ${obPreset().name}${obTeams()>1?' · '+esc(teamName(ob.team)):''} · 오늘 ${obPosLabels(obPattern())[((ob.pos-ob.shift)%obPattern().length+obPattern().length)%obPattern().length]}</div>
       <div class="ob-sub" style="font-size:12.5px">하루씩 어긋나 있으면 아래 버튼으로 밀어서 맞춰요.<br>특정 날만 다른 건 시작한 뒤 날짜를 눌러 고치면 돼요.</div>
       <div class="seg" style="margin-top:10px"><button data-act="ob-shift" data-v="-1">‹ 하루 앞으로</button><button data-act="ob-shift" data-v="1">하루 뒤로 ›</button></div>`;
     foot=`<button class="btn" data-act="ob-next">맞아요</button>`;
   }else if(s===4){
     const issues=nativeIssues();
-    const t1=ampm(ob.dayT),t2=ampm(ob.nightT);
     body=`<h2>출근 알람도<br>맞춰 드릴까요?</h2><div class="ob-sub">근무에 맞춰서만 울려요. 휴무날은 조용해요</div>
-      <div class="alrow">${badge('주')}<button type="button" class="tx" data-act="tpk" data-id="obDay" data-type="time"><b><small style="display:inline;font-size:13px;margin-right:4px">${t1.ap}</small>${t1.tm}</b><small>주간 근무 날</small></button><input type="hidden" id="obDay" value="${ob.dayT}"><label class="sw"><input type="checkbox" id="obDayOn" ${ob.dayOn?'checked':''}><i></i></label></div>
-      <div class="alrow">${badge('야')}<button type="button" class="tx" data-act="tpk" data-id="obNight" data-type="time"><b><small style="display:inline;font-size:13px;margin-right:4px">${t2.ap}</small>${t2.tm}</b><small>야간 근무 날</small></button><input type="hidden" id="obNight" value="${ob.nightT}"><label class="sw"><input type="checkbox" id="obNightOn" ${ob.nightOn?'checked':''}><i></i></label></div>
+      ${obAlarms().map(([k,a],i)=>{const tt=ampm(a.t);return `<div class="alrow">${obBadge(k)}<button type="button" class="tx" data-act="tpk" data-id="obT_${i}" data-type="time"><b><small style="display:inline;font-size:13px;margin-right:4px">${tt.ap}</small>${tt.tm}</b><small>${esc(shiftNameOf(k))} 근무 날</small></button><input type="hidden" id="obT_${i}" value="${a.t}"><label class="sw"><input type="checkbox" id="obOn_${i}" ${a.on?'checked':''}><i></i></label></div>`;}).join('')}
       ${hasBridge('status')?`<div class="lbl">알람이 꼭 울리게 하려면</div>
       ${['notif','exact','fsi'].map(k=>`<div class="perm"><div class="ck ${issues.includes(k)?'no':''}">${issues.includes(k)?'!':'✓'}</div><span>${{notif:'알림 허용',exact:'정확한 시간에 알람',fsi:'잠금화면에 알람 화면'}[k]}</span>${issues.includes(k)?`<button data-act="nativefix" data-k="${k}">켜기 ›</button>`:''}</div>`).join('')}
       <div class="ob-sub" style="font-size:12px">삼성·샤오미는 설정 › 앱 › 언제쉬어 › 배터리를 "제한 없음"으로</div>`:''}`;
@@ -3484,16 +3655,16 @@ function obApply(){
   if(p.add&&!S.types.some(t=>t.k===p.add.k))S.types.push(Object.assign({},p.add));
   S.pattern=obPattern().slice();
   S.anchor=obAnchor();
-  S.myTeam=ob.team;
   S.teamOffsets=(p.off||[6,4,0,2]).slice();
+  S.myTeam=Math.min(ob.team,S.teamOffsets.length-1);
+  S.holRest=!!p.hol;
   S.patternName=p.id==='custom'?'내 근무':p.name.replace(/\s/g,'').replace(/\(.*\)/,'');
   S.overrides={};
 }
 function obFinish(withAlarm){
   obApply();
   if(withAlarm){
-    if(ob.dayOn)S.alarms.push(Object.assign(newAlarm(),{isNew:undefined,time:ob.dayT,shift:'주'}));
-    if(ob.nightOn)S.alarms.push(Object.assign(newAlarm(),{isNew:undefined,time:ob.nightT,shift:'야'}));
+    obAlarms().forEach(([k,a])=>{if(a.on)S.alarms.push(Object.assign(newAlarm(),{isNew:undefined,time:a.t,shift:k}));});
     S.alarms.forEach(a=>delete a.isNew);
   }
   S.onboarded=true;save();
@@ -3540,7 +3711,7 @@ function shiftMonth(n){
 }
 document.addEventListener('click',e=>{
   const nb=e.target.closest('#nav [data-tab]');
-  if(nb){tab=nb.dataset.tab;closeSheet();if(pageMode)closePage();render();return;}
+  if(nb){tab=nb.dataset.tab;paint=null;closeSheet();if(pageMode)closePage();render();return;}
   if(e.target.id==='pop'){popBack();return;}
   const t=e.target.closest('[data-act]');
   if(!t)return;
@@ -3553,7 +3724,7 @@ document.addEventListener('click',e=>{
     case 'prev':slideTo(-1);break;
     case 'next':slideTo(1);break;
     case 'today':{const n=new Date();setCur(n.getFullYear(),n.getMonth());render();break;}
-    case 'day':reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(t.dataset.k);break;
+    case 'day':if(paint){if(role()==='host')paintDay(t.dataset.k);break;}reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(t.dataset.k);break;
     case 'close':closeSheet();break;
     case 'page-close':closePage();break;
     case 'pop-close':closePop();break;
@@ -3781,7 +3952,7 @@ document.addEventListener('click',e=>{
     case 'type-back':if(typeReturn==='page'){typeDraft=null;closeSheet();}else openDay(sheetKey);break;
 
     /* 동료근무 */
-    case 'setteam-ask':{const g=Number(t.dataset.g);if(g===S.myTeam)break;if(confirm(`${TEAMS[g]}를 내 조로 바꿀까요?\n(내 근무 패턴은 그대로, 다른 조 표시만 바뀌어요)`)){S.myTeam=g;save();render();}break;}
+    case 'setteam-ask':{const g=Number(t.dataset.g);if(g===S.myTeam)break;if(confirm(`${teamName(g)}을(를) 내 조로 바꿀까요?\n(내 근무 패턴은 그대로, 다른 조 표시만 바뀌어요)`)){S.myTeam=g;save();render();}break;}
     case 'col-day':{const k=t.dataset.k,d=parse(k);tab='cal';setCur(d.getFullYear(),d.getMonth());render();reqDraft={want:'휴',msg:''};openDay(k);break;}
 
     /* 알람 */
@@ -3823,7 +3994,7 @@ document.addEventListener('click',e=>{
     case 'more-times':openTimesPage();break;
     case 'more-stamps':closeSheet();openStampPage();break;
     case 'stamp-tap':stampTap(t.dataset.id,t.dataset.k);break;
-    case 'stamp-dn':e.stopPropagation();openStampDay(t.dataset.k);break;
+    case 'stamp-dn':e.stopPropagation();if(paint){if(role()==='host')paintDay(t.dataset.k);break;}openStampDay(t.dataset.k);break;
     case 'sd-done':case 'sd-undo':{
       const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;
       const n=stampCnt(k,s.id),v=a==='sd-done'?(s.kind==='pill'?Math.min(s.times,n+1):1):(s.kind==='pill'?n-1:0);
@@ -3870,26 +4041,41 @@ document.addEventListener('click',e=>{
     case 'font':S.fontScale=Number(t.dataset.v);save();applyFont();render();break;
     case 'mcolor':S.memoColors[t.dataset.k]=t.dataset.v;save();applyTheme();openColorsPage();break;
     case 'mcolor-reset':S.memoColors={fam:'#7b5cf0',my:'#6b7280'};save();applyTheme();openColorsPage();break;
-    case 'pcycle':{const i=Number(t.dataset.i),ks=S.types.map(x=>x.k),j=ks.indexOf(S.pattern[i]);S.pattern[i]=ks[(j+1)%ks.length];save();openPatternPage();break;}
-    case 'padd':if(S.pattern.length<28){S.pattern.push('휴');save();openPatternPage();}break;
+    case 'paint-open':paintStart(t.dataset.k);break;
+    case 'paint-k':paint.k=t.dataset.s;render();break;
+    case 'paint-done':paint=null;render();toast('칠하기를 마쳤어요');break;
+    case 'pcell':openPatCell(Number(t.dataset.i));break;
+    case 'pset':{const i=Number(t.dataset.i);if(i<S.pattern.length){S.pattern[i]=t.dataset.s;save();}closePop();openPatternPage();break;}
+    case 'padd':if(S.pattern.length<PAT_MAX){S.pattern.push(restKey());save();openPatternPage();}break;
     case 'pdel':if(S.pattern.length>2){S.pattern.pop();save();openPatternPage();}break;
     case 'clearov':if(confirm('직접 바꾼 근무를 모두 원래 패턴으로 되돌릴까요?')){S.overrides={};save();openPatternPage();toast('수동 변경을 초기화했어요');}break;
-    case 'setteam':S.myTeam=Number(t.dataset.g);save();openPatternPage();break;
-    case 'toff':{const g=Number(t.dataset.g);S.teamOffsets[g]=(S.teamOffsets[g]||0)+Number(t.dataset.v);save();openPatternPage();break;}
+    case 'toff':{const g=Number(t.dataset.g),n=S.pattern.length;S.teamOffsets[g]=(((S.teamOffsets[g]||0)+Number(t.dataset.v))%n+n)%n;save();openPatternPage();break;}
+    case 'trow':openTeamToday(Number(t.dataset.g));break;
+    case 'tpos':setTeamPos(Number(t.dataset.g),Number(t.dataset.p));break;
+    case 'tmine':{const g=Number(t.dataset.g);S.myTeam=g;save();closePop();openPatternPage();toast(`${teamName(g)}을(를) 내 조로 했어요`);break;}
+    case 'tnames':openTeamNames(Number(t.dataset.g));break;
+    case 'tnames-save':{const nm=[...Array(teamCount())].map((_,g)=>teamName(g));document.querySelectorAll('.tnm').forEach(x=>{const v=x.value.trim().slice(0,6);if(v)nm[+x.dataset.g]=v;});S.teamNames=nm;S.teamStyle='custom';save();closePop();openPatternPage();break;}
+    case 'tstyle':{const v=t.dataset.v;if(v==='custom'){openTeamNames(null);break;}S.teamStyle=v;save();openPatternPage();break;}
+    case 'tadd':if(teamCount()<TEAM_MAX)teamAdd();break;
+    case 'tdel':teamDel(Number(t.dataset.g));break;
     case 'redo-onboard':closePage();startOnboarding();break;
     case 'comp-open':chOpen=true;openCompPage();break;
     case 'comp-add':{
       chPull();const name=chDraft.name.trim(),date=chDraft.date,kind=chDraft.kind;
       if(!name||!date){toast('이름과 날짜를 넣어주세요');break;}
-      S.companyHols.push({id:uid(),name,date,yearly:chDraft.yearly,kind,emoji:chDraft.emoji||(kind==='memo'?'🎂':'🏢'),remind:chDraft.remind});
-      chDraft={date:'',name:'',yearly:true,kind,emoji:kind==='memo'?'🎂':'🏢',remind:kind==='memo'};chOpen=false;
+      S.companyHols.push({id:uid(),name,date,yearly:chDraft.yearly,kind,emoji:chDraft.emoji||(kind==='memo'?'🎂':'🏢'),rem:chDraft.rem.slice(),remAt:chDraft.remAt,remind:chDraft.rem.length>0});
+      chDraft={date:'',name:'',yearly:true,kind,emoji:kind==='memo'?'🎂':'🏢',rem:kind==='memo'?[1]:[],remAt:'20:00'};chOpen=false;
       save();render();openCompPage();toast(kind==='memo'?'기념일을 추가했어요':'휴무일을 추가했어요');break;}
-    case 'ch-kind':{chPull();const k2=t.dataset.v;if(k2!==chDraft.kind&&!isPhoto(chDraft.emoji))chDraft.emoji=k2==='memo'?'🎂':'🏢';chDraft.kind=k2;chDraft.remind=k2==='memo';openCompPage();break;}
+    case 'ch-kind':{chPull();const k2=t.dataset.v;if(k2!==chDraft.kind&&!isPhoto(chDraft.emoji))chDraft.emoji=k2==='memo'?'🎂':'🏢';chDraft.kind=k2;chDraft.rem=k2==='memo'?[1]:[];openCompPage();break;}
     case 'ch-ico':chPull();openIcn({title:'아이콘',sub:chDraft.name||'',icon:chDraft.emoji,name:null,emojis:chDraft.kind==='memo'?ANNIV_EMOJI:OFF_EMOJI,needIcon:true,onSave:e=>{chDraft.emoji=e;openCompPage();}});break;
     case 'comp-ico':{const x=S.companyHols.find(y=>y.id===t.dataset.id);if(!x)break;
       openIcn({title:'아이콘 바꾸기',sub:x.name,icon:x.emoji||(x.kind==='memo'?'⭐':'🏢'),name:null,emojis:x.kind==='memo'?ANNIV_EMOJI:OFF_EMOJI,needIcon:true,onSave:e=>{x.emoji=e;save();render();openCompPage();}});break;}
     case 'comp-kind':{const x=S.companyHols.find(y=>y.id===t.dataset.id);if(!x)break;x.kind=t.dataset.v;if(x.kind==='memo'&&!x.emoji)x.emoji='⭐';save();render();openCompPage();break;}
-    case 'comp-remind':{const x=S.companyHols.find(y=>y.id===t.dataset.id);if(!x)break;x.remind=!x.remind;save();openCompPage();toast(x.remind?'🔔 전날 저녁 8시에 알려드려요':'알림을 껐어요');break;}
+    case 'rem-open':openRem(t.dataset.id);break;
+    case 'rem-t':{const v=Number(t.dataset.v),r=remEd;if(!r)break;r.rem=r.rem.includes(v)?r.rem.filter(y=>y!==v):[...r.rem,v];renderRem();break;}
+    case 'rem-at':if(remEd){remEd.at=t.dataset.v;renderRem();}break;
+    case 'rem-save':remSave(false);break;
+    case 'rem-off':remSave(true);break;
     case 'comp-del':if(confirm('지울까요?')){S.companyHols=S.companyHols.filter(x=>x.id!==t.dataset.id);save();render();openCompPage();}break;
     case 'drive-link':driveBusy=true;driveFiles=null;try{window.AndroidBridge.driveList(false);}catch(err){driveBusy=false;}openBackupPage();break;
     case 'drive-backup':{
@@ -3919,7 +4105,7 @@ document.addEventListener('click',e=>{
       break;}
     case 'ob-back':ob.step=Math.max(0,ob.step-1);renderOb();break;
     case 'ob-next':ob.step++;renderOb();break;
-    case 'ob-preset':ob.preset=t.dataset.v;ob.pos=0;ob.shift=0;renderOb();break;
+    case 'ob-preset':ob.preset=t.dataset.v;ob.pos=ob.preset==='week'?(new Date().getDay()+6)%7:0;ob.shift=0;ob.team=Math.min(ob.team,obTeams()-1);renderOb();break;
     case 'ob-pos':ob.pos=Number(t.dataset.v);ob.shift=0;renderOb();break;
     case 'ob-team':ob.team=Number(t.dataset.v);renderOb();break;
     case 'ob-shift':ob.shift+=Number(t.dataset.v);renderOb();break;
@@ -3975,6 +4161,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='st_home'){S.status.homeAlert=t.checked;save();openStatusPage();
   }else if(t.id==='piDate'){const n=piTarget();if(n)n.dateAuto=t.checked;
   }else if(t.id==='anchor'&&t.value){S.anchor=t.value;save();openPatternPage();}
+  else if(t.id==='holRest'){S.holRest=t.checked;save();toast(t.checked?'공휴일 근무 칸을 휴무로 보여요':'공휴일도 패턴대로 보여요');}
   else if(t.id==='receiveFamilyMemo'){S.syncSettings.receiveFamilyMemo=t.checked;save();if(tab==='cal')render();toast(t.checked?'가족 메모를 달력에 표시해요':'가족 메모를 달력에서 숨겨요');}
   else if(t.id==='patternName'){S.patternName=t.value.trim().slice(0,20);save();toast('근무 이름을 저장했어요');}
   else if(t.id==='payWage'){S.pay.wage=Math.max(0,Math.round(Number(t.value)||0));save();openStatsPage();}
@@ -3988,10 +4175,8 @@ document.addEventListener('change',e=>{
   else if(t.id==='aRamp'&&draft){draft.ramp=t.checked;}
   else if(t.id==='aNoHol'&&draft){draft.noHol=t.checked;}
   else if(t.id==='at'&&draft){draft.time=t.value||draft.time;openAlarmPage();}
-  else if(t.id==='obDay'&&ob){ob.dayT=t.value||ob.dayT;renderOb();}
-  else if(t.id==='obNight'&&ob){ob.nightT=t.value||ob.nightT;renderOb();}
-  else if(t.id==='obDayOn'&&ob){ob.dayOn=t.checked;}
-  else if(t.id==='obNightOn'&&ob){ob.nightOn=t.checked;}
+  else if(t.id.startsWith('obT_')&&ob){const r=obAlarms()[+t.id.slice(4)];if(r&&t.value)r[1].t=t.value;renderOb();}
+  else if(t.id.startsWith('obOn_')&&ob){const r=obAlarms()[+t.id.slice(5)];if(r)r[1].on=t.checked;}
   else if(t.id==='guestModeToggle'){
     S.syncSettings.isGuestMode=t.checked;save();
     toast(t.checked?'가족 화면(체험)으로 바꿨어요':'내 화면으로 돌아왔어요');
@@ -4114,6 +4299,7 @@ function importBackup(file){
 window.__onBack=()=>{
   if($('#pop').classList.contains('open')){popBack();return true;}
   if(ob){if(ob.step>0&&ob.step<5){ob.step--;renderOb();return true;}return false;}
+  if(paint){paint=null;render();return true;}
   if($('#app').classList.contains('share-mode')){$('#app').classList.remove('share-mode');return true;}
   if($('#sheet').classList.contains('open')){closeSheet();return true;}
   if(pageMode){closePage();return true;}
@@ -4129,7 +4315,7 @@ window.__refresh=()=>{
 
 applyTheme();applyFont();
 render();
-pushAlarmsToNative();
+pushAlarmsToNative();pushRemindersToNative();
 if(!S.onboarded)startOnboarding();
 refreshHolidays();
 setTimeout(autoBackup,4000);
