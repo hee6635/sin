@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "516160617216-503nfmrnaiougopd1ovubdfho9fnr3se.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.eonjeswieo.app",
+            "certificate_hash": "7dcb7502cdeb37953052dbfaebf46b80c2a39dbd"
+          }
+        },
+        {
           "client_id": "516160617216-nrfrilhfks6sdcnhb0fjjbq9mj12rsir.apps.googleusercontent.com",
           "client_type": 3
         }
