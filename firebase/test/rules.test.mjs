@@ -469,6 +469,36 @@ await t('스티커 보여주기: stk · sdefs 를 올릴 수 있고, 너무 크�
   await assertFails(setDoc(SD('g1'), sch({ stk, sdefs: 'x' })));
 });
 
+// ───────── v0.22: 여러 날 한꺼번에 요청 (묶음) ─────────
+await G('여러 날 요청 묶음(grp)');
+const sendGroup = async (uid, n, over = {}, sent = 0, g = 'grpA') => { const d = db(uid); const b = writeBatch(d);
+  for (let i = 0; i < n; i++) b.set(doc(d, 'households', H, 'requests', `${g}_${i}`), rq({ to: H, toName: '아빠', date: `2026-11-${String(i + 1).padStart(2, '0')}`, grp: g, gn: n, ...(i === 0 ? { lead: true } : {}), ...over }));
+  b.update(doc(d, 'households', H, 'members', uid), { sent: sent + 1 }); return b.commit(); };
+await t('여러 날 요청: 날짜마다 문서 + 횟수는 묶음 1건 (2일 · 7일 · 14일)', async () => {
+  for (const n of [2, 7, 14]) { await fresh3(); await assertSucceeds(sendGroup('g1', n)); }
+});
+await t('여러 날 요청: 15일 이상 · 이상한 묶음 값은 막힘', async () => {
+  await fresh3();
+  await assertFails(sendGroup('g1', 15, {}, 0, 'big'));
+  await assertFails(sendGroup('g1', 3, { gn: 99 }, 0, 'x'));
+  await assertFails(sendGroup('g1', 3, { grp: 'x'.repeat(41) }, 0, 'y'));
+  await assertFails(sendGroup('g1', 3, { lead: 'yes' }, 0, 'z'));
+});
+await t('여러 날 요청도 횟수(sent)가 안 오르면 막힘, 10건 넘으면 막힘', async () => {
+  await fresh3();
+  const d = db('g1'); const b = writeBatch(d);
+  for (let i = 0; i < 3; i++) b.set(doc(d, 'households', H, 'requests', `n${i}`), rq({ to: H, toName: '아빠', grp: 'n', gn: 3 }));
+  await assertFails(b.commit());
+  await assertSucceeds(sendReq('g1', 'a1', rq(), 0));
+  await assertFails(sendGroup('g1', 3, {}, 10, 'late'));
+});
+await t('묶음 요청: 받는 사람은 날짜마다 답할 수 있고, cc 알림 가족은 읽기만', async () => {
+  await fresh3(); await assertSucceeds(sendGroup('g1', 3, { to: 'g2', toName: '딸', cc: ['g3'] }));
+  for (let i = 0; i < 3; i++) await assertSucceeds(updateDoc(doc(db('g2'), 'households', H, 'requests', `grpA_${i}`), { st: 'applied', held: false, reply: '', prev: '주', updatedAt: serverTimestamp() }));
+  await assertSucceeds(getDocs(query(collection(db('g3'), 'households', H, 'requests'), where('cc', 'array-contains', 'g3'))));
+  await assertFails(updateDoc(doc(db('g3'), 'households', H, 'requests', 'grpA_0'), { st: 'rejected', updatedAt: serverTimestamp() }));
+});
+
 // ───────── 서로 다른 가족방 ─────────
 await G('다른 가족방 사이');
 await t('A 가족방 구성원은 B 가족방을 읽을 수 없음', async () => {

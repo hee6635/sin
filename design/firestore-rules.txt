@@ -153,8 +153,12 @@ service cloud.firestore {
         && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid || isOwner(hid)
             || request.auth.uid in resource.data.cc);
       allow create: if signedIn() && isMember(hid)
-        && request.resource.data.keys().hasOnly(['from', 'to', 'fromName', 'toName', 'date', 'want', 'msg', 'st', 'reply', 'held', 'cc', 'createdAt', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['from', 'to', 'fromName', 'toName', 'date', 'want', 'msg', 'st', 'reply', 'held', 'cc', 'grp', 'gn', 'lead', 'createdAt', 'updatedAt'])
         && request.resource.data.get('cc', []) is list && request.resource.data.get('cc', []).size() <= 3
+        // 여러 날 요청: 같은 묶음(grp) 날짜별 문서 · 최대 14일 · 첫 문서에 lead (횟수는 묶음 1건 = 같은 묶음의 sent +1 한 번)
+        && request.resource.data.get('gn', 1) is int && request.resource.data.get('gn', 1) >= 1 && request.resource.data.get('gn', 1) <= 14
+        && request.resource.data.get('grp', '') is string && request.resource.data.get('grp', '').size() <= 40
+        && request.resource.data.get('lead', false) is bool
         && request.resource.data.from == request.auth.uid
         && request.resource.data.to is string && request.resource.data.to != request.auth.uid
         && exists(memberPath(hid, request.resource.data.to))

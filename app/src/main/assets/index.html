@@ -89,6 +89,28 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .shm small { font-weight: 400; font-size: 11.5px; color: var(--muted); margin-left: auto; }
 .shrow { width: 100%; display: flex; gap: 18px; flex-wrap: wrap; }
 .shrow .shm { width: auto; }
+.rqmail{position:relative;width:36px;height:36px;display:inline-grid;place-items:center;font-size:21px;margin-left:2px;flex:none}
+.rqmail i{position:absolute;top:0;right:-3px;min-width:17px;height:17px;border-radius:9px;background:#f08a00;color:#fff;font:800 11px/17px sans-serif;text-align:center;font-style:normal;padding:0 4px;box-shadow:0 0 0 2px var(--bg)}
+.rqmail i.hold{background:#0e9bb0}
+.cell[class*="rq-"] .bwrap .badge.r{border-radius:50%}
+.rq-grid{grid-template-columns:repeat(3,1fr) !important}
+.vcsl{flex:1;display:flex;flex-direction:column;min-height:0;touch-action:pan-y;will-change:transform}
+.vcsl.sel{touch-action:none;user-select:none}
+.vcchips .grow{flex:1}
+.vcsl .calwrap{flex:1;height:auto;min-height:0}
+.vcchips .vcmulti{background:color-mix(in srgb,var(--accent) 12%,var(--bg));color:var(--accent);font-weight:800}
+.vcmulti{height:32px;padding:0 12px;border-radius:16px;background:color-mix(in srgb,var(--accent) 12%,var(--bg));color:var(--accent);font-size:13px;font-weight:800;flex:none;white-space:nowrap}
+.cell.vsel{background:color-mix(in srgb,var(--accent) 16%,var(--bg));box-shadow:inset 0 0 0 2px var(--accent)}
+.cell.vdis{opacity:.4}
+.vsbar{flex:none;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.vsbar .seg button{height:38px}
+.vsbar input{width:100%;height:40px;border-radius:12px;background:var(--surface);padding:0 12px;font-size:14px}
+.vsbar .vs-row{display:flex;align-items:center;gap:8px}
+.vsbar .vs-n{font-weight:800;font-size:14.5px}
+.syncl{font-size:11.5px;color:var(--muted);text-align:right;padding:0 4px 4px}
+#famRef{font-size:22px}
+#famRef.spin{animation:rspin .8s linear infinite}
+@keyframes rspin{to{transform:rotate(360deg)}}
 .cfm-q{background:var(--surface);border-radius:12px;padding:12px 14px;font-size:15px;line-height:1.45;word-break:break-all;margin-bottom:8px}
 .cfm-q .cfm-m{font-size:13px;color:var(--muted);margin-top:6px}
 .cfm-h{padding:2px 2px 6px;font-size:13px}
@@ -1714,7 +1736,7 @@ function render(){
         <button class="hb pi-btn" data-act="open-board" aria-label="월 메모"><span>📝</span>${todoN?`<span class="bdg pur">${todoN>9?'9+':todoN}</span>`:''}</button>
       </div>
       ${mid}
-      <div class="hr">${(()=>{const c=famInCounts();return (c.ask?`<button class="rqhp ask" data-act="feed-req">답할 ${c.ask}</button>`:'')+(c.hold?`<button class="rqhp hold" data-act="feed-req">보류 ${c.hold}</button>`:'');})()}${todayBtn}</div>`;
+      <div class="hr">${(()=>{const c=famInCounts(),n=c.ask+c.hold;return n?`<button class="rqmail" data-act="feed-req" aria-label="처리할 요청 ${n}개">📩<i class="${c.ask?'':'hold'}">${n}</i></button>`:'';})()}${todayBtn}</div>`;
     v.innerHTML=renderCal();
     fitDn(v);
   }else if(tab==='colleague'){
@@ -1726,7 +1748,7 @@ function render(){
     v.innerHTML=renderAlarm();
   }else if(tab==='fam'){
     const un2=unseenCount();
-    top.innerHTML=`<h1>우리 가족</h1><button class="hb" data-act="feed-sheet" aria-label="가족 소식">${ICON.bell}${un2?`<span class="bdg">${un2>9?'9+':un2}</span>`:''}</button><button class="hb" data-act="fam-set" aria-label="가족 설정">${ICON.gear}</button>`;
+    top.innerHTML=`<h1>우리 가족</h1>${S.link?'<button class="hb" data-act="fam-refresh" id="famRef" aria-label="새로고침">↻</button>':''}<button class="hb" data-act="feed-sheet" aria-label="가족 소식">${ICON.bell}${un2?`<span class="bdg">${un2>9?'9+':un2}</span>`:''}</button><button class="hb" data-act="fam-set" aria-label="가족 설정">${ICON.gear}</button>`;
     v.innerHTML=renderFamily();
   }else{
     top.innerHTML=`<h1>설정</h1>`;
@@ -2600,7 +2622,7 @@ function feedEvents(){
   return S.events.filter(e=>e.to===r&&!(e.kind==='memo'&&S.syncSettings.receiveFamilyMemo===false));
 }
 function unseenCount(){return feedEvents().filter(e=>!e.seen).length;}
-const EV_IC={req:'📩',cc:'📣',reply:'💬',apply:'✅',memo:'♥',board:'📝',hol:'📢',dday:'D',join:'👪',cheer:'💌'};
+const EV_IC={req:'📩',cc:'📣',sch:'🔁',reply:'💬',apply:'✅',memo:'♥',board:'📝',hol:'📢',dday:'D',join:'👪',cheer:'💌'};
 function feedBody(){
   const isHost=role()==='host';
   const all=feedEvents();
@@ -2617,7 +2639,7 @@ function feedBody(){
     if(isHost&&e.kind==='req'){
       const r=S.requests.filter(x=>x.date===e.k&&x.st==='pending'&&(!x.srv||x.dir==='in')).sort((a,b)=>b.t-a.t)[0];
       if(r)extra=`${r.msg?`<div class="q">${esc(r.msg)}</div>`:''}
-        <div class="btns"><button class="ok" data-act="rqreply" data-id="${r.id}" data-s="accepted" data-mode="change">수락</button><button data-act="rqreply" data-id="${r.id}" data-s="pending">보류</button><button class="no" data-act="rqreply" data-id="${r.id}" data-s="rejected">거절</button></div>`;
+        <div class="btns"><button data-act="rqreply" data-id="${r.id}" data-s="pending">보류</button><button class="ok" data-act="rqreply" data-id="${r.id}" data-s="accepted">수락</button><button class="no" data-act="rqreply" data-id="${r.id}" data-s="rejected">거절</button></div>`;
     }
     rows+=`<div class="ev ${e.seen?'':'new'}" data-act="feed-open" data-id="${e.id}">
       <div class="ic" style="${e.kind==='memo'?'background:var(--fam-bg);color:var(--fam)':''}">${EV_IC[e.kind]||'•'}</div>
@@ -2639,7 +2661,6 @@ function feedBody(){
 // 가족 소식은 이제 "가족" 탭에서 본다
 function openFeed(){
   if(pageMode)closePage();
-  if(tab!=='fam'){tab='fam';render();}
   openSheet(`${sheetHead('🔔 가족 소식')}${feedBody()}`);sheetMode='feed';
 }
 /* ================= 👪 가족 탭: 지금 · 이번 주 가족 시간표 · 같이 쉬는 날 ================= */
@@ -2736,9 +2757,9 @@ function renderFamily(){
   const pend=S.requests.filter(r=>r.st==='pending').sort((a,b)=>a.date.localeCompare(b.date));
   const myReq=S.requests.filter(r=>r.st==='pending'||r.st==='accepted'||r.st==='rejected').sort((a,b)=>b.t-a.t).slice(0,3);
   const reqSum=(()=>{const c=famInCounts();return (c.ask||c.hold)?`<div class="fsec">근무 요청</div><button class="frqsum" data-act="feed-req">📩 답할 요청 ${c.ask}${c.hold?` · 보류 ${c.hold}`:''} <span>›</span></button>`:'';})();
-  const reqHtml=S.link?reqSum:isHost?(pend.length?`<div class="fsec">답장할 요청 ${pend.length}</div>${pend.map(r=>`<div class="frq"><b>${whoName(r.by||'guest')} · ${mdw(r.date)} ${esc(shiftLabel(shiftOf(parse(r.date))))} → ${esc(shiftLabel(r.want))} 요청</b>${r.msg?`<small>"${esc(r.msg)}" · ${rel(r.t)}</small>`:`<small>${rel(r.t)}</small>`}<div class="bt"><button class="y" data-act="rqreply" data-id="${r.id}" data-s="accepted" data-mode="change">수락</button><button data-act="rqreply" data-id="${r.id}" data-s="pending">보류</button><button data-act="rqreply" data-id="${r.id}" data-s="rejected">거절</button></div></div>`).join('')}`:'')
+  const reqHtml=S.link?reqSum:isHost?(pend.length?`<div class="fsec">답장할 요청 ${pend.length}</div>${pend.map(r=>`<div class="frq"><b>${whoName(r.by||'guest')} · ${mdw(r.date)} ${esc(shiftLabel(shiftOf(parse(r.date))))} → ${esc(shiftLabel(r.want))} 요청</b>${r.msg?`<small>"${esc(r.msg)}" · ${rel(r.t)}</small>`:`<small>${rel(r.t)}</small>`}<div class="bt"><button data-act="rqreply" data-id="${r.id}" data-s="pending">보류</button><button class="y" data-act="rqreply" data-id="${r.id}" data-s="accepted">수락</button><button data-act="rqreply" data-id="${r.id}" data-s="rejected">거절</button></div></div>`).join('')}`:'')
     :(myReq.length?`<div class="fsec">내 요청</div>${myReq.map(r=>`<div class="frq g"><b>${mdw(r.date)} ${esc(shiftLabel(r.want))} 요청 · ${REQ_ST[r.st].ic} ${r.st==='pending'?'답장 기다리는 중':REQ_ST[r.st].name}</b>${r.msg?`<small>"${esc(r.msg)}"</small>`:''}</div>`).join('')}`:'');
-  return `<div class="famv">
+  return `<div class="famv">${famSyncHtml()}
     <div class="fsec">지금</div>
     <div class="now ${isHost&&fam.length?'':'one'}">${famView()?'':meCard}${isHost?memCards:''}</div>
     ${cheerBtns}
@@ -3073,25 +3094,26 @@ function openDdayEdit(){
 
 /* ================= 근무 요청 (기존 흐름) ================= */
 function reqCard(r){
+  const items=grpItems(r),many=items.length>1;
   const guest=r.srv?r.dir==='out':S.syncSettings.isGuestMode,d=parse(r.date),st=REQ_ST[r.st];
+  const when=many?`${dateRangeText(items.map(x=>x.date))} (${items.length}일)`:mdw(r.date);
   let acts='';
   if(!guest){
     if(r.st==='pending'||r.st==='accepted'||r.st==='rejected'){
       acts+=`<div class="rq-grid">
-        <button class="btn sm ghost" data-act="rqreply" data-id="${r.id}" data-s="accepted" data-mode="change">🟢 수락(변경)</button>
-        <button class="btn sm ghost" data-act="rqreply" data-id="${r.id}" data-s="accepted" data-mode="keep">🟢 수락(유지)</button>
         <button class="btn sm ghost" data-act="rqreply" data-id="${r.id}" data-s="pending">🟡 ${r.srv?'보류':'대기'}</button>
+        <button class="btn sm ghost" data-act="rqreply" data-id="${r.id}" data-s="accepted">🟢 수락</button>
         <button class="btn sm ghost" data-act="rqreply" data-id="${r.id}" data-s="rejected">🔴 거절</button>
       </div>`;
     }
-    if(r.st==='accepted')acts+=`<button class="btn sm" style="width:100%;margin-top:8px" data-act="rqapply" data-id="${r.id}">✅ ${d.getDate()}일 ${esc(shiftLabel(r.want))}로 근무 변경 적용</button>`;
+    if(r.st==='accepted')acts+=`<button class="btn sm" style="width:100%;margin-top:8px" data-act="rqapply" data-id="${r.id}">✅ ${many?when:d.getDate()+'일'} ${esc(shiftLabel(r.want))}로 근무 변경 적용</button>`;
     if(r.st==='applied'&&r.mode==='keep')acts+=`<div class="row rq-acts"><span class="muted grow">근무는 원래대로 유지했어요</span></div>`;
-    else if(r.st==='applied')acts+=`<div class="row rq-acts"><span class="muted grow">근무표에 적용됐어요 (${esc(shiftLabel(r.prev))} → ${esc(shiftLabel(r.want))})</span><button class="btn sm ghost danger" data-act="rqundo" data-id="${r.id}" style="flex:none">적용 취소</button></div>`;
+    else if(r.st==='applied')acts+=`<div class="row rq-acts"><span class="muted grow">근무표에 적용됐어요 (${many?items.length+'일 전체':`${esc(shiftLabel(r.prev))} → ${esc(shiftLabel(r.want))}`})</span><button class="btn sm ghost danger" data-act="rqundo" data-id="${r.id}" style="flex:none">적용 취소</button></div>`;
   }else if(r.st==='pending'){
     acts+=`<div class="row rq-acts"><button class="btn sm ghost danger" data-act="rqcancel" data-id="${r.id}">요청 취소</button></div>`;
   }
   return `<div class="rq">
-    <div class="rq-head"><span class="rq-title">${r.srv?`${esc(r.peerName)}${r.dir==='out'?'에게 · ':' · '}`:''}${mdw(r.date)} · ${esc(shiftLabel(r.want))} 요청</span><span class="st ${r.st}">${st.ic} ${r.srv&&r.st==='pending'&&r.held?'보류 중':st.name}</span></div>
+    <div class="rq-head"><span class="rq-title">${r.srv?`${esc(r.peerName)}${r.dir==='out'?'에게 · ':' · '}`:''}${when} · ${esc(shiftLabel(r.want))} 요청</span><span class="st ${r.st}">${st.ic} ${r.srv&&r.st==='pending'&&r.held?'보류 중':st.name}</span></div>
     ${r.msg?`<div class="bubble ask"><small>요청</small>${esc(r.msg)}</div>`:''}
     ${r.reply?`<div class="bubble rep"><small>답장</small>${esc(r.reply)}</div>`:''}
     ${acts}
@@ -3102,7 +3124,7 @@ function openRequests(){
   const guest=S.syncSettings.isGuestMode;
   sheetMode='requests';
   const w={pending:0,accepted:1,rejected:2,applied:3,cancelled:4};
-  const list=[...(S.link?S.requests.filter(r=>r.srv):S.requests)].sort((a,b)=>(w[a.st]-w[b.st])||(b.t-a.t));
+  const list=reqUniq([...(S.link?S.requests.filter(r=>r.srv):S.requests)].sort((a,b)=>(w[a.st]-w[b.st])||(b.t-a.t)||a.date.localeCompare(b.date)));
   openSheet(`
     ${sheetHead(S.link?'📩 근무 요청':guest?'📩 내 요청 내역':'📩 가족 요청함')}
     <div class="hint">${guest?'달력에서 날짜를 누르면 근무 변경을 요청할 수 있어요.':'수락하면 "근무 변경 적용" 버튼이 나와요. 적용하면 달력·통계·알람에 바로 반영돼요.'}</div>
@@ -3175,20 +3197,20 @@ function presetText(r,st,mode){
   if(st==='rejected')return '회사에서 안 된대 😭';
   return '일단 회사에 물어볼게.\n내일 확인해보고 알려줄게.';
 }
-function openReply(id,st,mode){
+function openReply(id,st){
   const r=S.requests.find(x=>x.id===id);if(!r)return;
-  const back=sheetMode;
-  replyDraft={id,st,mode:mode||null,text:presetText(r,st,mode),back};
-  const label=(st==='accepted'&&mode==='keep')?'🟢 수락(근무 유지)':`${REQ_ST[st].ic} ${REQ_ST[st].name}`;
+  const back=sheetMode,its=grpItems(r),many=its.length>1;
+  replyDraft={id,st,mode:null,text:'',back};
+  const label=`${REQ_ST[st].ic} ${REQ_ST[st].name}`;
   openSheet(`
     <div class="sh-head">
       <button class="ib" data-act="rqback" style="font-size:15px; width:auto; padding:0; color:var(--muted);">뒤로</button>
       <b style="font-size:16px;flex:1;text-align:center">${label} 답장</b>
       <span style="width:36px"></span>
     </div>
-    <div class="hint">${mdw(r.date)} · ${esc(shiftLabel(r.want))} 요청${r.msg?`: "${esc(r.msg)}"`:''}</div>
-    <textarea id="rpm">${esc(replyDraft.text)}</textarea>
-    ${st==='accepted'&&mode!=='keep'?'<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13.5px"><input type="checkbox" id="rpApply" checked> 근무표에도 바로 적용</label>':''}
+    <div class="hint">${many?`${dateRangeText(its.map(x=>x.date))} (${its.length}일)`:mdw(r.date)} · ${esc(shiftLabel(r.want))} 요청${r.msg?`: "${esc(r.msg)}"`:''}</div>
+    <textarea id="rpm" placeholder="${esc(presetText(r,st))}"></textarea>
+    ${st==='accepted'?`<div class="hint" style="padding:6px 2px 0">수락하면 근무표가 바로 바뀌어요${many?` (${its.length}일 전체)`:''}</div>`:''}
     <div class="row" style="margin-top:14px"><span class="grow"></span><button class="btn" data-act="rqsend-reply">${REQ_ST[st].ic} ${REQ_ST[st].name}으로 보내기</button></div>`);
 }
 
@@ -3252,7 +3274,8 @@ function renderCfm(){
   }else{
     const want=schType(c.sch,c.want);
     head=`📩 근무 요청<b>${esc(c.name)}에게 보낼까요?</b>`;
-    body=`<div class="cfm-q"><b>${esc(c.name)}</b> · ${md(c.k)} → <span style="display:inline-flex;vertical-align:middle">${schBadge(c.sch,c.want,'sm')}</span> ${esc(want.name)}${c.msg?`<div class="cfm-m">${esc(c.msg)}</div>`:''}</div>
+    const ds=c.dates||[c.k],when=ds.length>1?`${dateRangeText(ds)} (${ds.length}일)`:md(c.k);
+    body=`<div class="cfm-q"><b>${esc(c.name)}</b> · ${when} → <span style="display:inline-flex;vertical-align:middle">${schBadge(c.sch,c.want,'sm')}</span> ${esc(want.name)}${ds.length>1?`<div class="cfm-m">${ds.map(md).join(' · ')}</div>`:''}${c.msg?`<div class="cfm-m">${esc(c.msg)}</div>`:''}</div>
       ${c.others.length?`<div class="jopt ${c.cc?'on':''}" data-act="cfm-cc"><b>가족 모두에게도 알리기</b><small>${esc(c.others.map(m=>m.name).join(' · '))}에게는 알림만 가요 · 답은 ${esc(c.name)}만 해요</small></div>`:''}${rem}`;
   }
   openPop(`<div class="mh">${head}</div><div class="mi" style="display:block">${body}</div><div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="cfm-no">취소</button><button class="btn grow" data-act="cfm-ok">${ok}</button></div>`);
@@ -3271,8 +3294,9 @@ function doCfm(c){
     memoEdit=null;memoText='';save();memoFinish(c.k,c.notify?'고쳐서 가족에게 알렸어요':'조용히 고쳤어요');
   }else{
     if(famRemain()<=0){famLimitSheet();return;}
-    famSendReq(c.uid,c.k,c.want,c.msg,c.cc?c.others.map(m=>m.uid):[]);
-    closeSheet();toast(`${c.name}에게 요청을 보냈어요${c.cc?' · 가족에게도 알렸어요':''}`);
+    famSendReqs(c.uid,c.dates||[c.k],c.want,c.msg,c.cc?c.others.map(m=>m.uid):[]);
+    closeSheet();if(c.multi){vcSel.on=false;vcSel.dates=new Set();vcSel.msg='';vcRerender();}
+    toast(`${c.name}에게 요청을 보냈어요${c.dates&&c.dates.length>1?` (${c.dates.length}일)`:''}${c.cc?' · 가족에게도 알렸어요':''}`);
   }
 }
 function memoCard(m,k){
@@ -3326,7 +3350,7 @@ function openDay(k){
   sheetKey=k;sheetMode='day';markSel(k);
   const d=parse(k),base=baseShift(d),c=shiftOf(d),hol=holName(k)||compHol(k),ov=S.overrides[k];
   const isGuest=S.syncSettings.isGuestMode;
-  const dayReqs=S.requests.filter(r=>r.date===k&&(!r.srv||r.dir==='in')).sort((a,b)=>b.t-a.t);
+  const dayReqs=reqUniq(S.requests.filter(r=>r.date===k&&(!r.srv||r.dir==='in')).sort((a,b)=>b.t-a.t));
   const reqHtml=dayReqs.map(reqCard).join('');
   const dd=ddayHits(k);
   const head=`
@@ -4331,6 +4355,7 @@ document.addEventListener('click',e=>{
     case 'go-alarm':tab='alarm';render();break;
     case 'go-colleague':tab='colleague';render();requestAnimationFrame(()=>{const r=$('.crow.today');if(r)r.scrollIntoView({block:'center'});});break;
     case 'feed-sheet':feedTab='all';openFeed();break;
+    case 'fam-refresh':{const b0=$('#famRef');if(b0)b0.classList.add('spin');famBoot();famPoll(true).finally(()=>{const b1=$('#famRef');if(b1)b1.classList.remove('spin');});toast('가족 소식을 새로 받는 중이에요');break;}
     case 'fam-set':openFamSetPage();break;
     case 'fam-mytime':{const d=new Date();let k=shiftOf(d);if(isRest(k)){for(let i=1;i<10;i++){const k2=shiftOf(addDays(d,i));if(!isRest(k2)){k=k2;break;}}}if(!isRest(k))timesTab=k;openTimesPage();break;}
     case 'fam-wk':famWeek+=+t.dataset.v;render();break;
@@ -4389,9 +4414,10 @@ document.addEventListener('click',e=>{
       if(e.target.closest('button'))break;
       const ev=S.events.find(x=>x.id===t.dataset.id);if(!ev)break;
       ev.seen=true;save();render();
-      if(ev.kind==='memo'||ev.kind==='hol'||ev.kind==='apply'||ev.kind==='reply'||ev.kind==='req'){
+      if(ev.kind==='memo'||ev.kind==='hol'||ev.kind==='apply'||ev.kind==='reply'||ev.kind==='req'||ev.kind==='cc'){
         if(/^\d{4}-\d{2}-\d{2}$/.test(ev.k||'')){const d=parse(ev.k);tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(ev.k);}
         else openFeed();
+      }else if(ev.kind==='sch'){closeSheet();const d=parse(ev.k);if(ev.u)vcUid=ev.u;vcY=d.getFullYear();vcM=d.getMonth();vcSel.on=false;vcSel.dates=new Set();if(famView()){tab='cal';render();}else renderFamCalPage();
       }else if(ev.kind==='board'){const [y,m]=String(ev.k).split('-').map(Number);tab='cal';if(y)setCur(y,m-1);render();openBoard();}
       else openFeed();
       break;}
@@ -4453,42 +4479,48 @@ document.addEventListener('click',e=>{
     case 'gopro':openProSheet();break;
     case 'dopro':S.syncSettings.isPro=true;save();toast('⭐ 구독이 시작됐어요 (예시)');resumePending();break;
     case 'rqcancel':{
-      const r=S.requests.find(x=>x.id===t.dataset.id);
-      if(r&&r.st==='pending'){
-        r.st='cancelled';r.tu=Date.now();if(r.srv)famReqPush(r,{st:'cancelled'});
-        pushEvent('host','req',r.date,`⚪ ${md(r.date)} ${shiftLabel(r.want)} 요청이 취소됐어요`);
+      const r0=S.requests.find(x=>x.id===t.dataset.id);
+      if(r0&&r0.st==='pending'){
+        const its=grpItems(r0);
+        its.forEach(r=>{if(r.st!=='pending')return;r.st='cancelled';r.tu=Date.now();if(r.srv)famReqPush(r,{st:'cancelled'});});
+        pushEvent('host','req',r0.date,`⚪ ${its.length>1?dateRangeText(its.map(x=>x.date)):md(r0.date)} ${shiftLabel(r0.want)} 요청이 취소됐어요`);
         save();render();reopen();toast('요청을 취소했어요');
       }
       break;}
-    case 'rqreply':e.stopPropagation();openReply(t.dataset.id,t.dataset.s,t.dataset.mode);break;
+    case 'rqreply':e.stopPropagation();openReply(t.dataset.id,t.dataset.s);break;
     case 'rqback':{const b=replyDraft&&replyDraft.back;replyDraft=null;sheetMode=b;reopen();break;}
     case 'rqsend-reply':{
       if(!replyDraft)break;
-      const r=S.requests.find(x=>x.id===replyDraft.id);if(!r)break;
-      const st=replyDraft.st,mode=replyDraft.mode,text=(replyDraft.text||'').trim(),back=replyDraft.back;
-      const doApply=!!($('#rpApply')&&$('#rpApply').checked);
-      r.reply=text;r.tu=Date.now();
-      if(st==='accepted'&&mode==='keep'){
-        r.st='applied';r.mode='keep';r.prev=null;if(r.srv)famReqPush(r,{st:'applied',reply:text.slice(0,100),held:false,mode:'keep',prev:''});
-        pushEvent('guest','apply',r.date,`🟢 ${md(r.date)} 요청은 수락, 근무는 원래대로예요${text?' · '+firstLine(text).slice(0,24):''}`);
-        replyDraft=null;save();render();sheetMode=back;reopen();toast('🟢 수락(근무 유지) 답장을 보냈어요');break;
-      }
-      r.st=st;r.mode=mode||null;
-      pushEvent('guest','reply',r.date,`${REQ_ST[st].ic} ${md(r.date)} ${shiftLabel(r.want)} 요청: ${REQ_ST[st].name}${text?' · '+firstLine(text).slice(0,24):''}`);
-      if(st==='accepted'&&doApply)applyRequest(r);
-      if(r.srv)famReqPush(r,{st:r.st,reply:text.slice(0,100),held:st==='pending',mode:r.mode||'',prev:r.prev||''});
+      const r0=S.requests.find(x=>x.id===replyDraft.id);if(!r0)break;
+      const st=replyDraft.st,text=(replyDraft.text||'').trim(),back=replyDraft.back;
+      const its=grpItems(r0),many=its.length>1;
+      its.forEach(r=>{
+        r.reply=text;r.tu=Date.now();r.st=st;r.mode=null;r.held=(st==='pending');
+        if(st==='accepted')applyRequest(r,many);   // 수락하면 근무도 바로 바뀜
+        if(r.srv)famReqPush(r,{st:r.st,reply:text.slice(0,100),held:st==='pending',mode:r.mode||'',prev:r.prev||''});
+      });
+      const when=many?dateRangeText(its.map(x=>x.date)):md(r0.date);
+      pushEvent('guest','reply',r0.date,`${REQ_ST[st].ic} ${when} ${shiftLabel(r0.want)} 요청: ${REQ_ST[st].name}${text?' · '+firstLine(text).slice(0,24):''}`);
+      if(st==='accepted'&&many)pushEvent('guest','apply',r0.date,`✅ ${when} 근무가 ${shiftLabel(r0.want)}(으)로 바뀌었어요`);
       replyDraft=null;save();render();sheetMode=back;reopen();
-      toast(st==='accepted'&&doApply?`✅ 수락하고 ${md(r.date)} 근무를 ${shiftLabel(r.want)}로 바꿨어요`:`${REQ_ST[st].ic} ${REQ_ST[st].name} 답장을 보냈어요`);
+      toast(st==='accepted'?`✅ 수락하고 ${when} 근무를 ${shiftLabel(r0.want)}로 바꿨어요`:`${REQ_ST[st].ic} ${REQ_ST[st].name} 답장을 보냈어요`);
       break;}
     case 'rqapply':{
-      const r=S.requests.find(x=>x.id===t.dataset.id);if(!r||r.st!=='accepted')break;
-      applyRequest(r);if(r.srv)famReqPush(r,{st:'applied',reply:(r.reply||'').slice(0,100),held:false,mode:r.mode||'change',prev:r.prev||''});save();render();reopen();toast(`${md(r.date)} 근무를 ${shiftLabel(r.want)}로 바꿨어요`);break;}
+      const r0=S.requests.find(x=>x.id===t.dataset.id);if(!r0||r0.st!=='accepted')break;
+      const its=grpItems(r0),many=its.length>1;
+      its.forEach(r=>{if(r.st!=='accepted')return;applyRequest(r,many);if(r.srv)famReqPush(r,{st:'applied',reply:(r.reply||'').slice(0,100),held:false,mode:r.mode||'change',prev:r.prev||''});});
+      if(many)pushEvent('guest','apply',r0.date,`✅ ${dateRangeText(its.map(x=>x.date))} 근무가 ${shiftLabel(r0.want)}(으)로 바뀌었어요`);
+      save();render();reopen();toast(`${many?dateRangeText(its.map(x=>x.date)):md(r0.date)} 근무를 ${shiftLabel(r0.want)}로 바꿨어요`);break;}
     case 'rqundo':{
-      const r=S.requests.find(x=>x.id===t.dataset.id);if(!r||r.st!=='applied')break;
-      const d=parse(r.date);
-      if(r.prev===baseShift(d))delete S.overrides[r.date];else S.overrides[r.date]=r.prev;
-      r.st='accepted';r.tu=Date.now();if(r.srv)famReqPush(r,{st:'accepted',reply:(r.reply||'').slice(0,100),held:false,mode:r.mode||'change',prev:''});
-      pushEvent('guest','apply',r.date,`↩️ ${md(r.date)} 근무 변경이 취소됐어요`);
+      const r0=S.requests.find(x=>x.id===t.dataset.id);if(!r0||r0.st!=='applied')break;
+      const its=grpItems(r0),many=its.length>1;
+      its.forEach(r=>{
+        if(r.st!=='applied')return;
+        const d=parse(r.date);
+        if(r.prev===baseShift(d))delete S.overrides[r.date];else S.overrides[r.date]=r.prev;
+        r.st='accepted';r.tu=Date.now();if(r.srv)famReqPush(r,{st:'accepted',reply:(r.reply||'').slice(0,100),held:false,mode:r.mode||'change',prev:''});
+      });
+      pushEvent('guest','apply',r0.date,`↩️ ${many?dateRangeText(its.map(x=>x.date)):md(r0.date)} 근무 변경이 취소됐어요`);
       save();render();reopen();toast('적용을 취소했어요');break;}
     case 'view-requests':openRequests();break;
 
@@ -4576,11 +4608,21 @@ document.addEventListener('click',e=>{
     case 'more-times':openTimesPage();break;
     case 'more-stamps':closeSheet();openStampPage();break;
     case 'join-mode':{const n=$('#joinName');if(n)joinDraft.name=n.value.trim();joinDraft.mode=t.dataset.v==='view'?'view':'own';renderJoinPreview();break;}
-    case 'fam-viewcal':{vcUid=t.dataset.u;const n=new Date();vcY=n.getFullYear();vcM=n.getMonth();if(famView()){tab='cal';render();}else renderFamCalPage();break;}
+    case 'fam-viewcal':{vcSel.on=false;vcSel.dates=new Set();vcUid=t.dataset.u;const n=new Date();vcY=n.getFullYear();vcM=n.getMonth();if(famView()){tab='cal';render();}else renderFamCalPage();break;}
     case 'vc-prev':vcMove(-1);break;
     case 'vc-next':vcMove(1);break;
     case 'vc-today':{const n=new Date();vcY=n.getFullYear();vcM=n.getMonth();vcRerender();break;}
     case 'vc-pick':vcUid=t.dataset.u;vcRerender();break;
+    case 'vc-multi':{const p=vcEnsure();if(!p)break;vcSel={on:true,uid:p.uid,want:vcRest(p),dates:new Set(),msg:''};vcRerender();break;}
+    case 'vc-multi-off':vcSel.on=false;vcSel.dates=new Set();vcRerender();break;
+    case 'vc-ms-want':{const p=vcEnsure();if(!p)break;const m0=(document.getElementById('vcmsg')||{}).value;if(m0!==undefined)vcSel.msg=m0;vcSel.want=t.dataset.s;[...vcSel.dates].forEach(k=>{if(!vsOk(p,k))vcSel.dates.delete(k);});vcRerender();break;}
+    case 'vc-multi-send':{
+      const p=famPeers().find(x=>x.uid===vcUid);if(!p||!vcSel.on)break;
+      const dates=[...vcSel.dates].filter(k=>vsOk(p,k)).sort();
+      if(!dates.length){toast('요청할 날짜를 골라 주세요');break;}
+      if(famRemain()<=0){famLimitSheet();break;}
+      const msg=(document.getElementById('vcmsg')||{}).value||vcSel.msg||'';
+      openCfm({type:'req',uid:p.uid,name:p.name,sch:p.sch,k:dates[0],dates,want:vcSel.want,msg,cc:false,others:famOthers().filter(m=>m.uid!==p.uid),multi:true});break;}
     case 'vc-want':rqD.want=t.dataset.s;t.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===t));break;
     case 'vc-send':{
       const p=famPeers().find(x=>x.uid===vcUid),k=rqD.k;if(!p||!k)break;
@@ -4589,14 +4631,15 @@ document.addEventListener('click',e=>{
       if(schShift(p.sch,parse(k))===rqD.want){toast('이미 그 근무예요. 다른 근무를 골라주세요');break;}
       if(S.requests.some(r=>r.srv&&r.dir==='out'&&r.peer===p.uid&&r.date===k&&(r.st==='pending'||r.st==='accepted'))){toast('이미 진행 중인 요청이 있어요');break;}
       if(famRemain()<=0){famLimitSheet();break;}
-      openCfm({type:'req',uid:p.uid,name:p.name,sch:p.sch,k,want:rqD.want,msg,cc:false,others:famOthers().filter(m=>m.uid!==p.uid)});break;}
+      openCfm({type:'req',uid:p.uid,name:p.name,sch:p.sch,k,dates:[k],want:rqD.want,msg,cc:false,others:famOthers().filter(m=>m.uid!==p.uid)});break;}
     case 'cfm-no':{const c=cfm;cfm=null;closePop();if(c&&c.type==='stk'&&pageMode==='link')openLinkPage();break;}
     case 'cfm-nt':if(cfm){cfm.notify=t.dataset.v==='1';renderCfm();}break;
     case 'cfm-cc':if(cfm){cfm.cc=!cfm.cc;renderCfm();}break;
     case 'cfm-ok':{const c=cfm;cfm=null;closePop();if(c)doCfm(c);break;}
-    case 'vc-day':openVcDay(t.dataset.k);break;
+    case 'vc-day':if(vcSel.on)break;openVcDay(t.dataset.k);break;
     case 'srvmm-del':{const sid=t.dataset.sid;closePop();if(!confirm('가족이 쓴 이 메모를 지울까요?'))break;famReady().then(({F,db})=>F.deleteDoc(F.doc(db,'households',S.link.hid,'memos',sid))).catch(e=>toast('지우지 못했어요. '+famErr(e)));break;}
     case 'feed-req':feedTab='req';openFeed();break;
+    case 'req-go':{if(e.target.closest('button'))break;closeSheet();const d=parse(t.dataset.k);tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(t.dataset.k);break;}
     case 'more-addons':closeSheet();openAddonPage();break;
     case 'addon-go':closePop();tab='set';render();openAddonPage();break;
     case 'stk-board':closeSheet();openStickerBoard(cur.y,cur.m);break;
@@ -4756,12 +4799,12 @@ function afterCompose(sel,fn){
   const el=document.activeElement;
   if(el&&el.matches&&el.matches(sel)){el.blur();setTimeout(fn,60);}else fn();
 }
-function applyRequest(r){
+function applyRequest(r,quiet){
   const d=parse(r.date),prev=shiftOf(d);
   r.prev=prev;
   if(r.want===baseShift(d))delete S.overrides[r.date];else S.overrides[r.date]=r.want;
   r.st='applied';r.tu=Date.now();
-  pushEvent('guest','apply',r.date,`✅ ${md(r.date)} 근무가 ${shiftLabel(prev)} → ${shiftLabel(r.want)}(으)로 바뀌었어요`);
+  if(!quiet)pushEvent('guest','apply',r.date,`✅ ${md(r.date)} 근무가 ${shiftLabel(prev)} → ${shiftLabel(r.want)}(으)로 바뀌었어요`);
 }
 
 document.addEventListener('change',e=>{
@@ -4828,6 +4871,7 @@ document.addEventListener('input',e=>{
   else if(t.dataset&&t.dataset.obn&&ob){const v=t.value.trim().slice(0,2);if(t.dataset.obn==='r')ob.rk=v;else ob.wk[+t.dataset.obn.slice(1)]=v;}
   else if(t.id==='typeSearch'){filterTypePick(t.value);}
   else if(t.id==='rqm'){reqDraft.msg=t.value;}
+  else if(t.id==='vcmsg'){vcSel.msg=t.value;}
   else if(t.id==='rpm'&&replyDraft){replyDraft.text=t.value;}
   else if(t.id==='al'&&draft){draft.label=t.value;}
   else if(t.id==='aVol'&&draft){draft.vol=Number(t.value);const s=t.parentElement.querySelector('small');if(s)s.textContent=`알람 볼륨 기준 ${draft.vol}%`;}
@@ -4964,7 +5008,7 @@ async function fbConnect(){
     await new Promise(res=>{const un=A.onAuthStateChanged(auth,u=>{un();res(u);});});   // 저장된 로그인 복원 기다림
     if(!auth.currentUser)await A.signInAnonymously(auth);
     let db;
-    try{db=F.initializeFirestore(app,{localCache:F.persistentLocalCache({tabManager:F.persistentSingleTabManager()})});}   // 오프라인 저장
+    try{db=F.initializeFirestore(app,{localCache:F.persistentLocalCache({tabManager:F.persistentSingleTabManager()}),experimentalAutoDetectLongPolling:true});}   // 오프라인 저장 · 안드로이드 웹뷰에서 연결이 멈추지 않게 자동으로 맞춤
     catch(e){db=F.getFirestore(app);}
     if(emulator&&emulator.firestore)F.connectFirestoreEmulator(db,emulator.firestore[0],emulator.firestore[1]);
     FBX.app=app;FBX.auth=auth;FBX.db=db;FBX.uid=auth.currentUser.uid;FBX.st='ok';
@@ -5178,17 +5222,65 @@ function famStop(){famUnsub.forEach(f=>{try{f();}catch(e){}});famUnsub=[];}
 function famClear(){famStop();clearTimeout(famT);if(S){S.fam2={scheds:{},members:[],memos:{},reqIn:{},reqOut:{},me:{sent:0,bonus:0},seenMemo:[],memoRev:{},reqCc:{},init:false};S.requests=(S.requests||[]).filter(r=>!r.srv);}}
 function famSaveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function famRefreshUi(){
+  const ae=document.activeElement;if(ae&&ae.id==='vcmsg')return;   // 요청 메시지를 쓰는 중이면 건드리지 않음
   if(pageMode==='famcal'){renderFamCalPage();return;}
-  if(pageMode||$('#sheet').classList.contains('open')||$('#pop').classList.contains('open'))return;
-  if(tab==='fam'||(tab==='cal'&&!paint))render();
+  if(paint||vcSel.on)return;
+  // 날짜 창 · 설정 · 소식 · 팝업이 열려 있어도 뒤 화면(달력 · 가족 탭)은 최신으로 (열린 창은 그대로)
+  if(tab==='fam'||tab==='cal'){render();if(sheetMode==='day'&&sheetKey)markSel(sheetKey);}
 }
+// ---- 동기화 표시 · 근무 변경 알림 · 서버에서 직접 확인
+const famSyncTxt=()=>{if(!S.link)return '';const t=S.fam2&&S.fam2.syncAt;if(!t)return '동기화 전';const m=Math.floor((Date.now()-t)/60000);return m<1?'방금 동기화됨':`${m}분 전 동기화`;};
+const famSyncHtml=()=>S.link?`<div class="syncl" id="syncl">${famSyncTxt()}</div>`:'';
+function famMarkSync(){if(!S.link||!S.fam2)return;S.fam2.syncAt=Date.now();const e=document.getElementById('syncl');if(e)e.textContent=famSyncTxt();}
+setInterval(()=>{const e=document.getElementById('syncl');if(e)e.textContent=famSyncTxt();},30000);
+function famApplyScheds(snap){
+  const prevAll=S.fam2.scheds||{},m={};
+  snap.docs.forEach(d=>{const v=d.data();m[d.id]={...v,updatedAt:v.updatedAt&&v.updatedAt.toMillis?v.updatedAt.toMillis():0};});
+  if(!snap.metadata.fromCache&&S.link){
+    famMarkSync();
+    if(S.fam2.init)Object.keys(m).forEach(u=>{
+      if(u===S.link.uid)return;const o=prevAll[u],n=m[u];
+      if(!o||!n||o.updatedAt===n.updatedAt)return;   // 처음 올라온 근무표 · 안 바뀐 것은 알림 없음
+      try{famSchChange(u,o,n);}catch(e){}
+    });
+  }
+  S.fam2.scheds=m;famSaveLocal();famRefreshUi();
+}
+// 가족이 근무를 바꿨으면 소식 한 줄 (오늘부터 62일 안 날짜만 비교)
+function famSchChange(u,o,n){
+  const ch=[],t0=new Date();
+  for(let i=0;i<62;i++){const d=addDays(t0,i),a=schShift(o,d),b=schShift(n,d);if(a!==b)ch.push({k:fmt(d),a,b});}
+  if(!ch.length)return;
+  const who=famNameOf(u),nm=x=>x||'미정';
+  const text=ch.length===1?`${who}${iga(who)} ${+ch[0].k.slice(8)}일 근무를 바꿨어요 (${nm(ch[0].a)} → ${nm(ch[0].b)})`
+    :ch.length===2?`${who}${iga(who)} ${+ch[0].k.slice(8)}일 · ${+ch[1].k.slice(8)}일 근무를 바꿨어요`
+    :`${who}${iga(who)} 근무 ${ch.length}일을 바꿨어요`;
+  pushEvent('host','sch',ch[0].k,text);S.events[0].u=u;
+}
+// 실시간 연결이 멈췄을 때를 위해: 화면을 보는 동안 가끔 서버에서 직접 확인 (같은 처리 함수를 씀)
+let famPollAt=0,famPolling=false;
+async function famPoll(force){
+  if(!S.link||!fbCfg()||famPolling)return;
+  if(!force&&document.visibilityState!=='visible')return;
+  famPolling=true;famPollAt=Date.now();
+  try{
+    const {F,db}=await famReady();if(!S.link)return;
+    const hid=S.link.hid,uid=S.link.uid,col=n=>F.collection(db,'households',hid,n);
+    const [sc,mm,ri,ro,rc]=await Promise.all([
+      F.getDocs(col('schedules')),F.getDocs(col('memos')),
+      F.getDocs(F.query(col('requests'),F.where('to','==',uid))),
+      F.getDocs(F.query(col('requests'),F.where('from','==',uid))),
+      F.getDocs(F.query(col('requests'),F.where('cc','array-contains',uid)))]);
+    if(!S.link)return;
+    famApplyScheds(sc);famOnMemos(mm);famOnReqs('reqIn',ri);famOnReqs('reqOut',ro);famOnCc(rc);
+  }catch(e){}finally{famPolling=false;}
+}
+setInterval(()=>{if(S&&S.link&&document.visibilityState==='visible'&&Date.now()-famPollAt>110000)famPoll();},30000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&S&&S.link)famPoll(true);});
 async function famListen(){
   famStop();if(!S.link||!fbCfg())return;
   const {F,db}=await famReady();const hid=S.link.hid;
-  famUnsub.push(F.onSnapshot(F.collection(db,'households',hid,'schedules'),snap=>{
-    const m={};snap.docs.forEach(d=>{const v=d.data();m[d.id]={...v,updatedAt:v.updatedAt&&v.updatedAt.toMillis?v.updatedAt.toMillis():0};});
-    S.fam2.scheds=m;famSaveLocal();famRefreshUi();
-  },()=>{}));
+  famUnsub.push(F.onSnapshot(F.collection(db,'households',hid,'schedules'),snap=>famApplyScheds(snap),()=>{}));
   const uid=S.link.uid;
   famUnsub.push(F.onSnapshot(F.collection(db,'households',hid,'memos'),snap=>famOnMemos(snap),()=>{}));
   famUnsub.push(F.onSnapshot(F.query(F.collection(db,'households',hid,'requests'),F.where('to','==',uid)),snap=>famOnReqs('reqIn',snap),()=>{}));
@@ -5258,9 +5350,11 @@ function famPeers(){
 }
 /* ---- 가족 달력 (보기만): "가족 것만 볼래요"는 달력 탭에, 나머지는 가족 탭에서 눌러서 열림 ---- */
 var vcUid='',vcY=0,vcM=0;
+var vcSel={on:false,uid:'',want:'',dates:new Set(),msg:''},vcAnim=0,vsDrag=null;   // 여러 날 요청 고르기 · 달 넘김 효과
 function vcEnsure(){
   const ps=famPeers();if(!ps.length)return null;
   if(!ps.some(p=>p.uid===vcUid))vcUid=ps[0].uid;
+  if(vcSel.on&&vcSel.uid!==vcUid){vcSel.on=false;vcSel.dates=new Set();}   // 다른 사람 달력으로 가면 고른 날 취소
   if(!vcY){const n=new Date();vcY=n.getFullYear();vcM=n.getMonth();}
   return ps.find(p=>p.uid===vcUid);
 }
@@ -5274,24 +5368,52 @@ function vcGrid(p){
     const ov=sch.overrides&&sch.overrides[k];
     const ring=rqRing(S.requests.filter(r=>r.srv&&r.dir==='out'&&r.peer===p.uid&&r.date===k).map(r=>r.st==='applied'?{...r,st:'accepted'}:r));
     const st0=schStk(sch,k),hone=hol&&st0.length?holOne(hol):'',stRow=st0.slice(0,2),stMore=st0.slice(2);
-    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${stMore.length?'m3':''} ${ring}" data-act="vc-day" data-k="${k}"><div class="dn ${hol?'hol':''} ${hol||dow===0?'sun':dow===6?'sat':''} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIconD(x.d,x.n,hone?12:13)).join('')}</span>`:''}${!st0.length&&hol&&shortHol(hol)?`<span class="hn ${shortHol(hol).length>3?'sm':''}">${esc(shortHol(hol))}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIconD(x.d,x.n,12)).join('')}</div>`:''}<div class="bwrap">${band}${sh===''?'':schBadge(sch,sh,'',ov?'<i class="dot"></i>':'')}</div></div>`;
+    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${stMore.length?'m3':''} ${ring} ${vsCls(p,k)}" data-act="vc-day" data-k="${k}"><div class="dn ${hol?'hol':''} ${hol||dow===0?'sun':dow===6?'sat':''} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIconD(x.d,x.n,hone?12:13)).join('')}</span>`:''}${!st0.length&&hol&&shortHol(hol)?`<span class="hn ${shortHol(hol).length>3?'sm':''}">${esc(shortHol(hol))}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIconD(x.d,x.n,12)).join('')}</div>`:''}<div class="bwrap">${band}${sh===''?'':schBadge(sch,sh,'',ov?'<i class="dot"></i>':'')}</div></div>`;
   }
   return `<div class="calwrap"><div class="dow">${DOW.map((d,i)=>`<span class="${i===0?'s':i===6?'t':''}">${d}</span>`).join('')}</div><div class="grid" style="grid-template-rows:repeat(${rows},1fr)">${cells}</div></div>`;
 }
 const vcChips=()=>{const ps=famPeers();return ps.length>1?`<div class="vcchips">${ps.map(x=>`<button class="${x.uid===vcUid?'on':''}" data-act="vc-pick" data-u="${esc(x.uid)}">${esc(x.name)} 달력</button>`).join('')}</div>`:'';};
+const vcRest=p=>((p.sch.types||[]).find(x=>x.rest)||{k:'휴'}).k;
+const vcTools=()=>{
+  const ps=famPeers();
+  const chips=ps.length>1?ps.map(x=>`<button class="${x.uid===vcUid?'on':''}" data-act="vc-pick" data-u="${esc(x.uid)}">${esc(x.name)} 달력</button>`).join(''):'';
+  return `<div class="vcchips">${chips}<span class="grow"></span>${vcSel.on?'':'<button class="vcmulti" data-act="vc-multi">☑ 여러 날 요청</button>'}</div>`;
+};
+// 여러 날 요청: 고를 수 있는 날 = 오늘 이후 · 지금 그 근무가 아님 · 진행 중인 요청이 없음
+function vsOk(p,k){
+  if(k<fmt(new Date()))return false;
+  if(schShift(p.sch,parse(k))===vcSel.want)return false;
+  return !S.requests.some(r=>r.srv&&r.dir==='out'&&r.peer===p.uid&&r.date===k&&(r.st==='pending'||r.st==='accepted'));
+}
+const vsCls=(p,k)=>vcSel.on?(vcSel.dates.has(k)?'vsel':(vsOk(p,k)?'':'vdis')):'';
+function vsBar(){const n=vcSel.dates.size,e=document.getElementById('vsN'),b=document.getElementById('vsGo');if(e)e.textContent=n?`${n}일 선택`:'날짜를 눌러서 · 쭉 밀어서 골라요';if(b)b.disabled=!n;}
+function vsSet(k,on){
+  if(on){if(vcSel.dates.size>=14&&!vcSel.dates.has(k)){toast('한 번에 14일까지예요');return;}vcSel.dates.add(k);}else vcSel.dates.delete(k);
+  const c=document.querySelector(`#vcsl .cell[data-k="${k}"]`);if(c)c.classList.toggle('vsel',on);
+  vsBar();
+}
+function vcSelBar(p){
+  if(!vcSel.on)return '';
+  const types=(p.sch.types||[]).slice(0,5),n=vcSel.dates.size;
+  return `<div class="vsbar">
+    <div class="seg">${types.map(x=>`<button class="${vcSel.want===x.k?'on':''}" data-act="vc-ms-want" data-s="${esc(x.k)}">${schBadge(p.sch,x.k,'sm')}${esc(x.name)}</button>`).join('')}</div>
+    <input id="vcmsg" maxlength="60" placeholder="메시지 (선택)" value="${esc(vcSel.msg||'')}">
+    <div class="vs-row"><span class="vs-n" id="vsN">${n?`${n}일 선택`:'날짜를 눌러서 · 쭉 밀어서 골라요'}</span><span class="grow"></span><button class="btn ghost sm" data-act="vc-multi-off">취소</button><button class="btn sm" id="vsGo" data-act="vc-multi-send" ${n?'':'disabled'}>요청 보내기</button></div>
+  </div>`;
+}
 function renderViewTab(){   // 달력 탭 (가족 것만 볼래요)
   const p=vcEnsure(),top=$('#top'),v=$('#view'),n=new Date(),isCur=vcY===n.getFullYear()&&vcM===n.getMonth();
   top.className='cal-top';v.className='calv';
   top.innerHTML=`<div class="hl"></div><div class="cal-mid"><div class="ym"><button class="ib" data-act="vc-prev">‹</button><h1>${vcY}.${pad(vcM+1)}</h1><button class="ib" data-act="vc-next">›</button></div><div class="sub"><b>${esc(p.name)} 달력</b> · 보기만</div></div><div class="hr">${isCur?'':'<button class="today-btn" data-act="vc-today">오늘</button>'}</div>`;
-  v.innerHTML=`${vcChips()}${vcGrid(p)}`;
-  fitDn(v);
+  v.innerHTML=`${vcTools()}<div id="vcsl" class="vcsl ${vcSel.on?'sel':''}">${vcGrid(p)}</div>${vcSelBar(p)}`;
+  fitDn(v);vcEnter();
 }
 function renderFamCalPage(){   // 가족 탭에서 이름을 누르면 (내 달력이 따로 있는 사람)
   const p=vcEnsure();if(!p){closePage();return;}
   openPage(`${pageHead(esc(p.name)+' 달력')}<div class="pg-b" style="display:flex;flex-direction:column;padding:0">
     <div class="vcnav"><button class="ib" data-act="vc-prev">‹</button><b>${vcY}.${pad(vcM+1)}</b><button class="ib" data-act="vc-next">›</button></div>
-    ${vcChips()}<div class="vcbox">${vcGrid(p)}</div></div>`,'famcal');
-  fitDn($('#page'));
+    ${vcTools()}<div class="vcbox"><div id="vcsl" class="vcsl ${vcSel.on?'sel':''}">${vcGrid(p)}</div></div>${vcSelBar(p)}</div>`,'famcal');
+  fitDn($('#page'));vcEnter();
 }
 var rqD={k:'',u:'',want:''};
 function openVcDay(k){   // 가족 달력에서 날짜를 누르면: 그 사람의 근무 + 요청 보내기
@@ -5299,7 +5421,7 @@ function openVcDay(k){   // 가족 달력에서 날짜를 누르면: 그 사람�
   const d=parse(k),sh=schShift(p.sch,d),hol=holName(k),rest=((p.sch.types||[]).find(x=>x.rest)||{k:'휴'}).k;
   if(rqD.k!==k||rqD.u!==p.uid)rqD={k,u:p.uid,want:rest};
   const past=k<fmt(new Date());
-  const mine=S.requests.filter(r=>r.srv&&r.dir==='out'&&r.peer===p.uid&&r.date===k).sort((a,b)=>b.t-a.t);
+  const mine=reqUniq(S.requests.filter(r=>r.srv&&r.dir==='out'&&r.peer===p.uid&&r.date===k).sort((a,b)=>b.t-a.t));
   const open=mine.some(r=>r.st==='pending'||r.st==='accepted');
   const chips=(p.sch.types||[]).slice(0,5).map(x=>`<button class="${rqD.want===x.k?'on':''}" data-act="vc-want" data-s="${esc(x.k)}">${schBadge(p.sch,x.k,'sm')}${esc(x.name)}</button>`).join('');
   sheetMode='vcday';
@@ -5313,6 +5435,52 @@ function openVcDay(k){   // 가족 달력에서 날짜를 누르면: 그 사람�
         <div class="row" style="margin-top:10px"><div class="usage-hint">무료 ${famRemain()}건 남음</div><span class="grow"></span><button class="btn sm" data-act="vc-send">요청 보내기</button></div>`}`);
 }
 function vcRerender(){if(pageMode==='famcal')renderFamCalPage();else render();}
+function vcEnter(){   // 달이 넘어간 뒤 새 달이 옆에서 들어오는 효과
+  if(!vcAnim)return;const d=vcAnim;vcAnim=0;const el=document.getElementById('vcsl');if(!el||reduceMotion())return;
+  const w=el.clientWidth||innerWidth;el.style.transition='none';el.style.transform=`translateX(${d>0?w:-w}px)`;el.getBoundingClientRect();
+  el.style.transition='transform .18s ease-out';el.style.transform='translateX(0)';
+}
+let vsx=null,vsy=0,vdx=0,vlock=null,vst=0,vbusy=false;
+document.addEventListener('touchstart',e=>{
+  const el=e.target.closest&&e.target.closest('#vcsl');
+  if(!el||vbusy||vcSel.on||$('#sheet').classList.contains('open')||$('#pop').classList.contains('open')){vsx=null;return;}
+  vsx=e.touches[0].clientX;vsy=e.touches[0].clientY;vdx=0;vlock=null;vst=Date.now();
+},{passive:true});
+document.addEventListener('touchmove',e=>{
+  if(vsx===null)return;
+  const x=e.touches[0].clientX-vsx,y=e.touches[0].clientY-vsy;
+  if(vlock===null&&(Math.abs(x)>8||Math.abs(y)>8))vlock=Math.abs(x)>Math.abs(y)?'x':'y';
+  if(vlock!=='x')return;
+  vdx=x;const el=document.getElementById('vcsl');if(!el)return;
+  el.style.transition='none';el.style.transform=`translateX(${x}px)`;
+},{passive:true});
+document.addEventListener('touchend',()=>{
+  if(vsx===null||vlock!=='x'){vsx=null;return;}
+  vsx=null;const el=document.getElementById('vcsl');if(!el)return;
+  const w=el.clientWidth||innerWidth,fast=Math.abs(vdx)/(Date.now()-vst+1)>0.5;
+  let dir=(Math.abs(vdx)>w*0.22||(fast&&Math.abs(vdx)>30))?(vdx<0?1:-1):0;
+  const mk=vcY*12+vcM;if(mk+dir<MIN_M||mk+dir>MAX_M)dir=0;
+  if(!dir){el.style.transition='transform .2s ease';el.style.transform='translateX(0)';return;}
+  vbusy=true;el.style.transition='transform .16s ease-in';el.style.transform=`translateX(${dir>0?-w:w}px)`;
+  setTimeout(()=>{vbusy=false;vcAnim=dir;vcMove(dir);},170);
+},{passive:true});
+// 여러 날 요청: 날짜를 하나씩 누르거나 쭉 밀어서 고르기 (달력 칠하기처럼)
+document.addEventListener('pointerdown',e=>{
+  if(!vcSel.on)return;const c=e.target.closest&&e.target.closest('#vcsl .cell[data-k]');if(!c)return;
+  const p=famPeers().find(x=>x.uid===vcUid);if(!p)return;
+  const k=c.dataset.k,on=!vcSel.dates.has(k);
+  vsDrag={on,last:k,id:e.pointerId};
+  if(!on||vsOk(p,k))vsSet(k,on);
+});
+document.addEventListener('pointermove',e=>{
+  if(!vsDrag||e.pointerId!==vsDrag.id)return;
+  const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest&&el.closest('#vcsl .cell[data-k]');
+  if(!c||c.dataset.k===vsDrag.last)return;
+  vsDrag.last=c.dataset.k;
+  const p=famPeers().find(x=>x.uid===vcUid);if(!p)return;
+  if(!vsDrag.on||vsOk(p,c.dataset.k))vsSet(c.dataset.k,vsDrag.on);
+});
+['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,()=>{vsDrag=null;}));
 function vcMove(n){let y=vcY,m=vcM+n;if(m<0){m=11;y--;}if(m>11){m=0;y++;}const k=y*12+m;if(k<MIN_M||k>MAX_M)return;vcY=y;vcM=m;vcRerender();}
 /* ================= 가족 메모 · 근무 요청 (3단계) =================
  * 가족 메모(♥) 는 households/{hid}/memos, 근무 요청은 households/{hid}/requests 에 두고,
@@ -5369,6 +5537,7 @@ function famOnMemos(snap){
   const m={};
   snap.docs.forEach(d=>{const v=d.data();m[d.id]={by:v.by,byName:v.byName,date:v.date,text:v.text,rev:+v.rev||0,t:tsMs(v.createdAt)||Date.now()};});
   const L=S.link;if(!L)return;
+  if(!snap.metadata.fromCache)famMarkSync();
   if(!snap.metadata.fromCache){
     const seen=new Set(S.fam2.seenMemo||[]),rv=S.fam2.memoRev||{};
     if(S.fam2.init){
@@ -5393,7 +5562,7 @@ function famRemoteMemos(k){
 // ---- 근무 요청: 받은 것 · 보낸 것
 function famMirrorReqs(){
   const f=S.fam2;if(!S.link)return;
-  const map=(id,v,dir)=>({id,srv:true,dir,date:v.date,want:v.want,msg:v.msg||'',st:v.st,reply:v.reply||'',held:!!v.held,mode:v.mode||null,prev:v.prev||null,
+  const map=(id,v,dir)=>({id,srv:true,dir,date:v.date,want:v.want,msg:v.msg||'',st:v.st,reply:v.reply||'',held:!!v.held,mode:v.mode||null,prev:v.prev||null,grp:v.grp||'',gn:v.gn||1,lead:!!v.lead,
     t:v.t,tu:v.u||v.t,peer:dir==='in'?v.from:v.to,peerName:dir==='in'?v.fromName:v.toName,by:dir==='in'?'guest':'host'});
   const out=[];
   Object.entries(f.reqIn||{}).forEach(([id,v])=>out.push(map(id,v,'in')));
@@ -5402,19 +5571,22 @@ function famMirrorReqs(){
 }
 function famOnReqs(field,snap){
   const L=S.link;if(!L)return;
+  if(!snap.metadata.fromCache)famMarkSync();
   const prev=S.fam2[field]||{},m={};
-  snap.docs.forEach(d=>{const v=d.data();m[d.id]={from:v.from,to:v.to,fromName:v.fromName,toName:v.toName,date:v.date,want:v.want,msg:v.msg,st:v.st,reply:v.reply,held:!!v.held,mode:v.mode,prev:v.prev,t:tsMs(v.createdAt)||Date.now(),u:tsMs(v.updatedAt)||0};});
+  snap.docs.forEach(d=>{const v=d.data();m[d.id]={from:v.from,to:v.to,fromName:v.fromName,toName:v.toName,date:v.date,want:v.want,msg:v.msg,st:v.st,reply:v.reply,held:!!v.held,mode:v.mode,prev:v.prev,grp:v.grp||'',gn:+v.gn||1,lead:!!v.lead,t:tsMs(v.createdAt)||Date.now(),u:tsMs(v.updatedAt)||0};});
   if(!snap.metadata.fromCache&&S.fam2.init){
+    const when=n=>{if(!n.grp)return `${+n.date.slice(8)}일`;const ds=Object.values(m).filter(x=>x.grp===n.grp).map(x=>x.date);return `${dateRangeText(ds)} (${ds.length}일)`;};
     Object.keys(m).forEach(id=>{
       const n=m[id],o=prev[id];
+      if(n.grp&&!n.lead)return;   // 여러 날 요청은 첫 요청 하나만 소식으로
       if(field==='reqIn'){
-        if(!o&&n.st==='pending')pushEvent('host','req',n.date,`${n.fromName}${iga(n.fromName)} ${+n.date.slice(8)}일 ${n.want} 요청해요`);
+        if(!o&&n.st==='pending')pushEvent('host','req',n.date,`${n.fromName}${iga(n.fromName)} ${when(n)} ${n.want} 요청해요`);
       }else if(o&&(o.st!==n.st||o.held!==n.held)){
-        const who=n.toName+iga(n.toName),d=+n.date.slice(8);
-        if(n.st==='accepted')pushEvent('host','reply',n.date,`🟢 ${who} ${d}일 ${n.want} 요청을 수락했어요${n.reply?' · '+firstLine(n.reply).slice(0,24):''}`);
-        else if(n.st==='rejected')pushEvent('host','reply',n.date,`🔴 ${who} ${d}일 ${n.want} 요청을 거절했어요${n.reply?' · '+firstLine(n.reply).slice(0,24):''}`);
-        else if(n.st==='pending'&&n.held)pushEvent('host','reply',n.date,`🟡 ${who} ${d}일 ${n.want} 요청을 보류했어요${n.reply?' · '+firstLine(n.reply).slice(0,24):''}`);
-        else if(n.st==='applied')pushEvent('host','apply',n.date,`✅ ${who} ${d}일 근무를 바꿨어요`);
+        const who=n.toName+iga(n.toName),d=when(n),rp=n.reply?' · '+firstLine(n.reply).slice(0,24):'';
+        if(n.st==='accepted')pushEvent('host','reply',n.date,`🟢 ${who} ${d} ${n.want} 요청을 수락했어요${rp}`);
+        else if(n.st==='rejected')pushEvent('host','reply',n.date,`🔴 ${who} ${d} ${n.want} 요청을 거절했어요${rp}`);
+        else if(n.st==='pending'&&n.held)pushEvent('host','reply',n.date,`🟡 ${who} ${d} ${n.want} 요청을 보류했어요${rp}`);
+        else if(n.st==='applied')pushEvent('host',o.st==='pending'?'reply':'apply',n.date,o.st==='pending'?`🟢 ${who} ${d} ${n.want} 요청을 수락했어요 · 근무가 바뀌었어요${rp}`:`✅ ${who} ${d} 근무를 바꿨어요`);
       }
     });
   }
@@ -5424,18 +5596,25 @@ function famOnReqs(field,snap){
 function famOnCc(snap){
   const L=S.link;if(!L)return;
   const prev=S.fam2.reqCc||{},m={};
-  snap.docs.forEach(d=>{const v=d.data();m[d.id]={fromName:v.fromName,toName:v.toName,date:v.date,want:v.want};});
+  snap.docs.forEach(d=>{const v=d.data();m[d.id]={fromName:v.fromName,toName:v.toName,date:v.date,want:v.want,grp:v.grp||'',lead:!!v.lead};});
   if(snap.metadata.fromCache)return;
-  if(S.fam2.init)Object.keys(m).forEach(id=>{if(prev[id])return;const n=m[id];pushEvent('host','cc',n.date,`${n.fromName}${iga(n.fromName)} ${n.toName}에게 ${md(n.date)} ${n.want} 요청했어요`);});
+  if(S.fam2.init)Object.keys(m).forEach(id=>{
+    if(prev[id])return;const n=m[id];if(n.grp&&!n.lead)return;
+    const ds=n.grp?Object.values(m).filter(x=>x.grp===n.grp).map(x=>x.date):[n.date];
+    pushEvent('host','cc',n.date,`${n.fromName}${iga(n.fromName)} ${n.toName}에게 ${ds.length>1?`${dateRangeText(ds)} (${ds.length}일)`:md(n.date)} ${n.want} 요청했어요`);
+  });
   S.fam2.reqCc=m;famSaveLocal();famRefreshUi();
 }
-async function famSendReq(toUid,date,want,msg,cc){
+async function famSendReqs(toUid,dates,want,msg,cc){
   const {F,db,uid}=await famReady();const hid=S.link.hid;
-  const ref=F.doc(F.collection(db,'households',hid,'requests'));
-  const b=F.writeBatch(db);
-  const doc0={from:uid,to:toUid,fromName:S.link.name,toName:famNameOf(toUid),date,want,msg:String(msg||'').slice(0,60),st:'pending',reply:'',held:false,createdAt:F.serverTimestamp(),updatedAt:F.serverTimestamp()};
-  if(cc&&cc.length)doc0.cc=cc.slice(0,3);   // "가족 모두에게도 알리기": 알림만 받는 가족
-  b.set(ref,doc0);
+  const col=F.collection(db,'households',hid,'requests'),b=F.writeBatch(db),n=dates.length;
+  const grp=n>1?F.doc(col).id:'';
+  dates.forEach((date,i)=>{
+    const d0={from:uid,to:toUid,fromName:S.link.name,toName:famNameOf(toUid),date,want,msg:String(msg||'').slice(0,60),st:'pending',reply:'',held:false,createdAt:F.serverTimestamp(),updatedAt:F.serverTimestamp()};
+    if(cc&&cc.length)d0.cc=cc.slice(0,3);   // "가족 모두에게도 알리기": 알림만 받는 가족
+    if(n>1){d0.grp=grp;d0.gn=n;if(i===0)d0.lead=true;}   // 여러 날 요청: 같은 묶음 · 첫 요청만 소식 · 횟수는 묶음 1건
+    b.set(F.doc(col),d0);
+  });
   b.update(famMember(F,db,hid,uid),{sent:F.increment(1)});
   b.commit().catch(e=>toast('요청을 보내지 못했어요. '+famErr(e)));
 }
@@ -5453,22 +5632,33 @@ function rqRing(list){
   if(list.some(r=>r.st==='rejected'&&recent(r)))return 'rq-no';
   return '';
 }
+/* ---- 여러 날 요청 묶음(grp): 같은 묶음의 요청은 한 줄로 보이고 한 번에 답해요 ---- */
+const grpItems=r=>(r&&r.grp)?(S.requests||[]).filter(x=>x.srv&&x.grp===r.grp&&x.dir===r.dir).sort((a,b)=>a.date.localeCompare(b.date)):[r];
+const reqUniq=list=>{const seen=new Set();return list.filter(r=>{if(!r.grp)return true;const k=r.grp+r.dir;if(seen.has(k))return false;seen.add(k);return true;});};
+function dateRangeText(ds){   // 10/31~11/2 · 떨어진 날은 10/31 · 11/2 · 11/5 (4일 넘으면 외 N일)
+  ds=[...ds].sort();if(ds.length<2)return ds.length?md(ds[0]):'';
+  let run=true;for(let i=1;i<ds.length;i++)if(addK(ds[i-1],1)!==ds[i])run=false;
+  if(run)return `${md(ds[0])}~${md(ds[ds.length-1])}`;
+  return ds.length<=3?ds.map(md).join(' · '):`${ds.slice(0,3).map(md).join(' · ')} 외 ${ds.length-3}일`;
+}
 function famInCounts(){
   if(!S.link)return {ask:0,hold:0};
-  const ins=(S.requests||[]).filter(r=>(!r.srv||r.dir==='in')&&r.st==='pending'&&(!S.link||r.srv));
+  const ins=reqUniq((S.requests||[]).filter(r=>(!r.srv||r.dir==='in')&&r.st==='pending'&&(!S.link||r.srv)).sort((a,b)=>a.date.localeCompare(b.date)));
   return {ask:ins.filter(r=>!r.held).length,hold:ins.filter(r=>r.held).length};
 }
-// 🔔 소식 › 근무 요청 탭: 답할 요청 / 보류 중
+// 🔔 소식 › 근무 요청 탭: 답할 요청 / 보류 중 (줄을 누르면 그 날짜 달력으로)
 function reqTabBody(){
-  const ins=S.requests.filter(r=>r.srv&&r.dir==='in'&&r.st==='pending').sort((a,b)=>a.date.localeCompare(b.date));
-  const row=r=>`<div class="ev ${r.held?'':'new'}">
+  const ins=reqUniq(S.requests.filter(r=>r.srv&&r.dir==='in'&&r.st==='pending').sort((a,b)=>a.date.localeCompare(b.date)));
+  const row=r=>{
+    const its=grpItems(r),n=its.length,when=n>1?`${dateRangeText(its.map(x=>x.date))} (${n}일)`:`${+r.date.slice(8)}일`;
+    return `<div class="ev ${r.held?'':'new'}" data-act="req-go" data-k="${r.date}">
       <div class="ic">📩</div>
-      <div class="tx"><b>${esc(r.peerName)}</b>${iga(r.peerName)} ${+r.date.slice(8)}일 ${esc(r.want)} 요청해요
+      <div class="tx"><b>${esc(r.peerName)}</b>${iga(r.peerName)} ${when} ${esc(r.want)} 요청해요
         ${r.msg?`<div class="q">“${esc(r.msg)}”</div>`:''}
         ${r.held?'<span class="mq-tag hold">⏳ 보류 중</span>':''}
-        <div class="btns"><button class="ok" data-act="rqreply" data-id="${r.id}" data-s="accepted" data-mode="change">수락</button>${r.held?'':`<button data-act="rqreply" data-id="${r.id}" data-s="pending">보류</button>`}<button class="no" data-act="rqreply" data-id="${r.id}" data-s="rejected">거절</button></div>
+        <div class="btns">${r.held?'':`<button data-act="rqreply" data-id="${r.id}" data-s="pending">보류</button>`}<button class="ok" data-act="rqreply" data-id="${r.id}" data-s="accepted">수락</button><button class="no" data-act="rqreply" data-id="${r.id}" data-s="rejected">거절</button></div>
         <small>${rel(r.t)}</small></div>
-    </div>`;
+    </div>`;};
   const ask=ins.filter(r=>!r.held),hold=ins.filter(r=>r.held);
   return `${ask.length?`<div class="feed-day">답할 요청 <b class="gcnt">${ask.length}</b></div>${ask.map(row).join('')}`:''}
     ${hold.length?`<div class="feed-day">보류 중 <b class="gcnt">${hold.length}</b></div>${hold.map(row).join('')}`:''}
@@ -5672,7 +5862,7 @@ window.__refresh=()=>{
   if(tab==='alarm'||tab==='set')render();
   // 권한 화면에서 돌아오면 바로 ✓ 로
   if(ob&&ob.step==='alarm')renderOb();else if(pageMode==='perm')openPermPage();
-  pushAlarmsToNative();refreshHolidays();autoBackup();famBoot();
+  pushAlarmsToNative();refreshHolidays();autoBackup();famBoot();famPoll(true);
 };
 
 applyTheme();applyFont();
