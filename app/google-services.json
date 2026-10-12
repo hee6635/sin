@@ -12,7 +12,12 @@
           "package_name": "com.eonjeswieo.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "516160617216-nrfrilhfks6sdcnhb0fjjbq9mj12rsir.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAvUbzaUDPbbbWfGN1MEem7BpMtRS1187s"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "516160617216-nrfrilhfks6sdcnhb0fjjbq9mj12rsir.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
