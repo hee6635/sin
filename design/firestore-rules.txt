@@ -129,7 +129,7 @@ service cloud.firestore {
       allow read: if isMember(hid);
       allow create, update: if signedIn() && request.auth.uid == uid && isMember(hid)
         && get(memberPath(hid, uid)).data.get('mode', 'own') == 'own'
-        && request.resource.data.keys().hasOnly(['v', 'patternName', 'teamName', 'pattern', 'anchor', 'types', 'overrides', 'holRest', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['v', 'patternName', 'teamName', 'pattern', 'anchor', 'types', 'overrides', 'holRest', 'stk', 'sdefs', 'updatedAt'])
         && request.resource.data.v == 1
         && request.resource.data.patternName is string && request.resource.data.patternName.size() <= 20
         && request.resource.data.teamName is string && request.resource.data.teamName.size() <= 10
@@ -138,6 +138,9 @@ service cloud.firestore {
         && request.resource.data.types is list && request.resource.data.types.size() <= 24
         && request.resource.data.overrides is map && request.resource.data.overrides.size() <= 500
         && request.resource.data.holRest is bool
+        // 스티커 보여주기(켠 사람만): 날짜별 스티커 목록 · 스티커 종류
+        && request.resource.data.get('stk', {}) is map && request.resource.data.get('stk', {}).size() <= 400
+        && request.resource.data.get('sdefs', []) is list && request.resource.data.get('sdefs', []).size() <= 12
         && request.resource.data.updatedAt == request.time;
       allow delete: if signedIn() && (request.auth.uid == uid || isOwner(hid));
     }
@@ -145,10 +148,13 @@ service cloud.firestore {
     // ───────── 근무 요청: households/{hid}/requests/{id} ─────────
     // 보낸 사람 · 받는 사람(과 호스트)만 읽기. 보낼 때 같은 묶음에서 내 횟수(sent)가 +1 되어야 함
     match /households/{hid}/requests/{id} {
+      // cc = "가족 모두에게도 알리기"를 고른 요청: 알림 받는 가족은 읽기만 (답 · 고치기는 받는 사람만)
       allow read: if isMember(hid)
-        && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid || isOwner(hid));
+        && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid || isOwner(hid)
+            || request.auth.uid in resource.data.cc);
       allow create: if signedIn() && isMember(hid)
-        && request.resource.data.keys().hasOnly(['from', 'to', 'fromName', 'toName', 'date', 'want', 'msg', 'st', 'reply', 'held', 'createdAt', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['from', 'to', 'fromName', 'toName', 'date', 'want', 'msg', 'st', 'reply', 'held', 'cc', 'createdAt', 'updatedAt'])
+        && request.resource.data.get('cc', []) is list && request.resource.data.get('cc', []).size() <= 3
         && request.resource.data.from == request.auth.uid
         && request.resource.data.to is string && request.resource.data.to != request.auth.uid
         && exists(memberPath(hid, request.resource.data.to))
@@ -192,7 +198,11 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time
         && getAfter(memberPath(hid, request.auth.uid)).data.get('sent', 0) == get(memberPath(hid, request.auth.uid)).data.get('sent', 0) + 1;
       allow update: if signedIn() && resource.data.by == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date', 'text', 'updatedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date', 'text', 'updatedAt', 'rev'])
+        // rev: "고쳤다고 알리기"를 고르면 +1 (가족 폰에 "메모를 고쳤어요" 알림)
+        && request.resource.data.get('rev', 0) is int
+        && request.resource.data.get('rev', 0) >= resource.data.get('rev', 0)
+        && request.resource.data.get('rev', 0) <= resource.data.get('rev', 0) + 1
         && request.resource.data.date is string && request.resource.data.date.size() == 10
         && request.resource.data.text is string && request.resource.data.text.size() >= 1 && request.resource.data.text.size() <= 200
         && request.resource.data.updatedAt == request.time;
