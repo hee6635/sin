@@ -104,3 +104,10 @@
 - 규칙 시험 72개 + 폰 4대(아빠 · 엄마 · 딸(새 폰) · 할머니(view)) 전체 흐름 시험
 - ⚠️ 규칙이 또 바뀜(cc · rev · stk · sdefs): 콘솔 › Firestore › 규칙에 새 firestore.rules 를 다시 게시해야 함. 안 하면 "모두에게 알리기" · "고쳤다고 알리기" · "스티커 보여주기"만 권한 오류
 - 방장 넘기기는 못 만듦 (가족방 번호 = 방장 uid 구조라 새 구조가 필요)
+
+## v0.22~0.24 추가된 서버 구조 (푸시 · 구글 로그인)
+- `devices/{uid}`: `{token, on, hid, updatedAt}` — 이 폰의 알림 주소 · "가족 알림 받기" 켜짐/꺼짐 · 어느 가족방. 본인만 읽고 쓰기. 나가기/없애기 때 지움.
+- `users/{uid}`: `{hid, updatedAt}` — "내가 어느 가족방 사람인지" 쪽지. 구글 계정으로 새 폰에 로그인하면 같은 uid → 이 쪽지로 가족방을 찾음. 본인만.
+- Firebase 함수(firebase/functions): 요청 도착/답장/취소, 가족 메모 새로/고침(rev), 근무표 바뀜(오늘부터 62일 비교), 가족 참여 → `devices` 의 token 으로 FCM 보냄. 알림 글은 `lib/notify.js` (내용 없이 이름 · 날짜 · 종류만). 여러 날 요청은 lead 문서에서만 한 번.
+- 시험: `cd firebase/functions && npm test` (문구 · 대상 계산), `firebase emulators:exec --only firestore,functions "node functions/test/int.mjs"` (함수 통합, PUSH_TEST_LOG 로 보내지 않고 기록).
+- 구글 로그인: 앱에서 안드로이드 Credential Manager 로 구글 ID 토큰을 받아 `linkWithCredential`(익명 → 구글, uid 유지). 새 폰은 `signInWithCredential` → `users/{uid}` → 가족방 복원. 콘솔에서 Google 로그인을 켜고 새 google-services.json 을 넣기 전에는 버튼이 안 보임. 내 근무표 · 메모는 구글 드라이브 백업에서 따로 복원.
