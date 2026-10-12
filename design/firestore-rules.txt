@@ -1,0 +1,177 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ───────── 공통 도우미 ─────────
+    function signedIn() { return request.auth != null; }
+    function memberPath(hid, uid) {
+      return /databases/$(database)/documents/households/$(hid)/members/$(uid);
+    }
+    function isMember(hid) { return signedIn() && exists(memberPath(hid, request.auth.uid)); }
+    function isOwner(hid) { return signedIn() && request.auth.uid == hid; }   // 가족방 번호(hid) = 호스트의 uid
+    function validName(n) { return n is string && n.size() >= 1 && n.size() <= 12; }
+
+    // ───────── 연결 시험: 자기 문서(ping/내 uid)만 ─────────
+    match /ping/{uid} {
+      allow read, delete: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['t', 'v', 'ua'])
+        && request.resource.data.t == request.time
+        && request.resource.data.v is string && request.resource.data.v.size() <= 20
+        && request.resource.data.ua is string && request.resource.data.ua.size() <= 200;
+    }
+
+    // ───────── 가족방: households/{호스트 uid} ─────────
+    match /households/{hid} {
+      // 읽기: 가족방 구성원만
+      allow read: if isMember(hid);
+
+      // 만들기: 호스트 본인만, 같은 묶음(batch)에서 호스트 구성원 문서도 같이 생김
+      allow create: if isOwner(hid)
+        && request.resource.data.keys().hasOnly(['ownerUid', 'createdAt', 'guestCount'])
+        && request.resource.data.ownerUid == hid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.guestCount == 0
+        && existsAfter(memberPath(hid, hid));
+
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestCount'])
+        && request.resource.data.guestCount >= 0 && request.resource.data.guestCount <= 3
+        && (
+          // 호스트: 내보내기 · 정리할 때
+          isOwner(hid)
+          // 가족 참여: +1, 같은 묶음에서 내 구성원 문서가 새로 생김
+          || (signedIn()
+              && request.resource.data.guestCount == resource.data.guestCount + 1
+              && !exists(memberPath(hid, request.auth.uid))
+              && existsAfter(memberPath(hid, request.auth.uid))
+              && getAfter(memberPath(hid, request.auth.uid)).data.role == 'guest')
+          // 가족 나가기: -1, 같은 묶음에서 내 구성원 문서가 사라짐
+          || (signedIn()
+              && request.resource.data.guestCount == resource.data.guestCount - 1
+              && exists(memberPath(hid, request.auth.uid))
+              && !existsAfter(memberPath(hid, request.auth.uid))
+              && get(memberPath(hid, request.auth.uid)).data.role == 'guest')
+        );
+
+      allow delete: if isOwner(hid);
+
+      // ───── 구성원: households/{hid}/members/{uid} ─────
+      match /members/{uid} {
+        // 내 문서는 언제나 읽기(가족방이 있는지 확인용), 같은 가족방 사람들은 서로 목록 읽기
+        allow get: if signedIn() && (request.auth.uid == uid || isMember(hid));
+        allow list: if isMember(hid);
+
+        // 호스트 본인 문서: 가족방과 같이 만들 때
+        allow create: if signedIn() && request.auth.uid == uid && uid == hid
+          && request.resource.data.keys().hasOnly(['role', 'name', 'perm', 'joinedAt'])
+          && request.resource.data.role == 'host'
+          && request.resource.data.perm == 'write'
+          && validName(request.resource.data.name)
+          && request.resource.data.joinedAt == request.time
+          && existsAfter(/databases/$(database)/documents/households/$(hid));
+
+        // 가족 참여: 쓸 수 있는 초대 코드가 있고, 같은 묶음에서 코드가 '사용됨'이 되고, 자리가 남아 있을 때
+        allow create: if signedIn() && request.auth.uid == uid && uid != hid
+          && request.resource.data.keys().hasOnly(['role', 'name', 'perm', 'joinedAt', 'inviteCode', 'mode'])
+          && request.resource.data.get('mode', 'own') in ['own', 'view']
+          && request.resource.data.role == 'guest'
+          && validName(request.resource.data.name)
+          && request.resource.data.joinedAt == request.time
+          && request.resource.data.inviteCode is string
+          && request.resource.data.inviteCode.matches('[A-HJKMNP-Z2-9]{8}')
+          && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.hid == hid
+          && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.usedBy == null
+          && request.time < get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.expireAt
+          && request.resource.data.perm == get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.perm
+          && getAfter(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.usedBy == uid
+          && get(/databases/$(database)/documents/households/$(hid)).data.guestCount < 3
+          && getAfter(/databases/$(database)/documents/households/$(hid)).data.guestCount
+             == get(/databases/$(database)/documents/households/$(hid)).data.guestCount + 1;
+
+        // 고치기: 내 호칭은 내가, 가족의 호칭 · 권한은 호스트가
+        allow update: if signedIn()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'perm', 'mode'])
+          && validName(request.resource.data.name)
+          && request.resource.data.perm in ['write', 'read']
+          && request.resource.data.get('mode', 'own') in ['own', 'view']
+          && (
+            (request.auth.uid == uid && request.resource.data.perm == resource.data.perm)
+            || (isOwner(hid) && resource.data.role == 'guest'
+                && request.resource.data.get('mode', 'own') == resource.data.get('mode', 'own'))
+          );
+
+        // 나가기(가족 본인) · 내보내기(호스트): 같은 묶음에서 가족 수가 하나 줄어야 함.
+        // 호스트 문서는 가족방을 없앨 때만 지울 수 있음 (그때는 가족 수를 맞출 필요 없음)
+        allow delete: if signedIn() && (
+          (request.auth.uid == uid && resource.data.role == 'guest'
+            && existsAfter(/databases/$(database)/documents/households/$(hid))
+            && getAfter(/databases/$(database)/documents/households/$(hid)).data.guestCount
+               == get(/databases/$(database)/documents/households/$(hid)).data.guestCount - 1)
+          || (isOwner(hid) && resource.data.role == 'guest'
+            && (!existsAfter(/databases/$(database)/documents/households/$(hid))
+                || getAfter(/databases/$(database)/documents/households/$(hid)).data.guestCount
+                   == get(/databases/$(database)/documents/households/$(hid)).data.guestCount - 1))
+          || (isOwner(hid) && resource.data.role == 'host'
+            && !existsAfter(/databases/$(database)/documents/households/$(hid)))
+        );
+      }
+    }
+
+    // ───────── (위 households 안) 근무표: households/{hid}/schedules/{uid} ─────────
+    // 구성원 모두 읽기, 쓰기는 본인만(근무표를 올리는 사람 = mode 'own'), 지우기는 본인 · 호스트
+    match /households/{hid}/schedules/{uid} {
+      allow read: if isMember(hid);
+      allow create, update: if signedIn() && request.auth.uid == uid && isMember(hid)
+        && get(memberPath(hid, uid)).data.get('mode', 'own') == 'own'
+        && request.resource.data.keys().hasOnly(['v', 'patternName', 'teamName', 'pattern', 'anchor', 'types', 'overrides', 'holRest', 'updatedAt'])
+        && request.resource.data.v == 1
+        && request.resource.data.patternName is string && request.resource.data.patternName.size() <= 20
+        && request.resource.data.teamName is string && request.resource.data.teamName.size() <= 10
+        && request.resource.data.pattern is list && request.resource.data.pattern.size() >= 1 && request.resource.data.pattern.size() <= 60
+        && request.resource.data.anchor is string && request.resource.data.anchor.size() == 10
+        && request.resource.data.types is list && request.resource.data.types.size() <= 24
+        && request.resource.data.overrides is map && request.resource.data.overrides.size() <= 500
+        && request.resource.data.holRest is bool
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if signedIn() && (request.auth.uid == uid || isOwner(hid));
+    }
+
+    // ───────── 초대 코드: invites/{8자리 코드} ─────────
+    // 코드를 아는 사람만 하나씩 읽기(get), 목록으로 훑어보기는 막음 (호스트는 자기 코드 목록만)
+    match /invites/{code} {
+      allow get: if signedIn();
+      allow list: if signedIn() && resource.data.ownerUid == request.auth.uid;
+
+      allow create: if signedIn() && code.matches('[A-HJKMNP-Z2-9]{8}')
+        && request.resource.data.keys().hasOnly(['hid', 'ownerUid', 'perm', 'name', 'hostName', 'patternName', 'createdAt', 'expireAt', 'usedBy'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.hid == request.auth.uid
+        && request.resource.data.perm in ['write', 'read']
+        && (request.resource.data.name == '' || validName(request.resource.data.name))
+        && request.resource.data.hostName is string && request.resource.data.hostName.size() <= 12
+        && request.resource.data.patternName is string && request.resource.data.patternName.size() <= 20
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.expireAt > request.time
+        && request.resource.data.expireAt <= request.time + duration.value(8, 'd')
+        && request.resource.data.usedBy == null
+        && exists(/databases/$(database)/documents/households/$(request.auth.uid));
+
+      // 가족이 참여하면서 '사용됨'으로 바꾸기: 한 번만, 만료 전, 같은 묶음에서 내 구성원 문서가 생길 때
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedBy', 'usedAt'])
+        && resource.data.usedBy == null
+        && request.resource.data.usedBy == request.auth.uid
+        && request.resource.data.usedAt == request.time
+        && request.time < resource.data.expireAt
+        && existsAfter(memberPath(resource.data.hid, request.auth.uid))
+        && getAfter(memberPath(resource.data.hid, request.auth.uid)).data.inviteCode == code;
+
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // ───────── 그 밖의 모든 곳은 막기 ─────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
