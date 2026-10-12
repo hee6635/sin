@@ -1154,7 +1154,9 @@ function holMap(y){
 }
 const holName=k=>holMap(+k.slice(0,4))[k]||'';
 /* 회사 휴무일 (매년 반복이면 월·일만 비교) */
+const ad=k=>!!(S.addons&&S.addons[k]);
 function compHolItem(k){
+  if(!ad('comp'))return null;
   return (S.companyHols||[]).find(x=>x.kind!=='memo'&&(x.date===k||(x.yearly&&x.date.slice(5)===k.slice(5)&&k>=x.date)))||null;
 }
 function compHol(k){const h=compHolItem(k);return h?h.name:'';}
@@ -1242,7 +1244,9 @@ const defaults=()=>({
   teamNames:[],            // 직접 고친 조 이름
   holRest:false,           // 공휴일엔 쉼 (상주 · 평일 근무)
   link:null,               // 가족방 연결 {hid, role:'host'|'guest', name, perm, mode:'own'|'view', uid, hash} (이 폰의 로그인 번호에 묶여서 백업에는 안 넣음)
-  fam2:{scheds:{},members:[],memos:{},reqIn:{},reqOut:{},me:{sent:0,bonus:0},seenMemo:[],init:false},   // 가족방에서 받은 가족 근무표 · 구성원 복사본 (오프라인에서도 보이게, 백업에는 안 넣음)
+  fam2:{scheds:{},members:[],memos:{},reqIn:{},reqOut:{},me:{sent:0,bonus:0},seenMemo:[],init:false},
+  addons:{comp:false,cheer:false,together:false,colleague:false,stats:false,share:false,status:false},   // 부가 기능 (설정 › 부가 기능): 처음에는 모두 꺼짐, 꺼도 저장된 내용은 그대로
+  addonNote:'new',          // 부가 기능 안내를 보여줬는지: 'new'(처음 쓰는 사람) · 'old'(쓰던 사람) · 'done'   // 가족방에서 받은 가족 근무표 · 구성원 복사본 (오프라인에서도 보이게, 백업에는 안 넣음)
   patternName:'4조2교대',  // 달력 위에 보이는 근무 이름
   types:DEFAULT_TYPES(),
   /* 월 메모: S.board['2026-10'] = [{id, kind('todo'|'note'), text, done, doneBy, shared, by, t}] */
@@ -1287,6 +1291,10 @@ function normalize(o){
   if(!s.shiftTimes||typeof s.shiftTimes!=='object')s.shiftTimes={};
   if(!Array.isArray(s.family))s.family=[];
   if(!s.icons||typeof s.icons!=='object'||Array.isArray(s.icons))s.icons={};
+  {const raw=o&&o.addons,had=!!(raw&&typeof raw==='object'&&!Array.isArray(raw));
+   const a=had?raw:{};s.addons={};['comp','cheer','together','colleague','stats','share','status'].forEach(k=>{s.addons[k]=!!a[k];});
+   if(!had)s.addonNote=(o&&o.onboarded)?'old':'new';
+   else if(!['new','old','done'].includes(o&&o.addonNote))s.addonNote='done';}
   if(!s.link&&Array.isArray(s.requests))s.requests=s.requests.filter(r=>!(r&&r.srv));
   s.fam2=(s.fam2&&typeof s.fam2==='object')?s.fam2:{};if(!s.fam2.scheds||typeof s.fam2.scheds!=='object'||Array.isArray(s.fam2.scheds))s.fam2.scheds={};if(!Array.isArray(s.fam2.members))s.fam2.members=[];['memos','reqIn','reqOut'].forEach(k=>{if(!s.fam2[k]||typeof s.fam2[k]!=='object'||Array.isArray(s.fam2[k]))s.fam2[k]={};});if(!s.fam2.me||typeof s.fam2.me!=='object')s.fam2.me={sent:0,bonus:0};if(!Array.isArray(s.fam2.seenMemo))s.fam2.seenMemo=[];s.fam2.init=!!s.fam2.init;if(s.link&&typeof s.link==='object'){if(s.link.mode!=='view')s.link.mode='own';}else s.link=null;
   s.stamps=Object.assign(defaultStamps(),s.stamps||{});(s.stamps.defs||[]).forEach(x=>{if(!x)return;if(x.id==='s_run'&&x.emoji==='🏃')x.emoji='👟';if(!x.rep)x.rep=x.kind==='pill'?'daily':(Array.isArray(x.days)&&x.days.length?'dow':'none');if(!Array.isArray(x.dates))x.dates=[];if(!Array.isArray(x.skip))x.skip=[];if(x.kind==='pill'&&!/^#[0-9a-f]{6}$/i.test(x.color||''))x.color='#ef4d5a';});if(!Array.isArray(s.stamps.defs))s.stamps.defs=defaultStamps().defs;if(!s.stamps.log||typeof s.stamps.log!=='object')s.stamps.log={};
@@ -1386,7 +1394,7 @@ function pushRemindersToNative(){
     const out=[],t0=new Date(),now=Date.now();
     for(let i=0;i<=70;i++){
       const d=addDays(new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()),i),k=fmt(d);
-      (S.companyHols||[]).forEach(x=>{
+      (ad('comp')?(S.companyHols||[]):[]).forEach(x=>{
         if(!(x.rem||[]).length)return;
         if(!(x.date===k||(x.yearly&&x.date.slice(5)===k.slice(5)&&k>=x.date)))return;
         const [h,mi]=(x.remAt||'20:00').split(':').map(Number);
@@ -1606,6 +1614,7 @@ const ICON={
 /* ================= 기념일 (휴무일 · 기념일 중 "메모만") ================= */
 // 예전 D-day 자리: 달력 칸·날짜 화면에 이름만 보여주는 기념일
 function ddayHits(k){
+  if(!ad('comp'))return [];
   return (S.companyHols||[]).filter(x=>x.kind==='memo'&&(x.date===k||(x.yearly&&x.date.slice(5)===k.slice(5)&&k>=x.date)));
 }
 function ddayNext(x){
@@ -2319,7 +2328,6 @@ function openStampPage(){
         <div class="prow"><div class="pl2">💊 약 먹을 시간 알림<small>하루 횟수만큼 (1번: 첫 시각만)</small></div><label class="sw"><input type="checkbox" id="stpRemind" ${st.remind?'checked':''}><i></i></label></div>
         ${st.remind?`<div class="prow"><div class="pl2">시각</div>${st.pillTimes.map((t,i)=>tpick('stpPT'+i,t)).join('')}</div>`:''}
       </div>`:''}
-      <div class="pg-sec"><div class="prow"><div class="pl2">스티커 많이 쓰기<small>하루 4개까지 (켜면 3~4번째는 날짜 아래 작은 줄로 내려와요)</small></div><label class="sw"><input type="checkbox" id="stkMore" ${st.more?'checked':''}><i></i></label></div></div>
       <div class="hint" style="padding:8px 16px 20px">💡 달력 칸 <b>위쪽 1/3</b>을 누르면 스티커를 등록하거나 완료해요. 하루 ${stampMax()}개까지, 약이 먼저 보여요.</div>
     </div>`,'stamps');
 }
@@ -2599,6 +2607,7 @@ function memberCell(m,d){
 }
 // 같이 쉬는 날: 'all' 종일 / 'day' 야간 근무 날 출근 전 낮 / ''
 function togetherOn(d){
+  if(!ad('together'))return '';
   const fam=(S.family||[]).concat(famPeers());if(!fam.length)return '';
   if(!fam.every(m=>memberOff(m,d)))return '';
   if(famView())return 'all';
@@ -2609,6 +2618,7 @@ function togetherOn(d){
 }
 function memberStatus(m,now){
   const d=new Date(now),h=d.getHours()*60+d.getMinutes(),k=fmt(d);
+  if(!ad('status')&&m.kind==='shift')return ['',shiftLabel(teamShift(d,m.team??S.myTeam)),'오늘'];
   if(m.kind==='sched'){const sh=schShift(m.sch,d);return schRest(m.sch,sh)?['🙂','쉬는 날','']:['🔁',schType(m.sch,sh).name,'오늘'];}
   if(m.kind==='shift'){
     const sh=teamShift(d,m.team??S.myTeam);
@@ -2632,7 +2642,7 @@ function cheerList(){return (Array.isArray(S.famCheer)&&S.famCheer.length?S.famC
 function famAv(m,i){const src=isPhoto(m.photo)&&(S.icons||{})[m.photo.slice(1)];return `<i style="background:${m.color||FAM_COL[i%6]}">${src?`<img src="${src}" alt="">`:esc((m.name||'?').slice(0,1))}</i>`;}
 function renderFamily(){
   const isHost=role()==='host',fam=(S.family||[]).concat(famPeers()),now=Date.now(),t0=new Date();
-  const st=myStatus(now);
+  const st0s=myStatus(now),st=ad('status')?st0s:{e:'',t:shiftLabel(shiftOf(new Date())),sub:'오늘',key:'rest'};
   const today=new Date(t0.getFullYear(),t0.getMonth(),t0.getDate());
   // 받은 응원 (오늘)
   const cheers=S.events.filter(e=>e.kind==='cheer'&&e.to===role()&&fmt(new Date(e.t))===fmt(today));
@@ -2641,14 +2651,14 @@ function renderFamily(){
   const meWho=isHost?(fam.length?'<div class="nwho"><i style="background:#1d2330">나</i></div>':''):'<div class="nwho"><i style="background:#1d2330">근</i>근무자</div>';
   const meCard=`<div class="nc w ${st.key==='sleep'?'sl':''}" ${isHost?'data-act="fam-mytime"':''}>
       ${meWho}
-      <div class="st">${ico(st.e)} ${esc(st.t)}</div>
-      ${st.prog!==undefined?`<div class="bar"><i style="width:${Math.round(st.prog*100)}%"></i></div>`:''}
-      <div class="sm">${esc(st.sub||'')}${S.status.phone&&st.key!=='rest'?` · ${st.phone?'전화 OK':'메시지만'}`:''}</div>
-      ${isHost?'<span class="tedit">🕐 시간 고치기 ›</span>':''}
+      <div class="st">${st.e?ico(st.e)+' ':''}${esc(st.t)}</div>
+      ${ad('status')&&st.prog!==undefined?`<div class="bar"><i style="width:${Math.round(st.prog*100)}%"></i></div>`:''}
+      <div class="sm">${esc(st.sub||'')}${ad('status')&&S.status.phone&&st.key!=='rest'?` · ${st.phone?'전화 OK':'메시지만'}`:''}</div>
+      ${isHost&&ad('status')?'<span class="tedit">🕐 시간 고치기 ›</span>':''}
       ${isHost&&cheers.length?`<span class="got">${cheers.slice(-3).map(c=>esc(c.text.split(' ')[0])).join(' ')} 응원 ${cheers.length}</span>`:''}
     </div>`;
-  const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);return `<div class="nc ${l==='자는 중'?'sl':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-edit" data-id="${m.id}"`}><div class="nwho">${famAv(m,i)}${esc(m.name)}</div><div class="st">${ico(e)} ${esc(l)}</div><div class="sm">${esc(sub)}</div></div>`;}).join('');
-  const cheerBtns=!isHost?`<div class="cheer">${cheerList().map(([e,l],i)=>`<button data-act="fam-cheer" data-i="${i}"><em>${ico(e)}</em>${esc(l)}</button>`).join('')}</div>`:'';
+  const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);return `<div class="nc ${l==='자는 중'?'sl':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-edit" data-id="${m.id}"`}><div class="nwho">${famAv(m,i)}${esc(m.name)}</div><div class="st">${e?ico(e)+' ':''}${esc(l)}</div><div class="sm">${esc(sub)}</div></div>`;}).join('');
+  const cheerBtns=!isHost&&ad('cheer')?`<div class="cheer">${cheerList().map(([e,l],i)=>`<button data-act="fam-cheer" data-i="${i}"><em>${ico(e)}</em>${esc(l)}</button>`).join('')}</div>`:'';
   // 이번 주 시간표
   const ws=addDays(today,-today.getDay()+famWeek*7),days=[...Array(7)].map((_,i)=>addDays(ws,i));
   const tog=days.map(togetherOn);
@@ -2674,10 +2684,10 @@ function renderFamily(){
     <div class="ftt">
       <div class="fwk"><button class="ib" data-act="fam-wk" data-v="-1">‹</button><span>${days[0].getMonth()+1}월 ${days[0].getDate()}일 ~ ${days[6].getMonth()+1}월 ${days[6].getDate()}일</span><button class="ib" data-act="fam-wk" data-v="1">›</button></div>
       <div class="fg"><span></span>${head}${famView()?'':meRow}${famRows}</div>
-      ${fam.length?`<div class="flg"><span><b style="background:#ffd966"></b>다 같이 쉼</span>${S.famDayToo!==false?'<span><b style="background:#fff0bf"></b>☀️ 낮엔 같이 (야간 전)</span>':''}</div>`
-        :`<button class="fempty" data-act="fam-add">👪 가족을 추가하면 <b>같이 쉬는 날</b>을 찾아드려요<br><small>가족이 앱을 안 깔아도 돼요 · 평일 근무 / 학생 / 교대 근무</small></button>`}
+      ${fam.length&&ad('together')?`<div class="flg"><span><b style="background:#ffd966"></b>다 같이 쉼</span>${S.famDayToo!==false?'<span><b style="background:#fff0bf"></b>☀️ 낮엔 같이 (야간 전)</span>':''}</div>`
+        :`<button class="fempty" data-act="fam-add">👪 가족을 추가하면 <b>${ad('together')?'같이 쉬는 날':'가족 시간표'}</b>${ad('together')?'을':'를'} ${ad('together')?'찾아드려요':'같이 볼 수 있어요'}<br><small>가족이 앱을 안 깔아도 돼요 · 평일 근무 / 학생 / 교대 근무</small></button>`}
     </div>
-    ${fam.length?`<div class="fsec">${t0.getMonth()+1}월에 남은 같이 쉬는 날</div>${chipHtml?`<div class="tg-row">${chipHtml}</div>`:'<div class="mempty">이번 달엔 남은 날이 없어요</div>'}`:''}
+    ${fam.length&&ad('together')?`<div class="fsec">${t0.getMonth()+1}월에 남은 같이 쉬는 날</div>${chipHtml?`<div class="tg-row">${chipHtml}</div>`:'<div class="mempty">이번 달엔 남은 날이 없어요</div>'}`:''}
     ${reqHtml}
   </div>`;
 }
@@ -2691,14 +2701,14 @@ function openFamSetPage(){
       <div class="pg-sec" style="margin-top:0">${fam.map((m,i)=>`<div class="prow" data-act="fam-edit" data-id="${m.id}"><span class="fav">${famAv(m,i)}</span><div class="pl2">${esc(m.name)}<small>${FAM_KIND[m.kind][0]} ${FAM_KIND[m.kind][1]}${m.kind==='shift'?` · ${esc(teamName(m.team??S.myTeam))}`:''}</small></div><span class="muted">›</span></div>`).join('')}
         <div class="prow" data-act="fam-add" style="color:var(--accent);font-weight:700;justify-content:center">＋ 가족 추가</div></div>
       <div class="pg-sec">
-        <div class="prow"><div class="pl2">☀️ 야간 전 낮도 "같이"로 보기<small>야간 근무 날 출근 전 낮에 같이 있을 수 있으면 연하게 표시</small></div><label class="sw"><input type="checkbox" id="famDayToo" ${S.famDayToo!==false?'checked':''}><i></i></label></div>
+        ${ad('together')?`<div class="prow"><div class="pl2">☀️ 야간 전 낮도 "같이"로 보기<small>야간 근무 날 출근 전 낮에 같이 있을 수 있으면 연하게 표시</small></div><label class="sw"><input type="checkbox" id="famDayToo" ${S.famDayToo!==false?'checked':''}><i></i></label></div>`:''}
         <div class="prow"><div class="pl2">가족 메모 달력에 표시<small>가족이 남긴 메모를 달력에 띄워요</small></div><label class="sw"><input type="checkbox" id="receiveFamilyMemo" ${S.syncSettings.receiveFamilyMemo!==false?'checked':''}><i></i></label></div>
         <div class="prow"><div class="pl2">가족 보기 (체험)<small>${g?'지금 가족 화면이에요':'가족 폰에서 보이는 화면으로 바꿔요'}</small></div><label class="sw"><input type="checkbox" id="guestModeToggle" ${g?'checked':''}><i></i></label></div>
       </div>
       <div class="pg-sec">
-        <div class="prow" data-act="more-times"><div class="pl2">🕐 내 근무 시간 · 상태<small>출근 · 점심/야식 · 퇴근 · 수면 시간</small></div><span class="muted">›</span></div>
-        <div class="prow" data-act="more-status"><div class="pl2">👁 가족에게 보이는 내 상태</div><span class="muted">›</span></div>
-        <div class="prow" data-act="fam-cheer-edit"><div class="pl2">💌 응원 버튼 바꾸기<small>가족 화면에서 근무자에게 보내는 버튼</small></div><span class="muted">${cheerList().map(c=>ico(c[0])).join('')} ›</span></div>
+        ${ad('status')?`<div class="prow" data-act="more-times"><div class="pl2">🕐 내 근무 시간 · 상태<small>출근 · 점심/야식 · 퇴근 · 수면 시간</small></div><span class="muted">›</span></div>`:''}
+        ${ad('status')?`<div class="prow" data-act="more-status"><div class="pl2">👁 가족에게 보이는 내 상태</div><span class="muted">›</span></div>`:''}
+        ${ad('cheer')?`<div class="prow" data-act="fam-cheer-edit"><div class="pl2">💌 응원 버튼 바꾸기<small>가족 화면에서 근무자에게 보내는 버튼</small></div><span class="muted">${cheerList().map(c=>ico(c[0])).join('')} ›</span></div>`:''}
         <div class="prow" data-act="link-open"><div class="pl2">📨 가족 연결 (폰끼리)<small>${fbCfg()?'초대 코드로 가족 폰과 연결해요':'준비 중이에요'}</small></div><span class="muted">›</span></div>
       </div>
     </div>`,'famset');
@@ -3417,24 +3427,25 @@ function renderMore(){
     ${guest?'':cap('내 근무')}
     ${guest?'':`<div class="pg-sec" style="margin-top:0">
       ${item('🔁','근무 패턴 · 조','more-pattern',`${esc(S.patternName||'')} ${esc(myTeamLabel())}`)}
-      ${item('🕐',`근무 시간 · 상태 <span class="${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'tagS':'tagA'}">${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'직접':'대략'}</span>`,'more-times')}
-      ${teamCount()>1?item('👥','동료 근무','go-colleague'):''}
-      ${item('🏢','휴무일 · 기념일','more-comp',`${(S.companyHols||[]).length}개`)}
+      ${ad('status')?item('🕐',`근무 시간 · 상태 <span class="${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'tagS':'tagA'}">${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'직접':'대략'}</span>`,'more-times'):''}
+      ${teamCount()>1&&ad('colleague')?item('👥','동료 근무','go-colleague'):''}
+      ${ad('comp')?item('🏢','휴무일 · 기념일','more-comp',`${(S.companyHols||[]).length}개`):''}
       ${item('💊','스티커 (약 · 운동)','stk-board',`${S.stamps.defs.filter(x=>x.kind==='pill').length?'약 '+S.stamps.defs.filter(x=>x.kind==='pill').length+' · ':''}${S.stamps.defs.filter(x=>x.kind==='mark').length}개`)}
-      ${item('📊','근무 통계 · 수당','more-stats',`대근 ${daeDays(cur.y,cur.m)}일`)}
+      ${ad('stats')?item('📊','근무 통계 · 수당','more-stats',`대근 ${daeDays(cur.y,cur.m)}일`):''}
     </div>`}
     ${cap('가족')}
     <div class="pg-sec" style="margin-top:0">
       ${!guest&&fbCfg()?item('🔗','가족 연결 (폰끼리)','link-open',S.link?(S.link.role==='host'?'내 가족방':'참여 중'):'초대'):''}
-      ${item('👪','가족 목록 · 같이 쉬는 날','fam-set',`${(S.family||[]).length}명`)}
-      ${guest?'':item('👁','가족에게 보이는 내 상태','more-status',S.status.show?'켜짐':'꺼짐')}
+      ${item('👪',ad('together')?'가족 목록 · 같이 쉬는 날':'가족 목록','fam-set',`${(S.family||[]).length}명`)}
+      ${guest||!ad('status')?'':item('👁','가족에게 보이는 내 상태','more-status',S.status.show?'켜짐':'꺼짐')}
       ${item('🎨','메모 색','more-colors',`<span style="color:var(--fam)">♥</span>`)}
     </div>
     ${cap('앱')}
     <div class="pg-sec" style="margin-top:0">
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('🔤')}</span>글자 크기</div><div class="chips">
         <button class="${fs===100?'on':''}" data-act="font" data-v="100">보통</button><button class="${fs===115?'on':''}" data-act="font" data-v="115">크게</button><button class="${fs===130?'on':''}" data-act="font" data-v="130">아주 크게</button></div></div>
-      ${item('🖼','달력 이미지로 공유','more-share')}
+      ${item('🧩','부가 기능','more-addons',`${addonCount()}개 켜짐`)}
+      ${ad('share')?item('🖼','달력 이미지로 공유','more-share'):''}
       ${item('☁️','백업 · 복원','more-backup',lastB)}
       ${item('✉️','문의하기 · 오류 신고','more-mail')}
       ${item('🔒','개인정보처리방침','more-privacy')}
@@ -3442,6 +3453,37 @@ function renderMore(){
       <div class="mi2" data-act="about-tap" style="cursor:default"><span class="e">${lineIcon('ℹ️')}</span><span>앱 정보</span><small>언제쉬어 ${appVersion()}</small></div>
     </div>
   </div>`;
+}
+/* ================= 부가 기능 (설정 › 부가 기능) =================
+ * 기본은 모두 꺼짐. 꺼도 저장된 내용은 그대로이고, 켜면 그 자리에 바로 생겨요. */
+const ADDONS=[
+  ['comp','🏢','휴무일 · 기념일','회사 휴무일 · 생일 · 기념일을 달력에 표시하고 미리 알려요'],
+  ['together','☀️','같이 쉬는 날','가족이 다 같이 쉬는 날을 찾아 가족 탭에 보여줘요'],
+  ['cheer','💌','응원 버튼','가족이 근무자에게 ☕💪 응원을 보내요'],
+  ['status','🕐','내 상태 · 출퇴근 시간','가족 탭에 "근무 중 · 자는 중" 같은 내 상태를 보여줘요 (끄면 주 · 야 · 휴만)'],
+  ['colleague','👥','동료 근무','같은 회사 다른 조의 근무를 한 표로 봐요'],
+  ['stats','📊','근무 통계 · 수당','대근 · 연차 · 교육 횟수와 수당을 계산해요'],
+  ['share','🖼','달력 이미지 공유','달력을 그림으로 만들어 카톡 등으로 보내요'],
+  ['stkmore','💊','스티커 많이 쓰기','하루 4개까지 붙여요 (3~4번째는 날짜 아래 작은 줄)']
+];
+const adOn=k=>k==='stkmore'?!!(S.stamps&&S.stamps.more):ad(k);
+const addonCount=()=>ADDONS.filter(a=>adOn(a[0])).length;
+function openAddonPage(){
+  openPage(`${pageHead('부가 기능')}
+    <div class="pg-b">
+      <div class="hint" style="padding:12px 16px 4px">필요한 기능만 켜서 쓰세요. 꺼도 저장된 내용은 그대로 있고, 다시 켜면 돌아와요.</div>
+      <div class="pg-sec" style="margin-top:8px">${ADDONS.map(a=>`<div class="prow"><div class="pl2"><span class="e e-in">${lineIcon(a[1])}</span>${a[2]}<small>${a[3]}</small></div><label class="sw"><input type="checkbox" id="ad_${a[0]}" ${adOn(a[0])?'checked':''}><i></i></label></div>`).join('')}</div>
+      <div class="hint" style="padding:8px 16px 20px">도장 · 월 메모 · 근무 요청 · 가족 메모 · 알람은 기본 기능이에요.</div>
+    </div>`,'addons');
+}
+// 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
+function addonNotice(){
+  if(!S.onboarded||ob||S.addonNote==='done'||pageMode||$('#pop').classList.contains('open')||$('#sheet').classList.contains('open'))return;
+  const old=S.addonNote==='old';
+  S.addonNote='done';save();
+  openPop(`<div class="mh">${old?'일부 기능이 옮겨졌어요':'알아 두면 좋아요'}<b>설정 › 부가 기능</b></div>
+    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0">${old?'휴무일 · 기념일, 같이 쉬는 날, 응원 버튼, 내 상태, 동료 근무, 근무 통계 · 수당, 달력 이미지 공유가 <b>부가 기능</b>으로 옮겨져 꺼져 있어요.<br>쓰던 내용은 그대로 있고, 켜면 바로 돌아와요.':'앱이 단순하게 보이도록 덜 쓰는 기능은 꺼 두었어요.<br>필요하면 <b>설정 › 부가 기능</b>에서 켜세요.'}</div></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">닫기</button><button class="btn grow" data-act="addon-go">부가 기능 보기</button></div>`);
 }
 function appVersion(){
   try{if(window.AndroidBridge&&window.AndroidBridge.appInfo)return 'v'+JSON.parse(window.AndroidBridge.appInfo()).version;}catch(e){}
@@ -3954,6 +3996,7 @@ function obClose(){
   const custom=ob&&ob.preset==='custom';ob=null;
   tab='cal';const n=new Date();setCur(n.getFullYear(),n.getMonth());render();
   if(custom){openPatternPage();toast('칸을 눌러 내 패턴을 만들어 주세요');}
+  else setTimeout(addonNotice,700);
 }
 const LOGO=`<svg class="logo-ic" viewBox="0 0 108 108"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#252A66"/><stop offset="1" stop-color="#3B3F9E"/></linearGradient></defs><rect width="108" height="108" rx="24" fill="url(#lg)"/><g fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"><path d="M38,28h32a13,13 0,0 1,13 13v30a13,13 0,0 1,-13 13h-32a13,13 0,0 1,-13 -13v-30a13,13 0,0 1,13 -13z"/><path d="M25,46h58"/></g><path fill="#fff" d="M40.5,22h0a2.5,2.5 0,0 1,2.5 2.5v8a2.5,2.5 0,0 1,-5 0v-8a2.5,2.5 0,0 1,2.5 -2.5zM67.5,22h0a2.5,2.5 0,0 1,2.5 2.5v8a2.5,2.5 0,0 1,-5 0v-8a2.5,2.5 0,0 1,2.5 -2.5z"/><path fill="#fff" d="M49.26,51.02A15,15 0,1 0 63.82,71.82A12.75,12.75 0,0 1 49.26,51.02z"/><path fill="#FFD36B" d="M70,52.5L71.65,56.35L75.5,58L71.65,59.65L70,63.5L68.35,59.65L64.5,58L68.35,56.35z"/></svg>`;
 
@@ -4321,10 +4364,12 @@ document.addEventListener('click',e=>{
     case 'vc-day':openVcDay(t.dataset.k);break;
     case 'srvmm-del':{const sid=t.dataset.sid;closePop();if(!confirm('가족이 쓴 이 메모를 지울까요?'))break;famReady().then(({F,db})=>F.deleteDoc(F.doc(db,'households',S.link.hid,'memos',sid))).catch(e=>toast('지우지 못했어요. '+famErr(e)));break;}
     case 'feed-req':feedTab='req';openFeed();break;
+    case 'more-addons':closeSheet();openAddonPage();break;
+    case 'addon-go':closePop();tab='set';render();openAddonPage();break;
     case 'stk-board':closeSheet();openStickerBoard(cur.y,cur.m);break;
     case 'sb-prev':{let y=sbY,m=sbM-1;if(m<0){m=11;y--;}openStickerBoard(y,m);break;}
     case 'sb-next':{let y=sbY,m=sbM+1;if(m>11){m=0;y++;}openStickerBoard(y,m);break;}
-    case 'stk-settings':closePop();closeSheet();openStampPage();break;
+    case 'stk-settings':closePop();closeSheet();openAddonPage();break;
     case 'stamp-tap':stampTap(t.dataset.id,t.dataset.k);break;
     case 'stamp-dn':e.stopPropagation();if(paint){if(role()==='host')paintDay(t.dataset.k);break;}buzz(8);openStampDay(t.dataset.k);break;
     case 'sd-done':case 'sd-undo':{
@@ -4497,6 +4542,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='srHol'&&stDraft){stDraft.noHol=t.checked;
   }else if(t.id==='srNight'&&stDraft){stDraft.noNight=t.checked;
   }else if(t.id==='famOwn'){famSetMode(t.checked?'own':'view');
+  }else if(t.id&&t.id.startsWith('ad_')){const k=t.id.slice(3);if(k==='stkmore')S.stamps.more=t.checked;else S.addons[k]=t.checked;save();render();openAddonPage();
   }else if(t.id==='stkMore'){S.stamps.more=t.checked;save();render();openStampPage();
   }else if(t.id==='stpRemind'){S.stamps.remind=t.checked;save();openStampPage();
   }else if(t.id&&t.id.startsWith('stpPT')){const i=+t.id.slice(5);if(t.value){S.stamps.pillTimes[i]=t.value;save();}
@@ -5325,6 +5371,7 @@ pushAlarmsToNative();pushRemindersToNative();
 if(!S.onboarded)startOnboarding();
 refreshHolidays();
 famBoot();
+setTimeout(addonNotice,900);
 setTimeout(autoBackup,4000);
 })();
 
