@@ -78,6 +78,18 @@ class AlarmBridge(private val activity: MainActivity) {
         activity.runOnUiThread { activity.sendMail(to, subject, body) }
     }
 
+    /** 이 폰의 푸시 알림 주소 (없으면 빈 글) */
+    @JavascriptInterface
+    fun fcmToken(): String = PushService.token(context)
+
+    /** 알림을 눌러서 앱이 열렸다면 그 정보(JSON), 아니면 빈 글 */
+    @JavascriptInterface
+    fun takePush(): String = activity.takePush()
+
+    /** 폰 설정에서 이 앱의 알림이 켜져 있는지 */
+    @JavascriptInterface
+    fun notifEnabled(): Boolean = activity.notifEnabled()
+
     /** 앱 버전·기기 정보 (문의 메일에 같이 넣기) */
     @JavascriptInterface
     fun appInfo(): String {

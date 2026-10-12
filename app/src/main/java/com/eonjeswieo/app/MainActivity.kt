@@ -2,6 +2,8 @@ package com.eonjeswieo.app
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -34,7 +36,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
+import com.google.firebase.messaging.FirebaseMessaging
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -204,6 +208,30 @@ class MainActivity : ComponentActivity() {
     private fun isNight(): Boolean =
         (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
 
+    // 알림을 눌러서 열렸을 때 (종류 · 날짜). 화면이 준비되면 웹이 가져감
+    private var pendingPush: String = ""
+
+    private fun readPush(i: Intent?) {
+        val t = i?.getStringExtra("type") ?: return
+        if (t.isEmpty()) return
+        pendingPush = JSONObject().put("type", t).put("date", i.getStringExtra("date") ?: "")
+            .put("hid", i.getStringExtra("hid") ?: "").toString()
+        i.removeExtra("type")
+    }
+
+    /** 웹이 시작할 때 가져가는 "알림을 눌러서 열림" 정보 (한 번만) */
+    fun takePush(): String { val p = pendingPush; pendingPush = ""; return p }
+
+    fun notifEnabled(): Boolean = NotificationManagerCompat.from(this).areNotificationsEnabled()
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        readPush(intent)
+        val p = takePush()
+        if (p.isNotEmpty()) js("window.__onPush&&window.__onPush($p)")
+    }
+
     /** 웹 화면의 자바스크립트 실행 (어느 스레드에서 불러도 됨) */
     fun js(code: String) {
         webView.post { webView.evaluateJavascript(code, null) }
@@ -212,6 +240,8 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        readPush(intent)
+        initPush()
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val root = FrameLayout(this)
@@ -333,6 +363,24 @@ class MainActivity : ComponentActivity() {
         }
 
         webView.loadUrl(START_URL)
+    }
+
+    /** 푸시 알림 준비: 알림 통로(channel) 만들기 + 이 폰의 알림 주소 받아 두기 */
+    private fun initPush() {
+        try {
+            if (Build.VERSION.SDK_INT >= 26) {
+                val nm = getSystemService(NotificationManager::class.java)
+                nm.createNotificationChannel(NotificationChannel("family", "가족 알림", NotificationManager.IMPORTANCE_DEFAULT))
+            }
+            FirebaseMessaging.getInstance().token.addOnSuccessListener { t ->
+                if (!t.isNullOrEmpty()) {
+                    PushService.saveToken(this, t)
+                    js("window.__onFcm&&window.__onFcm()")
+                }
+            }
+        } catch (e: Exception) {
+            // 알림 준비에 실패해도 앱은 그대로 동작
+        }
     }
 
     override fun onResume() {

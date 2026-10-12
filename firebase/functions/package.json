@@ -1,0 +1,14 @@
+{
+  "name": "eonjeswieo-functions",
+  "private": true,
+  "description": "언제쉬어 푸시 알림 (가족 메모 · 근무 요청 · 근무 변경 · 가족 참여) — Firebase 함수",
+  "main": "index.js",
+  "engines": { "node": "20" },
+  "scripts": {
+    "test": "node test/notify.test.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.1.0"
+  }
+}

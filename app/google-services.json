@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "516160617216",
+    "project_id": "eonjeswieo-d85e2",
+    "storage_bucket": "eonjeswieo-d85e2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:516160617216:android:bb21002cc474ab6345d1e5",
+        "android_client_info": {
+          "package_name": "com.eonjeswieo.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvUbzaUDPbbbWfGN1MEem7BpMtRS1187s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -246,6 +246,18 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
     }
 
+    // ───────── 푸시 알림 기기 등록: devices/{내 uid} ─────────
+    // 알림 받을 폰의 주소(token) · 켜기/끄기(on) · 어느 가족방(hid). 본인만 읽고 쓰기 (보내는 일은 서버 함수가 함)
+    match /devices/{uid} {
+      allow read, delete: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['token', 'on', 'hid', 'updatedAt'])
+        && request.resource.data.token is string && request.resource.data.token.size() >= 20 && request.resource.data.token.size() <= 400
+        && request.resource.data.on is bool
+        && request.resource.data.hid is string && request.resource.data.hid.size() <= 128
+        && request.resource.data.updatedAt == request.time;
+    }
+
     // ───────── 그 밖의 모든 곳은 막기 ─────────
     match /{document=**} {
       allow read, write: if false;

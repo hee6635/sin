@@ -499,6 +499,31 @@ await t('묶음 요청: 받는 사람은 날짜마다 답할 수 있고, cc 알�
   await assertFails(updateDoc(doc(db('g3'), 'households', H, 'requests', 'grpA_0'), { st: 'rejected', updatedAt: serverTimestamp() }));
 });
 
+// ───────── 푸시 알림 기기 등록 (devices) ─────────
+await G('푸시 알림 기기 등록 (devices)');
+const dev = (o = {}) => ({ token: 'x'.repeat(60), on: true, hid: H, updatedAt: serverTimestamp(), ...o });
+await t('내 기기 문서 쓰기 · 읽기 · 끄기 · 지우기', async () => {
+  const a = db('alice');
+  await assertSucceeds(setDoc(doc(a, 'devices/alice'), dev()));
+  await assertSucceeds(getDoc(doc(a, 'devices/alice')));
+  await assertSucceeds(setDoc(doc(a, 'devices/alice'), dev({ on: false })));
+  await assertSucceeds(deleteDoc(doc(a, 'devices/alice')));
+});
+await t('남의 기기 문서는 읽기 · 쓰기 · 지우기 모두 안 됨', async () => {
+  await assertSucceeds(setDoc(doc(db('alice'), 'devices/alice'), dev()));
+  await assertFails(getDoc(doc(db('bob'), 'devices/alice')));
+  await assertFails(setDoc(doc(db('bob'), 'devices/alice'), dev()));
+  await assertFails(deleteDoc(doc(db('bob'), 'devices/alice')));
+  await assertFails(getDoc(doc(db(null), 'devices/alice')));
+});
+await t('이상한 값은 거절 (짧은 token · 모르는 칸 · 가짜 시간)', async () => {
+  const a = db('alice');
+  await assertFails(setDoc(doc(a, 'devices/alice'), dev({ token: 'short' })));
+  await assertFails(setDoc(doc(a, 'devices/alice'), dev({ extra: 1 })));
+  await assertFails(setDoc(doc(a, 'devices/alice'), dev({ updatedAt: Timestamp.fromMillis(0) })));
+  await assertFails(setDoc(doc(a, 'devices/alice'), dev({ on: 'yes' })));
+});
+
 // ───────── 서로 다른 가족방 ─────────
 await G('다른 가족방 사이');
 await t('A 가족방 구성원은 B 가족방을 읽을 수 없음', async () => {

@@ -1338,7 +1338,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
+  s.pushOn=s.pushOn!==false;s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},o&&o.memoColors);
   s.drive=Object.assign(defaults().drive,o&&o.drive);
@@ -4828,6 +4828,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='srNight'&&stDraft){stDraft.noNight=t.checked;
   }else if(t.id==='famOwn'){famSetMode(t.checked?'own':'view');
   }else if(t.id==='famStk'){famSetStk(t.checked);
+  }else if(t.id==='famPushOn'){S.pushOn=t.checked;save();famRegDevice().catch(()=>{});toast(t.checked?'가족 알림을 받아요':'가족 알림을 끌게요');
   }else if(t.id&&t.id.startsWith('ad_')){const k=t.id.slice(3);if(k==='stkmore')S.stamps.more=t.checked;else S.addons[k]=t.checked;save();render();openAddonPage();
   }else if(t.id==='stkMore'){S.stamps.more=t.checked;save();render();openStampPage();
   }else if(t.id==='stpRemind'){S.stamps.remind=t.checked;save();openStampPage();
@@ -5152,6 +5153,7 @@ async function famRemoveMember(hid,uid){   // 나가기(본인) · 내보내기(
   b.delete(F.doc(db,'households',hid,'schedules',uid));   // 올려 둔 내 근무표도 같이 지움
   b.update(F.doc(db,'households',hid),{guestCount:F.increment(-1)});
   await b.commit();
+  if(uid===S.link?.uid){famDevKey='';await F.deleteDoc(F.doc(db,'devices',uid)).catch(()=>{});}   // 나간 가족방 알림은 더 안 오게
 }
 async function famDissolve(hid){   // 가족방 없애기: 코드 · 구성원 · 가족방을 한 묶음으로
   const {F,db,uid}=await famReady();
@@ -5168,6 +5170,7 @@ async function famDissolve(hid){   // 가족방 없애기: 코드 · 구성원 �
   b.delete(famMember(F,db,hid,uid));
   b.delete(F.doc(db,'households',hid));
   await b.commit();
+  famDevKey='';await F.deleteDoc(F.doc(db,'devices',uid)).catch(()=>{});
 }
 async function famEdit(hid,uid,patch){
   const {F,db}=await famReady();
@@ -5294,9 +5297,35 @@ async function famListen(){
     famSync().then(r=>{if(!S.link&&r.had){famClear();toast('가족방에서 나왔어요');render();}}).catch(()=>{});
   }));
 }
+// ---- 푸시 알림: 이 폰의 알림 주소를 서버(devices/내uid)에 등록 → 서버 함수가 가족 일이 생기면 알려 줌
+const pushBridge=()=>!!(window.AndroidBridge&&typeof window.AndroidBridge.fcmToken==='function');
+let famDevKey='';
+async function famRegDevice(){
+  if(!S.link||!fbCfg()||!pushBridge())return;
+  const tk=String(window.AndroidBridge.fcmToken()||'');if(tk.length<20)return;
+  const on=S.pushOn!==false,key=tk+'|'+S.link.hid+'|'+on;
+  if(famDevKey===key)return;
+  const {F,db}=await famReady();if(!S.link)return;
+  await F.setDoc(F.doc(db,'devices',S.link.uid),{token:tk,on,hid:S.link.hid,updatedAt:F.serverTimestamp()});
+  famDevKey=key;
+}
+window.__onFcm=()=>{famRegDevice().catch(()=>{});};
+// 알림을 눌러서 앱이 열림 → 그 날짜의 달력으로 (날짜 없으면 가족 탭)
+window.__onPush=o=>{
+  if(!o||typeof o!=='object')return;
+  try{if(pageMode)closePage();closeSheet();closePop();}catch(e){}
+  if(/^\d{4}-\d{2}-\d{2}$/.test(o.date||'')){const d=parse(o.date);tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(o.date);}
+  else{tab='fam';render();}
+  famBoot();famPoll(true);
+};
+function pushRow(){
+  if(!S.link||!pushBridge())return '';
+  const off=typeof window.AndroidBridge.notifEnabled==='function'&&!window.AndroidBridge.notifEnabled();
+  return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">가족 알림 받기<small>앱을 안 켜도 가족 메모 · 근무 요청 · 근무 변경을 알려줘요 (내용은 빼고 이름 · 날짜만)</small></div><label class="sw"><input type="checkbox" id="famPushOn" ${S.pushOn!==false?'checked':''}><i></i></label></div>${off?'<div class="hint" style="padding:6px 16px 10px;color:#e5484d">폰 설정에서 이 앱의 알림이 꺼져 있어요. 폰 설정 › 앱 › 언제쉬어 › 알림을 켜 주세요.</div>':''}</div>`;
+}
 async function famBoot(){
   if(!fbCfg()||!S.link||famBooting)return;famBooting=true;
-  try{await famSync();if(S.link){await famListen();if(!famView())famPush().catch(()=>{});famSyncMemos().catch(()=>{});}else famClear();}
+  try{await famSync();if(S.link){await famListen();if(!famView())famPush().catch(()=>{});famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});}else famClear();}
   catch(e){}finally{famBooting=false;}
 }
 // 가족이 "내 근무표 올리기 / 가족 것만 볼래요"를 바꿀 때
@@ -5711,6 +5740,7 @@ function renderLinkPage(){
     </div>
     ${u.invites.length?`<div class="pg-cap">보낸 초대 코드 (쓰면 사라져요)</div><div class="pg-sec" style="margin-top:0">${u.invites.map(v=>`<div class="prow"><div class="pl2"><b class="mono">${famFmt(v.code)}</b><small>${esc(v.name||'호칭 미정')} · ${daysLeft(v.exp)}일 남음</small></div><button class="btn ghost sm" data-act="inv-share" data-c="${v.code}">보내기</button><button class="xbtn" data-act="inv-del" data-c="${v.code}" aria-label="코드 지우기">✕</button></div>`).join('')}</div>`:''}
     ${S.myset?`<div class="pg-sec" style="margin-top:16px">${stkRow()}</div>`:''}
+    ${pushRow()}
     <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기<small>가족에게 보이는 내 이름</small></div><span class="muted">${esc(L.name)} ›</span></div>
       <div class="prow danger-row" data-act="link-dissolve">가족방 없애기 (방장이 나가는 것)</div></div>
     <div class="hint" style="padding:8px 16px 0">방장은 그냥 나갈 수 없어요. 나가려면 가족방을 없애야 하고, 그러면 가족 모두 연결이 끊겨요. 방장을 다른 가족에게 넘기는 기능은 아직 없어요.</div>`;
@@ -5721,6 +5751,7 @@ function renderLinkPage(){
     <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기</div><span class="muted">${esc(L.name)} ›</span></div>
       <div class="prow danger-row" data-act="link-leave">${hostM?esc(hostM.name)+'님의 ':''}가족방에서 나가기</div></div>
     <div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">내 근무표를 가족에게 보여요<small>끄면 가족 근무표만 보고, 달력 탭이 가족 달력으로 바뀌어요</small></div><label class="sw"><input type="checkbox" id="famOwn" ${L.mode==='view'?'':'checked'}><i></i></label></div>${!S.myset&&L.mode!=='view'?'<div class="prow tap" data-act="mk-sched" style="color:var(--accent);font-weight:700"><div class="pl2">내 근무표 만들기<small>만들기 전에는 가족에게 내 근무표가 안 보여요</small></div><span class="muted">›</span></div>':''}${S.myset&&L.mode!=='view'?stkRow():''}</div>
+    ${pushRow()}
     <div class="hint" style="padding:10px 16px">가족의 근무표는 가족 탭 · 달력에서, 가족 메모(♥)와 근무 요청은 날짜를 눌러 주고받아요. 처음 10건은 무료예요.</div>`;
   }
   openPage(`${pageHead('가족 연결')}<div class="pg-b">${body}${u.st==='ok'&&L&&host?'<div class="hint" style="padding:10px 16px">가족의 근무표는 가족 탭 · 달력에서, 가족 메모(♥)와 근무 요청은 날짜를 눌러 주고받아요. 처음 10건은 무료예요.</div>':''}</div>`,'link');
@@ -5871,6 +5902,7 @@ pushAlarmsToNative();pushRemindersToNative();
 if(!S.onboarded)startOnboarding();
 refreshHolidays();
 famBoot();
+setTimeout(()=>{try{if(window.AndroidBridge&&typeof window.AndroidBridge.takePush==='function'){const p=String(window.AndroidBridge.takePush()||'');if(p)window.__onPush(JSON.parse(p));}}catch(e){}},700);
 setTimeout(addonNotice,900);
 setTimeout(autoBackup,4000);
 })();

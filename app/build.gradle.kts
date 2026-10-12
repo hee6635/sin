@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -11,8 +12,8 @@ android {
         applicationId = "com.eonjeswieo.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 32
-        versionName = "0.22"
+        versionCode = 33
+        versionName = "0.23"
     }
 
     signingConfigs {
@@ -65,4 +66,7 @@ dependencies {
     implementation("androidx.webkit:webkit:1.12.1")
     // 구글 드라이브 백업: 계정 권한(drive.appdata) 받기
     implementation("com.google.android.gms:play-services-auth:21.2.0")
+    // 푸시 알림(앱을 안 켜도 가족 메모 · 근무 요청 알림)
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-messaging")
 }
