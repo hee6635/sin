@@ -100,6 +100,12 @@ service cloud.firestore {
                 && request.resource.data.get('mode', 'own') == resource.data.get('mode', 'own'))
           );
 
+        // 가족 메시지(근무 요청 · 가족 메모)를 보낼 때마다 내 횟수(sent) +1. 처음 10건 무료 (+ bonus: 광고 보상, 아직 아무도 못 씀)
+        allow update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sent'])
+          && request.resource.data.sent == resource.data.get('sent', 0) + 1
+          && request.resource.data.sent <= 10 + resource.data.get('bonus', 0);
+
         // 나가기(가족 본인) · 내보내기(호스트): 같은 묶음에서 가족 수가 하나 줄어야 함.
         // 호스트 문서는 가족방을 없앨 때만 지울 수 있음 (그때는 가족 수를 맞출 필요 없음)
         allow delete: if signedIn() && (
@@ -134,6 +140,63 @@ service cloud.firestore {
         && request.resource.data.holRest is bool
         && request.resource.data.updatedAt == request.time;
       allow delete: if signedIn() && (request.auth.uid == uid || isOwner(hid));
+    }
+
+    // ───────── 근무 요청: households/{hid}/requests/{id} ─────────
+    // 보낸 사람 · 받는 사람(과 호스트)만 읽기. 보낼 때 같은 묶음에서 내 횟수(sent)가 +1 되어야 함
+    match /households/{hid}/requests/{id} {
+      allow read: if isMember(hid)
+        && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid || isOwner(hid));
+      allow create: if signedIn() && isMember(hid)
+        && request.resource.data.keys().hasOnly(['from', 'to', 'fromName', 'toName', 'date', 'want', 'msg', 'st', 'reply', 'held', 'createdAt', 'updatedAt'])
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.to is string && request.resource.data.to != request.auth.uid
+        && exists(memberPath(hid, request.resource.data.to))
+        && validName(request.resource.data.fromName) && validName(request.resource.data.toName)
+        && request.resource.data.date is string && request.resource.data.date.size() == 10
+        && request.resource.data.want is string && request.resource.data.want.size() >= 1 && request.resource.data.want.size() <= 4
+        && request.resource.data.msg is string && request.resource.data.msg.size() <= 60
+        && request.resource.data.st == 'pending' && request.resource.data.reply == '' && request.resource.data.held == false
+        && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time
+        && getAfter(memberPath(hid, request.auth.uid)).data.get('sent', 0) == get(memberPath(hid, request.auth.uid)).data.get('sent', 0) + 1;
+      allow update: if signedIn() && (
+        // 받는 사람: 수락 · 보류 · 거절 · 적용 · 적용 취소
+        (resource.data.to == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['st', 'reply', 'held', 'mode', 'prev', 'updatedAt'])
+          && request.resource.data.st in ['pending', 'accepted', 'rejected', 'applied']
+          && resource.data.st != 'cancelled'
+          && request.resource.data.reply is string && request.resource.data.reply.size() <= 100
+          && request.resource.data.held is bool
+          && request.resource.data.get('mode', '') in ['', 'keep', 'change']
+          && request.resource.data.get('prev', '') is string && request.resource.data.get('prev', '').size() <= 4
+          && request.resource.data.updatedAt == request.time)
+        // 보낸 사람: 아직 답이 없을 때 취소
+        || (resource.data.from == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['st', 'updatedAt'])
+          && request.resource.data.st == 'cancelled' && resource.data.st == 'pending'
+          && request.resource.data.updatedAt == request.time)
+      );
+      allow delete: if signedIn() && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid || isOwner(hid));
+    }
+
+    // ───────── 가족 메모: households/{hid}/memos/{id} ─────────
+    // 가족 모두 읽기, 쓴 사람만 고치기, 쓴 사람 · 호스트가 지우기. 만들 때 내 횟수(sent) +1
+    match /households/{hid}/memos/{id} {
+      allow read: if isMember(hid);
+      allow create: if signedIn() && isMember(hid)
+        && request.resource.data.keys().hasOnly(['by', 'byName', 'date', 'text', 'createdAt', 'updatedAt'])
+        && request.resource.data.by == request.auth.uid
+        && validName(request.resource.data.byName)
+        && request.resource.data.date is string && request.resource.data.date.size() == 10
+        && request.resource.data.text is string && request.resource.data.text.size() >= 1 && request.resource.data.text.size() <= 200
+        && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time
+        && getAfter(memberPath(hid, request.auth.uid)).data.get('sent', 0) == get(memberPath(hid, request.auth.uid)).data.get('sent', 0) + 1;
+      allow update: if signedIn() && resource.data.by == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date', 'text', 'updatedAt'])
+        && request.resource.data.date is string && request.resource.data.date.size() == 10
+        && request.resource.data.text is string && request.resource.data.text.size() >= 1 && request.resource.data.text.size() <= 200
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if signedIn() && (resource.data.by == request.auth.uid || isOwner(hid));
     }
 
     // ───────── 초대 코드: invites/{8자리 코드} ─────────

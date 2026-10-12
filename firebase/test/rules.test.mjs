@@ -330,6 +330,94 @@ await t('내 mode 는 내가 바꿀 수 있고, 호스트가 가족의 mode 를 
   await assertFails(updateDoc(doc(db('g1'), 'households', H, 'members', 'g1'), { mode: 'x' }));
 });
 
+
+// ───────── 근무 요청 · 가족 메모 · 무료 횟수 (3단계) ─────────
+await G('근무 요청 · 가족 메모 · 무료 10건');
+const MEM = (uid) => doc(db(uid), 'households', H, 'members', uid);
+const rq = (o = {}) => ({ from: 'g1', to: H, fromName: '엄마', toName: '아빠', date: '2026-10-31', want: '휴', msg: '할로윈 파티', st: 'pending', reply: '', held: false, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...o });
+const memo = (o = {}) => ({ by: 'g1', byName: '엄마', date: '2026-10-17', text: '장모님 생신', createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...o });
+const sendReq = async (uid, id, data, sent = 0) => { const d = db(uid); const b = writeBatch(d);
+  b.set(doc(d, 'households', H, 'requests', id), data); b.update(doc(d, 'households', H, 'members', uid), { sent: sent + 1 }); return b.commit(); };
+const sendMemo = async (uid, id, data, sent = 0) => { const d = db(uid); const b = writeBatch(d);
+  b.set(doc(d, 'households', H, 'memos', id), data); b.update(doc(d, 'households', H, 'members', uid), { sent: sent + 1 }); return b.commit(); };
+const fresh3 = async () => { await env.clearFirestore(); await seedFamily(3); await seedGuest('g1'); await seedGuest('g2', '딸'); await seedGuest('g3', '할머니'); };
+await t('내 횟수는 +1씩만 올릴 수 있고, 한꺼번에 올리기 · bonus 쓰기 · 남의 횟수는 막힘', async () => {
+  await fresh3();
+  await assertSucceeds(updateDoc(MEM('g1'), { sent: 1 }));
+  await assertFails(updateDoc(MEM('g1'), { sent: 3 }));
+  await assertFails(updateDoc(MEM('g1'), { bonus: 10 }));
+  await assertFails(updateDoc(doc(db('g2'), 'households', H, 'members', 'g1'), { sent: 2 }));
+  await assertFails(updateDoc(MEM('g1'), { sent: 0 }));
+});
+await t('근무 요청 보내기: 횟수 +1 과 같은 묶음일 때만', async () => {
+  await fresh3();
+  await assertSucceeds(sendReq('g1', 'r1', rq()));
+  await assertFails(setDoc(doc(db('g1'), 'households', H, 'requests', 'r2'), rq()));                 // 횟수 안 올림
+  await assertFails(sendReq('g1', 'r3', rq(), 5));                                                    // 횟수 엉뚱하게
+});
+await t('근무 요청: 남 이름으로 · 나에게 · 가족 아닌 사람에게 · 이상한 값은 막힘', async () => {
+  await fresh3();
+  await assertFails(sendReq('g1', 'a', rq({ from: 'g2' })));
+  await assertFails(sendReq('g1', 'b', rq({ to: 'g1' })));
+  await assertFails(sendReq('g1', 'c', rq({ to: 'stranger' })));
+  await assertFails(sendReq('g1', 'd', rq({ st: 'accepted' })));
+  await assertFails(sendReq('g1', 'e', rq({ want: '휴휴휴휴휴' })));
+  await assertFails(sendReq('g1', 'f', rq({ msg: 'x'.repeat(61) })));
+  await assertFails(sendReq('g1', 'g', rq({ admin: 1 })));
+  await assertFails(sendReq('g1', 'h', rq({ date: '2026-10-3' })));
+});
+await t('근무 요청은 보낸 사람 · 받는 사람 · 호스트만 읽음 (다른 가족은 못 봄)', async () => {
+  await fresh3(); await sendReq('g1', 'r1', rq({ to: 'g2', toName: '딸' }));
+  await assertSucceeds(getDoc(doc(db('g1'), 'households', H, 'requests', 'r1')));
+  await assertSucceeds(getDoc(doc(db('g2'), 'households', H, 'requests', 'r1')));
+  await assertSucceeds(getDoc(doc(db(H), 'households', H, 'requests', 'r1')));
+  await assertFails(getDoc(doc(db('g3'), 'households', H, 'requests', 'r1')));
+  await assertSucceeds(getDocs(query(collection(db('g2'), 'households', H, 'requests'), where('to', '==', 'g2'))));
+  await assertFails(getDocs(collection(db('g3'), 'households', H, 'requests')));
+  await assertFails(getDoc(doc(db('stranger'), 'households', H, 'requests', 'r1')));
+});
+await t('받는 사람만 수락 · 보류 · 거절 · 적용, 보낸 사람은 대기 중일 때 취소만', async () => {
+  await fresh3(); await sendReq('g1', 'r1', rq({ to: 'g2', toName: '딸' }));
+  const R = (u) => doc(db(u), 'households', H, 'requests', 'r1');
+  await assertSucceeds(updateDoc(R('g2'), { st: 'pending', held: true, reply: '일단 물어볼게', updatedAt: serverTimestamp() }));
+  await assertSucceeds(updateDoc(R('g2'), { st: 'accepted', held: false, reply: '좋아', mode: 'change', updatedAt: serverTimestamp() }));
+  await assertSucceeds(updateDoc(R('g2'), { st: 'applied', prev: '주', updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(R('g1'), { st: 'accepted', updatedAt: serverTimestamp() }));            // 보낸 사람이 수락 못 함
+  await assertFails(updateDoc(R('g3'), { st: 'rejected', updatedAt: serverTimestamp() }));            // 제3자
+  await assertFails(updateDoc(R('g2'), { msg: '바꿔치기', updatedAt: serverTimestamp() }));           // 내용 바꾸기
+  await assertFails(updateDoc(R('g2'), { st: 'cancelled', updatedAt: serverTimestamp() }));
+  await sendReq('g1', 'r2', rq({ to: 'g2', toName: '딸' }), 1);
+  const R2 = (u) => doc(db(u), 'households', H, 'requests', 'r2');
+  await assertSucceeds(updateDoc(R2('g1'), { st: 'cancelled', updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(R2('g2'), { st: 'accepted', updatedAt: serverTimestamp() }));          // 취소된 것
+});
+await t('근무 요청 지우기: 보낸 사람 · 받는 사람 · 호스트', async () => {
+  await fresh3(); await sendReq('g1', 'r1', rq({ to: 'g2', toName: '딸' }));
+  await assertFails(deleteDoc(doc(db('g3'), 'households', H, 'requests', 'r1')));
+  await assertSucceeds(deleteDoc(doc(db('g2'), 'households', H, 'requests', 'r1')));
+});
+await t('가족 메모: 쓰기(횟수 +1과 같이) · 가족 모두 읽기 · 쓴 사람만 고치기 · 쓴 사람/호스트가 지우기', async () => {
+  await fresh3();
+  await assertSucceeds(sendMemo('g1', 'm1', memo()));
+  await assertFails(setDoc(doc(db('g1'), 'households', H, 'memos', 'm2'), memo()));                    // 횟수 안 올림
+  await assertFails(sendMemo('g1', 'm3', memo({ by: 'g2' }), 1));
+  await assertFails(sendMemo('g1', 'm4', memo({ text: '' }), 1));
+  await assertFails(sendMemo('g1', 'm5', memo({ text: 'x'.repeat(201) }), 1));
+  await assertSucceeds(getDoc(doc(db('g2'), 'households', H, 'memos', 'm1')));
+  await assertFails(getDoc(doc(db('stranger'), 'households', H, 'memos', 'm1')));
+  await assertSucceeds(updateDoc(doc(db('g1'), 'households', H, 'memos', 'm1'), { text: '고침', updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(db('g2'), 'households', H, 'memos', 'm1'), { text: '남이 고침', updatedAt: serverTimestamp() }));
+  await assertFails(deleteDoc(doc(db('g2'), 'households', H, 'memos', 'm1')));
+  await assertSucceeds(deleteDoc(doc(db(H), 'households', H, 'memos', 'm1')));
+});
+await t('무료 10건: 11번째 요청 · 메모는 막힘 (요청 + 메모 합쳐서)', async () => {
+  await fresh3();
+  for (let i = 0; i < 5; i++) await assertSucceeds(sendReq('g1', 'r' + i, rq({ to: 'g2', toName: '딸', date: '2026-11-0' + (i + 1) }), i));
+  for (let i = 5; i < 10; i++) await assertSucceeds(sendMemo('g1', 'm' + i, memo(), i));
+  await assertFails(sendReq('g1', 'r99', rq({ to: 'g2', toName: '딸' }), 10));
+  await assertFails(sendMemo('g1', 'm99', memo(), 10));
+});
+
 // ───────── 서로 다른 가족방 ─────────
 await G('다른 가족방 사이');
 await t('A 가족방 구성원은 B 가족방을 읽을 수 없음', async () => {
