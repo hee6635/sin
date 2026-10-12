@@ -37,6 +37,15 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import androidx.credentials.CredentialManager
+import androidx.credentials.CredentialManagerCallback
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import androidx.core.content.FileProvider
 import com.google.firebase.messaging.FirebaseMessaging
 import androidx.core.view.ViewCompat
@@ -230,6 +239,46 @@ class MainActivity : ComponentActivity() {
         readPush(intent)
         val p = takePush()
         if (p.isNotEmpty()) js("window.__onPush&&window.__onPush($p)")
+    }
+
+    // ---------- 구글 로그인 (가족방을 구글 계정에 묶어 두기 · 새 폰에서 찾기) ----------
+
+    /** Firebase 콘솔에서 구글 로그인을 켜고 새 google-services.json 을 넣었을 때만 값이 있음 */
+    fun googleClientId(): String {
+        val id = resources.getIdentifier("default_web_client_id", "string", packageName)
+        return if (id == 0) "" else getString(id)
+    }
+
+    /** 결과는 window.__onGoogle({req, idToken, email}) 또는 {req, error} */
+    fun googleSignIn(req: String) {
+        fun fail(msg: String) = js("window.__onGoogle&&window.__onGoogle(${JSONObject().put("req", req).put("error", msg)})")
+        val cid = googleClientId()
+        if (cid.isEmpty()) { fail("not_ready"); return }
+        try {
+            val opt = GetGoogleIdOption.Builder()
+                .setServerClientId(cid)
+                .setFilterByAuthorizedAccounts(false)
+                .setAutoSelectEnabled(false)
+                .build()
+            val request = GetCredentialRequest.Builder().addCredentialOption(opt).build()
+            CredentialManager.create(this).getCredentialAsync(
+                this, request, null, ContextCompat.getMainExecutor(this),
+                object : CredentialManagerCallback<GetCredentialResponse, GetCredentialException> {
+                    override fun onResult(result: GetCredentialResponse) {
+                        val c = result.credential
+                        if (c is CustomCredential && c.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                            val g = GoogleIdTokenCredential.createFrom(c.data)
+                            val o = JSONObject().put("req", req).put("idToken", g.idToken).put("email", g.id)
+                            js("window.__onGoogle&&window.__onGoogle($o)")
+                        } else fail("bad_credential")
+                    }
+                    override fun onError(e: GetCredentialException) {
+                        fail(if (e.type.contains("CANCEL", true)) "cancel" else (e.type + ": " + (e.message ?: "")).take(120))
+                    }
+                })
+        } catch (e: Exception) {
+            fail((e.message ?: "error").take(120))
+        }
     }
 
     /** 웹 화면의 자바스크립트 실행 (어느 스레드에서 불러도 됨) */

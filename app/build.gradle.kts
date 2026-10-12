@@ -12,8 +12,8 @@ android {
         applicationId = "com.eonjeswieo.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 33
-        versionName = "0.23"
+        versionCode = 34
+        versionName = "0.24"
     }
 
     signingConfigs {
@@ -69,4 +69,8 @@ dependencies {
     // 푸시 알림(앱을 안 켜도 가족 메모 · 근무 요청 알림)
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging")
+    // 구글 로그인(폰을 바꿔도 가족방 찾기): 안드로이드 로그인 창 → 구글 신분증(ID token)
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 }

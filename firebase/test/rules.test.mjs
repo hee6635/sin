@@ -524,6 +524,25 @@ await t('이상한 값은 거절 (짧은 token · 모르는 칸 · 가짜 시간
   await assertFails(setDoc(doc(a, 'devices/alice'), dev({ on: 'yes' })));
 });
 
+// ───────── 내 가족방 번호 쪽지 (users) ─────────
+await G('내 가족방 번호 쪽지 (users)');
+await t('내 쪽지 쓰기 · 읽기 · 고치기 · 지우기', async () => {
+  const a = db('alice');
+  await assertSucceeds(setDoc(doc(a, 'users/alice'), { hid: H, updatedAt: serverTimestamp() }));
+  await assertSucceeds(getDoc(doc(a, 'users/alice')));
+  await assertSucceeds(setDoc(doc(a, 'users/alice'), { hid: 'other', updatedAt: serverTimestamp() }));
+  await assertSucceeds(deleteDoc(doc(a, 'users/alice')));
+});
+await t('남의 쪽지는 읽기 · 쓰기 · 지우기 안 됨, 이상한 값도 거절', async () => {
+  await assertSucceeds(setDoc(doc(db('alice'), 'users/alice'), { hid: H, updatedAt: serverTimestamp() }));
+  await assertFails(getDoc(doc(db('bob'), 'users/alice')));
+  await assertFails(setDoc(doc(db('bob'), 'users/alice'), { hid: H, updatedAt: serverTimestamp() }));
+  await assertFails(deleteDoc(doc(db('bob'), 'users/alice')));
+  await assertFails(setDoc(doc(db('alice'), 'users/alice'), { hid: H, updatedAt: serverTimestamp(), extra: 1 }));
+  await assertFails(setDoc(doc(db('alice'), 'users/alice'), { hid: '', updatedAt: serverTimestamp() }));
+  await assertFails(getDoc(doc(db(null), 'users/alice')));
+});
+
 // ───────── 서로 다른 가족방 ─────────
 await G('다른 가족방 사이');
 await t('A 가족방 구성원은 B 가족방을 읽을 수 없음', async () => {

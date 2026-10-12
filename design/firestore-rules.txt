@@ -258,6 +258,16 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
     }
 
+    // ───────── 내 가족방 번호: users/{내 uid} ─────────
+    // 구글 계정으로 새 폰에 로그인했을 때 "내가 어느 가족방 사람인지" 찾기 위한 쪽지. 본인만 읽고 쓰기
+    match /users/{uid} {
+      allow read, delete: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['hid', 'updatedAt'])
+        && request.resource.data.hid is string && request.resource.data.hid.size() >= 1 && request.resource.data.hid.size() <= 128
+        && request.resource.data.updatedAt == request.time;
+    }
+
     // ───────── 그 밖의 모든 곳은 막기 ─────────
     match /{document=**} {
       allow read, write: if false;

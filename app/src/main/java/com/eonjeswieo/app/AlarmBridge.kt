@@ -78,6 +78,16 @@ class AlarmBridge(private val activity: MainActivity) {
         activity.runOnUiThread { activity.sendMail(to, subject, body) }
     }
 
+    /** 구글 로그인을 쓸 수 있는지 (Firebase 콘솔 설정이 끝난 빌드만 true) */
+    @JavascriptInterface
+    fun googleAvailable(): Boolean = activity.googleClientId().isNotEmpty()
+
+    /** 구글 계정 고르기 → window.__onGoogle(결과) */
+    @JavascriptInterface
+    fun googleSignIn(req: String) {
+        activity.runOnUiThread { activity.googleSignIn(req) }
+    }
+
     /** 이 폰의 푸시 알림 주소 (없으면 빈 글) */
     @JavascriptInterface
     fun fcmToken(): String = PushService.token(context)

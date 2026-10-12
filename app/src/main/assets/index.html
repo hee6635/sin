@@ -1338,7 +1338,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
+  s.pushOn=s.pushOn!==false;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},o&&o.memoColors);
   s.drive=Object.assign(defaults().drive,o&&o.drive);
@@ -4389,6 +4389,8 @@ document.addEventListener('click',e=>{
     case 'cheer-del':{const l=cheerPull();l.splice(+t.dataset.i,1);S.famCheer=l.length?l:null;openCheerEdit();break;}
     case 'cheer-reset':S.famCheer=null;save();closePop();if(pageMode==='famset')openFamSetPage();toast('기본 응원 버튼으로 되돌렸어요');break;
     case 'cheer-save':S.famCheer=cheerPull();save();closePop();if(pageMode==='famset')openFamSetPage();render();toast('응원 버튼을 저장했어요');break;
+    case 'g-link':googleStart('link');break;
+    case 'g-restore':googleStart('restore');break;
     case 'link-open':if(!fbCfg()){toast('가족 연결은 준비 중이에요');break;}openLinkPage();break;
     case 'link-retry':famRefresh();break;
     case 'link-invite':openInvitePop();break;
@@ -5153,7 +5155,7 @@ async function famRemoveMember(hid,uid){   // 나가기(본인) · 내보내기(
   b.delete(F.doc(db,'households',hid,'schedules',uid));   // 올려 둔 내 근무표도 같이 지움
   b.update(F.doc(db,'households',hid),{guestCount:F.increment(-1)});
   await b.commit();
-  if(uid===S.link?.uid){famDevKey='';await F.deleteDoc(F.doc(db,'devices',uid)).catch(()=>{});}   // 나간 가족방 알림은 더 안 오게
+  if(uid===S.link?.uid){famDevKey='';famUserKey='';await F.deleteDoc(F.doc(db,'devices',uid)).catch(()=>{});await F.deleteDoc(F.doc(db,'users',uid)).catch(()=>{});}   // 나간 가족방 알림은 더 안 오게
 }
 async function famDissolve(hid){   // 가족방 없애기: 코드 · 구성원 · 가족방을 한 묶음으로
   const {F,db,uid}=await famReady();
@@ -5170,7 +5172,7 @@ async function famDissolve(hid){   // 가족방 없애기: 코드 · 구성원 �
   b.delete(famMember(F,db,hid,uid));
   b.delete(F.doc(db,'households',hid));
   await b.commit();
-  famDevKey='';await F.deleteDoc(F.doc(db,'devices',uid)).catch(()=>{});
+  famDevKey='';famUserKey='';await F.deleteDoc(F.doc(db,'devices',uid)).catch(()=>{});await F.deleteDoc(F.doc(db,'users',uid)).catch(()=>{});
 }
 async function famEdit(hid,uid,patch){
   const {F,db}=await famReady();
@@ -5297,6 +5299,59 @@ async function famListen(){
     famSync().then(r=>{if(!S.link&&r.had){famClear();toast('가족방에서 나왔어요');render();}}).catch(()=>{});
   }));
 }
+// ---- 구글 로그인: 지금의 익명 계정에 구글 계정을 이어 붙임 (uid 는 그대로 → 가족방 유지).
+//      새 폰에서는 같은 구글 계정으로 로그인하면 같은 uid 가 되어 users/{uid} 쪽지로 가족방을 찾음
+const googleOn=()=>!!(window.AndroidBridge&&typeof window.AndroidBridge.googleAvailable==='function'&&window.AndroidBridge.googleAvailable()&&fbCfg());
+let gBusy=false;
+function googleStart(req){
+  if(gBusy)return;if(!googleOn()){toast('구글 로그인은 아직 준비 중이에요');return;}
+  gBusy=true;try{window.AndroidBridge.googleSignIn(req);}catch(e){gBusy=false;toast('구글 로그인을 열지 못했어요');}
+}
+window.__onGoogle=async o=>{
+  if(!o||!gBusy)return;
+  try{
+    if(o.error){if(o.error!=='cancel')toast(o.error==='not_ready'?'구글 로그인은 아직 준비 중이에요':'구글 로그인을 하지 못했어요');return;}
+    const {F}=await famReady();const A=window.FB.auth,cred=A.GoogleAuthProvider.credential(o.idToken);
+    if(o.req==='link'){
+      try{await A.linkWithCredential(FBX.auth.currentUser,cred);}
+      catch(e){
+        const c=String((e&&e.code)||'');
+        if(c.includes('credential-already-in-use')){toast('이 구글 계정은 이미 다른 가족방에 연결돼 있어요');return;}
+        if(!c.includes('provider-already-linked'))throw e;
+      }
+      S.gAcct=String(o.email||'').slice(0,80)||'연결됨';famRegUser(true).catch(()=>{});save();toast('구글 계정에 연결했어요');
+      if(pageMode==='link')renderLinkPage();
+    }else if(o.req==='restore'){
+      if(S.link){toast('이미 가족방에 들어가 있어요');return;}
+      await A.signInWithCredential(FBX.auth,cred);
+      FBX.uid=FBX.auth.currentUser.uid;
+      const us=await F.getDoc(F.doc(FBX.db,'users',FBX.uid));
+      const hid=us.exists()?String(us.data().hid||''):'';
+      if(!hid){toast('이 구글 계정에 연결된 가족방이 없어요');return;}
+      S.link={hid,role:'guest',name:'',perm:'write',mode:'own',uid:FBX.uid,hash:''};
+      const r=await famSync();
+      if(!r.link){toast('가족방을 찾지 못했어요 (이미 없어졌을 수 있어요)');return;}
+      S.gAcct=String(o.email||'').slice(0,80)||'연결됨';save();famBoot();
+      if(pageMode==='link')openLinkPage();
+      toast('가족방을 불러왔어요 · 내 근무표는 설정 › 백업에서 불러오세요');
+    }
+  }catch(e){toast(famErr(e));}
+  finally{gBusy=false;}
+};
+// 내 가족방 번호 쪽지 (users/내uid) — 새 폰에서 찾는 용도
+let famUserKey='';
+async function famRegUser(force){
+  if(!S.link||!fbCfg())return;
+  const key=S.link.hid+'|'+S.link.uid;if(!force&&famUserKey===key)return;
+  const {F,db}=await famReady();if(!S.link)return;
+  await F.setDoc(F.doc(db,'users',S.link.uid),{hid:S.link.hid,updatedAt:F.serverTimestamp()});
+  famUserKey=key;
+}
+function googleRow(){
+  if(!googleOn())return '';
+  if(S.gAcct)return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">구글 계정에 연결됨<small>${esc(S.gAcct)} · 폰을 바꿔도 같은 구글 계정으로 가족방을 불러올 수 있어요</small></div><span class="muted">✓</span></div></div>`;
+  return `<div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="g-link"><div class="pl2">구글 계정으로 가족방 지키기<small>폰을 바꾸거나 앱을 다시 깔아도 가족방을 불러올 수 있어요</small></div><span class="muted">›</span></div></div>`;
+}
 // ---- 푸시 알림: 이 폰의 알림 주소를 서버(devices/내uid)에 등록 → 서버 함수가 가족 일이 생기면 알려 줌
 const pushBridge=()=>!!(window.AndroidBridge&&typeof window.AndroidBridge.fcmToken==='function');
 let famDevKey='';
@@ -5325,7 +5380,7 @@ function pushRow(){
 }
 async function famBoot(){
   if(!fbCfg()||!S.link||famBooting)return;famBooting=true;
-  try{await famSync();if(S.link){await famListen();if(!famView())famPush().catch(()=>{});famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});}else famClear();}
+  try{await famSync();if(S.link){await famListen();if(!famView())famPush().catch(()=>{});famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});famRegUser().catch(()=>{});}else famClear();}
   catch(e){}finally{famBooting=false;}
 }
 // 가족이 "내 근무표 올리기 / 가족 것만 볼래요"를 바꿀 때
@@ -5733,6 +5788,7 @@ function renderLinkPage(){
       <div class="hint" style="padding:6px 0 14px">근무자(나)가 가족방을 만들고 <b>초대 코드</b>를 보내요. 가족은 앱에서 코드를 넣고 참여해요. 가족방은 4명(나 + 가족 3명)까지예요.</div>
       <button class="btn" style="width:100%" data-act="link-invite">가족 초대하기</button>
       <button class="btn ghost" style="width:100%;margin-top:8px" data-act="link-join">초대 코드가 있어요</button>
+      ${googleOn()?'<button class="btn ghost" style="width:100%;margin-top:8px" data-act="g-restore">전에 쓰던 폰의 가족방 불러오기 (구글 로그인)</button>':''}
     </div>`;
   else if(host)body=`<div class="pg-cap">내 가족방 · 가족 ${guests.length}/${FAM_MAX}명</div>
     <div class="pg-sec" style="margin-top:0">${u.members.map((m,i)=>`<div class="prow ${m.role==='host'?'':'tap'}" ${m.role==='host'?'':`data-act="mem-menu" data-u="${esc(m.uid)}"`}>${lav(m.name,i)}<div class="pl2">${esc(m.name)}<small>${m.role==='host'?'근무자 (나)':famModeTxt(m)}</small></div>${m.role==='host'?'':'<span class="muted">›</span>'}</div>`).join('')}
@@ -5741,6 +5797,7 @@ function renderLinkPage(){
     ${u.invites.length?`<div class="pg-cap">보낸 초대 코드 (쓰면 사라져요)</div><div class="pg-sec" style="margin-top:0">${u.invites.map(v=>`<div class="prow"><div class="pl2"><b class="mono">${famFmt(v.code)}</b><small>${esc(v.name||'호칭 미정')} · ${daysLeft(v.exp)}일 남음</small></div><button class="btn ghost sm" data-act="inv-share" data-c="${v.code}">보내기</button><button class="xbtn" data-act="inv-del" data-c="${v.code}" aria-label="코드 지우기">✕</button></div>`).join('')}</div>`:''}
     ${S.myset?`<div class="pg-sec" style="margin-top:16px">${stkRow()}</div>`:''}
     ${pushRow()}
+    ${googleRow()}
     <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기<small>가족에게 보이는 내 이름</small></div><span class="muted">${esc(L.name)} ›</span></div>
       <div class="prow danger-row" data-act="link-dissolve">가족방 없애기 (방장이 나가는 것)</div></div>
     <div class="hint" style="padding:8px 16px 0">방장은 그냥 나갈 수 없어요. 나가려면 가족방을 없애야 하고, 그러면 가족 모두 연결이 끊겨요. 방장을 다른 가족에게 넘기는 기능은 아직 없어요.</div>`;
@@ -5752,6 +5809,7 @@ function renderLinkPage(){
       <div class="prow danger-row" data-act="link-leave">${hostM?esc(hostM.name)+'님의 ':''}가족방에서 나가기</div></div>
     <div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">내 근무표를 가족에게 보여요<small>끄면 가족 근무표만 보고, 달력 탭이 가족 달력으로 바뀌어요</small></div><label class="sw"><input type="checkbox" id="famOwn" ${L.mode==='view'?'':'checked'}><i></i></label></div>${!S.myset&&L.mode!=='view'?'<div class="prow tap" data-act="mk-sched" style="color:var(--accent);font-weight:700"><div class="pl2">내 근무표 만들기<small>만들기 전에는 가족에게 내 근무표가 안 보여요</small></div><span class="muted">›</span></div>':''}${S.myset&&L.mode!=='view'?stkRow():''}</div>
     ${pushRow()}
+    ${googleRow()}
     <div class="hint" style="padding:10px 16px">가족의 근무표는 가족 탭 · 달력에서, 가족 메모(♥)와 근무 요청은 날짜를 눌러 주고받아요. 처음 10건은 무료예요.</div>`;
   }
   openPage(`${pageHead('가족 연결')}<div class="pg-b">${body}${u.st==='ok'&&L&&host?'<div class="hint" style="padding:10px 16px">가족의 근무표는 가족 탭 · 달력에서, 가족 메모(♥)와 근무 요청은 날짜를 눌러 주고받아요. 처음 10건은 무료예요.</div>':''}</div>`,'link');
