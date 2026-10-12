@@ -1,165 +1,32 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Noto Sans CJK KR","Noto Sans KR",sans-serif;background:#e9ebef;padding:26px;color:#1d2330;width:1560px}
-.row{display:flex;gap:26px;align-items:flex-start;margin-bottom:30px;padding:6px}
-h2{font-size:21px;font-weight:900;margin:0 6px 4px}p.s{font-size:13px;color:#6b7280;margin:0 6px 14px}
-.col{display:flex;flex-direction:column;gap:8px;align-items:center;width:350px}
-.cap{font-size:15px;font-weight:800;color:#3a4150}.sub{font-size:12px;color:#6b7280;text-align:center;line-height:1.45;min-height:34px}
-.ph{width:350px;height:740px;background:#fbf8f1;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330;position:relative}
-.top{display:flex;align-items:center;padding:14px 16px 6px;gap:8px}
-.top h1{font-size:22px;font-weight:900;flex:1}
-.ym{font-size:20px;font-weight:900;display:flex;align-items:center;gap:7px;flex:1;justify-content:center}
-.pill{font-size:12px;font-weight:900;background:#e5484d;color:#fff;border-radius:11px;padding:2px 8px}
-.pill.y{background:#f5a623;color:#fff}
-.nav{display:flex;justify-content:space-around;padding:9px 0 13px;background:#2b2f3a;font-size:12px;color:#8e95a3;font-weight:800;flex:none;margin-top:auto}
-.nav span{display:flex;flex-direction:column;align-items:center;gap:3px}.nav .on{color:#fff}.nav i{font-style:normal;font-size:18px}
-.chips{display:flex;gap:6px;padding:2px 14px 8px}
-.chips span{font-size:13px;font-weight:900;padding:7px 14px;border-radius:16px;background:#efe9db;color:#6b6556}
-.chips span.on{background:#1d2330;color:#fff}
-.banner{margin:0 14px 8px;border-radius:12px;background:#fff3d6;color:#7a5200;font-size:12.5px;font-weight:800;padding:8px 12px;display:flex;justify-content:space-between}
-.cal{padding:0 8px;display:grid;grid-template-columns:repeat(7,1fr);gap:0}
-.cal .w{text-align:center;font-size:11px;font-weight:800;color:#8a8574;padding:3px 0}
-.cal .w:first-child,.cal .d:nth-child(7n+8){color:#e5484d}
-.d{height:66px;border-top:1px solid #e6dfcc;padding:3px 2px;display:flex;flex-direction:column;align-items:center;position:relative}
-.d .n{font-size:11.5px;font-weight:800;color:#4b4638;align-self:flex-start;margin-left:3px}
-.d.sun .n{color:#e5484d}.d.today .n{background:#2f9e6e;color:#fff;border-radius:8px;padding:0 5px}
-.k{margin-top:5px;min-width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:800}
-.k.D{background:#c9d6dd;color:#33505e}.k.N{background:#d8c9c2;color:#5a4038}.k.R{color:#e5484d;font-weight:900;font-size:12px}
-.k.L{width:auto;padding:0 6px;border-radius:7px;height:20px;font-size:10px;background:#ece5d3;color:#6b6556}
-.dot{position:absolute;top:4px;right:5px;width:9px;height:9px;border-radius:50%}
-.dot.r{background:#e5484d}.dot.g{background:#a8adb6}.dot.y{background:#f5a623}
-.bell{position:absolute;top:1px;right:3px;font-size:12px}
-.ring{box-shadow:inset 0 0 0 2px #e5484d;border-radius:6px}
-.ringy{box-shadow:inset 0 0 0 2px #f5a623;border-radius:6px}
-.leg{display:flex;gap:12px;padding:8px 14px;font-size:11.5px;font-weight:700;color:#6b6556}
-.leg b{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
-.b{flex:1;overflow:hidden;padding:4px 14px 0;display:flex;flex-direction:column;gap:9px}
-.sec{font-size:12.5px;font-weight:800;color:#8a8574;margin-top:3px}
-.card{border-radius:16px;background:#fff;box-shadow:0 1px 0 #e6dfcc;padding:12px 13px;display:flex;align-items:center;gap:11px}
-.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:900;font-size:15px;flex:none}
-.card .t{flex:1}.card .t b{font-size:15.5px;display:block}.card .t small{font-size:12px;color:#6b7280;font-weight:700}
-.card .go{color:#b5ae99;font-size:20px}
-.tog{border-radius:16px;background:#fff0bf;padding:11px 13px}.tog b{font-size:14px}.tog small{display:block;font-size:12px;color:#8a5a00;font-weight:700;margin-top:2px}
-.dim{position:absolute;inset:0;background:rgba(15,18,30,.42)}
-.sh{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;padding:10px 16px 18px;display:flex;flex-direction:column;gap:10px}
-.gr{width:36px;height:4px;border-radius:2px;background:#d5d8de;margin:0 auto}
-.sh h3{font-size:18px;font-weight:900}.sh .l{font-size:12.5px;font-weight:800;color:#6b7280;margin-bottom:-4px}
-.opt{border-radius:14px;padding:12px;background:#f6f7f9;font-size:14px;font-weight:800;line-height:1.35}
-.opt small{display:block;font-size:11.5px;color:#6b7280;font-weight:600}
-.opt.on{background:#f3f0ff;box-shadow:inset 0 0 0 2.5px #7b5cf0}
-.inp{border:2px solid #e5e7eb;border-radius:12px;padding:10px 12px;font-size:15px;font-weight:700}
-.btn{background:#7b5cf0;color:#fff;border-radius:14px;padding:13px 0;text-align:center;font-weight:900;font-size:15px}
-.btn.g{background:#fff;color:#4b5563;border:2px solid #d5d8de}
-.two{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-.two div{border-radius:12px;padding:10px 4px;background:#f6f7f9;text-align:center;font-size:12.5px;font-weight:800}
-.two div em{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
-.two .on{background:#f3f0ff;box-shadow:inset 0 0 0 2.5px #7b5cf0}
-.bts{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:6px}
-.bts div{border-radius:12px;padding:12px 0;text-align:center;font-weight:900;font-size:14px;border:2px solid #d5d8de;background:#fff}
-.bts .y{background:#1f9a76;border-color:#1f9a76;color:#fff}
-.flow{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:#9aa1ad}
-.flow .on{background:#f5a623;color:#fff;border-radius:10px;padding:2px 9px}
-.flow .done{color:#1f9a76}
-.rq{border-radius:14px;padding:11px 12px;background:#fff;box-shadow:0 1px 0 #e6dfcc;border-left:5px solid #e5484d}
-.rq.y{border-left-color:#f5a623}.rq.g{border-left-color:#a8adb6}.rq.ok{border-left-color:#1f9a76;opacity:.7}
-.rq b{font-size:14px}.rq small{display:block;font-size:12px;color:#6b7280;font-weight:700;margin-top:2px}
-.rq .st{font-size:11.5px;font-weight:900;margin-top:5px;display:inline-block;border-radius:8px;padding:2px 8px;background:#fde8e8;color:#c0262b}
-.rq.y .st{background:#fdf0d5;color:#9a6200}.rq.g .st{background:#eceef1;color:#5b6270}.rq.ok .st{background:#dff1e6;color:#2f7a4f}
-.note{margin-top:auto;font-size:12px;color:#6b6556;background:#f1ecdd;border-radius:12px;padding:9px 11px;line-height:1.5;margin-bottom:8px}
+body{font-family:"Noto Sans CJK KR","Noto Sans KR",sans-serif;background:#e9ebef;color:#1d2330;padding:26px}
+.row{display:flex;gap:30px;align-items:flex-start;padding:10px 12px 18px;background:#e9ebef}
+.top{padding:4px 12px 0;background:#e9ebef}
+h2{font-size:22px;font-weight:900;margin-bottom:4px}p.s{font-size:13.5px;color:#5b6270;line-height:1.5;margin-bottom:8px}
+.col{width:340px;display:flex;flex-direction:column;align-items:center;gap:7px}
+.who{font-size:12px;font-weight:800;background:#1d2330;color:#fff;border-radius:11px;padding:2px 11px}
+.cap{font-size:16px;font-weight:900;text-align:center;line-height:1.35}
+.sub{font-size:12.5px;color:#5b6270;text-align:center;line-height:1.5;min-height:38px}
+#r3 .sub{height:80px}
+img{width:340px;border-radius:30px;border:7px solid #1d2330;box-shadow:0 10px 26px rgba(0,0,0,.18);display:block}
+.fix{font-size:12.5px;font-weight:800;color:#8a5a00;background:#fff0c9;border-radius:10px;padding:6px 11px;text-align:center;line-height:1.45;width:100%}
+.fix.g{color:#3b4252;background:#dfe3ea}
 </style></head><body>
 
-<div id="r2" class="row" style="flex-wrap:wrap;width:1520px;background:#e9ebef">
-<div style="width:100%"><h2>2단계 · 근무표 보기</h2><p class="s">가족 연결 → 서로의 근무표를 가족 탭에서 눌러 봐요. 알람은 계속 각자 폰 안에서만 울려요.</p></div>
+<div id="r2"><div class="top"><h2>2단계 · 근무표 보기</h2><p class="s">실제 앱 화면 위에 그린 시안이에요. 폰 주인(아빠 · 엄마 · 할머니)을 위에 적었어요. 알람은 계속 각자 폰 안에서만 울려요.</p></div>
+<div class="row">
+ <div class="col"><span class="who">엄마 폰</span><div class="cap">① 들어올 때 한 번 고르기</div><div class="sub">초대 코드를 확인한 다음 화면<br>(나중에 설정 › 가족 연결에서 바꿀 수 있어요)</div><img src="family23/p1.png"></div>
+ <div class="col"><span class="who">엄마 폰</span><div class="cap">② 가족 탭 · 이름을 누르면 한 달 달력</div><div class="sub">지금 있는 "지금 카드 · 이번 주 시간표"에 진짜 가족 데이터가 채워지고, 한 줄만 더해져요</div><img src="family23/p2.png"><div class="fix g">새로 생기는 건 "달력 보기" 한 줄뿐이에요</div></div>
+ <div class="col"><span class="who">할머니 폰 (가족 것만 볼래요)</span><div class="cap">③ 달력 탭이 가족 달력으로</div><div class="sub">위에 이름 칩 · 안내줄로 누구 달력인지 분명히<br>남의 달력이라 수정 · 칠하기는 숨겨요</div><img src="family23/p3.png"></div>
+</div></div>
 
-<div class="col"><div class="cap">① 들어올 때 한 번 고르기</div><div class="sub">초대 코드를 확인한 다음 화면<br>(나중에 설정 › 가족 연결에서 바꿀 수 있어요)</div>
-<div class="ph"><div class="top"><h1>가족 연결</h1></div><div class="b"><div class="sec">아빠님의 가족방 · 가족 1/3명</div></div>
- <div class="dim"></div>
- <div class="sh"><div class="gr"></div><h3>어떻게 쓰실래요?</h3>
-  <div class="opt on">나도 근무표를 써요<small>달력 탭은 내 것 · 내 근무표가 가족에게 보여요</small></div>
-  <div class="opt">가족 것만 볼래요<small>달력 탭이 가족 달력으로 바뀌어요 · 내 근무표는 안 올려요</small></div>
-  <div class="l">가족에게 보일 이름</div><div class="inp">엄마</div>
-  <div class="btn">참여하기</div></div></div></div>
-
-<div class="col"><div class="cap">② 가족 탭 · 이름을 누르면 달력</div><div class="sub">올린 사람이 나열돼요 (3인 가족이면 상대 2명)<br>같이 쉬는 날은 맨 위에 한 줄</div>
-<div class="ph"><div class="top"><h1>우리 가족</h1><span>🔔</span></div><div class="b">
- <div class="tog"><b>🌙 같이 쉬는 날 · 10월 3일 남음</b><small>17(토) · 24(토) · 25(일)</small></div>
- <div class="sec">달력 보기</div>
- <div class="card"><div class="av" style="background:#1d2330">나</div><div class="t"><b>나 (엄마)</b><small>오늘 주간 · 내일 야간</small></div><span class="go">›</span></div>
- <div class="card"><div class="av" style="background:#3b6fd6">아</div><div class="t"><b>아빠</b><small>🏭 지금 야간 근무 중</small></div><span class="go">›</span></div>
- <div class="card"><div class="av" style="background:#f59e0b">딸</div><div class="t"><b>딸</b><small>학원 · 방과후 일정</small></div><span class="go">›</span></div>
- <div class="note">이름을 누르면 그 사람 달력이 열려요. 남의 달력은 보기만 돼요.</div>
-</div><div class="nav"><span><i>📅</i>달력</span><span class="on"><i>👪</i>가족</span><span><i>⏰</i>알람</span><span><i>⚙️</i>설정</span></div></div></div>
-
-<div class="col"><div class="cap">③ "가족 것만 볼래요"인 사람의 달력 탭</div><div class="sub">위에 이름 칩 · 큰 안내줄로 누구 달력인지 분명히<br>수정 · 칠하기는 숨겨요</div>
-<div class="ph"><div class="top"><div class="ym">‹ 2026.10 ›</div></div>
- <div class="chips"><span class="on">아빠 달력</span><span>딸 달력</span></div>
- <div class="banner"><span>👀 아빠 달력 · 보기만</span><span>오늘 야간</span></div>
- <div class="cal" id="cal3"></div>
- <div class="nav"><span class="on"><i>📅</i>달력</span><span><i>👪</i>가족</span><span><i>⏰</i>알람</span><span><i>⚙️</i>설정</span></div></div></div>
-</div>
-
-<div id="r3" class="row" style="flex-wrap:wrap;width:1520px;background:#e9ebef">
-<div style="width:100%"><h2>3단계 · 날짜에 붙는 요청</h2><p class="s">요청은 항상 그 날짜에 붙어요. 채팅창은 없어요. 점 색 = 내가 답할 것(빨강) · 내가 보낸 것(회색) · 보류(노랑)</p></div>
-
-<div class="col"><div class="cap">④ 달력 · 요청이 눈에 띄게</div><div class="sub">년·월 옆에 "답할 요청 개수"<br>날짜 칸에 점 (끝난 요청은 점이 사라져요)</div>
-<div class="ph"><div class="top"><div class="ym">‹ 2026.10 › <span class="pill">🔔 2</span><span class="pill y">보류 1</span></div></div>
- <div class="cal" id="cal4"></div>
- <div class="leg"><span><b style="background:#e5484d"></b>내가 답할 것</span><span><b style="background:#a8adb6"></b>내가 보냄</span><span><b style="background:#f5a623"></b>보류</span></div>
- <div class="nav"><span class="on"><i>📅</i>달력</span><span><i>👪</i>가족</span><span><i>⏰</i>알람</span><span><i>⚙️</i>설정</span></div></div></div>
-
-<div class="col"><div class="cap">⑤ 날짜를 누르고 요청 보내기</div><div class="sub">종류는 3개만 · 한 줄 적고 보내면 끝<br>받는 사람 달력의 그날에 점이 떠요</div>
-<div class="ph"><div class="top"><div class="ym">‹ 2026.10 ›</div></div><div class="b"></div>
- <div class="dim"></div>
- <div class="sh"><div class="gr"></div><h3>31일(토) · 내 근무 주간</h3>
-  <div class="l">아빠에게 보내기</div>
-  <div class="two"><div class="on"><em>🔁</em>바꿔줘</div><div><em>🤝</em>같이 쉬자</div><div><em>📝</em>메모 한 줄</div></div>
-  <div class="inp">아이 할로윈 파티라 같이 가자</div>
-  <div class="btn">보내기</div>
-  <div class="note" style="margin:0">남은 무료 메시지 8건</div></div></div></div>
-
-<div class="col"><div class="cap">⑥ 받은 요청 · 수락 / 보류 / 거절</div><div class="sub">빨간 점 날짜를 누르면 이 창이 떠요<br>보류해도 "보류 중"으로 남아요</div>
-<div class="ph"><div class="top"><div class="ym">‹ 2026.10 ›</div></div><div class="b"></div>
- <div class="dim"></div>
- <div class="sh"><div class="gr"></div><h3>31일(토) · 엄마의 요청</h3>
-  <div class="rq"><b>🔁 31일 주간 ↔ 내 31일 휴무 바꿔줘</b><small>"아이 할로윈 파티라 같이 가자" · 10분 전</small></div>
-  <div class="flow"><span class="on">대기</span>→<span>수락/거절</span>→<span>완료</span></div>
-  <div class="bts"><div class="y">수락</div><div>보류</div><div>거절</div></div>
-  <div class="note" style="margin:0">수락하면 두 사람 달력이 같이 바뀌어요</div></div></div></div>
-
-<div class="col"><div class="cap">⑦ 년·월 옆 🔔를 누르면 요청 목록</div><div class="sub">답할 것 → 보류 → 내가 보낸 것 → 끝난 것<br>끝난 것은 흐리게</div>
-<div class="ph"><div class="top"><h1>요청</h1><span>✕</span></div><div class="b">
- <div class="sec">답할 요청 2</div>
- <div class="rq"><b>🔁 31일(토) 주간 ↔ 휴무</b><small>엄마 · 10분 전</small><span class="st">답해주세요</span></div>
- <div class="rq"><b>🤝 17일(토) 같이 쉬자</b><small>딸 · 어제</small><span class="st">답해주세요</span></div>
- <div class="sec">보류 중 1</div>
- <div class="rq y"><b>📝 22일(목) 병원 같이 가요</b><small>엄마 · 3일 전 · 22일까지 3일</small><span class="st">⏳ 보류 중 · 곧 날짜예요</span></div>
- <div class="sec">내가 보낸 것</div>
- <div class="rq g"><b>🔁 5일(월) 야간 ↔ 휴무</b><small>아빠에게 · 읽음 ✓✓</small><span class="st">답 기다리는 중</span></div>
- <div class="rq ok"><b>🤝 3일(토) 같이 쉬자</b><small>아빠 · 수락</small><span class="st">✓ 완료</span></div>
-</div></div></div>
-</div>
-
-<script>
-const pat=['D','D','N','N','R','R','R','R'];
-function cal(id,opt){
- const el=document.getElementById(id);let h='';
- '일월화수목금토'.split('').forEach(w=>h+=`<div class="w">${w}</div>`);
- // 2026-10-01 = 목 → 앞 4칸 비움
- for(let i=0;i<4;i++)h+='<div class="d"></div>';
- for(let d=1;d<=31;d++){
-  const dow=(4+d-1)%7;const p=pat[(d+2)%8];
-  let cls='d';if(dow==0)cls+=' sun';if(d==12)cls+=' today';
-  const lab={D:'주',N:'야',R:'휴'}[p];
-  let extra='';
-  const o=(opt&&opt[d])||'';
-  if(o=='r')extra='<span class="dot r"></span><span class="bell"></span>';
-  if(o=='g')extra='<span class="dot g"></span>';
-  if(o=='y')extra='<span class="dot y"></span>';
-  h+=`<div class="${cls}${o=='r'?' ring':''}${o=='y'?' ringy':''}"><span class="n">${d}</span>${extra}<span class="k ${p}">${lab}</span></div>`;
- }
- el.innerHTML=h;
-}
-cal('cal3');
-cal('cal4',{31:'r',17:'r',22:'y',5:'g'});
-</script>
+<div id="r3"><div class="top"><h2>3단계 · 날짜에 붙는 요청 (고친 시안)</h2>
+<p class="s"><b>고침 1</b> 달력 아래 설명 줄 없음 (처음 한 번만 안내) · <b>고침 2</b> 요청 목록은 지금 있는 🔔 가족 소식 창을 그대로 씀 · <b>고침 3</b> 받는 사람 칩 + 사람에 따라 요청 종류가 달라짐 · <b>고침 4</b> 수락하기 전에 결과 미리보기</p></div>
+<div class="row">
+ <div class="col"><span class="who">아빠 폰</span><div class="cap">④ 달력 · 요청이 눈에 띄게</div><div class="sub">주황 알약 = 답할 요청 (칸에 옅은 색) · 테두리 = 보류 · 회색 = 내가 보냄<br>년·월 옆에 "🔔 2 · ⏳ 1"</div><img src="family23/p4.png"><div class="fix">고침 1 · 설명 줄 없음<br>대신 처음 한 번만 위에 짧은 안내가 떠요</div></div>
+ <div class="col"><span class="who">엄마 폰 (내 달력)</span><div class="cap">⑤ 요청 보내기</div><div class="sub">날짜를 누르면 나오는 시트<br>누구에게 · 무엇을 · 한 줄</div><img src="family23/p5.png"><div class="fix">고침 3 · 받는 사람 칩 (아빠 · 딸 · 모두)<br>바꿔줘는 한 명에게만 (모두는 흐려져요)</div></div>
+ <div class="col"><span class="who">아빠 폰</span><div class="cap">⑥ 🔔 가족 소식 › 근무 요청</div><div class="sub">지금 있는 소식 창을 그대로 쓰고<br>답할 것 · 보류 · 내가 보낸 것으로 나눠 보여요</div><img src="family23/p6.png"><div class="fix">고침 2 · 새 창 없이 소식 창 재사용<br>고침 4 · "수락하면 이렇게 바뀌어요" 미리보기</div></div>
+ <div class="col"><span class="who">할머니 폰 (가족 것만 볼래요)</span><div class="cap">⑦ 요청 보내기 · 가족 것만 보는 사람</div><div class="sub">받는 사람은 보고 있는 달력의 주인<br>근무표가 없으니 종류는 둘만</div><img src="family23/p7.png"><div class="fix">고침 3 · 바꿔줘는 숨김<br>(같이 쉬자 · 메모만)</div></div>
+</div></div>
 </body></html>
