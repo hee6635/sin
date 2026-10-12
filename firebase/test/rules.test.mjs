@@ -262,6 +262,74 @@ await t('가족방이 남아 있는데 호스트 문서만 지우기 막힘', as
   await assertFails(deleteDoc(doc(db(H), 'households', H, 'members', H)));
 });
 
+
+// ───────── 근무표 (2단계) ─────────
+await G('근무표 올리기 · 보기');
+const sch = (o = {}) => ({
+  v: 1, patternName: '4조2교대', teamName: 'C조', pattern: ['주', '주', '휴', '휴', '야', '야', '휴', '휴'], anchor: '2026-10-06',
+  types: [{ k: '주', name: '주간', color: 'v:day', rest: false }, { k: '휴', name: '휴무', color: '', rest: true }],
+  overrides: { '2026-10-16': '주' }, holRest: false, updatedAt: serverTimestamp(), ...o,
+});
+const SD = (uid) => doc(db(uid), 'households', H, 'schedules', uid);
+const freshS = async () => { await env.clearFirestore(); await seedFamily(2); await seedGuest('g1'); await seedGuest('g2', '딸');
+  await env.withSecurityRulesDisabled(async (c) => setDoc(doc(c.firestore(), 'households', H, 'members', 'g2'), { role: 'guest', name: '할머니', perm: 'write', joinedAt: Timestamp.now(), inviteCode: CODE2, mode: 'view' })); };
+await t('구성원은 자기 근무표를 올리고 고칠 수 있음 (호스트 · 가족)', async () => {
+  await freshS();
+  await assertSucceeds(setDoc(SD(H), sch()));
+  await assertSucceeds(setDoc(SD('g1'), sch()));
+  await assertSucceeds(setDoc(SD('g1'), sch({ overrides: {} })));
+});
+await t('구성원은 서로의 근무표를 읽을 수 있음', async () => {
+  await freshS(); await setDoc(SD(H), sch());
+  await assertSucceeds(getDoc(SD(H)));
+  await assertSucceeds(getDoc(doc(db('g2'), 'households', H, 'schedules', H)));
+  await assertSucceeds(getDocs(collection(db('g1'), 'households', H, 'schedules')));
+});
+await t('남의 근무표 쓰기 · 지우기 막힘', async () => {
+  await freshS(); await setDoc(SD('g1'), sch());
+  await assertFails(setDoc(doc(db('g1'), 'households', H, 'schedules', H), sch()));
+  await assertFails(deleteDoc(doc(db('g2'), 'households', H, 'schedules', 'g1')));
+});
+await t('가족 것만 볼래요(view)는 근무표를 올릴 수 없음', async () => {
+  await freshS();
+  await assertFails(setDoc(SD('g2'), sch()));
+});
+await t('가족방 밖 사람은 읽기 · 쓰기 막힘, 로그인 안 하면 막힘', async () => {
+  await freshS(); await setDoc(SD(H), sch());
+  await assertFails(getDoc(doc(db('stranger'), 'households', H, 'schedules', H)));
+  await assertFails(setDoc(doc(db('stranger'), 'households', H, 'schedules', 'stranger'), sch()));
+  await assertFails(getDoc(doc(db(), 'households', H, 'schedules', H)));
+});
+await t('엉뚱한 필드 · 가짜 시간 · 너무 큰 내용 막힘', async () => {
+  await freshS();
+  await assertFails(setDoc(SD('g1'), sch({ admin: true })));
+  await assertFails(setDoc(SD('g1'), sch({ updatedAt: Timestamp.fromMillis(1000) })));
+  await assertFails(setDoc(SD('g1'), sch({ pattern: [] })));
+  await assertFails(setDoc(SD('g1'), sch({ pattern: Array(61).fill('주') })));
+  await assertFails(setDoc(SD('g1'), sch({ anchor: '2026-10-6' })));
+  await assertFails(setDoc(SD('g1'), sch({ types: Array(25).fill({ k: '주', name: '주간', color: '', rest: false }) })));
+  const big = {}; for (let i = 0; i < 501; i++) big['k' + i] = '주';
+  await assertFails(setDoc(SD('g1'), sch({ overrides: big })));
+  await assertFails(setDoc(SD('g1'), sch({ v: 2 })));
+});
+await t('본인 · 호스트는 근무표를 지울 수 있음 (나가기 · 내보내기)', async () => {
+  await freshS(); await setDoc(SD('g1'), sch());
+  await assertSucceeds(deleteDoc(SD('g1')));
+  await setDoc(SD('g1'), sch());
+  await assertSucceeds(deleteDoc(doc(db(H), 'households', H, 'schedules', 'g1')));
+});
+await t('가족이 올 때 mode 를 own · view 로 고를 수 있고, 다른 값은 막힘', async () => {
+  await env.clearFirestore(); await seedFamily(0); await seedInvite(CODE); await seedInvite(CODE2);
+  await assertSucceeds(join(db('g1'), 'g1', { m: { mode: 'view' } }));
+  await assertFails(join(db('g2'), 'g2', { code: CODE2, m: { mode: 'admin' } }));
+});
+await t('내 mode 는 내가 바꿀 수 있고, 호스트가 가족의 mode 를 바꾸는 건 막힘', async () => {
+  await freshS();
+  await assertSucceeds(updateDoc(doc(db('g1'), 'households', H, 'members', 'g1'), { mode: 'view' }));
+  await assertFails(updateDoc(doc(db(H), 'households', H, 'members', 'g1'), { mode: 'own' }));
+  await assertFails(updateDoc(doc(db('g1'), 'households', H, 'members', 'g1'), { mode: 'x' }));
+});
+
 // ───────── 서로 다른 가족방 ─────────
 await G('다른 가족방 사이');
 await t('A 가족방 구성원은 B 가족방을 읽을 수 없음', async () => {

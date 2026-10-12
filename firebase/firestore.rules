@@ -72,7 +72,8 @@ service cloud.firestore {
 
         // 가족 참여: 쓸 수 있는 초대 코드가 있고, 같은 묶음에서 코드가 '사용됨'이 되고, 자리가 남아 있을 때
         allow create: if signedIn() && request.auth.uid == uid && uid != hid
-          && request.resource.data.keys().hasOnly(['role', 'name', 'perm', 'joinedAt', 'inviteCode'])
+          && request.resource.data.keys().hasOnly(['role', 'name', 'perm', 'joinedAt', 'inviteCode', 'mode'])
+          && request.resource.data.get('mode', 'own') in ['own', 'view']
           && request.resource.data.role == 'guest'
           && validName(request.resource.data.name)
           && request.resource.data.joinedAt == request.time
@@ -89,12 +90,14 @@ service cloud.firestore {
 
         // 고치기: 내 호칭은 내가, 가족의 호칭 · 권한은 호스트가
         allow update: if signedIn()
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'perm'])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'perm', 'mode'])
           && validName(request.resource.data.name)
           && request.resource.data.perm in ['write', 'read']
+          && request.resource.data.get('mode', 'own') in ['own', 'view']
           && (
             (request.auth.uid == uid && request.resource.data.perm == resource.data.perm)
-            || (isOwner(hid) && resource.data.role == 'guest')
+            || (isOwner(hid) && resource.data.role == 'guest'
+                && request.resource.data.get('mode', 'own') == resource.data.get('mode', 'own'))
           );
 
         // 나가기(가족 본인) · 내보내기(호스트): 같은 묶음에서 가족 수가 하나 줄어야 함.
@@ -112,6 +115,25 @@ service cloud.firestore {
             && !existsAfter(/databases/$(database)/documents/households/$(hid)))
         );
       }
+    }
+
+    // ───────── (위 households 안) 근무표: households/{hid}/schedules/{uid} ─────────
+    // 구성원 모두 읽기, 쓰기는 본인만(근무표를 올리는 사람 = mode 'own'), 지우기는 본인 · 호스트
+    match /households/{hid}/schedules/{uid} {
+      allow read: if isMember(hid);
+      allow create, update: if signedIn() && request.auth.uid == uid && isMember(hid)
+        && get(memberPath(hid, uid)).data.get('mode', 'own') == 'own'
+        && request.resource.data.keys().hasOnly(['v', 'patternName', 'teamName', 'pattern', 'anchor', 'types', 'overrides', 'holRest', 'updatedAt'])
+        && request.resource.data.v == 1
+        && request.resource.data.patternName is string && request.resource.data.patternName.size() <= 20
+        && request.resource.data.teamName is string && request.resource.data.teamName.size() <= 10
+        && request.resource.data.pattern is list && request.resource.data.pattern.size() >= 1 && request.resource.data.pattern.size() <= 60
+        && request.resource.data.anchor is string && request.resource.data.anchor.size() == 10
+        && request.resource.data.types is list && request.resource.data.types.size() <= 24
+        && request.resource.data.overrides is map && request.resource.data.overrides.size() <= 500
+        && request.resource.data.holRest is bool
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if signedIn() && (request.auth.uid == uid || isOwner(hid));
     }
 
     // ───────── 초대 코드: invites/{8자리 코드} ─────────
