@@ -524,6 +524,14 @@ await t('이상한 값은 거절 (짧은 token · 모르는 칸 · 가짜 시간
   await assertFails(setDoc(doc(a, 'devices/alice'), dev({ on: 'yes' })));
 });
 
+await t('자는 시간(quiet) 숫자 목록은 허용, 너무 길거나 목록이 아니면 거절', async () => {
+  const a = db('alice');
+  await assertSucceeds(setDoc(doc(a, 'devices/alice'), dev({ quiet: [1760000000000, 1760018000000] })));
+  await assertSucceeds(setDoc(doc(a, 'devices/alice'), dev({ quiet: [] })));
+  await assertFails(setDoc(doc(a, 'devices/alice'), dev({ quiet: Array.from({ length: 61 }, (_, i) => 1760000000000 + i) })));
+  await assertFails(setDoc(doc(a, 'devices/alice'), dev({ quiet: 'night' })));
+});
+
 // ───────── 내 가족방 번호 쪽지 (users) ─────────
 await G('내 가족방 번호 쪽지 (users)');
 await t('내 쪽지 쓰기 · 읽기 · 고치기 · 지우기', async () => {

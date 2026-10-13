@@ -31,6 +31,10 @@ class AlarmBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun setTextZoom(pct: Int) = activity.setTextZoom(pct)
 
+    /** 화면 모드(system · light · dark): 상태바 · 뒷배경 색을 맞춤 */
+    @JavascriptInterface
+    fun setThemeMode(mode: String) = activity.setThemeMode(mode)
+
     /** 글(초대 문구 등)을 카카오톡 등으로 보내기 */
     @JavascriptInterface
     fun shareText(title: String, text: String) {

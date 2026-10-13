@@ -93,4 +93,14 @@ function onMemberJoined(m, uid, hostUid, hid) {
   return [{ to: [hostUid], title: '가족 참여', body: `${nm(m.name)}님이 가족에 참여했어요`, data: { type: 'join', date: '', hid } }];
 }
 
-module.exports = { iga, md, shiftOn, schedDiff, onRequestCreated, onRequestUpdated, onMemoCreated, onMemoUpdated, onScheduleChanged, onMemberJoined };
+// 받는 사람이 지금 "자는 시간"인지: quiet = [시작ms, 끝ms, 시작ms, 끝ms …] (앱이 앞으로 2주치를 올려 둠)
+function inQuiet(quiet, nowMs) {
+  if (!Array.isArray(quiet)) return false;
+  for (let i = 0; i + 1 < quiet.length; i += 2) {
+    const a = Number(quiet[i]), b = Number(quiet[i + 1]);
+    if (a <= nowMs && nowMs < b) return true;
+  }
+  return false;
+}
+
+module.exports = { inQuiet, iga, md, shiftOn, schedDiff, onRequestCreated, onRequestUpdated, onMemoCreated, onMemoUpdated, onScheduleChanged, onMemberJoined };

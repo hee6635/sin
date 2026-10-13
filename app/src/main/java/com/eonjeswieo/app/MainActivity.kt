@@ -214,8 +214,32 @@ class MainActivity : ComponentActivity() {
         drive.onAuthResult(res.data)
     }
 
-    private fun isNight(): Boolean =
-        (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+    // 화면 모드: 앱 안에서 고른 값(system · light · dark). 웹이 알려 주면 저장해 두고 다음 실행 때 바로 씀
+    private var themeMode = "system"
+    private var rootView: FrameLayout? = null
+
+    private fun isNight(): Boolean = when (themeMode) {
+        "dark" -> true
+        "light" -> false
+        else -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+    }
+
+    /** 뒷배경 · 상태바 · 내비게이션바 글자색을 지금 화면 모드에 맞춤 */
+    private fun applyBars() {
+        val root = rootView ?: return
+        root.setBackgroundColor(if (isNight()) Color.parseColor("#111318") else Color.WHITE)
+        val controller = WindowCompat.getInsetsController(window, root)
+        controller.isAppearanceLightStatusBars = !isNight()
+        controller.isAppearanceLightNavigationBars = !isNight()
+    }
+
+    fun setThemeMode(mode: String) {
+        val m = if (mode == "dark" || mode == "light") mode else "system"
+        getSharedPreferences("ui", MODE_PRIVATE).edit().putString("theme", m).apply()
+        if (m == themeMode) return
+        themeMode = m
+        runOnUiThread { applyBars() }
+    }
 
     // 알림을 눌러서 열렸을 때 (종류 · 날짜). 화면이 준비되면 웹이 가져감
     private var pendingPush: String = ""
@@ -293,7 +317,9 @@ class MainActivity : ComponentActivity() {
         initPush()
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        themeMode = getSharedPreferences("ui", MODE_PRIVATE).getString("theme", "system") ?: "system"
         val root = FrameLayout(this)
+        rootView = root
         root.setBackgroundColor(if (isNight()) Color.parseColor("#111318") else Color.WHITE)
         webView = WebView(this)
         root.addView(
@@ -420,6 +446,8 @@ class MainActivity : ComponentActivity() {
             if (Build.VERSION.SDK_INT >= 26) {
                 val nm = getSystemService(NotificationManager::class.java)
                 nm.createNotificationChannel(NotificationChannel("family", "가족 알림", NotificationManager.IMPORTANCE_DEFAULT))
+                // 자는 시간 알림: 소리 · 진동 없이 알림창에만 쌓임
+                nm.createNotificationChannel(NotificationChannel("family_quiet", "가족 알림 (자는 시간)", NotificationManager.IMPORTANCE_LOW))
             }
             FirebaseMessaging.getInstance().token.addOnSuccessListener { t ->
                 if (!t.isNullOrEmpty()) {

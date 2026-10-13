@@ -68,3 +68,17 @@ npx firebase-tools deploy --only functions,firestore:rules --project eonjeswieo-
 ## 3. 잊지 말기
 - **Blaze 무료 체험이 2027-01-11 에 끝나요.** 그 전에 콘솔에서 "업그레이드"를 눌러 두세요 (안 하면 푸시가 멈춰요). 쓰는 양이 적어서 요금은 사실상 0원이에요.
 - 출시용 서명 키를 새로 만들면, 그 SHA-1 도 2번 화면에 추가하고 google-services.json 을 다시 받아야 해요.
+
+## 4. v0.28 새 기능을 모두 쓰려면 (자는 시간엔 알림 소리 없이)
+앱(APK)만 새로 깔면 대부분 바로 돼요. **"자는 시간엔 소리 없이"** 만 서버가 같이 바뀌어야 해서 아래 두 가지를 한 번 더 해 주세요. (안 해도 앱은 잘 돌아가고, 그 기능만 아직 안 켜진 상태예요.)
+
+1. **보안 규칙 다시 게시** — 0번과 같은 방법 (새 `firestore-rules.txt` 로 통째로 바꿔 붙여 넣고 게시). `devices` 에 자는 시간 칸(`quiet`)이 늘었어요.
+2. **함수 다시 올리기** — 1-2번과 같은 방법 (새 `eonjeswieo-deploy.zip` 올리고, `deploy` 폴더를 지운 뒤 아래를 다시):
+```sh
+rm -rf deploy && mkdir deploy && cd deploy && unzip ../eonjeswieo-deploy.zip
+echo "FN_REGION=asia-northeast3" > functions/.env
+npm --prefix functions install
+npx firebase-tools deploy --only functions,firestore:rules --project eonjeswieo-d85e2
+```
+- 설정 › 가족 연결 › "가족 알림 받기" 아래에 **"자는 시간엔 소리 없이"** 스위치가 생겨요 (기본 켜짐). 야간 근무 뒤 자는 시간(근무 시간 설정, 기본 08:30~13:30)에는 알림이 소리 · 진동 없이 알림창에만 쌓여요.
+

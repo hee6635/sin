@@ -45,4 +45,10 @@ ok('가족 참여: 방장에게', () => {
   assert.deepEqual(N.onMemberJoined({ role: 'guest', name: '딸' }, 'u3', 'u1', 'u1')[0].to, ['u1']);
   assert.deepEqual(N.onMemberJoined({ role: 'host', name: '아빠' }, 'u1', 'u1', 'u1'), []);
 });
+ok('자는 시간(quiet): 구간 안이면 true · 밖이면 false · 이상한 값은 false', () => {
+  const q = [1000, 2000, 5000, 6000];
+  assert.equal(N.inQuiet(q, 1500), true); assert.equal(N.inQuiet(q, 2000), false);
+  assert.equal(N.inQuiet(q, 5000), true); assert.equal(N.inQuiet(q, 4000), false);
+  assert.equal(N.inQuiet(undefined, 1500), false); assert.equal(N.inQuiet([1000], 1500), false); assert.equal(N.inQuiet('x', 1500), false);
+});
 console.log(`${n} passed`);

@@ -22,13 +22,13 @@ async function members(hid) {
   return { uids, names };
 }
 
-// 기기 등록(devices/{uid}): { token, on, hid } — on 이 false 이거나 다른 가족방이면 보내지 않음
+// 기기 등록(devices/{uid}): { token, on, hid, quiet } — on 이 false 이거나 다른 가족방이면 보내지 않음, 자는 시간(quiet)이면 소리 없는 통로(family_quiet)로
 async function tokensFor(uids, hid) {
   const out = [];
   await Promise.all([...new Set(uids)].map(async u => {
     const s = await db.collection('devices').doc(u).get();
     const v = s.exists ? s.data() : null;
-    if (v && v.token && v.on !== false && v.hid === hid) out.push({ uid: u, token: v.token });
+    if (v && v.token && v.on !== false && v.hid === hid) out.push({ uid: u, token: v.token, quiet: N.inQuiet(v.quiet, Date.now()) });
   }));
   return out;
 }
@@ -37,7 +37,7 @@ async function send(msgs, hid) {
   for (const m of msgs) {
     const toks = await tokensFor(m.to, hid);
     if (process.env.PUSH_TEST_LOG) {   // 시험용: 보내지 않고 기록
-      await db.collection('__pushlog').add({ to: m.to, sentTo: toks.map(t => t.uid), title: m.title, body: m.body, data: m.data });
+      await db.collection('__pushlog').add({ to: m.to, sentTo: toks.map(t => t.uid), quietTo: toks.filter(t => t.quiet).map(t => t.uid), title: m.title, body: m.body, data: m.data });
       continue;
     }
     if (!toks.length) continue;
@@ -45,7 +45,7 @@ async function send(msgs, hid) {
       token: t.token,
       notification: { title: m.title, body: m.body },
       data: Object.fromEntries(Object.entries(m.data).map(([k, v]) => [k, String(v)])),
-      android: { priority: 'high', collapseKey: m.data.type, notification: { channelId: 'family', tag: m.data.type + (m.data.date || '') } },
+      android: { priority: t.quiet ? 'normal' : 'high', collapseKey: m.data.type, notification: { channelId: t.quiet ? 'family_quiet' : 'family', tag: m.data.type + (m.data.date || '') } },
     })));
     await Promise.all(res.responses.map(async (r, i) => {   // 만료된 기기는 정리
       const c = r.error && r.error.code;

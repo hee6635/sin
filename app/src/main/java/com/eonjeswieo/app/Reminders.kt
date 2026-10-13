@@ -70,11 +70,15 @@ object Reminders {
         if (due.isNotEmpty()) {
             val nm = ctx.getSystemService(NotificationManager::class.java)
             nm.createNotificationChannel(NotificationChannel(CHANNEL_ID, "기념일 · 알림", NotificationManager.IMPORTANCE_DEFAULT))
-            val open = PendingIntent.getActivity(
-                ctx, 0, Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
             due.forEach { o ->
+                // 스티커 알림(type = stk)은 눌렀을 때 그 날짜의 스티커 창이 열리도록 종류 · 날짜를 실어 보냄
+                val intent = Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                val type = o.optString("type", "")
+                if (type.isNotEmpty()) intent.putExtra("type", type).putExtra("date", o.optString("date", ""))
+                val open = PendingIntent.getActivity(
+                    ctx, o.optString("id").hashCode(), intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
                 val n = Notification.Builder(ctx, CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_stat_notify)
                     .setContentTitle(o.optString("title", "언제쉬어"))
