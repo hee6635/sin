@@ -152,7 +152,7 @@ class DriveBackup(private val activity: Activity) {
                     }
                     res.put("ok", true).put("files", listFiles(t)).put("email", email(t))
                 } catch (e: Exception) {
-                    res.put("ok", false).put("err", "net").put("msg", e.message ?: "")
+                    res.put("ok", false).put("err", if (e is java.io.IOException) "net" else "http").put("msg", e.message ?: "")
                 }
                 done(res)
             }
@@ -167,7 +167,7 @@ class DriveBackup(private val activity: Activity) {
                 try {
                     res.put("ok", true).put("files", listFiles(t)).put("email", email(t))
                 } catch (e: Exception) {
-                    res.put("ok", false).put("err", "net")
+                    res.put("ok", false).put("err", if (e is java.io.IOException) "net" else "http").put("msg", e.message ?: "")
                 }
                 done(res)
             }
@@ -184,7 +184,7 @@ class DriveBackup(private val activity: Activity) {
                     if (code !in 200..299) throw RuntimeException("get $code")
                     res.put("ok", true).put("data", txt)
                 } catch (e: Exception) {
-                    res.put("ok", false).put("err", "net")
+                    res.put("ok", false).put("err", if (e is java.io.IOException) "net" else "http").put("msg", e.message ?: "")
                 }
                 done(res)
             }
