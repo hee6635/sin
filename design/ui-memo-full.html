@@ -1,0 +1,67 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:26px;display:flex;gap:24px;align-items:flex-start;color:#1f2328;width:1230px}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center;width:370px}
+.cap{font-size:15px;font-weight:800;color:#3a4150}.sub{font-size:12px;color:#6b7280;margin-top:-6px;text-align:center;line-height:1.45;min-height:34px}
+.ph{width:360px;height:740px;background:#fff;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330;position:relative}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.3)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;padding:16px 16px 18px;box-shadow:0 -6px 24px rgba(0,0,0,.18)}
+.sheet h3{font-size:16px;font-weight:900;margin-bottom:10px}
+.shift{display:inline-block;background:#cbd8de;border-radius:8px;padding:2px 9px;font-size:13px;font-weight:800;margin-left:6px}
+.memo{background:#f5f6f8;border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:6px}
+.memo small{color:#8b919a;font-size:11px;margin-left:6px}
+.row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.inp{flex:1;background:#f5f6f8;border-radius:12px;padding:12px;font-size:14px;color:#9aa1ad}
+.btn{background:#2f6bf0;color:#fff;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:800}
+.more{font-size:12.5px;font-weight:800;color:#8a65c9;padding:6px 4px;white-space:nowrap}
+.hl{box-shadow:0 0 0 2px #ff9f43;border-radius:10px}
+.hd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;font-size:17px;font-weight:800;border-bottom:1px solid #eceef1}
+.hd .b{font-size:24px;font-weight:400}.hd .s{color:#2f6bf0;font-size:15px;font-weight:800}
+.date{padding:14px 18px 0;font-size:12.5px;color:#8b919a;font-weight:700}
+.ta{margin:8px 14px;border-radius:14px;padding:14px;font-size:16px;color:#9aa1ad;min-height:150px;background:#f8f9fb}
+.ta.c1{background:#fff4c9}
+.tools{display:flex;gap:8px;padding:2px 14px 10px}
+.tools span{width:44px;height:40px;border-radius:12px;background:#f1f2f5;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;color:#6b7280}
+.tools span.on{background:#eeeafd;box-shadow:inset 0 0 0 2px #8a65c9;color:#1f2328}
+.sec{border-top:1px solid #eceef1;padding:12px 18px}
+.sec .l{font-size:12px;font-weight:800;color:#8b919a;margin-bottom:8px}
+.sw{display:flex;gap:9px}.sw i{width:30px;height:30px;border-radius:50%;display:block}.sw i.on{box-shadow:0 0 0 2px #fff,0 0 0 4px #8a65c9}
+.line{display:flex;align-items:center;padding:12px 18px;border-top:1px solid #eceef1;font-size:15px}
+.line .v{margin-left:auto;color:#6b7280;font-weight:700}
+.tg{width:44px;height:25px;border-radius:13px;background:#c9ced6;position:relative;margin-left:auto}.tg::after{content:'';position:absolute;left:3px;top:3px;width:19px;height:19px;border-radius:50%;background:#fff}
+.tg.on{background:#3b6fd6}.tg.on::after{left:auto;right:3px}
+.seg{display:flex;gap:6px;margin-left:auto}.seg span{padding:6px 11px;border-radius:9px;background:#f1f2f5;font-size:12.5px;font-weight:800;color:#6b7280}.seg span.on{background:#eeeafd;color:#1f2328;box-shadow:inset 0 0 0 2px #8a65c9}
+.note{font-size:11.5px;color:#9aa1ad;padding:8px 18px;line-height:1.5}
+</style></head><body>
+
+<div class="col"><div class="cap">① 날짜 창 — 한 줄 메모는 그대로</div><div class="sub">지금처럼 바로 쓰고 저장 · 옆에 작은 "자세히 ›"만 늘어요<br>(안 쓰는 사람 화면은 글자 하나 차이)</div>
+<div class="ph"><div class="dim"></div>
+ <div class="sheet" style="top:300px">
+  <h3>10월 16일 금 <span class="shift">야</span></h3>
+  <div class="memo">병원 예약 10시 <small>나만</small></div>
+  <div class="row"><div class="inp">메모를 적어요</div><div class="more hl">자세히 ›</div><div class="btn">저장</div></div>
+ </div>
+</div></div>
+
+<div class="col"><div class="cap">② 자세히 — 전체 화면 (처음 모습)</div><div class="sub">큰 글자 칸 + 아래 작은 아이콘 줄<br>아이콘을 누를 때만 옵션이 펼쳐져요</div>
+<div class="ph">
+ <div class="hd"><span class="b">‹</span>메모<span class="s">저장</span></div>
+ <div class="date">10월 16일 금요일</div>
+ <div class="ta">메모를 입력하세요</div>
+ <div class="tools"><span>🎨</span><span>✓</span><span>🕐</span><span style="width:auto;padding:0 12px;font-size:13px">🔒 나만</span></div>
+ <div class="note">🎨 색 · ✓ 할 일 · 🕐 시간/알림 · 🔒 나만 / 👪 가족 — 누르면 아래에 펼쳐져요</div>
+</div></div>
+
+<div class="col"><div class="cap">③ 옵션을 펼친 모습</div><div class="sub">쓴 옵션만 위에 표시 · 달력 칸에는 색이 바탕으로, 할 일은 ✓ 로 보여요</div>
+<div class="ph">
+ <div class="hd"><span class="b">‹</span>메모<span class="s">저장</span></div>
+ <div class="date">10월 16일 금요일</div>
+ <div class="ta c1" style="color:#1f2328;min-height:96px">병원 예약<br>서류 챙기기</div>
+ <div class="tools"><span class="on">🎨</span><span class="on">✓</span><span class="on">🕐</span><span style="width:auto;padding:0 12px;font-size:13px">🔒 나만</span></div>
+ <div class="sec"><div class="l">색</div><div class="sw"><i style="background:#fff4c9" class="on"></i><i style="background:#ffd9d4"></i><i style="background:#ffe3c4"></i><i style="background:#d8f1d9"></i><i style="background:#d4e8ff"></i><i style="background:#e6dcff"></i><i style="background:#e5e7eb"></i></div></div>
+ <div class="line">✓ 할 일<span class="tg on"></span></div>
+ <div class="line">🕐 시간<span class="v">오전 10:00 ›</span></div>
+ <div class="line" style="border-top:0;padding-top:4px">🔔 알림<div class="seg"><span>없음</span><span class="on">정시</span><span>10분 전</span></div></div>
+ <div class="note">끝에 "저장"을 누르면 날짜에 메모가 붙어요 (시간순으로 정렬)</div>
+</div></div>
+</body></html>
