@@ -2693,10 +2693,9 @@ function renderAlarm(){
 /* ================= 시트 · 페이지 · 작은 메뉴 ================= */
 function openSheet(html,full){const top=!!pageMode;$('#sheet').innerHTML=html;$('#sheet').classList.add('open');$('#sheet').classList.toggle('full',!!full);$('#sheet').classList.toggle('top',top);$('#scrim').classList.add('open');$('#scrim').classList.toggle('top',top);}
 function closeSheet(){
-  const keepSel=sheetMode==='day'&&sheetKey?sheetKey:null;
   if(sheetKey){tidyMemos(sheetKey);save();render();}
   $('#sheet').classList.remove('open');$('#scrim').classList.remove('open');
-  sheetKey=null;sheetMode=null;replyDraft=null;typeDraft=null;memoEdit=null;ddDraft=null;markSel(keepSel);   // 날짜 화면에서 뒤로 가면 그 칸은 선택된 채로
+  sheetKey=null;sheetMode=null;replyDraft=null;typeDraft=null;memoEdit=null;ddDraft=null;markSel(null);
 }
 function reopen(){
   if(sheetMode==='requests')openRequests();
