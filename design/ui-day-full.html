@@ -1,0 +1,104 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:26px;display:flex;gap:24px;align-items:flex-start;color:#1f2328;width:1230px}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center;width:370px}
+.cap{font-size:15px;font-weight:800;color:#3a4150}.sub{font-size:12px;color:#6b7280;margin-top:-6px;text-align:center;line-height:1.45;min-height:34px}
+.ph{width:360px;height:760px;background:#fff;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330;position:relative}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 8px;border-bottom:1px solid #eceef1}
+.top .b{font-size:24px;width:34px}.top .t{text-align:center;font-size:17px;font-weight:900}.top .t small{display:block;font-size:11.5px;color:#8b919a;font-weight:700;margin-top:1px}
+.top .n{font-size:24px;width:34px;text-align:right;color:#8b919a}
+.strip{display:flex;justify-content:space-between;padding:10px 12px 12px;background:#f8f9fb;border-bottom:1px solid #eceef1}
+.sd{width:46px;text-align:center;font-size:10.5px;color:#8b919a;font-weight:700}
+.sd .c{width:34px;height:34px;border-radius:50%;margin:3px auto 0;display:grid;place-items:center;font-weight:800;font-size:14px;opacity:.55}
+.sd .c.d{background:#cbd8de;color:#1c2a31}.sd .c.n{background:#d9cbc6;color:#2b1f1b}.sd .c.r{background:none;color:#e0455c;font-size:12px}
+.sd.me{color:#1f2328}.sd.me .c{opacity:1;box-shadow:0 0 0 2px #fff,0 0 0 4px #2f6bf0;width:40px;height:40px;margin-top:0}
+.sd.me .c.d{background:#cbd8de}
+.sec{padding:12px 16px}
+.lbl{font-size:12px;font-weight:800;color:#8b919a;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.lbl a{color:#8a65c9;font-size:12.5px}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.ch{width:76px;text-align:center;font-size:11.5px;color:#6b7280;font-weight:700}
+.ch .c{width:56px;height:56px;border-radius:50%;margin:0 auto 4px;display:grid;place-items:center;font-weight:800;font-size:19px;opacity:.55}
+.ch .c.d{background:#cbd8de;color:#1c2a31}.ch .c.n{background:#d9cbc6;color:#2b1f1b}.ch .c.r{background:#f1f2f5;color:#e0455c;font-size:16px}
+.ch .c.x{border:2px dashed #b9bec7;background:none;color:#8b919a;font-size:12px}
+.ch.on .c{opacity:1;box-shadow:0 0 0 3px #fff,0 0 0 5px #2f6bf0}.ch.on{color:#1f2328}
+.ch .c.add{background:#f1f2f5;color:#8b919a;font-size:13px;opacity:1}
+.btnrow{display:flex;gap:8px;margin-top:10px}
+.pill{flex:1;text-align:center;padding:11px 0;border-radius:12px;background:#f1f2f5;font-weight:800;font-size:13.5px;color:#4b5563}
+.memo{background:#f5f6f8;border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:6px;display:flex;justify-content:space-between}
+.memo small{color:#8b919a;font-size:11px}
+.memo.fam{background:#f1ecff}
+.row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.inp{flex:1;background:#f5f6f8;border-radius:12px;padding:12px;font-size:14px;color:#9aa1ad}
+.btn{background:#2f6bf0;color:#fff;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:800}
+.more{font-size:12.5px;font-weight:800;color:#8a65c9;white-space:nowrap}
+.stk{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #eceef1;font-size:14px;font-weight:700}
+.stk small{display:block;font-size:11.5px;color:#8b919a;font-weight:500}
+.stk .g{margin-left:auto;display:flex;gap:6px}
+.stk .g span{padding:7px 11px;border-radius:10px;background:#f1f2f5;font-size:12.5px;font-weight:800}
+.stk .g .ok{background:#1f9a76;color:#fff}
+.req{border:1.5px solid #f2d3a1;background:#fff8ec;border-radius:14px;padding:12px;margin-bottom:6px}
+.req b{font-size:13.5px}.req p{font-size:12.5px;color:#6b7280;margin:4px 0 8px}
+.req .g{display:flex;gap:6px}.req .g span{flex:1;text-align:center;padding:9px 0;border-radius:10px;background:#fff;font-size:13px;font-weight:800;box-shadow:inset 0 0 0 1.5px #eceef1}
+.req .g .y{background:#1f9a76;color:#fff;box-shadow:none}
+.note{font-size:11.5px;color:#9aa1ad;padding:6px 16px;line-height:1.5}
+.hl{box-shadow:0 0 0 2px #ff9f43;border-radius:12px}
+.cap2{position:absolute;right:10px;top:56px;background:#ff9f43;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:9px}
+</style></head><body>
+
+<div class="col"><div class="cap">① 위쪽 — 근무 바꾸기</div><div class="sub">달력이 가려져도 앞뒤 3일이 띠로 보여요<br>칩은 크게 · 한 번 누르면 바뀜</div>
+<div class="ph">
+ <div class="top"><span class="b">‹</span><div class="t">10월 30일 (금)<small>야간 · 4조2교대 B조</small></div><span class="n">›</span></div>
+ <div class="strip">
+  <div class="sd">27일<div class="c d">주</div></div><div class="sd">28일<div class="c n">야</div></div><div class="sd">29일<div class="c r">휴</div></div>
+  <div class="sd me">30일<div class="c d">야</div></div>
+  <div class="sd">31일<div class="c r">휴</div></div><div class="sd">1일<div class="c d">주</div></div><div class="sd">2일<div class="c n">야</div></div>
+ </div>
+ <div class="sec"><div class="lbl">근무타입 <a>🖌 여러 날 칠하기</a></div>
+  <div class="chips">
+   <div class="ch"><div class="c d">주</div>주간</div><div class="ch on"><div class="c n">야</div>야간</div><div class="ch"><div class="c r">휴</div>휴무</div>
+   <div class="ch"><div class="c x">없음</div>없음</div><div class="ch"><div class="c add">+추가</div>&nbsp;</div>
+  </div>
+ </div>
+ <div class="sec" style="padding-top:0"><div class="lbl">메모</div>
+  <div class="memo">병원 예약 10시 <small>나만</small></div>
+  <div class="row"><div class="inp">메모를 적어요</div><div class="more">자세히 ›</div><div class="btn">저장</div></div>
+ </div>
+ <div class="note">⬇ 아래로 밀면 스티커 · 가족 메모 · 요청이 이어져요</div>
+</div></div>
+
+<div class="col"><div class="cap">② 같은 화면 아래쪽</div><div class="sub">스티커 · 가족 메모(♥) · 이 날의 근무 요청<br>(없는 날은 그 칸이 아예 안 보여요)</div>
+<div class="ph">
+ <div class="top"><span class="b">‹</span><div class="t">10월 30일 (금)<small>야간 · 4조2교대 B조</small></div><span class="n">›</span></div>
+ <div class="sec"><div class="lbl">가족 메모 ♥</div>
+  <div class="memo fam">장모님 생신 저녁 7시 <small>엄마</small></div>
+ </div>
+ <div class="sec" style="padding-top:0"><div class="lbl">스티커 <a>＋ 추가 · 관리 ›</a></div>
+  <div class="stk"><span style="font-size:22px">👟</span><div>조깅<small>매일 · 아직</small></div><div class="g"><span class="ok">✓ 완료</span><span>건너뛰기</span><span>끝내기</span></div></div>
+  <div class="stk"><span style="font-size:22px">💊</span><div>약<small>하루 2번 · 1번 먹음</small></div><div class="g"><span class="ok">✓ 먹음</span><span>끝내기</span></div></div>
+ </div>
+ <div class="sec" style="padding-top:0"><div class="lbl">📩 이 날의 근무 요청</div>
+  <div class="req"><b>엄마 · 10/30~11/1 휴 요청 (3일)</b><p>"할로윈 연휴"</p><div class="g"><span>보류</span><span class="y">수락</span><span>거절</span></div></div>
+ </div>
+</div></div>
+
+<div class="col"><div class="cap">③ 옆 날짜로 이동 · 달력 복귀</div><div class="sub">‹ › 또는 옆으로 밀면 31일로 (달력으로 안 돌아가도 됨)<br>뒤로가기 = 달력, 그 칸은 선택된 채로</div>
+<div class="ph">
+ <div class="top"><span class="b hl" style="width:auto;padding:0 8px">‹</span><div class="t">10월 31일 (토)<small>휴무 · 공휴일 아님</small></div><span class="n hl" style="width:auto;padding:0 8px;color:#1f2328">›</span></div>
+ <div class="strip">
+  <div class="sd">28일<div class="c n">야</div></div><div class="sd">29일<div class="c r">휴</div></div><div class="sd">30일<div class="c n">야</div></div>
+  <div class="sd me">31일<div class="c r" style="background:#f1f2f5">휴</div></div>
+  <div class="sd">1일<div class="c d">주</div></div><div class="sd">2일<div class="c n">야</div></div><div class="sd">3일<div class="c r">휴</div></div>
+ </div>
+ <div class="sec"><div class="lbl">근무타입 <a>🖌 여러 날 칠하기</a></div>
+  <div class="chips">
+   <div class="ch"><div class="c d">주</div>주간</div><div class="ch"><div class="c n">야</div>야간</div><div class="ch on"><div class="c r">휴</div>휴무</div>
+   <div class="ch"><div class="c x">없음</div>없음</div><div class="ch"><div class="c add">+추가</div>&nbsp;</div>
+  </div>
+ </div>
+ <div class="sec" style="padding-top:0"><div class="lbl">메모</div>
+  <div class="row"><div class="inp">메모를 적어요</div><div class="more">자세히 ›</div><div class="btn">저장</div></div>
+ </div>
+ <div class="note">그 날 메모 · 스티커 · 요청이 없으면 위 두 칸만 보여서 화면이 단순해요</div>
+</div></div>
+</body></html>
