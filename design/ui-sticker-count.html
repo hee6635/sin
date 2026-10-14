@@ -1,0 +1,72 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:26px;display:flex;gap:24px;align-items:flex-start;color:#1f2328;width:1230px}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center;width:370px}
+.cap{font-size:15px;font-weight:800;color:#3a4150}.sub{font-size:12px;color:#6b7280;margin-top:-6px;text-align:center;line-height:1.45;min-height:34px}
+.ph{width:360px;height:700px;background:#fff;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330;position:relative}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 10px;border-bottom:1px solid #eceef1}
+.top .b{font-size:24px;width:44px}.top .t{font-size:17px;font-weight:900}.top .s{width:44px;text-align:right;color:#2f6bf0;font-size:15px;font-weight:800}
+.sec{padding:11px 16px;border-bottom:1px solid #f1f2f5}.l{font-size:12px;font-weight:800;color:#8b919a;margin-bottom:8px}
+.seg{display:flex;gap:6px}.seg span{flex:1;text-align:center;padding:10px 0;border-radius:11px;background:#f1f2f5;font-size:13.5px;font-weight:800;color:#6b7280}.seg span.on{background:#eeeafd;color:#1f2328;box-shadow:inset 0 0 0 2px #8a65c9}
+.inp{background:#f5f6f8;border-radius:12px;padding:12px;font-size:15px}
+.tg{width:44px;height:25px;border-radius:13px;background:#3b6fd6;position:relative;margin-left:auto}.tg::after{content:'';position:absolute;right:3px;top:3px;width:19px;height:19px;border-radius:50%;background:#fff}
+.row{display:flex;align-items:center;font-size:14.5px}
+.tm{display:flex;gap:8px;margin-top:8px}.tm span{flex:1;text-align:center;padding:12px 0;border-radius:12px;background:#f5f6f8;font-size:17px;font-weight:800;box-shadow:inset 0 0 0 1.5px #e3e6ea}.tm span small{display:block;font-size:10.5px;color:#8b919a;font-weight:700;margin-bottom:2px}
+.hl{box-shadow:0 0 0 2px #ff9f43;border-radius:12px}
+.note{font-size:11.5px;color:#9aa1ad;padding:8px 16px;line-height:1.5}
+/* calendar mini */
+.cal{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #eceef1;border-left:1px solid #eceef1;margin:10px 12px 0}
+.cell{height:112px;border-right:1px solid #eceef1;border-bottom:1.5px solid #eceef1;position:relative;padding:4px 5px}
+.cell .n{font-size:13px;font-weight:700}
+.cell .bd{width:42px;height:42px;border-radius:50%;background:#cbd8de;display:grid;place-items:center;font-weight:800;font-size:15px;margin:22px auto 0}
+.cell .lbl{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:10px;color:#6b7280;font-weight:700}
+.stk{position:absolute;right:5px;top:3px;font-size:17px;line-height:1}
+.stk.faded{opacity:.35;filter:grayscale(.4)}
+.stk .c{position:absolute;right:-6px;bottom:-5px;min-width:15px;height:15px;border-radius:8px;background:#f08a00;color:#fff;font:800 8.5px/15px sans-serif;text-align:center;padding:0 3px;box-shadow:0 0 0 1.5px #fff}
+.stk .c.ok{background:#1f9a76}
+.pop{margin:12px;border-radius:18px;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.2);padding:12px 14px}
+.pop h4{font-size:14px;font-weight:900;margin-bottom:8px}
+.srow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #eceef1;font-size:14px;font-weight:700}
+.srow small{display:block;font-size:11.5px;color:#8b919a;font-weight:500}
+.srow .g{margin-left:auto;display:flex;gap:6px}.srow .g span{padding:8px 11px;border-radius:10px;background:#f1f2f5;font-size:12.5px;font-weight:800}.srow .g .ok{background:#1f9a76;color:#fff}
+.srow2{border-top:1px solid #eceef1;padding:9px 0 4px}.srow2 .h{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700}.srow2 .h small{display:block;font-size:11.5px;color:#8b919a;font-weight:500}.g2{display:flex;gap:6px;margin-top:8px}.g2 span{flex:1;text-align:center;padding:9px 0;border-radius:10px;background:#f1f2f5;font-size:12.5px;font-weight:800;white-space:nowrap}.g2 .ok{background:#1f9a76;color:#fff;flex:1.4}
+.prog{display:flex;gap:4px;margin-top:4px}.prog i{width:18px;height:6px;border-radius:3px;background:#e3e6ea}.prog i.on{background:#f08a00}
+</style></head><body>
+
+<div class="col"><div class="cap">① 활동에도 "하루 몇 번"</div><div class="sub">약과 같은 줄 · 횟수만큼 알림 시각 칸이 생겨요 (기본 1번)</div>
+<div class="ph">
+ <div class="top"><span class="b">‹</span><div class="t">스티커 추가</div><span class="s">저장</span></div>
+ <div class="sec"><div class="l">종류</div><div class="seg"><span class="on">활동</span><span>💊 약</span></div></div>
+ <div class="sec"><div class="l">이름 · 아이콘</div><div class="inp">양치 🪥</div></div>
+ <div class="sec"><div class="l">하루 몇 번</div><div class="seg"><span>1번</span><span class="on hl">2번</span><span>3번</span></div></div>
+ <div class="sec"><div class="l">얼마나</div><div class="seg"><span>이날만</span><span>요일</span><span class="on">매일</span><span>근무 맞춤</span></div></div>
+ <div class="sec"><div class="row">⏰ 알림<span class="tg"></span></div>
+  <div class="tm"><span><small>1번째</small>오전 7:30</span><span><small>2번째</small>오후 10:30</span></div></div>
+ <div class="note">1번을 고르면 지금처럼 "했다 / 안 했다"예요</div>
+</div></div>
+
+<div class="col"><div class="cap">② 달력 칸에서는 이렇게 보여요</div><div class="sub">이모티콘 오른쪽 아래 작은 숫자 · 다 하면 초록 ✓<br>(근무 동그라미와 칸 위치는 그대로)</div>
+<div class="ph">
+ <div class="top"><span class="b" style="font-size:14px;width:auto">2026.10</span><div class="t">양치 🪥 하루 2번</div><span class="s"></span></div>
+ <div class="cal">
+  <div class="cell"><span class="n">12</span><span class="stk faded">🪥</span><div class="bd">주</div><div class="lbl">아직 0/2</div></div>
+  <div class="cell"><span class="n">13</span><span class="stk">🪥<span class="c">1/2</span></span><div class="bd">야</div><div class="lbl">1번 함</div></div>
+  <div class="cell"><span class="n">14</span><span class="stk">🪥<span class="c ok">✓</span></span><div class="bd" style="background:#e8e9ec;color:#e0455c;font-size:12px">휴</div><div class="lbl">2/2 완료</div></div>
+  <div class="cell"><span class="n">15</span><span class="stk faded">🪥</span><div class="bd">주</div><div class="lbl">앞으로 할 날</div></div>
+ </div>
+ <div class="note" style="padding-top:14px">• 안 한 날: 흐리게 &nbsp;• 한 번 한 날: 숫자 <b style="color:#f08a00">1/2</b> (주황) &nbsp;• 다 한 날: <b style="color:#1f9a76">✓</b> (초록)<br>• 하루 1번 스티커는 지금처럼 숫자 없이 흐림 → 진함</div>
+</div></div>
+
+<div class="col"><div class="cap">③ 날짜 위쪽을 눌러 완료할 때</div><div class="sub">누를 때마다 한 번씩 올라가요 (약과 같음)</div>
+<div class="ph" style="background:#f4f5f7">
+ <div style="height:210px"></div>
+ <div class="pop">
+  <h4>10월 13일 (화) · 야간 <span style="color:#8b919a;font-weight:700">스티커</span></h4>
+  <div class="srow2"><div class="h"><span style="font-size:24px">🪥</span><div>양치<small>하루 2번 · 1번 함</small></div><div class="prog" style="margin-left:auto"><i class="on"></i><i></i></div></div>
+   <div class="g2"><span class="ok">✓ 완료 (2/2)</span><span>한 번 취소</span><span>끝내기</span></div></div>
+  <div class="srow2"><div class="h"><span style="font-size:24px">👟</span><div>조깅<small>요일 · 아직</small></div></div>
+   <div class="g2"><span class="ok">✓ 완료</span><span>건너뛰기</span><span>끝내기</span></div></div>
+ </div>
+ <div class="note" style="padding:6px 16px">진행 막대는 몇 번 했는지(2칸 중 1칸). 버튼 3개는 좁은 화면에서도 안 깨지게 아래 줄로 내렸어요 (끝내기를 건너뛰기와 같은 줄에)</div>
+</div></div>
+</body></html>
