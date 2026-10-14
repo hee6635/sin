@@ -46,7 +46,7 @@ body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;b
 .cap2{position:absolute;right:10px;top:56px;background:#ff9f43;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:9px}
 </style></head><body>
 
-<div class="col"><div class="cap">① 위쪽 — 근무 바꾸기</div><div class="sub">달력이 가려져도 앞뒤 3일이 띠로 보여요<br>칩은 크게 · 한 번 누르면 바뀜</div>
+<div class="col"><div class="cap">① 위쪽 — 근무 바꾸기</div><div class="sub">앞뒤 3일 띠: <b>누르면 그 날로 이동</b><br>칩은 크게 · 한 번 누르면 바뀜</div>
 <div class="ph">
  <div class="top"><span class="b">‹</span><div class="t">10월 30일 (금)<small>야간 · 4조2교대 B조</small></div><span class="n">›</span></div>
  <div class="strip">
@@ -64,21 +64,30 @@ body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;b
   <div class="memo">병원 예약 10시 <small>나만</small></div>
   <div class="row"><div class="inp">메모를 적어요</div><div class="more">자세히 ›</div><div class="btn">저장</div></div>
  </div>
- <div class="note">⬇ 아래로 밀면 스티커 · 가족 메모 · 요청이 이어져요</div>
+ <div class="note">⬇ 아래로 밀면 스티커가 맨 아래에 있어요 (요청이 있는 날은 요청이 맨 위 → ②)</div>
 </div></div>
 
-<div class="col"><div class="cap">② 같은 화면 아래쪽</div><div class="sub">스티커 · 가족 메모(♥) · 이 날의 근무 요청<br>(없는 날은 그 칸이 아예 안 보여요)</div>
+<div class="col"><div class="cap">② 요청이 있는 날 — 요청이 맨 위</div><div class="sub">요청 카드는 근무를 바꾸는 일이라 근무 칩 바로 위에<br>스티커와는 따로 (스티커는 맨 아래)</div>
 <div class="ph">
  <div class="top"><span class="b">‹</span><div class="t">10월 30일 (금)<small>야간 · 4조2교대 B조</small></div><span class="n">›</span></div>
- <div class="sec"><div class="lbl">가족 메모 ♥</div>
-  <div class="memo fam">장모님 생신 저녁 7시 <small>엄마</small></div>
+ <div class="strip">
+  <div class="sd hl">27일<div class="c d">주</div></div><div class="sd">28일<div class="c n">야</div></div><div class="sd">29일<div class="c r">휴</div></div>
+  <div class="sd me">30일<div class="c d">야</div></div>
+  <div class="sd">31일<div class="c r">휴</div></div><div class="sd">1일<div class="c d">주</div></div><div class="sd">2일<div class="c n">야</div></div>
  </div>
- <div class="sec" style="padding-top:0"><div class="lbl">스티커 <a>＋ 추가 · 관리 ›</a></div>
+ <div class="sec" style="padding-bottom:4px"><div class="lbl">📩 이 날의 근무 요청</div>
+  <div class="req" style="margin-bottom:0"><b>엄마 · 10/30~11/1 휴 요청 (3일)</b><p>"할로윈 연휴"</p><div class="g"><span>보류</span><span class="y">수락</span><span>거절</span></div></div>
+ </div>
+ <div class="sec" style="padding-bottom:4px"><div class="lbl">근무타입 <a>🖌 여러 날 칠하기</a></div>
+  <div class="chips" style="gap:8px">
+   <div class="ch" style="width:62px"><div class="c d" style="width:46px;height:46px;font-size:16px">주</div>주간</div><div class="ch on" style="width:62px"><div class="c n" style="width:46px;height:46px;font-size:16px">야</div>야간</div><div class="ch" style="width:62px"><div class="c r" style="width:46px;height:46px;font-size:14px">휴</div>휴무</div>
+   <div class="ch" style="width:62px"><div class="c x" style="width:46px;height:46px;font-size:11px">없음</div>없음</div>
+  </div>
+ </div>
+ <div class="sec" style="padding-bottom:4px"><div class="lbl">가족 메모 ♥</div><div class="memo fam">장모님 생신 저녁 7시 <small>엄마</small></div></div>
+ <div class="sec" style="padding-top:4px"><div class="lbl">메모</div><div class="row" style="margin-top:0"><div class="inp">메모를 적어요</div><div class="more">자세히 ›</div><div class="btn">저장</div></div></div>
+ <div class="sec" style="padding-top:2px"><div class="lbl">스티커 <a>＋ 추가 · 관리 ›</a></div>
   <div class="stk"><span style="font-size:22px">👟</span><div>조깅<small>매일 · 아직</small></div><div class="g"><span class="ok">✓ 완료</span><span>건너뛰기</span><span>끝내기</span></div></div>
-  <div class="stk"><span style="font-size:22px">💊</span><div>약<small>하루 2번 · 1번 먹음</small></div><div class="g"><span class="ok">✓ 먹음</span><span>끝내기</span></div></div>
- </div>
- <div class="sec" style="padding-top:0"><div class="lbl">📩 이 날의 근무 요청</div>
-  <div class="req"><b>엄마 · 10/30~11/1 휴 요청 (3일)</b><p>"할로윈 연휴"</p><div class="g"><span>보류</span><span class="y">수락</span><span>거절</span></div></div>
  </div>
 </div></div>
 
