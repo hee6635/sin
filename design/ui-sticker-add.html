@@ -1,0 +1,65 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:26px;display:flex;gap:24px;align-items:flex-start;color:#1f2328;width:1230px}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center;width:370px}
+.cap{font-size:15px;font-weight:800;color:#3a4150}.sub{font-size:12px;color:#6b7280;margin-top:-6px;text-align:center;line-height:1.45;min-height:34px}
+.ph{width:360px;height:770px;background:#fff;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330;position:relative}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 10px;border-bottom:1px solid #eceef1}
+.top .b{font-size:24px;width:44px}.top .t{font-size:17px;font-weight:900}.top .s{width:44px;text-align:right;color:#2f6bf0;font-size:15px;font-weight:800}
+.sec{padding:11px 16px;border-bottom:1px solid #f1f2f5}
+.l{font-size:12px;font-weight:800;color:#8b919a;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.seg{display:flex;gap:6px}.seg span{flex:1;text-align:center;padding:10px 0;border-radius:11px;background:#f1f2f5;font-size:13.5px;font-weight:800;color:#6b7280}
+.seg span.on{background:#eeeafd;color:#1f2328;box-shadow:inset 0 0 0 2px #8a65c9}
+.emo{display:flex;gap:8px;flex-wrap:wrap}.emo i{width:42px;height:42px;border-radius:12px;background:#f5f6f8;display:grid;place-items:center;font-style:normal;font-size:22px}.emo i.on{background:#eeeafd;box-shadow:inset 0 0 0 2px #8a65c9}
+.inp{background:#f5f6f8;border-radius:12px;padding:12px;font-size:15px}
+.row{display:flex;align-items:center;padding:6px 0;font-size:14.5px}.row .v{margin-left:auto;color:#6b7280;font-weight:700}
+.tg{width:44px;height:25px;border-radius:13px;background:#c9ced6;position:relative;margin-left:auto}.tg::after{content:'';position:absolute;left:3px;top:3px;width:19px;height:19px;border-radius:50%;background:#fff}
+.tg.on{background:#3b6fd6}.tg.on::after{left:auto;right:3px}
+.tm{display:flex;gap:8px;margin-top:8px}.tm span{flex:1;text-align:center;padding:12px 0;border-radius:12px;background:#f5f6f8;font-size:17px;font-weight:800;color:#1f2328;box-shadow:inset 0 0 0 1.5px #e3e6ea}
+.tm span small{display:block;font-size:10.5px;color:#8b919a;font-weight:700;margin-bottom:2px}
+.hint{font-size:11.5px;color:#8a65c9;font-weight:700;margin-top:7px}
+.note{font-size:11.5px;color:#9aa1ad;padding:8px 16px;line-height:1.5}
+.cd{display:flex;gap:9px}.cd i{width:26px;height:26px;border-radius:50%;display:block}.cd i.on{box-shadow:0 0 0 2px #fff,0 0 0 4px #1f2328}
+.dow{display:flex;gap:6px;margin-top:8px}.dow span{width:36px;height:36px;border-radius:50%;background:#f1f2f5;display:grid;place-items:center;font-size:13px;font-weight:800;color:#6b7280}.dow span.on{background:#2f6bf0;color:#fff}
+.hl{box-shadow:0 0 0 2px #ff9f43;border-radius:12px}
+</style></head><body>
+
+<div class="col"><div class="cap">① 활동 스티커 추가 (알림 끔 = 기본)</div><div class="sub">좁은 시트 대신 전체 화면 · 알림은 켜기 전엔 아무것도 안 보여요</div>
+<div class="ph">
+ <div class="top"><span class="b">‹</span><div class="t">스티커 추가</div><span class="s">저장</span></div>
+ <div class="sec"><div class="l">종류</div><div class="seg"><span class="on">활동</span><span>💊 약</span></div></div>
+ <div class="sec"><div class="l">이름 · 아이콘</div><div class="inp" style="margin-bottom:10px">조깅</div>
+  <div class="emo"><i class="on">👟</i><i>💪</i><i>🧘</i><i>💧</i><i>🚴</i><i>📖</i><i>😴</i><i>🥗</i><i>💰</i><i>🧾</i></div></div>
+ <div class="sec"><div class="l">얼마나</div><div class="seg"><span>이날만</span><span class="on">요일</span><span>매일</span><span>근무 맞춤</span></div>
+  <div class="dow"><span>월</span><span class="on">화</span><span>수</span><span class="on">목</span><span>금</span><span>토</span><span>일</span></div></div>
+ <div class="sec"><div class="row">📅 기간<span class="v">10월 16일 ~ 끝 없음 ›</span></div><div class="row">🎌 공휴일엔 빼기<span class="tg"></span></div></div>
+ <div class="sec"><div class="row">⏰ 알림<span class="tg"></span></div></div>
+ <div class="note">알림을 켜기 전에는 시각 줄이 안 보여요</div>
+</div></div>
+
+<div class="col"><div class="cap">② 활동 — 알림을 켜면</div><div class="sub">시각을 직접 고름 · 처음 값은 마지막에 정한 시각<br>(한 번 정해 두면 다음 스티커도 그 시각으로 시작)</div>
+<div class="ph">
+ <div class="top"><span class="b">‹</span><div class="t">스티커 추가</div><span class="s">저장</span></div>
+ <div class="sec"><div class="l">종류</div><div class="seg"><span class="on">활동</span><span>💊 약</span></div></div>
+ <div class="sec"><div class="l">이름 · 아이콘</div><div class="inp" style="margin-bottom:0">조깅 👟</div></div>
+ <div class="sec"><div class="l">얼마나</div><div class="seg"><span>이날만</span><span class="on">요일</span><span>매일</span><span>근무 맞춤</span></div></div>
+ <div class="sec"><div class="row">⏰ 알림<span class="tg on"></span></div>
+  <div class="tm"><span class="hl"><small>알림 시각</small>오후 6:30</span></div>
+  <div class="hint">↩ 마지막에 정한 시각이에요 · 눌러서 바꿔요</div>
+  <div class="note" style="padding:6px 0 0">하기로 한 날만 울려요 · 이미 완료한 날 · 자는 시간엔 건너뛰어요 · 알림을 누르면 그 날 스티커 창이 열려요</div></div>
+</div></div>
+
+<div class="col"><div class="cap">③ 약 추가 — 하루 3번</div><div class="sub">먹는 횟수만큼 시각을 각각 정해요 (1번이면 1개, 3번이면 3개)</div>
+<div class="ph">
+ <div class="top"><span class="b">‹</span><div class="t">스티커 추가</div><span class="s">저장</span></div>
+ <div class="sec"><div class="l">종류</div><div class="seg"><span>활동</span><span class="on">💊 약</span></div></div>
+ <div class="sec"><div class="l">약 이름</div><div class="inp">혈압약</div></div>
+ <div class="sec"><div class="l">하루 몇 번</div><div class="seg"><span>1번</span><span>2번</span><span class="on">3번</span></div>
+  <div class="l" style="margin-top:12px">색</div><div class="cd"><i style="background:#ef4d5a" class="on"></i><i style="background:#f08a00"></i><i style="background:#f2c200"></i><i style="background:#1fa971"></i><i style="background:#2f6bf0"></i><i style="background:#8b5cf6"></i></div></div>
+ <div class="sec"><div class="l">얼마나</div><div class="seg"><span>이날만</span><span>요일</span><span class="on">매일</span><span>근무 맞춤</span></div></div>
+ <div class="sec"><div class="row">⏰ 알림<span class="tg on"></span></div>
+  <div class="tm"><span><small>1번째</small>오전 8:00</span><span><small>2번째</small>오후 1:00</span><span><small>3번째</small>오후 8:00</span></div>
+  <div class="hint">↩ 마지막에 정한 시각들이에요 · 눌러서 바꿔요</div></div>
+ <div class="note">먹으면 칸 위쪽을 눌러 [✓ 먹음] · 못 먹은 알림은 다시 울리지 않아요</div>
+</div></div>
+</body></html>
