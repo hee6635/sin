@@ -1,0 +1,88 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:26px;display:flex;gap:24px;align-items:flex-start;color:#1f2328;width:1230px}
+.col{display:flex;flex-direction:column;gap:10px;align-items:center;width:370px}
+.cap{font-size:15px;font-weight:800;color:#3a4150}.sub{font-size:12px;color:#6b7280;margin-top:-6px;text-align:center;line-height:1.45;min-height:34px}
+.ph{width:360px;height:740px;background:#fff;border-radius:34px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;border:8px solid #1d2330;position:relative}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 8px;border-bottom:1px solid #eceef1}
+.top .b{font-size:24px;width:44px}.top .t{text-align:center;font-size:17px;font-weight:900}.top .t small{display:block;font-size:11.5px;color:#8b919a;font-weight:700;margin-top:1px}
+.top .n{font-size:24px;width:44px;text-align:right;color:#8b919a}.top .s{width:44px;text-align:right;color:#2f6bf0;font-size:15px;font-weight:800}
+.strip{display:flex;justify-content:space-between;padding:8px 12px 10px;background:#f8f9fb;border-bottom:1px solid #eceef1}
+.sd{width:46px;text-align:center;font-size:10px;color:#8b919a;font-weight:700}
+.sd .c{width:30px;height:30px;border-radius:50%;margin:2px auto 0;display:grid;place-items:center;font-weight:800;font-size:13px;opacity:.55}
+.sd .c.d{background:#cbd8de;color:#1c2a31}.sd .c.n{background:#d9cbc6;color:#2b1f1b}.sd .c.r{background:none;color:#e0455c;font-size:11px}
+.sd.me .c{opacity:1;box-shadow:0 0 0 2px #fff,0 0 0 4px #2f6bf0}
+.sec{padding:10px 16px}
+.lbl{font-size:12px;font-weight:800;color:#8b919a;margin-bottom:8px;display:flex;justify-content:space-between}
+.chips{display:flex;gap:8px}
+.ch{width:62px;text-align:center;font-size:11px;color:#6b7280;font-weight:700}
+.ch .c{width:46px;height:46px;border-radius:50%;margin:0 auto 3px;display:grid;place-items:center;font-weight:800;font-size:16px;opacity:.55}
+.ch .c.d{background:#cbd8de}.ch .c.n{background:#d9cbc6}.ch .c.r{background:#f1f2f5;color:#e0455c;font-size:14px}.ch .c.x{border:2px dashed #b9bec7;font-size:11px;color:#8b919a}
+.ch.on .c{opacity:1;box-shadow:0 0 0 3px #fff,0 0 0 5px #2f6bf0}
+.mc{border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.mc .tx{flex:1}.mc small{color:#6b7280;font-size:11px}
+.mc.y{background:#fff4c9}.mc.p{background:#ffd9d4}.mc.g{background:#d8f1d9}.mc.fam{background:#f1ecff}.mc.plain{background:#f5f6f8}
+.ck{width:18px;height:18px;border-radius:5px;border:2px solid #9aa1ad;display:inline-block;flex:none}.ck.on{background:#1f9a76;border-color:#1f9a76;position:relative}
+.ck.on::after{content:'✓';color:#fff;font-size:12px;position:absolute;left:2px;top:-2px;font-weight:900}
+.done{text-decoration:line-through;color:#9aa1ad}
+.row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.inp{flex:1;background:#f5f6f8;border-radius:12px;padding:12px;font-size:14px;color:#9aa1ad}
+.btn{background:#2f6bf0;color:#fff;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:800}
+.more{font-size:12.5px;font-weight:800;color:#8a65c9;white-space:nowrap}
+.hl{box-shadow:0 0 0 2px #ff9f43;border-radius:10px}
+.date{padding:12px 18px 0;font-size:12.5px;color:#8b919a;font-weight:700}
+.ta{margin:8px 14px;border-radius:14px;padding:14px;font-size:16px;color:#9aa1ad;min-height:140px;background:#f8f9fb}
+.ta.c1{background:#fff4c9;color:#1f2328;min-height:90px}
+.tools{display:flex;gap:8px;padding:2px 14px 10px}
+.tools span{width:44px;height:40px;border-radius:12px;background:#f1f2f5;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;color:#6b7280}
+.tools span.on{background:#eeeafd;box-shadow:inset 0 0 0 2px #8a65c9;color:#1f2328}
+.opt{border-top:1px solid #eceef1;padding:11px 18px}
+.opt .l{font-size:12px;font-weight:800;color:#8b919a;margin-bottom:7px}
+.sw{display:flex;gap:9px}.sw i{width:30px;height:30px;border-radius:50%;display:block}.sw i.on{box-shadow:0 0 0 2px #fff,0 0 0 4px #8a65c9}
+.line{display:flex;align-items:center;padding:11px 18px;border-top:1px solid #eceef1;font-size:15px}
+.line .v{margin-left:auto;color:#6b7280;font-weight:700}
+.tg{width:44px;height:25px;border-radius:13px;background:#3b6fd6;position:relative;margin-left:auto}.tg::after{content:'';position:absolute;right:3px;top:3px;width:19px;height:19px;border-radius:50%;background:#fff}
+.seg{display:flex;gap:6px;margin-left:auto}.seg span{padding:6px 11px;border-radius:9px;background:#f1f2f5;font-size:12.5px;font-weight:800;color:#6b7280}.seg span.on{background:#eeeafd;color:#1f2328;box-shadow:inset 0 0 0 2px #8a65c9}
+.who{display:flex;gap:8px;padding:10px 18px;border-top:1px solid #eceef1}
+.who span{flex:1;text-align:center;padding:10px 0;border-radius:12px;background:#f1f2f5;font-weight:800;font-size:13.5px;color:#6b7280}.who span.on{background:#eeeafd;color:#1f2328;box-shadow:inset 0 0 0 2px #8a65c9}
+.note{font-size:11.5px;color:#9aa1ad;padding:8px 18px;line-height:1.5}
+.arr{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;background:#ff9f43;color:#fff;font-size:11.5px;font-weight:800;padding:5px 11px;border-radius:12px;white-space:nowrap}
+</style></head><body>
+
+<div class="col"><div class="cap">① 날짜 화면 — "자세히 ›" 누르기 전</div><div class="sub">한 줄 메모는 여기서 바로 · 자세히로 쓴 메모는<br>색 · ✓ · 시간이 붙어서 보여요</div>
+<div class="ph">
+ <div class="top"><span class="b">‹</span><div class="t">10월 30일 (금)<small>야간 · 4조2교대 B조</small></div><span class="n">›</span></div>
+ <div class="strip"><div class="sd">27일<div class="c d">주</div></div><div class="sd">28일<div class="c n">야</div></div><div class="sd">29일<div class="c r">휴</div></div><div class="sd me">30일<div class="c n">야</div></div><div class="sd">31일<div class="c r">휴</div></div><div class="sd">1일<div class="c d">주</div></div><div class="sd">2일<div class="c n">야</div></div></div>
+ <div class="sec"><div class="lbl">근무타입</div><div class="chips"><div class="ch"><div class="c d">주</div>주간</div><div class="ch on"><div class="c n">야</div>야간</div><div class="ch"><div class="c r">휴</div>휴무</div><div class="ch"><div class="c x">없음</div>없음</div></div></div>
+ <div class="sec" style="padding-top:2px"><div class="lbl">메모</div>
+  <div class="mc y"><span class="ck"></span><div class="tx">서류 챙기기<br><small>🕐 오전 10:00 · 🔔 정시</small></div></div>
+  <div class="mc g"><span class="ck on"></span><div class="tx done">약국 들르기</div></div>
+  <div class="mc plain"><div class="tx">병원 예약 10시 <small>나만</small></div></div>
+  <div class="row"><div class="inp">메모를 적어요</div><div class="more hl" style="padding:6px 8px">자세히 ›</div><div class="btn">저장</div></div>
+ </div>
+ <div class="note">한 줄만 쓸 땐 입력칸 → 저장 (지금처럼). 색 · 할 일 · 시간을 쓰고 싶을 때만 "자세히 ›"</div>
+</div></div>
+
+<div class="col"><div class="cap">② 자세히 — 처음 모습</div><div class="sub">날짜 화면 위로 새 화면이 열려요 (‹ 누르면 되돌아감)<br>입력한 한 줄이 있으면 그대로 옮겨 와요</div>
+<div class="ph">
+ <div class="top"><span class="b">‹</span><div class="t">메모</div><span class="s">저장</span></div>
+ <div class="date">10월 30일 금요일</div>
+ <div class="ta">메모를 입력하세요</div>
+ <div class="tools"><span>🎨</span><span>✓</span><span>🕐</span><span style="width:auto;padding:0 12px;font-size:13px">🔒 나만</span></div>
+ <div class="note">🎨 색 · ✓ 할 일 · 🕐 시간/알림 · 🔒 나만 / 👪 가족<br>아이콘을 누를 때만 아래에 옵션이 펼쳐져요</div>
+</div></div>
+
+<div class="col"><div class="cap">③ 옵션을 펼치고 저장</div><div class="sub">저장하면 ‹ 날짜 화면으로 돌아가고<br>방금 쓴 메모가 색 · ✓ · 시간과 함께 맨 위에 보여요</div>
+<div class="ph">
+ <div class="top"><span class="b">‹</span><div class="t">메모</div><span class="s hl" style="padding:2px 6px">저장</span></div>
+ <div class="date">10월 30일 금요일</div>
+ <div class="ta c1">서류 챙기기<br>병원 가기 전에</div>
+ <div class="tools"><span class="on">🎨</span><span class="on">✓</span><span class="on">🕐</span><span class="on" style="width:auto;padding:0 12px;font-size:13px">👪 가족</span></div>
+ <div class="opt"><div class="l">색</div><div class="sw"><i style="background:#fff4c9" class="on"></i><i style="background:#ffd9d4"></i><i style="background:#ffe3c4"></i><i style="background:#d8f1d9"></i><i style="background:#d4e8ff"></i><i style="background:#e6dcff"></i><i style="background:#e5e7eb"></i></div></div>
+ <div class="line">✓ 할 일<span class="tg"></span></div>
+ <div class="line">🕐 시간<span class="v">오전 10:00 ›</span></div>
+ <div class="line" style="border-top:0;padding-top:2px">🔔 알림<div class="seg"><span>없음</span><span class="on">정시</span><span>10분 전</span></div></div>
+ <div class="who"><span>🔒 나만</span><span class="on">👪 가족에게</span></div>
+ <div class="note">👪 가족에게를 고르면 저장할 때 지금처럼 보내기 확인창이 한 번 떠요 (무료 N건 남음)</div>
+</div></div>
+</body></html>
