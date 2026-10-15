@@ -2059,8 +2059,11 @@ document.addEventListener('pointermove',e=>{
   ghostMove(e.clientX,e.clientY);
   const k=paintCellAt(e.clientX,e.clientY);if(!k||k===pdrag.last)return;
   if(!pdrag.moved){pdrag.moved=true;paintTouch(pdrag.start);}
-  const pp=pdrag.path;
-  if(pp.length>=2&&k===pp[pp.length-2]){pdrag.last=k;paintUndoLast();return;}
+  const pp=pdrag.path,ix=pp.lastIndexOf(k);
+  // 이미 지나간 칸으로 돌아오면 그 뒤에 칠한 칸을 모두 되돌림 (빠르게 돌아와서 중간 칸을 건너뛰어도 안 남게)
+  if(ix>=0&&ix<pp.length-1){pdrag.last=k;while(pp.length-1>ix)paintUndoLast();return;}
+  // 돌아오는 길에 지나는 칸(앞뒤 두 칸 사이)은 새로 칠하지 않음 (예: 토 → 월로 갔다가 월 → 일 → 토로 돌아올 때 일요일)
+  if(pp.length>=2){const a=pp[pp.length-1],b=pp[pp.length-2];if((k>a&&k<b)||(k<a&&k>b)){pdrag.last=k;return;}}
   pdrag.last=k;paintTouch(k);
 });
 ['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,e=>{
