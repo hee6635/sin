@@ -433,7 +433,7 @@ textarea{resize:none;min-height:84px}
 .dtop{margin:0 0 2px}.dtop button{font-size:14px;font-weight:700;color:var(--muted);padding:6px 4px}
 .dfh{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .dfh .ib{width:44px;height:44px;font-size:26px;color:var(--fg)}
-.dft{text-align:center;flex:1}.dft b{font-size:20px}.dft small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.dft{text-align:center;flex:1}.dft b{font-size:20px}.dft b.hl,.dft small .hl{color:var(--sun)}   /* 공휴일 · 명절은 붉은색 */.dft small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
 .dstrip{display:flex;justify-content:space-between;margin:10px -16px 0;padding:8px 10px;background:var(--surface);touch-action:pan-y}
 .dsi{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0;padding:2px 0;border-radius:14px}
 
@@ -3661,7 +3661,7 @@ function openDay(k){
   const head=`
       <div class="dtop"><button data-act="close">‹ 달력</button></div>
       <div class="dfh"><button class="ib" data-act="day-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
-        <div class="dft"><b>${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${S.personal?(hol?esc(hol):''):esc(shiftLabel(c))}${hol&&!S.personal?` · ${esc(hol)}`:''}${dd.map(x=>` · ${ico(x.emoji||'⭐')} ${esc(x.name)}`).join('')}</small></div>
+        <div class="dft"><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${S.personal?(hol?`<span class="hl">${esc(hol)}</span>`:''):esc(shiftLabel(c))}${hol&&!S.personal?` · <span class="hl">${esc(hol)}</span>`:''}${dd.map(x=>` · ${ico(x.emoji||'⭐')} ${esc(x.name)}`).join('')}</small></div>
         <button class="ib" data-act="day-go" data-k="${fmt(addDays(d,1))}" aria-label="다음날">›</button></div>
       <div class="dstrip" id="dstrip">${strip}</div>`;
   let topPart='';
