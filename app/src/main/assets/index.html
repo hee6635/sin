@@ -130,8 +130,6 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .share-mode #top h1 svg { display: none !important; }
 .share-mode .date-picker-wrap { justify-content: center; }
 .share-mode .title-btn { pointer-events: none; }
-.share-mode #top .ym .ib{display:flex !important}   /* 이미지 공유 중에도 달 바꾸는 ‹ › 는 보임 (사진 찍을 때만 숨김) */
-.capturing #top .ym .ib{visibility:hidden}
 .share-mode #pop,.share-mode #sheet{z-index:60}.share-mode #scrim{z-index:59}   /* 달 이동 창이 아래 공유 막대에 가려지지 않게 */
 .share-mode #view { padding-bottom: 76px; }
 
@@ -156,11 +154,11 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .dow .s{color:var(--sun)}.dow .t{color:var(--sat)}
 .grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:1fr;border-top:1px solid var(--line)}
 
-.cell{position:relative;display:flex;flex-direction:column;align-items:center;border-bottom:1.5px solid var(--line);border-right:1px solid var(--line);cursor:pointer;min-height:0;overflow:hidden;container-type:size;--b:max(30px,min(76cqw,44px,calc(100cqh - 68px)));}
+.cell{position:relative;display:flex;flex-direction:column;align-items:center;border-bottom:1.5px solid var(--line);border-right:1px solid var(--line);cursor:pointer;min-height:0;overflow:hidden;container-type:size;--b:calc(max(30px,min(76cqw,44px,calc(100cqh - 68px)))*.9);}
 .cell:nth-child(7n){border-right:0}
 .cell.out{background:var(--out-bg)}
 .cell.out>*{opacity:.4}
-.dn{width:100%;height:20px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 5px;font-size:13px;line-height:20px;position:relative;z-index:2;}
+.dn{width:100%;height:max(20px,calc(var(--stz) + 6px));flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 5px;font-size:13px;line-height:20px;position:relative;z-index:2;}
 .dn.sun .num{color:var(--sun)}.dn.sat .num{color:var(--sat)}
 .dn.hol{background:var(--hol-bg)}
 .dn .hn{font-size:10px;color:var(--sun);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none;text-align:right;}
@@ -188,7 +186,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .badge.s-edu{background:#f8c291;color:#b71540;}
 .badge.sm{width:26px;height:26px;font-size:13px;margin:0;}
 .badge.sm.r{font-size:11px; font-weight:700;}
-.badge .dot{position:absolute;top:-1px;right:-2px;width:8px;height:8px;border-radius:50%;background:#e5322d}
+.badge .dot{position:absolute;top:-1px;left:-2px;width:8px;height:8px;border-radius:50%;background:#e5322d}
 
 .pill-wrap{flex:none;width:100%;display:flex;flex-direction:column;align-items:center;gap:1px;padding-top:2px;z-index:3;pointer-events:none;--lh:14px;margin-top:min(0px,calc(100cqh - 22px - var(--b) - 2px - var(--n,0)*var(--lh)));}
 .family-pill{width:calc(100% - 6px);background:var(--family-pink);color:#fff;font-size:9px;line-height:13px;height:13px;padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;}
@@ -434,8 +432,9 @@ textarea{resize:none;min-height:84px}
 .dfh{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .dfh .ib{width:44px;height:44px;font-size:26px;color:var(--fg)}
 .dft{text-align:center;flex:1}.dft b{font-size:20px}.dft b.hl,.dft small .hl{color:var(--sun)}   /* 공휴일 · 명절은 붉은색 */.dft small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
-.dstrip{display:flex;justify-content:space-between;margin:10px -16px 0;padding:8px 10px;background:var(--surface);touch-action:pan-y}
-.dsi{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0;padding:2px 0;border-radius:14px}
+.dstrip{display:flex;margin:10px -16px 0;padding:8px 0;background:var(--surface);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.dstrip::-webkit-scrollbar{display:none}
+.dsi{display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 calc(100%/7);min-width:0;padding:2px 0;border-radius:14px;scroll-snap-align:center}
 
 .dnum{height:26px;display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--muted)}
 .dsi small{font-size:11px;color:var(--muted);font-weight:700}
@@ -490,11 +489,16 @@ textarea{resize:none;min-height:84px}
 .pill-wrap{gap:1px}
 .pl.more{background:none;color:var(--muted);font-weight:700;text-align:center}
 .pl{width:calc(100% - 4px);font-size:9px;line-height:13px;height:13px;border-radius:3px;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pl.fam{background:var(--fam);color:var(--fam-fg);font-weight:700}
-.pl.my{background:var(--my);color:#fff;font-weight:700}
+.pl{border-left:2px solid var(--c,var(--my));border-radius:2px;font-weight:600;padding-left:3px;box-sizing:border-box;background:color-mix(in srgb,var(--c,var(--my)) 15%,var(--bg));color:var(--fg)}
+.pl.fam{--c:var(--fam)}
+.pl.my{--c:var(--my);color:color-mix(in srgb,var(--fg) 92%,var(--bg))}
+@media (min-width:600px){.pl{border-left-width:3px}}
+.pl[style*="--mc"]{--c:color-mix(in srgb,var(--mc) 45%,#6a6458);background:var(--mc);color:#2a2418}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pl[style*="--mc"]{background:color-mix(in srgb,var(--mc) 30%,var(--bg));color:var(--fg)}}
+:root[data-theme="dark"] .pl[style*="--mc"]{background:color-mix(in srgb,var(--mc) 30%,var(--bg));color:var(--fg)}
 .pl.dd{background:color-mix(in srgb,var(--dd) 14%,var(--bg));color:var(--dd);font-weight:800}
-.pl,.req-pill{flex:none;text-overflow:clip;padding:0 2px}
-@media (min-width:600px){.cell{--b:min(70cqw,54px)}.pill-wrap{--lh:16px}.pl,.req-pill{font-size:11px;line-height:15px;height:15px}}
+.pl,.req-pill{flex:none;text-overflow:clip}.req-pill{padding:0 2px}
+@media (min-width:600px){.cell{--b:calc(min(70cqw,54px)*.9)}.pill-wrap{--lh:16px}.pl,.req-pill{font-size:11px;line-height:15px;height:15px}}
 .dn.chol{background:var(--chol)}.dn.chol .num,.dn.chol .hn{color:var(--chol-fg)}
 .legend{display:flex;gap:12px;justify-content:center;padding:5px 0 4px;font-size:10.5px;color:var(--muted);flex:none}
 .legend span{display:flex;align-items:center;gap:4px}.legend i{width:20px;height:9px;border-radius:2px;display:inline-block}
@@ -1064,6 +1068,7 @@ button.tbtn{cursor:pointer}
 .dn.fit1 .stp{gap:0}
 .dn.fit1 .stp>svg,.dn.fit1 .stp>.sx svg{width:10px;height:10px}
 .dn.fit1 .stp>.sx .se{font-size:9px !important}
+.dn.fit1+.s2>svg,.dn.fit1+.s2 .sx svg{width:12px;height:12px}.dn.fit1+.s2>.se,.dn.fit1+.s2 .sx .se{font-size:10px !important}
 .dn.fit1 .stp>.se{font-size:9px !important}
 .badge.nonb{background:none}
 .badge.nonb.ph{border:1.5px dashed var(--muted);border-radius:50%;color:var(--muted);font-size:10.5px;font-weight:700;opacity:.85}
@@ -1082,7 +1087,7 @@ button.tbtn{cursor:pointer}
 .fillchips .badge.r{background:var(--surface);border-radius:50%}
 .fillgrid{margin-top:14px}.fillgrid .pc .badge{width:32px;height:32px;font-size:14px}.fillgrid .pc .badge.r{background:none}
 .ob-f .lk small{font-weight:400;font-size:12px}
-.s2{position:absolute;left:0;right:0;top:21px;height:calc(var(--stz) + 2px);display:flex;align-items:center;justify-content:flex-end;gap:1px;padding:0 3px;z-index:8;pointer-events:none}   /* 3~4번째 스티커: 근무 동그라미 오른쪽 위에 살짝 걸쳐 붙임 (동그라미 크기는 그대로) */
+.s2{position:absolute;left:0;right:0;top:max(21px,calc(var(--stz) + 7px));height:calc(var(--stz) + 2px);display:flex;align-items:center;justify-content:flex-end;gap:1px;padding:0 3px;z-index:8;pointer-events:none}   /* 3~4번째 스티커: 근무 동그라미 오른쪽 위에 살짝 걸쳐 붙임 (동그라미 크기는 그대로) */
 .s2>svg:not(.off),.s2>.se:not(.plan),.s2>.sx{filter:drop-shadow(0 0 1.2px var(--bg)) drop-shadow(0 1px 1.2px rgba(0,0,0,.35))}
 /* 스티커 색 고르기 */
 .cdots{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
@@ -1428,7 +1433,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.personal=!!s.personal;s.weekStart=(o&&o.weekStart===1)?1:0;s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.personal=!!s.personal;s.weekStart=(o&&o.weekStart===1)?1:0;s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},o&&o.memoColors);
   s.drive=Object.assign(defaults().drive,o&&o.drive);
@@ -1595,6 +1600,16 @@ function pushRemindersToNative(){
         if(at>now)out.push({id:`m_${m.id}`,at,title:'📝 메모',text:`${m.al==='10'?'10분 뒤 · ':''}${firstLine(m.text).slice(0,40)}`});
       });
     });
+    if(S.link&&S.pushOn!==false&&S.fam2&&S.fam2.memos){
+      const slp=sleepWins(new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()),70);
+      Object.entries(S.fam2.memos).forEach(([id,v])=>{
+        if(v.by===S.link.uid||!v.time||v.al===undefined||v.al===''||!v.date)return;
+        if(v.date<fmt(t0)||v.date>addK(fmt(t0),70))return;
+        const [h,mi]=v.time.split(':').map(Number),d=parse(v.date),at=new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,mi).getTime()-(v.al==='10'?600000:0);
+        if(at<=now||slp.some(w=>at>=w[0]&&at<w[1]))return;
+        out.push({id:`f_${id}`,at,title:`♥ ${v.byName||'가족'}님의 메모`,text:`${v.al==='10'?'10분 뒤 · ':''}${firstLine(v.text).slice(0,40)}`,type:'memo',date:v.date});
+      });
+    }
     window.AndroidBridge.setReminders(JSON.stringify(out));
   }catch(e){}
 }
@@ -1845,9 +1860,9 @@ const dowHead=()=>weekOrder().map(w=>`<span class="${w===0?'s':w===6?'t':''}">${
 function memoLines(){
   const tab=innerWidth>=600,g=document.querySelector('.grid');
   const h=g&&g.clientHeight?g.clientHeight/6:(innerHeight-230)/6;
-  if(S.personal)return Math.max(1,Math.min(5,Math.floor((h-22)/14)));   // 개인 캘린더: 메모 5줄까지
-  const fit=tab?Math.floor((h-24)/16):Math.floor((h-22-30)/14);
-  return Math.max(1,Math.min(tab?4:3,fit));
+  const bw=(document.querySelector('.track .cell .bwrap')||{}).offsetHeight||(S.personal?50:38),lh=tab?16:14;   // 동그라미(개인 캘린더는 스티커 2줄) 자리를 뺀 나머지
+  const fit=Math.floor((h-22-bw-2)/lh);
+  return Math.max(1,Math.min(tab?8:5,fit));
 }
 let lastLines=0;
 // 달력 위 한 줄: 근무표를 안 만들었으면 만들기 안내, 불규칙이면 사용법(첫 근무를 넣기 전까지)
@@ -1939,7 +1954,7 @@ function calPanel(y,m){
     const rcls=sharing?'':rqRing(S.requests.filter(r=>r.date===k&&(!r.srv||r.dir==='in')));
     const pills=[];
     // 가족 · 나만은 색으로 구분 (♥ · 🔒 는 아래 설명 줄에 한 번만)
-    const pst=x=>`${x.done?' done':''}" ${x.color?`style="background:${esc(x.color)};color:#2a2418"`:''}`;
+    const pst=x=>`${x.done?' done':''}" ${x.color?`style="--mc:${esc(x.color)}"`:''}`;
     fam.forEach(x=>pills.push(`<div class="pl fam${pst(x)}>${esc(firstLine(x.text))}</div>`));
     if(!sharing)mine.forEach(x=>pills.push(`<div class="pl my${pst(x)}>${esc(firstLine(x.text))}</div>`));
     boardOnDate(k).filter(n=>!sharing||n.shared).forEach(n=>pills.push(`<div class="pl ${n.shared?'fam':'my'}">📝 ${esc(piLabel(n))}</div>`));
@@ -2430,7 +2445,7 @@ function openStampDay(k){
     let b='';
     if(n<N)b+=`<button class="ok" data-act="sd-done" ${id}>✓ ${pill?'먹음':'완료'}${N>1?` (${n+1}/${N})`:''}</button>`;
     b+=n?`<button class="un" data-act="sd-undo" ${id}>${N>1&&n<N?'한 번 취소':'완료 취소'}</button>`:`<button data-act="sd-skip" ${id}>건너뛰기</button>`;
-    if(['daily','dow','work','month'].includes(s.rep)&&(!s.to||s.to>=k))b+=`<button class="gh" data-act="sd-end" ${id}>끝내기</button>`;   // 반복 스티커: 이날부터 끝내기
+    if(['daily','dow','work','month'].includes(s.rep)&&(!s.to||s.to>=k))b+=`<button class="gh" data-act="sd-end" ${id}>그만하기</button>`;   // 반복 스티커: 이날부터 끝내기
     const st=N>1?`${n}/${N}${pill?' 먹음':''}`:pill?(n?'먹음':'아직'):n?'완료':'아직';
     return `<div class="mi sdr"><span class="sic">${pill?pillSvg(N,n,26,s.color):`<span class="${n?'':'plan'}">${ico(s.emoji)}</span>`}</span><div class="nm">${esc(s.name)}<small>${esc(stampRule(s))} · ${st}</small></div></div><div class="mi sdbt">${b}</div>`;
   };
@@ -2475,6 +2490,20 @@ function openStampReg(k,id,back){
   renderStampReg();
 }
 function srPull(){const d=stDraft;if(!d)return;const n=$('#srName');if(n)d.name=n.value.trim().slice(0,12);}
+// 시각 알림 안내 한 줄 ("울려요" 로 단정) — 지난 시각 · 수면 시간은 따로 알려줌
+function stAlarmHint(d){
+  if(!d.alarm)return '';
+  stFill(d);const ts=d.ats.slice(0,d.times).filter(Boolean),list=ts.join(' · ');
+  if(d.rep!=='once')return `깔리는 날마다 ${list}에 알림이 울려요`;
+  const day=parse(d.k),now=Date.now();
+  const ms=ts.map(t=>{const[h,m]=t.split(':').map(Number);return new Date(day.getFullYear(),day.getMonth(),day.getDate(),h,m).getTime();});
+  const left=ms.filter(x=>x>now);
+  if(!left.length)return '이미 지난 시각이라 알림이 울리지 않아요';
+  let sl=[];try{if(S.pushQuiet!==false)sl=sleepWins(new Date(day.getFullYear(),day.getMonth(),day.getDate()),1);}catch(e){}
+  const inSl=left.filter(x=>sl.some(w=>x>=w[0]&&x<w[1]));
+  const base=`${day.getMonth()+1}월 ${day.getDate()}일 ${list}에 알림이 울려요`;
+  return inSl.length===left.length?base+' · 단 수면 시간이라 조용히 지나가요':base;
+}
 function renderStampReg(){
   const d=stDraft,day=parse(d.k),pill=d.kind==='pill',isNew=d.id==='__new';
   const pick=S.stamps.defs.map(s=>`<button class="${d.id===s.id?'on':''}" data-act="sr-pick" data-id="${s.id}"><span>${s.kind==='pill'?pillSvg(stN(s),1,24,s.color):ico(s.emoji)}</span>${esc(s.name)}</button>`).join('')
@@ -2505,7 +2534,7 @@ function renderStampReg(){
       ${sw('srHol',d.noHol,'🎌 공휴일엔 빼기')}</div>`:''}
     <div class="pg-cap">알림</div>
     <div class="pg-sec" style="margin-top:0">${sw('srAlarm',d.alarm,`⏰ 시각 알림<small>${d.alarm?'아래 시각에 울려요':'끔 · 달력에서만 봐요'}</small>`)}
-      ${d.alarm?d.ats.map((t,i)=>`<div class="prow"><div class="pl2">${d.times>1?`${i+1}번째`:'시각'}</div>${tpick('srAt'+i,t)}</div>`).join(''):''}</div>
+      ${d.alarm?d.ats.map((t,i)=>`<div class="prow"><div class="pl2">${d.times>1?`${i+1}번째`:'시각'}</div>${tpick('srAt'+i,t)}</div>`).join('')+`<div class="hint" style="margin:0;padding:8px 16px">${stAlarmHint(d)}</div>`:''}</div>
     <div style="padding:16px"><button class="btn" style="width:100%" data-act="sr-save">${d.edit?'저장':'등록하기'}</button>
     ${d.edit?'<button class="btn ghost danger" style="width:100%;margin-top:8px" data-act="sr-del">이 스티커 지우기</button>':''}</div>
     </div>`,'stampadd');
@@ -2540,7 +2569,7 @@ function stampRegSave(){
   const ic=s.kind==='pill'?'💊':icoTxt(s.emoji,'✔');
   const hid=d.rep==='once'?{n:0}:stampHidden(s,s.from||k,s.to);
   if(hid.n){stampHiddenAsk(s,hid,snap);return;}
-  toast(d.rep==='once'?`${ic} ${s.name} 이날 등록했어요`:`${ic} ${s.name} · ${stampRule(s)}`);
+  toast(d.rep==='once'?`${ic} ${s.name} 이날 등록했어요${s.ats&&s.ats.length?' · 시각에 알림이 울려요':''}`:`${ic} ${s.name} · ${stampRule(s)}`);
 }
 // 반복 스티커가 깔리는 날 중 하루 한도(2개 · 설정 4개) 때문에 가려지는 날 수 (앞으로 200일 안)
 function stampHidden(s,from,to){
@@ -3589,7 +3618,7 @@ const mdApply=(m,x)=>{['color','todo','done','time','al'].forEach(p=>{if(x[p]===
 function mdPull(){const e=$('#mdText');if(e&&mdDraft)mdDraft.text=e.value;}
 function openMemoDetail(k,id){
   const m=id?memosOf(k).find(x=>x.id===id):null,i=$('#memoInput');
-  mdDraft={k,id:m?m.id:'',text:m?m.text:(i?i.value:memoText)||'',color:(m&&m.color)||'',todo:!!(m&&m.todo),done:!!(m&&m.done),time:(m&&m.time)||'',al:(m&&m.al)||'',shared:m?!!m.shared:role()!=='host'};
+  mdDraft={k,id:m?m.id:'',text:m?m.text:(i?i.value:memoText)||'',color:m?(m.color||''):(S.lastMemoColor||''),todo:!!(m&&m.todo),done:!!(m&&m.done),time:(m&&m.time)||'',al:(m&&m.al)||'',shared:m?!!m.shared:role()!=='host'};
   renderMemoDetail();
 }
 function renderMemoDetail(){
@@ -3597,9 +3626,9 @@ function renderMemoDetail(){
   openPage(`<div class="pg-h"><button class="bk" data-act="md-back" aria-label="뒤로">‹</button><b>메모</b><button class="ok" data-act="md-save">저장</button></div>
     <div class="pg-b">
     <div class="pg-cap">${day.getMonth()+1}월 ${day.getDate()}일 ${DOW[day.getDay()]}요일</div>
-    <div style="padding:0 16px"><textarea id="mdText" class="mdtx" placeholder="메모를 입력하세요" style="background:${d.color||'var(--surface)'}">${esc(d.text)}</textarea></div>
-    <div class="pg-cap">색</div>
-    <div class="mdcol">${MEMO_COL.map(c=>`<button class="${d.color===c?'on':''}" style="background:${c}" data-act="md-col" data-v="${c}" aria-label="색"></button>`).join('')}</div>
+    <div style="padding:0 16px"><textarea id="mdText" class="mdtx" placeholder="메모를 입력하세요" style="background:${d.shared?'var(--fam-bg)':(d.color||'var(--surface)')}">${esc(d.text)}</textarea></div>
+    ${d.shared?'<div class="hint" style="padding:10px 16px 0">가족 메모는 보라색으로 보여요 (색은 나만 메모에서 골라요)</div>':`<div class="pg-cap">색</div>
+    <div class="mdcol">${MEMO_COL.map(c=>`<button class="${d.color===c?'on':''}" style="background:${c}" data-act="md-col" data-v="${c}" aria-label="색"></button>`).join('')}</div>`}
     <div class="pg-sec">
       <div class="prow"><div class="pl2">✔ 할 일<small>체크하면 취소선이 그어져요</small></div><label class="sw"><input type="checkbox" id="mdTodo" ${d.todo?'checked':''}><i></i></label></div>
       <div class="prow"><div class="pl2">🕐 시간</div>${d.time?`${tpick('mdTime',d.time)}<button class="xbtn" data-act="md-notime" aria-label="시간 없애기">✕</button>`:'<button class="tbtn" data-act="md-settime">시간 없음 ›</button>'}</div>
@@ -3612,7 +3641,7 @@ function renderMemoDetail(){
 function mdSave(){
   mdPull();const d=mdDraft;if(!d)return;
   const text=(d.text||'').trim();if(!text){toast('메모를 적어주세요');return;}
-  const x={color:d.color||undefined,todo:d.todo||undefined,done:(d.todo&&d.done)||undefined,time:d.time||undefined,al:(d.time&&d.al!=='')?d.al:undefined};
+  const x={color:(!d.shared&&d.color)||undefined,todo:d.todo||undefined,done:(d.todo&&d.done)||undefined,time:d.time||undefined,al:(d.time&&d.al!=='')?d.al:undefined};
   const k=d.k,fam=d.shared,srv=!!S.link,isGuest=role()==='guest';
   const m=d.id?memosOf(k).find(y=>y.id===d.id):null;
   if(m){
@@ -3627,6 +3656,7 @@ function mdSave(){
     if(fam&&isGuest&&limitInfo().remaining<=0){pendingSend={type:'fam',date:k,text};openLimitSheet('fam');return;}
     addMemo(k,text,fam,fam&&isGuest,x);
   }
+  if(!fam)S.lastMemoColor=d.color||'';save();
   mdDraft=null;memoText='';closePage();memoFinish(k,fam?'♥ 가족 메모를 남겼어요':'🔒 나만 보는 메모를 남겼어요');
 }
 function openMemoMenu(mid){
@@ -3657,7 +3687,7 @@ function openDay(k){
   const dayReqs=reqUniq(S.requests.filter(r=>r.date===k&&(!r.srv||r.dir==='in')).sort((a,b)=>b.t-a.t));
   const reqHtml=dayReqs.map(r=>reqCard(r)).join('');
   const dd=ddayHits(k);
-  const strip=[-3,-2,-1,0,1,2,3].map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}" data-act="day-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${S.personal?`<span class="dnum">${DOW[x.getDay()]}</span>`:badge(shiftOf(x),'sm')}</button>`;}).join('');
+  const strip=[-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7].map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}" data-act="day-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${S.personal?`<span class="dnum">${DOW[x.getDay()]}</span>`:badge(shiftOf(x),'sm')}</button>`;}).join('');
   const head=`
       <div class="dtop"><button data-act="close">‹ 달력</button></div>
       <div class="dfh"><button class="ib" data-act="day-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
@@ -3693,6 +3723,7 @@ function openDay(k){
       </div>${warn}`;
   }
   openSheet(`${head}${topPart}${memoSection(k)}`,true);
+  dstripCenter();
 }
 
 /* ---------- 근무타입 고르기 / 편집 ---------- */
@@ -3712,11 +3743,25 @@ function goDay(k){
 }
 // 날짜 화면 위쪽(제목 · 3일 띠)을 옆으로 밀면 전날 · 다음날
 let dsw=null;
-document.addEventListener('pointerdown',e=>{const el=e.target.closest&&e.target.closest('.dfh,.dstrip');dsw=el&&sheetMode==='day'?{x:e.clientX,y:e.clientY}:null;});
+document.addEventListener('pointerdown',e=>{const el=e.target.closest&&e.target.closest('.dfh');dsw=el&&sheetMode==='day'?{x:e.clientX,y:e.clientY}:null;});
 document.addEventListener('pointerup',e=>{
   if(!dsw||!sheetKey)return;const dx=e.clientX-dsw.x,dy=e.clientY-dsw.y;dsw=null;
   if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){held=true;setTimeout(()=>{held=false;},50);goDay(addK(sheetKey,dx<0?1:-1));}
 });
+// 3일 띠: 가운데에 오늘 고른 날 · 옆으로 밀면 따라 움직이고, 멈췄을 때 가운데에 온 날로 이동
+function dstripCenter(){
+  const el=document.getElementById('dstrip');if(!el)return;
+  const go=()=>{const w=el.clientWidth/7;el.scrollLeft=7*w+w/2-el.clientWidth/2;};
+  go();requestAnimationFrame(go);
+  let tm=null;
+  el.addEventListener('scroll',()=>{
+    clearTimeout(tm);
+    tm=setTimeout(()=>{
+      const w=el.clientWidth/7,idx=Math.round((el.scrollLeft+el.clientWidth/2-w/2)/w),delta=idx-7;
+      if(delta&&sheetKey){held=true;setTimeout(()=>{held=false;},50);goDay(addK(sheetKey,delta));}
+    },140);
+  },{passive:true});
+}
 function openTypeMore(){
   openPop(`<div class="mh">근무타입<b>어떤 근무로 할까요?</b></div>
     <div class="mi"><div class="tchips">${S.types.map(x=>`<button class="tchip ${shiftOf(parse(sheetKey))===x.k?'on':''}" data-act="setshift" data-s="${esc(x.k)}">${badge(x.k,'tc')}<small>${esc(x.name)}</small></button>`).join('')}</div></div>
@@ -3901,7 +3946,6 @@ function renderMore(){
       ${!guest&&fbCfg()?item('🔗','가족 연결 (폰끼리)','link-open',S.link?(S.link.role==='host'?'내 가족방':'참여 중'):'초대'):''}
       ${item('👪',ad('together')?'가족 목록 · 같이 쉬는 날':'가족 목록','fam-set',`${(S.family||[]).length}명`)}
       ${guest||!ad('status')||S.personal?'':item('👁','가족에게 보이는 내 상태','more-status',S.status.show?'켜짐':'꺼짐')}
-      ${item('🎨','메모 색','more-colors',`<span style="color:var(--fam)">♥</span>`)}
     </div>
     ${cap('앱')}
     <div class="pg-sec" style="margin-top:0">
@@ -4321,7 +4365,7 @@ function openBackupPage(){
     </div>`,'backup');
   if(linked&&driveFiles===null&&!driveBusy){driveBusy=true;window.AndroidBridge.driveList(true);}
 }
-const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','weekStart','seenVer','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
+const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','weekStart','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -5065,7 +5109,7 @@ document.addEventListener('click',e=>{
     case 'sd-skip':{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;(s.skip=s.skip||[]).push(k);s.dates=(s.dates||[]).filter(x=>x!==k);save();render();stampReopen(k);toastUndo(`${s.kind==='pill'?'💊':icoTxt(s.emoji,'✔')} ${s.name} 이날은 건너뛰어요`,()=>{s.skip=s.skip.filter(x=>x!==k);save();render();});break;}
     case 'sd-end':{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;
       const old=s.to||'';s.to=addK(k,-1);save();render();stampReopen(k);
-      toastUndo(`${s.kind==='pill'?'💊':icoTxt(s.emoji,'✔')} ${s.name} 이날부터 끝냈어요 (지난 기록은 그대로)`,()=>{s.to=old;save();render();});break;}
+      toastUndo(`${s.kind==='pill'?'💊':icoTxt(s.emoji,'✔')} ${s.name} 이날부터 그만해요 (지난 기록은 그대로)`,()=>{s.to=old;save();render();});break;}
     case 'sd-add':if(t.classList.contains('dis')){closePop();stampFull();break;}closePop();openStampReg(t.dataset.k);break;
     case 'sd-manage':closePop();openStampPage();break;
     case 'sr-pick':srPull();{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),b=stDraft.back,k=stDraft.k;stDraft=stDraftOf(s,k,false,b);if(b==='stamps')stDraft.rep='daily';}renderStampReg();break;
@@ -6039,7 +6083,7 @@ function famMemoWarn(id,msg){if(famMemoWarned[id])return;famMemoWarned[id]=1;toa
 async function famSyncMemos(){
   if(!S.link||!fbCfg()||!S.link.uid)return;
   const uid=S.link.uid,hid=S.link.hid,want={};
-  Object.keys(S.memos||{}).forEach(k=>(S.memos[k]||[]).forEach(m=>{if(m.shared&&m.by===role()&&String(m.text||'').trim())want[uid+'_'+m.id]={date:k,text:String(m.text).slice(0,200),nt:!!m.notify,mid:m.id};}));
+  Object.keys(S.memos||{}).forEach(k=>(S.memos[k]||[]).forEach(m=>{if(m.shared&&m.by===role()&&String(m.text||'').trim())want[uid+'_'+m.id]={date:k,text:String(m.text).slice(0,200),nt:!!m.notify,mid:m.id,tm:/^\d\d:\d\d$/.test(m.time||'')?m.time:'',al:/^\d\d:\d\d$/.test(m.time||'')&&(m.al==='0'||m.al==='10')?m.al:''};}));
   const have={};Object.entries(S.fam2.memos||{}).forEach(([id,v])=>{if(v.by===uid)have[id]=v;});
   const {F,db}=await famReady();
   let remain=famRemain();
@@ -6050,12 +6094,13 @@ async function famSyncMemos(){
       if(remain<=0){famMemoWarn(id,'무료 횟수를 다 써서 가족 메모를 올리지 못했어요');continue;}remain--;
       famBusyMemo[id]=1;
       const b=F.writeBatch(db);
-      b.set(ref,{by:uid,byName:S.link.name,date:w.date,text:w.text,createdAt:F.serverTimestamp(),updatedAt:F.serverTimestamp()});
+      b.set(ref,{by:uid,byName:S.link.name,date:w.date,text:w.text,createdAt:F.serverTimestamp(),updatedAt:F.serverTimestamp(),...(w.tm?{time:w.tm,...(w.al!==''?{al:w.al}:{})}:{})});
       b.update(famMember(F,db,hid,uid),{sent:F.increment(1)});
       b.commit().catch(e=>famMemoWarn(id,famMemoErr(e))).finally(()=>{delete famBusyMemo[id];});
-    }else if(h.text!==w.text||h.date!==w.date){
+    }else if(h.text!==w.text||h.date!==w.date||(h.time||'')!==w.tm||(h.al||'')!==w.al){
       famBusyMemo[id]=1;
       const patch={date:w.date,text:w.text,updatedAt:F.serverTimestamp()};
+      if((h.time||'')!==w.tm||(h.al||'')!==w.al){patch.time=w.tm?w.tm:F.deleteField();patch.al=w.al!==''?w.al:F.deleteField();}   // 시간 알림(색 · 할 일은 안 올림)
       if(w.nt)patch.rev=(+h.rev||0)+1;   // 고쳤다고 알리기를 고른 수정
       F.updateDoc(ref,patch).then(()=>{if(w.nt)famClearNotify(w.mid);}).catch(e=>famMemoWarn(id,famMemoErr(e))).finally(()=>{delete famBusyMemo[id];});
     }
@@ -6072,7 +6117,7 @@ function famClearNotify(mid){
 }
 function famOnMemos(snap){
   const m={};
-  snap.docs.forEach(d=>{const v=d.data();m[d.id]={by:v.by,byName:v.byName,date:v.date,text:v.text,rev:+v.rev||0,t:tsMs(v.createdAt)||Date.now()};});
+  snap.docs.forEach(d=>{const v=d.data();m[d.id]={by:v.by,byName:v.byName,date:v.date,text:v.text,rev:+v.rev||0,time:/^\d\d:\d\d$/.test(v.time||'')?v.time:'',al:(v.al==='0'||v.al==='10')?v.al:'',t:tsMs(v.createdAt)||Date.now()};});
   const L=S.link;if(!L)return;
   if(!snap.metadata.fromCache)famMarkSync();
   if(!snap.metadata.fromCache){
@@ -6094,7 +6139,7 @@ function famOnMemos(snap){
 function famRemoteMemos(k){
   const L=S.link;if(!L||!S.fam2)return [];
   return Object.entries(S.fam2.memos||{}).filter(([id,v])=>v.date===k&&v.by!==L.uid)
-    .map(([id,v])=>({id:'s:'+id,sid:id,text:v.text,shared:true,by:'u:'+v.by,t:v.t,srv:true}));
+    .map(([id,v])=>({id:'s:'+id,sid:id,text:v.text,shared:true,by:'u:'+v.by,t:v.t,srv:true,time:v.time||'',al:v.al||''}));
 }
 // ---- 근무 요청: 받은 것 · 보낸 것
 function famMirrorReqs(){

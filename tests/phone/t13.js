@@ -35,7 +35,7 @@ T_('손 떼면 사라짐',await p.$eval('.track .panel:nth-child(2) .cell[data-k
 // ---- 톡: 완료 누르면 방금 붙인 스티커에 .tok
 await p.click('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] .stz');await p.waitForTimeout(350);
 const popTxt=await p.$eval('#pop',e=>e.innerText.replace(/\s+/g,' '));
-T_('날짜 스티커 창: 조깅 완료 버튼 + "이날부터 끝내기"',popTxt.includes('완료')&&popTxt.includes('끝내기'),popTxt.slice(0,160));
+T_('날짜 스티커 창: 조깅 완료 버튼 + "이날부터 끝내기"',popTxt.includes('완료')&&popTxt.includes('그만하기'),popTxt.slice(0,160));
 
 await p.click('#pop [data-act="sd-done"][data-id="s_run"]');await p.waitForTimeout(60);
 const tok=await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] [data-sid="s_run"]',e=>e.classList.contains('tok')).catch(()=>false);

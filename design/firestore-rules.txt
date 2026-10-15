@@ -140,7 +140,7 @@ service cloud.firestore {
         && request.resource.data.holRest is bool
         // 스티커 보여주기(켠 사람만): 날짜별 스티커 목록 · 스티커 종류
         && request.resource.data.get('stk', {}) is map && request.resource.data.get('stk', {}).size() <= 400
-        && request.resource.data.get('sdefs', []) is list && request.resource.data.get('sdefs', []).size() <= 12
+        && request.resource.data.get('sdefs', []) is list && request.resource.data.get('sdefs', []).size() <= 30
         && request.resource.data.updatedAt == request.time;
       allow delete: if signedIn() && (request.auth.uid == uid || isOwner(hid));
     }
@@ -189,20 +189,27 @@ service cloud.firestore {
       allow delete: if signedIn() && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid || isOwner(hid));
     }
 
+    // 가족 메모의 시간 알림(선택): time = 'HH:MM', al = '0'(정시) | '10'(10분 전). 둘 다 없거나, time 이 있을 때만 al 허용
+    function memoTimeOk(d) {
+      return (!('time' in d) || (d.time is string && d.time.matches('[0-2][0-9]:[0-5][0-9]')))
+        && (!('al' in d) || ('time' in d && d.al in ['0', '10']));
+    }
     // ───────── 가족 메모: households/{hid}/memos/{id} ─────────
     // 가족 모두 읽기, 쓴 사람만 고치기, 쓴 사람 · 호스트가 지우기. 만들 때 내 횟수(sent) +1
     match /households/{hid}/memos/{id} {
       allow read: if isMember(hid);
       allow create: if signedIn() && isMember(hid)
-        && request.resource.data.keys().hasOnly(['by', 'byName', 'date', 'text', 'createdAt', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['by', 'byName', 'date', 'text', 'createdAt', 'updatedAt', 'time', 'al'])
         && request.resource.data.by == request.auth.uid
+        && memoTimeOk(request.resource.data)
         && validName(request.resource.data.byName)
         && request.resource.data.date is string && request.resource.data.date.size() == 10
         && request.resource.data.text is string && request.resource.data.text.size() >= 1 && request.resource.data.text.size() <= 200
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time
         && getAfter(memberPath(hid, request.auth.uid)).data.get('sent', 0) == get(memberPath(hid, request.auth.uid)).data.get('sent', 0) + 1;
       allow update: if signedIn() && resource.data.by == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date', 'text', 'updatedAt', 'rev'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date', 'text', 'updatedAt', 'rev', 'time', 'al'])
+        && memoTimeOk(request.resource.data)
         // rev: "고쳤다고 알리기"를 고르면 +1 (가족 폰에 "메모를 고쳤어요" 알림)
         && request.resource.data.get('rev', 0) is int
         && request.resource.data.get('rev', 0) >= resource.data.get('rev', 0)

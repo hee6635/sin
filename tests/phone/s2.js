@@ -19,7 +19,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.click('[data-act="md-settime"]');await p.click('[data-act="md-al"][data-v="10"]');
  await p.screenshot({path:'b2.png'});
  await p.click('[data-act="md-save"]');await p.waitForTimeout(400);
- const m=await p.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('eonjeswieo:v1')).memos)[0]);
+ const m=(await p.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('eonjeswieo:v1')).memos)[0]))[0];
  console.log(JSON.stringify(m));
  T('메모 저장 extras',m&&m.todo&&m.time==='09:00'&&m.al==='10'&&!m.shared);
  T('알림 등록',await p.evaluate(()=>window.__rem.some(r=>r.title==='📝 메모')));

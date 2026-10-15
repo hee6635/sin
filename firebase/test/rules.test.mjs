@@ -396,6 +396,16 @@ await t('근무 요청 지우기: 보낸 사람 · 받는 사람 · 호스트', 
   await assertFails(deleteDoc(doc(db('g3'), 'households', H, 'requests', 'r1')));
   await assertSucceeds(deleteDoc(doc(db('g2'), 'households', H, 'requests', 'r1')));
 });
+await t('가족 메모 시간 알림: time · al (정시 · 10분 전)만 허용, time 없이 al 만은 막음', async () => {
+  await fresh3();
+  await assertSucceeds(sendMemo('g1', 'mt1', memo({ time: '19:00', al: '10' })));
+  await assertFails(sendMemo('g1', 'mt2', memo({ time: '7pm' }), 1));
+  await assertFails(sendMemo('g1', 'mt3', memo({ time: '19:00', al: '5' }), 1));
+  await assertFails(sendMemo('g1', 'mt4', memo({ al: '0' }), 1));
+  await assertSucceeds(updateDoc(doc(db('g1'), 'households', H, 'memos', 'mt1'), { time: '20:30', al: '0', updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(db('g1'), 'households', H, 'memos', 'mt1'), { al: '99', updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(db('g1'), 'households', H, 'memos', 'mt1'), { color: '#fff', updatedAt: serverTimestamp() }));   // 색은 안 올림
+});
 await t('가족 메모: 쓰기(횟수 +1과 같이) · 가족 모두 읽기 · 쓴 사람만 고치기 · 쓴 사람/호스트가 지우기', async () => {
   await fresh3();
   await assertSucceeds(sendMemo('g1', 'm1', memo()));
@@ -464,7 +474,7 @@ await t('스티커 보여주기: stk · sdefs 를 올릴 수 있고, 너무 크�
   await assertSucceeds(setDoc(SD('g1'), sch()));                                                                  // 끄면 없어짐
   const big = {}; for (let i = 0; i < 401; i++) big['d' + i] = '01';
   await assertFails(setDoc(SD('g1'), sch({ stk: big, sdefs })));
-  await assertFails(setDoc(SD('g1'), sch({ stk, sdefs: Array(13).fill({ i: 'x', k: 'm', e: '🧘' }) })));
+  await assertFails(setDoc(SD('g1'), sch({ stk, sdefs: Array(31).fill({ i: 'x', k: 'm', e: '🧘' }) })));
   await assertFails(setDoc(SD('g1'), sch({ stk: 'x', sdefs })));
   await assertFails(setDoc(SD('g1'), sch({ stk, sdefs: 'x' })));
 });
