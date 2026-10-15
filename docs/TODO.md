@@ -944,3 +944,5 @@
 
 - [ ] **달력 이미지 공유 중 월 옆 ‹ › 화살표 다시 뺌 (사용자 결정, 다음 묶음 A에 포함 — 앞서 v0.29에서 넣은 "공유 중에도 ‹ › 보이기"를 되돌림)**: `.share-mode #top .ym .ib{display:flex !important}` 와 `.capturing #top .ym .ib{visibility:hidden}` 두 줄을 지우고 원래대로 공유 중에는 ‹ › 숨김. **남기는 것**: 달 이동 창이 공유 막대에 가려지던 것을 고친 `.share-mode #pop,.share-mode #sheet{z-index:60}` 와 `#scrim{z-index:59}` (날짜 글자를 눌러 달을 바꾸는 길 + 옆으로 밀어서 달 넘기기는 그대로 됨)
 - ✅ 날짜 창 맨 위: 공휴일 · 명절이면 날짜 제목(10월 3일 (토))과 공휴일 이름(개천절)을 붉은색으로 → v0.29 에 포함
+
+- [ ] **설정 › 가족 › "메모 색" 항목 삭제 (사용자 결정, 다음 묶음 A에 포함)**: 이제 메모마다 색을 고르는 기능("자세히" 7색)이 있고 가족 메모는 보라 고정(결정)이라 전역 "메모 색"(가족 · 나만 두 색)은 중복 → **설정 줄(`more-colors`) 삭제**. 코드: `renderMore` 의 `item('🎨','메모 색','more-colors',…)` 줄 삭제, `case 'more-colors'`/`openColorsPage`/`case 'mcolor'`/`'mcolor-reset'` 는 쓰지 않으니 삭제하거나 주석. **저장 데이터의 `S.memoColors`(fam/my)와 `applyTheme()` 의 CSS 변수는 그대로 두어** 기본색(가족 #7b5cf0 · 나만 #6b7280)으로 동작, `BACKUP_KEYS` 의 `memoColors` 도 그대로(읽어도 안 깨짐). 옛날에 바꿔 둔 색은 기본색으로 돌아오지 않고 그대로 쓰이게 두어도 되고(코드 변경 최소), 사용자는 테스트 단계라 어느 쪽이든 무방
