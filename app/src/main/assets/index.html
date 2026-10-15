@@ -1169,7 +1169,7 @@ button.tbtn{cursor:pointer}
     <div class="shrow"><label class="shm"><input type="checkbox" id="shareMemo"> 📝 가족 메모 넣기</label><label class="shm"><input type="checkbox" id="shareStk"> ⭐ 스티커 넣기</label></div>
     <div class="shnote">🔒 나만 보는 메모는 항상 빠져요</div>
     <button class="btn ghost grow" data-act="cancel-share">취소</button>
-    <button class="btn grow" data-act="do-share" style="background:#fee500; color:#191919;">카카오톡 공유하기</button>
+    <button class="btn grow" data-act="do-share">공유하기</button>
   </div>
 
   <div id="scrim" data-act="close"></div>
@@ -5376,7 +5376,7 @@ function shareScreen(){
       try{window.AndroidBridge.shareScreen();}catch(e){toast('공유하지 못했어요');}
       done();
     },120)));
-  }else{toast('앱에서는 이 화면이 이미지로 카카오톡 등에 공유돼요');done();}
+  }else{toast('앱에서는 이 화면이 이미지로 공유돼요');done();}
 }
 function exportBackup(){
   const json=JSON.stringify(backupData(),null,1);
@@ -6299,7 +6299,7 @@ async function invMake(){
 function showCodePop(code){
   openPop(`<div class="mh">초대 코드<b>${FAM_DAYS}일 안에 가족이 넣으면 돼요</b></div>
     <div class="mi" style="display:block;text-align:center"><div class="codebig">${famFmt(code)}</div><div class="hint" style="padding:6px 0 0">한 번 쓰면 사라지는 코드예요 (1회용)</div></div>
-    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="inv-copy" data-c="${code}">코드 복사</button><button class="btn grow" data-act="inv-share" data-c="${code}" style="background:#fee500;color:#191919">카카오톡으로 보내기</button></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="inv-copy" data-c="${code}">코드 복사</button><button class="btn grow" data-act="inv-share" data-c="${code}">공유하기</button></div>
     <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);
 }
 /* ----- 초대 코드로 참여 (가족) ----- */
