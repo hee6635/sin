@@ -4,7 +4,7 @@ const defs=[
  {id:'p1',kind:'pill',emoji:'💊',name:'약',times:2,color:'#e5484d',rep:'daily',from:'2026-10-25',to:'',days:[],dates:[],skip:[]},
  mk('s_run','조깅','👟',{rep:'daily',from:'2026-10-18',to:''}),mk('s_gym','운동','🏋️'),mk('s_yoga','요가','🧘'),mk('s_water','물','💧')];
 const log={'2026-10-16':{s_run:1,s_gym:1,s_yoga:1,s_water:1},'2026-10-12':{s_gym:1},'2026-10-09':{p1:1}};
-const st={...base,pattern:['야','휴','휴','휴'],anchor:'2026-10-12',stamps:{defs,log,remind:true,more:true,pillTimes:['10:00','13:00','20:00'],lastRt:''}};
+const st={...base,pattern:['야','휴','휴','휴'],anchor:'2026-10-12',stamps:{defs,log,remind:true,more:true,v4:1,pillTimes:['10:00','13:00','20:00'],lastRt:''}};
 (async()=>{const b=await chromium.launch();const T_=mkT();
 let p=await boot(b,st);
 const q=(s)=>p.$eval(s,e=>e.outerHTML.slice(0,200)).catch(()=>null);
@@ -26,7 +26,7 @@ const tf=await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-12"] .s
 T_('한 개일 때 transform scale ≈1.4',/matrix\(1\.[34]/.test(tf),tf);
 // ---- 약: 안 먹은 날도 정한 색 테두리
 const pc=await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-26"] .pillic',e=>({cls:e.getAttribute('class'),style:e.getAttribute('style'),stroke:getComputedStyle(e.querySelector('.pr')).stroke,op:getComputedStyle(e.querySelector('.pr')).opacity,lines:e.querySelectorAll('.pd').length}));
-T_('안 먹은 약(2번): 정한 색(#e5484d) 연한 테두리 + 나눔선 2개',pc.cls.includes('off')&&/rgb\(229, 72, 77\)/.test(pc.stroke)&&pc.lines===2&&+pc.op<1,JSON.stringify(pc));
+T_('안 먹은 약(2번): 정한 색(#e5484d) 연한 테두리 + 나눔선 1개',pc.cls.includes('off')&&/rgb\(229, 72, 77\)/.test(pc.stroke)&&pc.lines===1&&+pc.op<1,JSON.stringify(pc));
 // ---- 위쪽 눌림
 await p.evaluate(()=>{const z=document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] .stz');const r=z.getBoundingClientRect();z.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:r.left+5,clientY:r.top+5,pointerId:3}));});
 T_('위쪽 1/3 누르면 pressTop (그 칸만 연한 파랑)',await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-20"]',e=>e.classList.contains('pressTop')&&!e.classList.contains('press')));
@@ -63,7 +63,7 @@ await p.evaluate(()=>document.getElementById('pop').click());await p.waitForTime
 // ---- 활동 알림: 등록 창에 ⏰
 await p.click('.track .panel:nth-child(2) .cell[data-k="2026-10-21"] .stz');await p.waitForTimeout(350);
 await p.click('#pop [data-act="sd-add"]');await p.waitForTimeout(400);
-await p.click('#page [data-act="sr-pick"][data-id="s_yoga"]');await p.waitForTimeout(150);
+await p.click('#pop [data-act="sp-pick"][data-id="s_yoga"]');await p.waitForTimeout(300);
 await p.evaluate(()=>{const c=document.getElementById('srAlarm');c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(150);
 await p.evaluate(()=>{const h=document.getElementById('srAt0');h.value='10:00';h.dispatchEvent(new Event('change',{bubbles:true}));});
 await p.click('#page [data-act="sr-rep"][data-v="daily"]');await p.waitForTimeout(150);
@@ -80,16 +80,15 @@ const pr=rem.filter(x=>x.id.startsWith('a_p1_'));
 T_('약 알림은 자는 시간에도 그대로 · 눌러 열기용 type/date',pr.length>0&&pr.every(x=>x.type==='stk'&&x.date),JSON.stringify(pr[0]));
 await p.click('.track .panel:nth-child(2) .cell[data-k="2026-10-23"] .stz').catch(()=>{});await p.waitForTimeout(350);
 await p.click('#pop [data-act="sd-add"]').catch(()=>{});await p.waitForTimeout(300);
-await p.click('#page [data-act="sr-pick"][data-id="__new"]');await p.waitForTimeout(150);
+await p.click('#pop [data-act="sp-pick"][data-id="s_water"]');await p.waitForTimeout(300);
 await p.evaluate(()=>{const c=document.getElementById('srAlarm');c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(150);
 T_('새 스티커 알림 처음 값 = 마지막에 정한 시각(10:00)',(await p.$eval('#srAt0',e=>e.value))==='10:00');
 await p.click('#page [data-act="sr-back"]');await p.waitForTimeout(250);
 // ---- 설정 › 스티커
 await p.click('#nav [data-tab="set"]');await p.waitForTimeout(300);
 await p.click('[data-act="stk-board"]');await p.waitForTimeout(400);
-await p.evaluate(()=>{const b=[...document.querySelectorAll('#page [data-act]')].find(x=>x.textContent.includes('스티커 관리'));if(b)b.click();});await p.waitForTimeout(400);
 const pg=await p.$eval('#page',e=>e.innerText.replace(/\s+/g,' ')).catch(()=>'');
-T_('설정 › 스티커: 큰 시간 알림 스위치 없음 · 스티커별 시각 표시',!pg.includes('시간 알림')&&pg.includes('⏰ 10:00'),pg.slice(0,300));
+T_('설정 › 스티커: 9칸 격자 + ＋ (큰 시간 알림 스위치 없음)',!pg.includes('시간 알림')&&pg.includes('내 스티커')&&pg.includes('하루만'),pg.slice(0,300));
 T_('JS 오류 없음',p.errs.length===0,p.errs.join('|'));
 await p.close();
 // ---- 애니메이션 줄이기: 톡 · 진동 없음

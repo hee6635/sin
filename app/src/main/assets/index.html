@@ -953,6 +953,20 @@ textarea{resize:none;min-height:84px}
 #toast .tu{color:#9fd3ff;margin-left:6px}
 
 .cell .stz{position:absolute;left:0;right:0;top:0;height:33%;z-index:6;cursor:pointer}
+.sgrid{display:grid;gap:6px}
+.sgrid.sg5{grid-template-columns:repeat(5,1fr)}.sgrid.sg4{grid-template-columns:repeat(4,1fr)}
+.sgrid button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 6px;border-radius:12px;background:var(--surface);min-width:0}
+.sgrid button .si{font-size:24px;line-height:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.sgrid button .si .ico{font-size:24px}
+.sgrid button small{font-size:10.5px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sgrid button.on{background:color-mix(in srgb,var(--accent) 16%,var(--surface));box-shadow:inset 0 0 0 2px var(--accent)}
+.sgrid button.plus{background:none;box-shadow:inset 0 0 0 1.5px var(--line)}
+#pop .sgrid{width:100%}
+.sr-hd{display:flex;align-items:center;gap:10px;padding:14px 16px 6px;font-size:17px}
+.sr-hd .si{font-size:30px;line-height:34px;display:flex}
+.icn-tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 16px 8px}
+.icn-tabs button{flex:0 0 auto;padding:6px 11px;border-radius:14px;background:var(--surface);font-size:13px;font-weight:700;color:var(--fg)}
+.icn-tabs button.on{background:var(--accent);color:#fff}
 .stp-add{flex:1;padding:14px 0;font-size:14.5px;font-weight:700;color:var(--accent)}
 .stp-add+.stp-add{border-left:1px solid var(--line)}
 
@@ -1447,12 +1461,16 @@ function normalize(o){
    else if(!['new','old','done'].includes(o&&o.addonNote))s.addonNote='done';}
   if(!s.link&&Array.isArray(s.requests))s.requests=s.requests.filter(r=>!(r&&r.srv));
   s.fam2=(s.fam2&&typeof s.fam2==='object')?s.fam2:{};if(!s.fam2.scheds||typeof s.fam2.scheds!=='object'||Array.isArray(s.fam2.scheds))s.fam2.scheds={};if(!Array.isArray(s.fam2.members))s.fam2.members=[];['memos','reqIn','reqOut','memoRev','reqCc'].forEach(k=>{if(!s.fam2[k]||typeof s.fam2[k]!=='object'||Array.isArray(s.fam2[k]))s.fam2[k]={};});if(!s.fam2.me||typeof s.fam2.me!=='object')s.fam2.me={sent:0,bonus:0};if(!Array.isArray(s.fam2.seenMemo))s.fam2.seenMemo=[];s.fam2.init=!!s.fam2.init;if(s.link&&typeof s.link==='object'){if(s.link.mode!=='view')s.link.mode='own';}else s.link=null;
-  s.stamps=Object.assign(defaultStamps(),s.stamps||{});(s.stamps.defs||[]).forEach(x=>{if(!x)return;if(x.id==='s_run'&&x.emoji==='🏃')x.emoji='👟';if(!x.rep)x.rep=x.kind==='pill'?'daily':(Array.isArray(x.days)&&x.days.length?'dow':'none');if(!Array.isArray(x.dates))x.dates=[];if(!Array.isArray(x.skip))x.skip=[];if(x.kind==='mark')x.rt=['am','noon','pm'].includes(x.rt)?x.rt:'';if(x.kind==='pill'&&!/^#[0-9a-f]{6}$/i.test(x.color||''))x.color='#ef4d5a';});if(!Array.isArray(s.stamps.defs))s.stamps.defs=defaultStamps().defs;if(!s.stamps.log||typeof s.stamps.log!=='object')s.stamps.log={};if(!['am','noon','pm'].includes(s.stamps.lastRt))s.stamps.lastRt='';
+  const stOld=s.stamps&&typeof s.stamps==='object'?s.stamps:null;s.stamps=Object.assign(defaultStamps(),s.stamps||{});(s.stamps.defs||[]).forEach(x=>{if(!x)return;if(x.id==='s_run'&&x.emoji==='🏃')x.emoji='👟';if(!x.rep)x.rep=x.kind==='pill'?'daily':(Array.isArray(x.days)&&x.days.length?'dow':'none');if(!Array.isArray(x.dates))x.dates=[];if(!Array.isArray(x.skip))x.skip=[];if(x.kind==='mark')x.rt=['am','noon','pm'].includes(x.rt)?x.rt:'';if(x.kind==='pill'&&!/^#[0-9a-f]{6}$/i.test(x.color||''))x.color='#ef4d5a';});if(!Array.isArray(s.stamps.defs))s.stamps.defs=defaultStamps().defs;if(!s.stamps.log||typeof s.stamps.log!=='object')s.stamps.log={};if(!['am','noon','pm'].includes(s.stamps.lastRt))s.stamps.lastRt='';
   {const st=s.stamps,okT=v=>/^\d{1,2}:\d\d$/.test(v),pt=(Array.isArray(st.pillTimes)&&st.pillTimes.length>=3?st.pillTimes:['08:00','13:00','20:00']).map(v=>okT(v)?v:'08:00'),ix={am:0,noon:1,pm:2};
    st.defs.forEach(x=>{if(!x)return;x.times=Math.max(1,Math.min(3,+x.times||1));
      if(!Array.isArray(x.ats)){x.ats=[];if(st.remind){if(x.kind==='pill')x.ats=x.times===1?[pt[0]]:x.times===2?[pt[0],pt[2]]:pt.slice(0,3);else if(x.rt)x.ats=[pt[ix[x.rt]]];}}   // 옛 큰 스위치 · 공통 시각 → 스티커별 시각 (스위치가 꺼져 있었으면 모두 끔)
      x.ats=x.ats.filter(okT).slice(0,x.times);delete x.rt;});
-   st.v3=1;st.lastAt=Array.isArray(st.lastAt)?st.lastAt.filter(okT).slice(0,3):[];}
+   st.v3=1;st.lastAt=Array.isArray(st.lastAt)?st.lastAt.filter(okT).slice(0,3):[];
+   // v4: 내 스티커 9칸 구조. 옛 구조면 스티커만 새 기본 9개로 다시 시작 (옛 스티커는 지난 기록용으로만 남기고 앞으로는 안 깔림)
+   if(stOld&&!stOld.v4){const dd=defaultStamps().defs,ids=dd.map(x=>x.id);
+     st.defs=dd.concat(st.defs.filter(x=>x&&!ids.includes(x.id)).map(x=>Object.assign(x,{retired:true,rep:'none',dates:[],days:[],skip:[],from:'',to:'',ats:[]})));}
+   st.v4=1;delete st.more;st.defs=st.defs.filter(x=>x&&typeof x==='object'&&x.id);}
   s.alarms=s.alarms.map(a=>Object.assign({noHol:false,skipAt:0},a));
   ['ddays','companyHols','requests','events'].forEach(k=>{if(!Array.isArray(s[k]))s[k]=[];});
   // 휴무일 · 기념일: kind 'off'(휴무로 표시) | 'memo'(메모만), remind = 전날 알림
@@ -2385,35 +2403,43 @@ function openStatusEdit(key){
 /* ================= 스티커 (💊 약 · 🏃 운동) ================= */
 /* S.stamps = {defs:[{id, kind('pill'|'mark'), emoji, name, times(약: 하루 1~3번), from, to(약: 복용 기간)}],
  *             log:{'2026-10-14':{id: 횟수}}, remind(약 시간 알림), pillTimes:['08:00','13:00','20:00']} */
-const stampMax=()=>(S.personal||(S.stamps&&S.stamps.more))?4:2;
+const stampMax=()=>4;
 const STK_COL=['#ef4d5a','#f08a00','#f2c200','#1fa971','#2f6bf0','#8b5cf6','#ec4899','#8b919a'];
 const colDots=(cur,act,id)=>`<div class="cdots">${STK_COL.map(c=>`<button class="${(cur||STK_COL[0]).toLowerCase()===c?'on':''}" style="background:${c}" data-act="${act}" ${id?`data-id="${id}" `:''}data-v="${c}" aria-label="색"></button>`).join('')}</div>`;
-// 하루 한도가 찼을 때: 4개까지 켜져 있으면 짧은 안내, 아니면 "설정에서 늘릴 수 있어요" 팝업
-function stampFull(){
-  if(S.stamps.more){toast(`스티커는 하루 ${stampMax()}개까지예요`);return;}
-  openPop(`<div class="mh">스티커<b>하루 ${stampMax()}개까지예요</b></div>
-    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0">설정에서 스티커를 더 늘릴 수 있어요 (하루 4개까지).</div></div>
-    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">닫기</button><button class="btn grow" data-act="stk-settings">설정으로 가기</button></div>`);
-}
+// 하루 한도(4개)가 찼을 때
+function stampFull(){toast('스티커는 하루 4개까지예요');}
 // 창을 닫지 않고 다시 그리기 (스티커가 다 사라졌으면 닫기)
 function stampReopen(k){if(stampsOn(k).length)openStampDay(k);else closePop();}
-const STAMP_EMO=['🏃','💪','🧘','💧','🚴','🏊','🚶','🥗','📖','😴','🦷','🧴','⚖️','🎯','💰','🧾'];
-function defaultStamps(){return {defs:[
-  {id:'s_run',kind:'mark',emoji:'👟',name:'조깅'},{id:'s_gym',kind:'mark',emoji:'💪',name:'운동'},
-  {id:'s_yoga',kind:'mark',emoji:'🧘',name:'요가'},{id:'s_water',kind:'mark',emoji:'💧',name:'물'}],
-  log:{},remind:false,more:false,pillTimes:['08:00','13:00','20:00'],lastAt:[],v3:1};}
-// 둥근 알약: 하루 n번 중 k번 먹으면 n조각 중 k조각 칠함 (안 먹은 날은 연한 회색 테두리만)
+const STAMP_CAT=[
+ ['운동 · 건강',[['🏃','달리기'],['👟','조깅'],['💪','운동'],['🌿','요가'],['🚴','자전거'],['🏊','수영'],['🚶','걷기'],['🏋️','헬스'],['⚽','축구'],['🏀','농구'],['🎾','테니스'],['🏸','배드민턴'],['⛰️','등산'],['🤸','스트레칭'],['🥊','복싱'],['🧗','클라이밍']]],
+ ['생활',[['💧','물'],['🦷','양치'],['🚿','샤워'],['🧴','스킨케어'],['🛏️','이불 정리'],['🧹','청소'],['🧺','빨래'],['🍽️','설거지'],['🗑️','쓰레기'],['🪴','화분'],['🐾','산책'],['🛒','장보기'],['📦','택배'],['🔑','열쇠'],['⏰','일찍 일어나기'],['🌙','일찍 자기']]],
+ ['공부 · 일',[['📖','독서'],['✏️','공부'],['💻','작업'],['📝','기록'],['🎧','강의'],['🗣️','영어'],['📚','책'],['🧮','계산'],['📧','메일'],['📞','전화'],['🎯','목표'],['🗓️','일정']]],
+ ['음식',[['🥗','샐러드'],['🍚','밥'],['🍎','과일'],['🥛','우유'],['☕','커피'],['🍺','술'],['🍕','외식'],['🥤','음료'],['🍳','요리'],['🥦','채소'],['🍫','간식'],['🍜','면']]],
+ ['돈',[['💰','가계'],['🧾','영수증'],['💳','카드'],['🏦','저축'],['📈','투자'],['🪙','동전'],['🛍️','쇼핑'],['💸','지출']]],
+ ['마음 · 취미',[['😴','수면'],['🙂','좋은 기분'],['😢','우울'],['😡','화남'],['🧠','명상'],['🙏','기도'],['❤️','사랑'],['🎵','음악'],['🎮','게임'],['🎬','영화'],['🎨','그림'],['📷','사진 찍기'],['🎸','악기'],['🧶','뜨개질']]],
+ ['동물 · 자연',[['🐶','강아지'],['🐱','고양이'],['🐰','토끼'],['🐦','새'],['🐟','물고기'],['🌸','꽃'],['🌳','나무'],['🌊','바다'],['☀️','해'],['🌧️','비'],['⭐','별'],['🔥','불']]],
+ ['기념 · 병원',[['🎂','생일'],['🎁','선물'],['🎉','파티'],['✈️','여행'],['🚗','운전'],['🏥','병원'],['🩺','진료'],['💉','주사'],['🩹','치료'],['🧪','검사']]]];
+const STAMP_NAME={};STAMP_CAT.forEach(c=>c[1].forEach(x=>{if(!STAMP_NAME[x[0]])STAMP_NAME[x[0]]=x[1];}));
+function defaultStamps(){
+  const m=(id,emoji,name)=>({id,kind:'mark',emoji,name,times:1,rep:'none',days:[],dates:[],skip:[],ats:[]});
+  return {defs:[
+    {id:'s_pill',kind:'pill',emoji:'💊',name:'약',times:1,color:'#ef4d5a',rep:'none',days:[],dates:[],skip:[],ats:[]},
+    m('s_run','👟','조깅'),m('s_gym','💪','운동'),m('s_yoga','🌿','요가'),m('s_water','💧','물'),
+    m('s_read','📖','독서'),m('s_sleep','😴','수면'),m('s_money','💰','가계'),m('s_teeth','🦷','양치')],
+  log:{},remind:false,pillTimes:['08:00','13:00','20:00'],lastAt:[],v3:1,v4:1};}
+// 내 스티커 9칸 = 지운 것(retired) · 하루짜리(one) 가 아닌 정의, 순서가 곧 달력에서 보이는 우선순위
+const slotDefs=()=>S.stamps.defs.filter(x=>!x.retired&&!x.one);
+// 타원형 알약(캡슐): 하루 n번이면 캡슐을 가로로 n칸으로 나누고, 먹은 칸만 약 색으로 채움 (안 먹은 날은 그 색의 연한 테두리만)
+let pillSeq=0;
 function pillSvg(n,k,px,col){
-  n=Math.max(1,Math.min(3,n||1));k=Math.max(0,Math.min(n,k||0));px=px||14;const RED=col||'#ef4d5a',r=7.6,c=9;
-  const pt=a=>`${(c+r*Math.cos(a)).toFixed(2)} ${(c+r*Math.sin(a)).toFixed(2)}`;
-  let p='';
-  if(k>=n)p=`<circle cx="9" cy="9" r="${r}" fill="${RED}"/><ellipse cx="6.5" cy="5.6" rx="2.2" ry="1.1" fill="#fff" opacity=".45"/>`;
-  else if(k>0){
-    for(let i=0;i<k;i++){const a0=-Math.PI/2+i*2*Math.PI/n,a1=a0+2*Math.PI/n;p+=`<path d="M9 9L${pt(a0)}A${r} ${r} 0 0 1 ${pt(a1)}Z" fill="${RED}"/>`;}
-    for(let i=0;i<n;i++)p+=`<line class="pd" x1="9" y1="9" x2="${pt(-Math.PI/2+i*2*Math.PI/n).replace(' ','" y2="')}"/>`;
-  }
-  if(!k&&n>1)for(let i=0;i<n;i++)p+=`<line class="pd" x1="9" y1="9" x2="${pt(-Math.PI/2+i*2*Math.PI/n).replace(' ','" y2="')}"/>`;
-  return `<svg class="pillic${k?'':' off'}" style="--pc:${RED}" width="${px}" height="${px}" viewBox="0 0 18 18">${p}<circle class="pr" cx="9" cy="9" r="${r}" fill="none"/></svg>`;
+  n=Math.max(1,Math.min(3,n||1));k=Math.max(0,Math.min(n,k||0));px=px||14;const RED=col||'#ef4d5a',id='pc'+(++pillSeq),w=20,sg=w/n;
+  let p=`<defs><clipPath id="${id}"><rect x="1" y="6" width="${w}" height="10" rx="5"/></clipPath></defs><g transform="rotate(-40 11 11)"><g clip-path="url(#${id})">`;
+  for(let i=0;i<k;i++)p+=`<rect x="${(1+i*sg).toFixed(2)}" y="6" width="${sg.toFixed(2)}" height="10" fill="${RED}"/>`;
+  if(k>=n)p+=`<rect x="3" y="7.2" width="9" height="2" rx="1" fill="#fff" opacity=".4"/>`;
+  p+='</g>';
+  for(let i=1;i<n;i++)p+=`<line class="pd" x1="${(1+i*sg).toFixed(2)}" y1="6" x2="${(1+i*sg).toFixed(2)}" y2="16"/>`;
+  p+=`<rect class="pr" x="1" y="6" width="${w}" height="10" rx="5" fill="none"/></g>`;
+  return `<svg class="pillic${k?'':' off'}" style="--pc:${RED}" width="${px}" height="${px}" viewBox="0 0 22 22">${p}</svg>`;
 }
 // 스티커가 그날 "할 일"로 깔리는지: 이날만(dates) · 매일 · 요일 · 근무 맞춤(휴무 날만/근무 날만) + 기간 · 공휴일 빼기 · 야간 날 빼기 · 건너뛴 날(skip)
 function stampPlanned(s,k){
@@ -2438,13 +2464,13 @@ function stampRule(s){
 /* ---- 달력 날짜 줄을 누르면: 스티커 있으면 완료 창, 없으면 등록 창 ---- */
 function openStampDay(k){
   const list=stampsOn(k);
-  if(!list.length){openStampReg(k);return;}
+  if(!list.length){openStampPick(k);return;}
   const d=parse(k),sh=shiftOf(d);
   const row=({s,n})=>{
     const N=stN(s),pill=s.kind==='pill',id=`data-id="${s.id}" data-k="${k}"`;
     let b='';
     if(n<N)b+=`<button class="ok" data-act="sd-done" ${id}>✓ ${pill?'먹음':'완료'}${N>1?` (${n+1}/${N})`:''}</button>`;
-    b+=n?`<button class="un" data-act="sd-undo" ${id}>${N>1&&n<N?'한 번 취소':'완료 취소'}</button>`:`<button data-act="sd-skip" ${id}>건너뛰기</button>`;
+    b+=n?`<button class="un" data-act="sd-undo" ${id}>${N>1&&n<N?'한 번 취소':'완료 취소'}</button>`:`<button data-act="sd-skip" ${id}>${s.one?'지우기':'건너뛰기'}</button>`;
     if(['daily','dow','work','month'].includes(s.rep)&&(!s.to||s.to>=k))b+=`<button class="gh" data-act="sd-end" ${id}>그만하기</button>`;   // 반복 스티커: 이날부터 끝내기
     const st=N>1?`${n}/${N}${pill?' 먹음':''}`:pill?(n?'먹음':'아직'):n?'완료':'아직';
     return `<div class="mi sdr"><span class="sic">${pill?pillSvg(N,n,26,s.color):`<span class="${n?'':'plan'}">${ico(s.emoji)}</span>`}</span><div class="nm">${esc(s.name)}<small>${esc(stampRule(s))} · ${st}</small></div></div><div class="mi sdbt">${b}</div>`;
@@ -2452,7 +2478,7 @@ function openStampDay(k){
   const full=list.length>=stampMax();
   openPop(`<div class="mh">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]}) · ${esc(shiftLabel(sh))}<b>스티커</b></div>
     ${list.map(row).join('')}
-    <div class="mi sdf"><button class="${full?'dis':''}" data-act="sd-add" data-k="${k}">＋ 스티커 추가${full?` (${stampMax()}개 다 참)`:''}</button><button data-act="sd-manage">관리 ›</button></div>`);
+    <div class="mi sdf"><button class="${full?'dis':''}" data-act="sd-add" data-k="${k}">＋ 스티커 추가${full?` (${stampMax()}개 다 참)`:''}</button><button data-act="sd-manage">설정 ›</button></div>`);
   const c=cellOf(k);if(c)c.classList.add('selTop');   // 팝업이 떠 있는 동안 칸 위쪽 1/3 은 눌린 채로
 }
 function toastUndo(msg,fn){
@@ -2463,6 +2489,58 @@ function stampSet(id,k,v){
   const lg=S.stamps.log[k]||(S.stamps.log[k]={});
   if(v>0)lg[id]=v;else delete lg[id];
   if(!Object.keys(lg).length)delete S.stamps.log[k];
+}
+/* ---- 날짜에서 스티커 고르기: 내 스티커 9칸 + "＋"(하루짜리 큰 목록) ---- */
+const stIcon=(s,px)=>s.kind==='pill'?pillSvg(stN(s),Math.ceil(stN(s)/2),px||26,s.color):ico(s.emoji);
+function openStampPick(k){
+  if(stampsOn(k).length>=stampMax()){stampFull();return;}
+  const d=parse(k);
+  openPop(`<div class="mh">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})<b>붙일 스티커 고르기</b></div>
+    <div class="mi sgrid sg5">${slotDefs().map(s=>`<button data-act="sp-pick" data-id="${s.id}" data-k="${k}"><span class="si">${stIcon(s)}</span><small>${esc(s.name)}</small></button>`).join('')}<button class="plus" data-act="sp-plus" data-k="${k}"><span class="si">＋</span><small>하루만</small></button></div>
+    <div class="mi"><div class="hint" style="padding:0;margin:0">＋ 는 아주 많은 그림 중에서 골라 이 날 하루만 붙여요 · 내 사진도 돼요.</div></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">닫기</button></div>`);
+}
+function openStampBig(k){
+  const d=parse(k);
+  openIcn({title:'＋ 하루만 붙이기',sub:`${d.getMonth()+1}월 ${d.getDate()}일`,icon:'',name:null,cats:STAMP_CAT,instant:true,needIcon:true,hint:'하나 누르면 바로 붙어요',onSave:e=>stampOneDay(k,e)});
+}
+function stampOneDay(k,e){
+  if(stampsOn(k).length>=stampMax()){stampFull();return;}
+  const nm=STAMP_NAME[e]||(isPhoto(e)?'사진':'스티커');
+  let x=S.stamps.defs.find(y=>y.one&&y.emoji===e);
+  if(!x){x={id:'o_'+uid(),kind:'mark',one:true,emoji:e,name:nm,times:1,rep:'none',days:[],dates:[],skip:[],ats:[]};S.stamps.defs.push(x);}
+  x.skip=(x.skip||[]).filter(v=>v!==k);
+  if(!(x.dates||[]).includes(k))(x.dates=x.dates||[]).push(k);
+  save();render();
+  toast(`${icoTxt(e,'✔')} ${nm} 이날 하루만 붙였어요`);
+  openStampDay(k);
+}
+/* ---- 설정 › 내 스티커 9칸: 그림 · 이름 · 순서만 바꿈 (규칙 · 알림은 날짜에서 등록할 때) ---- */
+function stRetire(s){Object.assign(s,{retired:true,rep:'none',dates:[],days:[],skip:[],from:'',to:'',ats:[]});}
+function stSlotReplace(id,e,n){
+  const defs=S.stamps.defs,i=defs.findIndex(x=>x.id===id),o=defs[i];if(!o)return;
+  n=(n||STAMP_NAME[e]||(isPhoto(e)?'사진':'스티커')).slice(0,12);
+  if(o.kind==='mark'&&o.emoji===e){o.name=n;save();render();openStampPage();return;}
+  stRetire(o);
+  defs.splice(i,0,{id:uid(),kind:'mark',emoji:e,name:n,times:1,rep:'none',days:[],dates:[],skip:[],ats:[]});
+  save();render();openStampPage();toast('바꿨어요 · 옛 스티커는 지난 날짜에 남아요');
+}
+function stSlotToPill(id){
+  const defs=S.stamps.defs,i=defs.findIndex(x=>x.id===id),o=defs[i];if(!o)return;
+  stRetire(o);defs.splice(i,0,{id:uid(),kind:'pill',emoji:'💊',name:'약',times:1,color:STK_COL[0],rep:'none',days:[],dates:[],skip:[],ats:[]});
+  save();render();openStampPage();toast('바꿨어요 · 옛 스티커는 지난 날짜에 남아요');
+}
+function openStampSlot(id){
+  const sl=slotDefs(),i=sl.findIndex(x=>x.id===id),s=sl[i];if(!s)return;
+  openPop(`<div class="mh">${i+1}번째 칸<b>${esc(s.name)}</b></div>
+    <div class="mi icn-top"><span class="icn-cur">${stIcon(s,32)}</span><input type="text" id="slotName" value="${esc(s.name)}" maxlength="12" placeholder="이름"></div>
+    ${s.kind==='pill'?`<div class="mi"><div class="pl2" style="flex:none;margin-right:10px">색</div>${colDots(s.color,'slot-col',s.id)}</div>`:''}
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="slot-mv" data-id="${s.id}" data-v="-1" ${i?'':'disabled'}>◀ 앞으로</button><button class="btn ghost grow" data-act="slot-mv" data-id="${s.id}" data-v="1" ${i<sl.length-1?'':'disabled'}>뒤로 ▶</button></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="slot-swap" data-id="${s.id}">다른 스티커로</button><button class="btn grow" data-act="slot-save" data-id="${s.id}">저장</button></div>`);
+}
+function slotPullName(id){
+  const n=$('#slotName'),s=S.stamps.defs.find(x=>x.id===id);
+  if(n&&s){const v=n.value.trim().slice(0,12);if(v)s.name=v;}
 }
 /* ---- 스티커 등록 · 고치기 (전체 화면) ---- */
 let stDraft=null;
@@ -2506,21 +2584,15 @@ function stAlarmHint(d){
 }
 function renderStampReg(){
   const d=stDraft,day=parse(d.k),pill=d.kind==='pill',isNew=d.id==='__new';
-  const pick=S.stamps.defs.map(s=>`<button class="${d.id===s.id?'on':''}" data-act="sr-pick" data-id="${s.id}"><span>${s.kind==='pill'?pillSvg(stN(s),1,24,s.color):ico(s.emoji)}</span>${esc(s.name)}</button>`).join('')
-    +`<button class="${isNew?'on':''}" data-act="sr-pick" data-id="__new"><span style="font-size:20px">＋</span>새로</button>`;
   const seg=(v,l)=>`<button class="${d.rep===v?'on':''}" data-act="sr-rep" data-v="${v}">${l}</button>`;
   const sw=(id,on,l)=>`<div class="prow"><div class="pl2">${l}</div><label class="sw"><input type="checkbox" id="${id}" ${on?'checked':''}><i></i></label></div>`;
   const title=d.edit?`${esc(d.name||'스티커')} 고치기`:`${day.getMonth()+1}월 ${day.getDate()}일 (${DOW[day.getDay()]}) 스티커`;
-  const emo=STAMP_EMO.map(e=>`<button class="${d.emoji===e?'on':''}" data-act="sr-emo" data-v="${e}">${e}</button>`).join('')+`<button data-act="sr-own" aria-label="다른 그림">＋</button>`;
   const covered=!d.edit&&d.rep==='once'&&d.id!=='__new'&&d.id!=='__newpill'&&(()=>{const x=S.stamps.defs.find(y=>y.id===d.id);return !!x&&stampPlanned(x,d.k);})();
   const restTxt=pill?'이날 빈 알약이 깔려요. 먹으면 칸 위쪽을 눌러 [✓ 먹음] 하세요.':'이날 흐린 스티커가 깔려요. 하고 나서 칸 위쪽을 눌러 [✓ 완료] 하세요.';
   openPage(`<div class="pg-h"><button class="bk" data-act="sr-back" aria-label="뒤로">‹</button><b>${title}</b><span style="min-width:56px"></span></div>
     <div class="pg-b srpg">
-    ${d.edit?'':`<div class="pg-cap">스티커 고르기</div><div class="sr-emo">${pick}</div>`}
-    ${(isNew||d.id==='__newpill')&&!d.edit?`<div class="pg-cap">종류</div><div style="padding:0 16px"><div class="hseg big"><button class="${pill?'':'on'}" data-act="sr-kind" data-v="mark">🏃 활동</button><button class="${pill?'on':''}" data-act="sr-kind" data-v="pill">💊 약</button></div></div>`:''}
-    <div class="pg-cap">이름 · 모양</div>
-    <div class="pg-sec" style="margin-top:0"><div class="prow"><div class="pl2"><input type="text" class="inl" id="srName" value="${esc(d.name)}" maxlength="12" placeholder="${pill?'약 이름':'이름 (예: 산책)'}"></div></div></div>
-    ${pill?`<div class="pg-sec" style="margin-top:0"><div class="prow"><div class="pl2">색</div>${colDots(d.color,'sr-col')}</div></div>`:`<div class="emo srpg-e">${emo}</div>`}
+    <div class="sr-hd"><span class="si">${pill?pillSvg(d.times,Math.ceil(d.times/2),34,d.color):ico(d.emoji)}</span><b>${esc(d.name)}</b></div>
+    ${pill?`<div class="pg-sec" style="margin-top:0"><div class="prow"><div class="pl2">색</div>${colDots(d.color,'sr-col')}</div></div>`:''}
     <div class="pg-cap">하루 몇 번</div>
     <div style="padding:0 16px"><div class="hseg big">${[1,2,3].map(n=>`<button class="${d.times===n?'on':''}" data-act="sr-times" data-v="${n}">${n}번</button>`).join('')}</div></div>
     <div class="pg-cap">얼마나</div>
@@ -2536,7 +2608,7 @@ function renderStampReg(){
     <div class="pg-sec" style="margin-top:0">${sw('srAlarm',d.alarm,`⏰ 시각 알림<small>${d.alarm?'아래 시각에 울려요':'끔 · 달력에서만 봐요'}</small>`)}
       ${d.alarm?d.ats.map((t,i)=>`<div class="prow"><div class="pl2">${d.times>1?`${i+1}번째`:'시각'}</div>${tpick('srAt'+i,t)}</div>`).join('')+`<div class="hint" style="margin:0;padding:8px 16px">${stAlarmHint(d)}</div>`:''}</div>
     <div style="padding:16px"><button class="btn" style="width:100%" data-act="sr-save">${d.edit?'저장':'등록하기'}</button>
-    ${d.edit?'<button class="btn ghost danger" style="width:100%;margin-top:8px" data-act="sr-del">이 스티커 지우기</button>':''}</div>
+</div>
     </div>`,'stampadd');
 }
 function stampRegSave(){
@@ -2584,10 +2656,10 @@ function stampHidden(s,from,to){
 }
 let hidSnap=null;
 function stampHiddenAsk(s,h,snap){
-  hidSnap=snap;const more=!!(S.stamps&&S.stamps.more);
+  hidSnap=snap;
   openPop(`<div class="mh">스티커가 많아서 가려져요<b>${esc(s.name)} · ${h.n}일</b></div>
-    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0">하루 ${stampMax()}개까지만 보여요. ${md(h.first)}부터는 <b>${esc(h.names)}</b>이(가) 먼저 보여서 ${esc(s.name)} 은(는) 안 보이고, 그 날 알림도 안 와요.${more?'':'<br>설정에서 하루 4개까지 늘릴 수 있어요.'}</div></div>
-    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="sh-undo">등록 취소</button>${more?'':'<button class="btn ghost grow" data-act="sh-more">4개로 늘리기</button>'}<button class="btn grow" data-act="pop-close">그대로 두기</button></div>`);
+    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0">하루 ${stampMax()}개까지만 보여요. ${md(h.first)}부터는 <b>${esc(h.names)}</b>이(가) 먼저 보여서 ${esc(s.name)} 은(는) 안 보이고, 그 날 알림도 안 와요.</div></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="sh-undo">등록 취소</button><button class="btn grow" data-act="pop-close">그대로 두기</button></div>`);
 }
 
 const stampCnt=(k,id)=>((S.stamps.log[k]||{})[id])||0;
@@ -2596,7 +2668,7 @@ function stampsOn(k){
   const out=[];
   S.stamps.defs.forEach(s=>{
     const n=Math.min(stN(s),stampCnt(k,s.id));
-    if(n||stampPlanned(s,k))out.push({s,n});
+    if(n||(!s.retired&&stampPlanned(s,k)))out.push({s,n});
   });
   return out.slice(0,stampMax());
 }
@@ -2673,39 +2745,12 @@ function openStickerBoard(y,m){
 }
 /* ---- 설정 › 스티커 ---- */
 function openStampPage(){
-  const y=cur.y,m=cur.m,days=new Date(y,m+1,0).getDate(),st=S.stamps;
-  const ks=[...Array(days)].map((_,i)=>fmt(new Date(y,m,i+1)));
-  const sum=st.defs.map(s=>{
-    if(s.kind==='pill'){const act=ks.filter(k=>pillActive(s,k));if(!act.length)return '';const full=act.filter(k=>stampCnt(k,s.id)>=stN(s)).length;return `<div>${pillSvg(stN(s),stN(s),16,s.color)} ${esc(s.name)}<b>${full}/${act.length}</b>일 다 먹음</div>`;}
-    const n=ks.filter(k=>stampCnt(k,s.id)).length,pl=ks.filter(k=>markPlanned(s,k)).length;
-    if(pl)return `<div>${ico(s.emoji)} ${esc(s.name)}<b>${ks.filter(k=>markPlanned(s,k)&&stampCnt(k,s.id)).length}/${pl}</b>일 완료</div>`;
-    return n?`<div>${ico(s.emoji)} ${esc(s.name)}<b>${n}</b>일</div>`:'';
-  }).join('');
-  openPage(`
-    ${pageHead('스티커 · 약 · 운동')}
+  openPage(`${pageHead('스티커')}
     <div class="pg-b">
-      <div class="pg-sec" style="margin-top:0"><div class="prow" data-act="stk-board"><div class="pl2">🗒 스티커판<small>이번 달 모은 스티커를 한 판에서 봐요</small></div><span class="muted">›</span></div></div>
-      ${sum?`<div class="pg-cap">${m+1}월 요약</div><div class="pg-sec ssum" style="margin-top:0">${sum}</div>`:''}
-      <div class="pg-cap">스티커</div>
-      <div class="pg-sec" style="margin-top:0">
-        ${st.defs.map(s=>`<div class="prow stp"><button class="sic big" ${s.kind==='pill'?'':`data-act="stp-emo" data-id="${s.id}"`}>${s.kind==='pill'?pillSvg(stN(s),Math.ceil(stN(s)/2),24,s.color):ico(s.emoji)}</button><div class="pl2"><input type="text" class="inl" id="stpN_${s.id}" value="${esc(s.name)}" maxlength="12"><button class="srule" data-act="sr-edit" data-id="${s.id}">${s.rep&&s.rep!=='none'?esc(stampRule(s)):'반복 없음 (등록한 날만)'}${s.ats&&s.ats.length?` · ⏰ ${s.ats.map(fmtTm12).join(' · ')}`:''} ›</button>${s.kind==='pill'?colDots(s.color,'stp-col',s.id):''}</div><button class="xbtn" data-act="stp-del" data-id="${s.id}" aria-label="삭제">✕</button></div>`).join('')}
-        <div class="prow" style="gap:0;padding:0"><button class="stp-add" data-act="stp-add-pill">＋ 약 추가</button><button class="stp-add" data-act="stp-add-mark">＋ 스티커 추가</button></div>
-      </div>
-      <div class="hint" style="padding:8px 16px 20px">💡 달력 칸 <b>위쪽 1/3</b>을 누르면 스티커를 등록하거나 완료해요. 하루 ${stampMax()}개까지, 약이 먼저 보여요.</div>
+      <div class="pg-cap">내 스티커 <small style="font-weight:600;color:var(--muted)">눌러서 바꿔요</small></div>
+      <div class="pg-sec sgrid sg5" style="margin-top:0;padding:10px">${slotDefs().map(s=>`<button data-act="slot-open" data-id="${s.id}"><span class="si">${stIcon(s)}</span><small>${esc(s.name)}</small></button>`).join('')}<button class="plus" data-act="slot-plus"><span class="si">＋</span><small>하루만</small></button></div>
+      <div class="hint" style="padding:8px 16px 20px">💡 달력 칸 <b>위쪽 1/3</b>을 누르면 이 칸들에서 골라 붙여요 (하루 4개까지). 앞쪽 칸이 먼저 보여요. <b>＋</b> 는 날짜에서 아주 많은 그림이나 내 사진을 골라 그 하루만 붙이는 거예요. 반복 · 알림은 붙일 때 정해요.</div>
     </div>`,'stamps');
-}
-// 스티커 아이콘: id = 스티커 번호(바꾸기) · 'new'(관리에서 새로) · 'reg'(등록 창에서 새로)
-function openStampEmo(id){
-  const x=S.stamps.defs.find(y=>y.id===id),isNew=id==='new'||id==='reg';
-  openIcn({title:isNew?'새 스티커':'스티커 아이콘',sub:isNew?'아이콘 · 이름':(x?x.name:''),icon:x?x.emoji:'',name:isNew?'':null,placeholder:'이름 (예: 산책)',emojis:STAMP_EMO,needIcon:true,
-    onSave:(e,n)=>{
-      if(isNew){
-        const nd={id:uid(),kind:'mark',emoji:e,name:(n||'새 스티커').slice(0,12),rep:'none',days:[],dates:[],skip:[]};S.stamps.defs.push(nd);
-        if(id==='reg'&&stDraft){stDraft.id=nd.id;save();renderStampReg();return;}
-        save();render();openStampPage();return;
-      }
-      if(x){x.emoji=e;save();render();openStampPage();}
-    }});
 }
 
 /* ================= 알람 목록 ================= */
@@ -2785,20 +2830,29 @@ const sheetHead=(title,left)=>`<div class="sh-head">${left||''}<b style="flex:1;
  * 스티커 · 기념일 · 근무 시간 아이콘 · 내 상태 · 내 직장 · 응원 버튼 · 가족 사진이 모두 이 창을 씀 */
 const ICON_MAX=30;
 let icn=null;
-function openIcn(o){icn=Object.assign({emojis:[],name:null,maxName:12,placeholder:'',resetLabel:'기본값',own:''},o);renderIcn();}
+function openIcn(o){icn=Object.assign({emojis:[],name:null,maxName:12,placeholder:'',resetLabel:'기본값',own:'',tab:0},o);if(icn.cats&&isPhoto(icn.icon))icn.tab=icn.cats.length;renderIcn();}
 function icnPull(){if(!icn)return;const n=$('#icnName');if(n)icn.name=n.value;const e=$('#icnOwn');if(e)icn.own=e.value;}
 function photoGrid(curv){
   const ids=Object.keys(S.icons||{}).reverse();
   return `<div class="phg"><button class="pha" data-act="ico-add">＋<small>사진</small></button>${ids.map(id=>`<button class="phi ${curv==='@'+id?'on':''}" data-act="icn-pick" data-v="@${id}" data-hold="ico" data-id="${id}"><img src="${S.icons[id]}" alt=""></button>`).join('')}</div>`;
+}
+// 종류별 탭 + 큰 목록 (맨 끝 탭 = 내 사진)
+function icnCats(o){
+  const n=o.cats.length,t=Math.min(o.tab||0,n);
+  const tabs=o.cats.map((c,i)=>`<button class="${t===i?'on':''}" data-act="icn-tab" data-i="${i}">${esc(c[0])}</button>`).join('')+`<button class="${t===n?'on':''}" data-act="icn-tab" data-i="${n}">내 사진</button>`;
+  const body=t===n?`<div class="icn-lb">내 사진 <small>길게 누르면 지워요</small></div>${photoGrid(o.icon)}`
+    :`<div class="sgrid sg4">${o.cats[t][1].map(x=>`<button class="${o.icon===x[0]?'on':''}" data-act="icn-pick" data-v="${x[0]}" data-n="${esc(x[1])}"><span class="si">${x[0]}</span><small>${esc(x[1])}</small></button>`).join('')}</div>`;
+  return `<div class="icn-tabs">${tabs}</div><div class="mi icn-sec" style="display:block">${body}</div>`;
 }
 function renderIcn(){
   const o=icn;if(!o)return;
   const curH=o.icon?ico(o.icon):o.letter?`<i class="icn-l" style="background:${o.color||'#6b7280'}">${esc(o.letter)}</i>`:'<i class="icn-l" style="background:var(--surface)"></i>';
   openPop(`<div class="mh">${esc(o.sub||'')}<b>${esc(o.title)}</b></div>
     <div class="mi icn-top"><span class="icn-cur">${curH}</span>${o.name!==null?`<input type="text" id="icnName" value="${esc(o.name)}" maxlength="${o.maxName}" placeholder="${esc(o.placeholder)}">`:`<span class="icn-hint">${esc(o.hint||'이모티콘을 고르거나 사진을 넣어요')}</span>`}</div>
-    <div class="mi icn-sec"><div class="icn-lb">내 사진 <small>길게 누르면 지워요</small></div>${photoGrid(o.icon)}</div>
-    ${o.emojis.length?`<div class="mi icn-sec"><div class="icn-lb">이모티콘</div><div class="emo">${o.emojis.map(e=>`<button class="${o.icon===e?'on':''}" data-act="icn-pick" data-v="${e}">${e}</button>`).join('')}<input type="text" id="icnOwn" class="icn-own" maxlength="4" placeholder="직접" value="${esc(o.own)}"></div></div>`:''}
-    <div class="mi" style="gap:8px">${o.onReset?`<button class="btn ghost grow" data-act="icn-reset">${esc(o.resetLabel)}</button>`:'<button class="btn ghost grow" data-act="icn-cancel">취소</button>'}<button class="btn grow" data-act="icn-save">저장</button></div>`);
+    ${o.extra||''}
+    ${o.cats?icnCats(o):`<div class="mi icn-sec"><div class="icn-lb">내 사진 <small>길게 누르면 지워요</small></div>${photoGrid(o.icon)}</div>`}
+    ${!o.cats&&o.emojis.length?`<div class="mi icn-sec"><div class="icn-lb">이모티콘</div><div class="emo">${o.emojis.map(e=>`<button class="${o.icon===e?'on':''}" data-act="icn-pick" data-v="${e}">${e}</button>`).join('')}<input type="text" id="icnOwn" class="icn-own" maxlength="4" placeholder="직접" value="${esc(o.own)}"></div></div>`:''}
+    <div class="mi" style="gap:8px">${o.onReset?`<button class="btn ghost grow" data-act="icn-reset">${esc(o.resetLabel)}</button>`:'<button class="btn ghost grow" data-act="icn-cancel">취소</button>'}${o.instant?'':'<button class="btn grow" data-act="icn-save">저장</button>'}</div>`);
 }
 function icnSave(){
   icnPull();const o=icn;if(!o)return;
@@ -2859,7 +2913,7 @@ function cropOk(){
   if(!crp||!crp.box)return;
   const u=cropOut(128),id=uid();crp=null;
   (S.icons=S.icons||{})[id]=u;save();
-  if(icn){icn.icon='@'+id;icn.own='';renderIcn();}else closePop();
+  if(icn){icn.icon='@'+id;icn.own='';if(icn.instant){icnSave();return;}renderIcn();}else closePop();
 }
 function cropBack(){crp=null;if(icn)renderIcn();else closePop();}
 document.addEventListener('pointerdown',e=>{const b=crp&&e.target.closest&&e.target.closest('#crpBox');if(!b)return;try{b.setPointerCapture(e.pointerId);}catch(err){}crp.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});crp.d0=0;});
@@ -3938,7 +3992,7 @@ function renderMore(){
       ${ad('status')&&!S.personal?item('🕐',`근무 시간 · 상태 <span class="${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'tagS':'tagA'}">${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'직접':'대략'}</span>`,'more-times'):''}
       ${teamCount()>1&&ad('colleague')&&!S.personal?item('👥','동료 근무','go-colleague'):''}
       ${ad('comp')?item('🏢','휴무일 · 기념일','more-comp',`${(S.companyHols||[]).length}개`):''}
-      ${item('💊','스티커 (약 · 운동)','stk-board',`${S.stamps.defs.filter(x=>x.kind==='pill').length?'약 '+S.stamps.defs.filter(x=>x.kind==='pill').length+' · ':''}${S.stamps.defs.filter(x=>x.kind==='mark').length}개`)}
+      ${item('💊','스티커','stk-board',`${slotDefs().length}개`)}
       ${ad('stats')&&!S.personal?item('📊','근무 통계 · 수당','more-stats',`대근 ${daeDays(cur.y,cur.m)}일`):''}
     </div>`}
     ${cap('가족')}
@@ -3974,10 +4028,9 @@ const ADDONS=[
   ['cheer','💌','응원 버튼','가족이 근무자에게 ☕💪 응원을 보내요'],
   ['status','🕐','내 상태 · 출퇴근 시간','가족 탭에 "근무 중 · 자는 중" 같은 내 상태를 보여줘요 (끄면 그날 근무 형태만 보여요)'],
   ['colleague','👥','동료 근무','같은 회사 다른 조의 근무를 한 표로 봐요'],
-  ['stats','📊','근무 통계 · 수당','대근 · 연차 · 교육 횟수와 수당을 계산해요'],
-  ['stkmore','💊','스티커 많이 쓰기','하루 4개까지 붙여요 (3~4번째는 날짜 아래 작은 줄)']
+  ['stats','📊','근무 통계 · 수당','대근 · 연차 · 교육 횟수와 수당을 계산해요']
 ];
-const adOn=k=>k==='stkmore'?!!(S.stamps&&S.stamps.more):ad(k);
+const adOn=k=>ad(k);
 const addonCount=()=>ADDONS.filter(a=>adOn(a[0])).length;
 function openAddonPage(){
   openPage(`${pageHead('부가 기능')}
@@ -4739,7 +4792,11 @@ document.addEventListener('click',e=>{
     case 'tpk-d':if(tpk){tpk.v=t.dataset.v;tpkOk();}break;
     case 'tpk-ok':tpkOk();break;
     /* 아이콘 · 사진 */
-    case 'icn-pick':icnPull();if(icn){icn.icon=t.dataset.v;icn.own='';renderIcn();}break;
+    case 'icn-pick':icnPull();if(icn){icn.icon=t.dataset.v;icn.own='';
+      if(icn.instant){icnSave();break;}
+      const nm=t.dataset.n;if(nm&&icn.name!==null&&(!icn.name||icn.name===icn.autoWas)){icn.name=nm;icn.autoWas=nm;}
+      renderIcn();}break;
+    case 'icn-tab':icnPull();if(icn){icn.tab=+t.dataset.i;renderIcn();}break;
     case 'icn-save':icnSave();break;
     case 'icn-reset':{const o=icn;closePop();if(o&&o.onReset)o.onReset();break;}
     case 'icn-cancel':{const o=icn;closePop();if(o&&o.onCancel)o.onCancel();break;}
@@ -5094,10 +5151,9 @@ document.addEventListener('click',e=>{
     case 'req-go':{if(e.target.closest('button'))break;closeSheet();const d=parse(t.dataset.k);tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(t.dataset.k);break;}
     case 'more-addons':closeSheet();openAddonPage();break;
     case 'addon-go':closePop();tab='set';render();openAddonPage();break;
-    case 'stk-board':closeSheet();openStickerBoard(cur.y,cur.m);break;
+    case 'stk-board':closeSheet();openStampPage();break;
     case 'sb-prev':{let y=sbY,m=sbM-1;if(m<0){m=11;y--;}openStickerBoard(y,m);break;}
     case 'sb-next':{let y=sbY,m=sbM+1;if(m>11){m=0;y++;}openStickerBoard(y,m);break;}
-    case 'stk-settings':closePop();closeSheet();openAddonPage();break;
     case 'stamp-tap':stampTap(t.dataset.id,t.dataset.k);break;
     case 'stamp-dn':e.stopPropagation();if(paint){if(role()==='host')paintDay(t.dataset.k);break;}if(t.closest('.cell.out')){buzz(6);slideTo(monthDirOf(t.dataset.k,cur.y,cur.m));break;}buzz(8);openStampDay(t.dataset.k);break;
     case 'sd-done':case 'sd-undo':{
@@ -5106,36 +5162,37 @@ document.addEventListener('click',e=>{
       stampSet(s.id,k,v);save();render();stampReopen(k);if(v>n)stkPop(k,s.id);
       const se=icoTxt(s.emoji,'✔'),msg=a==='sd-undo'?`${s.kind==='pill'?'💊':se} ${s.name} 취소했어요`:s.kind==='pill'?(v>=N?`💊 ${s.name} 오늘 다 먹었어요`:`💊 ${s.name} ${v}/${N} 먹음`):(N>1&&v<N?`${se} ${s.name} ${v}/${N}`:`${se} ${s.name} 완료`);
       toastUndo(msg,()=>{stampSet(s.id,k,n);save();render();if($('#pop').classList.contains('open'))stampReopen(k);});break;}
-    case 'sd-skip':{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;(s.skip=s.skip||[]).push(k);s.dates=(s.dates||[]).filter(x=>x!==k);save();render();stampReopen(k);toastUndo(`${s.kind==='pill'?'💊':icoTxt(s.emoji,'✔')} ${s.name} 이날은 건너뛰어요`,()=>{s.skip=s.skip.filter(x=>x!==k);save();render();});break;}
+    case 'sd-skip':{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;
+      if(s.one){s.dates=(s.dates||[]).filter(x=>x!==k);save();render();stampReopen(k);toastUndo(`${icoTxt(s.emoji,'✔')} ${s.name} 지웠어요`,()=>{(s.dates=s.dates||[]).push(k);save();render();});break;}
+      (s.skip=s.skip||[]).push(k);s.dates=(s.dates||[]).filter(x=>x!==k);save();render();stampReopen(k);toastUndo(`${s.kind==='pill'?'💊':icoTxt(s.emoji,'✔')} ${s.name} 이날은 건너뛰어요`,()=>{s.skip=s.skip.filter(x=>x!==k);save();render();});break;}
     case 'sd-end':{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;
       const old=s.to||'';s.to=addK(k,-1);save();render();stampReopen(k);
       toastUndo(`${s.kind==='pill'?'💊':icoTxt(s.emoji,'✔')} ${s.name} 이날부터 그만해요 (지난 기록은 그대로)`,()=>{s.to=old;save();render();});break;}
-    case 'sd-add':if(t.classList.contains('dis')){closePop();stampFull();break;}closePop();openStampReg(t.dataset.k);break;
+    case 'sd-add':if(t.classList.contains('dis')){stampFull();break;}closePop();openStampPick(t.dataset.k);break;
+    case 'sp-pick':closePop();openStampReg(t.dataset.k,t.dataset.id);break;
+    case 'sp-plus':closePop();openStampBig(t.dataset.k);break;
+    case 'slot-open':openStampSlot(t.dataset.id);break;
+    case 'slot-plus':toast('날짜 칸 위쪽을 눌러 ＋ 로 하루만 붙여요');break;
+    case 'slot-col':{slotPullName(t.dataset.id);const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x){x.color=t.dataset.v;save();render();openStampPage();openStampSlot(x.id);}break;}
+    case 'slot-save':{slotPullName(t.dataset.id);closePop();save();render();openStampPage();break;}
+    case 'slot-mv':{slotPullName(t.dataset.id);const sl=slotDefs(),i=sl.findIndex(x=>x.id===t.dataset.id),j=i+(+t.dataset.v);
+      if(i>=0&&j>=0&&j<sl.length){const a=S.stamps.defs.indexOf(sl[i]),b=S.stamps.defs.indexOf(sl[j]);[S.stamps.defs[a],S.stamps.defs[b]]=[S.stamps.defs[b],S.stamps.defs[a]];save();render();openStampPage();openStampSlot(t.dataset.id);}break;}
+    case 'slot-swap':{slotPullName(t.dataset.id);const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(!x)break;
+      openIcn({title:'다른 스티커로 바꾸기',sub:'옛 스티커는 지난 날짜에 남아요',icon:x.kind==='mark'?x.emoji:'',name:x.name,autoWas:x.name,placeholder:'이름',cats:STAMP_CAT,needIcon:true,
+        extra:x.kind==='pill'?'':`<div class="mi"><button class="btn ghost grow" data-act="slot-pill" data-id="${x.id}">💊 약 (알약)으로 바꾸기</button></div>`,
+        onSave:(e,n)=>stSlotReplace(x.id,e,n)});break;}
+    case 'slot-pill':closePop();stSlotToPill(t.dataset.id);break;
     case 'sd-manage':closePop();openStampPage();break;
-    case 'sr-pick':srPull();{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),b=stDraft.back,k=stDraft.k;stDraft=stDraftOf(s,k,false,b);if(b==='stamps')stDraft.rep='daily';}renderStampReg();break;
-    case 'sr-kind':srPull();{const pill=t.dataset.v==='pill';if((stDraft.kind==='pill')!==pill){stDraft.kind=pill?'pill':'mark';stDraft.id=pill?'__newpill':'__new';stDraft.name=pill?'약':'';}}renderStampReg();break;
-    case 'sr-emo':srPull();stDraft.emoji=t.dataset.v;renderStampReg();break;
     case 'sr-back':{const b=stDraft&&stDraft.back;stDraft=null;if(b==='stamps'){render();openStampPage();}else closePage();break;}
-    case 'sr-own':srPull();openIcn({title:'스티커 그림',sub:'',icon:stDraft.emoji,name:null,emojis:STAMP_EMO,needIcon:true,onSave:e=>{if(stDraft){stDraft.emoji=e;renderStampReg();}}});break;
     case 'sr-rep':srPull();stDraft.rep=t.dataset.v;renderStampReg();break;
     case 'sr-day':{srPull();const w=+t.dataset.v,d=stDraft.days;stDraft.days=d.includes(w)?d.filter(x=>x!==w):[...d,w];renderStampReg();break;}
     case 'sr-work':srPull();stDraft.workMode=t.dataset.v;renderStampReg();break;
     case 'sr-col':srPull();stDraft.color=t.dataset.v;renderStampReg();break;
-    case 'stp-col':{const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x){x.color=t.dataset.v;save();render();openStampPage();}break;}
     case 'sr-times':srPull();stDraft.times=+t.dataset.v;if(stDraft.alarm)stFill(stDraft);renderStampReg();break;
     case 'sr-setend':srPull();stDraft.to=fmt(addDays(parse(stDraft.from||stDraft.k),29));renderStampReg();toast('끝 날짜를 눌러 바꿀 수 있어요');break;
     case 'sr-noend':srPull();stDraft.to='';renderStampReg();break;
     case 'sr-save':afterCompose('#srName',stampRegSave);break;
     case 'sh-undo':{if(hidSnap){S.stamps=JSON.parse(hidSnap);hidSnap=null;save();render();if(pageMode==='stamps')openStampPage();}closePop();toast('등록을 취소했어요');break;}
-    case 'sh-more':{S.stamps.more=true;hidSnap=null;save();render();closePop();if(pageMode==='stamps')openStampPage();toast('하루 4개까지 보여요');break;}
-    case 'sr-edit':openStampReg(fmt(new Date()),t.dataset.id,'stamps');break;
-    case 'sr-del':{const s=S.stamps.defs.find(x=>x.id===stDraft.id);if(s&&confirm(`"${s.name}" 스티커를 지울까요? (찍은 기록도 지워져요)`)){S.stamps.defs=S.stamps.defs.filter(y=>y!==s);Object.values(S.stamps.log).forEach(l=>delete l[s.id]);const b=stDraft.back;stDraft=null;save();render();if(b==='stamps')openStampPage();else closePage();}break;}
-    case 'stp-times':{const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x){x.times=+t.dataset.v;save();render();openStampPage();}break;}
-    case 'stp-del':{const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x&&confirm(`"${x.name}" 스티커를 지울까요? (찍은 기록도 지워져요)`)){S.stamps.defs=S.stamps.defs.filter(y=>y!==x);Object.values(S.stamps.log).forEach(l=>delete l[x.id]);save();render();openStampPage();}break;}
-    case 'stp-day':{const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(!x)break;const w=+t.dataset.v,d=x.days||[];x.days=d.includes(w)?d.filter(v=>v!==w):[...d,w];if(!x.from&&x.days.length)x.from=fmt(new Date());save();render();openStampPage();break;}
-    case 'stp-add-pill':openStampReg(fmt(new Date()),'__newpill','stamps');break;
-    case 'stp-add-mark':openStampReg(fmt(new Date()),'__new','stamps');break;
-    case 'stp-emo':openStampEmo(t.dataset.id);break;
     case 'more-status':openStatusPage();break;
     case 'tt-tab':timesTab=t.dataset.k;openTimesPage();break;
     case 'tt-reset':if(confirm('기본값(대략)으로 되돌릴까요?')){delete S.shiftTimes[timesTab];save();openTimesPage();}break;
@@ -5284,8 +5341,6 @@ document.addEventListener('change',e=>{
     else if(id==='tt_sf'&&v)ttSet('sleep',{from:v});else if(id==='tt_st'&&v)ttSet('sleep',{to:v});else if(id==='tt_son')ttSet('sleep',{on:t.checked});
     else if(/^tt_b[ft]\d+$/.test(id)&&v){const i=+id.slice(5),b=cur0.breaks.map(x=>Object.assign({},x));if(b[i]){b[i][id[4]==='f'?'from':'to']=v;ttSet('breaks',b);}}
   }else if(t.id==='famDayToo'){S.famDayToo=t.checked;save();render();
-  }else if(t.id&&t.id.startsWith('stpN_')){const x=S.stamps.defs.find(y=>y.id===t.id.slice(5));if(x){x.name=t.value.trim().slice(0,12)||x.name;save();render();}
-  }else if(t.id&&(t.id.startsWith('stpF_')||t.id.startsWith('stpT_'))){const x=S.stamps.defs.find(y=>y.id===t.id.slice(5));if(x&&t.value){x[t.id[3]==='F'?'from':'to']=t.value;if(x.from&&x.to&&x.from>x.to)[x.from,x.to]=[x.to,x.from];save();render();openStampPage();}
   }else if(t.id==='srFrom'&&stDraft){stDraft.from=t.value;
   }else if(t.id==='srTo'&&stDraft){stDraft.to=t.value;renderStampReg();
   }else if(t.id==='mdTodo'&&mdDraft){mdPull();mdDraft.todo=t.checked;renderMemoDetail();
@@ -5299,8 +5354,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='showBand'){S.showBand=t.checked;save();applyBand();
   }else if(t.id==='famPushQuiet'){S.pushQuiet=t.checked;save();famRegDevice().catch(()=>{});toast(t.checked?'자는 시간엔 소리 없이 알려요':'자는 시간에도 소리로 알려요');
   }else if(t.id==='famPushOn'){S.pushOn=t.checked;save();famRegDevice().catch(()=>{});toast(t.checked?'가족 알림을 받아요':'가족 알림을 끌게요');
-  }else if(t.id&&t.id.startsWith('ad_')){const k=t.id.slice(3);if(k==='stkmore')S.stamps.more=t.checked;else S.addons[k]=t.checked;save();render();openAddonPage();
-  }else if(t.id==='stkMore'){S.stamps.more=t.checked;save();render();openStampPage();
+  }else if(t.id&&t.id.startsWith('ad_')){const k=t.id.slice(3);S.addons[k]=t.checked;save();render();openAddonPage();
   }else if(t.id==='st_show'){S.status.show=t.checked;save();
   }else if(t.id==='st_phone'){S.status.phone=t.checked;save();openStatusPage();
   }else if(t.id==='st_home'){S.status.homeAlert=t.checked;save();openStatusPage();
@@ -5550,7 +5604,7 @@ async function famSync(){
   const snap=await F.getDoc(famMember(F,db,hid,uid));
   const had=!!S.link;
   const old=S.link;
-  if(snap.exists()){const d=snap.data();S.link={hid,role:d.role,name:d.name,perm:d.perm,mode:d.mode==='view'?'view':'own',uid,hash:(old&&old.hid===hid&&old.hash)||''};}
+  if(snap.exists()){const d=snap.data();S.link={hid,role:d.role,name:d.name,perm:d.perm,mode:d.mode==='view'?'view':'own',uid,hash:(old&&old.hid===hid&&old.hash)||'',stk:!!(old&&old.hid===hid&&old.stk)};}
   else{S.link=null;famClear();}
   save();
   return {had,link:S.link};
@@ -5651,16 +5705,30 @@ async function famEdit(hid,uid,patch){
 var famT=null,famUnsub=[],famBooting=false;
 const famView=()=>!!(S.link&&S.link.mode==='view');   // "가족 것만 볼래요"
 // 스티커 보여주기(설정에서 켠 사람만): 오늘 기준 -35일 ~ +60일, 날짜마다 "스티커번호(36진수)+횟수" 두 글자씩
+// 사진 스티커: 128px 사진을 48px JPEG(약 2KB)로 줄여서 같이 올림 (비동기로 만들어 두고, 다 되면 다시 올림)
+const ph48={};
+function famPhoto(e){
+  if(!isPhoto(e))return '';
+  const id=e.slice(1);if(id in ph48)return ph48[id];
+  const src=(S.icons||{})[id];if(!src)return '';
+  ph48[id]='';
+  const im=new Image();
+  im.onload=()=>{try{const cv=document.createElement('canvas');cv.width=cv.height=48;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,48,48);g.drawImage(im,0,0,48,48);const u=cv.toDataURL('image/jpeg',0.7);ph48[id]=u.length<=4200?u:'';famSoon();}catch(err){}};
+  im.src=src;return '';
+}
 function famStkPayload(){
-  const defs=((S.stamps&&S.stamps.defs)||[]).slice(0,12);
-  const sdefs=defs.map(d=>d.kind==='pill'?{i:String(d.id).slice(0,20),k:'p',t:Math.max(1,Math.min(3,d.times||1)),c:String(d.color||'').slice(0,9)}
-    :{i:String(d.id).slice(0,20),k:'m',e:isPhoto(d.emoji)?'⭐':String(d.emoji||'⭐').slice(0,8)});   // 사진 아이콘은 안 올림
-  const stk={},from=addK(fmt(new Date()),-35);
+  const defs=(S.stamps&&S.stamps.defs)||[],used=[],stk={},from=addK(fmt(new Date()),-35);
   for(let i=0;i<=95;i++){
     const k=addK(from,i),list=stampsOn(k);if(!list.length)continue;
-    const str=list.map(x=>{const j=defs.findIndex(d=>d.id===x.s.id);return j<0?'':j.toString(36)+Math.min(9,x.n||0);}).join('');
+    const str=list.map(x=>{let j=used.indexOf(x.s.id);if(j<0){if(used.length>=30)return '';used.push(x.s.id);j=used.length-1;}return j.toString(36)+Math.min(9,x.n||0);}).join('');
     if(str)stk[k]=str;
   }
+  let imgs=0;
+  const sdefs=used.map(id=>{const d=defs.find(y=>y.id===id)||{};
+    if(d.kind==='pill')return {i:String(d.id).slice(0,20),k:'p',t:Math.max(1,Math.min(3,d.times||1)),c:String(d.color||'').slice(0,9)};
+    const o={i:String(d.id).slice(0,20),k:'m',e:isPhoto(d.emoji)?'⭐':String(d.emoji||'⭐').slice(0,8)};
+    if(isPhoto(d.emoji)&&imgs<6){const u=famPhoto(d.emoji);if(u){o.img=u;imgs++;}}
+    return o;});
   return {stk,sdefs};
 }
 function famPayload(){
@@ -5890,7 +5958,8 @@ function schStk(sch,k){
   for(let i=0;i+1<str.length;i+=2){const d=defs[parseInt(str[i],36)];if(d&&typeof d==='object')out.push({d,n:+str[i+1]||0});}
   return out;
 }
-const stampIconD=(d,n,px)=>d.k==='p'?pillSvg(d.t,n,px,d.c):`<span class="se ${n?'':'plan'}" style="font-size:${(px||14)-2}px">${esc(d.e||'⭐')}</span>`;
+const FAM_IMG=/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]{1,6000}$/;
+const stampIconD=(d,n,px)=>d.k==='p'?pillSvg(d.t,n,px,d.c):`<span class="se ${n?'':'plan'}" style="font-size:${(px||14)-2}px">${typeof d.img==='string'&&FAM_IMG.test(d.img)?`<img class="ico" src="${d.img}" alt="">`:esc(d.e||'⭐')}</span>`;
 function schBadge(sch,k,extra,inner){
   if(k===NONE_K)return noneBadge(extra,inner);
   if(k==='')return `<span class="badge r ${extra||''} blankb">·${inner||''}</span>`;

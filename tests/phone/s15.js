@@ -1,6 +1,6 @@
 const {chromium,boot,mkT,base}=require('./lib.js');
 (async()=>{const b=await chromium.launch();const T=mkT();
- const st={defs:[{id:'a',kind:'mark',emoji:'💪',name:'운동',rep:'daily',from:'2026-10-01',to:'',times:1,ats:['08:00'],days:[],dates:[],skip:[]}],log:{'2026-10-13':{a:1}},more:false,v3:1,lastAt:['08:00']};
+ const st={defs:[{id:'a',kind:'mark',emoji:'💪',name:'운동',rep:'daily',from:'2026-10-01',to:'',times:1,ats:['08:00'],days:[],dates:[],skip:[]}],log:{'2026-10-13':{a:1}},more:false,v3:1,v4:1,lastAt:['08:00']};
  const p=await boot(b,{...base,stamps:st},{touch:true});
  const cell=d=>`.track .panel:nth-child(2) .cell[data-k="${d}"]`;
  // 10/19 에서 그만하기
@@ -8,7 +8,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.click('#pop [data-act="sd-end"]');await p.waitForTimeout(300);
  // 같은 날 다시 등록: 월수금
  await p.evaluate(c=>document.querySelector(c+' .stz').click(),cell('2026-10-19'));await p.waitForTimeout(300);
- await p.click('#page [data-act="sr-pick"][data-id="a"]');await p.waitForTimeout(150);
+ await p.click('#pop [data-act="sp-pick"][data-id="a"]');await p.waitForTimeout(300);
  await p.click('#page [data-act="sr-rep"][data-v="dow"]');await p.waitForTimeout(100);
  await p.evaluate(()=>{[...document.querySelectorAll('#page .sdays button.on')].forEach(b=>b.click());});await p.waitForTimeout(100);
  for(const w of [1,3,5]){await p.click(`#page [data-act="sr-day"][data-v="${w}"]`);await p.waitForTimeout(60);}

@@ -14,7 +14,7 @@ await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);
 T_('설정에 이미지 공유 줄(부가 기능 꺼짐인데도)',!!(await p.$('[data-act="more-share"]')));
 await p.click('[data-act="more-addons"]');await p.waitForTimeout(250);
 const rows=await p.$$eval('#page .prow',a=>a.map(x=>x.innerText.replace(/\s+/g,' ')));
-T_('부가 기능 7개',rows.filter(r=>/\n|켜|·|표시|버튼|보여|계산|봐요|붙여|알려/.test(r)).length>=0&&(await p.$$('#page .sw input')).length===7);
+T_('부가 기능 6개',rows.filter(r=>/\n|켜|·|표시|버튼|보여|계산|봐요|붙여|알려/.test(r)).length>=0&&(await p.$$('#page .sw input')).length===6);
 await p.click('#page [data-act="page-close"]');await p.waitForTimeout(200);
 await p.click('[data-act="more-share"]');await p.waitForTimeout(400);
 const q=async()=>p.evaluate(()=>({pill:getComputedStyle(document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-09-22"] .pill-wrap')).display,fam:document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-09-22"] .pill-wrap').innerText,stp:!!document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-09-24"] .stp'),chk:[document.getElementById('shareMemo').checked,document.getElementById('shareStk').checked]}));

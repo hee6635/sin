@@ -52,7 +52,7 @@ const hostUid = await H.evaluate(() => window.__fbx.uid);
 await H.evaluate(() => window.__onBack && window.__onBack());
 
 // ───── 엄마: 예전 사용자(설정 › 가족 연결로 참여)
-const A = await phone('mom', base('2026-10-06', 2, { stamps: { defs: [{ id: 's_pill', kind: 'pill', name: '약', times: 3, rep: 'dates', dates: ['2026-10-14'], color: '#ef4d5a' }, { id: 's_yoga', kind: 'mark', emoji: '🧘', name: '요가', rep: 'none', dates: ['2026-10-14'] }], log: { '2026-10-14': { s_yoga: 1, s_pill: 1 } }, remind: false, more: false, pillTimes: ['08:00', '13:00', '20:00'] } }));
+const A = await phone('mom', base('2026-10-06', 2, { stamps: { defs: [{ id: 's_pill', kind: 'pill', name: '약', times: 3, rep: 'dates', dates: ['2026-10-14'], color: '#ef4d5a' }, { id: 's_yoga', kind: 'mark', emoji: '🧘', name: '요가', rep: 'none', dates: ['2026-10-14'] }, { id: 'o_ph', kind: 'mark', one: true, emoji: '@ph1', name: '사진', rep: 'none', dates: ['2026-10-14'] }], log: { '2026-10-14': { s_yoga: 1, s_pill: 1 } }, remind: false, v4: 1, pillTimes: ['08:00', '13:00', '20:00'] }, icons: { ph1: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCACAAIADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDcooor4Y/SjhKKKK/dj+fzu6KKK/CT+gDhKKKK/dj+fzu6KKK/CT+gDhKKKK/dj+fzu6KKK/CT+gDhKKKK/dj+fwooooA7uiiivwk/oA4Siiiv3Y/n87uiiivwk/oA4Siiiv3Y/n87uiiivwk/oA4Siiiv3Y/n87uiiivwk/oAKKKKAOEooor92P5/O7ooor8JP6AOEooor92P5/O7ooor8JP6AOEooor92P5/O7ooor8JP6AOEooor92P5/CiiigDu6KKK/CT+gDhKKKK/dj+fzu6KKK/CT+gDhKKKK/dj+fzu6KKK/CT+gDhKKKK/dj+fzu6KKK/CT+gAooooA4Siiiv3Y/n87uiiivwk/oA4Siiiv3Y/n87uiiivwk/oA4Siiiv3Y/n87uiiivwk/oA4Siiiv3Y/n8KKKKAO7ooor8JP6AOEooor92P5/O7ooor8JP6AOEooor92P5/O7ooor8JP6AOEooor92P5/O7ooor8JP6ACiiigDhKKKK/dj+fzu6KKK/CT+gDhKKKK/dj+fzu6KKK/CT+gDhKKKK/dj+fzu6KKK/CT+gDhKKKK/dj+fwooooA7uiiivwk/oA4Siiiv3Y/n87uiiivwk/oA4Siiiv3Y/n87uiiivwk/oA4Siiiv3Y/n87uiiivwk/oA//2Q==' } }));
 await A.click('#nav [data-tab="set"]'); await A.click('[data-act="link-open"]'); await A.waitForTimeout(800);
 await A.click('#page [data-act="link-join"]'); await A.fill('#joinCode', codeMom); await A.click('#pop [data-act="join-check"]'); await A.waitForSelector('#joinName', { timeout: 15000 });
 await A.fill('#joinName', '엄마'); await A.click('#pop [data-act="join-go"]');
@@ -202,8 +202,9 @@ await A.screenshot({ path: SC + 'a_cfm_stk.png' });
 await A.click('#pop [data-act="cfm-no"]'); await A.waitForTimeout(1500);
 check('취소하면 스위치가 다시 꺼짐', !(await A.$eval('#famStk', e => e.checked)) && !(await S(A)).link.stk);
 await A.click('label.sw:has(#famStk)'); await A.waitForTimeout(300); await A.click('#pop [data-act="cfm-ok"]'); await A.waitForTimeout(500);
-check('켠 뒤 서버 근무표에 스티커(sdefs 2종 · stk 날짜)가 올라감', await wait(H, async () => { const f = (await restRead(`households/${hostUid}/schedules/${momUid}`)).fields || {}; return f.sdefs && f.sdefs.arrayValue.values.length === 2 && f.stk && f.stk.mapValue.fields && !!f.stk.mapValue.fields['2026-10-14']; }, 20000), JSON.stringify(((await restRead(`households/${hostUid}/schedules/${momUid}`)).fields || {}).stk || '').slice(0, 200));
+check('켠 뒤 서버 근무표에 스티커(sdefs 2종 · stk 날짜)가 올라감', await wait(H, async () => { const f = (await restRead(`households/${hostUid}/schedules/${momUid}`)).fields || {}; return f.sdefs && f.sdefs.arrayValue.values.length === 3 && f.stk && f.stk.mapValue.fields && !!f.stk.mapValue.fields['2026-10-14']; }, 20000), JSON.stringify(((await restRead(`households/${hostUid}/schedules/${momUid}`)).fields || {}).stk || '').slice(0, 200));
 check('아빠 폰에 엄마 스티커 정보가 도착', await wait(H, async () => !!(await S(H)).fam2.scheds[momUid]?.stk, 20000));
+check('아빠 폰에 엄마 사진 스티커(48px)가 도착', await wait(H, async () => JSON.stringify((await S(H)).fam2.scheds[momUid] || {}).includes('data:image/jpeg;base64,'), 25000));
 await toRoot(H); await H.waitForTimeout(300);
 await H.click('#nav [data-tab="fam"]'); await H.waitForTimeout(500);
 const hchips = await H.$$eval('.vchip', a => a.map(x => x.textContent));
@@ -212,7 +213,9 @@ const momChip = (await H.$$('.vchip'))[hchips.findIndex(t => t.includes('엄마'
 await momChip.click(); await H.waitForSelector('#page .cell[data-k="2026-10-14"]', { timeout: 8000 });
 await H.waitForTimeout(300);
 const stkIn = await H.$eval('#page .cell[data-k="2026-10-14"]', e => ({ stp: !!e.querySelector('.stp'), n: e.querySelectorAll('.stp>*').length + e.querySelectorAll('.s2>*').length, t: e.querySelector('.dn').innerText }));
-check('★ 아빠가 보는 엄마 달력 14일에 스티커(약 · 요가)가 보임', stkIn.n === 2, JSON.stringify(stkIn));
+check('★ 아빠가 보는 엄마 달력 14일에 스티커(약 · 요가 · 사진)가 보임', stkIn.n === 3, JSON.stringify(stkIn));
+const imgIn = await H.$eval('#page .cell[data-k="2026-10-14"]', e => ({ img: e.querySelectorAll('img.ico[src^="data:image/jpeg"]').length, star: e.innerText.includes('⭐') }));
+check('★ 사진 스티커는 사진(48px)으로 보임 (⭐ 아님)', imgIn.img === 1 && !imgIn.star, JSON.stringify(imgIn));
 await H.screenshot({ path: SC + 'h_momcal_stk.png' });
 await toRoot(H);
 await A.click('label.sw:has(#famStk)'); await A.waitForTimeout(800);
