@@ -1977,6 +1977,7 @@ function fitDn(root){
   [...(root||document).querySelectorAll('.cell .dn>.stp')].forEach(stp=>{
     const dn=stp.parentNode,h1=dn.querySelector('.h1');
     if(over(dn)&&h1&&h1.dataset.o&&h1.textContent!==h1.dataset.o)h1.textContent=h1.dataset.o;   // 두 글자(개천)가 넘치면 한 글자(개)
+    if(over(dn)&&h1)h1.style.display='none';   // 그래도 넘치면 공휴일 글자는 빼고 (날짜 줄이 분홍색이라 공휴일인 건 보임) 스티커 둘을 다 보여줌
     if(!over(dn))return;
     dn.classList.add('fit1');
     if(!over(dn))return;
