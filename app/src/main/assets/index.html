@@ -1576,7 +1576,7 @@ function pushRemindersToNative(){
         const pill=x.kind==='pill',N=stN(x);
         for(let i=0;i<=14;i++){
           const d=addDays(new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()),i),k=fmt(d);
-          if(!stampPlanned(x,k))continue;
+          if(!stampPlanned(x,k)||!stampsOn(k).some(y=>y.s.id===x.id))continue;   // 하루 한도 때문에 안 보이는 스티커는 알림도 안 보냄 (눌러도 완료할 곳이 없어서)
           x.ats.slice(0,N).forEach((tm,j)=>{
             const [h,mi]=tm.split(':').map(Number),at=new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,mi).getTime();
             if(at<=now||stampCnt(k,x.id)>j)return;
@@ -2515,6 +2515,7 @@ function stampRegSave(){
   let s=S.stamps.defs.find(x=>x.id===d.id);
   const isNewDef=!s;
   if(d.rep==='once'&&s&&stampPlanned(s,d.k)){toast('이 스티커는 이 날에 이미 깔려 있어요 · 새 스티커는 "＋ 새로"');return;}
+  const snap=JSON.stringify(S.stamps);   // 한도 때문에 가려지면 "등록 취소"로 돌아가기 위한 사본
   if(!s){
     s=d.kind==='pill'?{id:uid(),kind:'pill',emoji:'💊',name:'약',times:1,color:STK_COL[0],rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]}
       :{id:uid(),kind:'mark',emoji:d.emoji||'🏃',name:'새 스티커',times:1,rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]};
@@ -2537,7 +2538,27 @@ function stampRegSave(){
   }
   const back=d.back;stDraft=null;save();if(back==='stamps'){render();openStampPage();}else closePage();
   const ic=s.kind==='pill'?'💊':icoTxt(s.emoji,'✔');
+  const hid=d.rep==='once'?{n:0}:stampHidden(s,s.from||k,s.to);
+  if(hid.n){stampHiddenAsk(s,hid,snap);return;}
   toast(d.rep==='once'?`${ic} ${s.name} 이날 등록했어요`:`${ic} ${s.name} · ${stampRule(s)}`);
+}
+// 반복 스티커가 깔리는 날 중 하루 한도(2개 · 설정 4개) 때문에 가려지는 날 수 (앞으로 200일 안)
+function stampHidden(s,from,to){
+  let n=0,first='',names='';
+  for(let i=0;i<=200;i++){
+    const k=addK(from,i);if(to&&k>to)break;
+    if(!stampPlanned(s,k))continue;
+    const on=stampsOn(k);
+    if(!on.some(x=>x.s.id===s.id)){n++;if(!first){first=k;names=on.map(x=>x.s.name).join(' · ');}}
+  }
+  return {n,first,names};
+}
+let hidSnap=null;
+function stampHiddenAsk(s,h,snap){
+  hidSnap=snap;const more=!!(S.stamps&&S.stamps.more);
+  openPop(`<div class="mh">스티커가 많아서 가려져요<b>${esc(s.name)} · ${h.n}일</b></div>
+    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0">하루 ${stampMax()}개까지만 보여요. ${md(h.first)}부터는 <b>${esc(h.names)}</b>이(가) 먼저 보여서 ${esc(s.name)} 은(는) 안 보이고, 그 날 알림도 안 와요.${more?'':'<br>설정에서 하루 4개까지 늘릴 수 있어요.'}</div></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="sh-undo">등록 취소</button>${more?'':'<button class="btn ghost grow" data-act="sh-more">4개로 늘리기</button>'}<button class="btn grow" data-act="pop-close">그대로 두기</button></div>`);
 }
 
 const stampCnt=(k,id)=>((S.stamps.log[k]||{})[id])||0;
@@ -5061,6 +5082,8 @@ document.addEventListener('click',e=>{
     case 'sr-setend':srPull();stDraft.to=fmt(addDays(parse(stDraft.from||stDraft.k),29));renderStampReg();toast('끝 날짜를 눌러 바꿀 수 있어요');break;
     case 'sr-noend':srPull();stDraft.to='';renderStampReg();break;
     case 'sr-save':afterCompose('#srName',stampRegSave);break;
+    case 'sh-undo':{if(hidSnap){S.stamps=JSON.parse(hidSnap);hidSnap=null;save();render();if(pageMode==='stamps')openStampPage();}closePop();toast('등록을 취소했어요');break;}
+    case 'sh-more':{S.stamps.more=true;hidSnap=null;save();render();closePop();if(pageMode==='stamps')openStampPage();toast('하루 4개까지 보여요');break;}
     case 'sr-edit':openStampReg(fmt(new Date()),t.dataset.id,'stamps');break;
     case 'sr-del':{const s=S.stamps.defs.find(x=>x.id===stDraft.id);if(s&&confirm(`"${s.name}" 스티커를 지울까요? (찍은 기록도 지워져요)`)){S.stamps.defs=S.stamps.defs.filter(y=>y!==s);Object.values(S.stamps.log).forEach(l=>delete l[s.id]);const b=stDraft.back;stDraft=null;save();render();if(b==='stamps')openStampPage();else closePage();}break;}
     case 'stp-times':{const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x){x.times=+t.dataset.v;save();render();openStampPage();}break;}
