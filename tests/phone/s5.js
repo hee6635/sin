@@ -1,0 +1,10 @@
+const {chromium,boot,base}=require('./lib.js');
+(async()=>{const b=await chromium.launch();const p=await boot(b,base,{touch:true});
+ await p.evaluate(()=>{document.querySelector('#nav [data-tab="set"]').click();});await p.waitForTimeout(200);
+ await p.evaluate(()=>document.querySelector('[data-act="more-share"]').click());await p.waitForTimeout(400);
+ await p.screenshot({path:'e1.png'});
+ await p.click('.ym [data-act="next"]');await p.waitForTimeout(500);
+ console.log(await p.evaluate(()=>document.querySelector('.ym h1').textContent));
+ await p.evaluate(()=>document.querySelector('.cal-mid h1').click());await p.waitForTimeout(300);
+ console.log('pop z',await p.evaluate(()=>{const r=document.querySelector('#sheet').getBoundingClientRect();const e=document.elementFromPoint(r.x+r.width/2,r.y+r.height-20);return !!e.closest('#sheet')}));
+ await p.screenshot({path:'e2.png'});console.log(p.errs);await b.close();})();

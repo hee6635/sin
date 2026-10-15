@@ -1,0 +1,32 @@
+const {chromium,boot,mkT,base}=require('./lib.js');
+(async()=>{const b=await chromium.launch();const T=mkT();
+ const p=await boot(b,base,{touch:true});
+ // 오른쪽 위 스티커 영역(윗 1/3) 눌러서 등록 페이지
+ const k='2026-10-14';
+ await p.evaluate(k=>{document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"] .stz`).click();},k);
+ await p.waitForTimeout(400);
+ T('등록 페이지 열림',await p.evaluate(()=>document.querySelector('#page.open .srpg')!==null));
+ await p.screenshot({path:'a1.png'});
+ await p.click('[data-act="sr-pick"][data-id="__new"]');await p.click('[data-act="sr-kind"][data-v="pill"]');await p.click('[data-act="sr-times"][data-v="3"]');
+ await p.click('#srAlarm',{force:true}).catch(()=>{});
+ await p.evaluate(()=>{const c=document.getElementById('srAlarm');c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}));});
+ await p.waitForTimeout(200);
+ await p.screenshot({path:'a2.png',fullPage:false});
+ T('시각 3줄',await p.evaluate(()=>document.querySelectorAll('[id^=srAt]').length===3));
+ await p.fill('#srName','비타민');
+ await p.evaluate(()=>{const e=document.querySelector('[data-act="sr-rep"][data-v="daily"]');e.click();});
+ await p.click('[data-act="sr-save"]');await p.waitForTimeout(400);
+ const st=await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).stamps);
+ console.log(JSON.stringify(st.defs[0]),JSON.stringify(st.lastAt));
+ T('저장됨 times3 ats3',st.defs[0].times===3&&st.defs[0].ats.length===3);
+ await p.evaluate(()=>window.__rem);
+ console.log((await p.evaluate(()=>window.__rem.length)),'알림');
+ await p.screenshot({path:'a3.png'});
+ // 한번 완료 → 배지
+ await p.evaluate(k=>{document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"] .stz`).click();},k);
+ await p.waitForTimeout(300);
+ await p.click('[data-act="sd-done"]');await p.waitForTimeout(300);
+ T('배지 1/3',await p.evaluate(k=>!!document.querySelector(`.cell[data-k="${k}"] .cb`),k));
+ T('selTop 유지',await p.evaluate(k=>document.querySelector(`.cell[data-k="${k}"]`).classList.contains('selTop'),k));
+ await p.screenshot({path:'a4.png'});
+ console.log(p.errs);T.sum();await b.close();})();

@@ -1,0 +1,24 @@
+const {chromium,boot,mkT,base}=require('./lib.js');
+(async()=>{const b=await chromium.launch();const T=mkT();
+ const mk=(e,i,x={})=>({id:'a'+i,kind:'mark',emoji:e,name:'스티커'+i,rep:'daily',from:'2026-10-13',times:1,ats:[],days:[],dates:[],skip:[],...x});
+ const st=(more)=>({defs:[mk('🧘',1),mk('🏃',2),mk('💧',3),mk('💪',4)],log:{},more,v3:1,lastAt:[]});
+ let p=await boot(b,{...base,stamps:st(true)},{touch:true});
+ const addDaily=async(day)=>{await p.evaluate(d=>document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${d}"] .stz`).click(),day);await p.waitForTimeout(350);
+   if(await p.$('#pop [data-act="sd-add"]'))await p.click('#pop [data-act="sd-add"]');await p.waitForTimeout(300);
+   await p.fill('#srName','새매일');await p.click('#page [data-act="sr-rep"][data-v="daily"]');await p.click('#page [data-act="sr-save"]');await p.waitForTimeout(500);};
+ await addDaily('2026-10-10');
+ const pop=await p.$eval('#pop',e=>e.innerText.replace(/\s+/g,' ')).catch(()=>'');
+ console.log(pop);
+ T('가려짐 안내창',pop.includes('가려져요'));
+ T('4개 상태라 "4개로 늘리기" 버튼은 없음',!pop.includes('4개로 늘리기'));
+ await p.click('#pop [data-act="sh-undo"]');await p.waitForTimeout(300);
+ T('등록 취소 → 스티커 4개 그대로',(await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).stamps.defs.length))===4);
+ p=await boot(b,{...base,stamps:st(false)},{touch:true});
+ // 2개 한도: 앞 날짜(10/10)엔 기존이 없으니 겹침 없음 → 안내 없어야 함
+ await p.evaluate(()=>document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-10"] .stz').click());await p.waitForTimeout(350);
+ await p.fill('#srName','새매일');await p.click('#page [data-act="sr-rep"][data-v="daily"]');await p.click('#page [data-act="sr-save"]');await p.waitForTimeout(500);
+ const pop2=await p.$eval('#pop',e=>e.innerText.replace(/\s+/g,' ')).catch(()=>'');
+ T('2개 한도 + 겹침 → 안내 + 4개로 늘리기 버튼',pop2.includes('가려져요')&&pop2.includes('4개로 늘리기'));
+ await p.click('#pop [data-act="sh-more"]');await p.waitForTimeout(300);
+ T('늘리기 → more=true',await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).stamps.more===true));
+ console.log(p.errs);T.sum();await b.close();})();

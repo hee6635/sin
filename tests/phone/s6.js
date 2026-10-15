@@ -1,0 +1,23 @@
+const {chromium,boot,mkT,base}=require('./lib.js');
+(async()=>{const b=await chromium.launch();const T=mkT();
+ const p=await boot(b,{...base,pattern:['주','주','주','주'],anchor:'2026-10-01'},{touch:false});
+ await p.evaluate(()=>document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-17"]').click());await p.waitForTimeout(400);
+ await p.evaluate(()=>document.querySelector('[data-act="paint-open"]').click());await p.waitForTimeout(400);
+ await p.evaluate(()=>document.querySelector('[data-act="paint-k"][data-s="야"]').click());await p.waitForTimeout(150);
+ const c=k=>p.evaluate(k=>{const r=document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"]`).getBoundingClientRect();return [r.x+r.width/2,r.y+r.height*0.6]},k);
+ const mv=async k=>{const [x,y]=await c(k);await p.mouse.move(x,y);};
+ const ov=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).overrides);
+ let [x,y]=await c('2026-10-17');await p.mouse.move(x,y);await p.mouse.down();
+ for(const k of ['2026-10-19','2026-10-20','2026-10-21'])await mv(k);
+ console.log('앞으로',Object.keys(await ov()).sort().join(','));
+ for(const k of ['2026-10-20','2026-10-19','2026-10-18','2026-10-17'])await mv(k);
+ await p.mouse.up();await p.waitForTimeout(200);
+ const o=Object.keys(await ov()).sort();console.log('돌아온 뒤',o.join(','));
+ T('토요일만 남음(월~수 모두 취소)',o.join(',')==='2026-10-17');
+ // 빠르게 한 번에 돌아오기
+ [x,y]=await c('2026-10-24');await p.mouse.move(x,y);await p.mouse.down();
+ for(const k of ['2026-10-26','2026-10-27','2026-10-28'])await mv(k);
+ await mv('2026-10-24');await p.mouse.up();await p.waitForTimeout(200);
+ const o2=Object.keys(await ov()).sort();console.log(o2.join(','));
+ T('한 번에 돌아와도 24일만',o2.join(',')==='2026-10-17,2026-10-24');
+ console.log(p.errs);T.sum();await b.close();})();
