@@ -1052,7 +1052,7 @@ button.tbtn{cursor:pointer}
 .dn .stp>.plan,.dn .stp>svg.off{transform:none !important}
 /* 스티커가 한 개뿐인 날은 1.4배 (두 개 이상 · 공휴일 글자가 있는 날은 그대로) */
 .dn .stp.one{margin-left:auto;margin-right:4px}
-.dn .stp.one>*{transform-origin:right center;transform:scale(1.4) rotate(-7deg) !important}
+.dn .stp.one>*{transform-origin:right top;transform:scale(1.4) rotate(-7deg) !important}
 .cell:nth-child(3n) .dn .stp.one>*{transform:scale(1.4) rotate(5deg) !important}
 .dn .stp.one>.plan,.dn .stp.one>svg.off{transform:scale(1.4) !important}
 .dn .h1{font-size:10px;font-weight:800;color:var(--sun);margin-left:1px;flex:none}
@@ -2467,7 +2467,7 @@ function stDraftOf(s,k,edit,back){
 function openStampReg(k,id,back){
   if(pageMode==='stamps'&&!back)back='stamps';
   const isNew=id==='__new'||id==='__newpill';
-  const s=isNew?null:id?S.stamps.defs.find(x=>x.id===id):S.stamps.defs.find(x=>x.kind==='mark');
+  const s=isNew||!id?null:S.stamps.defs.find(x=>x.id===id);   // 달력에서 열면 "새 스티커"부터 (옛 스티커가 미리 골라져 있으면 "이날만"이 그 스티커의 매일 규칙과 섞여 보임)
   stDraft=stDraftOf(s,k,!!(s&&back&&id),back);
   if(id==='__newpill'){stDraft.kind='pill';stDraft.name='약';}
   if(back==='stamps'&&!stDraft.edit)stDraft.rep='daily';
@@ -2482,6 +2482,7 @@ function renderStampReg(){
   const sw=(id,on,l)=>`<div class="prow"><div class="pl2">${l}</div><label class="sw"><input type="checkbox" id="${id}" ${on?'checked':''}><i></i></label></div>`;
   const title=d.edit?`${esc(d.name||'스티커')} 고치기`:`${day.getMonth()+1}월 ${day.getDate()}일 (${DOW[day.getDay()]}) 스티커`;
   const emo=STAMP_EMO.map(e=>`<button class="${d.emoji===e?'on':''}" data-act="sr-emo" data-v="${e}">${e}</button>`).join('')+`<button data-act="sr-own" aria-label="다른 그림">＋</button>`;
+  const covered=!d.edit&&d.rep==='once'&&d.id!=='__new'&&d.id!=='__newpill'&&(()=>{const x=S.stamps.defs.find(y=>y.id===d.id);return !!x&&stampPlanned(x,d.k);})();
   const restTxt=pill?'이날 빈 알약이 깔려요. 먹으면 칸 위쪽을 눌러 [✓ 먹음] 하세요.':'이날 흐린 스티커가 깔려요. 하고 나서 칸 위쪽을 눌러 [✓ 완료] 하세요.';
   openPage(`<div class="pg-h"><button class="bk" data-act="sr-back" aria-label="뒤로">‹</button><b>${title}</b><span style="min-width:56px"></span></div>
     <div class="pg-b srpg">
@@ -2497,7 +2498,7 @@ function renderStampReg(){
     ${d.rep==='dow'?`<div class="sdays big">${[1,2,3,4,5,6,0].map(w=>`<button class="${d.days.includes(w)?'on':''}" data-act="sr-day" data-v="${w}">${DOW[w]}</button>`).join('')}</div>`:''}
     ${d.rep==='work'?`<div class="hseg big" style="margin-top:8px"><button class="${d.workMode==='rest'?'on':''}" data-act="sr-work" data-v="rest">휴무 날만</button><button class="${d.workMode==='work'?'on':''}" data-act="sr-work" data-v="work">근무 날만</button></div>`:''}
     ${d.rep==='month'?`<div class="hint" style="margin:8px 0 0;padding:0">매달 ${parse(d.from||d.k).getDate()}일 · 그 날이 없는 달은 말일</div>`:''}
-    ${d.rep==='none'?'<div class="hint" style="margin:8px 0 0;padding:0">반복 없이 찍은 날에만 보여요.</div>':d.rep==='once'?`<div class="hint" style="margin:8px 0 0;padding:0">${restTxt}</div>`:''}</div>
+    ${d.rep==='none'?'<div class="hint" style="margin:8px 0 0;padding:0">반복 없이 찍은 날에만 보여요.</div>':d.rep==='once'?`<div class="hint" style="margin:8px 0 0;padding:0;${covered?'color:var(--danger)':''}">${covered?'이 스티커는 이 날에 이미 깔려 있어요 (매일 · 요일 · 매달 규칙). 새 스티커를 만들려면 위에서 "＋ 새로"를 골라 주세요.':restTxt}</div>`:''}</div>
     ${d.rep!=='once'&&d.rep!=='none'?`<div class="pg-cap">기간</div><div class="pg-sec" style="margin-top:0">
       <div class="prow"><div class="pl2">📅 기간</div>${tpick('srFrom',d.from,'','date')}<span class="tsep">~</span>${d.to?`${tpick('srTo',d.to,'','date')}<button class="xbtn" data-act="sr-noend" aria-label="끝 없음으로">✕</button>`:'<button class="tbtn" data-act="sr-setend">끝 없음 ›</button>'}</div>
       ${sw('srHol',d.noHol,'🎌 공휴일엔 빼기')}</div>`:''}
@@ -2511,6 +2512,8 @@ function renderStampReg(){
 function stampRegSave(){
   srPull();const d=stDraft;if(!d)return;
   let s=S.stamps.defs.find(x=>x.id===d.id);
+  const isNewDef=!s;
+  if(d.rep==='once'&&s&&stampPlanned(s,d.k)){toast('이 스티커는 이 날에 이미 깔려 있어요 · 새 스티커는 "＋ 새로"');return;}
   if(!s){
     s=d.kind==='pill'?{id:uid(),kind:'pill',emoji:'💊',name:'약',times:1,color:STK_COL[0],rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]}
       :{id:uid(),kind:'mark',emoji:d.emoji||'🏃',name:'새 스티커',times:1,rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]};
