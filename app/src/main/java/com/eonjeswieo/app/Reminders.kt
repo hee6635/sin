@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -58,7 +59,15 @@ object Reminders {
         val next = list.minByOrNull { it.optLong("at") }
         am.cancel(pending(ctx))
         if (next != null) {
-            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, maxOf(next.optLong("at"), now + 1000), pending(ctx))
+            val at = maxOf(next.optLong("at"), now + 1000)
+            // 정확한 시각에 울리게 (권한이 없거나 막히면 예전처럼 대략적인 시각)
+            val exactOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms()
+            try {
+                if (exactOk) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending(ctx))
+                else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending(ctx))
+            } catch (e: SecurityException) {
+                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending(ctx))
+            }
         }
     }
 
