@@ -28,9 +28,9 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.evaluate(()=>{document.querySelector('#nav [data-tab="set"]').click();});await p.waitForTimeout(200);
  await p.evaluate(()=>document.querySelector('[data-act="more-pattern"]').click());await p.waitForTimeout(300);
  const types0=await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).types.map(t=>t.k).join(''));
- // 드래그: 첫 행 ≡ 를 3번째 행으로
- const h=await p.evaluate(()=>{const r=[...document.querySelectorAll('.tdrag')].map(e=>e.getBoundingClientRect());return r.map(x=>[x.x+x.width/2,x.y+x.height/2]);});
- await p.mouse.move(h[0][0],h[0][1]);await p.mouse.down();await p.mouse.move(h[0][0],h[1][1],{steps:4});await p.mouse.move(h[0][0],h[2][1],{steps:4});await p.mouse.up();await p.waitForTimeout(300);
+ // 드래그: 첫 칩을 3번째 칩 자리로 (꾹 눌러서)
+ const h=await p.evaluate(()=>[...document.querySelectorAll('#tlist .tl')].map(e=>{const x=e.getBoundingClientRect();return [x.x+x.width/2,x.y+x.height/2];}));
+ await p.mouse.move(h[0][0],h[0][1]);await p.mouse.down();await p.waitForTimeout(500);await p.mouse.move(h[1][0],h[1][1],{steps:4});await p.mouse.move(h[2][0],h[2][1],{steps:4});await p.mouse.up();await p.waitForTimeout(300);
  const types1=await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).types.map(t=>t.k).join(''));
  console.log(types0,'→',types1);
  T('순서 바뀜',types0!==types1&&types1[2]===types0[0]);

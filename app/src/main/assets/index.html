@@ -453,6 +453,14 @@ textarea{resize:none;min-height:84px}
 .mdet{flex:none;font-size:13px;font-weight:800;color:var(--fam);padding:0 4px;white-space:nowrap}
 .pl.done{text-decoration:line-through;opacity:.7}
 .tl{cursor:pointer}.tl small{display:block;font-size:12px;color:var(--muted)}
+.tchipgrid{display:flex;flex-wrap:wrap;gap:8px 6px}
+.tl2{width:calc((100% - 30px)/6);min-width:52px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 5px;border-radius:12px;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;position:relative}
+.tl2 small{font-size:10.5px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl2.top4::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:2px;border-radius:2px;background:var(--accent);opacity:.8}
+.tl2.add{background:none;box-shadow:inset 0 0 0 1.5px var(--line);color:var(--accent)}.tl2.add i{font-style:normal;font-size:20px;line-height:30px}
+.tl2.drag,.pgrid .pc.drag{background:var(--surface);box-shadow:0 4px 14px rgba(0,0,0,.25);position:relative;z-index:5;opacity:.95}
+.tl2.over,.pgrid .pc.over{box-shadow:inset 0 0 0 2px var(--accent)}
+.pgrid .pc{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .tdrag{font-size:24px;color:var(--muted);padding:6px 4px 6px 12px;touch-action:none;cursor:grab;user-select:none}
 .tl.drag{background:var(--surface);box-shadow:0 4px 14px rgba(0,0,0,.2);position:relative;z-index:3}
 .tl.over{box-shadow:inset 0 3px 0 var(--accent)}
@@ -1389,6 +1397,7 @@ const defaults=()=>({
   noPat:false,             // 정해진 순서 없음 (불규칙 · 건너뛰기): 근무는 날짜마다 직접 넣음, 기본은 빈 칸
   pattern:['주','주','휴','휴','야','야','휴','휴'],
   anchor:fmt(new Date()),
+  patOld:[],               // 시작 날을 바꾸기 전 옛 패턴 구간: [{until:'YYYY-MM-DD'(그 날 이전), pattern:[...], anchor}] 날짜 오름차순
   overrides:{},
   /* 날짜 메모: S.memos[날짜] = [{id, text, shared(가족 메모인지), by('host'|'guest'), t}] */
   memos:{},
@@ -1436,6 +1445,8 @@ function normalize(o){
   s.syncSettings=Object.assign(defaults().syncSettings,o&&o.syncSettings);
   s.pay=Object.assign({wage:0,hours:12},o&&o.pay);
   if(!Array.isArray(s.pattern)||s.pattern.length<2)s.pattern=d.pattern;
+  {const okD=v=>/^\d{4}-\d\d-\d\d$/.test(v||'');
+   s.patOld=(Array.isArray(s.patOld)?s.patOld:[]).filter(o=>o&&okD(o.until)&&okD(o.anchor)&&Array.isArray(o.pattern)&&o.pattern.length>=2&&o.pattern.length<=60).map(o=>({until:o.until,anchor:o.anchor,pattern:o.pattern.map(String)})).sort((a,b)=>a.until<b.until?-1:1).slice(0,20);}
   s.noPat=!!s.noPat;
   s.myset=(o&&o.myset!==undefined)?!!o.myset:true;   // 예전 사용자는 근무표를 만든 걸로
   if(!Array.isArray(s.alarms))s.alarms=[];
@@ -1679,11 +1690,18 @@ const role=()=>S.syncSettings.isGuestMode?'guest':'host';
 
 /* ================= 근무 계산 ================= */
 // 패턴 그대로의 근무
-const patShift=d=>{
+const patShiftCur=d=>{
   if(S.noPat)return '';
   const n=S.pattern.length;
   const i=((dayNum(d)-dayNum(parse(S.anchor)))%n+n)%n;
   return S.pattern[i];
+};
+// 시작 날을 바꾼 적이 있으면 그 날 이전은 그때의 옛 패턴 구간 (S.patOld, 날짜 오름차순)
+const patShift=d=>{
+  if(S.noPat)return '';
+  const po=S.patOld;
+  if(po&&po.length){const k=fmt(d);for(const o of po)if(k<o.until){const n=o.pattern.length;return o.pattern[((dayNum(d)-dayNum(parse(o.anchor)))%n+n)%n];}}
+  return patShiftCur(d);
 };
 // "공휴일엔 쉬어요"를 켜면 공휴일의 근무 날은 쉬는 날로
 const restKey=()=>((S.types||[]).find(t=>t.rest)||{k:'휴'}).k;
@@ -3888,6 +3906,7 @@ function saveType(){
   if(i>=0)S.types[i]=item;
   if(k!==t.orig){   // 글자를 바꾸면 패턴·변경·알람도 같이 바꿈
     S.pattern=S.pattern.map(x=>x===t.orig?k:x);
+    (S.patOld||[]).forEach(o=>{o.pattern=o.pattern.map(x=>x===t.orig?k:x);});
     for(const d in S.overrides)if(S.overrides[d]===t.orig)S.overrides[d]=k;
     S.alarms.forEach(a=>{if(a.shift===t.orig)a.shift=k;});
   }
@@ -4175,34 +4194,84 @@ const patPos=d=>{const n=S.pattern.length;return((dayNum(d)-dayNum(parse(S.ancho
 // 조 g 의 오늘 칸 번호
 const teamPos=(g,d)=>{const n=S.pattern.length,o=S.teamOffsets;return((patPos(d)+(o[g]||0)-(o[S.myTeam]||0))%n+n)%n;};
 function typeListHtml(){
-  return `<div class="pg-cap pcap">근무타입 <span>≡ 끌어서 순서 바꾸기</span></div>
-    <div class="pg-sec" id="tlist" style="margin-top:0">
-      ${S.types.map((x,i)=>`${i===4?'<div class="tl-sep">↑ 위 4개는 날짜 화면에 바로 보여요</div>':''}<div class="prow tl" data-i="${i}" data-act="type-edit-page" data-s="${esc(x.k)}">${badge(x.k,'sm')}<div class="pl2">${esc(x.name)}<small>${x.k===NONE_K?'아무것도 안 보이는 쉬는 날':x.rest?'쉬는 날':'근무하는 날'}</small></div><span class="tdrag" data-i="${i}" aria-label="끌어서 순서 바꾸기">≡</span></div>`).join('')}
-      <div class="prow tap" data-act="type-pick-page"><div class="pl2" style="color:var(--accent);font-weight:700">＋ 근무타입 추가</div></div>
+  return `<div class="pg-cap pcap">근무타입 <span>꾹 눌러 끌면 순서가 바뀌어요</span></div>
+    <div class="pg-sec" style="margin-top:0;padding:12px 10px 8px">
+      <div class="tchipgrid" id="tlist">${S.types.map((x,i)=>`<div class="tl2 tl ${i<4?'top4':''}" data-i="${i}" data-act="type-edit-page" data-s="${esc(x.k)}">${badge(x.k,'sm')}<small>${esc(x.name)}</small></div>`).join('')}<button class="tl2 add" data-act="type-pick-page"><i>＋</i><small>추가</small></button></div>
+      <div class="hint" style="padding:6px 6px 0">밑줄 있는 앞 4개는 날짜 화면에 바로 보여요 · 누르면 고쳐요</div>
     </div>`;
 }
-// ≡ 를 끌어서 순서 바꾸기 (S.types 순서가 그대로 저장됨)
-let tdg=null;
+// 근무타입 칩 · 패턴 칸을 꾹 눌러 끌어서 순서 바꾸기 (S.types · S.pattern 순서가 그대로 저장됨 · 바로 반영)
+let gdg=null;
 document.addEventListener('pointerdown',e=>{
-  const h=e.target.closest&&e.target.closest('.tdrag');if(!h)return;
-  e.preventDefault();e.stopPropagation();
-  const row=h.closest('.tl');tdg={id:e.pointerId,from:+h.dataset.i,over:+h.dataset.i,row,y0:e.clientY};row.classList.add('drag');
-  try{h.setPointerCapture(e.pointerId);}catch(err){}
-  buzz(10);
+  const el=e.target.closest&&e.target.closest('#tlist .tl,#pgrid .pc');if(!el||(e.button&&e.button>0))return;
+  gdg={id:e.pointerId,kind:el.classList.contains('tl')?'type':'pat',from:+el.dataset.i,over:+el.dataset.i,el,x0:e.clientX,y0:e.clientY,on:false};
+  gdg.t=setTimeout(()=>{if(gdg&&!gdg.on){gdg.on=true;gdg.el.classList.add('drag');buzz(10);}},380);
 },true);
 document.addEventListener('pointermove',e=>{
-  if(!tdg||e.pointerId!==tdg.id)return;
-  tdg.row.style.transform=`translateY(${e.clientY-tdg.y0}px)`;
-  const rows=[...document.querySelectorAll('#tlist .tl')];let o=tdg.over;
-  rows.forEach((r,i)=>{const b=r.getBoundingClientRect();if(r!==tdg.row&&e.clientY>=b.top&&e.clientY<=b.bottom)o=i;});
-  if(o!==tdg.over){tdg.over=o;rows.forEach((r,i)=>r.classList.toggle('over',i===o&&i!==tdg.from));buzz(5);}
+  const g=gdg;if(!g||e.pointerId!==g.id)return;
+  if(!g.on){if(Math.hypot(e.clientX-g.x0,e.clientY-g.y0)>10){clearTimeout(g.t);gdg=null;}return;}
+  g.el.style.transform=`translate(${e.clientX-g.x0}px,${e.clientY-g.y0}px)`;
+  const items=[...document.querySelectorAll(g.kind==='type'?'#tlist .tl':'#pgrid .pc')];let o=g.over;
+  items.forEach((r,i)=>{const b=r.getBoundingClientRect();if(r!==g.el&&e.clientX>=b.left&&e.clientX<=b.right&&e.clientY>=b.top&&e.clientY<=b.bottom)o=i;});
+  if(o!==g.over){g.over=o;items.forEach((r,i)=>r.classList.toggle('over',i===o&&i!==g.from));buzz(5);}
 },true);
+// 끄는 중에는 화면이 같이 스크롤되지 않게
+document.addEventListener('touchmove',e=>{if(gdg&&gdg.on&&e.cancelable)e.preventDefault();},{passive:false,capture:true});
 ['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,e=>{
-  if(!tdg||e.pointerId!==tdg.id)return;
-  const g=tdg;tdg=null;held=true;setTimeout(()=>{held=false;},60);
-  if(ev==='pointerup'&&g.over!==g.from){S.types.splice(g.over,0,S.types.splice(g.from,1)[0]);save();render();}
+  const g=gdg;if(!g||e.pointerId!==g.id)return;
+  clearTimeout(g.t);gdg=null;
+  if(!g.on)return;
+  held=true;setTimeout(()=>{held=false;},60);
+  if(ev==='pointerup'&&g.over!==g.from){const a=g.kind==='type'?S.types:S.pattern;a.splice(g.over,0,a.splice(g.from,1)[0]);save();render();}
   openPatternPage();
 },true));
+/* ---- 1번째 칸 시작 날 바꾸기 = 큰일: 자동 백업 + 바꾸기 전 패턴을 "그 날 이전 구간"으로 간직 ---- */
+let patSnap=null,ancNew=null;
+const ANC_KEY='eonjeswieo:before-anchor';
+function askAnchor(nv){
+  if(nv===S.anchor){openPatternPage();return;}
+  ancNew=nv;
+  const snap=patSnap||{pattern:S.pattern.slice(),anchor:S.anchor};
+  const drop=(S.patOld||[]).filter(o=>o.until>=nv).length;
+  const d=parse(nv);
+  openPop(`<div class="mh">시작 날 바꾸기<b>${d.getMonth()+1}월 ${d.getDate()}일부터 1번째 칸</b></div>
+    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0">바꾸기 전에 지금 상태를 <b>자동으로 백업</b>해 둬요.<br><b>이 날부터 새 패턴</b>을 고르면 ${d.getMonth()+1}월 ${d.getDate()}일 <b>이전은 지금까지 쓰던 패턴 그대로</b> 남아요.${drop?`<br>(이전 구간 ${drop}개가 정리돼요)`:''}<br><b>처음부터 전부 바꾸기</b>는 지난 달까지 새 패턴으로 다시 계산해요 (패턴을 잘못 넣었을 때).</div></div>
+    <div class="mi" style="gap:8px;flex-direction:column"><button class="btn" style="width:100%" data-act="anc-keep">이 날부터 새 패턴 (이전은 그대로)</button><button class="btn ghost" style="width:100%" data-act="anc-all">처음부터 전부 바꾸기</button><button class="btn ghost" style="width:100%" data-act="anc-cancel">취소</button></div>`);
+}
+function ancBackup(){
+  try{
+    const data=backupData();
+    if(hasBridge('driveLinked')&&window.AndroidBridge.driveLinked()&&hasBridge('driveBackup')){window.AndroidBridge.driveBackup(JSON.stringify(data),JSON.stringify(backupMeta()),true);autoSilent=true;}
+    localStorage.setItem(ANC_KEY,JSON.stringify(data));   // 폰 안에도 한 번 (드라이브를 안 쓰는 사람용 · 가장 최근 1개)
+  }catch(e){}
+}
+function ancApply(keep){
+  const nv=ancNew;if(!nv)return;ancNew=null;
+  const snap=patSnap||{pattern:S.pattern.slice(),anchor:S.anchor};
+  ancBackup();
+  if(keep){
+    S.patOld=(S.patOld||[]).filter(o=>o.until<nv);
+    S.patOld.push({until:nv,pattern:snap.pattern.slice(),anchor:snap.anchor});
+    S.patOld.sort((a,b)=>a.until<b.until?-1:1);
+    if(S.patOld.length>20)S.patOld=S.patOld.slice(-20);
+  }
+  S.anchor=nv;patSnap={pattern:S.pattern.slice(),anchor:S.anchor};
+  save();render();closePop();openPatternPage();
+  toast(keep?'바꿨어요 · 이전 날짜는 옛 패턴 그대로예요':'바꿨어요 · 전체를 새 패턴으로 계산해요');
+}
+function restoreAnchorBackup(){
+  let d=null;try{d=JSON.parse(localStorage.getItem(ANC_KEY)||'null');}catch(e){}
+  if(!d){toast('되돌릴 백업이 없어요');return;}
+  if(!confirm('시작 날을 바꾸기 직전 상태로 되돌릴까요?\n(그 뒤에 바꾼 근무 · 메모도 그때 상태로 돌아가요)'))return;
+  if(applyBackup(d)){patSnap=null;render();openPatternPage();toast('바꾸기 전 상태로 되돌렸어요');}
+}
+function openPatOld(){
+  const po=S.patOld||[];
+  const lb=po.map((o,i)=>{const from=i?po[i-1].until:'';const u=parse(o.until);const f=from?parse(from):null;
+    return `<div class="prow"><div class="pl2">${f?`${f.getMonth()+1}/${f.getDate()}`:'처음'} ~ ${u.getMonth()+1}/${u.getDate()} 전까지<small>${o.pattern.length}일 반복 · 시작 ${o.anchor.slice(5).replace('-','/')}</small></div><div class="pv" style="display:flex;gap:2px">${o.pattern.slice(0,8).map(k=>badge(k,'xs')).join('')}</div></div>`;}).join('');
+  openPop(`<div class="mh">이전 패턴<b>시작 날을 바꾸기 전 패턴이에요</b></div><div class="mi" style="display:block;padding:0">${lb||'<div class="hint">없어요</div>'}</div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pat-old-clear">이전 패턴 지우기</button><button class="btn grow" data-act="pop-close">닫기</button></div>`);
+}
 function openPatternPage(){
   if(S.noPat){   // 정해진 순서가 없을 때: 순서 만들기 · 칠하기만
     const ovN0=Object.keys(S.overrides).length;
@@ -4232,17 +4301,19 @@ function openPatternPage(){
     ${pageHead('근무 패턴 · 조')}
     <div class="pg-b">
       ${typeListHtml()}
-      <div class="pg-cap pcap">근무 패턴 · ${n}일 반복 <span>칸을 누르면 바꿔요</span></div>
+      <div class="pg-cap pcap">근무 패턴 · ${n}일 반복 <span>누르면 바꾸고, 꾹 눌러 끌면 순서가 바뀌어요</span></div>
       <div class="pg-sec" style="margin-top:0;padding:12px 12px 14px">
-        <div class="pgrid">${S.pattern.map((s,i)=>`<button class="pc ${i===cp?'pnow':''}" data-act="pcell" data-i="${i}">${badge(s,'sm')}<small>${i+1}</small></button>`).join('')}</div>
+        <div class="pgrid" id="pgrid">${S.pattern.map((s,i)=>`<button class="pc ${i===cp?'pnow':''}" data-act="pcell" data-i="${i}">${badge(s,'sm')}<small>${i+1}</small></button>`).join('')}</div>
         <div class="row" style="margin-top:10px;gap:8px">${n<PAT_MAX?'<button class="btn ghost sm" data-act="padd">＋ 칸 추가</button>':''}${n>2?'<button class="btn ghost sm" data-act="pdel">－ 칸 빼기</button>':''}</div>
       </div>
       <div class="hint" style="padding:8px 16px 0">오늘(${t0.getMonth()+1}/${t0.getDate()})은 ${cp+1}번째 칸 · ${esc(lb[cp])}이에요</div>
       <div class="pg-sec">
         <div class="prow"><div class="pl2">근무 이름<small>달력 위에 보여요</small></div><input type="text" class="inl" id="patternName" value="${esc(S.patternName||'')}" placeholder="예: 4조2교대" maxlength="20"></div>
-        <div class="prow"><div class="pl2">1번째 칸 시작 날</div>${tpick('anchor',S.anchor,'','date')}</div>
+        <div class="prow"><div class="pl2">1번째 칸 시작 날<small>바꾸면 이전 날짜 근무를 어떻게 할지 물어봐요</small></div>${tpick('anchor',S.anchor,'','date')}</div>
+        ${(S.patOld||[]).length?`<div class="prow tap" data-act="pat-old-show"><div class="pl2">이전 패턴 보기 · 지우기<small>${S.patOld.length}개 구간이 남아 있어요</small></div><div class="pv">›</div></div>`:''}
+        ${(()=>{try{return localStorage.getItem(ANC_KEY)?`<div class="prow tap" data-act="pat-undo-anchor"><div class="pl2">시작 날 바꾸기 전으로 되돌리기<small>마지막으로 바꾸기 직전의 자동 백업</small></div><div class="pv">›</div></div>`:'';}catch(e){return '';}})()}
         <div class="prow"><div class="pl2">공휴일엔 쉬어요<small>상주(평일) 근무 · 빨간 날 근무 칸이 휴무로</small></div><label class="sw"><input type="checkbox" id="holRest" ${S.holRest?'checked':''}><i></i></label></div>
-        <div class="prow tap" data-act="paint-open"><div class="pl2">🖌 달력에 칠하기<small>매달 근무표가 새로 나오면 · 근무를 골라 날짜를 쭉 눌러요</small></div><div class="pv">›</div></div>
+        <div class="prow tap" data-act="paint-open"><div class="pl2">🖌 달력에 칠하기<small>달력 탭으로 이동해요 · 근무를 골라 날짜를 쭉 눌러요</small></div><div class="pv">›</div></div>
       </div>
       ${tc>1?`<div class="pg-cap">조별 근무</div>
       <div class="pg-sec" style="margin-top:0;padding:8px 6px 10px"><div class="tgrid" style="--cols:${cols}">${tg}</div>
@@ -4418,7 +4489,7 @@ function openBackupPage(){
     </div>`,'backup');
   if(linked&&driveFiles===null&&!driveBusy){driveBusy=true;window.AndroidBridge.driveList(true);}
 }
-const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','weekStart','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
+const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','weekStart','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -4696,7 +4767,7 @@ function obApply(){
     S.holRest=!!p.hol;
     S.patternName=p.name.replace(/\s/g,'').replace(/\(.*\)/,'');
   }
-  S.anchor=obAnchor();
+  S.anchor=obAnchor();S.patOld=[];
   if(ob.entry!=='later'||!S.noPat)S.overrides={};   // 불규칙으로 날짜마다 넣어 둔 근무는 패턴을 만들어도 그대로
   S.noPat=false;S.myset=true;S.personal=false;
 }
@@ -5101,7 +5172,13 @@ document.addEventListener('click',e=>{
     case 'more-share':shareStart();break;
     case 'more-family':openFamilyPage();break;
     case 'more-colors':openColorsPage();break;
-    case 'more-pattern':openPatternPage();break;
+    case 'more-pattern':patSnap={pattern:S.pattern.slice(),anchor:S.anchor};openPatternPage();break;
+    case 'anc-keep':ancApply(true);break;
+    case 'anc-all':ancApply(false);break;
+    case 'anc-cancel':ancNew=null;closePop();openPatternPage();break;
+    case 'pat-undo-anchor':restoreAnchorBackup();break;
+    case 'pat-old-show':openPatOld();break;
+    case 'pat-old-clear':if(confirm('이전 패턴 기록을 지울까요?\n지난 날짜 근무가 지금 패턴 기준으로 바뀌어요.')){S.patOld=[];save();render();openPatternPage();}break;
     case 'weekstart':S.weekStart=+t.dataset.v===1?1:0;save();render();break;
     case 'personal-off':S.personal=false;save();render();toast(S.myset?'근무표를 다시 써요':'달력 위 "내 근무표 만들기"로 시작해요');break;
     case 'more-comp':openCompPage();break;
@@ -5359,7 +5436,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='st_phone'){S.status.phone=t.checked;save();openStatusPage();
   }else if(t.id==='st_home'){S.status.homeAlert=t.checked;save();openStatusPage();
   }else if(t.id==='piDate'){const n=piTarget();if(n)n.dateAuto=t.checked;
-  }else if(t.id==='anchor'&&t.value){S.anchor=t.value;save();openPatternPage();}
+  }else if(t.id==='anchor'&&t.value){askAnchor(t.value);}
   else if(t.id==='shareMemo'){$('#app').classList.toggle('share-memo',t.checked);render();}
   else if(t.id==='shareStk'){shareStk=t.checked;render();}
   else if(t.id==='holRest'){S.holRest=t.checked;save();toast(t.checked?'공휴일 근무 칸을 휴무로 보여요':'공휴일도 패턴대로 보여요');}
@@ -5733,6 +5810,7 @@ function famStkPayload(){
 }
 function famPayload(){
   const lo=addK(fmt(new Date()),-35),ov={};
+  if(S.patOld&&S.patOld.length&&!S.noPat){for(let i=0;i<=35;i++){const d=addDays(parse(lo),i),k=fmt(d);if(k>=S.patOld[S.patOld.length-1].until)break;const b=baseShift(d);if(b!==holAdj(d,patShiftCur(d)))ov[k]=String(b);}}   // 옛 패턴이던 날(가족 앱은 새 패턴만 앎): 달라지는 날만 같이 올림
   Object.keys(S.overrides||{}).sort().forEach(k=>{if(k>=lo)ov[k]=String(S.overrides[k]);});
   const ks=Object.keys(ov);if(ks.length>500)ks.slice(0,ks.length-500).forEach(k=>delete ov[k]);
   return {v:1,patternName:String(S.patternName||'교대근무').slice(0,20),teamName:String(S.noPat?'':(myTeamLabel()||'')).slice(0,10),
