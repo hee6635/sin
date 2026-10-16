@@ -34,7 +34,7 @@ const closeNotice=async p=>{await p.waitForTimeout(950);if(await p.$('#pop.open 
  T_('끝 화면',(await txt(p)).includes('준비 끝'));
  await ob(p,'ob-done');await p.waitForTimeout(500);
  const s=await st(p);T_('myset true · noPat false · 4조2교대',s.myset===true&&s.noPat===false&&s.patternName==='4조2교대'&&s.pattern.length===8);
- T_('달력 위 줄에 근무 이름',(await p.$eval('.cal-mid .sub',e=>e.textContent)).includes('4조2교대'));
+ T_('달력 위 줄에 근무 이름이 없음',!(await p.$eval('.cal-mid .sub',e=>e.textContent)).includes('4조2교대'));
  console.log('ERR',p.errs);await p.context().close();}
 // ---- 2. 직접 만들게요
 {const p=await mk(b,null);
@@ -109,7 +109,7 @@ const closeNotice=async p=>{await p.waitForTimeout(950);if(await p.$('#pop.open 
  const p=await mk(b,OLD);
  const s=await st(p);
  const cell=await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-12"] .bwrap',e=>e.textContent.trim());
- T_('예전 사용자: 달력 그대로(근무 표시)',cell.length>0&&!!(await p.$eval('.cal-mid .sub',e=>e.textContent)).includes('4조2교대'));
+ T_('예전 사용자: 달력 그대로(근무 표시)',cell.length>0);
  // 설정 > 근무 패턴 > 다시 하기
  await p.click('#nav [data-tab="set"]');await p.waitForTimeout(200);
  await p.click('[data-act="more-pattern"]');await p.waitForTimeout(300);

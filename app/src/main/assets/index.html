@@ -161,10 +161,10 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .dn{width:100%;height:max(20px,calc(var(--stz) + 6px));flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 5px;font-size:13px;line-height:20px;position:relative;z-index:2;}
 .dn.sun .num{color:var(--sun)}.dn.sat .num{color:var(--sat)}
 .dn.hol{background:var(--hol-bg)}
-.dn .hn{font-size:10px;color:var(--sun);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none;text-align:right;}
+.dn .hn{font-size:10px;font-weight:800;color:var(--sun);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none;text-align:right;}
 .cell.today{background:var(--today-bg)}
-.cell.today::after{content:'';position:absolute;inset:0;border:4px solid var(--today);pointer-events:none;z-index:4}
-.cell.today .dn{padding-left:8px;padding-top:3px}
+.cell.today .dn{padding-left:0;padding-top:0}
+.cell.today .dn .num{background:var(--today);color:#fff !important;font-weight:800;border-radius:0 0 8px 0;padding:0 7px 0 5px;min-width:22px;text-align:center;align-self:flex-start;line-height:max(20px,calc(var(--stz) + 6px))}
 
 .bwrap{flex:none;width:100%;height:calc(var(--b) + 2px);position:relative;display:flex;align-items:center;justify-content:center;margin-top:clamp(6px,calc(var(--stz) - 4px),12px)}
 .cell.pers .bwrap{margin-top:0}
@@ -369,6 +369,8 @@ textarea{resize:none;min-height:84px}
 .pgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
 .pgrid .pc{width:auto;height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 .pgrid .pc small{position:static;font-size:9.5px}
+.pgrid.wk7{grid-template-columns:repeat(7,1fr)}
+.pgdow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;font-size:11.5px;font-weight:800;color:var(--muted);margin-bottom:4px}.pgdow .su{color:var(--sun)}.pgdow .sa{color:var(--sat)}
 .pgrid .pc.pnow{box-shadow:inset 0 0 0 2px var(--accent)}.pgrid .pc.pnow small{color:var(--accent);font-weight:800}
 .ted{gap:8px!important;padding:10px 16px!important}.ted input{flex:1;min-width:0}
 .ted .tstar{font-size:20px;width:30px;flex:none;color:var(--muted)}.ted .tmy{width:36px;flex:none;font-size:11.5px;font-weight:800;color:var(--accent);text-align:center}
@@ -401,6 +403,7 @@ textarea{resize:none;min-height:84px}
 .badge.tc{width:46px;height:46px;font-size:17px;font-weight:500;opacity:.45}
 .badge.tc.r{font-size:15px;font-weight:600;border-radius:50%;background:var(--surface)}
 .badge.tc.two{font-size:13px}
+.badge.three{letter-spacing:-1.2px}.bwrap .badge.three,.bwrap .badge.r.three{font-size:calc(var(--b)*.28)}.badge.sm.three{font-size:8.5px}.badge.xs.three{font-size:7.5px}.badge.tc.three{font-size:10.5px}.badge.big.three{font-size:15px}
 .tchip.on .badge.tc{opacity:1;box-shadow:0 0 0 2.5px var(--bg),0 0 0 4.5px var(--fg)}
 .tchip.on small{color:var(--fg);font-weight:700}
 .badge.tc.add{width:auto;padding:0 14px;border-radius:23px;background:var(--surface);color:var(--muted);font-size:15px;opacity:1}
@@ -1082,7 +1085,8 @@ button.tbtn{cursor:pointer}
 /* 개인 캘린더: 스티커는 칸 가운데에 크게 (최대 4개) */
 .cell.pers{--b:max(34px,min(100cqw,56px,calc(100cqh - 62px)))}
 .pstk{display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:1px 2px;height:100%;width:100%;--stz:min(28px,44cqw,var(--b))}
-.pstk.n3,.pstk.n4{--stz:min(24px,46cqw,calc(var(--b)/2 - 1px))}
+.pstk.n3{--stz:min(22px,calc((100cqw - 6px)/3),calc(var(--b)*.7));flex-wrap:nowrap}
+.pstk.n4{--stz:min(24px,46cqw,calc(var(--b)/2 - 1px))}
 .pstk>svg,.pstk .sx svg{width:var(--stz);height:var(--stz)}
 .pstk>.se,.pstk .sx .se{font-size:calc(var(--stz)*.8) !important;line-height:1.2}
 .pstk>svg:not(.off),.pstk>.se:not(.plan),.pstk>.sx{filter:drop-shadow(0 0 1.2px var(--bg)) drop-shadow(0 1px 1.4px rgba(0,0,0,.3))}
@@ -1091,7 +1095,7 @@ button.tbtn{cursor:pointer}
 .dn .stp>*:nth-child(1){transform:rotate(-7deg)}.dn .stp>*:nth-child(2){transform:rotate(6deg)}
 .cell:nth-child(3n) .dn .stp>*:nth-child(1){transform:rotate(5deg)}.cell:nth-child(3n) .dn .stp>*:nth-child(2){transform:rotate(-6deg)}
 .dn .stp>.plan,.dn .stp>svg.off{transform:none !important}
-.dn .h1{font-size:10px;font-weight:800;color:var(--sun);margin-left:1px;flex:none}
+.dn .h1{font-size:11px;font-weight:800;color:var(--sun);margin-left:1px;flex:none}
 .dn.h1r{padding:0 3px;justify-content:flex-start}.dn.h1r .stp{margin-left:auto;gap:1px}
 .dn .hn.sm{font-size:9px;letter-spacing:-.4px}
 /* 공휴일 이름이 날짜 줄에 안 들어가면(fitDn) 숫자 바로 아래 한 글자 */
@@ -1359,6 +1363,7 @@ const NONE_K='_';   // "없음" 근무타입의 저장 글자 (달력에는 아�
 // 근무타입 고르는 칩 · 칠하기 막대처럼 눈에 보여야 하는 곳은 점선 동그라미 "없음", 달력 칸은 빈 칸
 const noneBadge=(extra,inner)=>{const ph=/(^|\s)(tc|sm|big|xs)(\s|$)/.test(extra||'');return `<span class="badge r nonb${ph?' ph':''} ${extra||''}">${ph?'없음':''}${inner||''}</span>`;};
 const BLANK_T={k:'',name:'미정',color:'',rest:true,blank:true};   // 정해진 근무가 없는 날 (불규칙 · 건너뛴 달력)
+const kCut=v=>{v=String(v||'').trim();return /^[\x21-\x7e]+$/.test(v)?v.slice(0,3):v.slice(0,2);};
 const typeOf=k=>k===''?BLANK_T:((S.types||[]).find(t=>t.k===k)||{k,name:k,color:'#cfd8dc',rest:false});
 const shiftLabel=k=>typeOf(k).name;
 const isRest=k=>!!typeOf(k).rest;
@@ -1373,7 +1378,7 @@ function tColors(t){
 function badge(k,extra,inner){
   if(k===NONE_K)return noneBadge(extra,inner);
   if(k==='')return `<span class="badge r ${extra||''} blankb">·${inner||''}</span>`;
-  const t=typeOf(k),c=tColors(t),two=String(k).length>1?' two':'';
+  const t=typeOf(k),c=tColors(t),two=String(k).length>2?' two three':String(k).length>1?' two':'';
   if(!c)return `<span class="badge r${two} ${extra||''}">${esc(k)}${inner||''}</span>`;
   return `<span class="badge c${two} ${extra||''}" style="--tb:${c.bg};--tf:${c.fg}">${esc(k)}${inner||''}</span>`;
 }
@@ -1463,7 +1468,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.personal=!!s.personal;s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.personal=!!s.personal;s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},o&&o.memoColors);
   s.drive=Object.assign(defaults().drive,o&&o.drive);
@@ -1972,8 +1977,8 @@ let lastLines=0;
 function calSub(){
   if(S.personal)return '<span class="mkh">개인 캘린더</span>';
   if(!S.myset)return S.personal?'<span class="mkh">개인 캘린더</span>':'<button class="mkp" data-act="mk-sched">내 근무표 만들기 ›</button>';
-  if(S.noPat)return Object.keys(S.overrides||{}).length?`<b>${esc(S.patternName||'불규칙 근무')}</b>`:'<span class="mkh">날짜를 눌러서 근무를 넣어요</span>';
-  return `<b>${esc(S.patternName||'교대근무')} ${esc(myTeamLabel())}</b>${role()==='guest'?' · 가족 보기':''}`;
+  if(S.noPat)return Object.keys(S.overrides||{}).length?'':'<span class="mkh">날짜를 눌러서 근무를 넣어요</span>';
+  return role()==='guest'?'<b>가족 보기</b>':'';
 }
 let lastW=innerWidth;
 window.addEventListener('resize',()=>{const n=memoLines(),w=innerWidth;if((n!==lastLines||w!==lastW)&&document.querySelector('.grid')){lastW=w;render();}else lastW=w;});
@@ -2054,7 +2059,7 @@ function calPanel(y,m){
     const d=addDays(start,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),chI=hol?null:compHolItem(k),ch=chI?chI.name:'',ov=S.overrides[k],dow=d.getDay();
     const cls=hol||dow===0?'sun':dow===6?'sat':'';
     const vm=visibleMemos(k),fam=vm.filter(x=>x.shared),mine=vm.filter(x=>!x.shared);
-    const rcls=sharing?'':rqRing(S.requests.filter(r=>r.date===k&&(!r.srv||r.dir==='in')));
+    const rcls=sharing?'':rqRing(S.requests.filter(r=>r.date===k&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r));
     const pills=[];
     // 가족 · 나만은 색으로 구분 (♥ · 🔒 는 아래 설명 줄에 한 번만)
     const pst=x=>`${x.done?' done':''}" ${x.color?`style="--mc:${esc(x.color)}"`:''}`;
@@ -2212,15 +2217,15 @@ function markSel(k){
   const c=k&&cellOf(k);if(c)c.classList.add('sel');
 }
 let busy=false;
-function slideTo(dir){
+function slideTo(dir,cb){
   const tr=$('#track'),mk=cur.y*12+cur.m+dir;
   if(mk<MIN_M||mk>MAX_M)return;
-  if(!tr){shiftMonth(dir);return;}
+  if(!tr){shiftMonth(dir);if(cb)cb();return;}
   if(busy)return;
   busy=true;
   tr.style.transition='transform .26s ease';
   tr.style.transform=`translateX(${dir>0?'-66.6667%':'0%'})`;
-  setTimeout(()=>{busy=false;shiftMonth(dir);},270);
+  setTimeout(()=>{busy=false;shiftMonth(dir);if(cb)cb();},270);
 }
 
 /* ================= 동료근무 ================= */
@@ -3879,7 +3884,7 @@ function openDay(k){
   let topPart='';
   if(isGuest){
     const canAsk=!dayReqs.some(r=>r.st==='pending'||r.st==='accepted');
-    const wantBtns=S.types.slice(0,4).map(x=>x.k).map(s=>`<button class="${reqDraft.want===s?'on':''}" data-act="rqwant" data-s="${esc(s)}">${badge(s,'sm')}${esc(shiftLabel(s))}</button>`).join('');
+    const wantBtns=S.types.slice(0,quickN()).map(x=>x.k).map(s=>`<button class="${reqDraft.want===s?'on':''}" data-act="rqwant" data-s="${esc(s)}">${badge(s,'sm')}${esc(shiftLabel(s))}</button>`).join('');
     topPart=`
       <div class="card" style="padding:14px; margin-bottom:6px; text-align:center; font-size:16px; font-weight:700; background:var(--bg); border:1px solid var(--line);">
          ${badge(c,'sm','')} <span style="vertical-align:middle;margin-left:6px">${esc(shiftLabel(c))}</span>
@@ -3894,7 +3899,7 @@ function openDay(k){
   }else{
     const famOthers=visibleMemos(k).filter(m=>m.shared&&m.by!=='host');
     const warn=famOthers.length?`<div class="family-warning-box" style="border-color:var(--fam);background:var(--fam-bg)"><b style="color:var(--fam)">♥ 가족 메모가 있는 날이에요</b><p>"${esc(firstLine(famOthers[0].text))}"</p></div>`:'';
-    const quick=S.types.slice(0,4);if(!quick.some(x=>x.k===c)&&S.types.some(x=>x.k===c))quick.push(typeOf(c));
+    const quick=S.types.slice(0,quickN());if(!quick.some(x=>x.k===c)&&S.types.some(x=>x.k===c))quick.push(typeOf(c));
     const shiftBtns=quick.map(x=>`<button class="tchip ${c===x.k?'on':''}" data-act="setshift" data-s="${esc(x.k)}">
         ${badge(x.k,'tc')}<small>${esc(x.name)}</small>${ov&&x.k===base?'<i class="orig">원래</i>':''}</button>`).join('');
     topPart=S.personal?`${warn}`:`${dayReqs.length?`<div class="lbl" style="color:var(--accent);margin-top:12px;">📩 이 날의 근무 요청</div>${reqHtml}`:''}
@@ -3974,7 +3979,8 @@ function filterTypePick(q){
 function typePreview(){
   const t=typeDraft,c=tColors(t),k=t.k||'?';
   if(t.k===NONE_K)return `<span id="tdPrev" class="badge r big nonb ph">없음</span>`;
-  return c?`<span id="tdPrev" class="badge c big" style="--tb:${c.bg};--tf:${c.fg}">${esc(k)}</span>`:`<span id="tdPrev" class="badge r big">${esc(k)}</span>`;
+  const tw=k.length>2?' two three':'';
+  return c?`<span id="tdPrev" class="badge c big${tw}" style="--tb:${c.bg};--tf:${c.fg}">${esc(k)}</span>`:`<span id="tdPrev" class="badge r big${tw}">${esc(k)}</span>`;
 }
 function openTypeEdit(){
   const t=typeDraft;
@@ -3987,7 +3993,7 @@ function openTypeEdit(){
     </div>
     <div style="display:flex;justify-content:center;padding:6px 0 16px">${typePreview()}</div>
     <div class="row">
-      <div style="width:90px"><div class="lbl" style="margin-top:0">달력 글자</div><input type="text" id="tdK" value="${t.k===NONE_K?'':esc(t.k)}" maxlength="2" placeholder="${t.k===NONE_K?'없음':'예: 연'}" ${BUILTIN.includes(t.orig)||t.orig===NONE_K?'disabled':''}></div>
+      <div style="width:90px"><div class="lbl" style="margin-top:0">달력 글자</div><input type="text" id="tdK" value="${t.k===NONE_K?'':esc(t.k)}" maxlength="3" placeholder="${t.k===NONE_K?'없음':'예: 연'}" ${BUILTIN.includes(t.orig)||t.orig===NONE_K?'disabled':''}></div>
       <div class="grow"><div class="lbl" style="margin-top:0">이름</div><input type="text" id="tdName" value="${esc(t.name)}" maxlength="12" placeholder="예: 연차"></div>
     </div>
     ${t.orig===NONE_K?'<div class="hint" style="margin:10px 0 0">달력 칸에 아무것도 안 보이는 쉬는 날이에요 (쉬는 날로 세요)</div>':`<div class="lbl">종류</div>
@@ -4005,7 +4011,7 @@ function openTypeEdit(){
 function saveType(){
   const t=typeDraft;if(!t)return;
   const k=(t.k||'').trim(),name=(t.name||'').trim()||k;
-  if(!k){toast('달력에 보일 글자를 1~2자 넣어주세요');return;}
+  if(!k){toast('달력에 보일 글자를 넣어주세요 (한글 2자 · 영문 3자)');return;}
   if(S.types.some(x=>x.k===k&&x.k!==t.orig)){toast('이미 있는 글자예요');return;}
   const item={k,name,color:t.color,rest:!!t.rest};
   if(t.isNew){
@@ -4302,11 +4308,13 @@ const PAT_MAX=60,TEAM_MAX=8;
 const patPos=d=>{const n=S.pattern.length;return((dayNum(d)-dayNum(parse(S.anchor)))%n+n)%n;};
 // 조 g 의 오늘 칸 번호
 const teamPos=(g,d)=>{const n=S.pattern.length,o=S.teamOffsets;return((patPos(d)+(o[g]||0)-(o[S.myTeam]||0))%n+n)%n;};
+const quickN=()=>S.quickN===4||S.quickN===8?S.quickN:(new Set(S.pattern||[]).size>=5?8:4);
 function typeListHtml(){
   return `<div class="pg-cap pcap">근무타입 <span>꾹 눌러 끌면 순서가 바뀌어요</span></div>
     <div class="pg-sec" style="margin-top:0;padding:12px 10px 8px">
-      <div class="tchipgrid" id="tlist">${S.types.map((x,i)=>`<div class="tl2 tl ${i<4?'top4':''}" data-i="${i}" data-act="type-edit-page" data-s="${esc(x.k)}">${badge(x.k,'sm')}<small>${esc(x.name)}</small></div>`).join('')}<button class="tl2 add" data-act="type-pick-page"><i>＋</i><small>추가</small></button></div>
-      <div class="hint" style="padding:6px 6px 0">밑줄 있는 앞 4개는 날짜 화면에 바로 보여요 · 누르면 고쳐요</div>
+      <div class="tchipgrid" id="tlist">${S.types.map((x,i)=>`<div class="tl2 tl ${i<quickN()?'top4':''}" data-i="${i}" data-act="type-edit-page" data-s="${esc(x.k)}">${badge(x.k,'sm')}<small>${esc(x.name)}</small></div>`).join('')}<button class="tl2 add" data-act="type-pick-page"><i>＋</i><small>추가</small></button></div>
+      <div class="hint" style="padding:6px 6px 0">밑줄 있는 앞 ${quickN()}개는 날짜 화면에 바로 보여요 · 누르면 고쳐요</div>
+      <div class="prow" style="padding:8px 6px 0"><div class="pl2">바로 보이는 개수</div><div class="chips"><button class="${S.quickN?'':'on'}" data-act="quickn" data-v="0">자동</button><button class="${S.quickN===4?'on':''}" data-act="quickn" data-v="4">4개</button><button class="${S.quickN===8?'on':''}" data-act="quickn" data-v="8">8개</button></div></div>
     </div>`;
 }
 // 근무타입 칩 · 패턴 칸을 꾹 눌러 끌어서 순서 바꾸기 (S.types · S.pattern 순서가 그대로 저장됨 · 바로 반영)
@@ -4421,7 +4429,10 @@ function openPatternPage(){
       ${typeListHtml()}
       <div class="pg-cap pcap">근무 패턴 · ${n}일 반복 <span>누르면 바꾸고, 꾹 눌러 끌면 순서가 바뀌어요</span></div>
       <div class="pg-sec" style="margin-top:0;padding:12px 12px 14px">
-        <div class="pgrid" id="pgrid">${S.pattern.map((s,i)=>`<button class="pc ${i===cp?'pnow':''}" data-act="pcell" data-i="${i}">${badge(s,'sm')}<small>${i+1}</small></button>`).join('')}</div>
+        <div class="prow" style="padding:0 2px 10px"><div class="pl2">요일 보기</div><label class="sw"><input type="checkbox" id="patWeek" ${S.patWeek?'checked':''}><i></i></label></div>
+        ${S.patWeek&&n%7===0?`<div class="pgdow">${[0,1,2,3,4,5,6].map(j=>{const w=(parse(S.anchor).getDay()+j)%7;return `<span class="${w===0?'su':w===6?'sa':''}">${DOW[w]}</span>`;}).join('')}</div>`:''}
+        ${S.patWeek&&n%7!==0?`<div class="hint" style="padding:0 2px 10px">지금은 ${n}일 패턴이라 요일이 매주 달라져요 <button class="btn ghost sm" data-act="pweek-fit" style="margin-left:6px">요일로 맞추기</button></div>`:''}
+        <div class="pgrid ${S.patWeek&&n%7===0?'wk7':''}" id="pgrid">${S.pattern.map((s,i)=>`<button class="pc ${i===cp?'pnow':''}" data-act="pcell" data-i="${i}">${badge(s,'sm')}<small>${i+1}</small></button>`).join('')}</div>
         <div class="row" style="margin-top:10px;gap:8px">${n<PAT_MAX?'<button class="btn ghost sm" data-act="padd">＋ 칸 추가</button>':''}${n>2?'<button class="btn ghost sm" data-act="pdel">－ 칸 빼기</button>':''}</div>
       </div>
       <div class="hint" style="padding:8px 16px 0">오늘(${t0.getMonth()+1}/${t0.getDate()})은 ${cp+1}번째 칸 · ${esc(lb[cp])}이에요</div>
@@ -4607,7 +4618,7 @@ function openBackupPage(){
     </div>`,'backup');
   if(linked&&driveFiles===null&&!driveBusy){driveBusy=true;window.AndroidBridge.driveList(true);}
 }
-const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','weekStart','memoLines','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
+const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','weekStart','memoLines','quickN','patWeek','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -4968,7 +4979,7 @@ document.addEventListener('click',e=>{
     case 'prev':slideTo(-1);break;
     case 'next':slideTo(1);break;
     case 'today':{const n=new Date();setCur(n.getFullYear(),n.getMonth());render();break;}
-    case 'day':if(paint){if(role()==='host')paintDay(t.dataset.k);break;}if(t.classList.contains('out')){buzz(6);slideTo(monthDirOf(t.dataset.k,cur.y,cur.m));break;}buzz(8);reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(t.dataset.k);break;
+    case 'day':if(paint){if(role()==='host')paintDay(t.dataset.k);break;}{const k=t.dataset.k,go=()=>{buzz(8);reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(k);};if(t.classList.contains('out')){buzz(6);slideTo(monthDirOf(k,cur.y,cur.m),go);}else go();}break;
     case 'close':closeSheet();break;
     case 'page-close':closePage();break;
     case 'pop-close':closePop();break;
@@ -5303,6 +5314,7 @@ document.addEventListener('click',e=>{
     case 'pat-undo-anchor':restoreAnchorBackup();break;
     case 'pat-old-show':openPatOld();break;
     case 'pat-old-clear':if(confirm('이전 패턴 기록을 지울까요?\n지난 날짜 근무가 지금 패턴 기준으로 바뀌어요.')){S.patOld=[];save();render();openPatternPage();}break;
+    case 'quickn':S.quickN=+t.dataset.v===4?4:+t.dataset.v===8?8:0;save();openPatternPage();break;
     case 'memolines':S.memoLines=+t.dataset.v===4?4:3;save();render();break;
     case 'weekstart':S.weekStart=+t.dataset.v===1?1:0;save();render();break;
     case 'personal-on':if(!confirm('개인 캘린더로 바꿀까요?\n근무 표시 · 칠하기 · 통계 · 근무 요청이 숨겨져요. 근무표 데이터는 그대로 있어요.'))break;S.personal=true;save();render();toast('개인 캘린더로 바꿨어요');break;
@@ -5424,6 +5436,7 @@ document.addEventListener('click',e=>{
     case 'fb-out':fbSignOut().then(()=>{if(pageMode==='fb')openFirebasePage();});break;
     case 'pcell':openPatCell(Number(t.dataset.i));break;
     case 'pset':{const i=Number(t.dataset.i);if(i<S.pattern.length){S.pattern[i]=t.dataset.s;save();}closePop();openPatternPage();break;}
+    case 'pweek-fit':{while(S.pattern.length<7)S.pattern.push(restKey());if(S.pattern.length>7)S.pattern.length=7;save();openPatternPage();}break;
     case 'padd':if(S.pattern.length<PAT_MAX){S.pattern.push(restKey());save();openPatternPage();}break;
     case 'pdel':if(S.pattern.length>2){S.pattern.pop();save();openPatternPage();}break;
     case 'clearov':if(confirm('직접 바꾼 근무를 모두 원래 패턴으로 되돌릴까요?')){S.overrides={};save();openPatternPage();toast('수동 변경을 초기화했어요');}break;
@@ -5565,6 +5578,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='shareStk'){shareStk=t.checked;render();}
   else if(t.id==='holRest'){S.holRest=t.checked;save();toast(t.checked?'공휴일 근무 칸을 휴무로 보여요':'공휴일도 패턴대로 보여요');}
   else if(t.id==='receiveFamilyMemo'){S.syncSettings.receiveFamilyMemo=t.checked;save();if(tab==='cal')render();toast(t.checked?'가족 메모를 달력에 표시해요':'가족 메모를 달력에서 숨겨요');}
+  else if(t.id==='patWeek'){S.patWeek=!!t.checked;save();openPatternPage();}
   else if(t.id==='patternName'){S.patternName=t.value.trim().slice(0,20);save();toast('근무 이름을 저장했어요');}
   else if(t.id==='payWage'){S.pay.wage=Math.max(0,Math.round(Number(t.value)||0));save();openStatsPage();}
   else if(t.id==='payHours'){const h=Number(t.value);S.pay.hours=(h>0&&h<=24)?h:12;save();openStatsPage();}
@@ -5590,9 +5604,9 @@ document.addEventListener('input',e=>{
   if(t.id==='memoInput'){memoText=t.value;}
   else if(t.id==='joinCode'){const n=famNorm(t.value).slice(0,8);t.value=n.length>4?n.slice(0,4)+'-'+n.slice(4):n;}
   else if((t.id==='piText'||t.id==='piTitle')&&piEd){const n=piTarget();if(n){piPull();const sg=$('#piSug');if(sg)sg.innerHTML=piSug(n);}}
-  else if(t.id==='tdK'&&typeDraft){typeDraft.k=t.value.trim().slice(0,2);const pv=$('#tdPrev');if(pv)pv.outerHTML=typePreview();}
+  else if(t.id==='tdK'&&typeDraft){typeDraft.k=kCut(t.value);if(t.value.trim()!==typeDraft.k)t.value=typeDraft.k;const pv=$('#tdPrev');if(pv)pv.outerHTML=typePreview();}
   else if(t.id==='tdName'&&typeDraft){typeDraft.name=t.value;}
-  else if(t.dataset&&t.dataset.obn&&ob){const v=t.value.trim().slice(0,2);if(t.dataset.obn==='r')ob.rk=v;else ob.wk[+t.dataset.obn.slice(1)]=v;}
+  else if(t.dataset&&t.dataset.obn&&ob){const v=kCut(t.value);if(t.dataset.obn==='r')ob.rk=v;else ob.wk[+t.dataset.obn.slice(1)]=v;}
   else if(t.id==='typeSearch'){filterTypePick(t.value);}
   else if(t.id==='rqm'){reqDraft.msg=t.value;}
   else if(t.id==='vcmsg'){vcSel.msg=t.value;}
@@ -6172,7 +6186,7 @@ const stampIconD=(d,n,px)=>d.k==='p'?pillSvg(d.t,n,px,d.c,({r:'round',t:'tab',d:
 function schBadge(sch,k,extra,inner){
   if(k===NONE_K)return noneBadge(extra,inner);
   if(k==='')return `<span class="badge r ${extra||''} blankb">·${inner||''}</span>`;
-  const t=schType(sch,k),c=tColors(t),two=String(k).length>1?' two':'';
+  const t=schType(sch,k),c=tColors(t),two=String(k).length>2?' two three':String(k).length>1?' two':'';
   if(!c)return `<span class="badge r${two} ${extra||''}">${esc(k)}${inner||''}</span>`;
   return `<span class="badge c${two} ${extra||''}" style="--tb:${c.bg};--tf:${c.fg}">${esc(k)}${inner||''}</span>`;
 }
@@ -6197,7 +6211,7 @@ function vcEnsure(){
 function vcPills(k,mx){
   const pl=visibleMemos(k).filter(x=>x.shared).map(x=>`<div class="pl fam">${linkify(firstLine(x.text))}</div>`);
   if(pl.length>mx)pl.splice(mx-1,pl.length,`<div class="pl more">+${pl.length-mx+1}</div>`);
-  return pl.length?`<div class="pill-wrap${pl.length>=mxl?' full':''}">${pl.join('')}</div>`:'';
+  return pl.length?`<div class="pill-wrap${pl.length>=mx?' full':''}">${pl.join('')}</div>`:'';
 }
 function vcMemoHtml(k){
   const ms=visibleMemos(k).filter(x=>x.shared);
