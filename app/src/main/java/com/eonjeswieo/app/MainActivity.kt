@@ -305,6 +305,66 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // (시험) 폰 달력 읽기: 앞으로 60일 일정 제목 + 어느 달력에 있는지 → window.__onCal(JSON). 저장은 안 함
+    fun calendarRead() {
+        if (checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.READ_CALENDAR), 77)
+            return
+        }
+        Thread { js("window.__onCal&&window.__onCal(${JSONObject.quote(readCalendarJson())})") }.start()
+    }
+
+    private fun readCalendarJson(): String {
+        val out = JSONObject()
+        try {
+            val cals = org.json.JSONArray()
+            contentResolver.query(
+                android.provider.CalendarContract.Calendars.CONTENT_URI,
+                arrayOf(
+                    android.provider.CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
+                    android.provider.CalendarContract.Calendars.ACCOUNT_NAME,
+                    android.provider.CalendarContract.Calendars.ACCOUNT_TYPE
+                ), null, null, null
+            )?.use { c ->
+                while (c.moveToNext()) {
+                    cals.put(JSONObject().put("n", c.getString(0) ?: "").put("a", c.getString(1) ?: "").put("t", c.getString(2) ?: ""))
+                }
+            }
+            out.put("cals", cals)
+            val now = System.currentTimeMillis()
+            val end = now + 60L * 24 * 3600 * 1000
+            val b = android.provider.CalendarContract.Instances.CONTENT_URI.buildUpon()
+            android.content.ContentUris.appendId(b, now)
+            android.content.ContentUris.appendId(b, end)
+            val evs = org.json.JSONArray()
+            contentResolver.query(
+                b.build(),
+                arrayOf(
+                    android.provider.CalendarContract.Instances.TITLE,
+                    android.provider.CalendarContract.Instances.BEGIN,
+                    android.provider.CalendarContract.Instances.CALENDAR_DISPLAY_NAME
+                ), null, null, android.provider.CalendarContract.Instances.BEGIN + " ASC"
+            )?.use { c ->
+                while (c.moveToNext() && evs.length() < 80) {
+                    evs.put(JSONObject().put("t", c.getString(0) ?: "").put("b", c.getLong(1)).put("c", c.getString(2) ?: ""))
+                }
+            }
+            out.put("ev", evs)
+            out.put("ok", true)
+        } catch (e: Exception) {
+            out.put("ok", false).put("err", (e.message ?: e.javaClass.simpleName).take(80))
+        }
+        return out.toString()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 77) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) calendarRead()
+            else js("window.__onCal&&window.__onCal(${JSONObject.quote("{\"ok\":false,\"err\":\"denied\"}")})")
+        }
+    }
+
     /** 웹 화면의 자바스크립트 실행 (어느 스레드에서 불러도 됨) */
     fun js(code: String) {
         webView.post { webView.evaluateJavascript(code, null) }
