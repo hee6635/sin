@@ -3869,7 +3869,7 @@ function openDay(k){
   const dayReqs=reqUniq(S.requests.filter(r=>r.date===k&&(!r.srv||r.dir==='in')).sort((a,b)=>b.t-a.t));
   const reqHtml=dayReqs.map(r=>reqCard(r)).join('');
   const dd=ddayHits(k);
-  const strip=[-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7].map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}" data-act="day-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${S.personal?`<span class="dnum">${DOW[x.getDay()]}</span>`:badge(shiftOf(x),'sm')}</button>`;}).join('');
+  const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}" data-act="day-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${S.personal?`<span class="dnum">${DOW[x.getDay()]}</span>`:badge(shiftOf(x),'sm')}</button>`;}).join('');
   const head=`
       <div class="dtop"><button data-act="close">‹ 달력</button></div>
       <div class="dfh"><button class="ib" data-act="day-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
@@ -3933,14 +3933,15 @@ document.addEventListener('pointerup',e=>{
 // 3일 띠: 가운데에 오늘 고른 날 · 옆으로 밀면 따라 움직이고, 멈췄을 때 가운데에 온 날로 이동
 function dstripCenter(){
   const el=document.getElementById('dstrip');if(!el)return;
-  const go=()=>{const w=el.clientWidth/7;el.scrollLeft=7*w+w/2-el.clientWidth/2;};
+  const go=()=>{const on=el.querySelector('.dsi.on');if(on)el.scrollLeft=on.offsetLeft+on.offsetWidth/2-el.clientWidth/2;};
   go();requestAnimationFrame(go);
   let tm=null;
   el.addEventListener('scroll',()=>{
     clearTimeout(tm);
     tm=setTimeout(()=>{
-      const w=el.clientWidth/7,idx=Math.round((el.scrollLeft+el.clientWidth/2-w/2)/w),delta=idx-7;
-      if(delta&&sheetKey){held=true;setTimeout(()=>{held=false;},50);goDay(addK(sheetKey,delta));}
+      const kids=el.children,w=kids[0]?kids[0].offsetWidth:el.clientWidth/7;
+      const i=Math.max(0,Math.min(kids.length-1,Math.round((el.scrollLeft+el.clientWidth/2)/w-.5))),k=kids[i]&&kids[i].dataset.k;
+      if(k&&k!==sheetKey){held=true;setTimeout(()=>{held=false;},50);goDay(k);}
     },140);
   },{passive:true});
 }
