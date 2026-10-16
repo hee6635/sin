@@ -27,7 +27,7 @@ await p.click('.vchip');await p.waitForSelector('#page #vcsl',{timeout:5000});aw
 const ttl=()=>p.$eval('#page .vcnav b',e=>e.textContent);
 const t0=await ttl();
 T_('가족 달력: 없음(10/20)은 빈 칸',(await p.$eval('#vcsl .cell[data-k="2026-10-20"] .bwrap',e=>e.innerText.trim()))==='');
-T_('가족 달력: 한 개뿐인 스티커는 .stp.one',!!(await p.$('#vcsl .cell[data-k="2026-10-21"] .stp.one')));
+T_('가족 달력: 한 개뿐인 스티커도 같은 크기(.one 없음)',!(await p.$('#vcsl .cell[data-k="2026-10-21"] .stp.one')));
 const outk=await p.$eval('#vcsl .cell.out',e=>e.dataset.k);
 await p.click(`#vcsl .cell.out[data-k="${outk}"]`);await p.waitForTimeout(600);
 const t1=await ttl();

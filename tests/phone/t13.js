@@ -20,10 +20,10 @@ console.log(JSON.stringify(info));
 T_('4개인 날: 3~4번째가 절대 위치 둘째 줄(.s2)',info.s2&&info.s2pos==='absolute');
 T_('3~4번째 오른쪽 정렬',info.s2right.justify==='flex-end');
 T_('스티커가 있는 날 근무 동그라미도 원래 크기(야간 같은 날과 비교)',info.c14>0&&(Math.abs(info.c14-info.c12)<1||Math.abs(info.c14-info.c24)<1),JSON.stringify([info.c14,info.c20,info.c24]));
-T_('한 개뿐인 날은 .stp.one (1.4배)',info.one);
+T_('한 개뿐인 날도 다른 날과 같은 크기(.one 없음)',!info.one);
 T_('스티커에 data-sid 가 붙음',info.sid);
-const tf=await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-12"] .stp.one>*',e=>getComputedStyle(e).transform);
-T_('한 개일 때 transform scale ≈1.4',/matrix\(1\.[34]/.test(tf),tf);
+const tf=await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-12"] .stp>*',e=>getComputedStyle(e).transform);
+T_('한 개일 때도 확대 없음(scale 1.4 아님)',!/matrix\(1\.[34]/.test(tf),tf);
 // ---- 약: 안 먹은 날도 정한 색 테두리
 const pc=await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-26"] .pillic',e=>({cls:e.getAttribute('class'),style:e.getAttribute('style'),stroke:getComputedStyle(e.querySelector('.pr')).stroke,op:getComputedStyle(e.querySelector('.pr')).opacity,lines:e.querySelectorAll('.pd').length}));
 T_('안 먹은 약(2번): 정한 색(#e5484d) 연한 테두리 + 나눔선 1개',pc.cls.includes('off')&&/rgb\(229, 72, 77\)/.test(pc.stroke)&&pc.lines===1&&+pc.op<1,JSON.stringify(pc));

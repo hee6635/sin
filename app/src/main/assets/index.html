@@ -10,7 +10,7 @@
 :root{
   --pill-off:#b9bec7;
   --bg:#ffffff;--surface:#f5f6f8;--fg:#1f2328;--muted:#8b919a;--line:#eceef1;--track:#c9ced6;
-  --accent:#2f6bf0;--day:#cbd8de;--day-fg:#1c2a31;--night:#d9cbc6;--night-fg:#2b1f1b;--band-d:#eef1f3;--band-n:#f3eeeb;--today:#1f8f75;--today-bg:#e3f6f0;--navbar:#ffffff;--navbar-fg:#9aa1ad;--out-bg:#f4f5f7;--head-bg:#f7f7f8;
+  --accent:#2f6bf0;--day:#a9bfca;--day-fg:#1c2a31;--night:#bda89f;--night-fg:#2b1f1b;--band-d:#eef1f3;--band-n:#f3eeeb;--today:#1f8f75;--today-bg:#e3f6f0;--navbar:#ffffff;--navbar-fg:#9aa1ad;--out-bg:#f4f5f7;--head-bg:#f7f7f8;
   --rest:#e0455c;--hol-bg:#f8d5d9;--sat:#3b6fd6;--sun:#d64560;--danger:#d64560;
   --icon-on:#8a65c9; --icon-off:#c9ced6;
   --fab-color:#8a65c9;
@@ -154,7 +154,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .dow .s{color:var(--sun)}.dow .t{color:var(--sat)}
 .grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:1fr;border-top:1px solid var(--line)}
 
-.cell{position:relative;display:flex;flex-direction:column;align-items:center;border-bottom:1.5px solid var(--line);border-right:1px solid var(--line);cursor:pointer;min-height:0;overflow:hidden;container-type:size;--b:calc(max(30px,min(76cqw,44px,calc(100cqh - 68px)))*.9);}
+.cell{position:relative;display:flex;flex-direction:column;align-items:center;border-bottom:1.5px solid var(--line);border-right:1px solid var(--line);cursor:pointer;min-height:0;overflow:hidden;container-type:size;--b:calc(max(30px,min(76cqw,44px,calc(100cqh - 68px)))*.75);}
 .cell:nth-child(7n){border-right:0}
 .cell.out{background:var(--out-bg)}
 .cell.out>*{opacity:.4}
@@ -173,26 +173,29 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .band.jr{right:0}
 
 .badge{position:relative;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;flex:none}
-.bwrap .badge{width:var(--b);height:var(--b);font-size:calc(var(--b)*.32);font-weight:500;z-index:1}
+.bwrap .badge{width:var(--b);height:var(--b);font-size:calc(var(--b)*.40);font-weight:700;z-index:1}
 .badge.c{background:var(--tb);color:var(--tf)}
 .badge.two{letter-spacing:-1px}
-.bwrap .badge.two{font-size:calc(var(--b)*.27)}
+.bwrap .badge.two{font-size:calc(var(--b)*.34)}
 .badge.sm.two{font-size:10.5px}
 .badge.d{background:var(--day);color:var(--day-fg)}
 .badge.n{background:var(--night);color:var(--night-fg)}
 .badge.r{background:none;color:var(--rest);border-radius:0}
-.bwrap .badge.r{font-size:calc(var(--b)*.28);font-weight:600}
+.bwrap .badge.r{font-size:calc(var(--b)*.37);font-weight:600}
+.bwrap .badge.r.two{font-size:calc(var(--b)*.36)}
 .badge.s-sang{background:#b8e994;color:#0a3d62;}
 .badge.s-edu{background:#f8c291;color:#b71540;}
 .badge.sm{width:26px;height:26px;font-size:13px;margin:0;}
 .badge.sm.r{font-size:11px; font-weight:700;}
 .badge .dot{position:absolute;top:-1px;left:-2px;width:8px;height:8px;border-radius:50%;background:#e5322d}
+.bwrap .badge .dot{top:50%;left:calc(-1*(100cqw - var(--b))/2*.4 - 3px);width:6px;height:6px;transform:translateY(-50%)}
+@container (max-width:46px){.bwrap .badge .dot{top:-1px;left:-2px;width:8px;height:8px;transform:none}}
 
-.pill-wrap{flex:none;width:100%;display:flex;flex-direction:column;align-items:center;gap:1px;padding-top:2px;z-index:3;pointer-events:none;--lh:14px;margin-top:min(0px,calc(100cqh - 22px - var(--b) - 2px - var(--n,0)*var(--lh)));}
-.family-pill{width:calc(100% - 6px);background:var(--family-pink);color:#fff;font-size:9px;line-height:13px;height:13px;padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;}
-.shared-pill{width:calc(100% - 6px);background:var(--accent);color:#fff;font-size:9px;line-height:13px;height:13px;padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;}
-.pill{width:calc(100% - 6px);background:#3a3d43;color:#fff;font-size:9px;line-height:13px;height:13px;padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.req-pill{width:calc(100% - 6px);color:#fff;font-size:9px;line-height:13px;height:13px;padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;}
+.pill-wrap{flex:none;width:100%;display:flex;flex-direction:column;align-items:center;gap:1px;padding-top:2px;z-index:3;pointer-events:none;--lh:calc(var(--plh,13px) + 1px);margin-top:min(0px,calc(100cqh - 22px - var(--b) - 2px - var(--n,0)*var(--lh)));}
+.family-pill{width:calc(100% - 6px);background:var(--family-pink);color:#fff;font-size:var(--plf,9px);line-height:var(--plh,13px);height:var(--plh,13px);padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;}
+.shared-pill{width:calc(100% - 6px);background:var(--accent);color:#fff;font-size:var(--plf,9px);line-height:var(--plh,13px);height:var(--plh,13px);padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;}
+.pill{width:calc(100% - 6px);background:#3a3d43;color:#fff;font-size:var(--plf,9px);line-height:var(--plh,13px);height:var(--plh,13px);padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.req-pill{width:calc(100% - 6px);color:#fff;font-size:var(--plf,9px);line-height:var(--plh,13px);height:var(--plh,13px);padding:0 3px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;}
 .req-pill.pending{background:var(--st-pending)}
 .req-pill.accepted{background:var(--st-accepted)}
 .req-pill.rejected{background:var(--st-rejected)}
@@ -496,7 +499,7 @@ textarea{resize:none;min-height:84px}
 /* 달력 칸 메모 */
 .pill-wrap{gap:1px}
 .pl.more{background:none;color:var(--muted);font-weight:700;text-align:center}
-.pl{width:calc(100% - 4px);font-size:9px;line-height:13px;height:13px;border-radius:3px;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl{width:calc(100% - 4px);font-size:var(--plf,9px);line-height:var(--plh,13px);height:var(--plh,13px);border-radius:3px;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl{border-left:2px solid var(--c,var(--my));border-radius:2px;font-weight:600;padding-left:3px;box-sizing:border-box;background:color-mix(in srgb,var(--c,var(--my)) 15%,var(--bg));color:var(--fg)}
 .pl.fam{--c:var(--fam)}
 .pl.my{--c:var(--my);color:color-mix(in srgb,var(--fg) 92%,var(--bg))}
@@ -506,7 +509,7 @@ textarea{resize:none;min-height:84px}
 :root[data-theme="dark"] .pl[style*="--mc"]{background:color-mix(in srgb,var(--mc) 30%,var(--bg));color:var(--fg)}
 .pl.dd{background:color-mix(in srgb,var(--dd) 14%,var(--bg));color:var(--dd);font-weight:800}
 .pl,.req-pill{flex:none;text-overflow:clip}.req-pill{padding:0 2px}
-@media (min-width:600px){.cell{--b:calc(min(70cqw,54px)*.9)}.pill-wrap{--lh:16px}.pl,.req-pill{font-size:11px;line-height:15px;height:15px}}
+@media (min-width:600px){.cell{--b:calc(min(70cqw,54px)*.75)}}
 .dn.chol{background:var(--chol)}.dn.chol .num,.dn.chol .hn{color:var(--chol-fg)}
 .legend{display:flex;gap:12px;justify-content:center;padding:5px 0 4px;font-size:10.5px;color:var(--muted);flex:none}
 .legend span{display:flex;align-items:center;gap:4px}.legend i{width:20px;height:9px;border-radius:2px;display:inline-block}
@@ -1057,9 +1060,9 @@ button.tbtn{cursor:pointer}
 /* 통계 */
 .stw{font-size:16px;font-weight:800}
 
-/* 스티커 크기: 칸 폭에 비례 (폰 11~18px · 태블릿 최대 24px) */
+/* 스티커 크기: 칸 폭에 비례, 달 전체가 한 크기 (폰 11~18px · 태블릿 최대 18px) */
 :root{--stz:clamp(11px,3.86vw,18px)}
-@media (min-width:600px){:root{--stz:clamp(18px,3.2vw,24px)}}
+@media (min-width:600px){:root{--stz:clamp(16px,2.4vw,18px)}}
 .dn .stp>svg,.s2>svg,.dn .stp .sx svg,.s2 .sx svg{width:var(--stz);height:var(--stz)}
 .dn .stp>.se,.s2>.se,.dn .stp .sx .se,.s2 .sx .se{font-size:calc(var(--stz) - 2px) !important}
 .sx{position:relative;display:inline-block;line-height:0}
@@ -1076,22 +1079,12 @@ button.tbtn{cursor:pointer}
 .dn .stp>*:nth-child(1){transform:rotate(-7deg)}.dn .stp>*:nth-child(2){transform:rotate(6deg)}
 .cell:nth-child(3n) .dn .stp>*:nth-child(1){transform:rotate(5deg)}.cell:nth-child(3n) .dn .stp>*:nth-child(2){transform:rotate(-6deg)}
 .dn .stp>.plan,.dn .stp>svg.off{transform:none !important}
-/* 스티커가 한 개뿐인 날은 1.4배 (두 개 이상 · 공휴일 글자가 있는 날은 그대로) */
-.dn .stp.one{margin-left:auto;margin-right:4px}
-.dn .stp.one>*{transform-origin:right top;transform:scale(1.4) rotate(-7deg) !important}
-.cell:nth-child(3n) .dn .stp.one>*{transform:scale(1.4) rotate(5deg) !important}
-.dn .stp.one>.plan,.dn .stp.one>svg.off{transform:scale(1.4) !important}
 .dn .h1{font-size:10px;font-weight:800;color:var(--sun);margin-left:1px;flex:none}
 .dn.h1r{padding:0 3px;justify-content:flex-start}.dn.h1r .stp{margin-left:auto;gap:1px}
 .dn .hn.sm{font-size:9px;letter-spacing:-.4px}
-/* 날짜 줄(숫자 · 앞글자 · 스티커)이 칸보다 넓으면 fitDn 이 한 단계 작게(fit1), 그래도 넘치면 두 번째 스티커를 아래 줄로 */
-.dn.fit1{padding:0 3px;font-size:12px}.cell.today .dn.fit1{padding-left:6px}
-.dn.fit1 .h1{font-size:9px;margin-left:0}
-.dn.fit1 .stp{gap:0}
-.dn.fit1 .stp>svg,.dn.fit1 .stp>.sx svg{width:10px;height:10px}
-.dn.fit1 .stp>.sx .se{font-size:9px !important}
-.dn.fit1+.s2>svg,.dn.fit1+.s2 .sx svg{width:12px;height:12px}.dn.fit1+.s2>.se,.dn.fit1+.s2 .sx .se{font-size:10px !important}
-.dn.fit1 .stp>.se{font-size:9px !important}
+/* 공휴일 이름이 날짜 줄에 안 들어가면(fitDn) 숫자 바로 아래 한 글자 */
+.hnb{position:absolute;left:4px;top:max(20px,calc(var(--stz) + 6px));font-size:10px;font-weight:800;font-style:normal;color:var(--sun);line-height:1;z-index:3;pointer-events:none}
+.dn.h1r{padding:0 3px}
 .badge.nonb{background:none}
 .badge.nonb.ph{border:1.5px dashed var(--muted);border-radius:50%;color:var(--muted);font-size:10.5px;font-weight:700;opacity:.85}
 .badge.tc.nonb.ph{background:none;font-size:11.5px}
@@ -1458,7 +1451,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.personal=!!s.personal;s.weekStart=(o&&o.weekStart===1)?1:0;s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.personal=!!s.personal;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},o&&o.memoColors);
   s.drive=Object.assign(defaults().drive,o&&o.drive);
@@ -1893,12 +1886,21 @@ function ddayLabel(x){
 const weekOrder=()=>S.weekStart===1?[1,2,3,4,5,6,0]:[0,1,2,3,4,5,6];
 const leadOf=d=>(d.getDay()-(S.weekStart===1?1:0)+7)%7;
 const dowHead=()=>weekOrder().map(w=>`<span class="${w===0?'s':w===6?'t':''}">${DOW[w]}</span>`).join('');
+// 달력 칸 메모: 줄 수는 설정(3 · 4줄 · 태블릿은 +1 · 개인 캘린더는 4줄 이상), 칸 높이에서 날짜 줄 · 근무 동그라미를 뺀 자리에 들어가는 만큼.
+// 남는 자리는 줄 높이 · 글자를 키우는 데 씀(상한: 폰 줄 20px · 글자 12.5px, 태블릿 24px · 14px)
 function memoLines(){
   const tab=innerWidth>=600,g=document.querySelector('.grid');
-  const h=g&&g.clientHeight?g.clientHeight/6:(innerHeight-230)/6;
-  const bw=(document.querySelector('.track .cell .bwrap')||{}).offsetHeight||(S.personal?50:38),lh=tab?16:14;   // 동그라미(개인 캘린더는 스티커 2줄) 자리를 뺀 나머지
-  const fit=Math.floor((h-22-bw-2)/lh);
-  return Math.max(1,Math.min(tab?8:5,fit));
+  const ch=g&&g.clientHeight?g.clientHeight/6:(innerHeight-230)/6;
+  const dnH=(document.querySelector('.track .cell .dn')||{}).offsetHeight||(tab?24:20);
+  const bw=(document.querySelector('.track .cell .bwrap')||{}).offsetHeight||(S.personal?50:32);
+  const avail=ch-dnH-bw-6;
+  const want=S.personal?Math.max(4,S.memoLines):(tab?S.memoLines+1:S.memoLines);
+  const minLh=tab?14:12,capLh=tab?24:20,capFs=tab?14:12.5;
+  let n=want;while(n>1&&avail/n-1<minLh)n--;
+  const lh=Math.max(minLh,Math.min(capLh,Math.floor(avail/n-1)));
+  const fs=Math.min(capFs,Math.max(9,Math.round(lh*0.6*2)/2));
+  const r=document.documentElement.style;r.setProperty('--plh',lh+'px');r.setProperty('--plf',fs+'px');
+  return n;
 }
 let lastLines=0;
 // 달력 위 한 줄: 근무표를 안 만들었으면 만들기 안내, 불규칙이면 사용법(첫 근무를 넣기 전까지)
@@ -1995,7 +1997,7 @@ function calPanel(y,m){
     if(!sharing)mine.forEach(x=>pills.push(`<div class="pl my${pst(x)}>${esc(firstLine(x.text))}</div>`));
     boardOnDate(k).filter(n=>!sharing||n.shared).forEach(n=>pills.push(`<div class="pl ${n.shared?'fam':'my'}">📝 ${esc(piLabel(n))}</div>`));
     ddayHits(k).forEach(x=>pills.push(`<div class="pl dd">${ico(x.emoji||'⭐')} ${esc(x.name)}</div>`));
-    // 폰 3줄, 태블릿 4줄. 넘치면 마지막 줄을 +N 으로
+    // 설정 줄 수(기본 3 · 태블릿 +1). 넘치면 마지막 줄을 +N 으로
     if(pills.length>maxLines)pills.splice(maxLines-1,pills.length,`<div class="pl more">+${pills.length-maxLines+1}</div>`);
     // 날짜 줄: 숫자 · 스티커 · 공휴일 이름. 좁은 칸에서 스티커와 겹치면 이름은 빼기 (날짜 줄 색으로 이미 보임)
     const stAll=sharing&&!shareStk?[]:stampsOn(k),st0=S.personal?[]:stAll;
@@ -2008,7 +2010,7 @@ function calPanel(y,m){
     const stRow=st0.slice(0,2),stMore=st0.slice(2);
 
     cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${S.personal?'pers':''} ${stMore.length?'m3':''} ${rcls}" data-act="day" data-k="${k}">
-      <i class="stz" data-act="stamp-dn" data-k="${k}"></i><div class="dn ${hol?'hol':ch?'chol':''} ${cls} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1" data-o="${esc(honeO)}">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp${stRow.length===1&&!hone?' one':''}">${stRow.map(x=>stampIcon(x,0)).join('')}</span>`:''}${showHn?`<span class="hn ${shortHol(hol).length>3&&hol?'sm':''}">${hnHtml}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIcon(x,0)).join('')}</div>`:''}
+      <i class="stz" data-act="stamp-dn" data-k="${k}"></i><div class="dn ${hol?'hol':ch?'chol':''} ${cls} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1" data-o="${esc(honeO)}">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIcon(x,0)).join('')}</span>`:''}${showHn?`<span class="hn ${shortHol(hol).length>3&&hol?'sm':''}">${hnHtml}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIcon(x,0)).join('')}</div>`:''}
       <div class="bwrap">${S.personal?(stAll.length?`<div class="pstk n${stAll.length}">${stAll.slice(0,4).map(x=>stampIcon(x,0)).join('')}</div>`:''):bwrapHtml(d,k)}</div>
       <div class="pill-wrap" style="--n:${pills.length}">${pills.join('')}</div>
     </div>`;
@@ -2027,15 +2029,16 @@ function fitDn(root){
   };
   [...(root||document).querySelectorAll('.cell .dn>.stp')].forEach(stp=>{
     const dn=stp.parentNode,h1=dn.querySelector('.h1');
-    if(over(dn)&&h1&&h1.dataset.o&&h1.textContent!==h1.dataset.o)h1.textContent=h1.dataset.o;   // 두 글자(개천)가 넘치면 한 글자(개)
-    if(over(dn)&&h1)h1.style.display='none';   // 그래도 넘치면 공휴일 글자는 빼고 (날짜 줄이 분홍색이라 공휴일인 건 보임) 스티커 둘을 다 보여줌
+    // 공휴일 이름: 숫자 옆 두 글자 → 한 글자 → (그래도 안 들어가면) 숫자 바로 아래 한 글자. 스티커 크기는 달 전체가 같음
+    if(h1){
+      if(over(dn)&&h1.dataset.o&&h1.textContent!==h1.dataset.o)h1.textContent=h1.dataset.o;
+      if(over(dn)){const b=document.createElement('i');b.className='hnb';b.textContent=h1.dataset.o||h1.textContent;h1.remove();dn.after(b);}
+    }
     if(!over(dn))return;
-    dn.classList.add('fit1');
-    if(!over(dn))return;
-    const kids=stp.children;
+    const kids=stp.children;   // 이름을 빼고도 넘치면(두 자리 날짜 + 스티커 둘) 둘째 스티커를 아래 줄로
     if(kids.length>1){
       const cell=dn.closest('.cell');let s2=cell.querySelector('.s2');
-      if(!s2){s2=document.createElement('div');s2.className='s2';dn.after(s2);cell.classList.add('m3');}
+      if(!s2){s2=document.createElement('div');s2.className='s2';const ref=cell.querySelector('.hnb')||dn;ref.after(s2);cell.classList.add('m3');}
       s2.insertBefore(kids[kids.length-1],s2.firstChild);
     }
   });
@@ -4027,6 +4030,7 @@ function renderMore(){
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('🌓')}</span>화면 모드</div><div class="chips">
         <button class="${S.theme==='light'?'on':''}" data-act="thememode" data-v="light">라이트</button><button class="${S.theme==='dark'?'on':''}" data-act="thememode" data-v="dark">다크</button><button class="${S.theme!=='light'&&S.theme!=='dark'?'on':''}" data-act="thememode" data-v="system">시스템</button></div></div>
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('📅')}</span>주 시작 요일</div><div class="chips"><button class="${S.weekStart===1?'':'on'}" data-act="weekstart" data-v="0">일요일</button><button class="${S.weekStart===1?'on':''}" data-act="weekstart" data-v="1">월요일</button></div></div>
+      <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('📝')}</span>달력 메모 줄 수</div><div class="chips"><button class="${S.memoLines===4?'':'on'}" data-act="memolines" data-v="3">3줄</button><button class="${S.memoLines===4?'on':''}" data-act="memolines" data-v="4">4줄</button></div></div>
       ${S.personal?`<div class="prow tap" data-act="personal-off"><div class="pl2"><span class="e e-in">${lineIcon('🔁')}</span>근무표 쓰기<small>켜면 근무 띠 · 칠하기 · 통계 · 근무 요청이 생겨요</small></div><div class="pv">›</div></div>`:`<div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('▬')}</span>근무 띠 표시<small>같은 근무가 이어지면 칸을 색 띠로 이어요</small></div><label class="sw"><input type="checkbox" id="showBand" ${S.showBand!==false?'checked':''}><i></i></label></div>`}
       ${item('🧩','부가 기능','more-addons',`${addonCount()}개 켜짐`)}
       ${item('🖼','달력 이미지로 공유','more-share')}
@@ -4490,7 +4494,7 @@ function openBackupPage(){
     </div>`,'backup');
   if(linked&&driveFiles===null&&!driveBusy){driveBusy=true;window.AndroidBridge.driveList(true);}
 }
-const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','weekStart','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
+const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','weekStart','memoLines','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -5180,6 +5184,7 @@ document.addEventListener('click',e=>{
     case 'pat-undo-anchor':restoreAnchorBackup();break;
     case 'pat-old-show':openPatOld();break;
     case 'pat-old-clear':if(confirm('이전 패턴 기록을 지울까요?\n지난 날짜 근무가 지금 패턴 기준으로 바뀌어요.')){S.patOld=[];save();render();openPatternPage();}break;
+    case 'memolines':S.memoLines=+t.dataset.v===4?4:3;save();render();break;
     case 'weekstart':S.weekStart=+t.dataset.v===1?1:0;save();render();break;
     case 'personal-off':S.personal=false;save();render();toast(S.myset?'근무표를 다시 써요':'달력 위 "내 근무표 만들기"로 시작해요');break;
     case 'more-comp':openCompPage();break;
@@ -6087,7 +6092,7 @@ function vcGrid(p){
     const pls=vcPills(k,mxl);
     const ring=rqRing(S.requests.filter(r=>r.srv&&r.dir==='out'&&r.peer===p.uid&&r.date===k).map(r=>r.st==='applied'?{...r,st:'accepted'}:r));
     const st0=schStk(sch,k),hone=hol&&st0.length?holOne(hol):'',stRow=st0.slice(0,2),stMore=st0.slice(2);
-    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${stMore.length?'m3':''} ${ring} ${vsCls(p,k)}" data-act="vc-day" data-k="${k}"><div class="dn ${hol?'hol':''} ${hol||dow===0?'sun':dow===6?'sat':''} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp${stRow.length===1&&!hone?' one':''}">${stRow.map(x=>stampIconD(x.d,x.n,hone?12:13)).join('')}</span>`:''}${!st0.length&&hol&&shortHol(hol)?`<span class="hn ${shortHol(hol).length>3?'sm':''}">${esc(shortHol(hol))}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIconD(x.d,x.n,12)).join('')}</div>`:''}<div class="bwrap">${band}${sh===''?'':schBadge(sch,sh,'',ov?'<i class="dot"></i>':'')}</div>${pls}</div>`;
+    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${stMore.length?'m3':''} ${ring} ${vsCls(p,k)}" data-act="vc-day" data-k="${k}"><div class="dn ${hol?'hol':''} ${hol||dow===0?'sun':dow===6?'sat':''} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIconD(x.d,x.n,hone?12:13)).join('')}</span>`:''}${!st0.length&&hol&&shortHol(hol)?`<span class="hn ${shortHol(hol).length>3?'sm':''}">${esc(shortHol(hol))}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIconD(x.d,x.n,12)).join('')}</div>`:''}<div class="bwrap">${band}${sh===''?'':schBadge(sch,sh,'',ov?'<i class="dot"></i>':'')}</div>${pls}</div>`;
   }
   return `<div class="calwrap"><div class="dow">${dowHead()}</div><div class="grid" style="grid-template-rows:repeat(${rows},1fr)">${cells}</div></div>`;
 }
