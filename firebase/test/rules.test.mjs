@@ -474,7 +474,9 @@ await t('스티커 보여주기: stk · sdefs 를 올릴 수 있고, 너무 크�
   await assertSucceeds(setDoc(SD('g1'), sch()));                                                                  // 끄면 없어짐
   const big = {}; for (let i = 0; i < 401; i++) big['d' + i] = '01';
   await assertFails(setDoc(SD('g1'), sch({ stk: big, sdefs })));
-  await assertFails(setDoc(SD('g1'), sch({ stk, sdefs: Array(31).fill({ i: 'x', k: 'm', e: '🧘' }) })));
+  await assertFails(setDoc(SD('g1'), sch({ stk, sdefs: Array(61).fill({ i: 'x', k: 'm', e: '🧘' }) })));
+  await assertSucceeds(setDoc(SD('g1'), sch({ stk, sdefs: Array(60).fill({ i: 'x', k: 'm', e: '🧘' }), sv: 2 })));
+  await assertFails(setDoc(SD('g1'), sch({ stk, sdefs, sv: 1 })));
   await assertFails(setDoc(SD('g1'), sch({ stk: 'x', sdefs })));
   await assertFails(setDoc(SD('g1'), sch({ stk, sdefs: 'x' })));
 });

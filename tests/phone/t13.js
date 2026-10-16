@@ -88,7 +88,7 @@ await p.click('#page [data-act="sr-back"]');await p.waitForTimeout(250);
 await p.click('#nav [data-tab="set"]');await p.waitForTimeout(300);
 await p.click('[data-act="stk-board"]');await p.waitForTimeout(400);
 const pg=await p.$eval('#page',e=>e.innerText.replace(/\s+/g,' ')).catch(()=>'');
-T_('설정 › 스티커: 9칸 격자 + ＋ (큰 시간 알림 스위치 없음)',!pg.includes('시간 알림')&&pg.includes('내 스티커')&&pg.includes('하루만'),pg.slice(0,300));
+T_('설정 › 스티커: 9칸 격자 + ＋ (큰 시간 알림 스위치 없음)',!pg.includes('시간 알림')&&pg.includes('내 스티커'),pg.slice(0,300));
 T_('JS 오류 없음',p.errs.length===0,p.errs.join('|'));
 await p.close();
 // ---- 애니메이션 줄이기: 톡 · 진동 없음

@@ -129,7 +129,7 @@ service cloud.firestore {
       allow read: if isMember(hid);
       allow create, update: if signedIn() && request.auth.uid == uid && isMember(hid)
         && get(memberPath(hid, uid)).data.get('mode', 'own') == 'own'
-        && request.resource.data.keys().hasOnly(['v', 'patternName', 'teamName', 'pattern', 'anchor', 'types', 'overrides', 'holRest', 'stk', 'sdefs', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['v', 'patternName', 'teamName', 'pattern', 'anchor', 'types', 'overrides', 'holRest', 'stk', 'sdefs', 'sv', 'updatedAt'])
         && request.resource.data.v == 1
         && request.resource.data.patternName is string && request.resource.data.patternName.size() <= 20
         && request.resource.data.teamName is string && request.resource.data.teamName.size() <= 10
@@ -140,7 +140,8 @@ service cloud.firestore {
         && request.resource.data.holRest is bool
         // 스티커 보여주기(켠 사람만): 날짜별 스티커 목록 · 스티커 종류
         && request.resource.data.get('stk', {}) is map && request.resource.data.get('stk', {}).size() <= 400
-        && request.resource.data.get('sdefs', []) is list && request.resource.data.get('sdefs', []).size() <= 30
+        && request.resource.data.get('sdefs', []) is list && request.resource.data.get('sdefs', []).size() <= 60
+        && request.resource.data.get('sv', 2) == 2
         && request.resource.data.updatedAt == request.time;
       allow delete: if signedIn() && (request.auth.uid == uid || isOwner(hid));
     }
