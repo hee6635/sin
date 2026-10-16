@@ -502,6 +502,8 @@ textarea{resize:none;min-height:84px}
 .cal-top .today-btn{font-size:14.5px;padding:0 4px}
 /* 달력 칸 메모 */
 .pill-wrap{gap:1px}
+.pill-wrap>*{flex:1 1 0 !important;min-height:0;max-height:var(--plmax,14px);line-height:var(--plhf,var(--plh,13px))}
+.pill-wrap.full>*{max-height:none}
 .pl.more{background:none;color:var(--muted);font-weight:700;text-align:center}
 .pl{width:calc(100% - 4px);font-size:var(--plf,9px);line-height:var(--plh,13px);flex:1 1 0;min-height:0;max-height:var(--plmax,14px);border-radius:3px;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl{border-left:2px solid var(--c,var(--my));border-radius:2px;font-weight:600;padding-left:3px;box-sizing:border-box;background:color-mix(in srgb,var(--c,var(--my)) 15%,var(--bg));color:var(--fg)}
@@ -1962,7 +1964,7 @@ function memoLines(){
   let n=want;while(n>1&&(avail-(n-1))/n<minLh)n--;
   const per=(avail-(n-1))/n,lh=Math.max(minLh,Math.min(capLh,Math.floor(per)));
   const fs=Math.min(capFs,Math.max(9,Math.round(lh*0.6*2)/2));
-  const r=document.documentElement.style;r.setProperty('--plh',lh+'px');r.setProperty('--plf',fs+'px');r.setProperty('--plmax',Math.min(capLh,Math.ceil(per)+1)+'px');
+  const r=document.documentElement.style;r.setProperty('--plh',lh+'px');r.setProperty('--plhf',Math.max(lh,Math.min(tab?34:30,Math.floor(per)))+'px');r.setProperty('--plf',fs+'px');r.setProperty('--plmax',(Math.max(lh,Math.min(tab?34:30,Math.floor(per)))+1)+'px');
   return n;
 }
 let lastLines=0;
@@ -2075,7 +2077,7 @@ function calPanel(y,m){
     cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${S.personal?'pers':''} ${stMore.length?'m3':''} ${rcls}" data-act="day" data-k="${k}">
       <i class="stz" data-act="stamp-dn" data-k="${k}"></i><div class="dn ${hol?'hol':ch?'chol':''} ${cls} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1" data-o="${esc(honeO)}">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIcon(x,0)).join('')}</span>`:''}${showHn?`<span class="hn ${shortHol(hol).length>3&&hol?'sm':''}">${hnHtml}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIcon(x,0)).join('')}</div>`:''}
       <div class="bwrap">${S.personal?(stAll.length?`<div class="pstk n${stAll.length}">${stAll.slice(0,4).map(x=>stampIcon(x,0)).join('')}</div>`:''):bwrapHtml(d,k)}</div>
-      <div class="pill-wrap" style="--n:${pills.length}">${pills.join('')}</div>
+      <div class="pill-wrap${pills.length>=maxLines?' full':''}">${pills.join('')}</div>
     </div>`;
   }
   return `<div class="calwrap">
@@ -6194,7 +6196,7 @@ function vcEnsure(){
 function vcPills(k,mx){
   const pl=visibleMemos(k).filter(x=>x.shared).map(x=>`<div class="pl fam">${linkify(firstLine(x.text))}</div>`);
   if(pl.length>mx)pl.splice(mx-1,pl.length,`<div class="pl more">+${pl.length-mx+1}</div>`);
-  return pl.length?`<div class="pill-wrap" style="--n:${pl.length}">${pl.join('')}</div>`:'';
+  return pl.length?`<div class="pill-wrap${pl.length>=mxl?' full':''}">${pl.join('')}</div>`:'';
 }
 function vcMemoHtml(k){
   const ms=visibleMemos(k).filter(x=>x.shared);

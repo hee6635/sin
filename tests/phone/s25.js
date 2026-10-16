@@ -6,7 +6,7 @@ const memos={};['2026-10-03','2026-10-09','2026-10-10','2026-10-13'].forEach(k=>
 memos['2026-10-14']=[{id:'x1',text:'하나',shared:false}];
 const st={...base,stamps:{defs,log:{},snap:{},v3:1,v4:1,lastAt:[]},memos,pattern:['주','야','휴','휴'],anchor:'2026-10-02',overrides:{'2026-10-10':'휴'}};
 (async()=>{const b=await chromium.launch();const T=mkT();
- for(const [w,h,n] of [[390,844,'p'],[360,780,'n'],[412,892,'q'],[820,1100,'t']]){
+ for(const [w,h,n] of [[390,844,'p'],[360,780,'n'],[412,892,'q'],[390,1000,'k'],[820,1100,'t']]){
   const p=await boot(b,st,{w,h,touch:true});
   const r=await p.evaluate(()=>{
     const q=k=>document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"]`);
