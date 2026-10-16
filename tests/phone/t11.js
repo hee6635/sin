@@ -43,8 +43,7 @@ T_('결정: 칠한 것 그대로 남음',o['2026-10-16']==='야',JSON.stringify(
 const out=await p.$eval('.track .panel:nth-child(2) .cell.out',e=>e.dataset.k);
 await p.click(`.track .panel:nth-child(2) .cell.out[data-k="${out}"]`);await p.waitForTimeout(700);
 T_('흐린 칸(9월) 누르면 9월로 이동',!!(await p.$('.track .panel:nth-child(2) .cell[data-k="2026-09-14"]')),out);
-T_('이동하면서 그 날 날짜 창도 열림',!!(await p.$('#sheet.open')));
-await p.evaluate(()=>document.getElementById('scrim').click());await p.waitForTimeout(300);
+T_('이동만 하고 날짜 창은 안 열림',!(await p.$('#sheet.open')));
 // 다음 달 흐린 칸
 await p.click('[data-act="today"]').catch(()=>{});await p.waitForTimeout(400);
 // ===== 없음 근무타입

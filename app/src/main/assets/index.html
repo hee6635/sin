@@ -160,11 +160,11 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .cell.out>*{opacity:.4}
 .dn{width:100%;height:max(20px,calc(var(--stz) + 6px));flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 5px;font-size:13px;line-height:20px;position:relative;z-index:2;}
 .dn.sun .num{color:var(--sun)}.dn.sat .num{color:var(--sat)}
-.dn.hol{background:var(--hol-bg)}
+.dn.hol{background:linear-gradient(var(--hol-bg),var(--hol-bg)) center/100% calc(100% - 5px) no-repeat}
 .dn .hn{font-size:10px;font-weight:800;color:var(--sun);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none;text-align:right;}
 .cell.today{background:var(--today-bg)}
-.cell.today .dn{padding-left:0;padding-top:0}
-.cell.today .dn .num{background:var(--today);color:#fff !important;font-weight:800;border-radius:0 0 8px 0;padding:0 7px 0 5px;min-width:22px;text-align:center;align-self:flex-start;line-height:max(20px,calc(var(--stz) + 6px))}
+.cell.today::after{content:'';position:absolute;inset:0;border:4px solid var(--today);pointer-events:none;z-index:4}
+.cell.today .dn{padding-left:8px;padding-top:3px}
 
 .bwrap{flex:none;width:100%;height:calc(var(--b) + 2px);position:relative;display:flex;align-items:center;justify-content:center;margin-top:clamp(6px,calc(var(--stz) - 4px),12px)}
 .cell.pers .bwrap{margin-top:0}
@@ -519,7 +519,7 @@ textarea{resize:none;min-height:84px}
 .pl.dd{background:color-mix(in srgb,var(--dd) 14%,var(--bg));color:var(--dd);font-weight:800}
 .pl,.req-pill{flex:none;text-overflow:clip}.req-pill{padding:0 2px}
 @media (min-width:600px){.cell{--b:calc(min(70cqw,54px)*.75)}}
-.dn.chol{background:var(--chol)}.dn.chol .num,.dn.chol .hn{color:var(--chol-fg)}
+.dn.chol{background:linear-gradient(var(--chol),var(--chol)) center/100% calc(100% - 5px) no-repeat}.dn.chol .num,.dn.chol .hn{color:var(--chol-fg)}
 .legend{display:flex;gap:12px;justify-content:center;padding:5px 0 4px;font-size:10.5px;color:var(--muted);flex:none}
 .legend span{display:flex;align-items:center;gap:4px}.legend i{width:20px;height:9px;border-radius:2px;display:inline-block}
 /* 시트 공통 */
@@ -4979,7 +4979,7 @@ document.addEventListener('click',e=>{
     case 'prev':slideTo(-1);break;
     case 'next':slideTo(1);break;
     case 'today':{const n=new Date();setCur(n.getFullYear(),n.getMonth());render();break;}
-    case 'day':if(paint){if(role()==='host')paintDay(t.dataset.k);break;}{const k=t.dataset.k,go=()=>{buzz(8);reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(k);};if(t.classList.contains('out')){buzz(6);slideTo(monthDirOf(k,cur.y,cur.m),go);}else go();}break;
+    case 'day':if(paint){if(role()==='host')paintDay(t.dataset.k);break;}if(t.classList.contains('out')){buzz(6);slideTo(monthDirOf(t.dataset.k,cur.y,cur.m));break;}buzz(8);reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(t.dataset.k);break;
     case 'close':closeSheet();break;
     case 'page-close':closePage();break;
     case 'pop-close':closePop();break;
