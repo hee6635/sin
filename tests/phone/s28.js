@@ -12,7 +12,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  T('개인: 3개는 한 줄 · 칸 안에 들어감',b3&&b3.n===3&&b3.rows===1&&b3.right<=b3.cr+0.5);
  T('개인: 4개는 2×2',b4&&b4.n===4&&b4.rows===2);
  // 오늘 표시
- T('오늘 칸은 예전처럼 굵은 테두리',await p.evaluate(()=>getComputedStyle(document.querySelector('.track .panel:nth-child(2) .cell.today'),'::after').borderTopWidth==='4px'));
+ T('오늘 칸은 얇은 테두리(2px)',await p.evaluate(()=>getComputedStyle(document.querySelector('.track .panel:nth-child(2) .cell.today'),'::after').borderTopWidth==='2px'));
  await p.close();p=await boot(b,{...st,personal:false},{touch:true});
  // 수락 후 링 (내 달력)
  T('수락(적용됨) 요청도 초록 링',await p.evaluate(()=>document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-20"]').classList.contains('rq-ok')));

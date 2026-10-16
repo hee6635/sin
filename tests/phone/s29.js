@@ -1,0 +1,10 @@
+const {chromium,boot,mkT,base}=require('./lib.js');
+(async()=>{const b=await chromium.launch();const T=mkT();
+ const p=await boot(b,{...base,requests:[{id:'r1',date:'2026-10-13',by:'guest',want:'휴',st:'pending',t:1,msg:'x'},{id:'r2',date:'2026-10-14',by:'guest',want:'휴',st:'applied',t:+new Date('2026-10-12T09:00:00'),tu:+new Date('2026-10-12T09:00:00'),msg:''}]},{touch:true});
+ await p.tap('.track .panel:nth-child(2) .cell[data-k="2026-10-13"]');await p.waitForTimeout(700);
+ T('날짜 띠: 고른 날은 네모 박스(둥근 모서리 8px)',await p.evaluate(()=>{const s=getComputedStyle(document.querySelector('.dsi.on .badge'),'::after');return s.borderTopWidth==='2px'&&s.borderTopLeftRadius==='8px';}));
+ T('날짜 띠: 요청 온 날(답할 요청)은 오렌지 링',await p.evaluate(()=>document.querySelector('.dsi[data-k="2026-10-13"]').classList.contains('rq-ask')));
+ T('날짜 띠: 고른 날이 요청 날이면 링 + 네모 둘 다',await p.evaluate(()=>{const e=document.querySelector('.dsi.on');return e.classList.contains('rq-ask')&&getComputedStyle(e.querySelector('.badge'),'::after').content!=='none';}));
+ T('날짜 띠: 적용된 요청 옆 날은 초록 링',await p.evaluate(()=>document.querySelector('.dsi[data-k="2026-10-14"]').classList.contains('rq-ok')));
+ T('날짜 띠: 요청 없는 날은 링 없음',await p.evaluate(()=>!/rq-/.test(document.querySelector('.dsi[data-k="2026-10-12"]').className)));
+ console.log(p.errs);T.sum();await b.close();})();

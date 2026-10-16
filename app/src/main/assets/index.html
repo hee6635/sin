@@ -163,7 +163,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .dn.hol{background:linear-gradient(var(--hol-bg),var(--hol-bg)) center/100% calc(100% - 5px) no-repeat}
 .dn .hn{font-size:10px;font-weight:800;color:var(--sun);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none;text-align:right;}
 .cell.today{background:var(--today-bg)}
-.cell.today::after{content:'';position:absolute;inset:0;border:4px solid var(--today);pointer-events:none;z-index:4}
+.cell.today::after{content:'';position:absolute;inset:0;border:2px solid var(--today);pointer-events:none;z-index:4}
 .cell.today .dn{padding-left:8px;padding-top:3px}
 
 .bwrap{flex:none;width:100%;height:calc(var(--b) + 2px);position:relative;display:flex;align-items:center;justify-content:center;margin-top:clamp(6px,calc(var(--stz) - 4px),12px)}
@@ -446,7 +446,11 @@ textarea{resize:none;min-height:84px}
 .dnum{height:26px;display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--muted)}
 .dsi small{font-size:11px;color:var(--muted);font-weight:700}
 .dsi .badge{transform:scale(.9)}
-.dsi.on small{color:var(--fg)}.dsi.on .badge{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
+.dsi.on small{color:var(--fg)}.dsi.on .badge{position:relative;overflow:visible}
+.dsi.on .badge::after{content:'';position:absolute;inset:-5px;border:2px solid var(--accent);border-radius:8px;pointer-events:none}
+.dsi[class*="rq-"] .badge{border-radius:50%}
+.dsi.rq-ask .badge{box-shadow:0 0 0 2px var(--bg),0 0 0 4px #f08a00}.dsi.rq-hold .badge{box-shadow:0 0 0 2px var(--bg),0 0 0 4px #0e9bb0}.dsi.rq-ok .badge{box-shadow:0 0 0 2px var(--bg),0 0 0 4px #1fa971}.dsi.rq-no .badge{box-shadow:0 0 0 2px var(--bg),0 0 0 4px #e0455c}
+.dsi.on[class*="rq-"] .badge::after{inset:-9px}
 .mdtx{width:100%;min-height:150px;border-radius:14px;padding:14px;font-size:16px;line-height:1.5;color:#2a2418;resize:none}
 .mdcol{display:flex;gap:10px;padding:4px 16px 8px}
 .mdcol button{width:34px;height:34px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.12)}
@@ -3874,7 +3878,7 @@ function openDay(k){
   const dayReqs=reqUniq(S.requests.filter(r=>r.date===k&&(!r.srv||r.dir==='in')).sort((a,b)=>b.t-a.t));
   const reqHtml=dayReqs.map(r=>reqCard(r)).join('');
   const dd=ddayHits(k);
-  const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}" data-act="day-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${S.personal?`<span class="dnum">${DOW[x.getDay()]}</span>`:badge(shiftOf(x),'sm')}</button>`;}).join('');
+  const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);const rq=rqRing(S.requests.filter(r=>r.date===fmt(x)&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r));return `<button class="dsi ${i===0?'on':''} ${rq}" data-act="day-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${S.personal?`<span class="dnum">${DOW[x.getDay()]}</span>`:badge(shiftOf(x),'sm')}</button>`;}).join('');
   const head=`
       <div class="dtop"><button data-act="close">‹ 달력</button></div>
       <div class="dfh"><button class="ib" data-act="day-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
