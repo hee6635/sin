@@ -12,11 +12,14 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.click('[data-act="font"][data-v="100"]');await p.waitForTimeout(200);
  T('보통으로 바꾸면 100 저장',(await S()).fontScale===100);
  // 개인 캘린더로 쓰기
- T('설정에 "개인 캘린더로 쓰기" 줄',await p.evaluate(()=>!!document.querySelector('[data-act="personal-on"]')));
+ T('설정에는 "개인 캘린더로 쓰기" 줄이 없음',await p.evaluate(()=>!document.querySelector('[data-act="personal-on"]')));
+ await p.click('[data-act="more-pattern"]');await p.waitForTimeout(350);
+ T('근무 패턴 화면 맨 아래에 "개인 캘린더로 쓰기"',await p.evaluate(()=>!!document.querySelector('#page [data-act="personal-on"]')));
  p.once('dialog',d=>d.accept());
- await p.click('[data-act="personal-on"]');await p.waitForTimeout(400);
+ await p.click('#page [data-act="personal-on"]');await p.waitForTimeout(400);
+ T('바꾸면 패턴 화면은 닫힘',await p.evaluate(()=>!document.getElementById('page').classList.contains('open')));
  T('개인 캘린더로 바뀜(근무표 데이터는 그대로)',await (async()=>{const s=await S();return s.personal===true&&s.pattern.length>=2;})());
- T('설정에 "근무표 쓰기"로 돌아갈 줄',await p.evaluate(()=>!!document.querySelector('[data-act="personal-off"]')&&!document.querySelector('[data-act="personal-on"]')));
+ T('설정에 "근무표 쓰기"로 돌아갈 줄',await p.evaluate(()=>!!document.querySelector('#view [data-act="personal-off"]')&&!document.querySelector('#view [data-act="personal-on"]')));
  await p.click('[data-act="personal-off"]');await p.waitForTimeout(300);
  T('근무표 쓰기로 복귀',(await S()).personal===false);
  // 요청 카드 → 날짜
