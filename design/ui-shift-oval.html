@@ -1,0 +1,57 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;padding:24px;display:flex;gap:22px;width:1180px;color:#1f2328}
+.col{width:360px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.cap{font-size:15px;font-weight:800}.sub{font-size:12px;color:#6b7280;text-align:center;line-height:1.45;min-height:34px;margin-top:-4px}
+.ph{width:360px;background:#fff;border-radius:22px;box-shadow:0 8px 26px rgba(0,0,0,.15);padding:10px 8px 14px}
+.w{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid #eceef1;border-left:1px solid #eceef1}
+.c{height:86px;border-right:1px solid #eceef1;border-bottom:1px solid #eceef1;position:relative;padding:3px 4px}
+.n{font-size:12px;font-weight:700}.n.s{color:#e0455c}
+.b{position:absolute;left:50%;top:34px;transform:translateX(-50%);height:27px;min-width:27px;border-radius:14px;display:grid;place-items:center;font-weight:800;color:#33414a;white-space:nowrap}
+.d{background:#a9bfca}.nt{background:#bda89f}.r{background:#e8e9ec;color:#e0455c;border-radius:5px}
+.b.o1{width:27px;font-size:14px}
+.b.o2{padding:0 9px;font-size:12.5px;letter-spacing:-.5px}
+.b.o3{padding:0 7px;font-size:10.5px;letter-spacing:-.5px}
+.b.sq{width:27px;font-size:12px}
+/* 지금 방식: 동그라미에 글자만 줄임 */
+.b.old{width:27px;border-radius:50%;font-size:9px;letter-spacing:-1px}.b.old3{width:27px;border-radius:50%;font-size:7px;letter-spacing:-1px}
+.note{font-size:11.5px;color:#7b828d;margin-top:8px;line-height:1.5;padding:0 6px}
+.hd{display:grid;grid-template-columns:repeat(7,1fr);font-size:11px;font-weight:800;text-align:center;color:#8b919a;margin-bottom:4px}
+</style></head><body>
+
+<div class="col"><div class="cap">지금 (두·세 글자도 동그라미 안)</div><div class="sub">글자가 작아져서 읽기 힘들어요</div>
+<div class="ph"><div class="hd"><span style="color:#e0455c">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span style="color:#2f6bf0">토</span></div>
+<div class="w">
+<div class="c"><span class="n s">4</span><span class="b d old">주</span></div>
+<div class="c"><span class="n">5</span><span class="b d old">오전</span></div>
+<div class="c"><span class="n">6</span><span class="b nt old">야간</span></div>
+<div class="c"><span class="n">7</span><span class="b d old3">당직일</span></div>
+<div class="c"><span class="n">8</span><span class="b d old">연차</span></div>
+<div class="c"><span class="n">9</span><span class="b r sq">휴</span></div>
+<div class="c"><span class="n">10</span><span class="b r sq">휴</span></div>
+</div><div class="note">한 글자는 지금 그대로예요</div></div></div>
+
+<div class="col"><div class="cap">제안 (두 글자부터 가로 타원)</div><div class="sub">높이는 동그라미와 같고, 글자 길이만큼 옆으로 늘어나요</div>
+<div class="ph"><div class="hd"><span style="color:#e0455c">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span style="color:#2f6bf0">토</span></div>
+<div class="w">
+<div class="c"><span class="n s">4</span><span class="b d o1">주</span></div>
+<div class="c"><span class="n">5</span><span class="b d o2">오전</span></div>
+<div class="c"><span class="n">6</span><span class="b nt o2">야간</span></div>
+<div class="c"><span class="n">7</span><span class="b d o3">당직일</span></div>
+<div class="c"><span class="n">8</span><span class="b d o2">연차</span></div>
+<div class="c"><span class="n">9</span><span class="b r sq">휴</span></div>
+<div class="c"><span class="n">10</span><span class="b r o2" style="border-radius:6px">휴무</span></div>
+</div><div class="note">한 글자 = 동그라미 · 두 글자 = 타원 · 세 글자 = 조금 더 긴 타원(글자 약간 작게)</div></div></div>
+
+<div class="col"><div class="cap">좁은 폰 (칸 폭 44px)에서도</div><div class="sub">타원이 칸을 넘지 않게 상한을 두고, 넘으면 글자만 줄여요</div>
+<div class="ph" style="width:320px"><div class="hd"><span style="color:#e0455c">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span style="color:#2f6bf0">토</span></div>
+<div class="w">
+<div class="c" style="height:86px"><span class="n s">4</span><span class="b d o1">주</span></div>
+<div class="c"><span class="n">5</span><span class="b d o2">오전</span></div>
+<div class="c"><span class="n">6</span><span class="b nt o2">야간</span></div>
+<div class="c"><span class="n">7</span><span class="b d o3" style="font-size:9.5px;padding:0 5px">당직일</span></div>
+<div class="c"><span class="n">8</span><span class="b d o2">연차</span></div>
+<div class="c"><span class="n">9</span><span class="b r sq">휴</span></div>
+<div class="c"><span class="n">10</span><span class="b r o2" style="border-radius:6px">휴무</span></div>
+</div><div class="note">달력 글자는 최대 3글자까지만 입력돼요</div></div></div>
+</body></html>
