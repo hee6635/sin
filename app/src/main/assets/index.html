@@ -1531,7 +1531,7 @@ function normalize(o){
   const mm={};
   for(const [k,v] of Object.entries(s.memos||{})){
     const list=Array.isArray(v)?v:typeof v==='string'?[{text:v,shared:false}]:[{text:(v&&v.text)||'',shared:!!(v&&v.shared)}];
-    const clean=list.filter(x=>x&&x.text).map(x=>({id:x.id||uid(),text:String(x.text),shared:!!x.shared,by:x.by||'host',t:x.t||Date.now(),...(x.notify?{notify:true}:{}),...(/^#[0-9a-f]{6}$/i.test(x.color||'')?{color:x.color}:{}),...(x.todo?{todo:true}:{}),...(x.todo&&x.done?{done:true}:{}),...(/^\d{1,2}:\d\d$/.test(x.time||'')?{time:x.time,...(x.al==='0'||x.al==='10'?{al:x.al}:{})}:{})}));   // 메모 색 · 할 일 · 시간 · 알림은 내 폰에만 (다시 켜도 남게)
+    const clean=list.filter(x=>x&&x.text).map(x=>({id:x.id||uid(),text:String(x.text),shared:!!x.shared,by:x.by||'host',t:x.t||Date.now(),...(x.notify?{notify:true}:{}),...(Array.isArray(x.to)&&x.to.length?{to:x.to.filter(u=>typeof u==='string').slice(0,12)}:{}),...(/^#[0-9a-f]{6}$/i.test(x.color||'')?{color:x.color}:{}),...(x.todo?{todo:true}:{}),...(x.todo&&x.done?{done:true}:{}),...(/^\d{1,2}:\d\d$/.test(x.time||'')?{time:x.time,...(x.al==='0'||x.al==='10'?{al:x.al}:{})}:{})}));   // 메모 색 · 할 일 · 시간 · 알림은 내 폰에만 (다시 켜도 남게)
     if(clean.length)mm[k]=clean;
   }
   // 예전 "가족 메모"(게스트가 쓴 것)는 가족 메모로 합침
@@ -3384,6 +3384,7 @@ function openFamEdit(){
   openPage(`
     ${pageHead(isNew?'가족 추가':'가족 고치기','<button class="ib" data-act="fe-save" style="width:auto;font-size:16px;color:var(--accent);font-weight:700;padding-right:8px">저장</button>')}
     <div class="pg-b">
+      ${isNew&&fbCfg()?`<div class="pg-sec" style="margin-top:0"><div class="prow tap" data-act="link-open"><div class="pl2">📲 앱을 쓰는 가족이면<small>가족 연결로 근무표를 자동으로 받아요</small></div><div class="pv">›</div></div></div>`:''}
       <div class="pg-cap">이름 · 사진</div>
       <div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="fe-top"><button class="fe-av" data-act="fe-photo" aria-label="사진">${famAv(m,0)}<small>${isPhoto(m.photo)?'바꾸기':'＋ 사진'}</small></button><input type="text" id="feName" value="${esc(m.name)}" placeholder="예: 아내, 딸, 엄마" maxlength="10"></div>
         <div class="swatch" style="margin-top:10px">${FAM_COL.map(c=>`<button class="${m.color===c?'on':''}" style="background:${c}" data-act="fe-color" data-v="${c}"></button>`).join('')}</div></div>
@@ -3794,7 +3795,10 @@ function addMemo(k,text,shared,countUsage,x){
   (S.memos[k]=S.memos[k]||[]).push(mm);
   if(shared)pushEvent(other(),'memo',k,`♥ ${md(k)}에 ${role()==='host'?'근무자':'가족'}가 메모를 남겼어요: "${firstLine(text).slice(0,24)}"`);
   if(countUsage&&!S.syncSettings.isPro)consumeUsage();else save();
+  return mm;
 }
+// 가족 메모 받는 사람: 가족 모두면 따로 안 적고(m.to 없음), 일부만이면 m.to=[uid…]
+function memoSetTo(m,to){const all=famOthers().map(x=>x.uid);if(!m)return;if(!Array.isArray(to)||all.every(u=>to.includes(u)))delete m.to;else m.to=to.filter(u=>all.includes(u));}
 function memoSubmit(){
   const k=sheetKey;if(!k)return;
   const el=$('#memoInput'),text=el?el.value.trim():'';
@@ -3827,14 +3831,23 @@ function memoFinish(k,msg){
 }
 /* ----- 서버(가족방)로 나가는 행동은 보내기 전에 확인창 한 번 (개인 메모 · 스티커 · 내 근무표는 바로) ----- */
 var cfm=null;
-function openCfm(c){cfm=c;renderCfm();}
+function openCfm(c){
+  if(c.type==='memo'||c.type==='memo-edit'){   // 받는 사람: 처음엔 가족 모두 (고치는 메모는 지금 받는 사람)
+    const all=famOthers().map(x=>x.uid),cur=c.id?(memosOf(c.k).find(x=>x.id===c.id)||{}).to:null;
+    c.to=Array.isArray(cur)&&cur.length?cur.filter(u=>all.includes(u)):all.slice();
+    if(!c.to.length)c.to=all.slice();
+  }
+  cfm=c;renderCfm();
+}
+const cfmToHtml=(c,others)=>others.length>1?`<div class="hint cfm-h" style="margin-top:8px">받는 사람 <small>(눌러서 빼요)</small></div><div class="chips left" style="margin-top:4px">${others.map(m=>`<button class="${c.to.includes(m.uid)?'on':''}" data-act="cfm-to" data-u="${esc(m.uid)}">${esc(m.name)}</button>`).join('')}</div>`:'';
 function renderCfm(){
   const c=cfm;if(!c)return;
   const others=famOthers(),names=others.map(m=>m.name).join(' · ')||'가족',rem=`<div class="cfm-rem">무료 ${famRemain()}건 남음 (처음 ${FAM_FREE}건까지 무료)</div>`;
   let head='',body='',ok='보내기';
   if(c.type==='memo'){
     head='♥ 가족 메모<b>가족에게 보낼까요?</b>';
-    body=`<div class="cfm-q">${esc(c.text)}</div><div class="hint cfm-h">${esc(names)}에게 보여요 · ${md(c.k)} 날짜에 붙어요</div>${rem}`;
+    const sel=others.filter(m=>c.to.includes(m.uid)).map(m=>m.name).join(' · ')||names;
+    body=`<div class="cfm-q">${esc(c.text)}</div><div class="hint cfm-h">${esc(sel)}에게 보여요 · ${md(c.k)} 날짜에 붙어요</div>${cfmToHtml(c,others)}${rem}`;
   }else if(c.type==='stk'){
     head='⭐ 스티커 보여주기<b>가족에게 보여줄까요?</b>';
     body=`<div class="cfm-q">내 스티커(약 · 운동 등)가 ${esc(names)}의 가족 달력에 보여요</div><div class="hint cfm-h">언제든 끌 수 있어요 · 끄면 가족 화면에서 바로 사라져요</div>`;ok='켜기';
@@ -3846,7 +3859,7 @@ function renderCfm(){
     body=`<div class="cfm-q">${esc(c.text)}</div>
       <div class="jopt ${c.notify?'':'on'}" data-act="cfm-nt" data-v="0"><b>조용히 고치기</b><small>가족 화면의 메모만 바뀌어요</small></div>
       <div class="jopt ${c.notify?'on':''}" data-act="cfm-nt" data-v="1"><b>고쳤다고 알리기</b><small>가족에게 "메모를 고쳤어요" 알림이 가요</small></div>
-      <div class="cfm-rem">고치는 건 무료 횟수를 쓰지 않아요</div>`;
+      ${cfmToHtml(c,others)}<div class="cfm-rem">고치는 건 무료 횟수를 쓰지 않아요</div>`;
     ok='올리기';
   }else{
     const want=schType(c.sch,c.want);
@@ -3863,14 +3876,14 @@ function doCfm(c){
   if(c.type==='stk'){S.link.stk=true;save();famPush(true).catch(()=>{});if(pageMode==='link')openLinkPage();toast('내 스티커를 가족에게 보여줘요');return;}
   if(c.type==='memo'){
     if(famRemain()<=0){famLimitSheet();return;}
-    if(c.vc){addMemo(c.k,c.text,true,false);save();vcRerender();openVcDay(c.k);toast('♥ 가족 메모를 남겼어요');return;}
-    if(c.id){const m=memosOf(c.k).find(x=>x.id===c.id);if(m){m.text=c.text;m.shared=true;m.t=Date.now();if(c.x)mdApply(m,c.x);pushEvent(other(),'memo',c.k,`♥ ${md(c.k)}에 메모를 남겼어요: "${firstLine(c.text).slice(0,24)}"`);}}
-    else addMemo(c.k,c.text,true,false,c.x);
+    if(c.vc){memoSetTo(addMemo(c.k,c.text,true,false),c.to);save();vcRerender();openVcDay(c.k);toast('♥ 가족 메모를 남겼어요');return;}
+    if(c.id){const m=memosOf(c.k).find(x=>x.id===c.id);if(m){m.text=c.text;m.shared=true;m.t=Date.now();memoSetTo(m,c.to);if(c.x)mdApply(m,c.x);pushEvent(other(),'memo',c.k,`♥ ${md(c.k)}에 메모를 남겼어요: "${firstLine(c.text).slice(0,24)}"`);}}
+    else memoSetTo(addMemo(c.k,c.text,true,false,c.x),c.to);
     if(c.edit||!c.id){memoEdit=c.edit?null:memoEdit;memoText='';save();memoFinish(c.k,'♥ 가족 메모를 남겼어요');}
     else{save();render();openDay(c.k);toast('♥ 가족 메모로 바꿨어요');}
   }else if(c.type==='memo-edit'){
     const m=memosOf(c.k).find(x=>x.id===c.id);
-    if(m){m.text=c.text;m.t=Date.now();if(c.x)mdApply(m,c.x);if(c.notify)m.notify=true;else delete m.notify;}
+    if(m){m.text=c.text;m.t=Date.now();memoSetTo(m,c.to);if(c.x)mdApply(m,c.x);if(c.notify)m.notify=true;else delete m.notify;}
     memoEdit=null;memoText='';save();memoFinish(c.k,c.notify?'고쳐서 가족에게 알렸어요':'조용히 고쳤어요');
   }else{
     if(famRemain()<=0){famLimitSheet();return;}
@@ -5475,6 +5488,9 @@ document.addEventListener('click',e=>{
     case 'cfm-no':{const c=cfm;cfm=null;closePop();if(c&&c.type==='stk'&&pageMode==='link')openLinkPage();if(c&&c.type==='status')openStatusPage();break;}
     case 'cfm-nt':if(cfm){cfm.notify=t.dataset.v==='1';renderCfm();}break;
     case 'cfm-cc':if(cfm){cfm.cc=!cfm.cc;renderCfm();}break;
+    case 'cfm-to':{const c=cfm;if(!c||!c.to)break;const u=t.dataset.u,i=c.to.indexOf(u);
+      if(i>=0){if(c.to.length<=1){toast('받는 사람이 한 명은 있어야 해요');break;}c.to.splice(i,1);}else c.to.push(u);
+      renderCfm();break;}
     case 'cfm-ok':{const c=cfm;cfm=null;closePop();if(c)doCfm(c);break;}
     case 'vc-day':if(vcSel.on)break;if(t.classList.contains('out')){buzz(6);vcMove(monthDirOf(t.dataset.k,vcY,vcM));break;}openVcDay(t.dataset.k);break;
     case 'srvmm-del':{const sid=t.dataset.sid;closePop();if(!confirm('가족이 쓴 이 메모를 지울까요?'))break;famReady().then(({F,db})=>F.deleteDoc(F.doc(db,'households',S.link.hid,'memos',sid))).catch(e=>toast('지우지 못했어요. '+famErr(e)));break;}
@@ -6029,7 +6045,9 @@ async function famDissolve(hid){   // 가족방 없애기: 코드 · 구성원 �
   mem.docs.filter(d=>d.id!==uid).forEach(d=>b.delete(d.ref));
   const sc=await F.getDocs(F.collection(db,'households',hid,'schedules'));
   sc.docs.forEach(d=>b.delete(d.ref));
-  const mm=await F.getDocs(F.collection(db,'households',hid,'memos'));
+  const mmA=await F.getDocs(F.query(F.collection(db,'households',hid,'memos'),F.where('to','array-contains',uid)));   // 내가 볼 수 있는 메모만 (나머지는 서버가 가족방이 지워질 때 같이 지움)
+  const mmB=await F.getDocs(F.query(F.collection(db,'households',hid,'memos'),F.where('by','==',uid)));
+  const mm={docs:famMemoDocs(mmA.docs,mmB.docs)};
   const rq=await F.getDocs(F.collection(db,'households',hid,'requests'));
   [...mm.docs,...rq.docs].slice(0,350).forEach(d=>b.delete(d.ref));
   b.delete(famMember(F,db,hid,uid));
@@ -6157,22 +6175,33 @@ async function famPoll(force){
     const {F,db}=await famReady();if(!S.link)return;
     const hid=S.link.hid,uid=S.link.uid,col=n=>F.collection(db,'households',hid,n);
     const [sc,mm,ri,ro,rc]=await Promise.all([
-      F.getDocs(col('schedules')),F.getDocs(col('memos')),
+      F.getDocs(col('schedules')),Promise.all([F.getDocs(F.query(col('memos'),F.where('to','array-contains',uid))),F.getDocs(F.query(col('memos'),F.where('by','==',uid)))]),
       F.getDocs(F.query(col('requests'),F.where('to','==',uid))),
       F.getDocs(F.query(col('requests'),F.where('from','==',uid))),
       F.getDocs(F.query(col('requests'),F.where('cc','array-contains',uid)))]);
     if(!S.link)return;
-    famApplyScheds(sc);famOnMemos(mm);famOnReqs('reqIn',ri);famOnReqs('reqOut',ro);famOnCc(rc);
+    famApplyScheds(sc);famOnMemos({docs:famMemoDocs(mm[0].docs,mm[1].docs),metadata:{fromCache:false}});famOnReqs('reqIn',ri);famOnReqs('reqOut',ro);famOnCc(rc);
   }catch(e){}finally{famPolling=false;}
 }
 setInterval(()=>{if(S&&S.link&&document.visibilityState==='visible'&&Date.now()-famPollAt>110000)famPoll();},30000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&S&&S.link)famPoll(true);});
+// 가족 메모는 두 가지 목록을 합쳐서 봄: 나에게 온 것(to) + 내가 쓴 것(by, 옛 메모 포함)
+const famMemoParts={to:null,by:null};
+function famMemoDocs(a,b){const seen=new Set(),docs=[];[...a,...b].forEach(d=>{if(!seen.has(d.id)){seen.add(d.id);docs.push(d);}});return docs;}
+function famMemoPart(key,snap){
+  famMemoParts[key]={docs:snap.docs,fc:!!(snap.metadata&&snap.metadata.fromCache)};
+  const a=famMemoParts.to,b=famMemoParts.by;if(!a||!b)return;
+  famOnMemos({docs:famMemoDocs(a.docs,b.docs),metadata:{fromCache:a.fc||b.fc}});
+}
 async function famListen(){
   famStop();if(!S.link||!fbCfg())return;
   const {F,db}=await famReady();const hid=S.link.hid;
   famUnsub.push(F.onSnapshot(F.collection(db,'households',hid,'schedules'),snap=>famApplyScheds(snap),()=>{}));
   const uid=S.link.uid;
-  famUnsub.push(F.onSnapshot(F.collection(db,'households',hid,'memos'),snap=>famOnMemos(snap),()=>{}));
+  famMemoParts.to=famMemoParts.by=null;
+  const memoErr=key=>()=>famMemoPart(key,{docs:[],metadata:{fromCache:true}});
+  famUnsub.push(F.onSnapshot(F.query(F.collection(db,'households',hid,'memos'),F.where('to','array-contains',uid)),snap=>famMemoPart('to',snap),memoErr('to')));   // 나에게 온 메모(내가 쓴 것 포함)
+  famUnsub.push(F.onSnapshot(F.query(F.collection(db,'households',hid,'memos'),F.where('by','==',uid)),snap=>famMemoPart('by',snap),memoErr('by')));   // 내가 쓴 옛 메모(to 없음)도
   famUnsub.push(F.onSnapshot(F.query(F.collection(db,'households',hid,'requests'),F.where('to','==',uid)),snap=>famOnReqs('reqIn',snap),()=>{}));
   famUnsub.push(F.onSnapshot(F.query(F.collection(db,'households',hid,'requests'),F.where('from','==',uid)),snap=>famOnReqs('reqOut',snap),()=>{}));
   famUnsub.push(F.onSnapshot(F.query(F.collection(db,'households',hid,'requests'),F.where('cc','array-contains',uid)),snap=>famOnCc(snap),()=>{}));
@@ -6501,8 +6530,9 @@ const famMemoWarned={};
 function famMemoWarn(id,msg){if(famMemoWarned[id])return;famMemoWarned[id]=1;toast(msg);}   // 메모 하나당 한 번만 알려요
 async function famSyncMemos(){
   if(!S.link||!fbCfg()||!S.link.uid)return;
-  const uid=S.link.uid,hid=S.link.hid,want={};
-  Object.keys(S.memos||{}).forEach(k=>(S.memos[k]||[]).forEach(m=>{if(m.shared&&m.by===role()&&String(m.text||'').trim())want[uid+'_'+m.id]={date:k,text:String(m.text).slice(0,200),nt:!!m.notify,mid:m.id,tm:/^\d\d:\d\d$/.test(m.time||'')?m.time:'',al:/^\d\d:\d\d$/.test(m.time||'')&&(m.al==='0'||m.al==='10')?m.al:''};}));
+  const uid=S.link.uid,hid=S.link.hid,want={},others=famOthers().map(x=>x.uid);
+  const toOf=m=>{const l=Array.isArray(m.to)&&m.to.length?m.to.filter(u=>others.includes(u)):others;return [...new Set([uid,...(l.length?l:others)])].sort();};
+  Object.keys(S.memos||{}).forEach(k=>(S.memos[k]||[]).forEach(m=>{if(m.shared&&m.by===role()&&String(m.text||'').trim())want[uid+'_'+m.id]={date:k,text:String(m.text).slice(0,200),nt:!!m.notify,mid:m.id,tm:/^\d\d:\d\d$/.test(m.time||'')?m.time:'',al:/^\d\d:\d\d$/.test(m.time||'')&&(m.al==='0'||m.al==='10')?m.al:'',to:toOf(m)};}));
   const have={};Object.entries(S.fam2.memos||{}).forEach(([id,v])=>{if(v.by===uid)have[id]=v;});
   const {F,db}=await famReady();
   let remain=famRemain();
@@ -6513,12 +6543,13 @@ async function famSyncMemos(){
       if(remain<=0){famMemoWarn(id,'무료 횟수를 다 써서 가족 메모를 올리지 못했어요');continue;}remain--;
       famBusyMemo[id]=1;
       const b=F.writeBatch(db);
-      b.set(ref,{by:uid,byName:S.link.name,date:w.date,text:w.text,createdAt:F.serverTimestamp(),updatedAt:F.serverTimestamp(),...(w.tm?{time:w.tm,...(w.al!==''?{al:w.al}:{})}:{})});
+      b.set(ref,{by:uid,byName:S.link.name,date:w.date,text:w.text,to:w.to,createdAt:F.serverTimestamp(),updatedAt:F.serverTimestamp(),...(w.tm?{time:w.tm,...(w.al!==''?{al:w.al}:{})}:{})});
       b.update(famMember(F,db,hid,uid),{sent:F.increment(1)});
       b.commit().catch(e=>famMemoWarn(id,famMemoErr(e))).finally(()=>{delete famBusyMemo[id];});
-    }else if(h.text!==w.text||h.date!==w.date||(h.time||'')!==w.tm||(h.al||'')!==w.al){
+    }else if(h.text!==w.text||h.date!==w.date||(h.time||'')!==w.tm||(h.al||'')!==w.al||JSON.stringify([...(h.to||[])].sort())!==JSON.stringify(w.to)){
       famBusyMemo[id]=1;
       const patch={date:w.date,text:w.text,updatedAt:F.serverTimestamp()};
+      if(JSON.stringify([...(h.to||[])].sort())!==JSON.stringify(w.to))patch.to=w.to;   // 받는 사람이 바뀌었거나, 옛 메모(to 없음)를 채움
       if((h.time||'')!==w.tm||(h.al||'')!==w.al){patch.time=w.tm?w.tm:F.deleteField();patch.al=w.al!==''?w.al:F.deleteField();}   // 시간 알림(색 · 할 일은 안 올림)
       if(w.nt)patch.rev=(+h.rev||0)+1;   // 고쳤다고 알리기를 고른 수정
       F.updateDoc(ref,patch).then(()=>{if(w.nt)famClearNotify(w.mid);}).catch(e=>famMemoWarn(id,famMemoErr(e))).finally(()=>{delete famBusyMemo[id];});
@@ -6536,7 +6567,7 @@ function famClearNotify(mid){
 }
 function famOnMemos(snap){
   const m={};
-  snap.docs.forEach(d=>{const v=d.data();m[d.id]={by:v.by,byName:v.byName,date:v.date,text:v.text,rev:+v.rev||0,time:/^\d\d:\d\d$/.test(v.time||'')?v.time:'',al:(v.al==='0'||v.al==='10')?v.al:'',t:tsMs(v.createdAt)||Date.now()};});
+  snap.docs.forEach(d=>{const v=d.data();m[d.id]={by:v.by,byName:v.byName,date:v.date,text:v.text,to:Array.isArray(v.to)?v.to:null,rev:+v.rev||0,time:/^\d\d:\d\d$/.test(v.time||'')?v.time:'',al:(v.al==='0'||v.al==='10')?v.al:'',t:tsMs(v.createdAt)||Date.now()};});
   const L=S.link;if(!L)return;
   if(!snap.metadata.fromCache)famMarkSync();
   if(!snap.metadata.fromCache){

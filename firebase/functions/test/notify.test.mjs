@@ -37,6 +37,12 @@ const memo = { by: 'u1', byName: '엄마', date: '2026-11-03', text: '비밀메�
 ok('메모: 쓴 사람 제외 · 내용 없음', () => {
   const m = N.onMemoCreated(memo, ['u1', 'u2'], 'h'); assert.deepEqual(m[0].to, ['u2']); assert.ok(!JSON.stringify(m).includes('비밀메모'));
 });
+ok('메모 받는 사람(to): 고른 사람에게만 알림 · 없으면(옛 메모) 모두', () => {
+  assert.deepEqual(N.onMemoCreated({ ...memo, to: ['u1', 'u2'] }, ['u1', 'u2', 'u3'], 'h')[0].to, ['u2']);
+  assert.deepEqual(N.onMemoCreated({ ...memo, to: ['u1'] }, ['u1', 'u2', 'u3'], 'h'), []);
+  assert.deepEqual(N.onMemoCreated(memo, ['u1', 'u2', 'u3'], 'h')[0].to, ['u2', 'u3']);
+  assert.deepEqual(N.onMemoUpdated(memo, { ...memo, rev: 1, to: ['u1', 'u3'] }, ['u1', 'u2', 'u3'], 'h')[0].to, ['u3']);
+});
 ok('메모 고침: rev 오를 때만', () => {
   assert.deepEqual(N.onMemoUpdated(memo, { ...memo, text: 'x' }, ['u1', 'u2'], 'h'), []);
   assert.match(N.onMemoUpdated(memo, { ...memo, rev: 1 }, ['u1', 'u2'], 'h')[0].body, /고쳤어요/);

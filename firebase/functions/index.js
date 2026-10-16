@@ -1,7 +1,7 @@
 'use strict';
 // 언제쉬어 푸시 알림 — 가족 메모 · 근무 요청 · 근무 변경 · 가족 참여가 생기면 가족 폰에 알림
 // 알림 문구에는 메모/메시지 내용을 넣지 않습니다 (이름 · 날짜 · 종류만).
-const { onDocumentCreated, onDocumentUpdated } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated, onDocumentUpdated, onDocumentDeleted } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const N = require('./lib/notify');
 
@@ -79,6 +79,10 @@ exports.onScheduleUpdated = onDocumentUpdated(opt(`${H}/schedules/{uid}`), async
   const { hid, uid } = ev.params, b = ev.data.before.data(), a = ev.data.after.data();
   const { uids, names } = await members(hid);
   await send(N.onScheduleChanged(uid, b, a, uids, u => names[u], todayKey(), hid), hid);
+});
+// 가족방(households/{hid})이 지워지면 안에 남은 메모 · 요청 · 근무표도 같이 지움 (받는 사람을 고른 메모는 호스트도 못 읽어서 앱이 못 지움)
+exports.onHouseholdDeleted = onDocumentDeleted(opt(H), async ev => {
+  await db.recursiveDelete(db.collection('households').doc(ev.params.hid));
 });
 exports.onMemberCreated = onDocumentCreated(opt(`${H}/members/{uid}`), async ev => {
   const m = ev.data && ev.data.data(); if (!m) return;

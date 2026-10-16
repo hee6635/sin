@@ -1,0 +1,12 @@
+const {chromium,boot,mkT,base}=require('./lib.js');
+(async()=>{const b=await chromium.launch();const T=mkT();
+ const p=await boot(b,{...base},{touch:true});
+ await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);
+ await p.evaluate(()=>{window.FIREBASE_CONFIG={};});
+ await p.evaluate(()=>document.querySelector('[data-act="fam-add"]').click());await p.waitForTimeout(400);
+ T('가족 추가 창 맨 위에 "앱을 쓰는 가족이면" 줄(서버가 준비된 때)',await p.evaluate(()=>{const e=document.querySelector('#page [data-act="link-open"]');return !!e&&e.textContent.includes('앱을 쓰는 가족');}));
+ await p.evaluate(()=>{delete window.FIREBASE_CONFIG;});
+ await p.evaluate(()=>document.querySelector('#page [data-act="pop-close"],#page .bk')&&document.querySelector('#page .bk').click());await p.waitForTimeout(300);
+ await p.evaluate(()=>document.querySelector('[data-act="fam-add"]').click());await p.waitForTimeout(400);
+ T('서버 설정이 없으면 그 줄이 안 보임',await p.evaluate(()=>!document.querySelector('#page [data-act="link-open"]')));
+ console.log(p.errs);T.sum();await b.close();})();

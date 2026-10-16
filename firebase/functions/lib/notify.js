@@ -64,14 +64,16 @@ function onRequestUpdated(b, a, hid) {
   return [];
 }
 
+// 받는 사람(m.to)이 있으면 그 사람만, 없으면(옛 메모) 가족 모두
+const only = (m, uids) => (Array.isArray(m && m.to) ? uids.filter(u => m.to.includes(u)) : uids);
 function onMemoCreated(m, memberUids, hid) {
-  const to = memberUids.filter(u => u !== m.by);
+  const to = only(m, memberUids).filter(u => u !== m.by);
   if (!to.length) return [];
   return [{ to, title: '가족 메모', body: `${nm(m.byName)}님이 ${md(m.date)}에 메모를 남겼어요`, data: { type: 'memo', date: m.date || '', hid } }];
 }
 function onMemoUpdated(b, a, memberUids, hid) {
   if (!((a.rev || 0) > (b.rev || 0))) return [];   // '고쳤다고 알리기'를 고른 때만
-  const to = memberUids.filter(u => u !== a.by);
+  const to = only(a, memberUids).filter(u => u !== a.by);
   if (!to.length) return [];
   return [{ to, title: '가족 메모', body: `${nm(a.byName)}님이 ${md(a.date)} 메모를 고쳤어요`, data: { type: 'memo', date: a.date || '', hid } }];
 }

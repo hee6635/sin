@@ -196,11 +196,14 @@ service cloud.firestore {
         && (!('al' in d) || ('time' in d && d.al in ['0', '10']));
     }
     // ───────── 가족 메모: households/{hid}/memos/{id} ─────────
-    // 가족 모두 읽기, 쓴 사람만 고치기, 쓴 사람 · 호스트가 지우기. 만들 때 내 횟수(sent) +1
+    // 받는 사람(to)으로 고른 가족과 쓴 사람만 읽기(받는 폰은 where('to','array-contains',내 uid) 로 구독), 쓴 사람만 고치기, 쓴 사람 · 호스트가 지우기. 만들 때 내 횟수(sent) +1
     match /households/{hid}/memos/{id} {
-      allow read: if isMember(hid);
+      allow read: if isMember(hid)
+        && (resource.data.by == request.auth.uid || request.auth.uid in resource.data.get('to', []));
       allow create: if signedIn() && isMember(hid)
-        && request.resource.data.keys().hasOnly(['by', 'byName', 'date', 'text', 'createdAt', 'updatedAt', 'time', 'al'])
+        && request.resource.data.keys().hasOnly(['by', 'byName', 'date', 'text', 'createdAt', 'updatedAt', 'time', 'al', 'to'])
+        && request.resource.data.to is list && request.resource.data.to.size() >= 1 && request.resource.data.to.size() <= 12
+        && request.auth.uid in request.resource.data.to
         && request.resource.data.by == request.auth.uid
         && memoTimeOk(request.resource.data)
         && validName(request.resource.data.byName)
@@ -209,7 +212,9 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time
         && getAfter(memberPath(hid, request.auth.uid)).data.get('sent', 0) == get(memberPath(hid, request.auth.uid)).data.get('sent', 0) + 1;
       allow update: if signedIn() && resource.data.by == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date', 'text', 'updatedAt', 'rev', 'time', 'al'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date', 'text', 'updatedAt', 'rev', 'time', 'al', 'to'])
+        && request.resource.data.get('to', []) is list && request.resource.data.get('to', []).size() <= 12
+        && request.auth.uid in request.resource.data.get('to', [request.auth.uid])
         && memoTimeOk(request.resource.data)
         // rev: "고쳤다고 알리기"를 고르면 +1 (가족 폰에 "메모를 고쳤어요" 알림)
         && request.resource.data.get('rev', 0) is int
