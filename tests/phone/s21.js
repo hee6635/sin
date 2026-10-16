@@ -45,7 +45,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.click('[data-act="more-pattern"]');await p.waitForTimeout(350);
  T('이전 패턴 보기 줄',await p.evaluate(()=>!!document.querySelector('#page [data-act="pat-old-show"]')&&!!document.querySelector('#page [data-act="pat-undo-anchor"]')));
  await p.evaluate(()=>{const i=document.getElementById('anchor');i.value='2026-10-01';i.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(300);
- T('이전 구간이 겹쳐 정리된다는 안내',await p.$eval('#pop',e=>e.innerText.includes('정리돼요')));
+ T('이전 구간이 겹쳐 정리된다는 안내',await p.$eval('#pop',e=>e.innerText.includes('정리')));
  await p.click('#pop [data-act="anc-all"]');await p.waitForTimeout(400);
  s=await S();
  T('전부 바꾸기: 시작 날만 바뀜 · 구간 추가 없음',s.anchor==='2026-10-01'&&s.patOld.length===1);

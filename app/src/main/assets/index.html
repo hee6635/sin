@@ -976,6 +976,9 @@ textarea{resize:none;min-height:84px}
 .sgrid button.on{background:color-mix(in srgb,var(--accent) 16%,var(--surface));box-shadow:inset 0 0 0 2px var(--accent)}
 .sgrid button.emp{background:none;box-shadow:inset 0 0 0 1.5px var(--line)}
 .emptybox{display:block;width:22px;height:22px;border:1.8px dashed var(--muted);border-radius:6px;opacity:.7}
+.lnk{color:var(--accent) !important;text-decoration:underline;font-weight:600}
+a.lnk{cursor:pointer;-webkit-tap-highlight-color:transparent}a.lnk:active{opacity:.6}
+.lnkrow{padding:6px 18px 0;display:flex;gap:12px;flex-wrap:wrap;font-size:14px}.lnkrow:empty{display:none}
 .icn-ownrow{display:flex;gap:8px;align-items:center;margin-top:10px}.icn-ownrow input,.icn-ownrow .icn-own{flex:1;min-width:0;width:auto !important}
 .sgrid button.plus{background:none;box-shadow:inset 0 0 0 1.5px var(--line)}
 #pop .sgrid{width:100%}
@@ -1863,6 +1866,51 @@ function visibleMemos(k){
   return memosOf(k).concat(S.link&&S.syncSettings.receiveFamilyMemo!==false?famRemoteMemos(k):[]).filter(m=>m.text.trim()&&((m.shared&&(m.by===r||S.syncSettings.receiveFamilyMemo!==false))||m.by===r));
 }
 const firstLine=t=>String(t).split('\n')[0];
+/* ---- 글 속 주소(https:// · http:// · www.)는 파란 밑줄 "링크"로 보여 줌 (저장된 글은 그대로 · 보이는 모양만) ---- */
+function linkParts(text){
+  text=String(text||'');const out=[],re=/(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi;let last=0,m;
+  while((m=re.exec(text))){
+    let u=m[0];while(u&&/[.,;:!?)\]}>]$/.test(u))u=u.slice(0,-1);
+    if(u.length<5){continue;}
+    if(m.index>last)out.push({t:text.slice(last,m.index)});
+    out.push({u});last=m.index+u.length;re.lastIndex=last;
+  }
+  if(last<text.length)out.push({t:text.slice(last)});
+  return out;
+}
+const linkUrl=u=>/^https?:\/\//i.test(u)?u:'https://'+u;
+const hasLink=t=>linkParts(t).some(x=>x.u);
+// o.click: 눌러지는 링크(날짜 창 · 포스트잇) / 아니면 모양만(달력 칸) · o.fam: 가족이 보낸 글이라 열기 전에 확인
+function linkify(text,o){
+  o=o||{};
+  return linkParts(text).map(x=>x.u?(o.click?`<a class="lnk" data-act="lnk" data-u="${esc(linkUrl(x.u))}"${o.fam?' data-fam="1"':''}>링크</a>`:'<span class="lnk">링크</span>'):esc(x.t)).join('');
+}
+let lnkHeld=false,lnkTimer=null;
+function lnkGo(url){
+  if(!/^https?:\/\//i.test(url))return;
+  try{if(hasBridge('openUrl')){window.AndroidBridge.openUrl(url);return;}}catch(e){}
+  window.open(url,'_blank','noopener');
+}
+function lnkHost(url){try{return new URL(url).hostname;}catch(e){return url.slice(0,40);}}
+function lnkOpen(url,fam){
+  if(!fam){lnkGo(url);return;}
+  openPop(`<div class="mh">링크 열기<b>${esc(lnkHost(url))}</b></div>
+    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0">가족이 보낸 메모의 링크예요. 아는 주소일 때만 열어요.</div></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">취소</button><button class="btn grow" data-act="lnk-go" data-u="${esc(url)}">열기</button></div>`);
+}
+function lnkCopy(url){
+  try{if(hasBridge('copyText')){window.AndroidBridge.copyText(url);toast('주소를 복사했어요');return;}}catch(e){}
+  try{navigator.clipboard.writeText(url).then(()=>toast('주소를 복사했어요'),()=>toast('복사하지 못했어요'));}catch(e){toast('복사하지 못했어요');}
+}
+function lnkMenu(url,fam){
+  openPop(`<div class="mh">링크<b>${esc(lnkHost(url))}</b></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="lnk-open2" data-u="${esc(url)}"${fam?' data-fam="1"':''}>열기</button><button class="btn grow" data-act="lnk-copy" data-u="${esc(url)}">주소 복사</button></div>`);
+}
+document.addEventListener('pointerdown',e=>{
+  clearTimeout(lnkTimer);const a=e.target.closest&&e.target.closest('a.lnk[data-u]');if(!a)return;
+  lnkHeld=false;lnkTimer=setTimeout(()=>{lnkHeld=true;clearTimeout(holdTimer);held=true;try{navigator.vibrate&&navigator.vibrate(20);}catch(err){}lnkMenu(a.dataset.u,!!a.dataset.fam);},450);
+},true);
+['pointerup','pointercancel','pointermove'].forEach(ev=>document.addEventListener(ev,()=>{if(ev!=='pointermove')clearTimeout(lnkTimer);},true));
 const ICON={
   bell:'<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
   send:'<svg viewBox="0 0 24 24"><path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z"/></svg>',
@@ -2005,8 +2053,8 @@ function calPanel(y,m){
     const pills=[];
     // 가족 · 나만은 색으로 구분 (♥ · 🔒 는 아래 설명 줄에 한 번만)
     const pst=x=>`${x.done?' done':''}" ${x.color?`style="--mc:${esc(x.color)}"`:''}`;
-    fam.forEach(x=>pills.push(`<div class="pl fam${pst(x)}>${esc(firstLine(x.text))}</div>`));
-    if(!sharing)mine.forEach(x=>pills.push(`<div class="pl my${pst(x)}>${esc(firstLine(x.text))}</div>`));
+    fam.forEach(x=>pills.push(`<div class="pl fam${pst(x)}>${linkify(firstLine(x.text))}</div>`));
+    if(!sharing)mine.forEach(x=>pills.push(`<div class="pl my${pst(x)}>${linkify(firstLine(x.text))}</div>`));
     boardOnDate(k).filter(n=>!sharing||n.shared).forEach(n=>pills.push(`<div class="pl ${n.shared?'fam':'my'}">📝 ${esc(piLabel(n))}</div>`));
     ddayHits(k).forEach(x=>pills.push(`<div class="pl dd">${ico(x.emoji||'⭐')} ${esc(x.name)}</div>`));
     // 설정 줄 수(기본 3 · 태블릿 +1). 넘치면 마지막 줄을 +N 으로
@@ -2191,7 +2239,7 @@ function renderColleague(){
     const cls=hol?'hol':ch?'chol':w===0?'sun':w===6?'sat':'';
     h+=`<div class="crow ${k===tk?'today':''}"><div class="dt ${cls}" data-act="col-day" data-k="${k}">${i}.${DOW[w]}</div>${teamList().map((n,g)=>`<div class="${g===S.myTeam?'me':''}">${badge(teamShift(d,g),'sm')}</div>`).join('')}</div>`;
   }
-  return `<div class="ctbl" style="--tc:${teamCount()}">${h}</div><div class="hint" style="padding:6px 16px 20px">조 이름을 누르면 내 조를 바꿀 수 있어요. 조 순서가 회사와 다르면 더 보기 › 근무 패턴에서 맞춰주세요.</div>`;
+  return `<div class="ctbl" style="--tc:${teamCount()}">${h}</div><div class="hint" style="padding:6px 16px 20px">조 이름을 누르면 내 조를 바꿔요</div>`;
 }
 
 /* ================= 근무 시간 · 지금 상태 ================= */
@@ -2403,7 +2451,6 @@ function openStatusPage(){
       <div class="pg-cap">보이는 것</div>
       <div class="pg-sec" style="margin-top:0">
         <div class="prow"><div class="pl2">"전화 OK / 메시지만" 표시</div><label class="sw"><input type="checkbox" id="st_phone" ${st.phone?'checked':''}><i></i></label></div>
-        <div class="prow"><div class="pl2">퇴근하면 가족에게 알림<small>가족 연결(다음 업데이트) 후에 보내져요</small></div><label class="sw"><input type="checkbox" id="st_home" ${st.homeAlert?'checked':''}><i></i></label></div>
         <div class="prow"><div class="pl2">받은 응원 알림</div><div class="chips">${[['loud','소리'],['quiet','근무 중엔 조용히'],['off','끄기']].map(([v,n])=>`<button class="${st.cheer===v?'on':''}" data-act="st-cheer" data-v="${v}">${n}</button>`).join('')}</div></div>
       </div>
     </div>`,'status');
@@ -2659,7 +2706,7 @@ function renderStampReg(){
     ${d.rep==='dow'?`<div class="sdays big">${[1,2,3,4,5,6,0].map(w=>`<button class="${d.days.includes(w)?'on':''}" data-act="sr-day" data-v="${w}">${DOW[w]}</button>`).join('')}</div>`:''}
     ${d.rep==='work'?`<div class="hseg big" style="margin-top:8px"><button class="${d.workMode==='rest'?'on':''}" data-act="sr-work" data-v="rest">휴무 날만</button><button class="${d.workMode==='work'?'on':''}" data-act="sr-work" data-v="work">근무 날만</button></div>`:''}
     ${d.rep==='month'?`<div class="hint" style="margin:8px 0 0;padding:0">매달 ${parse(d.from||d.k).getDate()}일 · 그 날이 없는 달은 말일</div>`:''}
-    ${d.rep==='none'?'<div class="hint" style="margin:8px 0 0;padding:0">반복 없이 찍은 날에만 보여요.</div>':d.rep==='once'?`<div class="hint" style="margin:8px 0 0;padding:0;${covered?'color:var(--danger)':''}">${covered?'이 스티커는 이 날에 이미 깔려 있어요 (매일 · 요일 · 매달 규칙). 새 스티커를 만들려면 위에서 "＋ 새로"를 골라 주세요.':restTxt}</div>`:''}</div>
+    ${d.rep==='none'?'':d.rep==='once'?`<div class="hint" style="margin:8px 0 0;padding:0;${covered?'color:var(--danger)':''}">${covered?'이 스티커는 이 날에 이미 깔려 있어요 (반복 규칙).':restTxt}</div>`:''}</div>
     ${d.rep!=='once'&&d.rep!=='none'?`<div class="pg-cap">기간</div><div class="pg-sec" style="margin-top:0">
       <div class="prow"><div class="pl2">📅 기간</div>${tpick('srFrom',d.from,'','date')}<span class="tsep">~</span>${d.to?`${tpick('srTo',d.to,'','date')}<button class="xbtn" data-act="sr-noend" aria-label="끝 없음으로">✕</button>`:'<button class="tbtn" data-act="sr-setend">끝 없음 ›</button>'}</div>
       ${sw('srHol',d.noHol,'🎌 공휴일엔 빼기')}</div>`:''}
@@ -3191,15 +3238,15 @@ function openFamSetPage(){
       <div class="pg-sec" style="margin-top:0">${fam.map((m,i)=>`<div class="prow" data-act="fam-edit" data-id="${m.id}"><span class="fav">${famAv(m,i)}</span><div class="pl2">${esc(m.name)}<small>${FAM_KIND[m.kind][0]} ${FAM_KIND[m.kind][1]}${m.kind==='shift'?` · ${esc(teamName(m.team??S.myTeam))}`:''}</small></div><span class="muted">›</span></div>`).join('')}
         <div class="prow" data-act="fam-add" style="color:var(--accent);font-weight:700;justify-content:center">＋ 가족 추가</div></div>
       <div class="pg-sec">
-        ${ad('together')?`<div class="prow"><div class="pl2">☀️ 야간 전 낮도 "같이"로 보기<small>야간 근무 날 출근 전 낮에 같이 있을 수 있으면 연하게 표시</small></div><label class="sw"><input type="checkbox" id="famDayToo" ${S.famDayToo!==false?'checked':''}><i></i></label></div>`:''}
-        <div class="prow"><div class="pl2">가족 메모 달력에 표시<small>가족이 남긴 메모를 달력에 띄워요</small></div><label class="sw"><input type="checkbox" id="receiveFamilyMemo" ${S.syncSettings.receiveFamilyMemo!==false?'checked':''}><i></i></label></div>
-        <div class="prow"><div class="pl2">가족 보기 (체험)<small>${g?'지금 가족 화면이에요':'가족 폰에서 보이는 화면으로 바꿔요'}</small></div><label class="sw"><input type="checkbox" id="guestModeToggle" ${g?'checked':''}><i></i></label></div>
+        ${ad('together')?`<div class="prow"><div class="pl2">☀️ 야간 전 낮도 "같이"로 보기<small>출근 전 낮도 연하게 표시</small></div><label class="sw"><input type="checkbox" id="famDayToo" ${S.famDayToo!==false?'checked':''}><i></i></label></div>`:''}
+        <div class="prow"><div class="pl2">가족 메모 달력에 표시</div><label class="sw"><input type="checkbox" id="receiveFamilyMemo" ${S.syncSettings.receiveFamilyMemo!==false?'checked':''}><i></i></label></div>
+        <div class="prow"><div class="pl2">가족 보기 (체험)</div><label class="sw"><input type="checkbox" id="guestModeToggle" ${g?'checked':''}><i></i></label></div>
       </div>
       <div class="pg-sec">
-        ${ad('status')?`<div class="prow" data-act="more-times"><div class="pl2">🕐 내 근무 시간 · 상태<small>출근 · 점심/야식 · 퇴근 · 수면 시간</small></div><span class="muted">›</span></div>`:''}
+        ${ad('status')?`<div class="prow" data-act="more-times"><div class="pl2">🕐 내 근무 시간 · 상태</div><span class="muted">›</span></div>`:''}
         ${ad('status')?`<div class="prow" data-act="more-status"><div class="pl2">👁 가족에게 보이는 내 상태</div><span class="muted">›</span></div>`:''}
-        ${ad('cheer')?`<div class="prow" data-act="fam-cheer-edit"><div class="pl2">💌 응원 버튼 바꾸기<small>가족 화면에서 근무자에게 보내는 버튼</small></div><span class="muted">${cheerList().map(c=>ico(c[0])).join('')} ›</span></div>`:''}
-        <div class="prow" data-act="link-open"><div class="pl2">📨 가족 연결 (폰끼리)<small>${fbCfg()?'초대 코드로 가족 폰과 연결해요':'준비 중이에요'}</small></div><span class="muted">›</span></div>
+        ${ad('cheer')?`<div class="prow" data-act="fam-cheer-edit"><div class="pl2">💌 응원 버튼 바꾸기</div><span class="muted">${cheerList().map(c=>ico(c[0])).join('')} ›</span></div>`:''}
+        <div class="prow" data-act="link-open"><div class="pl2">📨 가족 연결 (폰끼리)${fbCfg()?'':'<small>준비 중이에요</small>'}</div><span class="muted">›</span></div>
       </div>
     </div>`,'famset');
 }
@@ -3300,9 +3347,9 @@ function piCard(n){
   if(n.type==='list'){
     const dn=n.lines.filter(l=>l.done).length;
     body=`<h5>☑ ${esc(n.title||'할 일')}${n.lines.length?`<em>${dn}/${n.lines.length}</em>`:''}</h5>`+
-      n.lines.slice(0,6).map(l=>`<div class="ck ${l.done?'d':''}" data-act="pi-check" data-id="${n.id}" data-l="${l.id}"><i>${l.done?'✓':''}</i><span>${esc(l.text)}${l.done&&l.doneBy&&l.doneBy!==role()&&n.shared?`<small>${whoName(l.doneBy)}가 완료</small>`:''}</span></div>`).join('')+
+      n.lines.slice(0,6).map(l=>`<div class="ck ${l.done?'d':''}" data-act="pi-check" data-id="${n.id}" data-l="${l.id}"><i>${l.done?'✓':''}</i><span>${linkify(l.text,{click:true,fam:!!(n.shared&&n.by!==role())})}${l.done&&l.doneBy&&l.doneBy!==role()&&n.shared?`<small>${whoName(l.doneBy)}가 완료</small>`:''}</span></div>`).join('')+
       (n.lines.length>6?`<div class="pi-more">+${n.lines.length-6}</div>`:'');
-  }else body=`<div class="t">${esc(n.text).replace(/\n/g,'<br>')}</div>`;
+  }else body=`<div class="t">${linkify(n.text,{click:true,fam:!!(n.shared&&n.by!==role())}).replace(/\n/g,'<br>')}</div>`;
   const chips=(n.repeat?'<span class="chip rep">🔁 매달</span>':'')+(n.date?`<span class="chip cal">📅 ${+n.date.slice(5,7)!==cur.m+1?`${+n.date.slice(5,7)}/`:''}${+n.date.slice(8)}일</span>`:'');
   const rx=Object.entries(n.reacts||{}).filter(([,e])=>e).map(([w,e])=>`<span>${e} ${w===role()?'나':whoName(w)}</span>`).join('');
   return `<div class="pi c-${col} ${piRot(n.id)} ${wide?'wide':''} ${done?'done':''}" data-act="pi-open" data-id="${n.id}">
@@ -3557,7 +3604,7 @@ function openAdSheet(){
       <div class="muted" style="margin-top:6px">잠시만 기다려주세요…</div>
       <div class="ad-bar"><i id="adBar" style="width:0%"></i></div>
     </div>
-    <div class="hint" style="text-align:center">실제 앱에서는 이 자리에 보상형 광고가 재생돼요.</div>`);
+`);
   clearInterval(adTimer);
   adTimer=setInterval(()=>{
     left--;
@@ -3574,7 +3621,7 @@ function openProSheet(){
     <span class="pro-badge">월 3,000원</span>
     <div class="hint" style="margin-top:0">가족 메모·근무 요청을 하루 제한 없이 보낼 수 있어요.</div>
     <button class="btn" style="width:100%" data-act="dopro">구독 시작하기 (예시)</button>
-    <div class="hint" style="text-align:center">실제 결제는 Google Play 정기 결제로 연결돼요. 지금은 화면만 확인하는 예시예요.</div>`);
+`);
 }
 function resumePending(){
   const p=pendingSend;pendingSend=null;
@@ -3714,7 +3761,7 @@ function memoCard(m,k){
   const ex=m.time?` · 🕐 ${tfmt(m.time)}${m.al!==undefined&&m.al!==''?` · 🔔 ${m.al==='10'?'10분 전':'정시'}`:''}`:'';
   return `<div class="mcard ${cls} ${m.color?'cl':''} ${m.todo&&m.done?'done':''} ${memoEdit===m.id?'sel':''}" ${m.color?`style="background:${esc(m.color)} !important"`:''} data-act="memo-tap" data-mid="${m.id}" data-hold="memo">
     ${m.todo?`<button class="mchk ${m.done?'on':''}" data-act="memo-chk" data-mid="${m.id}" aria-label="완료">${m.done?'✓':''}</button>`:''}
-    <div class="mt2"><span class="tx">${esc(m.text)}</span><div class="meta">${m.shared?(isSolo()?'♥ 가족 메모':`<span class="who ${own?'me':''}">${whoName(m.by)}</span>`):'나만'} · ${rel(m.t)}${ex}</div></div>
+    <div class="mt2"><span class="tx">${linkify(m.text,{click:true,fam:!!(m.shared&&m.by!==role())})}</span><div class="meta">${m.shared?(isSolo()?'♥ 가족 메모':`<span class="who ${own?'me':''}">${whoName(m.by)}</span>`):'나만'} · ${rel(m.t)}${ex}</div></div>
     ${own&&!m.shared?`<button class="conv" data-act="memo-conv" data-mid="${m.id}">♡ 가족에게</button>`:''}
   </div>`;
 }
@@ -3755,10 +3802,11 @@ function renderMemoDetail(){
     <div class="pg-b">
     <div class="pg-cap">${day.getMonth()+1}월 ${day.getDate()}일 ${DOW[day.getDay()]}요일</div>
     <div style="padding:0 16px"><textarea id="mdText" class="mdtx" placeholder="메모를 입력하세요" style="background:${d.shared?'var(--fam-bg)':(d.color||'var(--surface)')}">${esc(d.text)}</textarea></div>
-    ${d.shared?'<div class="hint" style="padding:10px 16px 0">가족 메모는 보라색으로 보여요 (색은 나만 메모에서 골라요)</div>':`<div class="pg-cap">색</div>
+    <div class="lnkrow" id="mdLinks">${hasLink(d.text)?linkParts(d.text).filter(x=>x.u).map(x=>`<a class="lnk" data-act="lnk" data-u="${esc(linkUrl(x.u))}">🔗 링크</a>`).join(' '):''}</div>
+    ${d.shared?'':`<div class="pg-cap">색</div>
     <div class="mdcol">${MEMO_COL.map(c=>`<button class="${d.color===c?'on':''}" style="background:${c}" data-act="md-col" data-v="${c}" aria-label="색"></button>`).join('')}</div>`}
     <div class="pg-sec">
-      <div class="prow"><div class="pl2">✔ 할 일<small>체크하면 취소선이 그어져요</small></div><label class="sw"><input type="checkbox" id="mdTodo" ${d.todo?'checked':''}><i></i></label></div>
+      <div class="prow"><div class="pl2">✔ 할 일</div><label class="sw"><input type="checkbox" id="mdTodo" ${d.todo?'checked':''}><i></i></label></div>
       <div class="prow"><div class="pl2">🕐 시간</div>${d.time?`${tpick('mdTime',d.time)}<button class="xbtn" data-act="md-notime" aria-label="시간 없애기">✕</button>`:'<button class="tbtn" data-act="md-settime">시간 없음 ›</button>'}</div>
       ${d.time?`<div class="prow"><div class="pl2">🔔 알림</div><div class="hseg">${[['','없음'],['0','정시'],['10','10분 전']].map(([v,l])=>`<button class="${d.al===v?'on':''}" data-act="md-al" data-v="${v}">${l}</button>`).join('')}</div></div>`:''}
     </div>
@@ -4027,8 +4075,8 @@ function openAlarmPage(){
         <div class="prow tap" data-act="dsnd-open"><div class="pl2">🔊 소리 · 다시 울림<small>${esc(sndSum)}</small></div><div class="pv">${alSnd?'접기 ▴':'›'}</div></div>
         ${alSnd?`<div class="prow"><div class="pl2">알람종류</div><div class="chips">
           <button class="${a.sound?'on':''}" data-act="dsound">소리</button><button class="${a.vib?'on':''}" data-act="dvib">진동</button><button class="${kind?'on':''}" data-act="dsilent">무음</button></div></div>
-        <div class="prow col"><div class="pl2">볼륨 <small>알람 볼륨 기준 ${a.vol}%</small></div><input type="range" id="aVol" min="10" max="100" step="5" value="${a.vol}" ${a.sound?'':'disabled'}></div>
-        <div class="prow"><div class="pl2">점점 커지는 소리<small>작게 시작해서 30초 동안 커져요</small></div><label class="sw"><input type="checkbox" id="aRamp" ${a.ramp?'checked':''} ${a.sound?'':'disabled'}><i></i></label></div>
+        <div class="prow col"><div class="pl2">볼륨 </div><input type="range" id="aVol" min="10" max="100" step="5" value="${a.vol}" ${a.sound?'':'disabled'}></div>
+        <div class="prow"><div class="pl2">점점 커지는 소리</div><label class="sw"><input type="checkbox" id="aRamp" ${a.ramp?'checked':''} ${a.sound?'':'disabled'}><i></i></label></div>
         <div class="prow tap" data-act="dtone"><div class="pl2">알람음 선택</div>${isFileTone(a.tone)&&hasBridge('previewTone')?'<button class="btn ghost sm" data-act="dtone-play">▶ 듣기</button>':''}<div class="pv" style="max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${isFileTone(a.tone)?'🎵':'♩'} ${esc(a.toneName||'기본 알람음')} ›</div></div>
         <div class="prow"><div class="pl2">다시 울림 간격</div><div class="chips">${ch([[5,'5분'],[10,'10분'],[15,'15분']],a.snMin,'dsnmin')}</div></div>
         <div class="prow col"><div class="pl2">다시 울림 횟수</div><div class="chips left">${ch([[0,'끔'],[1,'1번'],[3,'3번'],[5,'5번'],[-1,'계속']],a.snMax,'dsnmax')}</div></div>`:''}
@@ -4111,9 +4159,8 @@ const addonCount=()=>ADDONS.filter(a=>adOn(a[0])).length;
 function openAddonPage(){
   openPage(`${pageHead('부가 기능')}
     <div class="pg-b">
-      <div class="hint" style="padding:12px 16px 4px">필요한 기능만 켜서 쓰세요. 꺼도 저장된 내용은 그대로 있고, 다시 켜면 돌아와요.</div>
+      <div class="hint" style="padding:12px 16px 4px">필요한 기능만 켜세요. 꺼도 내용은 그대로예요.</div>
       <div class="pg-sec" style="margin-top:8px">${ADDONS.map(a=>`<div class="prow"><div class="pl2"><span class="e e-in">${lineIcon(a[1])}</span>${a[2]}<small>${a[3]}</small></div><label class="sw"><input type="checkbox" id="ad_${a[0]}" ${adOn(a[0])?'checked':''}><i></i></label></div>`).join('')}</div>
-      <div class="hint" style="padding:8px 16px 20px">스티커 · 월 포스트잇 · 근무 요청 · 가족 메모 · 달력 이미지 공유 · 알람은 기본 기능이에요.</div>
     </div>`,'addons');
 }
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
@@ -4123,12 +4170,10 @@ function introNotice(){
   S.seenVer=v;save();
   openPop(`<div class="mh">${esc(v)}<b>새로 생겼어요</b></div>
     <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0;line-height:1.7">
-      · <b>스티커</b>가 새로 바뀌었어요: 내 스티커 9칸 + ＋(하루만 · 아주 많은 그림 · 내 사진) · 하루 4개<br>
-      · 옛 스티커는 새 9칸으로 다시 시작해요 (지난 기록은 그대로)<br>
-      · <b>가족 메모</b>에도 시간 알림 · 메모 색은 마지막 색으로 시작<br>
-      · 근무타입 · 패턴 칸을 <b>꾹 눌러 끌어서</b> 순서 바꾸기<br>
-      · 시작 날을 바꿀 때 <b>자동 백업</b> + 이전 날짜는 옛 패턴 그대로<br>
-      · 알림이 정확한 시각에 울려요 (설정에서 정확한 알람을 허용하면)<br><br>
+      · <b>스티커</b>: 내 9칸 + ＋ · 빈 칸에 내 이모티콘 · 약 모양 · 끌어서 순서<br>
+      · 달력 칸: 스티커 크기 통일 · 메모 줄 수 선택 · 동그라미 작게<br>
+      · 메모의 주소는 <b>링크</b>로 눌러서 열어요<br>
+      · 설명 글을 줄였어요<br><br>
       <span style="color:var(--muted)">업데이트해도 내 데이터는 그대로예요.</span></div></div>
     <div class="mi"><button class="btn grow" data-act="pop-close">확인</button></div>`);
 }
@@ -4194,7 +4239,6 @@ function openStatsPage(){
         <div class="prow"><div class="pl2">대근 시급</div><input type="number" class="inl" id="payWage" inputmode="numeric" min="0" step="10" value="${S.pay.wage||''}" placeholder="15000" style="width:110px"> 원</div>
         <div class="prow"><div class="pl2">대근 1번 근무시간</div><input type="number" class="inl" id="payHours" inputmode="decimal" min="1" max="24" step="0.5" value="${S.pay.hours}" style="width:80px"> 시간</div>
       </div>
-      <div class="hint" style="padding:8px 16px">‹ › 로 달을 바꾸면 그 달 기준으로 다시 계산돼요.</div>
     </div>`,'stats');
 }
 
@@ -4206,8 +4250,8 @@ function openFamilyPage(){
     <div class="pg-b">
       <div class="policy" style="font-size:13.5px">👪 <b>가족 실시간 공유는 다음 업데이트에서 열려요.</b><br>초대 코드로 가족을 연결하면 근무표·가족 메모·근무 요청이 서로의 폰에 바로 보여요.<br><br>지금은 이 폰 안에서 <b>가족 보기(체험)</b>를 켜서 가족 쪽 화면(메모 남기기 → 근무 요청 → 답장)을 미리 써 볼 수 있어요.</div>
       <div class="pg-sec">
-        <div class="prow"><div class="pl2">가족 보기 (체험)<small>${g?'지금 가족 화면이에요':'가족 폰에서 보이는 화면으로 바꿔요'}</small></div><label class="sw"><input type="checkbox" id="guestModeToggle" ${g?'checked':''}><i></i></label></div>
-        <div class="prow"><div class="pl2">가족 메모 달력에 표시<small>가족이 남긴 메모를 달력에 띄워요</small></div><label class="sw"><input type="checkbox" id="receiveFamilyMemo" ${s.receiveFamilyMemo!==false?'checked':''}><i></i></label></div>
+        <div class="prow"><div class="pl2">가족 보기 (체험)</div><label class="sw"><input type="checkbox" id="guestModeToggle" ${g?'checked':''}><i></i></label></div>
+        <div class="prow"><div class="pl2">가족 메모 달력에 표시</div><label class="sw"><input type="checkbox" id="receiveFamilyMemo" ${s.receiveFamilyMemo!==false?'checked':''}><i></i></label></div>
       </div>
     </div>`,'family');
 }
@@ -4229,7 +4273,6 @@ function openColorsPage(){
       </div>
       <div class="pg-cap">♥ 가족 메모 색</div><div class="pg-sec" style="margin-top:0;padding:14px 16px">${sw('fam')}${reddish(c.fam)?'<div class="warnline">⚠️ 휴무·일요일 빨강과 비슷해요</div>':''}</div>
       <div class="pg-cap">🔒 나만 보는 메모 색</div><div class="pg-sec" style="margin-top:0;padding:14px 16px">${sw('my')}${reddish(c.my)?'<div class="warnline">⚠️ 휴무·일요일 빨강과 비슷해요</div>':''}</div>
-      <div class="hint" style="padding:8px 16px">색 설정은 이 폰에만 저장돼요. 가족은 각자 좋아하는 색으로 볼 수 있어요.</div>
       <div class="pg-sec"><div class="prow danger-row" data-act="mcolor-reset" style="color:var(--accent)">기본 색으로 되돌리기</div></div>
     </div>`,'colors');
 }
@@ -4302,7 +4345,7 @@ function askAnchor(nv){
   const drop=(S.patOld||[]).filter(o=>o.until>=nv).length;
   const d=parse(nv);
   openPop(`<div class="mh">시작 날 바꾸기<b>${d.getMonth()+1}월 ${d.getDate()}일부터 1번째 칸</b></div>
-    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0">바꾸기 전에 지금 상태를 <b>자동으로 백업</b>해 둬요.<br><b>이 날부터 새 패턴</b>을 고르면 ${d.getMonth()+1}월 ${d.getDate()}일 <b>이전은 지금까지 쓰던 패턴 그대로</b> 남아요.${drop?`<br>(이전 구간 ${drop}개가 정리돼요)`:''}<br><b>처음부터 전부 바꾸기</b>는 지난 달까지 새 패턴으로 다시 계산해요 (패턴을 잘못 넣었을 때).</div></div>
+    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0">먼저 <b>자동 백업</b>해요. 이 날 이전은 지금까지 쓰던 패턴이 그대로 남아요.${drop?` (이전 구간 ${drop}개 정리)`:''}</div></div>
     <div class="mi" style="gap:8px;flex-direction:column"><button class="btn" style="width:100%" data-act="anc-keep">이 날부터 새 패턴 (이전은 그대로)</button><button class="btn ghost" style="width:100%" data-act="anc-all">처음부터 전부 바꾸기</button><button class="btn ghost" style="width:100%" data-act="anc-cancel">취소</button></div>`);
 }
 function ancBackup(){
@@ -4346,8 +4389,8 @@ function openPatternPage(){
       <div class="pg-b">
         <div class="hint" style="padding:12px 16px 4px">${S.myset?'지금은 정해진 순서 없이, 달력에서 날짜마다 직접 근무를 넣고 있어요.':'아직 내 근무표를 만들지 않았어요. 달력은 비어 있고, 가족에게도 내 근무표가 안 보여요.'}</div>
         <div class="pg-sec">
-          <div class="prow tap" data-act="redo-onboard"><div class="pl2">${S.myset?'정해진 순서로 만들기':'내 근무표 만들기'}<small>며칠 주기 · 근무 이름 · 순서를 정해요</small></div><div class="pv">›</div></div>
-          <div class="prow tap" data-act="paint-open"><div class="pl2">🖌 달력에 칠하기<small>근무를 골라 날짜를 쭉 눌러요</small></div><div class="pv">›</div></div>
+          <div class="prow tap" data-act="redo-onboard"><div class="pl2">${S.myset?'정해진 순서로 만들기':'내 근무표 만들기'}</div><div class="pv">›</div></div>
+          <div class="prow tap" data-act="paint-open"><div class="pl2">🖌 달력에 칠하기</div><div class="pv">›</div></div>
           ${ovN0?`<div class="prow danger-row" data-act="clearov">직접 넣은 근무 ${ovN0}일 지우기</div>`:''}
         </div>
         ${typeListHtml()}
@@ -4375,17 +4418,17 @@ function openPatternPage(){
       </div>
       <div class="hint" style="padding:8px 16px 0">오늘(${t0.getMonth()+1}/${t0.getDate()})은 ${cp+1}번째 칸 · ${esc(lb[cp])}이에요</div>
       <div class="pg-sec">
-        <div class="prow"><div class="pl2">근무 이름<small>달력 위에 보여요</small></div><input type="text" class="inl" id="patternName" value="${esc(S.patternName||'')}" placeholder="예: 4조2교대" maxlength="20"></div>
+        <div class="prow"><div class="pl2">근무 이름</div><input type="text" class="inl" id="patternName" value="${esc(S.patternName||'')}" placeholder="예: 4조2교대" maxlength="20"></div>
         <div class="prow"><div class="pl2">1번째 칸 시작 날<small>바꾸면 이전 날짜 근무를 어떻게 할지 물어봐요</small></div>${tpick('anchor',S.anchor,'','date')}</div>
         ${(S.patOld||[]).length?`<div class="prow tap" data-act="pat-old-show"><div class="pl2">이전 패턴 보기 · 지우기<small>${S.patOld.length}개 구간이 남아 있어요</small></div><div class="pv">›</div></div>`:''}
-        ${(()=>{try{return localStorage.getItem(ANC_KEY)?`<div class="prow tap" data-act="pat-undo-anchor"><div class="pl2">시작 날 바꾸기 전으로 되돌리기<small>마지막으로 바꾸기 직전의 자동 백업</small></div><div class="pv">›</div></div>`:'';}catch(e){return '';}})()}
-        <div class="prow"><div class="pl2">공휴일엔 쉬어요<small>상주(평일) 근무 · 빨간 날 근무 칸이 휴무로</small></div><label class="sw"><input type="checkbox" id="holRest" ${S.holRest?'checked':''}><i></i></label></div>
-        <div class="prow tap" data-act="paint-open"><div class="pl2">🖌 달력에 칠하기<small>달력 탭으로 이동해요 · 근무를 골라 날짜를 쭉 눌러요</small></div><div class="pv">›</div></div>
+        ${(()=>{try{return localStorage.getItem(ANC_KEY)?`<div class="prow tap" data-act="pat-undo-anchor"><div class="pl2">시작 날 바꾸기 전으로 되돌리기</div><div class="pv">›</div></div>`:'';}catch(e){return '';}})()}
+        <div class="prow"><div class="pl2">공휴일엔 쉬어요<small>빨간 날 근무를 휴무로</small></div><label class="sw"><input type="checkbox" id="holRest" ${S.holRest?'checked':''}><i></i></label></div>
+        <div class="prow tap" data-act="paint-open"><div class="pl2">🖌 달력에 칠하기</div><div class="pv">›</div></div>
       </div>
       ${tc>1?`<div class="pg-cap">조별 근무</div>
       <div class="pg-sec" style="margin-top:0;padding:8px 6px 10px"><div class="tgrid" style="--cols:${cols}">${tg}</div>
         <button class="btn ghost sm" style="margin:10px 6px 0" data-act="tedit">✏️ 조 이름 · 개수 고치기</button></div>
-      <div class="hint" style="padding:8px 16px 0">· 줄을 누르면 "오늘 이 조 근무는?"으로 한 번에 맞춰요<br>· 회사 근무표와 다르면 ‹ › 로 하루씩 밀어요</div>`:`<div class="pg-cap">조</div>
+      <div class="hint" style="padding:8px 16px 0">줄을 누르면 오늘 근무로 맞추고, 다르면 ‹ › 로 하루씩 밀어요</div>`:`<div class="pg-cap">조</div>
       <div class="pg-sec" style="margin-top:0;padding:10px 10px"><button class="btn ghost sm" data-act="tedit">✏️ 조 이름 · 개수 고치기</button></div>`}
       <div class="pg-sec">
         <div class="prow tap" data-act="redo-onboard"><div class="pl2">처음 시작 설정 다시 하기</div><div class="pv">›</div></div>
@@ -4483,7 +4526,7 @@ function openCompPage(){
   openPage(`
     ${pageHead('휴무일 · 기념일')}
     <div class="pg-b">
-      <div class="hint" style="padding:12px 16px 0">🏢 <b>휴무</b> = 회사가 쉬는 날(달력 날짜가 빨갛게) · 🎂 <b>메모만</b> = 생일·기념일처럼 이름만 보여요(근무는 그대로). 🔔 를 누르면 언제 알려줄지 골라요 (1주 전 · 3일 전 · 전날 · 당일 …).</div>
+      <div class="hint" style="padding:12px 16px 0">🏢 <b>휴무</b> 회사가 쉬는 날 · 🎂 <b>메모만</b> 이름만 표시 · 🔔 알림 시점</div>
       <div class="pg-sec">${list.map(row).join('')||'<div class="prow"><div class="pl2 muted">아직 없어요</div></div>'}</div>
       ${chOpen?`<div class="pg-cap">추가하기</div>
       <div class="pg-sec" style="margin-top:0;padding:14px 16px">
@@ -4495,7 +4538,7 @@ function openCompPage(){
         <button class="btn" style="width:100%;margin-top:12px" data-act="comp-add">추가</button>
       </div>`:`<div class="pg-sec"><div class="prow" data-act="comp-open" style="justify-content:center;color:var(--accent);font-weight:700">＋ 휴무일 · 기념일 추가</div></div>`}
       <div class="pg-sec">
-        <div class="prow"><div class="pl2">휴무일 출근은 휴일 근무로 셈<small>"휴무" 날에 출근하면 통계의 "휴일 출근"에 넣어요</small></div><label class="sw"><input type="checkbox" id="compHolAsHoliday" ${S.compHolAsHoliday?'checked':''}><i></i></label></div>
+        <div class="prow"><div class="pl2">휴무일 출근은 휴일 근무로 셈</div><label class="sw"><input type="checkbox" id="compHolAsHoliday" ${S.compHolAsHoliday?'checked':''}><i></i></label></div>
       </div>
     </div>`,'comp');
 }
@@ -4540,12 +4583,12 @@ function openBackupPage(){
       <div class="pg-cap">구글 드라이브</div>
       <div class="pg-sec" style="margin-top:0">
         ${!hasBridge('driveBackup')?`<div class="prow"><div class="pl2 muted">앱에서 쓸 수 있어요 (지금은 브라우저 미리보기)</div></div>`:linked?`
-          <div class="prow"><div class="pl2">☁️ 연결됨<small>${esc(S.drive.email||'구글 계정')} · 앱 전용 숨김 폴더에 저장</small></div></div>
+          <div class="prow"><div class="pl2">☁️ 연결됨<small>${esc(S.drive.email||'구글 계정')}</small></div></div>
           <div class="prow"><div class="pl2">마지막 백업<small>${S.drive.last?new Date(S.drive.last).toLocaleString('ko-KR'):'아직 없어요'}</small></div><button class="btn sm" data-act="drive-backup" ${driveBusy?'disabled':''}>${driveBusy?'백업 중…':'지금 백업하기'}</button></div>
           <div class="prow"><div class="pl2">자동 백업<small>바뀐 게 있으면 하루 한 번</small></div><label class="sw"><input type="checkbox" id="driveAuto" ${S.drive.auto?'checked':''}><i></i></label></div>
           ${files.length?files.slice(0,2).map(fileRow).join(''):`<div class="prow"><div class="pl2 muted">${driveFiles?'저장된 백업이 없어요':'백업 목록을 불러오는 중…'}</div></div>`}
           <div class="prow danger-row" data-act="drive-unlink" style="color:var(--muted);font-weight:600">연결 해제</div>`
-        :`<div class="prow"><div class="pl2">구글 드라이브 백업 · 복원<small>연결하면 드라이브에 저장된 백업을 먼저 보여드려요. 앱을 다시 깔았거나 새 폰이면 거기서 "복원"을 누르세요.</small></div></div>
+        :`<div class="prow"><div class="pl2">구글 드라이브 백업 · 복원<small>연결하면 저장된 백업에서 복원할 수 있어요</small></div></div>
           <div class="prow"><button class="btn" style="width:100%" data-act="drive-link" ${driveBusy?'disabled':''}>${driveBusy?'연결 중…':'구글 계정 연결하기'}</button></div>`}
       </div>
       <div class="pg-cap">파일로 백업 (고급)</div>
@@ -4921,6 +4964,10 @@ document.addEventListener('click',e=>{
     case 'close':closeSheet();break;
     case 'page-close':closePage();break;
     case 'pop-close':closePop();break;
+    case 'lnk':if(lnkHeld){lnkHeld=false;break;}e.stopPropagation();lnkOpen(t.dataset.u,!!t.dataset.fam);break;
+    case 'lnk-go':closePop();lnkGo(t.dataset.u);break;
+    case 'lnk-open2':closePop();lnkOpen(t.dataset.u,!!t.dataset.fam);break;
+    case 'lnk-copy':closePop();lnkCopy(t.dataset.u);break;
     /* 시간 · 날짜 고르기 */
     case 'tpk':openTpk(t.dataset.id,t.dataset.type);break;
     case 'tpk-ap':if(tpk){tpk.h=tpk.h%12+(t.dataset.v==='1'?12:0);renderTpk();}break;
@@ -5540,6 +5587,7 @@ document.addEventListener('input',e=>{
   else if(t.id==='vcmsg'){vcSel.msg=t.value;}
   else if(t.id==='rpm'&&replyDraft){replyDraft.text=t.value;}
   else if(t.id==='al'&&draft){draft.label=t.value;}
+  else if(t.id==='mdText'){const r=$('#mdLinks');if(r)r.innerHTML=hasLink(t.value)?linkParts(t.value).filter(x=>x.u).map(x=>`<a class="lnk" data-act="lnk" data-u="${esc(linkUrl(x.u))}">🔗 링크</a>`).join(' '):'';}
   else if(t.id==='aVol'&&draft){draft.vol=Number(t.value);const s=t.parentElement.querySelector('small');if(s)s.textContent=`알람 볼륨 기준 ${draft.vol}%`;}
   else if(t.id==='chName'){chDraft.name=t.value;}
   else if(t.id==='crpZoom'&&crp){crp.z=+t.value;cropDraw();}
@@ -5707,7 +5755,6 @@ function openFirebasePage(){
   openPage(`
     ${pageHead('Firebase 연결 시험')}
     <div class="pg-b">
-      <div class="hint" style="padding:12px 16px 0">가족 연결(서버)을 만들기 위한 준비 화면이에요. 설정 방법은 저장소의 docs/firebase-setup.md 에 있어요.</div>
       <div class="pg-sec">
         ${row('설정 파일','firebase/config.js',f.cfg?'있음':'없음',f.cfg?'var(--today)':'var(--muted)')}
         ${row('로그인 (익명)','',f.uid?esc(f.uid.slice(0,8))+'…':'아직',ok?'var(--today)':'')}
@@ -6035,8 +6082,8 @@ async function famRegUser(force){
 }
 function googleRow(){
   if(!googleOn())return '';
-  if(S.gAcct)return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">구글 계정에 연결됨<small>${esc(S.gAcct)} · 폰을 바꿔도 같은 구글 계정으로 가족방을 불러올 수 있어요</small></div><span class="muted">✓</span></div></div>`;
-  return `<div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="g-link"><div class="pl2">구글 계정으로 가족방 지키기<small>폰을 바꾸거나 앱을 다시 깔아도 가족방을 불러올 수 있어요</small></div><span class="muted">›</span></div></div>`;
+  if(S.gAcct)return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">구글 계정에 연결됨<small>${esc(S.gAcct)}</small></div><span class="muted">✓</span></div></div>`;
+  return `<div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="g-link"><div class="pl2">구글 계정으로 가족방 지키기<small>폰을 바꿔도 가족방을 불러와요</small></div><span class="muted">›</span></div></div>`;
 }
 // ---- 푸시 알림: 이 폰의 알림 주소를 서버(devices/내uid)에 등록 → 서버 함수가 가족 일이 생기면 알려 줌
 const pushBridge=()=>!!(window.AndroidBridge&&typeof window.AndroidBridge.fcmToken==='function');
@@ -6067,7 +6114,7 @@ window.__onPush=o=>{
 function pushRow(){
   if(!S.link||!pushBridge())return '';
   const off=typeof window.AndroidBridge.notifEnabled==='function'&&!window.AndroidBridge.notifEnabled();
-  return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">가족 알림 받기<small>앱을 안 켜도 가족 메모 · 근무 요청 · 근무 변경을 알려줘요 (내용은 빼고 이름 · 날짜만)</small></div><label class="sw"><input type="checkbox" id="famPushOn" ${S.pushOn!==false?'checked':''}><i></i></label></div>${S.pushOn!==false?`<div class="prow"><div class="pl2">자는 시간엔 소리 없이<small>야간 근무 뒤 자는 시간에는 알림이 소리 · 진동 없이 알림창에만 쌓여요 (자는 시간은 근무 시간 설정)</small></div><label class="sw"><input type="checkbox" id="famPushQuiet" ${S.pushQuiet!==false?'checked':''}><i></i></label></div>`:''}${off?'<div class="hint" style="padding:6px 16px 10px;color:#e5484d">폰 설정에서 이 앱의 알림이 꺼져 있어요. 폰 설정 › 앱 › 언제쉬어 › 알림을 켜 주세요.</div>':''}</div>`;
+  return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">가족 알림 받기<small>내용은 빼고 이름 · 날짜만 알려줘요</small></div><label class="sw"><input type="checkbox" id="famPushOn" ${S.pushOn!==false?'checked':''}><i></i></label></div>${S.pushOn!==false?`<div class="prow"><div class="pl2">자는 시간엔 소리 없이<small>자는 시간 알림은 소리 없이 쌓여요</small></div><label class="sw"><input type="checkbox" id="famPushQuiet" ${S.pushQuiet!==false?'checked':''}><i></i></label></div>`:''}${off?'<div class="hint" style="padding:6px 16px 10px;color:#e5484d">폰 설정에서 이 앱의 알림이 꺼져 있어요. 폰 설정 › 앱 › 언제쉬어 › 알림을 켜 주세요.</div>':''}</div>`;
 }
 async function famBoot(){
   if(!fbCfg()||!S.link||famBooting)return;famBooting=true;
@@ -6080,7 +6127,7 @@ function famSetStk(on){
   if(on){openCfm({type:'stk'});return;}
   S.link.stk=false;save();toast('스티커는 가족에게 안 보여요');
 }
-const stkRow=()=>`<div class="prow"><div class="pl2">내 스티커도 가족에게 보여요<small>약 · 운동 스티커가 가족 달력에 보여요 (기본은 꺼짐)</small></div><label class="sw"><input type="checkbox" id="famStk" ${S.link&&S.link.stk?'checked':''}><i></i></label></div>`;
+const stkRow=()=>`<div class="prow"><div class="pl2">내 스티커도 가족에게 보여요</div><label class="sw"><input type="checkbox" id="famStk" ${S.link&&S.link.stk?'checked':''}><i></i></label></div>`;
 async function famSetMode(mode){
   if(!S.link||S.link.role==='host')return;
   try{
@@ -6137,13 +6184,13 @@ function vcEnsure(){
 }
 // 가족 달력 칸 · 날짜 화면에도 가족 메모(♥)를 보여줘요 (가족 메모는 사람이 아니라 날짜에 붙어요)
 function vcPills(k,mx){
-  const pl=visibleMemos(k).filter(x=>x.shared).map(x=>`<div class="pl fam">${esc(firstLine(x.text))}</div>`);
+  const pl=visibleMemos(k).filter(x=>x.shared).map(x=>`<div class="pl fam">${linkify(firstLine(x.text))}</div>`);
   if(pl.length>mx)pl.splice(mx-1,pl.length,`<div class="pl more">+${pl.length-mx+1}</div>`);
   return pl.length?`<div class="pill-wrap" style="--n:${pl.length}">${pl.join('')}</div>`:'';
 }
 function vcMemoHtml(k){
   const ms=visibleMemos(k).filter(x=>x.shared);
-  const list=ms.map(m=>`<div class="mcard fam"><div class="mt2"><span class="tx">${esc(m.text)}</span><div class="meta"><span class="who ${m.by===role()?'me':''}">${esc(whoName(m.by))}</span> · ${rel(m.t)}</div></div></div>`).join('');
+  const list=ms.map(m=>`<div class="mcard fam"><div class="mt2"><span class="tx">${linkify(m.text,{click:true,fam:m.by!==role()})}</span><div class="meta"><span class="who ${m.by===role()?'me':''}">${esc(whoName(m.by))}</span> · ${rel(m.t)}</div></div></div>`).join('');
   return `<div class="lbl" style="color:var(--fam);margin-top:12px">♥ 가족 메모</div>${list||'<div class="mempty">아직 메모가 없어요</div>'}
     <div class="vcmemo-bar"><input type="text" id="vcmemo" maxlength="200" placeholder="가족에게 남길 메모" enterkeyhint="send"><button class="send fam" data-act="vc-memo-send" data-k="${k}" aria-label="보내기">${ICON.send}</button></div>
     <div class="usage-hint" style="margin-top:4px">무료 ${famRemain()}건 남음 · 가족 모두에게 보이고 알림이 가요</div>`;
@@ -6292,7 +6339,7 @@ const famNameOf=uid=>{const m=((S.fam2&&S.fam2.members)||[]).find(x=>x.uid===uid
 const tsMs=v=>v&&v.toMillis?v.toMillis():0;
 function famLimitSheet(){
   openSheet(`${sheetHead('무료 메시지를 다 썼어요')}
-    <div class="hint">가족 메모와 근무 요청은 처음 ${FAM_FREE}건까지 무료예요.<br>광고를 보고 더 받기 · 구독(월 3,000원, 가족방 전체 무제한)은 곧 열려요.</div>
+    <div class="hint">가족 메모와 근무 요청은 처음 ${FAM_FREE}건까지 무료예요.</div>
     <button class="btn ghost" style="width:100%" data-act="close">닫기</button>`);
 }
 // ---- 가족 메모 올리기 · 받기
@@ -6503,7 +6550,7 @@ function renderLinkPage(){
   else if(u.st==='err')body=`<div class="hint" style="padding:16px;color:var(--danger)">${esc(u.err)}</div><div style="padding:0 16px"><button class="btn" style="width:100%" data-act="link-retry">다시 시도</button></div>`;
   else if(!L)body=`<div class="pg-sec" style="margin-top:12px;padding:18px 16px">
       <b style="font-size:16px">가족과 같이 보려면</b>
-      <div class="hint" style="padding:6px 0 14px">근무자(나)가 가족방을 만들고 <b>초대 코드</b>를 보내요. 가족은 앱에서 코드를 넣고 참여해요. 가족방은 4명(나 + 가족 3명)까지예요.</div>
+      <div class="hint" style="padding:6px 0 14px"><b>초대 코드</b>를 보내면 가족이 코드를 넣고 참여해요 · 가족방은 4명까지예요</div>
       <button class="btn" style="width:100%" data-act="link-invite">가족 초대하기</button>
       <button class="btn ghost" style="width:100%;margin-top:8px" data-act="link-join">초대 코드가 있어요</button>
       ${googleOn()?'<button class="btn ghost" style="width:100%;margin-top:8px" data-act="g-restore">전에 쓰던 폰의 가족방 불러오기 (구글 로그인)</button>':''}
@@ -6516,7 +6563,7 @@ function renderLinkPage(){
     ${S.myset?`<div class="pg-sec" style="margin-top:16px">${stkRow()}</div>`:''}
     ${pushRow()}
     ${googleRow()}
-    <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기<small>가족에게 보이는 내 이름</small></div><span class="muted">${esc(L.name)} ›</span></div>
+    <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기</div><span class="muted">${esc(L.name)} ›</span></div>
       <div class="prow danger-row" data-act="link-dissolve">가족방 없애기 (방장이 나가는 것)</div></div>
     <div class="hint" style="padding:8px 16px 0">방장은 그냥 나갈 수 없어요. 나가려면 가족방을 없애야 하고, 그러면 가족 모두 연결이 끊겨요. 방장을 다른 가족에게 넘기는 기능은 아직 없어요.</div>`;
   else{
@@ -6530,7 +6577,7 @@ function renderLinkPage(){
     ${googleRow()}
     <div class="hint" style="padding:10px 16px">가족의 근무표는 가족 탭 · 달력에서, 가족 메모(♥)와 근무 요청은 날짜를 눌러 주고받아요. 처음 10건은 무료예요.</div>`;
   }
-  openPage(`${pageHead('가족 연결')}<div class="pg-b">${body}${u.st==='ok'&&L&&host?'<div class="hint" style="padding:10px 16px">가족의 근무표는 가족 탭 · 달력에서, 가족 메모(♥)와 근무 요청은 날짜를 눌러 주고받아요. 처음 10건은 무료예요.</div>':''}</div>`,'link');
+  openPage(`${pageHead('가족 연결')}<div class="pg-b">${body}</div>`,'link');
 }
 /* ----- 초대 코드 만들기 (호스트) ----- */
 let invDraft={perm:'write',name:'',host:''};
@@ -6593,7 +6640,7 @@ function renderJoinPreview(){
     <div class="mi" style="display:block"><div class="icn-lb">어떻게 쓰실래요?</div>
       <div class="jopt ${joinDraft.mode==='own'?'on':''}" data-act="join-mode" data-v="own"><b>나도 근무표를 써요</b><small>달력 탭은 내 것 · 내 근무표가 가족에게 보여요</small></div>
       <div class="jopt ${joinDraft.mode==='view'?'on':''}" data-act="join-mode" data-v="view"><b>가족 것만 볼래요</b><small>달력 탭이 가족 달력으로 바뀌어요 · 내 근무표는 안 올려요</small></div>
-      <div class="icn-lb" style="margin-top:12px">내 호칭 <small>(가족에게 보여요)</small></div><input type="text" id="joinName" maxlength="12" placeholder="예: 아내" value="${esc(joinDraft.name)}" style="width:100%;margin-top:6px"><div class="hint" style="margin:8px 0 0">나중에 설정 › 가족 연결에서 바꿀 수 있어요</div><div class="warnline" id="joinErr" style="min-height:18px;margin-top:6px"></div></div>
+      <div class="icn-lb" style="margin-top:12px">내 호칭 <small>(가족에게 보여요)</small></div><input type="text" id="joinName" maxlength="12" placeholder="예: 아내" value="${esc(joinDraft.name)}" style="width:100%;margin-top:6px"><div class="warnline" id="joinErr" style="min-height:18px;margin-top:6px"></div></div>
     <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="join-back">뒤로</button><button class="btn grow" data-act="join-go">참여하기</button></div>`);
 }
 async function joinGo(){

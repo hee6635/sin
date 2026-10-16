@@ -1,6 +1,8 @@
 package com.eonjeswieo.app
 
 import android.app.NotificationManager
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -39,6 +41,28 @@ class AlarmBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun shareText(title: String, text: String) {
         activity.runOnUiThread { activity.shareText(title, text) }
+    }
+
+    /** 메모 속 링크 열기: http · https 주소만 (그 밖의 것은 무시) */
+    @JavascriptInterface
+    fun openUrl(url: String) {
+        if (!(url.startsWith("https://") || url.startsWith("http://"))) return
+        activity.runOnUiThread {
+            try {
+                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            } catch (e: Exception) { }
+        }
+    }
+
+    /** 글자 복사 (링크 주소 복사) */
+    @JavascriptInterface
+    fun copyText(text: String) {
+        activity.runOnUiThread {
+            try {
+                val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                cm.setPrimaryClip(ClipData.newPlainText("언제쉬어", text))
+            } catch (e: Exception) { }
+        }
     }
 
     /** 앱 종료 (종료 확인 팝업에서 [종료]) */
