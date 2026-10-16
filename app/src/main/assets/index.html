@@ -3303,6 +3303,7 @@ function renderFamily(){
       ${ad('status')&&st.prog!==undefined?`<div class="bar"><i style="width:${Math.round(st.prog*100)}%"></i></div>`:''}
       <div class="sm">${esc(st.sub||'')}${ad('status')&&S.status.phone&&st.key!=='rest'?` · ${st.phone?'전화 OK':'메시지만'}`:''}</div>
       ${isHost&&ad('status')?'<span class="tedit">🕐 시간 고치기 ›</span>':''}
+      ${isHost&&ad('status')&&!S.status.show?'<span class="tedit" data-act="st-show-on">👁 가족에겐 안 보여요 · 켜기 ›</span>':''}
       ${isHost&&cheers.length?`<span class="got">${cheers.slice(-3).map(c=>esc(c.text.split(' ')[0])).join(' ')} 응원 ${cheers.length}</span>`:''}
     </div>`;
   const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);return `<div class="nc ${l==='자는 중'?'sl':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-edit" data-id="${m.id}"`}><div class="nwho">${famAv(m,i)}${esc(m.name)}</div><div class="st">${e?ico(e)+' ':''}${esc(l)}</div><div class="sm">${esc(sub)}</div></div>`;}).join('');
@@ -5542,6 +5543,7 @@ document.addEventListener('click',e=>{
     case 'sr-save':afterCompose('#srName',stampRegSave);break;
     case 'sh-undo':{if(hidSnap){S.stamps=JSON.parse(hidSnap);hidSnap=null;save();render();if(pageMode==='stamps')openStampPage();}closePop();toast('등록을 취소했어요');break;}
     case 'more-status':openStatusPage();break;
+    case 'st-show-on':openCfm({type:'status'});break;
     case 'tt-tab':timesTab=t.dataset.k;openTimesPage();break;
     case 'tt-reset':if(confirm('기본값(대략)으로 되돌릴까요?')){delete S.shiftTimes[timesTab];save();openTimesPage();}break;
     case 'tt-icon':openTtIcon(t.dataset.i);break;
