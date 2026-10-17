@@ -596,25 +596,28 @@ object WidgetRenderer {
         }
     }
 
-    /** 메모 한 줄: \u0001 ~ \u0002 사이(앱의 "링크")는 파랗게 + 밑줄, 폭을 넘으면 … 로 줄임 */
+    /** 메모 한 줄: \u0001 주소 \u0003 글자 \u0002 (앱의 "링크")는 글자만 파랗게 + 밑줄, 폭을 넘으면 … 로 줄임 */
     private fun drawRich(cv: Canvas, text: String, x: Float, y: Float, maxW: Float, paint: TextPaint, fg: Int, link: Int) {
         val parts = ArrayList<Pair<String, Boolean>>()
         var cur = StringBuilder()
-        var inLink = false
+        var mode = 0   // 0 보통 · 1 주소(건너뜀) · 2 링크 글자
         for (ch in text) {
             if (ch == '\u0001') {
                 if (cur.isNotEmpty()) parts.add(Pair(cur.toString(), false))
                 cur = StringBuilder()
-                inLink = true
-            } else if (ch == '\u0002') {
-                if (cur.isNotEmpty()) parts.add(Pair(cur.toString(), true))
+                mode = 1
+            } else if (ch == '\u0003' && mode == 1) {
                 cur = StringBuilder()
-                inLink = false
-            } else {
+                mode = 2
+            } else if (ch == '\u0002') {
+                if (mode == 2 && cur.isNotEmpty()) parts.add(Pair(cur.toString(), true))
+                cur = StringBuilder()
+                mode = 0
+            } else if (mode != 1) {
                 cur.append(ch)
             }
         }
-        if (cur.isNotEmpty()) parts.add(Pair(cur.toString(), inLink))
+        if (cur.isNotEmpty() && mode == 0) parts.add(Pair(cur.toString(), false))
         var cx = x
         val limit = x + maxW
         for (part in parts) {

@@ -1,6 +1,11 @@
 package com.eonjeswieo.app
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.net.Uri
+import android.text.TextPaint
+import android.text.style.ClickableSpan
+import android.view.MotionEvent
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -64,26 +69,89 @@ class WidgetDayActivity : Activity() {
         return t
     }
 
-    /** \u0001 ~ \u0002 사이(앱의 "링크")는 파랗게 + 밑줄 */
-    private fun rich(text: String, fg: Int, link: Int): CharSequence {
+    /** \u0001 주소 \u0003 글자 \u0002 → 글자만 파랗게 + 밑줄 + 누르면 주소 열기 */
+    private fun rich(text: String, fg: Int, link: Int, onUrl: (String) -> Unit): CharSequence {
         val sb = StringBuilder()
-        val spans = ArrayList<IntArray>()
-        var start = -1
+        val spans = ArrayList<Array<Any>>()
+        val url = StringBuilder()
+        var mode = 0
+        var start = 0
         for (ch in text) {
-            if (ch == '\u0001') start = sb.length
-            else if (ch == '\u0002') {
-                if (start >= 0) spans.add(intArrayOf(start, sb.length))
-                start = -1
-            } else sb.append(ch)
-        }
-        val out = SpannableString(sb.toString())
-        for (s in spans) {
-            if (s[1] > s[0]) {
-                out.setSpan(ForegroundColorSpan(link), s[0], s[1], Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                out.setSpan(UnderlineSpan(), s[0], s[1], Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            if (ch == '\u0001') {
+                mode = 1
+                url.setLength(0)
+            } else if (ch == '\u0003' && mode == 1) {
+                mode = 2
+                start = sb.length
+            } else if (ch == '\u0002') {
+                if (mode == 2 && sb.length > start) spans.add(arrayOf<Any>(start, sb.length, url.toString()))
+                mode = 0
+            } else if (mode == 1) {
+                url.append(ch)
+            } else {
+                sb.append(ch)
             }
         }
+        val out = SpannableString(sb.toString())
+        for (sp in spans) {
+            val u = sp[2] as String
+            val span = object : ClickableSpan() {
+                override fun onClick(widget: View) {
+                    onUrl(u)
+                }
+
+                override fun updateDrawState(ds: TextPaint) {
+                    ds.color = link
+                    ds.isUnderlineText = true
+                }
+            }
+            out.setSpan(span, sp[0] as Int, sp[1] as Int, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
         return out
+    }
+
+    /** 누른 자리에 링크가 있으면 그 링크 */
+    private fun linkAt(tv: TextView, ev: MotionEvent): ClickableSpan? {
+        val text = tv.text as? Spanned ?: return null
+        val layout = tv.layout ?: return null
+        val loc = IntArray(2)
+        tv.getLocationOnScreen(loc)
+        val x = (ev.rawX - loc[0] - tv.totalPaddingLeft + tv.scrollX).toInt()
+        val y = (ev.rawY - loc[1] - tv.totalPaddingTop + tv.scrollY).toInt()
+        if (y < 0 || y > layout.height) return null
+        val line = layout.getLineForVertical(y)
+        if (x < layout.getLineLeft(line) || x > layout.getLineRight(line)) return null
+        val off = layout.getOffsetForHorizontal(line, x.toFloat())
+        return text.getSpans(off, off, ClickableSpan::class.java).firstOrNull()
+    }
+
+    /** 주소 열기 (가족이 보낸 메모의 링크는 앱처럼 한 번 물어봄) */
+    private fun openUrl(url: String, fromFamily: Boolean) {
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return
+        val go = {
+            try {
+                val it2 = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                it2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(it2)
+            } catch (e: Exception) {
+                // 열 수 있는 앱이 없으면 그냥 둠
+            }
+        }
+        if (!fromFamily) {
+            go()
+            return
+        }
+        val host = try {
+            Uri.parse(url).host ?: url
+        } catch (e: Exception) {
+            url
+        }
+        AlertDialog.Builder(this)
+            .setTitle("링크 열기")
+            .setMessage(host + "\n\n가족이 보낸 메모의 링크예요. 아는 주소일 때만 열어요.")
+            .setPositiveButton("열기") { _, _ -> go() }
+            .setNegativeButton("취소", null)
+            .show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -285,14 +353,22 @@ class WidgetDayActivity : Activity() {
         }
         val col = LinearLayout(this)
         col.orientation = LinearLayout.VERTICAL
-        val t = tv(rich(m.optString("t", ""), pal.fg, pal.link), 16f, if (checkable && done) pal.sub else pal.fg)
+        val fromFamily = m.optInt("o", 0) == 1
+        val t = tv(rich(m.optString("t", ""), pal.fg, pal.link) { u -> openUrl(u, fromFamily) }, 16f, if (checkable && done) pal.sub else pal.fg)
         if (checkable && done) t.paintFlags = t.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
         col.addView(t)
         val sub = (if (m.optInt("f", 0) == 1) "♥ 가족 메모" else "") +
             (if (m.optString("tm", "").isNotEmpty()) (if (m.optInt("f", 0) == 1) " · " else "") + "🕐 " + m.optString("tm", "") else "")
         if (sub.isNotEmpty()) col.addView(tv(sub, 12.5f, pal.sub))
         row.addView(col, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        if (checkable) row.setOnClickListener { toggleMemo(m) }
+        // 링크 위를 누르면 주소 열기, 아니면(체크할 수 있는 줄이면) 완료/취소
+        row.setOnTouchListener { _, ev ->
+            if (ev.action == MotionEvent.ACTION_UP) {
+                val span = linkAt(t, ev)
+                if (span != null) span.onClick(t) else if (checkable) toggleMemo(m)
+            }
+            true
+        }
         val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         lp.bottomMargin = dp(6)
         row.layoutParams = lp
