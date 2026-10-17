@@ -4686,10 +4686,8 @@ function openPatternPage(){
       <div class="pg-cap pcap">근무 패턴 · ${n}일 반복 <span>누르면 바꾸고, 꾹 눌러 끌면 순서가 바뀌어요</span></div>
       <div class="pg-sec" style="margin-top:0;padding:12px 12px 14px">
         <div class="prow" style="padding:0 2px 10px"><div class="pl2">요일 보기</div><label class="sw"><input type="checkbox" id="patWeek" ${S.patWeek?'checked':''}><i></i></label></div>
-        ${S.patWeek?`<div class="pgdow">${[0,1,2,3,4,5,6].map(j=>{const w=(parse(S.anchor).getDay()+j)%7;return `<span class="${w===0?'su':w===6?'sa':''}">${DOW[w]}</span>`;}).join('')}</div>`:''}
-        ${S.patWeek&&n%7===0&&parse(S.anchor).getDay()!==(S.weekStart||0)?`<div class="hint" style="padding:0 2px 10px">시작 날이 ${DOW[parse(S.anchor).getDay()]}요일이라 ${DOW[parse(S.anchor).getDay()]}요일부터 보여요 <button class="btn ghost sm" data-act="pweek-align" style="margin-left:6px">${DOW[S.weekStart||0]}요일로 맞추기</button><small style="display:block;color:var(--muted)">달력은 그대로예요 · 시작 날과 칸 순서만 같이 옮겨요</small></div>`:''}
-        ${S.patWeek&&n%7!==0?`<div class="hint" style="padding:0 2px 10px">첫 ${n}일 기준이에요 · ${n}일 패턴이라 다음 바퀴엔 요일이 밀려요 <button class="btn ghost sm" data-act="pweek-fit" style="margin-left:6px">7일로 줄이기</button></div>`:''}
-        <div class="pgrid ${S.patWeek?'wk7':''}" id="pgrid">${S.pattern.map((s,i)=>`<button class="pc ${i===cp?'pnow':''}" data-act="pcell" data-i="${i}">${badge(s,'sm')}<small>${i+1}</small></button>`).join('')}</div>
+        ${S.patWeek?`<div class="pgdow">${weekOrder().map(w=>`<span class="${w===0?'su':w===6?'sa':''}">${DOW[w]}</span>`).join('')}</div>`:''}
+        <div class="pgrid ${S.patWeek?'wk7':''}" id="pgrid">${S.patWeek?'<i class="pgb"></i>'.repeat((parse(S.anchor).getDay()-(S.weekStart||0)+7)%7):''}${S.pattern.map((s,i)=>`<button class="pc ${i===cp?'pnow':''}" data-act="pcell" data-i="${i}">${badge(s,'sm')}<small>${i+1}</small></button>`).join('')}</div>
         <div class="row" style="margin-top:10px;gap:8px">${n<PAT_MAX?'<button class="btn ghost sm" data-act="padd">＋ 칸 추가</button>':''}${n>2?'<button class="btn ghost sm" data-act="pdel">－ 칸 빼기</button>':''}</div>
       </div>
       <div class="hint" style="padding:8px 16px 0">오늘(${t0.getMonth()+1}/${t0.getDate()})은 ${cp+1}번째 칸 · ${esc(lb[cp])}이에요</div>
@@ -5718,14 +5716,6 @@ document.addEventListener('click',e=>{
     case 'fb-out':fbSignOut().then(()=>{if(pageMode==='fb')openFirebasePage();});break;
     case 'pcell':openPatCell(Number(t.dataset.i));break;
     case 'pset':{const i=Number(t.dataset.i);if(i<S.pattern.length){S.pattern[i]=t.dataset.s;save();}closePop();openPatternPage();break;}
-    case 'pweek-align':{   // 시작 날을 주 시작 요일로: 칸 순서를 같이 돌려서 달력은 그대로
-      const n=S.pattern.length;if(n%7)break;
-      const a=parse(S.anchor),delta=(a.getDay()-(S.weekStart||0)+7)%7;if(!delta)break;
-      ancBackup();
-      S.pattern=S.pattern.map((_,j)=>S.pattern[((j-delta)%n+n)%n]);
-      S.anchor=fmt(addDays(a,-delta));patSnap={pattern:S.pattern.slice(),anchor:S.anchor};
-      save();render();openPatternPage();toast(`시작 날을 ${md(S.anchor)}(${DOW[parse(S.anchor).getDay()]})로 맞췄어요 · 달력은 그대로예요`);break;}
-    case 'pweek-fit':{const n0=S.pattern.length;if(n0>7&&!confirm(`${n0-7}칸을 지우고 7일로 줄일까요?\n(${n0}번째까지 있던 칸 중 8번째부터 없어져요)`))break;while(S.pattern.length<7)S.pattern.push(restKey());if(S.pattern.length>7)S.pattern.length=7;save();openPatternPage();}break;
     case 'padd':if(S.pattern.length<PAT_MAX){S.pattern.push(restKey());save();openPatternPage();}break;
     case 'pdel':if(S.pattern.length>2){S.pattern.pop();save();openPatternPage();}break;
     case 'clearov':if(confirm('직접 바꾼 근무를 모두 원래 패턴으로 되돌릴까요?')){S.overrides={};save();openPatternPage();toast('수동 변경을 초기화했어요');}break;
