@@ -1484,7 +1484,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))) };s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},o&&o.memoColors);
   s.drive=Object.assign(defaults().drive,o&&o.drive);
@@ -1600,6 +1600,34 @@ function pushAlarmsToNative(){
     }
   }catch(e){}
 }
+/* 홈 화면 위젯(1칸 · 2칸)에 보여줄 앞으로 2주의 날짜별 근무 · 스티커 · 메모 → window.AndroidBridge.setWidgetData(json) */
+let wgT=null;
+function cssHex(v){   // var(--day) 같은 CSS 색을 #rrggbb 로 (위젯은 CSS 변수를 못 읽음)
+  try{
+    v=String(v||'');if(!v)return '';
+    const m=v.match(/^var\((--[\w-]+)\)$/);if(m)v=getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();
+    if(/^#[0-9a-f]{6}$/i.test(v))return v;
+    const c=document.createElement('canvas').getContext('2d');c.fillStyle='#000000';c.fillStyle=v;const r=c.fillStyle;
+    return /^#[0-9a-f]{6}$/i.test(r)?r:'';
+  }catch(e){return '';}
+}
+function widgetJson(){
+  const t0=new Date(),days=[];
+  for(let i=0;i<14;i++){
+    const d=addDays(t0,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),pers=persOn(k);
+    const c=(pers||sh===''||sh===NONE_K)?null:tColors(typeOf(sh));
+    const rest=!pers&&sh!==''&&sh!==NONE_K&&isRest(sh);
+    const stk=stampsOn(k).slice(0,4).map(x=>x.s.kind==='pill'?{p:1,c:cssHex(x.v&&x.v.col)||'#7e57c2',n:x.n,N:x.v.N}:{e:icoTxt(x.s.emoji,'⭐'),n:x.n,N:x.v.N});
+    const vm=visibleMemos(k),m1=vm.find(x=>x.shared)||vm[0],bd=boardOnDate(k)[0],dd=ddayHits(k)[0];
+    const memo=m1?firstLine(m1.text):bd?piLabel(bd):dd?dd.name:'';
+    days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),hol:hol||'',t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',stk,memo:String(memo||'').slice(0,40)});
+  }
+  return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,days});
+}
+function pushWidgetToNative(){
+  if(!(window.AndroidBridge&&typeof window.AndroidBridge.setWidgetData==='function'))return;
+  clearTimeout(wgT);wgT=setTimeout(()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},700);
+}
 /* 기념일 전날 알림 (조용한 알림 한 줄) */
 function iyeyo(w){const c=String(w).replace(/[^가-힣]+$/,'').slice(-1).charCodeAt(0);return c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28===0?'예요':'이에요';}
 function remAtLabel(t){const [h,m]=(t||'20:00').split(':').map(Number),h12=h%12===0?12:h%12;return `${h<5?'새벽':h<11?'아침':h<17?'낮':h<21?'저녁':'밤'} ${h12}시${m?` ${m}분`:''}`;}
@@ -1677,7 +1705,7 @@ function pushRemindersToNative(){
 function save(){
   S.drive.dirty=true;dataRev++;
   try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('저장 공간이 꽉 찼어요 · 안 쓰는 사진을 지워 주세요');}
-  pushAlarmsToNative();pushRemindersToNative();
+  pushAlarmsToNative();pushRemindersToNative();pushWidgetToNative();
   famSoon();
 }
 
@@ -4321,6 +4349,7 @@ window.__onTone=o=>{
 /* ================= 더 보기 ================= */
 /* 설정 목록 아이콘: 이모티콘 대신 같은 굵기 · 같은 색(보라) 선 아이콘 */
 const LINE_ICON={'🌓':'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>','▬':'<rect x="3" y="9" width="18" height="6" rx="3"/>','🔗':'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>','🔁':'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>','🕐':'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>','👥':'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>','🏢':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>','💊':'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>','📊':'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>','👪':'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>','👁':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>','🎨':'<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>','🖼':'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>','☁️':'<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>','✉️':'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>','🔒':'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>','🗑':'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>','ℹ️':'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>','🔤':'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>'};
+LINE_ICON['▣']='<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>';
 const lineIcon=e=>LINE_ICON[e]?`<svg class="li" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LINE_ICON[e]}</svg>`:e;
 function renderMore(){
   const guest=role()==='guest';
@@ -4360,6 +4389,7 @@ function renderMore(){
     ${cap('기능')}
     <div class="pg-sec" style="margin-top:0">
       ${item('🧩','부가 기능','more-addons',`${addonCount()}개 켜짐`)}
+      ${hasBridge('setWidgetData')?item('▣','홈 화면 위젯','more-widget'):''}
       ${item('🖼','달력 이미지로 공유','more-share')}
       ${item('☁️','백업 · 복원','more-backup',lastB)}
     </div>
@@ -4371,6 +4401,16 @@ function renderMore(){
       <div class="mi2" data-act="about-tap" style="cursor:default"><span class="e">${lineIcon('ℹ️')}</span><span>앱 정보</span><small>${appVersion()}</small></div>
     </div>
   </div>`;
+}
+function openWidgetPage(){
+  const w=S.widget;
+  openPage(`${pageHead('홈 화면 위젯')}
+    <div class="pg-b">
+      <div class="pg-cap">배경</div>
+      <div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${[['light','밝게'],['dark','어둡게'],['system','폰 설정 따라']].map(([v,n])=>`<button class="${w.theme===v?'on':''}" data-act="wg-theme" data-v="${v}">${n}</button>`).join('')}</div>
+        <div class="prow" style="padding:12px 0 0"><div class="pl2">진하기 <b id="wgAv">${w.alpha}%</b></div><input type="range" id="wgAlpha" min="0" max="100" step="10" value="${w.alpha}" style="flex:1"></div></div>
+      <div class="hint" style="padding:12px 16px">홈 화면을 길게 눌러 위젯 › 언제쉬어 1칸 · 2칸을 골라요.<br>달력 칸처럼 날짜 · 근무 · 스티커 · 메모가 보여요.</div>
+    </div>`,'widget');
 }
 /* ================= 부가 기능 (설정 › 부가 기능) =================
  * 기본은 모두 꺼짐. 꺼도 저장된 내용은 그대로이고, 켜면 그 자리에 바로 생겨요. */
@@ -4835,7 +4875,7 @@ function openBackupPage(){
     </div>`,'backup');
   if(linked&&driveFiles===null&&!driveBusy){driveBusy=true;window.AndroidBridge.driveList(true);}
 }
-const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','pers','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
+const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -5603,6 +5643,8 @@ document.addEventListener('click',e=>{
       reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(k);break;}
     case 'req-go':{if(e.target.closest('button'))break;closeSheet();const d=parse(t.dataset.k);tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(t.dataset.k);break;}
     case 'more-addons':closeSheet();openAddonPage();break;
+    case 'more-widget':closeSheet();openWidgetPage();break;
+    case 'wg-theme':S.widget.theme=t.dataset.v;save();openWidgetPage();break;
     case 'addon-go':closePop();tab='set';render();openAddonPage();break;
     case 'stk-board':closeSheet();openStampPage();break;
     case 'sb-prev':{let y=sbY,m=sbM-1;if(m<0){m=11;y--;}openStickerBoard(y,m);break;}
@@ -5811,6 +5853,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='srNight'&&stDraft){stDraft.noNight=t.checked;
   }else if(t.id==='famOwn'){famSetMode(t.checked?'own':'view');
   }else if(t.id==='famStk'){famSetStk(t.checked);
+  }else if(t.id==='wgAlpha'){S.widget.alpha=+t.value;save();const e=$('#wgAv');if(e)e.textContent=S.widget.alpha+'%';
   }else if(t.id==='showBand'){S.showBand=t.checked;save();applyBand();
   }else if(t.id==='famPushQuiet'){S.pushQuiet=t.checked;save();famRegDevice().catch(()=>{});toast(t.checked?'자는 시간엔 소리 없이 알려요':'자는 시간에도 소리로 알려요');
   }else if(t.id==='famPushOn'){S.pushOn=t.checked;save();famRegDevice().catch(()=>{});toast(t.checked?'가족 알림을 받아요':'가족 알림을 끌게요');
@@ -7016,12 +7059,12 @@ window.__refresh=()=>{
   if(tab==='alarm'||tab==='set')render();
   // 권한 화면에서 돌아오면 바로 ✓ 로
   if(ob&&ob.step==='alarm')renderOb();else if(pageMode==='perm')openPermPage();
-  pushAlarmsToNative();refreshHolidays();autoBackup();famBoot();famPoll(true);
+  pushAlarmsToNative();pushWidgetToNative();refreshHolidays();autoBackup();famBoot();famPoll(true);
 };
 
 applyTheme();applyFont();applyBand();
 render();
-pushAlarmsToNative();pushRemindersToNative();
+pushAlarmsToNative();pushRemindersToNative();pushWidgetToNative();
 if(!S.onboarded)startOnboarding();
 refreshHolidays();
 famBoot();

@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">언제쉬어</string>
+    <string name="widget1_label">언제쉬어 1칸</string>
+    <string name="widget2_label">언제쉬어 2칸</string>
+    <string name="widget1_desc">오늘 근무 · 스티커 · 메모</string>
+    <string name="widget2_desc">오늘 · 내일 근무와 다음 알람</string>
 </resources>

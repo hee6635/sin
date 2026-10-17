@@ -94,6 +94,13 @@ class AlarmBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun cleanTones(keepJson: String) = activity.cleanTones(keepJson)
 
+    /** 홈 화면 위젯에 보여줄 날짜별 근무 · 스티커 · 메모 (JSON) */
+    @JavascriptInterface
+    fun setWidgetData(json: String) {
+        WidgetStore.save(context, json)
+        WidgetRefresher.refreshAll(context)
+    }
+
     /** 사진 고르기 → 결과는 window.__onImage(data URL, 취소면 '', 실패면 null) */
     @JavascriptInterface
     fun pickImage() {

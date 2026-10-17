@@ -97,6 +97,12 @@ object AlarmScheduler {
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(key, arr.toString()).apply()
     }
 
+    /** 가장 가까운 미래 알람 시각 (없으면 0) — 홈 화면 위젯이 "다음 알람"으로 보여줌 */
+    fun nextAt(ctx: Context): Long {
+        val now = System.currentTimeMillis()
+        return readList(ctx).firstOrNull { it.at > now }?.at ?: 0L
+    }
+
     /** 다시 울릴 수 있는지 (최대 횟수 안인지) */
     fun canSnooze(r: Ring): Boolean = r.snMax < 0 || r.snCount < r.snMax
 

@@ -1,0 +1,20 @@
+const {chromium,boot,mkT,base}=require('./lib.js');
+(async()=>{const b=await chromium.launch();const T=mkT();
+ const p=await boot(b,{...base,memos:{'2026-10-13':[{id:'m1',text:'병원 가는 날',t:1,by:'host',shared:false}]}},{touch:true,w:384});
+ await p.click('#nav [data-tab="set"]');await p.waitForTimeout(300);
+ T('앱 밖(브라우저)에서는 위젯 줄이 안 보임',await p.evaluate(()=>!document.querySelector('[data-act="more-widget"]')));
+ await p.evaluate(()=>{window.__wg=[];window.AndroidBridge.setWidgetData=j=>window.__wg.push(JSON.parse(j));});
+ await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(200);await p.click('#nav [data-tab="set"]');await p.waitForTimeout(300);
+ T('브리지가 있으면 "홈 화면 위젯" 줄',await p.evaluate(()=>!!document.querySelector('[data-act="more-widget"]')));
+ await p.evaluate(()=>document.querySelector('[data-act="more-widget"]').click());await p.waitForTimeout(300);
+ await p.evaluate(()=>document.querySelector('[data-act="wg-theme"][data-v="dark"]').click());await p.waitForTimeout(1000);
+ const w=await p.evaluate(()=>window.__wg[window.__wg.length-1]);
+ T('위젯 데이터가 넘어감(14일 · 테마 어둡게)',!!w&&w.days.length===14&&w.theme==='dark'&&w.alpha===100,JSON.stringify(w).slice(0,200));
+ T('오늘(10/12)은 근무 글자 · 날짜 숫자',w&&w.days[0].k==='2026-10-12'&&w.days[0].d===12&&typeof w.days[0].t==='string',JSON.stringify(w&&w.days[0]));
+ T('10/13 메모가 들어감',w&&w.days[1].memo==='병원 가는 날',JSON.stringify(w&&w.days[1]));
+ await p.evaluate(()=>{const r=document.getElementById('wgAlpha');r.value='60';r.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(1000);
+ T('진하기 60% 저장 · 전달',await p.evaluate(()=>{const w=window.__wg[window.__wg.length-1];const s=JSON.parse(localStorage.getItem('eonjeswieo:v1'));return w.alpha===60&&s.widget.alpha===60&&s.widget.theme==='dark';}));
+ // 옛 데이터(widget 없음)로 켜짐
+ const p2=await boot(b,{...base},{touch:true});
+ T('옛 데이터로 켜짐 · 오류 없음',p2.errs.length===0,p2.errs.join('|'));
+ console.log(p.errs);T.sum();await b.close();})();
