@@ -268,40 +268,99 @@ object WidgetRenderer {
         }
     }
 
-    /** 한 날짜를 칸 하나(x0,y0,cw,ch)에 그린다 */
+    /** 한 날짜를 칸 하나(x0,y0,cw,ch)에 그린다: 앱 달력 칸과 같은 짜임 (날짜 + 스티커 한 줄 → 근무 동그라미 → 메모) */
     private fun drawCell(cv: Canvas, d: JSONObject?, x0: Float, y0: Float, cw: Float, ch: Float, label: String?, pal: Pal, icons: JSONObject?) {
         if (d == null) return
-        val cx = x0 + cw / 2
+        val pad = cw * 0.06f
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
-        paint.textAlign = Paint.Align.CENTER
-        val dow = d.optInt("w", 0)
+        val dow = d.optInt("w", 0).coerceIn(0, 6)
         val hol = d.optString("hol", "")
         val dateColor = if (hol.isNotEmpty() || dow == 0) pal.sun else if (dow == 6) pal.sat else pal.fg
 
-        // 1) 날짜 (+ 공휴일 이름)
-        val dateText = (if (label != null) label + " " else d.optInt("m").toString() + ".") + d.optInt("d") + "(" + DOW[dow.coerceIn(0, 6)] + ")"
-        paint.typeface = Typeface.DEFAULT_BOLD
-        paint.color = dateColor
-        paint.textSize = Math.min(cw * 0.15f, ch * 0.13f)
-        cv.drawText(TextUtils.ellipsize(dateText, paint, cw * 0.94f, TextUtils.TruncateAt.END).toString(), cx, y0 + ch * 0.15f, paint)
-        if (hol.isNotEmpty()) {
-            paint.typeface = Typeface.DEFAULT
-            paint.textSize = Math.min(cw * 0.11f, ch * 0.09f)
-            cv.drawText(TextUtils.ellipsize(hol, paint, cw * 0.94f, TextUtils.TruncateAt.END).toString(), cx, y0 + ch * 0.25f, paint)
+        val rowH = Math.min(ch * 0.17f, cw * 0.2f)
+        val rowTop = y0 + ch * 0.04f
+        val sz = rowH * 0.85f
+        val gap = sz * 0.18f
+
+        // 스티커 (맨 윗줄 오른쪽, 자리가 모자라면 아래 줄)
+        val stk = d.optJSONArray("stk")
+        val n = if (stk == null) 0 else Math.min(stk.length(), 4)
+        val cap = Math.max(1, Math.floor(((cw * 0.5f + gap) / (sz + gap)).toDouble()).toInt())
+        val n1 = Math.min(n, cap)
+        val n2 = n - n1
+        val w1 = if (n1 > 0) n1 * sz + (n1 - 1) * gap else 0f
+        val w2 = if (n2 > 0) n2 * sz + (n2 - 1) * gap else 0f
+        for (i in 0 until n) {
+            val s = stk!!.optJSONObject(i) ?: continue
+            val inRow1 = i < n1
+            val idx = if (inRow1) i else i - n1
+            val rowW = if (inRow1) w1 else w2
+            val sx = x0 + cw - pad - rowW + idx * (sz + gap)
+            val sy = rowTop + (if (inRow1) 0f else rowH * 1.05f)
+            drawSticker(cv, s, sx, sy, sz, paint, icons)
         }
 
-        val stk = d.optJSONArray("stk")
-        val hasStk = stk != null && stk.length() > 0
-        val memo = d.optString("memo", "")
-        val hasMemo = memo.isNotEmpty()
+        // 날짜 (왼쪽) — 스티커 자리를 빼고 남은 폭에 맞춤
+        val dateText = (if (label != null) label + " " else "") + d.optInt("d") + "(" + DOW[dow] + ")"
+        val availDate = cw - pad * 2 - (if (n1 > 0) w1 + gap else 0f)
+        paint.typeface = Typeface.DEFAULT_BOLD
+        paint.textAlign = Paint.Align.LEFT
+        paint.color = dateColor
+        paint.textSize = Math.min(rowH * 0.8f, cw * 0.15f)
+        while (paint.measureText(dateText) > availDate && paint.textSize > rowH * 0.45f) paint.textSize = paint.textSize * 0.92f
+        cv.drawText(TextUtils.ellipsize(dateText, paint, availDate, TextUtils.TruncateAt.END).toString(), x0 + pad, rowTop + rowH * 0.78f, paint)
+        var topEnd = rowTop + rowH
+        if (hol.isNotEmpty()) {
+            paint.typeface = Typeface.DEFAULT
+            paint.textSize = rowH * 0.5f
+            val availHol = cw - pad * 2 - (if (n2 > 0) w2 + gap else 0f)
+            cv.drawText(TextUtils.ellipsize(hol, paint, availHol, TextUtils.TruncateAt.END).toString(), x0 + pad, rowTop + rowH * 1.38f, paint)
+            topEnd = rowTop + rowH * 1.55f
+        } else if (n2 > 0) {
+            topEnd = rowTop + rowH * 2.05f
+        }
+        topEnd += ch * 0.02f
 
-        // 2) 근무 동그라미
-        val rad = Math.min(cw * 0.22f, ch * 0.17f)
-        val cyc = y0 + ch * (if (hasStk || hasMemo) 0.45f else 0.56f)
+        // 메모 (맨 아래, 칸이 세로로 길면 두 줄까지)
+        val msArr = d.optJSONArray("ms")
+        val memos = ArrayList<String>()
+        if (msArr != null) {
+            for (i in 0 until msArr.length()) {
+                val t = msArr.optString(i, "")
+                if (t.isNotEmpty()) memos.add(t)
+            }
+        } else {
+            val one = d.optString("memo", "")
+            if (one.isNotEmpty()) memos.add(one)
+        }
+        val maxLines = if (ch >= cw * 1.3f) 2 else 1
+        val ml = Math.min(memos.size, maxLines)
+        val ph = Math.min(ch * 0.11f, cw * 0.15f)
+        val pg = ch * 0.012f
+        val bottom = y0 + ch * 0.96f
+        val memoTop = if (ml > 0) bottom - (ml * ph + (ml - 1) * pg) else bottom
+        for (i in 0 until ml) {
+            val py = memoTop + i * (ph + pg)
+            val pp = Paint(Paint.ANTI_ALIAS_FLAG)
+            pp.color = pal.pill
+            cv.drawRoundRect(RectF(x0 + pad, py, x0 + cw - pad, py + ph), ph * 0.3f, ph * 0.3f, pp)
+            paint.typeface = Typeface.DEFAULT
+            paint.textAlign = Paint.Align.LEFT
+            paint.color = pal.fg
+            paint.textSize = Math.min(ph * 0.62f, cw * 0.085f)
+            cv.drawText(TextUtils.ellipsize(memos[i], paint, cw - pad * 2.6f, TextUtils.TruncateAt.END).toString(), x0 + pad * 1.4f, py + ph * 0.7f, paint)
+        }
+
+        // 근무 동그라미: 위(날짜·스티커)와 아래(메모) 사이 한가운데
         val t = d.optString("t", "")
         if (t.isNotEmpty()) {
+            val free = memoTop - topEnd
+            val rad = Math.max(cw * 0.08f, Math.min(cw * 0.21f, Math.min(free * 0.42f, ch * 0.17f)))
+            val cx = x0 + cw / 2
+            val cyc = topEnd + free / 2
             val bg = d.optString("bg", "")
             paint.typeface = Typeface.DEFAULT_BOLD
+            paint.textAlign = Paint.Align.CENTER
             paint.textSize = rad * 1.0f
             if (bg.isNotEmpty()) {
                 val cp = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -313,53 +372,49 @@ object WidgetRenderer {
             }
             cv.drawText(t, cx, cyc + rad * 0.36f, paint)
         }
+    }
 
-        // 3) 스티커 (최대 4개, 안 한 것은 연하게)
-        if (hasStk) {
-            val n = Math.min(stk!!.length(), 4)
-            val sz = Math.min(ch * 0.15f, cw * 0.2f)
-            val gap = sz * 0.25f
-            val totalW = n * sz + (n - 1) * gap
-            var sx = cx - totalW / 2
-            val baseY = y0 + ch * (if (hasMemo) 0.76f else 0.80f)
-            for (i in 0 until n) {
-                val s = stk.optJSONObject(i) ?: continue
-                val done = s.optInt("n", 0) > 0
-                val photoId = s.optString("i", "")
-                val photo = if (photoId.isNotEmpty()) iconBitmap(icons, photoId) else null
-                if (photo != null) {
-                    val ip = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-                    ip.alpha = if (done) 255 else 100
-                    cv.drawBitmap(photo, null, RectF(sx, baseY - sz * 0.9f, sx + sz, baseY + sz * 0.1f), ip)
-                } else if (s.optInt("p", 0) == 1) {
-                    val pp = Paint(Paint.ANTI_ALIAS_FLAG)
-                    pp.color = parseColor(s.optString("c", ""), 0xFF7E57C2.toInt())
-                    pp.alpha = if (done) 255 else 90
-                    cv.drawRoundRect(RectF(sx, baseY - sz * 0.62f, sx + sz, baseY - sz * 0.14f), sz * 0.24f, sz * 0.24f, pp)
-                } else {
-                    paint.typeface = Typeface.DEFAULT
-                    paint.textSize = sz * 0.9f
-                    paint.color = Color.BLACK
-                    paint.alpha = if (done) 255 else 100
-                    cv.drawText(s.optString("e", "⭐"), sx + sz / 2, baseY, paint)
-                    paint.alpha = 255
-                }
-                sx += sz + gap
-            }
-        }
-
-        // 4) 메모 한 줄
-        if (hasMemo) {
-            val ph = ch * 0.13f
-            val py = y0 + ch * 0.95f - ph
-            val pad = cw * 0.06f
-            val pp = Paint(Paint.ANTI_ALIAS_FLAG)
-            pp.color = pal.pill
-            cv.drawRoundRect(RectF(x0 + pad, py, x0 + cw - pad, py + ph), ph * 0.3f, ph * 0.3f, pp)
+    /** 스티커 하나 (사진 · 이모티콘 · 알약). 안 한 것은 연하게 */
+    private fun drawSticker(cv: Canvas, s: JSONObject, sx: Float, sy: Float, sz: Float, paint: TextPaint, icons: JSONObject?) {
+        val done = s.optInt("n", 0) > 0
+        val photoId = s.optString("i", "")
+        val photo = if (photoId.isNotEmpty()) iconBitmap(icons, photoId) else null
+        if (photo != null) {
+            val ip = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+            ip.alpha = if (done) 255 else 100
+            cv.drawBitmap(photo, null, RectF(sx, sy, sx + sz, sy + sz), ip)
+        } else if (s.optInt("p", 0) == 1) {
+            // 알약: 비스듬한 둥근 막대, 한 것은 반을 채움
+            val col = parseColor(s.optString("c", ""), 0xFF7E57C2.toInt())
+            val cx = sx + sz / 2
+            val cy = sy + sz / 2
+            val len = sz * 0.98f
+            val thick = sz * 0.46f
+            cv.save()
+            cv.rotate(-45f, cx, cy)
+            val rect = RectF(cx - len / 2, cy - thick / 2, cx + len / 2, cy + thick / 2)
+            val stroke = Paint(Paint.ANTI_ALIAS_FLAG)
+            stroke.style = Paint.Style.STROKE
+            stroke.strokeWidth = sz * 0.1f
+            stroke.color = col
+            stroke.alpha = if (done) 255 else 120
+            val fill = Paint(Paint.ANTI_ALIAS_FLAG)
+            fill.color = col
+            fill.alpha = if (done) 200 else 60
+            cv.save()
+            cv.clipRect(cx - len / 2, cy - thick, cx, cy + thick)
+            cv.drawRoundRect(rect, thick / 2, thick / 2, fill)
+            cv.restore()
+            cv.drawRoundRect(rect, thick / 2, thick / 2, stroke)
+            cv.restore()
+        } else {
             paint.typeface = Typeface.DEFAULT
-            paint.color = pal.fg
-            paint.textSize = ph * 0.62f
-            cv.drawText(TextUtils.ellipsize(memo, paint, cw - pad * 2.6f, TextUtils.TruncateAt.END).toString(), cx, py + ph * 0.7f, paint)
+            paint.textAlign = Paint.Align.CENTER
+            paint.textSize = sz * 0.9f
+            paint.color = Color.BLACK
+            paint.alpha = if (done) 255 else 100
+            cv.drawText(s.optString("e", "⭐"), sx + sz / 2, sy + sz * 0.82f, paint)
+            paint.alpha = 255
         }
     }
 }
