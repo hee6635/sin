@@ -14,6 +14,11 @@ ok('근무 변경 알림: 본인 제외 · 내용 없음', () => {
   const m = N.onScheduleChanged('u1', sch, { ...sch, overrides: { ...sch.overrides, '2026-10-10': '야' } }, ['u1', 'u2', 'u3'], u => ({ u1: '엄마' }[u]), '2026-10-01', 'h');
   assert.equal(m.length, 1); assert.deepEqual(m[0].to, ['u2', 'u3']); assert.match(m[0].body, /엄마님이 10\/10 근무를 바꿨어요/);
 });
+ok('스티커만 바뀌면(등록 · 완료) 가족에게 알림 없음', () => {
+  const b = { ...sch, stk: {}, sdefs: [] };
+  const a2 = { ...sch, stk: { '2026-10-10': '000' + '1', '2026-10-11': '0001' }, sdefs: [{ i: 'a', k: 'm', e: '👟' }], sv: 2 };
+  assert.deepEqual(N.onScheduleChanged('u1', b, a2, ['u1', 'u2'], u => '엄마', '2026-10-01', 'h'), []);
+});
 const req = { from: 'u1', fromName: '엄마', to: 'u2', toName: '아빠', date: '2026-11-03', want: '휴', msg: '비밀메시지', cc: ['u3', 'u1'], st: 'pending', held: false };
 ok('요청 도착: 받는 사람 + 알림만 받는 가족 · 메시지 내용 없음', () => {
   const m = N.onRequestCreated(req, 'h'); assert.equal(m.length, 2);
