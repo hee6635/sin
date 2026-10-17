@@ -233,6 +233,7 @@ object WidgetRenderer {
         cv.drawRoundRect(RectF(0f, 0f, w, h), r, r, bgPaint)
 
         val icons = data?.optJSONObject("ic")
+        val memoMax = (data?.optInt("lines", 3) ?: 3).coerceIn(1, 4)
         val today = Calendar.getInstance()
         val tom = Calendar.getInstance()
         tom.add(Calendar.DAY_OF_YEAR, 1)
@@ -246,14 +247,14 @@ object WidgetRenderer {
             return
         }
         if (count == 1) {
-            drawCell(cv, d0, 0f, 0f, w, h, null, pal, icons)
+            drawCell(cv, d0, 0f, 0f, w, h, null, pal, icons, memoMax)
         } else {
             val alarm = nextAlarmText(ctx)
             val bottom = if (alarm.isEmpty()) 0f else h * 0.13f
             val ch = h - bottom
             val half = w / 2
-            drawCell(cv, d0, 0f, 0f, half, ch, "오늘", pal, icons)
-            drawCell(cv, findDay(data, dateKey(tom)), half, 0f, half, ch, "내일", pal, icons)
+            drawCell(cv, d0, 0f, 0f, half, ch, "오늘", pal, icons, memoMax)
+            drawCell(cv, findDay(data, dateKey(tom)), half, 0f, half, ch, "내일", pal, icons, memoMax)
             val line = Paint(Paint.ANTI_ALIAS_FLAG)
             line.color = pal.line
             line.strokeWidth = 2f
@@ -269,7 +270,7 @@ object WidgetRenderer {
     }
 
     /** 한 날짜를 칸 하나(x0,y0,cw,ch)에 그린다: 앱 달력 칸과 같은 짜임 (날짜 + 스티커 한 줄 → 근무 동그라미 → 메모) */
-    private fun drawCell(cv: Canvas, d: JSONObject?, x0: Float, y0: Float, cw: Float, ch: Float, label: String?, pal: Pal, icons: JSONObject?) {
+    private fun drawCell(cv: Canvas, d: JSONObject?, x0: Float, y0: Float, cw: Float, ch: Float, label: String?, pal: Pal, icons: JSONObject?, memoMax: Int) {
         if (d == null) return
         val pad = cw * 0.06f
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
@@ -333,11 +334,13 @@ object WidgetRenderer {
             val one = d.optString("memo", "")
             if (one.isNotEmpty()) memos.add(one)
         }
-        val maxLines = if (ch >= cw * 1.3f) 2 else 1
-        val ml = Math.min(memos.size, maxLines)
-        val ph = Math.min(ch * 0.11f, cw * 0.15f)
+        val ph = Math.min(ch * 0.135f, cw * 0.19f)
         val pg = ch * 0.012f
         val bottom = y0 + ch * 0.96f
+        // 설정(3 · 4줄)만큼 보여주되, 근무 동그라미가 들어갈 자리(칸 높이의 0.22)는 남김
+        val room = bottom - topEnd - ch * 0.22f
+        val fit = Math.max(1, Math.floor(((room + pg) / (ph + pg)).toDouble()).toInt())
+        val ml = Math.min(memos.size, Math.min(memoMax, fit))
         val memoTop = if (ml > 0) bottom - (ml * ph + (ml - 1) * pg) else bottom
         for (i in 0 until ml) {
             val py = memoTop + i * (ph + pg)
@@ -347,8 +350,8 @@ object WidgetRenderer {
             paint.typeface = Typeface.DEFAULT
             paint.textAlign = Paint.Align.LEFT
             paint.color = pal.fg
-            paint.textSize = Math.min(ph * 0.62f, cw * 0.085f)
-            cv.drawText(TextUtils.ellipsize(memos[i], paint, cw - pad * 2.6f, TextUtils.TruncateAt.END).toString(), x0 + pad * 1.4f, py + ph * 0.7f, paint)
+            paint.textSize = Math.min(ph * 0.72f, cw * 0.11f)
+            cv.drawText(TextUtils.ellipsize(memos[i], paint, cw - pad * 2.6f, TextUtils.TruncateAt.END).toString(), x0 + pad * 1.4f, py + ph * 0.72f, paint)
         }
 
         // 근무 동그라미: 위(날짜·스티커)와 아래(메모) 사이 한가운데
