@@ -81,6 +81,14 @@
             </intent-filter>
         </receiver>
 
+        <!-- 위젯을 누르면 뜨는 그 날짜의 큰 창 (스티커 · 메모 할 일 체크) -->
+        <activity
+            android:name=".WidgetDayActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.ShiftCal.WidgetPopup" />
+
         <!-- 홈 화면 위젯: 1칸(오늘) · 2칸(오늘+내일) -->
         <receiver
             android:name=".TodayWidget1Provider"

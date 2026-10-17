@@ -1617,15 +1617,49 @@ function widgetJson(){
     const d=addDays(t0,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),pers=persOn(k);
     const c=(pers||sh===''||sh===NONE_K)?null:tColors(typeOf(sh));
     const rest=!pers&&sh!==''&&sh!==NONE_K&&isRest(sh);
-    const stk=stampsOn(k).slice(0,4).map(x=>x.s.kind==='pill'?{p:1,c:cssHex(x.v&&x.v.col)||'#7e57c2',n:x.n,N:x.v.N}:(()=>{const e=x.s.emoji;if(isPhoto(e)){const id=e.slice(1),src=(S.icons||{})[id];if(typeof src==='string'&&src.length<30000){ic[id]=src;return {i:id,n:x.n,N:x.v.N};}}return {e:icoTxt(e,'⭐'),n:x.n,N:x.v.N};})());
+    const sa=stampsOn(k).slice(0,12).map(x=>{
+      const id=String(x.s.id),nm=String(x.s.name||'').slice(0,12);
+      if(x.s.kind==='pill')return {id,nm,p:1,c:cssHex(x.v&&x.v.col)||'#7e57c2',n:x.n,N:x.v.N};
+      const e=x.s.emoji;
+      if(isPhoto(e)){const pid=e.slice(1),src=(S.icons||{})[pid];if(typeof src==='string'&&src.length<30000){ic[pid]=src;return {id,nm,i:pid,n:x.n,N:x.v.N};}}
+      return {id,nm,e:icoTxt(e,'⭐'),n:x.n,N:x.v.N};
+    });
+    const stk=sa.slice(0,4);
     const vm=visibleMemos(k),m1=vm.find(x=>x.shared)||vm[0],bd=boardOnDate(k)[0],dd=ddayHits(k)[0];
     const wm=t=>linkParts(firstLine(t)).map(q=>q.u?'\u0001링크\u0002':q.t).join('');   // 주소는 앱처럼 "링크"(위젯이 파랗게 그림)
     const ml=[];vm.filter(x=>x.shared).concat(vm.filter(x=>!x.shared)).forEach(x=>ml.push(wm(x.text)));boardOnDate(k).forEach(n=>ml.push(wm(piLabel(n))));ddayHits(k).forEach(x=>ml.push(x.name));
     const memo=m1?firstLine(m1.text):bd?piLabel(bd):dd?dd.name:'';
-    days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40))});
+    const mi=[];   // 위젯 창에서 크게 보여줄 메모 · 할 일 (r: m=메모 할 일(체크) · l=포스트잇 체크 줄 · t=글만)
+    vm.forEach(x=>{if(mi.length<16)mi.push({r:x.todo&&!x.shared?'m':'t',id:String(x.id),t:wm(x.text).slice(0,160),d:!!(x.todo&&x.done)});});
+    boardOnDate(k).forEach(n=>{if(n.type==='list'){if(mi.length<16)mi.push({r:'t',t:('☑ '+(n.title||'할 일')).slice(0,60),d:false});(n.lines||[]).slice(0,10).forEach(l=>{if(mi.length<20)mi.push({r:'l',pid:String(n.id),lid:String(l.id),t:wm(l.text).slice(0,120),d:!!l.done});});}else if(mi.length<16)mi.push({r:'t',t:wm(n.text).slice(0,160),d:false});});
+    days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40)),sa,mi});
   }
   return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,lines:S.memoLines===4?4:3,days,ic});
 }
+/* 위젯 창에서 체크한 것(대기 목록)을 앱 기록에 반영 + 위젯 [앱에서 열기]로 온 날짜 열기 */
+function applyWidgetActions(){
+  if(!(window.AndroidBridge&&typeof window.AndroidBridge.takeWidgetActions==='function'))return 0;
+  let list=[];try{list=JSON.parse(String(window.AndroidBridge.takeWidgetActions()||'[]'));}catch(e){}
+  let n=0;
+  list.forEach(a=>{
+    if(!a||!a.k)return;
+    if(a.t==='stk'){const d=S.stamps.defs.find(x=>x.id===a.id);if(!d)return;const N=stView(d,a.k).N;stampSet(d.id,a.k,Math.max(0,Math.min(N,+a.n||0)));n++;}
+    else if(a.t==='memo'){const m=memosOf(a.k).find(x=>String(x.id)===a.id);if(!m||!m.todo)return;if(a.d)m.done=true;else delete m.done;n++;}
+    else if(a.t==='line'){const p=(S.board[a.k.slice(0,7)]||[]).find(x=>String(x.id)===a.pid),l=p&&(p.lines||[]).find(x=>String(x.id)===a.lid);if(!l)return;l.done=!!a.d;l.doneBy=l.done?role():'';n++;}
+  });
+  if(n){save();render();toast(`위젯에서 체크한 ${n}개를 반영했어요`);}
+  return n;
+}
+function widgetSync(){
+  try{applyWidgetActions();}catch(e){}
+  try{
+    if(window.AndroidBridge&&typeof window.AndroidBridge.takeOpenDate==='function'){
+      const k=String(window.AndroidBridge.takeOpenDate()||'');
+      if(/^\d{4}-\d\d-\d\d$/.test(k)){const d=parse(k);if(pageMode)closePage();tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);}
+    }
+  }catch(e){}
+}
+window.__widgetSync=widgetSync;
 function pushWidgetToNative(){
   if(!(window.AndroidBridge&&typeof window.AndroidBridge.setWidgetData==='function'))return;
   clearTimeout(wgT);wgT=setTimeout(()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},700);
@@ -7062,7 +7096,7 @@ window.__refresh=()=>{
   if(tab==='alarm'||tab==='set')render();
   // 권한 화면에서 돌아오면 바로 ✓ 로
   if(ob&&ob.step==='alarm')renderOb();else if(pageMode==='perm')openPermPage();
-  pushAlarmsToNative();pushWidgetToNative();refreshHolidays();autoBackup();famBoot();famPoll(true);
+  widgetSync();pushAlarmsToNative();pushWidgetToNative();refreshHolidays();autoBackup();famBoot();famPoll(true);
 };
 
 applyTheme();applyFont();applyBand();
@@ -7072,6 +7106,7 @@ if(!S.onboarded)startOnboarding();
 refreshHolidays();
 famBoot();
 setTimeout(()=>{try{if(window.AndroidBridge&&typeof window.AndroidBridge.takePush==='function'){const p=String(window.AndroidBridge.takePush()||'');if(p)window.__onPush(JSON.parse(p));}}catch(e){}},700);
+setTimeout(widgetSync,150);
 setTimeout(introNotice,800);
 setTimeout(addonNotice,1200);
 setTimeout(autoBackup,4000);

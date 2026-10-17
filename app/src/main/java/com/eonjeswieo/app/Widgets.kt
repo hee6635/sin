@@ -16,6 +16,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.net.Uri
+import android.view.View
 import android.os.Bundle
 import android.text.TextPaint
 import android.text.TextUtils
@@ -32,6 +34,81 @@ object WidgetStore {
 
     fun save(ctx: Context, json: String) {
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY, json).apply()
+    }
+
+    private const val KEY_ACT = "actions"
+
+    /** 위젯 창에서 체크한 것(최종 상태)을 대기 목록에 적음 — 같은 항목은 마지막 것만 남김 */
+    fun addAction(ctx: Context, a: JSONObject) {
+        val sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val old = try {
+            JSONArray(sp.getString(KEY_ACT, "[]"))
+        } catch (e: Exception) {
+            JSONArray()
+        }
+        val out = JSONArray()
+        val sig = actionSig(a)
+        for (i in 0 until old.length()) {
+            val o = old.optJSONObject(i) ?: continue
+            if (actionSig(o) != sig) out.put(o)
+        }
+        out.put(a)
+        sp.edit().putString(KEY_ACT, out.toString()).apply()
+    }
+
+    private fun actionSig(a: JSONObject): String =
+        a.optString("t") + "|" + a.optString("k") + "|" + a.optString("id") + "|" + a.optString("pid") + "|" + a.optString("lid")
+
+    /** 앱이 열릴 때 가져가는 대기 목록 (가져가면 비움) */
+    fun takeActions(ctx: Context): String {
+        val sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val s = sp.getString(KEY_ACT, "[]") ?: "[]"
+        sp.edit().remove(KEY_ACT).apply()
+        return s
+    }
+
+    /** 앱이 새 데이터를 보내도, 아직 앱에 반영 안 된 위젯 체크는 그 위에 다시 입혀서 되돌아가 보이지 않게 */
+    fun saveFromApp(ctx: Context, json: String) {
+        var out = json
+        try {
+            val sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val acts = JSONArray(sp.getString(KEY_ACT, "[]"))
+            if (acts.length() > 0) {
+                val d = JSONObject(json)
+                val days = d.optJSONArray("days")
+                if (days != null) {
+                    for (i in 0 until acts.length()) {
+                        val a = acts.optJSONObject(i) ?: continue
+                        for (j in 0 until days.length()) {
+                            val day = days.optJSONObject(j) ?: continue
+                            if (day.optString("k") != a.optString("k")) continue
+                            when (a.optString("t")) {
+                                "stk" -> for (ln in arrayOf("sa", "stk")) {
+                                    val arr = day.optJSONArray(ln) ?: continue
+                                    for (q in 0 until arr.length()) {
+                                        val s = arr.optJSONObject(q) ?: continue
+                                        if (s.optString("id") == a.optString("id")) s.put("n", a.optInt("n", 0))
+                                    }
+                                }
+                                "memo", "line" -> {
+                                    val arr = day.optJSONArray("mi") ?: continue
+                                    for (q in 0 until arr.length()) {
+                                        val m = arr.optJSONObject(q) ?: continue
+                                        val hit = if (a.optString("t") == "memo") m.optString("r") == "m" && m.optString("id") == a.optString("id")
+                                        else m.optString("r") == "l" && m.optString("pid") == a.optString("pid") && m.optString("lid") == a.optString("lid")
+                                        if (hit) m.put("d", a.optBoolean("d", false))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    out = d.toString()
+                }
+            }
+        } catch (e: Exception) {
+            out = json
+        }
+        save(ctx, out)
     }
 
     fun load(ctx: Context): JSONObject? {
@@ -131,7 +208,7 @@ object WidgetRenderer {
     private var dens = 3f   // 화면 밀도 (dp 계산용)
 
     /** 사진 스티커: 앱이 data URL(base64)로 보내 준 작은 그림을 비트맵으로 (한 번 풀어서 기억) */
-    private fun iconBitmap(icons: JSONObject?, id: String): Bitmap? {
+    fun iconBitmap(icons: JSONObject?, id: String): Bitmap? {
         val src = icons?.optString(id, "") ?: ""
         if (src.isEmpty()) return null
         val key = id + ":" + src.length
@@ -180,11 +257,24 @@ object WidgetRenderer {
             draw(ctx, Canvas(bmp), w.toFloat(), h.toFloat(), count)
             val rv = RemoteViews(ctx.packageName, R.layout.widget_view)
             rv.setImageViewBitmap(R.id.widget_img, bmp)
-            val open = PendingIntent.getActivity(
-                ctx, 0, Intent(ctx, MainActivity::class.java),
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            rv.setOnClickPendingIntent(R.id.widget_root, open)
+            // 누르면 그 날짜의 큰 창: 1칸은 오늘, 2칸은 왼쪽 = 오늘 · 오른쪽 = 내일
+            val tomCal = Calendar.getInstance()
+            tomCal.add(Calendar.DAY_OF_YEAR, 1)
+            fun dayPi(k: String, half: Int): PendingIntent {
+                val it = Intent(ctx, WidgetDayActivity::class.java).putExtra("k", k)
+                it.data = Uri.parse("eonjeswieo://widget/" + id + "/" + half)
+                return PendingIntent.getActivity(
+                    ctx, id * 10 + half, it,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+            }
+            rv.setOnClickPendingIntent(R.id.zone_a, dayPi(dateKey(Calendar.getInstance()), 0))
+            if (count == 2) {
+                rv.setViewVisibility(R.id.zone_b, View.VISIBLE)
+                rv.setOnClickPendingIntent(R.id.zone_b, dayPi(dateKey(tomCal), 1))
+            } else {
+                rv.setViewVisibility(R.id.zone_b, View.GONE)
+            }
             mgr.updateAppWidget(id, rv)
         } catch (e: Exception) {
             // 그리기에 실패해도 앱이 죽지 않게

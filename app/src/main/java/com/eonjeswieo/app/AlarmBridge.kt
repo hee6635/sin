@@ -97,9 +97,17 @@ class AlarmBridge(private val activity: MainActivity) {
     /** 홈 화면 위젯에 보여줄 날짜별 근무 · 스티커 · 메모 (JSON) */
     @JavascriptInterface
     fun setWidgetData(json: String) {
-        WidgetStore.save(context, json)
+        WidgetStore.saveFromApp(context, json)
         WidgetRefresher.refreshAll(context)
     }
+
+    /** 위젯 창에서 체크한 것(대기 목록 JSON, 가져가면 비움) */
+    @JavascriptInterface
+    fun takeWidgetActions(): String = WidgetStore.takeActions(context)
+
+    /** 위젯 창의 [앱에서 열기]로 온 날짜 (한 번만) */
+    @JavascriptInterface
+    fun takeOpenDate(): String = activity.takeOpenDate()
 
     /** 사진 고르기 → 결과는 window.__onImage(data URL, 취소면 '', 실패면 null) */
     @JavascriptInterface

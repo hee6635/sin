@@ -252,6 +252,18 @@ class MainActivity : ComponentActivity() {
         i.removeExtra("type")
     }
 
+    // 위젯 창의 [앱에서 열기]로 열렸을 때 (날짜). 화면이 준비되면 웹이 가져감
+    private var pendingOpenDate: String = ""
+
+    private fun readOpenDate(i: Intent?) {
+        val k = i?.getStringExtra("openDate") ?: return
+        if (k.isEmpty()) return
+        pendingOpenDate = k
+        i.removeExtra("openDate")
+    }
+
+    fun takeOpenDate(): String { val p = pendingOpenDate; pendingOpenDate = ""; return p }
+
     /** 웹이 시작할 때 가져가는 "알림을 눌러서 열림" 정보 (한 번만) */
     fun takePush(): String { val p = pendingPush; pendingPush = ""; return p }
 
@@ -261,8 +273,10 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         readPush(intent)
+        readOpenDate(intent)
         val p = takePush()
         if (p.isNotEmpty()) js("window.__onPush&&window.__onPush($p)")
+        if (pendingOpenDate.isNotEmpty()) js("window.__widgetSync&&window.__widgetSync()")
     }
 
     // ---------- 구글 로그인 (가족방을 구글 계정에 묶어 두기 · 새 폰에서 찾기) ----------
@@ -314,6 +328,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         readPush(intent)
+        readOpenDate(intent)
         initPush()
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
