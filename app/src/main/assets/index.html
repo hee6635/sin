@@ -1619,7 +1619,8 @@ function widgetJson(){
     const rest=!pers&&sh!==''&&sh!==NONE_K&&isRest(sh);
     const stk=stampsOn(k).slice(0,4).map(x=>x.s.kind==='pill'?{p:1,c:cssHex(x.v&&x.v.col)||'#7e57c2',n:x.n,N:x.v.N}:(()=>{const e=x.s.emoji;if(isPhoto(e)){const id=e.slice(1),src=(S.icons||{})[id];if(typeof src==='string'&&src.length<30000){ic[id]=src;return {i:id,n:x.n,N:x.v.N};}}return {e:icoTxt(e,'⭐'),n:x.n,N:x.v.N};})());
     const vm=visibleMemos(k),m1=vm.find(x=>x.shared)||vm[0],bd=boardOnDate(k)[0],dd=ddayHits(k)[0];
-    const ml=[];vm.filter(x=>x.shared).concat(vm.filter(x=>!x.shared)).forEach(x=>ml.push(firstLine(x.text)));boardOnDate(k).forEach(n=>ml.push(piLabel(n)));ddayHits(k).forEach(x=>ml.push(x.name));
+    const wm=t=>linkParts(firstLine(t)).map(q=>q.u?'\u0001링크\u0002':q.t).join('');   // 주소는 앱처럼 "링크"(위젯이 파랗게 그림)
+    const ml=[];vm.filter(x=>x.shared).concat(vm.filter(x=>!x.shared)).forEach(x=>ml.push(wm(x.text)));boardOnDate(k).forEach(n=>ml.push(wm(piLabel(n))));ddayHits(k).forEach(x=>ml.push(x.name));
     const memo=m1?firstLine(m1.text):bd?piLabel(bd):dd?dd.name:'';
     days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40))});
   }
@@ -2143,13 +2144,13 @@ function calPanel(y,m){
 // (시험) 두 자리 날짜 + 스티커 둘이어도 공휴일 이름 한 글자가 옆에 들어가도록 스티커를 딱 필요한 만큼만 줄여요 (달 전체 같은 크기 · 최소 9px)
 function fitStz(root){
   const rt=document.documentElement;rt.style.removeProperty('--stz');
-  const stps=[...(root||document).querySelectorAll('.cell .dn>.stp')].filter(stp=>stp.parentNode.querySelector('.h1'));
+  const stps=[...(root||document).querySelectorAll('.cell .dn>.stp')];   // 공휴일 이름이 없는 칸도 포함: 두 자리 날짜 + 스티커 둘이 같은 줄에 들어가도록 달 전체 크기를 맞춤
   if(!stps.length)return;
   const probe=()=>{const e=document.createElement('i');e.style.cssText='position:absolute;visibility:hidden;width:var(--stz)';document.body.appendChild(e);const w=e.getBoundingClientRect().width;e.remove();return w;};
   const measure=()=>{let need=0;stps.forEach(stp=>{
-    const dn=stp.parentNode,h1=dn.querySelector('.h1'),t=h1.textContent;h1.textContent=h1.dataset.o||t;
+    const dn=stp.parentNode,h1=dn.querySelector('.h1'),t=h1?h1.textContent:'';if(h1)h1.textContent=h1.dataset.o||t;
     const r=dn.getBoundingClientRect(),padR=parseFloat(getComputedStyle(dn).paddingRight)||0,last=dn.lastElementChild.getBoundingClientRect();
-    h1.textContent=t;
+    if(h1)h1.textContent=t;
     const ov=r.width>0?last.right-(r.right-padR):0;
     if(ov>.5)need=Math.max(need,ov/Math.max(1,stp.children.length));
   });return need;};
@@ -4351,6 +4352,7 @@ window.__onTone=o=>{
 /* 설정 목록 아이콘: 이모티콘 대신 같은 굵기 · 같은 색(보라) 선 아이콘 */
 const LINE_ICON={'🌓':'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>','▬':'<rect x="3" y="9" width="18" height="6" rx="3"/>','🔗':'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>','🔁':'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>','🕐':'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>','👥':'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>','🏢':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>','💊':'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>','📊':'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>','👪':'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>','👁':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>','🎨':'<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>','🖼':'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>','☁️':'<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>','✉️':'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>','🔒':'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>','🗑':'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>','ℹ️':'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>','🔤':'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>'};
 LINE_ICON['▣']='<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>';
+Object.assign(LINE_ICON,{'📅':'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>','📝':'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>','🧩':'<path d="M10 4a2 2 0 1 1 4 0v2h4v4h-2a2 2 0 1 0 0 4h2v6h-5v-2a2 2 0 1 0-4 0v2H5v-5h2a2 2 0 1 0 0-4H5V6h5z"/>'});
 const lineIcon=e=>LINE_ICON[e]?`<svg class="li" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LINE_ICON[e]}</svg>`:e;
 function renderMore(){
   const guest=role()==='guest';

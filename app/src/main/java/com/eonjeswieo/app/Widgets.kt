@@ -117,15 +117,15 @@ class TodayWidget2Provider : AppWidgetProvider() {
  * 날짜(+공휴일 이름) → 근무 동그라미 → 스티커 → 메모 한 줄.
  */
 object WidgetRenderer {
-    private class Pal(val bg: Int, val fg: Int, val sub: Int, val pill: Int, val sun: Int, val sat: Int, val line: Int)
+    private class Pal(val bg: Int, val fg: Int, val sub: Int, val pill: Int, val sun: Int, val sat: Int, val line: Int, val link: Int)
 
     private val LIGHT = Pal(
         0xFFFFFFFF.toInt(), 0xFF1F2328.toInt(), 0xFF8A919A.toInt(), 0xFFEAECEF.toInt(),
-        0xFFD6334A.toInt(), 0xFF3B6FD6.toInt(), 0xFFE3E5E8.toInt()
+        0xFFD6334A.toInt(), 0xFF3B6FD6.toInt(), 0xFFE3E5E8.toInt(), 0xFF2F6FDE.toInt()
     )
     private val DARK = Pal(
         0xFF23282E.toInt(), 0xFFF2F4F7.toInt(), 0xFF9AA3AD.toInt(), 0xFF39414A.toInt(),
-        0xFFFF6B7F.toInt(), 0xFF7BA2FF.toInt(), 0xFF3A424B.toInt()
+        0xFFFF6B7F.toInt(), 0xFF7BA2FF.toInt(), 0xFF3A424B.toInt(), 0xFF7BA2FF.toInt()
     )
     private val iconCache = HashMap<String, Bitmap?>()
     private var dens = 3f   // 화면 밀도 (dp 계산용)
@@ -397,7 +397,7 @@ object WidgetRenderer {
             paint.textAlign = Paint.Align.LEFT
             paint.color = pal.fg
             paint.textSize = Math.min(ph * 0.72f, cw * 0.11f)
-            cv.drawText(TextUtils.ellipsize(memos[i], paint, cw - pad * 2.6f, TextUtils.TruncateAt.END).toString(), x0 + pad * 1.4f, py + ph * 0.72f, paint)
+            drawRich(cv, memos[i], x0 + pad * 1.4f, py + ph * 0.72f, cw - pad * 2.6f, paint, pal.fg, pal.link)
         }
 
         // 근무 동그라미: 위(날짜·스티커)와 아래(메모) 사이 한가운데
@@ -428,6 +428,45 @@ object WidgetRenderer {
                 cv.drawCircle(x0 + pad * 1.6f, cyc, 3.2f * dens, dp)
             }
         }
+    }
+
+    /** 메모 한 줄: \u0001 ~ \u0002 사이(앱의 "링크")는 파랗게 + 밑줄, 폭을 넘으면 … 로 줄임 */
+    private fun drawRich(cv: Canvas, text: String, x: Float, y: Float, maxW: Float, paint: TextPaint, fg: Int, link: Int) {
+        val parts = ArrayList<Pair<String, Boolean>>()
+        var cur = StringBuilder()
+        var inLink = false
+        for (ch in text) {
+            if (ch == '\u0001') {
+                if (cur.isNotEmpty()) parts.add(Pair(cur.toString(), false))
+                cur = StringBuilder()
+                inLink = true
+            } else if (ch == '\u0002') {
+                if (cur.isNotEmpty()) parts.add(Pair(cur.toString(), true))
+                cur = StringBuilder()
+                inLink = false
+            } else {
+                cur.append(ch)
+            }
+        }
+        if (cur.isNotEmpty()) parts.add(Pair(cur.toString(), inLink))
+        var cx = x
+        val limit = x + maxW
+        for (part in parts) {
+            paint.color = if (part.second) link else fg
+            paint.isUnderlineText = part.second
+            val room = limit - cx
+            if (room <= 0f) break
+            val w = paint.measureText(part.first)
+            if (w <= room) {
+                cv.drawText(part.first, cx, y, paint)
+                cx += w
+            } else {
+                cv.drawText(TextUtils.ellipsize(part.first, paint, room, TextUtils.TruncateAt.END).toString(), cx, y, paint)
+                break
+            }
+        }
+        paint.isUnderlineText = false
+        paint.color = fg
     }
 
     /** 스티커 하나 (사진 · 이모티콘 · 알약). 안 한 것은 연하게 */
