@@ -2349,7 +2349,9 @@ function timesOf(k){
 }
 const timesCustom=k=>Object.keys((S.shiftTimes||{})[k]||{}).length>0;
 const workTypes=()=>(S.types||[]).filter(t=>!t.rest);
-const ST_DEF={commute:['🚗','출근 중'],work:['🏭','근무 중'],meal:['🍱','점심 시간'],night:['🍗','야식 시간'],brk:['☕','쉬는 시간'],back:['🚗','퇴근 중'],home:['🏠','집에 왔어요'],sleep:['😴','자는 중'],rest:['🙂','쉬는 중']};
+const ST_DEF={commute:['🚗','출근 중'],work:['🏭','근무 중'],meal:['🍱','점심 시간'],night:['🍗','야식 시간'],brk:['☕','쉬는 시간'],back:['🚗','퇴근 중'],home:['🏠','집에 왔어요'],sleep:['😴','자는 중'],rest:['🙂','쉬는 중'],end:['🏁','근무 끝']};
+const ROW_DEF={commute:'집에서 나서기',work:'근무 시작',end:'근무 끝',home:'집 도착',sleep:'수면'};   // 근무 시간 화면 줄 이름 (바꾸면 labels[key].n)
+const rowName=key=>((S.status.labels||{})[key]||{}).n||ROW_DEF[key];
 function stLabel(key){const c=(S.status.labels||{})[key]||{};const d=ST_DEF[key];return {e:c.e||(key==='work'?S.status.work||d[0]:d[0]),t:c.t||d[1]};}
 // 한 근무날의 시각들(밀리초)
 function dayPlan(d,k){
@@ -2452,13 +2454,13 @@ function openTimesPage(){
   // 줄은 시간 순서대로: 근무 시작을 기준으로 몇 분 뒤인지 (밤을 넘어가도 맞게). 점심 · 쉬는 시간은 그 사이에 끼워 넣음
   const s0=tm2m(t.start),after=v=>((tm2m(v)-s0)%1440+1440)%1440,endK=after(t.end)||1440;
   const rows=[
-    [-1,`<div class="prow"><div class="pl2">${L('commute')} 집에서 나서기</div>${tin('tt_leave',t.leave,ed('leave'))}</div>`],
-    [0,`<div class="prow"><div class="pl2">${L('work')} 근무 시작</div>${tin('tt_start',t.start,ed('start'))}</div>`],
+    [-1,`<div class="prow"><div class="pl2 tt-lb" data-act="row-edit" data-k="commute">${L('commute')} ${esc(rowName('commute'))}<small>✏️ 바꾸기</small></div>${tin('tt_leave',t.leave,ed('leave'))}</div>`],
+    [0,`<div class="prow"><div class="pl2 tt-lb" data-act="row-edit" data-k="work">${L('work')} ${esc(rowName('work'))}<small>✏️ 바꾸기</small></div>${tin('tt_start',t.start,ed('start'))}</div>`],
     [after(t.meal.from)+.1,`<div class="prow inw"><div class="pl2 tt-lb" data-act="tt-icon" data-i="m">${ico(ml.icon)} ${esc(ml.name)}<small>✏️ 바꾸기</small></div>${t.meal.on?`${tin('tt_mf',t.meal.from,c.meal?'ed':'')}<span class="tsep">~</span>${tin('tt_mt',t.meal.to,c.meal?'ed':'')}`:'<span class="muted" style="font-size:13px">없음</span>'}<label class="sw sm"><input type="checkbox" id="tt_mon" ${t.meal.on?'checked':''}><i></i></label></div>`],
     ...t.breaks.map((b,i)=>[after(b.from)+.2+i/1000,`<div class="prow inw"><div class="pl2 tt-lb" data-act="tt-icon" data-i="${i}">${ico(b.icon||'☕')} ${esc(b.name||'쉬는 시간')}<small>✏️ 바꾸기</small></div>${tin('tt_bf'+i,b.from,'ed')}<span class="tsep">~</span>${tin('tt_bt'+i,b.to,'ed')}<button class="xbtn" data-act="tt-bdel" data-i="${i}">✕</button></div>`]),
-    [endK,`<div class="prow"><div class="pl2">🏁 근무 끝${tm2m(t.end)<=tm2m(t.start)?'<small>다음 날</small>':''}</div>${tin('tt_end',t.end,ed('end'))}</div>`],
-    [endK+.5,`<div class="prow"><div class="pl2">${L('home')} 집 도착</div>${tin('tt_home',t.home,ed('home'))}</div>`],
-    [endK+1,`<div class="prow"><div class="pl2">${L('sleep')} 수면<small>가족에게 "깨우지 마세요"</small></div>${t.sleep.on?`${tin('tt_sf',t.sleep.from,c.sleep?'ed':'')}<span class="tsep">~</span>${tin('tt_st',t.sleep.to,c.sleep?'ed':'')}`:''}<label class="sw sm"><input type="checkbox" id="tt_son" ${t.sleep.on?'checked':''}><i></i></label></div>`]
+    [endK,`<div class="prow"><div class="pl2 tt-lb" data-act="row-edit" data-k="end">${L('end')} ${esc(rowName('end'))}<small>${tm2m(t.end)<=tm2m(t.start)?'다음 날 · ':''}✏️ 바꾸기</small></div>${tin('tt_end',t.end,ed('end'))}</div>`],
+    [endK+.5,`<div class="prow"><div class="pl2 tt-lb" data-act="row-edit" data-k="home">${L('home')} ${esc(rowName('home'))}<small>✏️ 바꾸기</small></div>${tin('tt_home',t.home,ed('home'))}</div>`],
+    [endK+1,`<div class="prow"><div class="pl2 tt-lb" data-act="row-edit" data-k="sleep">${L('sleep')} ${esc(rowName('sleep'))}<small>✏️ 바꾸기</small></div>${t.sleep.on?`${tin('tt_sf',t.sleep.from,c.sleep?'ed':'')}<span class="tsep">~</span>${tin('tt_st',t.sleep.to,c.sleep?'ed':'')}`:''}<label class="sw sm"><input type="checkbox" id="tt_son" ${t.sleep.on?'checked':''}><i></i></label></div>`]
   ].sort((a,b)=>a[0]-b[0]);
   openPage(`
     ${pageHead('근무 시간 · 상태')}
@@ -2561,8 +2563,15 @@ function setWork(e,name){
 function openStatusEdit(key){
   const l=stLabel(key);
   openIcn({title:'이모티콘 · 문구 바꾸기',sub:l.t,icon:l.e,name:l.t,maxName:16,cats:statCats(),
-    onSave:(e,n)=>{S.status.labels[key]={e,t:n};save();if(pageMode==='status')openStatusPage();else if(pageMode==='times')openTimesPage();render();},
-    onReset:()=>{delete S.status.labels[key];save();if(pageMode==='status')openStatusPage();else if(pageMode==='times')openTimesPage();render();}});
+    onSave:(e,n)=>{S.status.labels[key]=Object.assign({},S.status.labels[key],{e,t:n});save();if(pageMode==='status')openStatusPage();else if(pageMode==='times')openTimesPage();render();},
+    onReset:()=>{const c=S.status.labels[key];if(c){delete c.e;delete c.t;if(!c.n)delete S.status.labels[key];}save();if(pageMode==='status')openStatusPage();else if(pageMode==='times')openTimesPage();render();}});
+}
+// 근무 시간 화면 줄(나서기 · 근무 시작 · 근무 끝 · 집 도착 · 수면): 아이콘(내 상태 아이콘과 같이 씀) + 줄 이름
+function openRowEdit(key){
+  const l=stLabel(key);
+  openIcn({title:'아이콘 · 이름 바꾸기',sub:rowName(key),icon:l.e,name:rowName(key),maxName:12,placeholder:'이름 (예: 집에서 출발)',cats:statCats(),
+    onSave:(e,n)=>{const c=S.status.labels[key]||{};if(e)c.e=e;c.n=(n||'').trim()===ROW_DEF[key]?'':(n||'').trim();if(!c.e&&!c.t&&!c.n)delete S.status.labels[key];else S.status.labels[key]=c;save();if(pageMode==='times')openTimesPage();render();},
+    onReset:()=>{const c=S.status.labels[key];if(c){delete c.e;delete c.n;if(!c.t)delete S.status.labels[key];}save();if(pageMode==='times')openTimesPage();render();}});
 }
 
 /* ================= 스티커 (💊 약 · 🏃 운동) ================= */
@@ -5691,6 +5700,7 @@ document.addEventListener('click',e=>{
     case 'tt-tab':timesTab=t.dataset.k;openTimesPage();break;
     case 'tt-reset':if(confirm('기본값(대략)으로 되돌릴까요?')){delete S.shiftTimes[timesTab];save();openTimesPage();}break;
     case 'tt-icon':openTtIcon(t.dataset.i);break;
+    case 'row-edit':openRowEdit(t.dataset.k);break;
     case 'tt-badd':{const b=timesOf(timesTab).breaks.slice();b.push({from:'15:00',to:'15:30'});ttSet('breaks',b);break;}
     case 'tt-bdel':{const b=timesOf(timesTab).breaks.slice();b.splice(+t.dataset.i,1);ttSet('breaks',b);break;}
     case 'st-work-open':openWorkPick();break;
