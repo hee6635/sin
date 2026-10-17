@@ -18,3 +18,14 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  const p2=await boot(b,{...base},{touch:true});
  T('옛 데이터로 켜짐 · 오류 없음',p2.errs.length===0,p2.errs.join('|'));
  console.log(p.errs);T.sum();await b.close();})();
+// 사진 스티커: 그림이 데이터에 같이 들어가는지
+(async()=>{const b=await chromium.launch();const T=mkT();
+ const img='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=';
+ const st={...base,icons:{p1:img},stamps:{defs:[{id:'zz1',kind:'mark',emoji:'@p1',name:'사진',times:1,rep:'daily',days:[],dates:[],skip:[],ats:[]}],log:{},snap:{},v3:1,v4:1,lastAt:[]}};
+ const p=await boot(b,st,{touch:true,w:384});
+ await p.evaluate(()=>{window.__wg=[];window.AndroidBridge.setWidgetData=j=>window.__wg.push(JSON.parse(j));});
+ await p.click('#nav [data-tab="set"]');await p.waitForTimeout(200);
+ await p.evaluate(()=>document.querySelector('[data-act="memolines"][data-v="4"]').click());await p.waitForTimeout(1000);
+ const w=await p.evaluate(()=>window.__wg[window.__wg.length-1]);
+ T('사진 스티커는 id로 가고 그림은 ic 에 한 번만',!!w&&Object.keys(w.ic||{}).join()==='p1'&&w.days[0].stk.some(x=>x.i==='p1')&&!JSON.stringify(w.days).includes('base64'),JSON.stringify(w).slice(0,260));
+ T.sum();await b.close();})();

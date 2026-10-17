@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -18,6 +19,7 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.text.TextPaint
 import android.text.TextUtils
+import android.util.Base64
 import android.widget.RemoteViews
 import org.json.JSONArray
 import org.json.JSONObject
@@ -125,6 +127,27 @@ object WidgetRenderer {
         0xFF23282E.toInt(), 0xFFF2F4F7.toInt(), 0xFF9AA3AD.toInt(), 0xFF39414A.toInt(),
         0xFFFF6B7F.toInt(), 0xFF7BA2FF.toInt(), 0xFF3A424B.toInt()
     )
+    private val iconCache = HashMap<String, Bitmap?>()
+
+    /** 사진 스티커: 앱이 data URL(base64)로 보내 준 작은 그림을 비트맵으로 (한 번 풀어서 기억) */
+    private fun iconBitmap(icons: JSONObject?, id: String): Bitmap? {
+        val src = icons?.optString(id, "") ?: ""
+        if (src.isEmpty()) return null
+        val key = id + ":" + src.length
+        if (iconCache.containsKey(key)) return iconCache[key]
+        var bmp: Bitmap? = null
+        try {
+            val b64 = src.substringAfter(",", "")
+            val bytes = Base64.decode(b64, Base64.DEFAULT)
+            bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        } catch (e: Exception) {
+            bmp = null
+        }
+        if (iconCache.size > 40) iconCache.clear()
+        iconCache[key] = bmp
+        return bmp
+    }
+
     private val DOW = arrayOf("일", "월", "화", "수", "목", "금", "토")
 
     private fun dateKey(cal: Calendar): String =
@@ -209,6 +232,7 @@ object WidgetRenderer {
         val r = Math.min(w, h) * 0.12f
         cv.drawRoundRect(RectF(0f, 0f, w, h), r, r, bgPaint)
 
+        val icons = data?.optJSONObject("ic")
         val today = Calendar.getInstance()
         val tom = Calendar.getInstance()
         tom.add(Calendar.DAY_OF_YEAR, 1)
@@ -222,14 +246,14 @@ object WidgetRenderer {
             return
         }
         if (count == 1) {
-            drawCell(cv, d0, 0f, 0f, w, h, null, pal)
+            drawCell(cv, d0, 0f, 0f, w, h, null, pal, icons)
         } else {
             val alarm = nextAlarmText(ctx)
             val bottom = if (alarm.isEmpty()) 0f else h * 0.13f
             val ch = h - bottom
             val half = w / 2
-            drawCell(cv, d0, 0f, 0f, half, ch, "오늘", pal)
-            drawCell(cv, findDay(data, dateKey(tom)), half, 0f, half, ch, "내일", pal)
+            drawCell(cv, d0, 0f, 0f, half, ch, "오늘", pal, icons)
+            drawCell(cv, findDay(data, dateKey(tom)), half, 0f, half, ch, "내일", pal, icons)
             val line = Paint(Paint.ANTI_ALIAS_FLAG)
             line.color = pal.line
             line.strokeWidth = 2f
@@ -245,7 +269,7 @@ object WidgetRenderer {
     }
 
     /** 한 날짜를 칸 하나(x0,y0,cw,ch)에 그린다 */
-    private fun drawCell(cv: Canvas, d: JSONObject?, x0: Float, y0: Float, cw: Float, ch: Float, label: String?, pal: Pal) {
+    private fun drawCell(cv: Canvas, d: JSONObject?, x0: Float, y0: Float, cw: Float, ch: Float, label: String?, pal: Pal, icons: JSONObject?) {
         if (d == null) return
         val cx = x0 + cw / 2
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
@@ -301,7 +325,13 @@ object WidgetRenderer {
             for (i in 0 until n) {
                 val s = stk.optJSONObject(i) ?: continue
                 val done = s.optInt("n", 0) > 0
-                if (s.optInt("p", 0) == 1) {
+                val photoId = s.optString("i", "")
+                val photo = if (photoId.isNotEmpty()) iconBitmap(icons, photoId) else null
+                if (photo != null) {
+                    val ip = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+                    ip.alpha = if (done) 255 else 100
+                    cv.drawBitmap(photo, null, RectF(sx, baseY - sz * 0.9f, sx + sz, baseY + sz * 0.1f), ip)
+                } else if (s.optInt("p", 0) == 1) {
                     val pp = Paint(Paint.ANTI_ALIAS_FLAG)
                     pp.color = parseColor(s.optString("c", ""), 0xFF7E57C2.toInt())
                     pp.alpha = if (done) 255 else 90

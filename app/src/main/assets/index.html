@@ -1612,17 +1612,17 @@ function cssHex(v){   // var(--day) 같은 CSS 색을 #rrggbb 로 (위젯은 CSS
   }catch(e){return '';}
 }
 function widgetJson(){
-  const t0=new Date(),days=[];
+  const t0=new Date(),days=[],ic={};
   for(let i=0;i<14;i++){
     const d=addDays(t0,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),pers=persOn(k);
     const c=(pers||sh===''||sh===NONE_K)?null:tColors(typeOf(sh));
     const rest=!pers&&sh!==''&&sh!==NONE_K&&isRest(sh);
-    const stk=stampsOn(k).slice(0,4).map(x=>x.s.kind==='pill'?{p:1,c:cssHex(x.v&&x.v.col)||'#7e57c2',n:x.n,N:x.v.N}:{e:icoTxt(x.s.emoji,'⭐'),n:x.n,N:x.v.N});
+    const stk=stampsOn(k).slice(0,4).map(x=>x.s.kind==='pill'?{p:1,c:cssHex(x.v&&x.v.col)||'#7e57c2',n:x.n,N:x.v.N}:(()=>{const e=x.s.emoji;if(isPhoto(e)){const id=e.slice(1),src=(S.icons||{})[id];if(typeof src==='string'&&src.length<30000){ic[id]=src;return {i:id,n:x.n,N:x.v.N};}}return {e:icoTxt(e,'⭐'),n:x.n,N:x.v.N};})());
     const vm=visibleMemos(k),m1=vm.find(x=>x.shared)||vm[0],bd=boardOnDate(k)[0],dd=ddayHits(k)[0];
     const memo=m1?firstLine(m1.text):bd?piLabel(bd):dd?dd.name:'';
     days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),hol:hol||'',t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',stk,memo:String(memo||'').slice(0,40)});
   }
-  return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,days});
+  return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,days,ic});
 }
 function pushWidgetToNative(){
   if(!(window.AndroidBridge&&typeof window.AndroidBridge.setWidgetData==='function'))return;
