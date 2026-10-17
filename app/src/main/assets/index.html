@@ -1484,7 +1484,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.personal=!!s.personal;s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},o&&o.memoColors);
   s.drive=Object.assign(defaults().drive,o&&o.drive);
@@ -1739,7 +1739,11 @@ const patShift=d=>{
 const restKey=()=>((S.types||[]).find(t=>t.rest)||{k:'휴'}).k;
 const holAdj=(d,b)=>S.holRest&&!isRest(b)&&holName(fmt(d))?restKey():b;
 const baseShift=d=>holAdj(d,patShift(d));
-const shiftOf=d=>S.overrides[fmt(d)]||baseShift(d);
+/* 개인 캘린더 기간 S.pers=[{f:시작 날, t:끝나는 날(그날부터 다시 근무, 비면 계속)}]: 그 기간은 근무가 없는 날(NONE_K)로 셈 */
+const persOn=k=>(S.pers||[]).some(p=>p.f<=k&&(!p.t||k<p.t));
+const persAll=()=>(S.pers||[]).some(p=>p.f<='1900-01-01'&&!p.t);
+const persSync=()=>{S.personal=persOn(fmt(new Date()));};
+const shiftOf=d=>{const k=fmt(d);return persOn(k)?NONE_K:(S.overrides[k]||baseShift(d));};
 
 /* S.memos[날짜] = [{id,text,shared}, ...]  하루에 메모 여러 개 */
 const memosOf=k=>Array.isArray(S.memos[k])?S.memos[k]:[];
@@ -1999,7 +2003,7 @@ function calSub(){
 let lastW=innerWidth;
 window.addEventListener('resize',()=>{const n=memoLines(),w=innerWidth;if((n!==lastLines||w!==lastW)&&document.querySelector('.grid')){lastW=w;render();}else lastW=w;});
 function render(){
-  expireOnceAlarms();
+  persSync();expireOnceAlarms();
   const top=$('#top'),v=$('#view');
   const navTab=tab==='colleague'?'set':tab;
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===navTab));
@@ -2056,7 +2060,7 @@ function holTagName(k,hol){
 /* ================= 메인 달력 ================= */
 // 달력 칸의 근무 동그라미(+ 이어지는 띠). pop 이면 "톡" 튀어나오는 효과
 function bwrapHtml(d,k,pop){
-  if(S.personal)return '';
+  if(persOn(k))return '';
   const sh=shiftOf(d),hol=holName(k),ov=S.overrides[k];
   if(sh==='')return '';
   const ps=shiftOf(addDays(d,-1)),ns=shiftOf(addDays(d,1));
@@ -2086,7 +2090,7 @@ function calPanel(y,m){
     // 설정 줄 수(기본 3 · 태블릿 +1). 넘치면 마지막 줄을 +N 으로
     if(pills.length>maxLines)pills.splice(maxLines-1,pills.length,`<div class="pl more">+${pills.length-maxLines+1}</div>`);
     // 날짜 줄: 숫자 · 스티커 · 공휴일 이름. 좁은 칸에서 스티커와 겹치면 이름은 빼기 (날짜 줄 색으로 이미 보임)
-    const stAll=sharing&&!shareStk?[]:stampsOn(k),st0=S.personal?[]:stAll;
+    const stAll=sharing&&!shareStk?[]:stampsOn(k),pers=persOn(k),st0=pers?[]:stAll;
     const hnHtml=hol?esc(shortHol(hol)):chI?ico(chI.emoji||'🏢')+(narrow?'':esc(ch)):'';
     // "공휴일엔 쉬어요"(상주): 쉬는 공휴일은 "휴" 자리에 공휴일 이름 (두 글자) → 날짜 줄엔 이름 안 씀
     const holTag=S.holRest&&hol&&isRest(sh)&&ov==null?holTagName(k,hol):'';
@@ -2095,9 +2099,9 @@ function calPanel(y,m){
     const showHn=!!hnHtml&&!holTag&&(hol?!st0.length:(!narrow||!st0.length||st0.length<2));
     const stRow=st0.slice(0,2),stMore=st0.slice(2);
 
-    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${S.personal?'pers':''} ${stMore.length?'m3':''} ${rcls}" data-act="day" data-k="${k}">
+    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${pers?'pers':''} ${stMore.length?'m3':''} ${rcls}" data-act="day" data-k="${k}">
       <i class="stz" data-act="stamp-dn" data-k="${k}"></i><div class="dn ${hol?'hol':ch?'chol':''} ${cls} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1" data-o="${esc(honeO)}">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIcon(x,0)).join('')}</span>`:''}${showHn?`<span class="hn ${shortHol(hol).length>3&&hol?'sm':''}">${hnHtml}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIcon(x,0)).join('')}</div>`:''}
-      <div class="bwrap">${S.personal?(stAll.length?`<div class="pstk n${stAll.length}">${stAll.slice(0,4).map(x=>stampIcon(x,0)).join('')}</div>`:''):bwrapHtml(d,k)}</div>
+      <div class="bwrap">${pers?(stAll.length?`<div class="pstk n${stAll.length}">${stAll.slice(0,4).map(x=>stampIcon(x,0)).join('')}</div>`:''):bwrapHtml(d,k)}</div>
       <div class="pill-wrap${pills.length>=maxLines?' full':''}">${pills.join('')}</div>
     </div>`;
   }
@@ -2600,7 +2604,7 @@ function stampPlanned(s,k){
   if(s.rep==='daily')on=true;
   else if(s.rep==='dow')on=(s.days||[]).includes(d.getDay());
   else if(s.rep==='month'){const md=s.mday||(s.from?parse(s.from).getDate():1);on=d.getDate()===Math.min(md,new Date(d.getFullYear(),d.getMonth()+1,0).getDate());}   // 31일 없는 달은 말일
-  else if(s.rep==='work'){const r=isRest(shiftOf(d));on=s.workMode==='work'?!r:r;}
+  else if(s.rep==='work'){if(!persOn(k)){const r=isRest(shiftOf(d));on=s.workMode==='work'?!r:r;}}
   if(on&&s.noHol&&(holName(k)||compHol(k)))on=false;
   if(on&&s.noWknd&&(d.getDay()===0||d.getDay()===6))on=false;
   return on;
@@ -2756,7 +2760,7 @@ function renderStampReg(){
     <div class="pg-cap">하루 몇 번</div>
     <div style="padding:0 16px"><div class="hseg big">${[1,2,3].map(n=>`<button class="${d.times===n?'on':''}" data-act="sr-times" data-v="${n}">${n}번</button>`).join('')}</div></div>
     <div class="pg-cap">얼마나</div>
-    <div style="padding:0 16px"><div class="hseg big five">${d.edit?seg('none','반복 없음'):seg('once','이날만')}${seg('dow','요일')}${seg('daily','매일')}${S.personal?'':seg('work','근무 맞춤')}${seg('month','매달')}</div>
+    <div style="padding:0 16px"><div class="hseg big five">${d.edit?seg('none','반복 없음'):seg('once','이날만')}${seg('dow','요일')}${seg('daily','매일')}${persAll()?'':seg('work','근무 맞춤')}${seg('month','매달')}</div>
     ${d.rep==='dow'?`<div class="sdays big">${[1,2,3,4,5,6,0].map(w=>`<button class="${d.days.includes(w)?'on':''}" data-act="sr-day" data-v="${w}">${DOW[w]}</button>`).join('')}</div>`:''}
     ${d.rep==='work'?`<div class="hseg big" style="margin-top:8px"><button class="${d.workMode==='rest'?'on':''}" data-act="sr-work" data-v="rest">휴무 날만</button><button class="${d.workMode==='work'?'on':''}" data-act="sr-work" data-v="work">근무 날만</button></div>`:''}
     ${d.rep==='month'?`<div class="hint" style="margin:8px 0 0;padding:0">매달 ${parse(d.from||d.k).getDate()}일 · 그 날이 없는 달은 말일</div>`:''}
@@ -3350,6 +3354,24 @@ function renderFamily(){
     ${fam.length&&ad('together')?`<div class="fsec">${t0.getMonth()+1}월에 남은 같이 쉬는 날</div>${chipHtml?`<div class="tg-row">${chipHtml}</div>`:'<div class="mempty">이번 달엔 남은 날이 없어요</div>'}`:''}
     ${reqHtml}
   </div>`;
+}
+/* ---- 개인 캘린더 "언제부터?" ---- */
+var persKind='on';
+function openPersPage(kind){
+  persKind=kind;const today=fmt(new Date());
+  const n=(S.stamps.defs||[]).filter(x=>x.rep==='work'&&!x.retired).length;
+  openPage(`${pageHead(kind==='on'?'개인 캘린더':'근무표 쓰기')}
+    <div class="pg-b"><div class="pg-sec" style="margin-top:12px"><div class="prow"><div class="pl2">${kind==='on'?'언제부터 개인 캘린더로 쓸까요?':'언제부터 근무표를 다시 쓸까요?'}</div>${tpick('persD',today,'','date')}</div></div>
+      <div class="hint" style="padding:10px 16px">${kind==='on'?'그 날 이전은 근무표 그대로예요 (달력 · 통계 · 수당). 그 날부터 근무 표시가 없어져요.':'그 날부터 근무표가 다시 보여요. 그 사이는 개인 캘린더로 남아요.'}${kind==='on'&&n?`<br>"근무 맞춤" 스티커 ${n}개는 개인 캘린더 기간에는 안 보여요.`:''}</div>
+      <div style="padding:6px 16px"><button class="btn" style="width:100%" data-act="pers-ok">확인</button></div></div>`,'pers');
+}
+function persApply(kind,d){
+  const L=(S.pers||[]).filter(p=>p.f<d).map(p=>({f:p.f,t:p.t}));   // 그 날 전에 시작한 기간만 남김
+  if(kind==='on'){const c=L.find(p=>!p.t||p.t>d);if(c)c.t='';else L.push({f:d,t:''});}
+  else L.forEach(p=>{if(!p.t||p.t>d)p.t=d;});
+  S.pers=L;
+  persSync();save();closePage();render();
+  toast(kind==='on'?(persOn(fmt(new Date()))?'개인 캘린더로 바꿨어요':`${md(d)}부터 개인 캘린더로 바뀌어요`):(S.myset?(persOn(fmt(new Date()))?`${md(d)}부터 근무표를 다시 써요`:'근무표를 다시 써요'):'달력 위 "내 근무표 만들기"로 시작해요'));
 }
 /* ---- 가족 설정 (가족 탭 ⚙️ · 설정 › 가족) ---- */
 function openFamSetPage(){
@@ -4061,7 +4083,7 @@ function openDay(k){
   const head=`
       <div class="dtop"><button data-act="close">‹ 달력</button></div>
       <div class="dfh"><button class="ib" data-act="day-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
-        <div class="dft"><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${S.personal?(hol?`<span class="hl">${esc(hol)}</span>`:''):esc(shiftLabel(c))}${hol&&!S.personal?` · <span class="hl">${esc(hol)}</span>`:''}${dd.map(x=>` · ${ico(x.emoji||'⭐')} ${esc(x.name)}`).join('')}</small></div>
+        <div class="dft"><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${persOn(k)?(hol?`<span class="hl">${esc(hol)}</span>`:''):esc(shiftLabel(c))}${hol&&!persOn(k)?` · <span class="hl">${esc(hol)}</span>`:''}${dd.map(x=>` · ${ico(x.emoji||'⭐')} ${esc(x.name)}`).join('')}</small></div>
         <button class="ib" data-act="day-go" data-k="${fmt(addDays(d,1))}" aria-label="다음날">›</button></div>
       <div class="dstrip" id="dstrip">${strip}</div>`;
   let topPart='';
@@ -4085,7 +4107,7 @@ function openDay(k){
     const quick=S.types.slice(0,quickN());if(!quick.some(x=>x.k===c)&&S.types.some(x=>x.k===c))quick.push(typeOf(c));
     const shiftBtns=quick.map(x=>`<button class="tchip ${c===x.k?'on':''}" data-act="setshift" data-s="${esc(x.k)}">
         ${badge(x.k,'tc')}<small>${esc(x.name)}</small>${ov&&x.k===base?'<i class="orig">원래</i>':''}</button>`).join('');
-    topPart=S.personal?`${warn}`:`${dayReqs.length?`<div class="lbl" style="color:var(--accent);margin-top:12px;">📩 이 날의 근무 요청</div>${reqHtml}`:''}
+    topPart=persOn(k)?`${warn}`:`${dayReqs.length?`<div class="lbl" style="color:var(--accent);margin-top:12px;">📩 이 날의 근무 요청</div>${reqHtml}`:''}
       <div class="sec">
         <div class="sec-t">근무타입<button class="paint-lk" data-act="paint-open" data-k="${esc(c)}">🖌 여러 날 칠하기</button></div>
         <div class="tchips">${shiftBtns}${S.types.length>quick.length?'<button class="tchip add" data-act="type-more"><span class="badge tc add">＋ 더보기</span></button>':''}</div>
@@ -4310,14 +4332,14 @@ function renderMore(){
   const cap=t=>`<div class="pg-cap">${t}</div>`;
   return `<div class="mlist" style="padding-bottom:20px">
     ${issues.length?`<div class="pg-sec">${item('⚠️','알람이 잘 울리게 (권한)','more-perm',`<span style="color:var(--danger)">${issues.length}개 꺼짐</span>`)}</div>`:''}
-    ${guest?'':cap(S.personal?'내 기록':'내 근무')}
+    ${guest?'':cap(persAll()?'내 기록':'내 근무')}
     ${guest?'':`<div class="pg-sec" style="margin-top:0">
-      ${S.personal?'':item('🔁','근무 패턴 · 조','more-pattern',S.noPat?(S.myset?'불규칙':'아직 안 만듦'):`${esc(S.patternName||'')} ${esc(myTeamLabel())}`)}
+      ${persAll()?'':item('🔁','근무 패턴 · 조','more-pattern',S.noPat?(S.myset?'불규칙':'아직 안 만듦'):`${esc(S.patternName||'')} ${esc(myTeamLabel())}`)}
       ${ad('status')&&!S.personal?item('🕐',`근무 시간 · 상태 <span class="${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'tagS':'tagA'}">${Object.keys(S.shiftTimes||{}).some(k=>timesCustom(k))?'직접':'대략'}</span>`,'more-times'):''}
       ${teamCount()>1&&ad('colleague')&&!S.personal?item('👥','동료 근무','go-colleague'):''}
       ${ad('comp')?item('🏢','휴무일 · 기념일','more-comp',`${(S.companyHols||[]).length}개`):''}
       ${item('💊','스티커','stk-board',`${slotDefs().length}개`)}
-      ${ad('stats')&&!S.personal?item('📊','근무 통계 · 수당','more-stats',`대근 ${daeDays(cur.y,cur.m)}일`):''}
+      ${ad('stats')&&!persAll()?item('📊','근무 통계 · 수당','more-stats',`대근 ${daeDays(cur.y,cur.m)}일`):''}
     </div>`}
     ${cap('가족')}
     <div class="pg-sec" style="margin-top:0">
@@ -4813,7 +4835,7 @@ function openBackupPage(){
     </div>`,'backup');
   if(linked&&driveFiles===null&&!driveBusy){driveBusy=true;window.AndroidBridge.driveList(true);}
 }
-const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
+const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','pers','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -5093,7 +5115,7 @@ function obApply(){
   }
   S.anchor=obAnchor();S.patOld=[];
   if(ob.entry!=='later'||!S.noPat)S.overrides={};   // 불규칙으로 날짜마다 넣어 둔 근무는 패턴을 만들어도 그대로
-  S.noPat=false;S.myset=true;S.personal=false;
+  S.noPat=false;S.myset=true;S.personal=false;S.pers=[];
 }
 function obFinish(withAlarm){
   obApply();
@@ -5529,8 +5551,9 @@ document.addEventListener('click',e=>{
     case 'quickn':S.quickN=+t.dataset.v===4?4:+t.dataset.v===8?8:0;save();openPatternPage();break;
     case 'memolines':S.memoLines=+t.dataset.v===4?4:3;save();render();break;
     case 'weekstart':S.weekStart=+t.dataset.v===1?1:0;save();render();break;
-    case 'personal-on':if(!confirm('개인 캘린더로 바꿀까요?\n근무 표시 · 칠하기 · 통계 · 근무 요청이 숨겨져요. 근무표 데이터는 그대로 있어요.'))break;S.personal=true;save();if(pageMode)closePage();render();toast('개인 캘린더로 바꿨어요');break;
-    case 'personal-off':S.personal=false;save();render();toast(S.myset?'근무표를 다시 써요':'달력 위 "내 근무표 만들기"로 시작해요');break;
+    case 'personal-on':openPersPage('on');break;
+    case 'personal-off':openPersPage('off');break;
+    case 'pers-ok':{const d=($('#persD')||{}).value||fmt(new Date());persApply(persKind,d);break;}
     case 'more-comp':openCompPage();break;
     case 'more-times':openTimesPage();break;
     case 'more-stamps':closeSheet();openStampPage();break;
@@ -5727,7 +5750,7 @@ document.addEventListener('click',e=>{
     case 'ob-next':obNext();break;
     case 'ob-way':{const w=t.dataset.v;ob.way=w;if(w==='irregular'){obIrregular();if(ob&&ob.step==='way')ob.way='preset';}else obGo(w==='custom'?'len':'preset');break;}
     case 'ob-skip':obSkip();break;
-    case 'ob-personal':S.personal=true;obSkip();break;
+    case 'ob-personal':S.personal=true;S.pers=[{f:'1900-01-01',t:''}];obSkip();break;
     case 'ob-len':{const v=Number(t.dataset.v);ob.len=Math.max(2,Math.min(PAT_MAX,t.dataset.m==='set'?v:ob.len+v));renderOb();break;}
     case 'ob-rnone':{if(!ob)break;ob.rk=ob.rk===NONE_K?'휴':NONE_K;renderOb();break;}
     case 'ob-wadd':if(ob.wk.length<4){ob.wk.push(['오','상','당','교','출'].find(k=>!ob.wk.includes(k)&&k!==ob.rk)||'근');renderOb();}break;

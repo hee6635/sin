@@ -17,10 +17,13 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  T('근무 패턴 화면 맨 아래에 "개인 캘린더로 쓰기"',await p.evaluate(()=>!!document.querySelector('#page [data-act="personal-on"]')));
  p.once('dialog',d=>d.accept());
  await p.click('#page [data-act="personal-on"]');await p.waitForTimeout(400);
- T('바꾸면 패턴 화면은 닫힘',await p.evaluate(()=>!document.getElementById('page').classList.contains('open')));
+ T('누르면 "언제부터" 화면',await p.evaluate(()=>document.getElementById('page').innerText.includes('언제부터 개인 캘린더')));
+ await p.click('#page [data-act="pers-ok"]');await p.waitForTimeout(400);
+ T('확인하면 화면은 닫힘',await p.evaluate(()=>!document.getElementById('page').classList.contains('open')));
  T('개인 캘린더로 바뀜(근무표 데이터는 그대로)',await (async()=>{const s=await S();return s.personal===true&&s.pattern.length>=2;})());
  T('설정에 "근무표 쓰기"로 돌아갈 줄',await p.evaluate(()=>!!document.querySelector('#view [data-act="personal-off"]')&&!document.querySelector('#view [data-act="personal-on"]')));
  await p.click('[data-act="personal-off"]');await p.waitForTimeout(300);
+ await p.click('#page [data-act="pers-ok"]');await p.waitForTimeout(400);
  T('근무표 쓰기로 복귀',(await S()).personal===false);
  // 요청 카드 → 날짜
  await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);
