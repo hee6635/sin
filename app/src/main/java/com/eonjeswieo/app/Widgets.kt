@@ -128,6 +128,7 @@ object WidgetRenderer {
         0xFFFF6B7F.toInt(), 0xFF7BA2FF.toInt(), 0xFF3A424B.toInt()
     )
     private val iconCache = HashMap<String, Bitmap?>()
+    private var dens = 3f   // 화면 밀도 (dp 계산용)
 
     /** 사진 스티커: 앱이 data URL(base64)로 보내 준 작은 그림을 비트맵으로 (한 번 풀어서 기억) */
     private fun iconBitmap(icons: JSONObject?, id: String): Bitmap? {
@@ -164,6 +165,7 @@ object WidgetRenderer {
         try {
             val opts = mgr.getAppWidgetOptions(id)
             val density = ctx.resources.displayMetrics.density
+            dens = density
             val wDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, if (count == 1) 70 else 140)
             val hDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, if (count == 1) 70 else 110)
             var w = (wDp * density).toInt().coerceAtLeast(120)
@@ -247,31 +249,40 @@ object WidgetRenderer {
             return
         }
         if (count == 1) {
-            drawCell(cv, d0, 0f, 0f, w, h, null, pal, icons, memoMax)
+            drawCell(cv, d0, 0f, 0f, w, h, null, pal, icons, memoMax, false)
         } else {
             val alarm = nextAlarmText(ctx)
-            val bottom = if (alarm.isEmpty()) 0f else h * 0.13f
+            val bottom = if (alarm.isEmpty()) 0f else Math.max(h * 0.13f, 14f * dens)
             val ch = h - bottom
             val half = w / 2
-            drawCell(cv, d0, 0f, 0f, half, ch, "오늘", pal, icons, memoMax)
-            drawCell(cv, findDay(data, dateKey(tom)), half, 0f, half, ch, "내일", pal, icons, memoMax)
-            val line = Paint(Paint.ANTI_ALIAS_FLAG)
-            line.color = pal.line
-            line.strokeWidth = 2f
-            cv.drawLine(half, h * 0.08f, half, ch * 0.92f, line)
+            drawCell(cv, d0, 0f, 0f, half, ch, null, pal, icons, memoMax, true)
+            drawCell(cv, findDay(data, dateKey(tom)), half, 0f, half, ch, null, pal, icons, memoMax, false)
             if (alarm.isNotEmpty()) {
                 val p = TextPaint(Paint.ANTI_ALIAS_FLAG)
                 p.color = pal.sub
-                p.textSize = h * 0.075f
+                p.textSize = Math.min(bottom * 0.7f, 11f * dens)
                 p.textAlign = Paint.Align.CENTER
-                cv.drawText(TextUtils.ellipsize(alarm, p, w * 0.9f, TextUtils.TruncateAt.END).toString(), w / 2, h - h * 0.035f, p)
+                cv.drawText(TextUtils.ellipsize(alarm, p, w * 0.9f, TextUtils.TruncateAt.END).toString(), w / 2, h - bottom * 0.28f, p)
             }
         }
     }
 
     /** 한 날짜를 칸 하나(x0,y0,cw,ch)에 그린다: 앱 달력 칸과 같은 짜임 (날짜 + 스티커 한 줄 → 근무 동그라미 → 메모) */
-    private fun drawCell(cv: Canvas, d: JSONObject?, x0: Float, y0: Float, cw: Float, ch: Float, label: String?, pal: Pal, icons: JSONObject?, memoMax: Int) {
+    private fun drawCell(cv: Canvas, d: JSONObject?, x0: Float, y0: Float, cw: Float, ch: Float, label: String?, pal: Pal, icons: JSONObject?, memoMax: Int, isToday: Boolean) {
         if (d == null) return
+        if (isToday) {   // 달력의 오늘 칸처럼: 연한 초록 바탕 + 초록 테두리
+            val inset = 2f * dens
+            val box = RectF(x0 + inset, y0 + inset, x0 + cw - inset, y0 + ch - inset)
+            val night = pal === DARK
+            val f = Paint(Paint.ANTI_ALIAS_FLAG)
+            f.color = if (night) 0xFF1E3A31.toInt() else 0xFFE3F5EF.toInt()
+            cv.drawRoundRect(box, 8f * dens, 8f * dens, f)
+            val st = Paint(Paint.ANTI_ALIAS_FLAG)
+            st.style = Paint.Style.STROKE
+            st.strokeWidth = 2f * dens
+            st.color = 0xFF2A8C6F.toInt()
+            cv.drawRoundRect(box, 8f * dens, 8f * dens, st)
+        }
         val pad = cw * 0.06f
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
         val dow = d.optInt("w", 0).coerceIn(0, 6)
