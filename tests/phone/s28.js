@@ -29,7 +29,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  T('요일 보기 스위치(항상 보임)',await p.evaluate(()=>!!document.getElementById('patWeek')));
  T('끄면 안내 · 머리글 없음',await p.evaluate(()=>!document.querySelector('[data-act="pweek-fit"]')&&!document.querySelector('.pgdow')));
  await p.evaluate(()=>{document.getElementById('patWeek').click();});await p.waitForTimeout(300);
- T('4일 패턴에서 켜면 맞추기 안내 · 머리글 없음',await p.evaluate(()=>!!document.querySelector('[data-act="pweek-fit"]')&&!document.querySelector('.pgdow')));
+ T('4일 패턴에서 켜도 칸이 그대로 · 7칸씩 · 줄이기 버튼',await p.evaluate(()=>!!document.querySelector('[data-act="pweek-fit"]')&&!!document.querySelector('.pgdow')&&document.querySelector('#pgrid').classList.contains('wk7')&&document.querySelectorAll('#pgrid .pc').length===4));
  T('켜면 저장',(await S()).patWeek===true);
  await p.click('[data-act="pweek-fit"]');await p.waitForTimeout(300);
  T('요일로 맞추기: 7칸',(await S()).pattern.length===7);
@@ -37,7 +37,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  const hd=await p.evaluate(()=>[...document.querySelectorAll('.pgdow span')].map(x=>x.textContent).join(''));
  T('머리글은 1번째 칸 시작 날 요일부터(2026-10-02=금)',hd==='금토일월화수목',hd);
  await p.click('[data-act="padd"]');await p.waitForTimeout(250);
- T('8칸이 되면 다시 안내',await p.evaluate(()=>!!document.querySelector('[data-act="pweek-fit"]')&&!document.querySelector('.pgdow')));
+ T('8칸이면 7칸씩 두 줄(하루도 안 사라짐)',await p.evaluate(()=>document.querySelectorAll('#pgrid .pc').length===8&&document.querySelector('#pgrid').classList.contains('wk7')));
  // 영문 3자
  await p.click('[data-act="type-pick-page"]');await p.waitForTimeout(300);
  await p.click('[data-act="type-new"]');await p.waitForTimeout(300);

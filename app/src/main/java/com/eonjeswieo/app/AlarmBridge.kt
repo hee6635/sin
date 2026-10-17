@@ -94,12 +94,6 @@ class AlarmBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun cleanTones(keepJson: String) = activity.cleanTones(keepJson)
 
-    /** (시험) 폰 달력 읽기 → window.__onCal(JSON) */
-    @JavascriptInterface
-    fun calendarRead() {
-        activity.runOnUiThread { activity.calendarRead() }
-    }
-
     /** 사진 고르기 → 결과는 window.__onImage(data URL, 취소면 '', 실패면 null) */
     @JavascriptInterface
     fun pickImage() {
