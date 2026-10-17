@@ -249,14 +249,20 @@ object WidgetRenderer {
             return
         }
         if (count == 1) {
-            drawCell(cv, d0, 0f, 0f, w, h, null, pal, icons, memoMax, false)
+            drawCell(cv, d0, 0f, 0f, w, h, null, pal, icons, memoMax, false, Float.NaN, Float.NaN)
         } else {
             val alarm = nextAlarmText(ctx)
             val bottom = if (alarm.isEmpty()) 0f else Math.max(h * 0.13f, 14f * dens)
             val ch = h - bottom
             val half = w / 2
-            drawCell(cv, d0, 0f, 0f, half, ch, null, pal, icons, memoMax, true)
-            drawCell(cv, findDay(data, dateKey(tom)), half, 0f, half, ch, null, pal, icons, memoMax, false)
+            val d1 = findDay(data, dateKey(tom))
+            // 두 칸의 근무 동그라미 높이를 맞추기 위해 위(날짜·스티커)와 아래(메모) 경계를 둘 중 더 많이 차지하는 쪽에 맞춤
+            val m0 = measure(d0, half, ch, memoMax)
+            val m1 = measure(d1, half, ch, memoMax)
+            val bt = Math.max(m0[0], m1[0])
+            val bb = Math.min(m0[1], m1[1])
+            drawCell(cv, d0, 0f, 0f, half, ch, null, pal, icons, memoMax, true, bt, bb)
+            drawCell(cv, d1, half, 0f, half, ch, null, pal, icons, memoMax, false, bt, bb)
             if (alarm.isNotEmpty()) {
                 val p = TextPaint(Paint.ANTI_ALIAS_FLAG)
                 p.color = pal.sub
@@ -267,8 +273,37 @@ object WidgetRenderer {
         }
     }
 
+    /** 칸 하나의 [날짜·스티커 줄이 끝나는 y, 메모가 시작하는 y] (그리기와 같은 계산) */
+    private fun measure(d: JSONObject?, cw: Float, ch: Float, memoMax: Int): FloatArray {
+        val rowH = Math.min(ch * 0.17f, cw * 0.2f)
+        val rowTop = ch * 0.04f
+        val sz = rowH * 0.85f
+        val gap = sz * 0.18f
+        val stk = d?.optJSONArray("stk")
+        val n = if (stk == null) 0 else Math.min(stk.length(), 4)
+        val cap = Math.max(1, Math.floor(((cw * 0.5f + gap) / (sz + gap)).toDouble()).toInt())
+        val n2 = n - Math.min(n, cap)
+        val hol = d?.optString("hol", "") ?: ""
+        var topEnd = rowTop + rowH
+        if (hol.isNotEmpty()) topEnd = rowTop + rowH * 1.55f else if (n2 > 0) topEnd = rowTop + rowH * 2.05f
+        topEnd += ch * 0.02f
+        var cnt = 0
+        val ms = d?.optJSONArray("ms")
+        if (ms != null) {
+            for (i in 0 until ms.length()) if (ms.optString(i, "").isNotEmpty()) cnt++
+        } else if ((d?.optString("memo", "") ?: "").isNotEmpty()) cnt = 1
+        val ph = Math.min(ch * 0.135f, cw * 0.19f)
+        val pg = ch * 0.012f
+        val bottom = ch * 0.96f
+        val room = bottom - topEnd - ch * 0.22f
+        val fit = Math.max(1, Math.floor(((room + pg) / (ph + pg)).toDouble()).toInt())
+        val ml = Math.min(cnt, Math.min(memoMax, fit))
+        val memoTop = if (ml > 0) bottom - (ml * ph + (ml - 1) * pg) else bottom
+        return floatArrayOf(topEnd, memoTop)
+    }
+
     /** 한 날짜를 칸 하나(x0,y0,cw,ch)에 그린다: 앱 달력 칸과 같은 짜임 (날짜 + 스티커 한 줄 → 근무 동그라미 → 메모) */
-    private fun drawCell(cv: Canvas, d: JSONObject?, x0: Float, y0: Float, cw: Float, ch: Float, label: String?, pal: Pal, icons: JSONObject?, memoMax: Int, isToday: Boolean) {
+    private fun drawCell(cv: Canvas, d: JSONObject?, x0: Float, y0: Float, cw: Float, ch: Float, label: String?, pal: Pal, icons: JSONObject?, memoMax: Int, isToday: Boolean, bandTop: Float, bandBottom: Float) {
         if (d == null) return
         if (isToday) {   // 달력의 오늘 칸처럼: 연한 초록 바탕 + 초록 테두리
             val inset = 2f * dens
@@ -368,10 +403,12 @@ object WidgetRenderer {
         // 근무 동그라미: 위(날짜·스티커)와 아래(메모) 사이 한가운데
         val t = d.optString("t", "")
         if (t.isNotEmpty()) {
-            val free = memoTop - topEnd
+            val bt = if (bandTop.isNaN()) topEnd else Math.max(topEnd, bandTop + y0)
+            val bb = if (bandBottom.isNaN()) memoTop else Math.min(memoTop, bandBottom + y0)
+            val free = bb - bt
             val rad = Math.max(cw * 0.08f, Math.min(cw * 0.21f, Math.min(free * 0.42f, ch * 0.17f)))
             val cx = x0 + cw / 2
-            val cyc = topEnd + free / 2
+            val cyc = bt + free / 2
             val bg = d.optString("bg", "")
             paint.typeface = Typeface.DEFAULT_BOLD
             paint.textAlign = Paint.Align.CENTER
@@ -385,6 +422,11 @@ object WidgetRenderer {
                 paint.color = 0xFFE5484D.toInt()   // 휴무: 색 없이 붉은 글자
             }
             cv.drawText(t, cx, cyc + rad * 0.36f, paint)
+            if (d.optBoolean("ov", false)) {   // 근무를 바꾼 날: 왼쪽에 붉은 점
+                val dp = Paint(Paint.ANTI_ALIAS_FLAG)
+                dp.color = 0xFFE5322D.toInt()
+                cv.drawCircle(x0 + pad * 1.6f, cyc, 3.2f * dens, dp)
+            }
         }
     }
 
