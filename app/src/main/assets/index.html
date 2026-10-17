@@ -889,6 +889,7 @@ textarea{resize:none;min-height:84px}
 .fn i{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:9.5px;color:#fff;font-weight:800;flex:none}
 .fc{height:36px;display:grid;place-items:center}
 .fc .badge.sm{width:26px;height:26px;font-size:11.5px}
+.fk{position:relative}.fk .dot{position:absolute;top:-2px;left:-3px;width:6px;height:6px;border-radius:50%;background:#e5322d}
 .fk{font-size:10px;font-weight:700;border-radius:6px;padding:2px 5px}
 .fk.r{color:var(--rest);font-weight:800;font-size:12px}.fk.w{background:var(--line);color:var(--muted)}.fk.s{background:#dff1e6;color:#2f7a4f}
 .flg{display:flex;gap:10px;justify-content:center;font-size:10.5px;color:var(--muted);font-weight:600;margin-top:7px}
@@ -2996,7 +2997,7 @@ function openPage(html,mode){
   p.innerHTML=html;p.classList.add('open');
   if(same){const b=p.querySelector('.pg-b');if(b)b.scrollTop=sc;}
 }
-function closePage(){if(pageMode==='alarm')try{if(hasBridge('stopPreview'))window.AndroidBridge.stopPreview();}catch(e){}$('#page').classList.remove('open');pageMode=null;draft=null;render();}
+function closePage(){manPaint=null;if(pageMode==='alarm')try{if(hasBridge('stopPreview'))window.AndroidBridge.stopPreview();}catch(e){}$('#page').classList.remove('open');pageMode=null;draft=null;render();}
 function pageHead(title,right){return `<div class="pg-h"><button class="bk" data-act="page-close" aria-label="뒤로">‹</button><b>${title}</b>${right||'<span style="min-width:56px"></span>'}</div>`;}
 function openPop(html){$('#pop').innerHTML=`<div class="menu">${html}</div>`;$('#pop').classList.add('open');}
 function closePop(){document.querySelectorAll('.cell.selTop').forEach(c=>c.classList.remove('selTop'));$('#pop').className='';$('#pop').innerHTML='';tpk=null;icn=null;crp=null;}
@@ -3230,13 +3231,15 @@ function famGoToday(){
   sc.scrollTo({left:left*sc.clientWidth/7,behavior:'smooth'});
 }
 const isHolK=k=>!!(holName(k)||compHol(k));
-function famShift(m,d){   // 직접 추가한 교대 가족: 자기 패턴이 있으면 그것, 없으면 내 조 따라가기
+function famShift(m,d){   // 직접 추가한 교대 가족: 이 날만 바꾼 날 > 자기 패턴 > 내 조 따라가기
+  const o=m.ov&&m.ov[fmt(d)];if(o)return o;
   if(m.own&&Array.isArray(m.pat)&&m.pat.length>1&&/^\d{4}-\d{2}-\d{2}$/.test(m.anc||'')){const n=m.pat.length,i=((dayNum(d)-dayNum(parse(m.anc)))%n+n)%n;return m.pat[i];}
   return teamShift(d,m.team??S.myTeam);
 }
 function memberOff(m,d){
   const k=fmt(d),w=d.getDay();
   if(m.kind==='sched')return schRest(m.sch,schShift(m.sch,d));
+  const o=m.ov&&m.ov[k];if(o&&m.kind!=='shift')return o==='off';   // 이 날만 바꾼 날
   if(m.kind==='free')return true;
   if(m.kind==='shift')return isRest(famShift(m,d));
   if(m.kind==='student'){
@@ -3246,11 +3249,12 @@ function memberOff(m,d){
   const days=m.days||[1,2,3,4,5];
   return !days.includes(w)||(m.holOff!==false&&!!holName(k));
 }
-function memberCell(m,d){
+function memberCell(m,d,dot){   // dot: 이 날만 바꾼 날 표시(직접 추가한 가족 달력에서만)
+  const dt=dot&&m.ov&&m.ov[fmt(d)]?'<i class="dot"></i>':'';
   if(m.kind==='sched')return schBadge(m.sch,schShift(m.sch,d),'sm');
-  if(m.kind==='shift')return badge(famShift(m,d),'sm');
-  if(memberOff(m,d))return '<span class="fk r">휴</span>';
-  return m.kind==='student'?'<span class="fk s">학교</span>':'<span class="fk w">회사</span>';
+  if(m.kind==='shift')return badge(famShift(m,d),'sm',dt);
+  if(memberOff(m,d))return `<span class="fk r">휴${dt}</span>`;
+  return m.kind==='student'?`<span class="fk s">학교${dt}</span>`:m.kind==='free'?`<span class="fk w">일정${dt}</span>`:`<span class="fk w">회사${dt}</span>`;
 }
 // 같이 쉬는 날: 'all' 종일 / 'day' 야간 근무 날 출근 전 낮 / ''
 function togetherOn(d){
@@ -3408,7 +3412,10 @@ var manId='';
 const manMember=()=>(S.family||[]).find(x=>x.id===manId);
 const manIc=(x,px)=>`<span class="se" style="font-size:${px-2}px">${ico(x.emoji)}</span>`;
 const manStk=(m,k)=>((m.stk&&m.stk[k])||[]).map(id=>S.stamps.defs.find(x=>x.id===id&&!x.retired&&x.kind!=='pill')).filter(Boolean);
-function manLabel(m,d){return m.kind==='shift'?shiftLabel(famShift(m,d)):memberOff(m,d)?'쉬는 날':m.kind==='student'?'학교':m.kind==='free'?'일정 없음':'회사';}
+function manLabel(m,d){return m.kind==='shift'?shiftLabel(famShift(m,d)):memberOff(m,d)?(m.kind==='free'?'일정 없음':'쉬는 날'):m.kind==='student'?'학교':m.kind==='free'?'일정 있음':'회사';}
+const manBase=(m,d)=>m.kind==='shift'?famShift({...m,ov:null},d):memberOff({...m,ov:null},d)?'off':'on';
+function manChoices(m){return m.kind==='shift'?S.types.map(x=>[x.k,badge(x.k,'sm'),x.name]):[['off','<span class="fk r">휴</span>','쉬는 날'],['on',m.kind==='student'?'<span class="fk s">학교</span>':m.kind==='free'?'<span class="fk w">일정</span>':'<span class="fk w">회사</span>',m.kind==='student'?'학교 가는 날':m.kind==='free'?'일정 있는 날':'일하는 날']];}
+function manSetOv(m,k,v){m.ov=m.ov||{};if(v===manBase(m,parse(k)))delete m.ov[k];else m.ov[k]=v;if(!Object.keys(m.ov).length)delete m.ov;}
 function manGrid(m){
   const y=vcY,mo=vcM,first=new Date(y,mo,1),lead=leadOf(first),days=new Date(y,mo+1,0).getDate(),rows=Math.ceil((lead+days)/7),start=addDays(first,-lead),tk=fmt(new Date());
   let cells='';
@@ -3417,16 +3424,19 @@ function manGrid(m){
     const sk=manStk(m,k),hone=hol&&sk.length?holOne(hol):'',row=sk.slice(0,2),more=sk.slice(2),note=m.notes&&m.notes[k];
     let band='';
     if(m.kind==='shift'){const sh=famShift(m,d),c=tColors(typeOf(sh)),ps=famShift(m,addDays(d,-1)),ns=famShift(m,addDays(d,1));band=c&&!isRest(sh)&&(ps===sh||ns===sh)?`<i class="band ${ps===sh?'jl':''} ${ns===sh?'jr':''}" style="--tb:${c.bg}"></i>`:'';}
-    cells+=`<div class="cell ${d.getMonth()===mo?'':'out'} ${k===tk?'today':''} ${more.length?'m3':''}" data-act="man-day" data-k="${k}"><div class="dn ${hol?'hol':''} ${hol||dow===0?'sun':dow===6?'sat':''} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1">${esc(hone)}</span>`:''}${row.length?`<span class="stp">${row.map(x=>manIc(x,hone?12:13)).join('')}</span>`:''}${!sk.length&&hol&&shortHol(hol)?`<span class="hn ${shortHol(hol).length>3?'sm':''}">${esc(shortHol(hol))}</span>`:''}</div>${more.length?`<div class="s2">${more.map(x=>manIc(x,12)).join('')}</div>`:''}<div class="bwrap">${band}${memberCell(m,d)}</div>${note?`<div class="pill-wrap"><div class="pl">${esc(note)}</div></div>`:''}</div>`;
+    cells+=`<div class="cell ${d.getMonth()===mo?'':'out'} ${k===tk?'today':''} ${more.length?'m3':''}" data-act="man-day" data-k="${k}"><div class="dn ${hol?'hol':''} ${hol||dow===0?'sun':dow===6?'sat':''} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1">${esc(hone)}</span>`:''}${row.length?`<span class="stp">${row.map(x=>manIc(x,hone?12:13)).join('')}</span>`:''}${!sk.length&&hol&&shortHol(hol)?`<span class="hn ${shortHol(hol).length>3?'sm':''}">${esc(shortHol(hol))}</span>`:''}</div>${more.length?`<div class="s2">${more.map(x=>manIc(x,12)).join('')}</div>`:''}<div class="bwrap">${band}${memberCell(m,d,true)}</div>${note?`<div class="pill-wrap"><div class="pl">${esc(note)}</div></div>`:''}</div>`;
   }
   return `<div class="calwrap"><div class="dow">${dowHead()}</div><div class="grid" style="grid-template-rows:repeat(${rows},1fr)">${cells}</div></div>`;
 }
+var manPaint=null;   // 칠하기 중이면 {v: 칠할 값}
+function manBar(m){const ch=manChoices(m);return `<div class="vsbar"><div class="seg">${ch.map(c=>`<button class="${manPaint.v===c[0]?'on':''}" data-act="man-pk" data-v="${esc(c[0])}">${c[1]}${m.kind==='shift'?'':esc(c[2])}</button>`).join('')}</div><div class="vs-row"><span class="vs-n">날짜를 누르거나 쭉 밀어요</span><span class="grow"></span><button class="btn sm" data-act="man-paint-off">끝내기</button></div></div>`;}
+function manApply(k){const m=manMember();if(!m||!manPaint)return;manSetOv(m,k,manPaint.v);save();const e=document.getElementById('vcsl');if(e){e.innerHTML=manGrid(m);fitDn(e);}}
 function renderManCalPage(){
   const m=manMember();if(!m){closePage();return;}
-  openPage(`${pageHead(esc(m.name)+' 달력','<button class="ib" data-act="man-edit" style="width:auto;font-size:15px;padding-right:8px" aria-label="고치기">✏️</button>')}<div class="pg-b" style="display:flex;flex-direction:column;padding:0">
+  openPage(`${pageHead(esc(m.name)+' 달력',`<span style="display:flex;align-items:center"><button class="ib" data-act="man-paint" style="width:auto;font-size:15px;padding:0 6px" aria-label="칠하기">🖌</button><button class="ib" data-act="man-edit" style="width:auto;font-size:15px;padding-right:8px" aria-label="고치기">✏️</button></span>`)}<div class="pg-b" style="display:flex;flex-direction:column;padding:0">
     <div class="vcnav"><button class="ib" data-act="vc-prev">‹</button><b>${vcY}.${pad(vcM+1)}</b><button class="ib" data-act="vc-next">›</button></div>
-    <div class="vcbox"><div id="vcsl" class="vcsl">${manGrid(m)}</div></div>
-    <div class="hint" style="padding:8px 16px">메모 · 스티커는 이 폰에만 저장돼요</div></div>`,'mancal');
+    <div class="vcbox"><div id="vcsl" class="vcsl ${manPaint?'sel':''}">${manGrid(m)}</div></div>
+    ${manPaint?manBar(m):'<div class="hint" style="padding:8px 16px">메모 · 스티커는 이 폰에만 저장돼요</div>'}</div>`,'mancal');
   fitDn($('#page'));vcEnter();
 }
 function openManDay(k){
@@ -3436,6 +3446,8 @@ function openManDay(k){
   sheetMode='mandy';
   openSheet(`<div class="sh-head"><div style="flex:1;"><b>${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b>${hol?`<span class="tag" style="margin-left:6px;">${esc(hol)}</span>`:''}</div><button class="ib" data-act="close" style="width:auto;font-size:16px;">✕</button></div>
     <div class="card" style="padding:18px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;font-weight:700;background:var(--bg);border:1px solid var(--line)"><span>${esc(m.name)}</span>${memberCell(m,d)}<span>${esc(manLabel(m,d))}</span></div>
+    <div class="lbl" style="margin-top:12px">이 날만 바꾸기</div>
+    <div class="chips">${manChoices(m).map(c=>`<button class="${(m.ov&&m.ov[k]===c[0])?'on':''}" data-act="man-ov" data-k="${k}" data-v="${esc(c[0])}">${c[1]}${m.kind==='shift'?'':esc(c[2])}</button>`).join('')}${m.ov&&m.ov[k]?`<button data-act="man-ov" data-k="${k}" data-v="">원래대로</button>`:''}</div>
     <div class="lbl" style="margin-top:12px">스티커</div>
     ${defs.length?`<div class="chips">${defs.map(x=>`<button class="${on.includes(x.id)?'on':''}" data-act="man-stk" data-k="${k}" data-id="${x.id}">${ico(x.emoji)}</button>`).join('')}</div>`:'<div class="mempty">내 스티커를 먼저 만들어 주세요</div>'}
     <div class="lbl" style="margin-top:12px">메모</div>
@@ -5236,7 +5248,11 @@ document.addEventListener('click',e=>{
     case 'fam-day':{const k=t.dataset.k,d=parse(k);tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
     case 'fam-add':{const n=(S.family||[]).length;famDraft={id:uid(),name:'',color:FAM_COL[n%6],kind:'office',days:[1,2,3,4,5],start:'09:00',end:'18:00',holOff:true,vac:[],team:S.myTeam};openFamEdit();break;}
     case 'fam-mancal':{manId=t.dataset.id;const n=new Date();vcY=n.getFullYear();vcM=n.getMonth();renderManCalPage();break;}
-    case 'man-day':if(t.classList.contains('out')){buzz(6);vcMove(monthDirOf(t.dataset.k,vcY,vcM));break;}openManDay(t.dataset.k);break;
+    case 'man-ov':{const m=manMember();if(!m)break;const k=t.dataset.k,v=t.dataset.v;if(v)manSetOv(m,k,v);else if(m.ov){delete m.ov[k];if(!Object.keys(m.ov).length)delete m.ov;}save();openManDay(k);renderManCalPage();break;}
+    case 'man-paint':{const m=manMember();if(!m)break;manPaint={v:m.kind==='shift'?restKey():'off'};closeSheet();renderManCalPage();toast('날짜를 누르거나 쭉 밀면 바뀌어요');break;}
+    case 'man-paint-off':manPaint=null;renderManCalPage();break;
+    case 'man-pk':if(manPaint){manPaint.v=t.dataset.v;renderManCalPage();}break;
+    case 'man-day':if(manPaint)break;if(t.classList.contains('out')){buzz(6);vcMove(monthDirOf(t.dataset.k,vcY,vcM));break;}openManDay(t.dataset.k);break;
     case 'man-stk':{const m=manMember();if(!m)break;const k=t.dataset.k,id=t.dataset.id;m.stk=m.stk||{};const a=m.stk[k]||[];m.stk[k]=a.includes(id)?a.filter(x=>x!==id):[...a,id];if(!m.stk[k].length)delete m.stk[k];save();openManDay(k);renderManCalPage();break;}
     case 'man-note':{const m=manMember();if(!m)break;const k=t.dataset.k,v=($('#manNote')||{value:''}).value.trim().slice(0,40);m.notes=m.notes||{};if(v)m.notes[k]=v;else delete m.notes[k];save();closeSheet();renderManCalPage();break;}
     case 'man-edit':{const m=manMember();if(!m)break;famDraft=JSON.parse(JSON.stringify(m));openFamEdit();break;}
@@ -6534,7 +6550,7 @@ function vcEnter(){   // 달이 넘어간 뒤 새 달이 옆에서 들어오는 
 let vsx=null,vsy=0,vdx=0,vlock=null,vst=0,vbusy=false;
 document.addEventListener('touchstart',e=>{
   const el=e.target.closest&&e.target.closest('#vcsl');
-  if(!el||vbusy||vcSel.on||$('#sheet').classList.contains('open')||$('#pop').classList.contains('open')){vsx=null;return;}
+  if(!el||vbusy||vcSel.on||manPaint||$('#sheet').classList.contains('open')||$('#pop').classList.contains('open')){vsx=null;return;}
   vsx=e.touches[0].clientX;vsy=e.touches[0].clientY;vdx=0;vlock=null;vst=Date.now();
 },{passive:true});
 document.addEventListener('touchmove',e=>{
@@ -6571,7 +6587,18 @@ document.addEventListener('pointermove',e=>{
   const p=famPeers().find(x=>x.uid===vcUid);if(!p)return;
   if(!vsDrag.on||vsOk(p,c.dataset.k))vsSet(c.dataset.k,vsDrag.on);
 });
-['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,()=>{vsDrag=null;}));
+['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,()=>{vsDrag=null;mpDrag=null;}));
+var mpDrag=null;
+document.addEventListener('pointerdown',e=>{
+  if(!manPaint)return;const c=e.target.closest&&e.target.closest('#vcsl .cell[data-k]');if(!c)return;
+  mpDrag={id:e.pointerId,last:c.dataset.k};manApply(c.dataset.k);buzz(6);
+});
+document.addEventListener('pointermove',e=>{
+  if(!mpDrag||e.pointerId!==mpDrag.id)return;
+  const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest&&el.closest('#vcsl .cell[data-k]');
+  if(!c||c.dataset.k===mpDrag.last)return;
+  mpDrag.last=c.dataset.k;manApply(c.dataset.k);
+});
 function vcMove(n){let y=vcY,m=vcM+n;if(m<0){m=11;y--;}if(m>11){m=0;y++;}const k=y*12+m;if(k<MIN_M||k>MAX_M)return;vcY=y;vcM=m;vcRerender();}
 /* ================= 가족 메모 · 근무 요청 (3단계) =================
  * 가족 메모(♥) 는 households/{hid}/memos, 근무 요청은 households/{hid}/requests 에 두고,
