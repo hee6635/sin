@@ -6205,6 +6205,7 @@ function famPayload(){
   const lo=addK(fmt(new Date()),-35),ov={};
   if(S.patOld&&S.patOld.length&&!S.noPat){for(let i=0;i<=35;i++){const d=addDays(parse(lo),i),k=fmt(d);if(k>=S.patOld[S.patOld.length-1].until)break;const b=baseShift(d);if(b!==holAdj(d,patShiftCur(d)))ov[k]=String(b);}}   // 옛 패턴이던 날(가족 앱은 새 패턴만 앎): 달라지는 날만 같이 올림
   Object.keys(S.overrides||{}).sort().forEach(k=>{if(k>=lo)ov[k]=String(S.overrides[k]);});
+  {const hi=addK(fmt(new Date()),180);for(let d=parse(lo);fmt(d)<=hi;d=addDays(d,1)){const k=fmt(d);if(persOn(k))ov[k]=NONE_K;}}   // 개인 캘린더 기간은 가족에게 "근무 없음"으로
   const ks=Object.keys(ov);if(ks.length>500)ks.slice(0,ks.length-500).forEach(k=>delete ov[k]);
   return {v:1,patternName:String(S.patternName||'교대근무').slice(0,20),teamName:String(S.noPat?'':(myTeamLabel()||'')).slice(0,10),
     pattern:S.noPat?['']:S.pattern.slice(0,60).map(String),anchor:String(S.anchor),
@@ -6427,7 +6428,7 @@ async function famSetMode(mode){
 }
 /* ---- 서버에서 받은 근무표 계산 ---- */
 const schType=(sch,k)=>k===''?BLANK_T:((sch.types||[]).find(t=>t.k===k)||{k,name:k,color:'#cfd8dc',rest:false});
-const schRest=(sch,k)=>!!schType(sch,k).rest;
+const schRest=(sch,k)=>k===NONE_K||!!schType(sch,k).rest;
 function schShift(sch,d){
   const k=fmt(d),o=sch.overrides&&sch.overrides[k];if(o)return o;
   const n=sch.pattern.length,i=((dayNum(d)-dayNum(parse(sch.anchor)))%n+n)%n,b=sch.pattern[i];
@@ -6487,7 +6488,7 @@ function vcGrid(p){
     const d=addDays(start,i),k=fmt(d),sh=schShift(sch,d),hol=holName(k),dow=d.getDay();
     const ps=schShift(sch,addDays(d,-1)),ns=schShift(sch,addDays(d,1)),c=tColors(schType(sch,sh));
     const band=c&&!schRest(sch,sh)&&(ps===sh||ns===sh)?`<i class="band ${ps===sh?'jl':''} ${ns===sh?'jr':''}" style="--tb:${c.bg}"></i>`:'';
-    const ov=sch.overrides&&sch.overrides[k];
+    const ov=sch.overrides&&sch.overrides[k]&&sch.overrides[k]!==NONE_K;
     const pls=vcPills(k,mxl);
     const ring=rqRing(S.requests.filter(r=>r.srv&&r.dir==='out'&&r.peer===p.uid&&r.date===k).map(r=>r.st==='applied'?{...r,st:'accepted'}:r));
     const st0=schStk(sch,k),hone=hol&&st0.length?holOne(hol):'',stRow=st0.slice(0,2),stMore=st0.slice(2);
