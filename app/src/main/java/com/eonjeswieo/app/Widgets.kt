@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.net.Uri
@@ -133,6 +134,9 @@ object WidgetRefresher {
         for (id in mgr.getAppWidgetIds(ComponentName(ctx, TodayWidget2Provider::class.java))) {
             WidgetRenderer.update(ctx, mgr, id, 2)
         }
+        for (id in mgr.getAppWidgetIds(ComponentName(ctx, WeekWidgetProvider::class.java))) {
+            WidgetRenderer.update(ctx, mgr, id, 7)
+        }
     }
 
     fun scheduleTick(ctx: Context) {
@@ -182,6 +186,22 @@ class TodayWidget2Provider : AppWidgetProvider() {
 
     override fun onAppWidgetOptionsChanged(context: Context, mgr: AppWidgetManager, id: Int, newOptions: Bundle) {
         WidgetRenderer.update(context, mgr, id, 2)
+    }
+
+    override fun onEnabled(context: Context) {
+        WidgetRefresher.scheduleTick(context)
+    }
+}
+
+/** 7일 위젯: 이번 주(주 시작 요일부터 7일) */
+class WeekWidgetProvider : AppWidgetProvider() {
+    override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
+        for (id in ids) WidgetRenderer.update(context, mgr, id, 7)
+        WidgetRefresher.scheduleTick(context)
+    }
+
+    override fun onAppWidgetOptionsChanged(context: Context, mgr: AppWidgetManager, id: Int, newOptions: Bundle) {
+        WidgetRenderer.update(context, mgr, id, 7)
     }
 
     override fun onEnabled(context: Context) {
@@ -243,8 +263,8 @@ object WidgetRenderer {
             val opts = mgr.getAppWidgetOptions(id)
             val density = ctx.resources.displayMetrics.density
             dens = density
-            val wDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, if (count == 1) 70 else 140)
-            val hDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, if (count == 1) 70 else 110)
+            val wDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, if (count == 1) 70 else if (count == 7) 250 else 140)
+            val hDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, if (count == 1) 70 else if (count == 7) 110 else 110)
             var w = (wDp * density).toInt().coerceAtLeast(120)
             var h = (hDp * density).toInt().coerceAtLeast(120)
             val maxPx = 700_000
@@ -268,16 +288,39 @@ object WidgetRenderer {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
             }
-            rv.setOnClickPendingIntent(R.id.zone_a, dayPi(dateKey(Calendar.getInstance()), 0))
-            if (count == 2) {
-                rv.setViewVisibility(R.id.zone_b, View.VISIBLE)
-                rv.setOnClickPendingIntent(R.id.zone_b, dayPi(dateKey(tomCal), 1))
+            if (count == 7) {
+                rv.setViewVisibility(R.id.zones12, View.GONE)
+                rv.setViewVisibility(R.id.zones7, View.VISIBLE)
+                val ids7 = intArrayOf(R.id.zw0, R.id.zw1, R.id.zw2, R.id.zw3, R.id.zw4, R.id.zw5, R.id.zw6)
+                val wk = weekKeys(WidgetStore.load(ctx))
+                for (i in 0 until 7) rv.setOnClickPendingIntent(ids7[i], dayPi(wk[i], i))
             } else {
-                rv.setViewVisibility(R.id.zone_b, View.GONE)
+                rv.setViewVisibility(R.id.zones7, View.GONE)
+                rv.setViewVisibility(R.id.zones12, View.VISIBLE)
+                rv.setOnClickPendingIntent(R.id.zone_a, dayPi(dateKey(Calendar.getInstance()), 0))
+                if (count == 2) {
+                    rv.setViewVisibility(R.id.zone_b, View.VISIBLE)
+                    rv.setOnClickPendingIntent(R.id.zone_b, dayPi(dateKey(tomCal), 1))
+                } else {
+                    rv.setViewVisibility(R.id.zone_b, View.GONE)
+                }
             }
             mgr.updateAppWidget(id, rv)
         } catch (e: Exception) {
             // 그리기에 실패해도 앱이 죽지 않게
+        }
+    }
+
+    /** 이번 주 7일의 날짜 키 (앱의 주 시작 요일: 0=일요일 · 1=월요일) */
+    private fun weekKeys(data: JSONObject?): Array<String> {
+        val ws = (data?.optInt("ws", 0) ?: 0).coerceIn(0, 1)
+        val cal = Calendar.getInstance()
+        val dow = cal.get(Calendar.DAY_OF_WEEK) - 1
+        cal.add(Calendar.DAY_OF_YEAR, -((dow - ws + 7) % 7))
+        return Array(7) {
+            val s = dateKey(cal)
+            cal.add(Calendar.DAY_OF_YEAR, 1)
+            s
         }
     }
 
@@ -338,8 +381,10 @@ object WidgetRenderer {
             cv.drawText("앱을 열어 주세요", w / 2, h / 2, p)
             return
         }
-        if (count == 1) {
-            drawCell(cv, d0, 0f, 0f, w, h, null, pal, icons, memoMax, false, Float.NaN, Float.NaN)
+        if (count == 7) {
+            drawWeek(cv, data, w, h, pal, icons, memoMax)
+        } else if (count == 1) {
+            drawCell(cv, d0, 0f, 0f, w, h, null, pal, icons, memoMax, false, Float.NaN, Float.NaN, false)
         } else {
             val alarm = nextAlarmText(ctx)
             val bottom = if (alarm.isEmpty()) 0f else Math.max(h * 0.13f, 14f * dens)
@@ -347,12 +392,12 @@ object WidgetRenderer {
             val half = w / 2
             val d1 = findDay(data, dateKey(tom))
             // 두 칸의 근무 동그라미 높이를 맞추기 위해 위(날짜·스티커)와 아래(메모) 경계를 둘 중 더 많이 차지하는 쪽에 맞춤
-            val m0 = measure(d0, half, ch, memoMax)
-            val m1 = measure(d1, half, ch, memoMax)
+            val m0 = measure(d0, half, ch, memoMax, false)
+            val m1 = measure(d1, half, ch, memoMax, false)
             val bt = Math.max(m0[0], m1[0])
             val bb = Math.min(m0[1], m1[1])
-            drawCell(cv, d0, 0f, 0f, half, ch, null, pal, icons, memoMax, true, bt, bb)
-            drawCell(cv, d1, half, 0f, half, ch, null, pal, icons, memoMax, false, bt, bb)
+            drawCell(cv, d0, 0f, 0f, half, ch, null, pal, icons, memoMax, true, bt, bb, false)
+            drawCell(cv, d1, half, 0f, half, ch, null, pal, icons, memoMax, false, bt, bb, false)
             if (alarm.isNotEmpty()) {
                 val p = TextPaint(Paint.ANTI_ALIAS_FLAG)
                 p.color = pal.sub
@@ -363,8 +408,39 @@ object WidgetRenderer {
         }
     }
 
+    /** 7일 위젯: 위에 요일 줄, 아래에 7칸(앱 달력 한 줄처럼). 오늘 칸은 초록 띠 */
+    private fun drawWeek(cv: Canvas, data: JSONObject?, w: Float, h: Float, pal: Pal, icons: JSONObject?, memoMax: Int) {
+        val ws = (data?.optInt("ws", 0) ?: 0).coerceIn(0, 1)
+        val keys = weekKeys(data)
+        val order = if (ws == 1) intArrayOf(1, 2, 3, 4, 5, 6, 0) else intArrayOf(0, 1, 2, 3, 4, 5, 6)
+        val cw = w / 7
+        val hh = Math.min(h * 0.13f, 17f * dens)
+        val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.DEFAULT_BOLD
+        paint.textSize = hh * 0.62f
+        for (i in 0 until 7) {
+            val wd = order[i]
+            paint.color = if (wd == 0) pal.sun else if (wd == 6) pal.sat else pal.sub
+            cv.drawText(DOW[wd], cw * i + cw / 2, hh * 0.78f, paint)
+        }
+        val ch = h - hh
+        val days = Array<JSONObject?>(7) { findDay(data, keys[it]) }
+        var bt = 0f
+        var bb = Float.MAX_VALUE
+        for (d in days) {
+            val m = measure(d, cw, ch, memoMax, true)
+            bt = Math.max(bt, m[0])
+            bb = Math.min(bb, m[1])
+        }
+        val todayKey = dateKey(Calendar.getInstance())
+        for (i in 0 until 7) {
+            drawCell(cv, days[i], cw * i, hh, cw, ch, null, pal, icons, memoMax, keys[i] == todayKey, bt, bb, true)
+        }
+    }
+
     /** 칸 하나의 [날짜·스티커 줄이 끝나는 y, 메모가 시작하는 y] (그리기와 같은 계산) */
-    private fun measure(d: JSONObject?, cw: Float, ch: Float, memoMax: Int): FloatArray {
+    private fun measure(d: JSONObject?, cw: Float, ch: Float, memoMax: Int, compact: Boolean): FloatArray {
         val rowH = Math.min(ch * 0.17f, cw * 0.2f)
         val rowTop = ch * 0.04f
         val sz = rowH * 0.85f
@@ -375,7 +451,7 @@ object WidgetRenderer {
         val n2 = n - Math.min(n, cap)
         val hol = d?.optString("hol", "") ?: ""
         var topEnd = rowTop + rowH
-        if (hol.isNotEmpty()) topEnd = rowTop + rowH * 1.55f else if (n2 > 0) topEnd = rowTop + rowH * 2.05f
+        if (hol.isNotEmpty() && !compact) topEnd = rowTop + rowH * 1.55f else if (n2 > 0) topEnd = rowTop + rowH * 2.05f
         topEnd += ch * 0.02f
         var cnt = 0
         val ms = d?.optJSONArray("ms")
@@ -393,7 +469,7 @@ object WidgetRenderer {
     }
 
     /** 한 날짜를 칸 하나(x0,y0,cw,ch)에 그린다: 앱 달력 칸과 같은 짜임 (날짜 + 스티커 한 줄 → 근무 동그라미 → 메모) */
-    private fun drawCell(cv: Canvas, d: JSONObject?, x0: Float, y0: Float, cw: Float, ch: Float, label: String?, pal: Pal, icons: JSONObject?, memoMax: Int, isToday: Boolean, bandTop: Float, bandBottom: Float) {
+    private fun drawCell(cv: Canvas, d: JSONObject?, x0: Float, y0: Float, cw: Float, ch: Float, label: String?, pal: Pal, icons: JSONObject?, memoMax: Int, isToday: Boolean, bandTop: Float, bandBottom: Float, compact: Boolean) {
         if (d == null) return
         if (isToday) {   // 달력의 오늘 칸처럼: 연한 초록 바탕 + 초록 테두리
             val inset = 2f * dens
@@ -438,7 +514,7 @@ object WidgetRenderer {
         }
 
         // 날짜 (왼쪽) — 스티커 자리를 빼고 남은 폭에 맞춤
-        val dateText = (if (label != null) label + " " else "") + d.optInt("d") + "(" + DOW[dow] + ")"
+        val dateText = if (compact) d.optInt("d").toString() else (if (label != null) label + " " else "") + d.optInt("d") + "(" + DOW[dow] + ")"
         val availDate = cw - pad * 2 - (if (n1 > 0) w1 + gap else 0f)
         paint.typeface = Typeface.DEFAULT_BOLD
         paint.textAlign = Paint.Align.LEFT
@@ -447,7 +523,7 @@ object WidgetRenderer {
         while (paint.measureText(dateText) > availDate && paint.textSize > rowH * 0.45f) paint.textSize = paint.textSize * 0.92f
         cv.drawText(TextUtils.ellipsize(dateText, paint, availDate, TextUtils.TruncateAt.END).toString(), x0 + pad, rowTop + rowH * 0.78f, paint)
         var topEnd = rowTop + rowH
-        if (hol.isNotEmpty()) {
+        if (hol.isNotEmpty() && !compact) {
             paint.typeface = Typeface.DEFAULT
             paint.textSize = rowH * 0.5f
             val availHol = cw - pad * 2 - (if (n2 > 0) w2 + gap else 0f)
@@ -486,7 +562,7 @@ object WidgetRenderer {
             paint.typeface = Typeface.DEFAULT
             paint.textAlign = Paint.Align.LEFT
             paint.color = pal.fg
-            paint.textSize = Math.min(ph * 0.72f, cw * 0.11f)
+            paint.textSize = Math.min(ph * 0.72f, cw * (if (compact) 0.2f else 0.11f))
             drawRich(cv, memos[i], x0 + pad * 1.4f, py + ph * 0.72f, cw - pad * 2.6f, paint, pal.fg, pal.link)
         }
 
@@ -569,29 +645,9 @@ object WidgetRenderer {
             ip.alpha = if (done) 255 else 100
             cv.drawBitmap(photo, null, RectF(sx, sy, sx + sz, sy + sz), ip)
         } else if (s.optInt("p", 0) == 1) {
-            // 알약: 비스듬한 둥근 막대, 한 것은 반을 채움
+            // 알약: 앱과 같은 모양 · 횟수만큼 조각 · 한 만큼 채움
             val col = parseColor(s.optString("c", ""), 0xFF7E57C2.toInt())
-            val cx = sx + sz / 2
-            val cy = sy + sz / 2
-            val len = sz * 0.98f
-            val thick = sz * 0.46f
-            cv.save()
-            cv.rotate(-45f, cx, cy)
-            val rect = RectF(cx - len / 2, cy - thick / 2, cx + len / 2, cy + thick / 2)
-            val stroke = Paint(Paint.ANTI_ALIAS_FLAG)
-            stroke.style = Paint.Style.STROKE
-            stroke.strokeWidth = sz * 0.1f
-            stroke.color = col
-            stroke.alpha = if (done) 255 else 120
-            val fill = Paint(Paint.ANTI_ALIAS_FLAG)
-            fill.color = col
-            fill.alpha = if (done) 200 else 60
-            cv.save()
-            cv.clipRect(cx - len / 2, cy - thick, cx, cy + thick)
-            cv.drawRoundRect(rect, thick / 2, thick / 2, fill)
-            cv.restore()
-            cv.drawRoundRect(rect, thick / 2, thick / 2, stroke)
-            cv.restore()
+            PillDraw.draw(cv, sx + sz / 2, sy + sz / 2, sz * 1.05f, col, s.optString("h", "caps"), s.optInt("N", 1), s.optInt("n", 0))
         } else {
             paint.typeface = Typeface.DEFAULT
             paint.textAlign = Paint.Align.CENTER
@@ -601,5 +657,92 @@ object WidgetRenderer {
             cv.drawText(s.optString("e", "⭐"), sx + sz / 2, sy + sz * 0.82f, paint)
             paint.alpha = 255
         }
+    }
+}
+
+
+/** 알약 스티커 그리기 (앱의 알약 4가지 모양 · 하루 횟수만큼 조각, 한 만큼 채움) — 앱 pillSvg 와 같은 22×22 도면을 옮김 */
+object PillDraw {
+    fun draw(cv: Canvas, cx: Float, cy: Float, size: Float, color: Int, shape: String, nIn: Int, kIn: Int) {
+        val n = nIn.coerceIn(1, 3)
+        val k = kIn.coerceIn(0, n)
+        val s = size / 22f
+        cv.save()
+        cv.translate(cx - size / 2, cy - size / 2)
+        cv.scale(s, s)
+        val fill = Paint(Paint.ANTI_ALIAS_FLAG)
+        fill.color = color
+        val line = Paint(Paint.ANTI_ALIAS_FLAG)
+        line.style = Paint.Style.STROKE
+        line.color = color
+        line.strokeWidth = 1.1f
+        line.alpha = 160
+        val rim = Paint(Paint.ANTI_ALIAS_FLAG)
+        rim.style = Paint.Style.STROKE
+        rim.color = color
+        rim.strokeWidth = 1.7f
+        rim.alpha = if (k > 0) 255 else 150
+        when (shape) {
+            "round" -> {
+                val r = 8.4f
+                val oval = RectF(11 - r, 11 - r, 11 + r, 11 + r)
+                if (k >= n) cv.drawCircle(11f, 11f, r, fill)
+                else for (i in 0 until k) cv.drawArc(oval, -90f + i * 360f / n, 360f / n, true, fill)
+                if (n > 1) for (i in 0 until n) {
+                    val a = Math.toRadians((-90.0 + i * 360.0 / n))
+                    cv.drawLine(11f, 11f, 11f + r * Math.cos(a).toFloat(), 11f + r * Math.sin(a).toFloat(), line)
+                }
+                cv.drawCircle(11f, 11f, r, rim)
+            }
+            "tab" -> {
+                val sg = 17f / n
+                val oval = RectF(2f, 4.8f, 20f, 17.2f)
+                val clip = Path()
+                clip.addOval(oval, Path.Direction.CW)
+                cv.save()
+                cv.clipPath(clip)
+                for (i in 0 until k) cv.drawRect(2.5f + i * sg, 3f, 2.5f + (i + 1) * sg, 19f, fill)
+                cv.restore()
+                for (i in 1 until n) cv.drawLine(2.5f + i * sg, 5f, 2.5f + i * sg, 17f, line)
+                cv.drawOval(oval, rim)
+                val mid = Paint(rim)
+                mid.color = if (k >= n) Color.WHITE else color
+                cv.drawLine(11f, 6.5f, 11f, 15.5f, mid)
+            }
+            "drop" -> {
+                val d = Path()
+                d.moveTo(11f, 2.5f)
+                d.cubicTo(11f, 2.5f, 4.2f, 10f, 4.2f, 14.2f)
+                d.arcTo(RectF(4.2f, 7.4f, 17.8f, 21f), 180f, -180f, false)
+                d.cubicTo(17.8f, 10f, 11f, 2.5f, 11f, 2.5f)
+                d.close()
+                cv.save()
+                cv.clipPath(d)
+                cv.drawRect(0f, 21f - (k.toFloat() / n) * 19f, 22f, 22f, fill)
+                cv.restore()
+                for (i in 1 until n) {
+                    val y = 21f - (i.toFloat() / n) * 19f
+                    cv.drawLine(5f, y, 17f, y, line)
+                }
+                cv.drawPath(d, rim)
+            }
+            else -> {
+                val w = 20f
+                val sg = w / n
+                val rect = RectF(1f, 6f, 1f + w, 16f)
+                val clip = Path()
+                clip.addRoundRect(rect, 5f, 5f, Path.Direction.CW)
+                cv.save()
+                cv.rotate(-40f, 11f, 11f)
+                cv.save()
+                cv.clipPath(clip)
+                for (i in 0 until k) cv.drawRect(1f + i * sg, 6f, 1f + (i + 1) * sg, 16f, fill)
+                cv.restore()
+                for (i in 1 until n) cv.drawLine(1f + i * sg, 6f, 1f + i * sg, 16f, line)
+                cv.drawRoundRect(rect, 5f, 5f, rim)
+                cv.restore()
+            }
+        }
+        cv.restore()
     }
 }

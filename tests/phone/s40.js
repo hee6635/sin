@@ -2,8 +2,8 @@ const {chromium,boot,mkT,base}=require('./lib.js');
 (async()=>{const b=await chromium.launch();const T=mkT();
  const k='2026-10-14';
  const st={...base,
-  stamps:{defs:[{id:'zz1',kind:'mark',emoji:'👟',name:'걷기',times:2,rep:'daily',days:[],dates:[],skip:[],ats:[]}],log:{},snap:{},v3:1,v4:1,lastAt:[]},
-  memos:{[k]:[{id:'m1',text:'약국 가기',todo:true,shared:false,by:'host',t:1},{id:'m2',text:'그냥 메모',shared:false,by:'host',t:2}]},
+  stamps:{defs:[{id:'zz1',kind:'mark',emoji:'👟',name:'걷기',times:2,rep:'daily',days:[],dates:[],skip:[],ats:[]},{id:'pl',kind:'pill',emoji:'💊',name:'약',times:3,color:'#ef4d5a',shape:'drop',rep:'daily',days:[],dates:[],skip:[],ats:[]}],log:{},snap:{},v3:1,v4:1,lastAt:[]},
+  memos:{[k]:[{id:'m1',text:'약국 가기',todo:true,shared:false,by:'host',t:1},{id:'m2',text:'그냥 메모',shared:false,by:'host',t:2},{id:'m3',text:'가족 할 일',shared:true,by:'host',todo:true,time:'09:00',color:'#e5484d',t:3}]},
   board:{'2026-10':[{id:'p1',type:'list',title:'장보기',lines:[{id:'l1',text:'우유',done:false,doneBy:''},{id:'l2',text:'빵',done:false,doneBy:''}],text:'',shared:false,by:'host',color:'y',repeat:false,dateAuto:true,date:k,reacts:{},torn:false,tornAt:0,t:1}]}};
  const p=await boot(b,st,{touch:true,w:384});
  const S=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')));
@@ -13,7 +13,10 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.evaluate(()=>document.querySelector('[data-act="memolines"][data-v="4"]').click());await p.waitForTimeout(1000);
  const w=await p.evaluate(()=>window.__wg[window.__wg.length-1]);
  const day=w.days.find(x=>x.k===k);
- T('스티커 목록(sa)에 id · 이름 · 횟수',day&&day.sa.length===1&&day.sa[0].id==='zz1'&&day.sa[0].nm==='걷기'&&day.sa[0].N===2,JSON.stringify(day&&day.sa));
+ T('스티커 목록(sa)에 id · 이름 · 횟수',day&&day.sa.some(x=>x.id==='zz1'&&x.nm==='걷기'&&x.N===2),JSON.stringify(day&&day.sa));
+ T('알약은 모양(h) · 횟수(N) · 색을 함께 보냄',day&&day.sa.some(x=>x.id==='pl'&&x.p===1&&x.h==='drop'&&x.N===3&&/^#[0-9a-f]{6}$/i.test(x.c)),JSON.stringify(day&&day.sa));
+ T('내가 쓴 가족 메모의 할 일도 체크 칸(m) · 시간(tm) · 색(c) · 가족 표시(f)',day&&day.mi.some(x=>x.r==='m'&&x.id==='m3'&&x.tm==='오전 9:00'&&x.c==='#e5484d'&&x.f===1),JSON.stringify(day&&day.mi));
+ T('주 시작 요일(ws) 전달',w.ws===0);
  T('메모 항목(mi): 메모 할 일(m) · 글만(t) · 포스트잇 줄(l)',day&&day.mi.some(x=>x.r==='m'&&x.id==='m1')&&day.mi.some(x=>x.r==='t'&&x.t==='그냥 메모')&&day.mi.filter(x=>x.r==='l').length===2,JSON.stringify(day&&day.mi));
  // 2) 위젯에서 체크한 대기 목록을 앱이 읽어서 반영 + 날짜 열기
  await p.evaluate(({k})=>{

@@ -11,8 +11,9 @@
         android:contentDescription="@string/app_name"
         android:scaleType="fitXY" />
 
-    <!-- 누르는 자리: 왼쪽 / 오른쪽 (1칸 위젯은 오른쪽을 숨김) -->
+    <!-- 누르는 자리 (1칸 · 2칸): 왼쪽 / 오른쪽 (1칸은 오른쪽을 숨김) -->
     <LinearLayout
+        android:id="@+id/zones12"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal">
@@ -28,5 +29,22 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1" />
+    </LinearLayout>
+
+    <!-- 누르는 자리 (7일): 7칸 -->
+    <LinearLayout
+        android:id="@+id/zones7"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <FrameLayout android:id="@+id/zw0" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+        <FrameLayout android:id="@+id/zw1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+        <FrameLayout android:id="@+id/zw2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+        <FrameLayout android:id="@+id/zw3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+        <FrameLayout android:id="@+id/zw4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+        <FrameLayout android:id="@+id/zw5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+        <FrameLayout android:id="@+id/zw6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
     </LinearLayout>
 </FrameLayout>

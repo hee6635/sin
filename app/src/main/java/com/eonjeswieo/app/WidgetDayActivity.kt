@@ -239,7 +239,7 @@ class WidgetDayActivity : Activity() {
                 iv.scaleType = ImageView.ScaleType.FIT_CENTER
                 iv
             }
-            s.optInt("p", 0) == 1 -> PillView(this, parse(s.optString("c", ""), 0xFF7E57C2.toInt()), n > 0)
+            s.optInt("p", 0) == 1 -> PillView(this, parse(s.optString("c", ""), 0xFF7E57C2.toInt()), s.optString("h", "caps"), total, n)
             else -> {
                 val t = tv(s.optString("e", "⭐"), 24f, Color.BLACK)
                 t.gravity = Gravity.CENTER
@@ -269,15 +269,29 @@ class WidgetDayActivity : Activity() {
         row.gravity = Gravity.CENTER_VERTICAL
         row.setPadding(dp(12), dp(10), dp(12), dp(10))
         row.background = rounded(if (checkable && done) pal.done else pal.chip, 14)
+        val cc = m.optString("c", "")
+        if (cc.isNotEmpty()) {   // 메모 색: 왼쪽 띠
+            val bar = View(this)
+            bar.background = rounded(parse(cc, pal.sub), 3)
+            val blp = LinearLayout.LayoutParams(dp(5), dp(34))
+            blp.rightMargin = dp(10)
+            row.addView(bar, blp)
+        }
         if (checkable) {
             val box = tv(if (done) "☑" else "☐", 22f, if (done) pal.accent else pal.sub, true)
             val blp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             blp.rightMargin = dp(10)
             row.addView(box, blp)
         }
+        val col = LinearLayout(this)
+        col.orientation = LinearLayout.VERTICAL
         val t = tv(rich(m.optString("t", ""), pal.fg, pal.link), 16f, if (checkable && done) pal.sub else pal.fg)
         if (checkable && done) t.paintFlags = t.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-        row.addView(t, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        col.addView(t)
+        val sub = (if (m.optInt("f", 0) == 1) "♥ 가족 메모" else "") +
+            (if (m.optString("tm", "").isNotEmpty()) (if (m.optInt("f", 0) == 1) " · " else "") + "🕐 " + m.optString("tm", "") else "")
+        if (sub.isNotEmpty()) col.addView(tv(sub, 12.5f, pal.sub))
+        row.addView(col, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         if (checkable) row.setOnClickListener { toggleMemo(m) }
         val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         lp.bottomMargin = dp(6)
@@ -321,31 +335,11 @@ class WidgetDayActivity : Activity() {
         build()
     }
 
-    /** 알약 스티커: 비스듬한 둥근 막대, 한 것은 반을 채움 */
-    private class PillView(ctx: Context, private val color: Int, private val done: Boolean) : View(ctx) {
+    /** 알약 스티커 (앱과 같은 모양 · 횟수만큼 조각 · 한 만큼 채움) */
+    private class PillView(ctx: Context, private val color: Int, private val shape: String, private val total: Int, private val done: Int) : View(ctx) {
         override fun onDraw(c: Canvas) {
             val sz = Math.min(width, height).toFloat()
-            val cx = width / 2f
-            val cy = height / 2f
-            val len = sz * 0.98f
-            val thick = sz * 0.46f
-            c.save()
-            c.rotate(-45f, cx, cy)
-            val rect = RectF(cx - len / 2, cy - thick / 2, cx + len / 2, cy + thick / 2)
-            val stroke = Paint(Paint.ANTI_ALIAS_FLAG)
-            stroke.style = Paint.Style.STROKE
-            stroke.strokeWidth = sz * 0.1f
-            stroke.color = color
-            stroke.alpha = if (done) 255 else 120
-            val fill = Paint(Paint.ANTI_ALIAS_FLAG)
-            fill.color = color
-            fill.alpha = if (done) 200 else 60
-            c.save()
-            c.clipRect(cx - len / 2, cy - thick, cx, cy + thick)
-            c.drawRoundRect(rect, thick / 2, thick / 2, fill)
-            c.restore()
-            c.drawRoundRect(rect, thick / 2, thick / 2, stroke)
-            c.restore()
+            PillDraw.draw(c, width / 2f, height / 2f, sz, color, shape, total, done)
         }
     }
 }
