@@ -223,7 +223,7 @@ object WidgetLayout {
         val holSize = dateSize * 0.62f
         val pillH = clamp(rowH * 0.19f, 9f * u, 12f * u)
         val pg = 1f * u
-        val dTop = clamp(Math.min(cw * 0.5f, rowH * 0.4f), 14f * u, 26f * u)   // 근무 동그라미 크기 (칸 폭의 절반 · 칸 높이의 40% 중 작은 쪽)
+        val dTop = clamp(Math.min(cw * 0.5f, rowH * 0.4f), 14f * u, 44f * u)   // 근무 동그라미 크기 (칸 폭의 절반 · 칸 높이의 40% 중 작은 쪽 · 상한은 7일 위젯과 같은 44dp — 칸이 큰 위젯에서도 칸에 맞게 커짐)
         val dMin = Math.min(dTop, 12f * u)
         val cm = 1.5f * u   // 동그라미 위아래 여백 합
         fun blk(l: Int): Float = if (l <= 0) 0f else l * pillH + (l - 1) * pg

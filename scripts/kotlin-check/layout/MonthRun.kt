@@ -93,6 +93,12 @@ fun main(args: Array<String>) {
     render(data, "내 달력 · 가장 작게", 250, 250, 0, -1, false, File(out, "r31_min.png"))
     render(data, "가족 달력 · 가장 작게 + 칩", 250, 250, 0, if (ppl.isNotEmpty()) 0 else -1, false, File(out, "r32_min_fam.png"))
     render(data, "내 달력 · 넓게", 600, 330, 0, -1, false, File(out, "r33_wide.png"))
+    // 칸이 큰 위젯(접이식 안쪽 화면 등): 근무 동그라미가 칸 폭의 절반까지 커짐 (v0.74)
+    render(data, "내 달력 · 큰 위젯(545x561)", 545, 561, 0, -1, false, File(out, "r34_big.png"))
+    render(data, "내 달력 · 큰 위젯 · 어둡게", 545, 561, 0, -1, true, File(out, "r35_big_dark.png"))
+    render(data, "내 달력 · 큰 위젯 · 6주 달(2달 전)", 545, 561, -2, -1, false, File(out, "r36_big_6weeks.png"))
+    render(data, "내 달력 · 아주 큰 위젯(700x640)", 700, 640, 0, -1, false, File(out, "r37_huge.png"))
+    if (ppl.isNotEmpty()) render(data, "가족 달력 · 큰 위젯 + 칩", 545, 561, 0, 0, false, File(out, "r38_big_fam.png"))
     println(if (fails == 0) "진짜 그리기 코드: 오류 없이 모두 그려짐" else "진짜 그리기 코드: 실패 ${fails}개")
     System.exit(if (fails == 0) 0 else 1)
 }

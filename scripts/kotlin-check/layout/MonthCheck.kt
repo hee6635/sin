@@ -158,9 +158,41 @@ fun arrowsCheck(): Int {
     return f
 }
 
+/**
+ * 근무 동그라미 크기: 칸이 넉넉하면 "칸 폭의 절반 · 칸 높이의 40% 중 작은 쪽"까지(상한 44dp) 커지고,
+ * 칸이 작은 폰 크기에서는 상한에 안 걸려서 예전 값 그대로 (v0.74 에서 상한을 26dp → 44dp 로 올림 — 큰 위젯에서만 달라짐).
+ * 기대값은 메모 줄 규칙(2줄은 동그라미가 17dp 이상 남을 때만)까지 포함한 값이라, 그 규칙을 바꾸면 같이 고칠 것.
+ */
+fun circleSizeCheck(): Int {
+    var f = 0
+    val u = 2.75f
+    class Case(val name: String, val cwDp: Float, val rowHDp: Float, val rowMemos: IntArray, val want: Float)
+    val cases = listOf(
+        Case("큰 위젯(접이식 안쪽 545x561): 칸 폭의 절반", 76.7f, 100.2f, intArrayOf(1, 2, 2, 2, 1), 38.35f),
+        Case("큰 위젯 메모 없음", 76.7f, 100.2f, intArrayOf(0, 0, 0, 0, 0), 38.35f),
+        Case("아주 큰 위젯(700x640): 상한 44dp", 98.9f, 116f, intArrayOf(1, 2, 2, 2, 1), 44f),
+        Case("폰 4x4(340x330): 예전과 같음", 47.4f, 54f, intArrayOf(0, 0, 1, 1, 1), 19.6f),
+        Case("세로로 길게(340x440): 예전과 같음", 47.4f, 76f, intArrayOf(0, 0, 2, 2, 1), 23.7f),
+        Case("중간(420x400): 예전과 같음", 58.9f, 68f, intArrayOf(1, 2, 2, 2, 1), 17.95f),
+        Case("가장 작게(250x250): 예전과 같음", 34.5f, 38f, intArrayOf(0, 0, 0, 0, 0), 15.2f)
+    )
+    for (c in cases) {
+        val p = WidgetLayout.solveMonth(c.rowMemos, c.cwDp * u, c.rowHDp * u, u, true, 2)
+        val got = p.circleD / u
+        if (Math.abs(got - c.want) > 0.1f) { f++; println("  ✗ 동그라미 크기 ${c.name}: ${got}dp (기대 ${c.want}dp)") }
+    }
+    // 어떤 칸 크기 · 메모 수에서도 동그라미는 칸 폭의 절반 · 44dp 를 넘지 않음
+    for (w in 30..140 step 5) for (h in 30..140 step 5) for (memos in listOf(intArrayOf(0, 0, 0, 0, 0), intArrayOf(1, 1, 1, 1, 1), intArrayOf(2, 2, 2, 2, 2))) {
+        val d = WidgetLayout.solveMonth(memos, w * u, h * u, u, true, 2).circleD / u
+        if (d > Math.min(w * 0.5f, 44f) + 0.01f) { f++; println("  ✗ 동그라미가 칸 폭의 절반 · 44dp 보다 큼: 칸 ${w}x${h}dp → ${d}dp") }
+    }
+    println(if (f == 0) "동그라미 크기: 큰 위젯은 칸 폭의 절반(상한 44dp) · 폰 크기는 예전과 같음" else "동그라미 크기 실패 ${f}개")
+    return f
+}
+
 fun monthFuzz(): Int {
     val rnd = java.util.Random(11)
-    var fails = weeksCheck() + arrowsCheck()
+    var fails = weeksCheck() + arrowsCheck() + circleSizeCheck()
     val u = 2.75f
     val img = BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB)
     val g = img.createGraphics()
@@ -331,6 +363,7 @@ fun monthMain(out: File) {
     renderMonth("가장 작게 (250x250)", 250, 250, "2026년 10월", oct(), 0, LIGHTM, File(out, "month_d_min.png"))
     renderMonth("좁은 폰 (285x320)", 285, 320, "2026년 10월", oct(), 0, LIGHTM, File(out, "month_e_narrow.png"))
     renderMonth("가로로 넓게 (600x330)", 600, 330, "2026년 10월", oct(), 0, LIGHTM, File(out, "month_f_wide.png"))
+    renderMonth("큰 위젯 · 접이식 안쪽 (545x561)", 545, 561, "2026년 10월", oct(), 0, LIGHTM, File(out, "month_l_big.png"))
     // 6주짜리 달 (2026년 8월: 토요일 시작) — 맨 앞 줄이 일요일부터
     val aug = (0 until 42).map { i ->
         val dn = if (i < 6) 26 + i else if (i - 5 <= 31) i - 5 else i - 36
@@ -340,6 +373,7 @@ fun monthMain(out: File) {
     }
     renderMonth("6주 달 폰 4x4 (340x330)", 340, 330, "2026년 8월", aug, 0, LIGHTM, File(out, "month_g_6weeks.png"))
     renderMonth("6주 달 세로로 길게 (340x440)", 340, 440, "2026년 8월", aug, 0, LIGHTM, File(out, "month_h_6weeks_tall.png"))
+    renderMonth("6주 달 큰 위젯 (545x561)", 545, 561, "2026년 8월", aug, 0, LIGHTM, File(out, "month_m_6weeks_big.png"))
     // 아빠 달력 (이름 칩 · 가족 메모(♥) 보라색 칸)
     val dad = (0 until 35).map { i ->
         val dnum = dd[i]; val o = i < 4
