@@ -92,7 +92,24 @@ fun render(name: String, wDp: Int, hDp: Int, count: Int, days: List<Dy>, memoMax
             val py = y0 + mt + k * (row.pillH + row.pillGap)
             g.color = Color(0xEAECEF); g.fill(RoundRectangle2D.Float(x0 + row.padX, py, cw - 2 * row.padX, row.pillH, row.pillH * 0.3f, row.pillH * 0.3f))
             g.color = Color.BLACK; g.font = Font("SansSerif", Font.PLAIN, Math.max(6, Math.min(row.pillH * 0.7f, cw * (if (compact) 0.2f else 0.11f)).toInt()))
-            g.drawString("memo ${k + 1}", x0 + row.padX * 1.4f, py + row.pillH * 0.72f)
+            val moreN = d.memos - shown
+            if (moreN > 0 && k == shown - 1) {   // 메모가 더 있으면 마지막 줄 끝에 "+n" 칩
+                val bg = WidgetLayout.moreBadge(row.pillH)
+                val right = x0 + cw - row.padX - row.pillH * 0.12f
+                val textRoom = (cw - row.padX * 2.6f) - (bg[0] + row.pillH * 0.15f)
+                if (textRoom < (cw - row.padX * 2f) * 0.3f) { bad("$name 칸${i + 1}: 칩 때문에 메모 글자 자리가 너무 좁음 ${textRoom / dens}dp"); ok = false }
+                if (bg[1] > row.pillH + 0.5f || right - bg[0] < x0 + row.padX) { bad("$name 칸${i + 1}: 칩이 메모 줄을 벗어남"); ok = false }
+                g.color = Color(0x6B7380); g.fill(RoundRectangle2D.Float(right - bg[0], py + (row.pillH - bg[1]) / 2f, bg[0], bg[1], bg[1], bg[1]))
+                g.color = Color.WHITE; g.font = Font("SansSerif", Font.BOLD, Math.max(5, (bg[1] * 0.66f).toInt()))
+                val lab = WidgetLayout.moreLabel(moreN); val lw = g.fontMetrics.stringWidth(lab)
+                g.drawString(lab, right - bg[0] / 2f - lw / 2f, py + row.pillH / 2f + bg[1] * 0.24f)
+                g.color = Color.BLACK; g.font = Font("SansSerif", Font.PLAIN, Math.max(6, Math.min(row.pillH * 0.7f, cw * (if (compact) 0.2f else 0.11f)).toInt()))
+            }
+            // 앱처럼 글자 자리(칩이 있으면 칩만큼 줄어듦)를 넘으면 … 로 줄임
+            var label = "memo ${k + 1}"
+            val room = (cw - row.padX * 2.6f) - (if (d.memos - shown > 0 && k == shown - 1) WidgetLayout.moreBadge(row.pillH)[0] + row.pillH * 0.15f else 0f)
+            while (g.fontMetrics.stringWidth(label) > room && label.length > 1) label = label.dropLast(if (label.endsWith("…")) 2 else 1) + "…"
+            g.drawString(label, x0 + row.padX * 1.4f, py + row.pillH * 0.72f)
         }
         if (shown > 0 && mt < row.headEnd - 0.5f) { bad("$name 칸${i + 1}: 메모가 위쪽(${row.headEnd})을 침범 mt=$mt"); ok = false }
         if (d.memos > 0 && row.memoLines < Math.min(d.memos, memoMax)) { /* 줄 수가 줄어든 것은 정보로만 */ }

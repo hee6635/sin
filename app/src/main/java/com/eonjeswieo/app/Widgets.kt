@@ -243,7 +243,7 @@ class WeekWidgetProvider : AppWidgetProvider() {
  * 날짜(+공휴일 이름) → 근무 동그라미 → 스티커 → 메모 한 줄.
  */
 object WidgetRenderer {
-    private class Pal(val bg: Int, val fg: Int, val sub: Int, val pill: Int, val sun: Int, val sat: Int, val line: Int, val link: Int)
+    private class Pal(val bg: Int, val fg: Int, val sub: Int, val pill: Int, val sun: Int, val sat: Int, val line: Int, val link: Int, val chip: Int = 0xFF6B7380.toInt(), val chipFg: Int = 0xFFFFFFFF.toInt())
 
     private val LIGHT = Pal(
         0xFFFFFFFF.toInt(), 0xFF1F2328.toInt(), 0xFF8A919A.toInt(), 0xFFEAECEF.toInt(),
@@ -251,7 +251,8 @@ object WidgetRenderer {
     )
     private val DARK = Pal(
         0xFF23282E.toInt(), 0xFFF2F4F7.toInt(), 0xFF9AA3AD.toInt(), 0xFF39414A.toInt(),
-        0xFFFF6B7F.toInt(), 0xFF7BA2FF.toInt(), 0xFF3A424B.toInt(), 0xFF7BA2FF.toInt()
+        0xFFFF6B7F.toInt(), 0xFF7BA2FF.toInt(), 0xFF3A424B.toInt(), 0xFF7BA2FF.toInt(),
+        0xFFB4BCC6.toInt(), 0xFF23282E.toInt()
     )
     private val iconCache = HashMap<String, Bitmap?>()
     private var dens = 3f   // 화면 밀도 (dp 계산용)
@@ -585,6 +586,7 @@ object WidgetRenderer {
         // 메모 (맨 아래부터 쌓음, 줄 수는 줄 전체가 함께 정함)
         val memos = memoList(d)
         val shown = Math.min(memos.size, row.memoLines)
+        val more = memos.size - shown   // 칸에 다 못 보이는 메모 수 (있으면 마지막 줄 끝에 "+n" 칩)
         val memoTop = y0 + row.memoTop(shown)
         for (i in 0 until shown) {
             val py = memoTop + i * (row.pillH + row.pillGap)
@@ -595,8 +597,25 @@ object WidgetRenderer {
             paint.textAlign = Paint.Align.LEFT
             paint.color = pal.fg
             paint.textSize = Math.min(row.pillH * 0.72f, cw * (if (compact) 0.2f else 0.11f))
-            drawRich(cv, memos[i], x0 + pad * 1.4f, py + row.pillH * 0.72f, cw - pad * 2.6f, paint, pal.fg, pal.link)
+            val chipW = if (more > 0 && i == shown - 1) WidgetLayout.moreBadge(row.pillH)[0] else 0f
+            drawRich(cv, memos[i], x0 + pad * 1.4f, py + row.pillH * 0.72f, cw - pad * 2.6f - (if (chipW > 0f) chipW + row.pillH * 0.15f else 0f), paint, pal.fg, pal.link)
+            if (chipW > 0f) drawMoreChip(cv, more, x0 + cw - pad - row.pillH * 0.12f, py, row.pillH, pal)
         }
+    }
+
+    /** 메모가 더 있다는 작은 칩 ("+1"): 메모 글자가 아니라 표시라는 걸 알 수 있게 색을 칠한 작은 알약 모양 (오른쪽 끝 기준) */
+    private fun drawMoreChip(cv: Canvas, more: Int, right: Float, py: Float, pillH: Float, pal: Pal) {
+        val g = WidgetLayout.moreBadge(pillH)
+        val rect = RectF(right - g[0], py + (pillH - g[1]) / 2f, right, py + (pillH + g[1]) / 2f)
+        val bp = Paint(Paint.ANTI_ALIAS_FLAG)
+        bp.color = pal.chip
+        cv.drawRoundRect(rect, g[1] / 2f, g[1] / 2f, bp)
+        val tp = TextPaint(Paint.ANTI_ALIAS_FLAG)
+        tp.typeface = Typeface.DEFAULT_BOLD
+        tp.textAlign = Paint.Align.CENTER
+        tp.color = pal.chipFg
+        tp.textSize = g[1] * 0.66f
+        cv.drawText(WidgetLayout.moreLabel(more), rect.centerX(), rect.centerY() + tp.textSize * 0.36f, tp)
     }
 
     /** 메모 한 줄: \u0001 주소 \u0003 글자 \u0002 (앱의 "링크")는 글자만 파랗게 + 밑줄, 폭을 넘으면 … 로 줄임 */

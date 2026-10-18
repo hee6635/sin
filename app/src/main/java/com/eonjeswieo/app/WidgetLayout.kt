@@ -40,6 +40,15 @@ object WidgetLayout {
 
     private fun clamp(v: Float, lo: Float, hi: Float): Float = if (hi < lo) lo else Math.max(lo, Math.min(hi, v))
 
+    /** 메모가 칸에 다 안 들어갈 때 마지막 메모 줄 끝에 붙이는 작은 알약 모양 표시("+1")의 [가로, 세로] — 글자(메모)가 아니라 그림(이모티콘)처럼 보이게 색을 칠한 작은 칩 */
+    fun moreBadge(pillH: Float): FloatArray {
+        val h = pillH * 0.8f
+        return floatArrayOf(h * 1.3f, h)
+    }
+
+    /** 칩 안의 글자: 더 있는 메모 수 ("+1" … "+9", 열 개 이상은 "9+") */
+    fun moreLabel(more: Int): String = if (more > 9) "9+" else "+" + more
+
     /** 7일 위젯 맨 윗줄(월 화 수 …)의 글자 크기(text)와 줄 높이(height). 칸 폭 · 위젯 높이로만 정함 */
     class Head(val text: Float, val height: Float)
 
