@@ -568,7 +568,9 @@ textarea{resize:none;min-height:84px}
 .pill-wrap{gap:1px}
 .pill-wrap>*{flex:1 1 0 !important;min-height:0;max-height:var(--plmax,14px);line-height:var(--plhf,var(--plh,13px))}
 .pill-wrap.full>*{max-height:none}
-.pl.more{background:none;color:var(--muted);font-weight:700;text-align:center}
+.pl.withmore{display:flex;align-items:center;gap:2px}   /* 메모가 줄 수보다 많으면 마지막 줄 끝에 "+n" 칩 (위젯 칸과 같은 표시) */
+.pl .pt{flex:1 1 0;min-width:0;overflow:hidden;white-space:nowrap}
+.pl .mc{flex:none;box-sizing:border-box;height:calc(var(--plh,13px)*.8);min-width:calc(var(--plh,13px)*1.04);padding:0 3px;border-radius:99px;background:color-mix(in srgb,var(--fg) 62%,var(--bg));color:var(--bg);font-style:normal;font-weight:800;font-size:calc(var(--plf,9px)*.9);line-height:calc(var(--plh,13px)*.8);text-align:center}
 .pl{width:calc(100% - 4px);font-size:var(--plf,9px);line-height:var(--plh,13px);flex:1 1 0;min-height:0;max-height:var(--plmax,14px);border-radius:3px;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl{border-left:2px solid var(--c,var(--my));border-radius:2px;font-weight:600;padding-left:3px;box-sizing:border-box;background:color-mix(in srgb,var(--c,var(--my)) 15%,var(--bg));color:var(--fg)}
 .pl.fam{--c:var(--fam)}
@@ -2310,6 +2312,13 @@ function bwrapHtml(d,k,pop){
   const holTag=S.holRest&&hol&&isRest(sh)&&ov==null?holTagName(k,hol):'';
   return `${band}${holTag?`<span class="badge r two holtag ${pop?'pop':''}">${esc(holTag)}</span>`:badge(sh,pop?'pop':'',ov?'<i class="dot"></i>':'')}`;
 }
+// 메모가 줄 수(mx)보다 많으면: 보이는 줄은 그대로 두고 마지막 줄 끝에 "+n" 칩 (n = 더 있는 메모 수 · 10개 이상은 9+). 메모 글자가 아니라 "더 있어요" 표시로 보이게 어두운 알약 모양 — 위젯 칸과 같은 표시
+function capPills(pl,mx){
+  if(pl.length<=mx)return pl;
+  const n=pl.length-mx,out=pl.slice(0,mx),s=out[mx-1],i=s.indexOf('>');
+  out[mx-1]=s.slice(0,i+1).replace('class="pl ','class="pl withmore ')+`<span class="pt">${s.slice(i+1,-6)}</span><i class="mc" role="img" aria-label="메모 ${n}개 더 있음">${n>9?'9+':'+'+n}</i></div>`;
+  return out;
+}
 function calPanel(y,m){
   const first=new Date(y,m,1),lead=leadOf(first);
   const rows=6;   // 항상 6주 (다음 달 첫 주까지 보여줌)
@@ -2328,8 +2337,8 @@ function calPanel(y,m){
     if(!sharing)mine.forEach(x=>pills.push(`<div class="pl my${pst(x)}>${linkify(firstLine(x.text))}</div>`));
     boardOnDate(k).filter(n=>!sharing||n.shared).forEach(n=>pills.push(`<div class="pl ${n.shared?'fam':'my'}">📝 ${esc(piLabel(n))}</div>`));
     ddayHits(k).forEach(x=>pills.push(`<div class="pl dd">${ico(x.emoji||'⭐')} ${esc(x.name)}</div>`));
-    // 설정 줄 수(기본 3 · 태블릿 +1). 넘치면 마지막 줄을 +N 으로
-    if(pills.length>maxLines)pills.splice(maxLines-1,pills.length,`<div class="pl more">+${pills.length-maxLines+1}</div>`);
+    // 설정 줄 수(기본 3 · 태블릿 +1). 넘치면 마지막 줄 끝에 "+n" 칩
+    if(pills.length>maxLines)pills.splice(0,pills.length,...capPills(pills,maxLines));
     // 날짜 줄: 숫자 · 스티커 · 공휴일 이름. 좁은 칸에서 스티커와 겹치면 이름은 빼기 (날짜 줄 색으로 이미 보임)
     const stAll=sharing&&!shareStk?[]:stampsOn(k),pers=persOn(k),st0=pers?[]:stAll;
     const hnHtml=hol?esc(shortHol(hol)):chI?ico(chI.emoji||'🏢')+(narrow?'':esc(ch)):'';
@@ -6937,7 +6946,7 @@ function vcEnsure(){
 // 가족 달력 칸 · 날짜 화면에도 가족 메모(♥)를 보여줘요 (가족 메모는 사람이 아니라 날짜에 붙어요)
 function vcPills(k,mx){
   const pl=visibleMemos(k).filter(x=>x.shared).map(x=>`<div class="pl fam">${linkify(firstLine(x.text))}</div>`);
-  if(pl.length>mx)pl.splice(mx-1,pl.length,`<div class="pl more">+${pl.length-mx+1}</div>`);
+  if(pl.length>mx)pl.splice(0,pl.length,...capPills(pl,mx));
   return pl.length?`<div class="pill-wrap${pl.length>=mx?' full':''}">${pl.join('')}</div>`:'';
 }
 function vcMemoHtml(k){

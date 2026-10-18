@@ -19,14 +19,14 @@ const st={...base,stamps:{defs,log:{'2026-10-09':{a:1}},v3:1,v4:1,lastAt:[]},mem
       dotL:Math.round(dot.left-cr.left),dotR:Math.round(bd.left-dot.right),hb:[...document.querySelectorAll('.track .panel:nth-child(2) .hnb')].map(e=>e.textContent),
       h1:['2026-10-03','2026-10-05','2026-10-09'].map(k=>{const e=q(k).querySelector('.h1');return e?e.textContent:'-';}),
       plh:getComputedStyle(document.documentElement).getPropertyValue('--plh'),plf:getComputedStyle(document.documentElement).getPropertyValue('--plf'),
-      pills:q('2026-10-03').querySelectorAll('.pl').length,more:(q('2026-10-03').querySelector('.pl.more')||{}).textContent||''};});
+      pills:q('2026-10-03').querySelectorAll('.pl').length,more:(q('2026-10-03').querySelector('.pl .mc')||{}).textContent||''};});
   console.log(n,JSON.stringify(info));
   const all=[...info.sz3,...info.sz5,...info.sz9,...info.sz17];
   T(`${n}: 스티커 크기가 칸마다 같음`,new Set(all).size===1,all.join());
   T(`${n}: 동그라미가 칸 폭의 약 ${n==='t'?'':'55~60'}%`,info.ring/info.cw<.62,String(info.ring/info.cw));
   T(`${n}: 점이 동그라미 왼쪽 가운데(칸 안쪽)`,info.dotL>=3&&info.dotR>=1,JSON.stringify([info.dotL,info.dotR]));
   T(`${n}: 메모 줄 높이 · 글자 변수`,/px/.test(info.plh)&&/px/.test(info.plf),info.plh+info.plf);
-  T(`${n}: 메모 4개 → 줄 수 제한 + "+N"`,info.pills<=(n==='t'?4:3)&&(n==='t'||info.more.startsWith('+')),info.pills+info.more);
+  T(`${n}: 메모 4개 → 줄 수 제한 + 마지막 줄 끝 "+n" 칩`,info.pills<=(n==='t'?4:3)&&(n==='t'||info.more==='+1'),info.pills+info.more);
   await p.screenshot({path:`/tmp/s22_${n}.png`,clip:{x:0,y:0,width:w,height:Math.min(h,w>500?760:640)}});
   await p.close();}
  // 설정 3/4줄
