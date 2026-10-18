@@ -157,14 +157,14 @@ class WidgetDayActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         key = intent.getStringExtra("k") ?: ""
-        build()
+        build(0)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         key = intent.getStringExtra("k") ?: key
-        build()
+        build(0)
     }
 
     private fun findDay(d: JSONObject?): JSONObject? {
@@ -176,7 +176,74 @@ class WidgetDayActivity : Activity() {
         return null
     }
 
-    private fun build() {
+    /** 위젯이 가진 날짜들(앞에서부터 날짜순) */
+    private fun dayKeys(d: JSONObject?): List<String> {
+        val arr = d?.optJSONArray("days") ?: return emptyList()
+        val out = ArrayList<String>()
+        for (i in 0 until arr.length()) {
+            val k = arr.optJSONObject(i)?.optString("k", "") ?: ""
+            if (k.isNotEmpty()) out.add(k)
+        }
+        return out
+    }
+
+    /** 앞뒤 날짜로 이동: dir -1 = 전날 · +1 = 다음 날 (위젯이 가진 범위 밖이면 가만히) */
+    private fun step(dir: Int) {
+        val keys = dayKeys(data)
+        val i = keys.indexOf(key)
+        if (i < 0) return
+        val j = i + dir
+        if (j < 0 || j >= keys.size) return
+        key = keys[j]
+        build(dir)
+    }
+
+    private fun arrow(label: String, desc: String, enabled: Boolean, pal: Pal, dir: Int): TextView {
+        val t = tv(label, 26f, pal.sub, true)
+        t.gravity = Gravity.CENTER
+        t.contentDescription = desc
+        t.minimumWidth = dp(44)
+        t.minimumHeight = dp(48)
+        t.alpha = if (enabled) 1f else 0.25f
+        if (enabled) t.setOnClickListener { step(dir) } else t.isClickable = false
+        return t
+    }
+
+    // 좌우로 확실히 민 경우만 날짜 이동 (왼쪽으로 밀면 다음 날 · 앱 달력과 같은 방향). 세로 스크롤 · 링크 누르기와 안 겹치게 가로가 세로의 2배 넘을 때만
+    private var swX = 0f
+    private var swY = 0f
+    private var swiping = false
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                swX = ev.rawX
+                swY = ev.rawY
+                swiping = false
+            }
+            MotionEvent.ACTION_MOVE -> if (!swiping) {
+                val dx = ev.rawX - swX
+                val dy = ev.rawY - swY
+                if (Math.abs(dx) > dp(64) && Math.abs(dx) > Math.abs(dy) * 2f) {
+                    swiping = true
+                    val c = MotionEvent.obtain(ev)
+                    c.action = MotionEvent.ACTION_CANCEL
+                    super.dispatchTouchEvent(c)   // 아래 칸(체크 · 링크)이 누름으로 받지 않게 취소
+                    c.recycle()
+                    step(if (dx < 0) 1 else -1)
+                    return true
+                }
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> if (swiping) {
+                swiping = false
+                return true
+            }
+        }
+        if (swiping) return true
+        return super.dispatchTouchEvent(ev)
+    }
+
+    private fun build(dir: Int) {
         data = WidgetStore.load(this)
         val pal = palette()
         val day = findDay(data)
@@ -200,10 +267,14 @@ class WidgetDayActivity : Activity() {
             val head = LinearLayout(this)
             head.orientation = LinearLayout.HORIZONTAL
             head.gravity = Gravity.CENTER_VERTICAL
-            head.addView(
-                tv(day.optInt("m").toString() + "월 " + day.optInt("d") + "일 (" + dow[w] + ")", 20f, dateColor, true),
-                LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            )
+            val keys = dayKeys(data)
+            val at = keys.indexOf(key)
+            head.addView(arrow("‹", "전날", at > 0, pal, -1))
+            val title = tv(day.optInt("m").toString() + "월 " + day.optInt("d") + "일 (" + dow[w] + ")", if (resources.configuration.screenWidthDp < 360) 17f else 20f, dateColor, true)
+            title.maxLines = 1
+            head.addView(title)
+            head.addView(arrow("›", "다음 날", at >= 0 && at < keys.size - 1, pal, 1))
+            head.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
             val wk = day.optString("t", "")
             if (wk.isNotEmpty()) {
                 val bg = day.optString("bg", "")
@@ -214,10 +285,20 @@ class WidgetDayActivity : Activity() {
             }
             card.addView(head)
             if (hol.isNotEmpty()) card.addView(tv(hol, 13f, 0xFFD6334A.toInt()))
+            val chn = day.optString("ch", "")
+            if (chn.isNotEmpty()) card.addView(tv("회사 휴무 · " + chn, 13f, pal.link))
+            val an = day.optJSONArray("an")
+            if (an != null) {
+                for (i in 0 until an.length()) {
+                    val t = an.optString(i, "")
+                    if (t.isNotEmpty()) card.addView(tv(t, 13f, pal.sub))
+                }
+            }
 
             val content = LinearLayout(this)
             content.orientation = LinearLayout.VERTICAL
 
+            val far = day.optInt("far", 0) == 1
             // 스티커
             val sa = day.optJSONArray("sa")
             if (sa != null && sa.length() > 0) {
@@ -236,7 +317,9 @@ class WidgetDayActivity : Activity() {
                     content.addView(memoRow(m, pal))
                 }
             }
-            if ((sa == null || sa.length() == 0) && (mi == null || mi.length() == 0)) {
+            if (far) {
+                content.addView(tv("2주 뒤의 날이라 스티커 · 메모는 앱에서 볼 수 있어요", 14f, pal.sub))
+            } else if ((sa == null || sa.length() == 0) && (mi == null || mi.length() == 0)) {
                 content.addView(tv("이 날은 스티커도 메모도 없어요", 14f, pal.sub))
             }
             val maxH = (resources.displayMetrics.heightPixels * 0.6f).toInt()
@@ -273,6 +356,11 @@ class WidgetDayActivity : Activity() {
         lp.setMargins(dp(20), dp(24), dp(20), dp(24))
         frame.addView(card, lp)
         setContentView(frame)
+        if (dir != 0) {   // 옆 날로 넘어갈 때 살짝 밀려 들어옴 (애니메이션을 끈 폰에서는 바로)
+            card.alpha = 0f
+            card.translationX = dir * dp(36).toFloat()
+            card.animate().alpha(1f).translationX(0f).setDuration(150).start()
+        }
     }
 
     private fun parse(s: String, fallback: Int): Int =
@@ -395,7 +483,7 @@ class WidgetDayActivity : Activity() {
         WidgetStore.save(this, d.toString())
         WidgetStore.addAction(this, JSONObject().put("t", "stk").put("k", key).put("id", id).put("n", newN))
         WidgetRefresher.refreshAll(this)
-        build()
+        build(0)
     }
 
     private fun toggleMemo(m: JSONObject) {
@@ -408,7 +496,7 @@ class WidgetDayActivity : Activity() {
         else a.put("t", "memo").put("id", m.optString("id"))
         WidgetStore.addAction(this, a)
         WidgetRefresher.refreshAll(this)
-        build()
+        build(0)
     }
 
     /** 알약 스티커 (앱과 같은 모양 · 횟수만큼 조각 · 한 만큼 채움) */

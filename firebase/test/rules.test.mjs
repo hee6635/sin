@@ -355,6 +355,26 @@ await t('근무 요청 보내기: 횟수 +1 과 같은 묶음일 때만', async 
   await assertFails(setDoc(doc(db('g1'), 'households', H, 'requests', 'r2'), rq()));                 // 횟수 안 올림
   await assertFails(sendReq('g1', 'r3', rq(), 5));                                                    // 횟수 엉뚱하게
 });
+await t('보기만(read) 가족은 서버에서도 메모 · 요청을 못 보냄 (쓰기 권한 가족 · 호스트는 그대로)', async () => {
+  await fresh3();
+  await env.withSecurityRulesDisabled(async (c) => setDoc(doc(c.firestore(), 'households', H, 'members', 'g3'), { role: 'guest', name: '할머니', perm: 'read', joinedAt: Timestamp.now(), inviteCode: CODE }));
+  await assertFails(sendReq('g3', 'rx', rq({ from: 'g3', fromName: '할머니' })));
+  await assertFails(sendMemo('g3', 'mx', memo({ by: 'g3', byName: '할머니', to: ['g3', H] })));
+  await assertSucceeds(sendReq('g1', 'ry', rq()));
+  await assertSucceeds(sendMemo('g1', 'my', memo(), 1));
+  await assertSucceeds(sendMemo(H, 'mh', memo({ by: H, byName: '아빠', to: [H, 'g1'] })));
+  await assertSucceeds(sendReq(H, 'rh', rq({ from: H, fromName: '아빠', to: 'g1', toName: '엄마' }), 1));
+});
+await t('호스트가 권한을 보기만으로 바꾸면 그때부터 못 보냄 (이미 보낸 내 메모 지우기는 됨)', async () => {
+  await fresh3();
+  await assertSucceeds(sendMemo('g1', 'm1', memo()));
+  await assertSucceeds(updateDoc(doc(db(H), 'households', H, 'members', 'g1'), { perm: 'read' }));
+  await assertFails(sendMemo('g1', 'm2', memo(), 1));
+  await assertFails(sendReq('g1', 'r2', rq(), 1));
+  await assertSucceeds(deleteDoc(doc(db('g1'), 'households', H, 'memos', 'm1')));
+  await assertSucceeds(updateDoc(doc(db(H), 'households', H, 'members', 'g1'), { perm: 'write' }));
+  await assertSucceeds(sendMemo('g1', 'm3', memo(), 1));
+});
 await t('근무 요청: 남 이름으로 · 나에게 · 가족 아닌 사람에게 · 이상한 값은 막힘', async () => {
   await fresh3();
   await assertFails(sendReq('g1', 'a', rq({ from: 'g2' })));

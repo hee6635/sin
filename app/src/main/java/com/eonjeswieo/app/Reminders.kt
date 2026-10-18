@@ -71,6 +71,28 @@ object Reminders {
         }
     }
 
+    /** 알림 한 줄을 지금 바로 띄움 (눌러서 앱 열기) */
+    fun postNow(ctx: Context, id: String, title: String, text: String) {
+        try {
+            val nm = ctx.getSystemService(NotificationManager::class.java)
+            nm.createNotificationChannel(NotificationChannel(CHANNEL_ID, "기념일 · 알림", NotificationManager.IMPORTANCE_DEFAULT))
+            val open = PendingIntent.getActivity(
+                ctx, id.hashCode(), Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val n = Notification.Builder(ctx, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_stat_notify)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setAutoCancel(true)
+                .setContentIntent(open)
+                .build()
+            nm.notify(id.hashCode(), n)
+        } catch (e: Exception) {
+            // 알림 권한이 없으면 그냥 넘어감
+        }
+    }
+
     /** 시각이 된 알림들을 띄우고 목록에서 지운 뒤 다음 것을 예약 */
     fun fireDue(ctx: Context) {
         val now = System.currentTimeMillis()

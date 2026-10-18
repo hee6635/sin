@@ -1261,13 +1261,16 @@ button.tbtn{cursor:pointer}
 .frqsum{display:flex;justify-content:space-between;width:100%;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,#f08a00 12%,var(--bg));color:#9a5a00;font-weight:800;font-size:14px;text-align:left}
 .ev .tx b{font-weight:800}
 .ev .q{background:none;padding:0;margin-top:2px;color:var(--muted);font-size:12.5px}
+/* 접근성: 작은 버튼은 보이는 크기는 그대로 두고 누르는 자리만 최소 44px 로 넓힘 (a11yPass 가 --tx · --ty 를 정함) */
+.tapx{position:relative}
+.tapx::after,.tapz::after,.tapb::before{content:"";position:absolute;left:calc(-1 * var(--tx,0px));right:calc(-1 * var(--tx,0px));top:calc(-1 * var(--ty,0px));bottom:calc(-1 * var(--ty,0px))}
 </style>
 </head>
 <body>
 <div id="app">
   <header id="top"></header>
   <main id="view"></main>
-  <nav id="nav">
+  <nav id="nav" role="tablist" aria-label="메뉴">
     <button data-tab="cal"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>달력</button>
     <button data-tab="fam"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1a5 5 0 0 1 5-5h3a5 5 0 0 1 5 5v1"/><circle cx="17.5" cy="9.5" r="2.5"/><path d="M17 14.2a4 4 0 0 1 4.5 4V20"/></svg>가족<i class="nbdg" id="famBadge"></i></button>
     <button data-tab="alarm"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4.5l3 1.5M4 5.5l3-2.5M20 5.5l-3-2.5"/></svg>알람</button>
@@ -1284,7 +1287,7 @@ button.tbtn{cursor:pointer}
   <div id="scrim" data-act="close"></div>
   <div id="sheet"></div>
   <div id="page"></div>
-  <div id="toast"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
 </div>
 <div id="pop"></div>
 <div id="onboard"></div>
@@ -1380,20 +1383,21 @@ function famCleanFam2(f){   // 폰에 저장해 둔 가족 복사본 (옛 버전
 
 /* ================= 한국 공휴일 =================
  * 양력 공휴일과 대체공휴일은 규칙으로 계산하고,
- * 음력 명절(설날·부처님오신날·추석)은 아래 표에 직접 적어둡니다. (2026~2030 확인 완료)
+ * 음력 명절(설날·부처님오신날·추석)은 아래 표에 직접 적어둡니다. (2025~2030 확인 완료)
  * → 해마다 6월쯤 나오는 '월력요항'을 보고 다음 해를 한 줄 추가하세요.
  * 선거일·임시공휴일은 EXTRA_HOL 에 추가하세요.
  * (규칙: 'SS'=토·일과 겹치면 대체, 'S'=일요일과 겹칠 때만, 'N'=대체 없음, 다른 공휴일과 겹치면 모두 대체 1일)
  */
 //#HOL_START
 const LUNAR={
+  2025:['2025-01-29','2025-05-05','2025-10-06'],   // 지난 해도 달력에서 볼 수 있게 (수당 · 근무 확인)
   2026:['2026-02-17','2026-05-24','2026-09-25'],   // 설날, 부처님오신날, 추석
   2027:['2027-02-07','2027-05-13','2027-09-15'],
   2028:['2028-01-27','2028-05-02','2028-10-03'],
   2029:['2029-02-13','2029-05-20','2029-09-22'],
   2030:['2030-02-03','2030-05-09','2030-09-12']
 };
-const EXTRA_HOL={'2026-06-03':'지방선거일','2028-04-12':'국회의원선거'};
+const EXTRA_HOL={'2025-01-27':'임시공휴일','2025-06-03':'대통령선거일','2026-06-03':'지방선거일','2028-04-12':'국회의원선거'};
 const holCache={};
 function computeHol(y){
   const bases=[];
@@ -1525,10 +1529,10 @@ function badge(k,extra,inner){
   if(!c)return `<span class="badge r${two} ${extra||''}">${esc(k)}${inner||''}</span>`;
   return `<span class="badge c${two} ${extra||''}" style="--tb:${c.bg};--tf:${c.fg}">${esc(k)}${inner||''}</span>`;
 }
-let MIN_M=2026*12, MAX_M=2030*12+11;   // 공휴일 데이터가 있는 범위 (서버 공휴일을 받으면 늘어남)
+let MIN_M=2025*12, MAX_M=2030*12+11;   // 달력을 넘길 수 있는 범위 = 공휴일 계산이 되는 해 (서버 공휴일을 받으면 늘어남)
 function updateRange(){
   const ys=Object.keys(REMOTE_HOL.years||{}).map(Number).filter(Boolean);
-  MIN_M=Math.min(2026,...ys)*12;
+  MIN_M=Math.min(2025,...ys)*12;
   MAX_M=Math.max(2030,...ys)*12+11;
 }
 updateRange();
@@ -1590,7 +1594,9 @@ const defaults=()=>({
   fontScale:100,
   theme:'system',   // 화면 모드: system(폰 설정 따라감) · light · dark
   showBand:false,  // 같은 근무가 이어질 때 칸 사이를 잇는 색 띠 (새로 설치하면 꺼짐, 예전 데이터는 켜짐 그대로)
-  drive:{last:0,dirty:false,email:'',auto:true}
+  drive:{last:0,dirty:false,email:'',auto:true},
+  born:Date.now(),         // 처음 쓴 때 (며칠 쓴 뒤 "백업해 둘까요?" 한 번 물어보는 데 씀)
+  nudgeBk:0                // 그 안내를 보여준 때 (0 = 아직)
 });
 const REM_DAYS=[7,3,2,1,0],REM_SHORT={7:'1주',3:'3일',2:'2일',1:'전날',0:'당일'},REM_LABEL={7:'1주 전',3:'3일 전',2:'2일 전',1:'전날',0:'당일'},REM_AT=['08:00','12:00','20:00','22:00'];
 function normalize(o){
@@ -1598,6 +1604,7 @@ function normalize(o){
   const d=defaults(),s=Object.assign({},d,o);   // (d 는 그대로 둬야 아래 "깨진 값은 기본값으로"가 먹음)
   s.syncSettings=Object.assign(defaults().syncSettings,isObj(o.syncSettings)?o.syncSettings:{});
   s.pay=Object.assign({wage:0,hours:12},isObj(o.pay)?o.pay:{});s.pay.wage=Math.max(0,+s.pay.wage||0);s.pay.hours=Math.max(1,Math.min(24,+s.pay.hours||12));
+  s.born=(+s.born>0&&+s.born<=Date.now()+864e5)?+s.born:Date.now();s.nudgeBk=+s.nudgeBk>0?+s.nudgeBk:0;
   // 깨진 값 방어: 모양이 안 맞는 칸은 기본값으로 (첫 화면이 안 뜨거나 저장 데이터를 못 읽는 일을 막음)
   if(!Array.isArray(s.pattern)||s.pattern.length<2||s.pattern.length>366)s.pattern=d.pattern;
   s.pattern=s.pattern.map(x=>cutTxt(x,6));
@@ -1756,6 +1763,8 @@ function pushAlarmsToNative(){
       const list=buildSchedule(180).map(x=>({id:`${x.a.id}_${fmt(x.d)}`,at:x.at.getTime(),label:x.a.label||'',shift:x.sh,shiftName:shiftLabel(x.sh),time:x.a.time,
         sound:x.a.sound!==false,vib:x.a.vib!==false,vol:x.a.vol??100,ramp:!!x.a.ramp,tone:x.a.tone||'',snMin:x.a.snMin||5,snMax:x.a.snMax??3}));
       window.AndroidBridge.setAlarms(JSON.stringify(list));
+      // 반복 알람이 켜져 있으면 폰이 "목록이 끝나기 한 주 전" 알림을 예약 (앱을 한 번도 안 열면 180일 뒤 알람이 끊기므로)
+      if(typeof window.AndroidBridge.setAlarmsCont==='function')window.AndroidBridge.setAlarmsCont(S.alarms.some(a=>a.on&&!a.once));
     }
   }catch(e){}
 }
@@ -1776,7 +1785,8 @@ function widgetJson(){
     const d=addDays(t0,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),pers=persOn(k);
     const c=(pers||sh===''||sh===NONE_K)?null:tColors(typeOf(sh));
     const rest=!pers&&sh!==''&&sh!==NONE_K&&isRest(sh);
-    if(i>=14){days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',far:1});continue;}
+    if(i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',far:1,
+      ...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 2주 뒤 날: 근무 · 공휴일 · 회사 휴무 · 기념일 이름만
     const sa=stampsOn(k).slice(0,12).map(x=>{
       const id=String(x.s.id),nm=String(x.s.name||'').slice(0,12);
       if(x.s.kind==='pill')return {id,nm,p:1,c:cssHex(x.v&&x.v.col)||'#7e57c2',h:String((x.v&&x.v.shape)||'caps'),n:x.n,N:Math.max(1,Math.min(3,x.v.N||1))};
@@ -2084,7 +2094,7 @@ function applyTheme(){
   const st=document.documentElement.style,f=S.memoColors.fam||'#7b5cf0',m=S.memoColors.my||'#6b7280';
   st.setProperty('--fam',f);
   st.setProperty('--fam-fg',fgOn(f));
-  st.setProperty('--fam-bg',`color-mix(in srgb, ${f} 13%, var(--bg))`);
+  st.setProperty('--fam-bg',`color-mix(in srgb, ${f} 20%, var(--bg))`);   // 개인 메모 색(연한 색)과 구분되게 조금 짙게
   st.setProperty('--fam-line',`color-mix(in srgb, ${f} 38%, var(--bg))`);
   st.setProperty('--my',m);
   st.setProperty('--my-bg',`color-mix(in srgb, ${m} 12%, var(--bg))`);
@@ -4242,7 +4252,7 @@ function memoSection(k){
   return `<div class="sec"><div class="sec-t">메모</div>${tabs}${body}</div>${bar}`;
 }
 /* ---- 메모 자세히 (전체 화면): 색 · 할 일 · 시간/알림 · 나만/가족에게 ---- */
-const MEMO_COL=['#fff1c4','#ffd9e4','#ffe0c7','#d6f5df','#d9ecff','#e6ddff','#e8eaee'];
+const MEMO_COL=['#fff1c4','#ffd9e4','#ffe0c7','#d6f5df','#d2f1ef','#d9ecff','#e8eaee'];   // 연보라는 가족 메모 색과 닮아서 뺌 (이미 칠한 메모는 그대로)
 let mdDraft=null;
 const mdApply=(m,x)=>{['color','todo','done','time','al'].forEach(p=>{if(x[p]===undefined)delete m[p];else m[p]=x[p];});};
 function mdPull(){const e=$('#mdText');if(e&&mdDraft)mdDraft.text=e.value;}
@@ -4657,10 +4667,11 @@ function introNotice(){
   S.seenVer=v;save();
   openPop(`<div class="mh">${esc(v)}<b>새로 생겼어요</b></div>
     <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0;line-height:1.7">
-      · <b>스티커</b>: 내 9칸 + ＋ · 빈 칸에 내 이모티콘 · 약 모양 · 끌어서 순서<br>
-      · 달력 칸: 스티커 크기 통일 · 메모 줄 수 선택 · 동그라미 작게<br>
-      · 메모의 주소는 <b>링크</b>로 눌러서 열어요<br>
-      · 설명 글을 줄였어요<br><br>
+      · <b>알람</b>: 폰이 저절로 다시 켜져도 잠금을 풀기 전에 알람이 다시 걸려요 · 앞으로 180일치 · 앱을 오래 안 열면 끊기기 전에 알려요<br>
+      · <b>위젯</b>: 칸 배치 정리 · 스티커 "1/2" 숫자 · 큰 창에서 옆으로 밀거나 ‹ › 로 앞뒤 날짜 보기<br>
+      · <b>메모</b>: 길게 눌러 복사 · 스티커마다 가족에게 보일지 고르기 (가족이 있을 때)<br>
+      · <b>데이터 안전</b>: 저장 값이 깨져도 앱이 열리고, 가족이 보낸 값은 한 번 더 걸러서 받아요<br>
+      · 설정 › 개인정보처리방침이 새 글로 · 모두 지우기는 서버(가족방 · 로그인 계정)까지 지워요<br><br>
       <span style="color:var(--muted)">업데이트해도 내 데이터는 그대로예요.</span></div></div>
     <div class="mi"><button class="btn grow" data-act="pop-close">확인</button></div>`);
 }
@@ -4671,6 +4682,16 @@ function addonNotice(){
   openPop(`<div class="mh">${old?'일부 기능이 옮겨졌어요':'알아 두면 좋아요'}<b>설정 › 부가 기능</b></div>
     <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0">${old?'휴무일 · 기념일, 같이 쉬는 날, 응원 버튼, 내 상태, 동료 근무, 근무 통계 · 수당이 <b>부가 기능</b>으로 옮겨져 꺼져 있어요.<br>쓰던 내용은 그대로 있고, 켜면 바로 돌아와요.':'앱이 단순하게 보이도록 덜 쓰는 기능은 꺼 두었어요.<br>필요하면 <b>설정 › 부가 기능</b>에서 켜세요.'}</div></div>
     <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">닫기</button><button class="btn grow" data-act="addon-go">부가 기능 보기</button></div>`);
+}
+// 며칠 쓴 뒤 딱 한 번: 백업을 안 켠 사람에게 "백업해 둘까요?" (구글 드라이브 기능이 있는 앱에서만 · 이미 켰거나 한 번 보여줬으면 안 나옴)
+function backupNudge(){
+  if(!S.onboarded||ob||pageMode||S.nudgeBk||S.drive.last||!hasBridge('driveLinked')||$('#pop').classList.contains('open')||$('#sheet').classList.contains('open'))return;
+  if(Date.now()-S.born<5*864e5||!(S.myset||Object.keys(S.memos||{}).length||Object.keys(S.overrides||{}).length))return;
+  try{if(window.AndroidBridge.driveLinked())return;}catch(e){return;}
+  S.nudgeBk=Date.now();persist();
+  openPop(`<div class="mh">☁️ 백업해 둘까요?<b>폰을 바꿔도 기록이 안 사라져요</b></div>
+    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0">근무 변경 · 메모 · 설정이 지금은 이 폰에만 있어요. 구글 드라이브에 백업해 두면 폰을 바꾸거나 앱을 지워도 그대로 불러올 수 있어요. 설정 › 백업 · 복원에서 언제든 할 수 있어요.<br><span style="color:var(--muted)">이 안내는 한 번만 나와요.</span></div></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">나중에</button><button class="btn grow" data-act="nudge-bk">백업 켜기</button></div>`);
 }
 function appVersion(){
   try{if(window.AndroidBridge&&window.AndroidBridge.appInfo)return 'v'+JSON.parse(window.AndroidBridge.appInfo()).version;}catch(e){}
@@ -4747,7 +4768,7 @@ function openFamilyPage(){
 const MEMO_PAL=['#7b5cf0','#5b8def','#2f6bf0','#0fa3b1','#1f8f75','#43a047','#f08c00','#e8590c','#c2255c','#e0455c','#8a65c9','#6b7280','#3a3d43','#795548'];
 function openColorsPage(){
   const c=S.memoColors;
-  const sw=(key)=>`<div class="swatch">${MEMO_PAL.map(x=>`<button class="${c[key]===x?'on':''}" style="background:${x}" data-act="mcolor" data-k="${key}" data-v="${x}"></button>`).join('')}</div>`;
+  const sw=(key)=>`<div class="swatch">${MEMO_PAL.filter(x=>x===c[key]||x!==c[key==='fam'?'my':'fam']).map(x=>`<button class="${c[key]===x?'on':''}" style="background:${x}" data-act="mcolor" data-k="${key}" data-v="${x}"></button>`).join('')}</div>`;
   const reddish=h=>{const [r,g,b]=hexRgb(h);return r>170&&g<110&&b<130;};
   openPage(`
     ${pageHead('메모 색')}
@@ -5197,33 +5218,125 @@ function sendInquiry(){
   let info={};try{if(hasBridge('appInfo'))info=JSON.parse(window.AndroidBridge.appInfo());}catch(e){}
   let errs='';
   try{const a=JSON.parse(localStorage.getItem('eonjeswieo:err')||'[]');if(Array.isArray(a)&&a.length)errs='\n최근 오류:\n'+a.slice(-5).map(x=>{const d=new Date(+x.t||0);return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())} ${String(x.m||'').slice(0,120)} ${String(x.s||'').slice(0,40)}`;}).join('\n');}catch(e){}
-  const body=`\n\n\n----\n앱: 언제쉬어 ${info.version||''}\n기기: ${info.device||navigator.userAgent}\n안드로이드: ${info.android||''}${errs}`;
+  const famNo=S.link&&S.link.uid?`\n가족 연결 번호: ${String(S.link.uid).slice(0,40)}`:'';   // 서버에 남은 정보를 찾아 지울 때 쓰는 번호 (이름 · 이메일 아님)
+  const body=`\n\n\n----\n앱: 언제쉬어 ${info.version||''}\n기기: ${info.device||navigator.userAgent}\n안드로이드: ${info.android||''}${famNo}${errs}`;
   if(hasBridge('sendMail')){window.AndroidBridge.sendMail(SUPPORT_MAIL,'[언제쉬어] 문의',body);return;}
   location.href=`mailto:${SUPPORT_MAIL}?subject=${encodeURIComponent('[언제쉬어] 문의')}&body=${encodeURIComponent(body)}`;
 }
 const SUPPORT_MAIL='eonjeswieo.app@gmail.com';   // 문의 받을 메일 주소 (운영용)
+const PRIVACY_URL='https://eonjeswieo.web.app/privacy',DELETE_URL='https://eonjeswieo.web.app/delete',PRIVACY_DATE='2026년 10월 18일';
 function openPrivacyPage(){
   openPage(`
     ${pageHead('개인정보처리방침')}
     <div class="pg-b"><div class="policy">
-      <b>언제쉬어 개인정보처리방침</b>
-      <h4>1. 저장하는 정보</h4>근무 패턴·근무 변경, 메모, 월 포스트잇, D-day, 회사 휴무일, 알람 설정, 앱 설정을 저장합니다. 이름·전화번호·위치 같은 정보는 받지 않습니다.
-      <h4>2. 저장하는 곳</h4>모든 정보는 이 폰 안에만 저장됩니다. 구글 드라이브 백업을 켜면 사용자 본인의 구글 드라이브 "앱 전용 숨김 폴더"에 백업 파일이 저장되며, 다른 앱이나 저희가 볼 수 없습니다.
-      <h4>3. 인터넷 사용</h4>공휴일 목록(공공 정보)을 하루 한 번 받아 옵니다. 이때 사용자 정보는 보내지 않습니다.
-      <h4>4. 가족 공유 (다음 업데이트)</h4>가족 연결을 켜면 "가족 메모"로 정한 메모와 근무표만 가족과 공유됩니다. "나만 보는 메모"는 서버에 올라가지 않습니다. 스티커(약 · 운동 기록)는 "스티커 보여주기"를 직접 켠 경우에만 공유됩니다 (기본은 꺼짐).
-      <h4>5. 지우기</h4>더 보기 › 내 데이터 모두 지우기로 언제든 모든 정보를 지울 수 있습니다. 구글 드라이브 백업은 구글 드라이브 설정 › 앱 관리에서 지울 수 있습니다.
-      <h4>6. 문의</h4>더 보기 › 문의하기로 연락해 주세요.
+      <b>언제쉬어 개인정보처리방침</b><br><small style="color:var(--muted)">시행일 ${PRIVACY_DATE}</small>
+      <h4>1. 한 줄 요약</h4>기본은 모두 이 폰 안에만 저장돼요. <b>가족 연결</b>이나 <b>구글 드라이브 백업</b>을 직접 켰을 때만 그 정보가 구글 서버로 가요. 광고 · 분석 도구는 쓰지 않아요.
+      <h4>2. 이 폰에만 저장하는 정보</h4>근무 패턴 · 근무 변경 · 메모 · 월 포스트잇 · 기념일 · 회사 휴무일 · 스티커(직접 고른 사진 포함) · 알람과 앱 설정. 이름 · 전화번호 · 연락처 · 위치는 받지 않아요. "나만 보는 메모"와 개인 캘린더는 서버에 올라가지 않아요.
+      <h4>3. 가족 연결을 켰을 때 서버에 올라가는 정보</h4>
+      · 로그인 번호: 이름 · 이메일이 없는 무작위 번호(익명 로그인). 구글 계정으로 연결하면 그 이메일도 로그인 정보로 저장돼요.<br>
+      · 가족방 정보: 내가 정한 호칭 · 초대 코드 · 권한(보기만 / 메모 · 요청 보내기).<br>
+      · 내 근무표: 근무 패턴 · 바꾼 날 · 근무 이름과 색. "스티커 보여주기"를 켠 경우에만 고른 스티커의 기록(사진 스티커는 작게 줄인 사진)이 같이 올라가요. 약은 기본으로 빠져요.<br>
+      · 가족 메모(고른 가족에게만 보여요) · 근무 요청과 답 · 보낸 횟수(무료 횟수 계산).<br>
+      · 푸시 알림 주소와 자는 시간. 알림 문구에는 메모 내용을 넣지 않아요.<br>
+      서버는 구글 클라우드(Firebase)이고, 데이터는 한국(서울) 서버에 저장돼요. 가족방 사람만 읽을 수 있도록 보안 규칙으로 막아 둬요.
+      <h4>4. 구글 드라이브 백업 (선택)</h4>켜면 내 구글 드라이브의 "앱 전용 숨김 폴더"에 백업 파일이 저장돼요. 다른 앱이나 저희는 볼 수 없어요.
+      <h4>5. 인터넷 사용</h4>공휴일 목록(공공 정보)을 하루 한 번 받아 와요. 이때 사용자 정보는 보내지 않아요.
+      <h4>6. 제3자 제공 · 국외 이전</h4>구글(Google LLC)이 로그인 · 데이터 저장 · 푸시 알림 · 드라이브 · 구글 로그인 서비스를 제공하기 위해 위 정보를 처리해요. 서비스를 쓰는 동안 인터넷으로 전송되고, 구글 서버(한국 · 미국 등)에 보관돼요. 광고나 마케팅 목적으로 다른 곳에 주지 않아요.
+      <h4>7. 보관과 지우기</h4>
+      · 이 폰의 정보: 앱을 지우거나 "내 데이터 모두 지우기"를 할 때까지.<br>
+      · 서버의 정보: 가족방을 없애거나 가족방에서 나가거나 "내 데이터 모두 지우기"를 할 때까지. "내 데이터 모두 지우기"는 서버의 내 정보와 로그인 계정까지 함께 지워요. 초대 코드는 7일이 지나면 쓸 수 없어요.<br>
+      · 앱을 이미 지웠다면 아래 문의 메일로 지워 달라고 요청해 주세요. 요청은 지체 없이 처리해요.<br>
+      · 구글 드라이브 백업 파일은 구글 드라이브 설정 › 앱 관리에서 지울 수 있어요.
+      <h4>8. 이용자의 권리</h4>언제든 내 정보를 보고, 고치고, 지우고, 처리를 멈춰 달라고 할 수 있어요. 앱 안(설정 › 내 데이터 모두 지우기, 설정 › 가족 연결)에서 직접 하거나 문의 메일로 요청해 주세요.
+      <h4>9. 어린이</h4>만 14세 미만 어린이를 대상으로 하지 않으며, 알면서 어린이의 정보를 받지 않아요.
+      <h4>10. 안전하게 지키기</h4>서버 전송은 암호화(HTTPS)되고, 서버 접근은 보안 규칙으로 가족방 사람에게만 열려 있어요. 앱 화면은 외부 스크립트를 막는 보안 설정(CSP)을 켜 두었어요.
+      <h4>11. 문의 · 개인정보 보호책임자</h4>언제쉬어 운영팀 · ${SUPPORT_MAIL}<br>설정 › 문의하기에서도 보낼 수 있어요.
+      <h4>12. 방침이 바뀔 때</h4>내용이 바뀌면 앱 업데이트와 이 화면 · 웹 주소에 먼저 알려요. 나중에 광고나 결제를 넣게 되면 그 전에 이 글을 먼저 고쳐요.
+      <div style="margin-top:14px"><a class="btn ghost" data-act="lnk-go" data-u="${PRIVACY_URL}" style="display:block;text-align:center">웹에서 전체 보기</a></div>
+      <div style="margin-top:8px"><a class="btn ghost" data-act="lnk-go" data-u="${DELETE_URL}" style="display:block;text-align:center">계정 · 데이터 삭제 안내 (웹)</a></div>
     </div></div>`,'privacy');
 }
-function wipeAll(){
-  if(!confirm('근무표·메모·알람·설정을 모두 지울까요?\n\n지우면 되돌릴 수 없어요.'))return;
-  if(!confirm('정말 모두 지울까요?'))return;
-  const L=S.link;famClear();
-  if(L&&fbCfg()){(L.role==='host'?famDissolve(L.hid):famRemoveMember(L.hid,FBX.uid)).catch(()=>{});}   // 서버의 가족방 · 구성원 정리 (실패해도 계속)
-  try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY);}catch(e){}
+/* 내 데이터 모두 지우기: 확인 두 번 → 서버(가족방 · 알림 주소 · 로그인 계정)를 먼저 지움 → 다 되면 이 폰을 비움.
+ * 서버를 못 지우면 폰은 그대로 두고 알려 줌 (서버에 남겨 둔 채 폰만 지워 버리지 않게). 그래도 하겠다고 하면 폰만 지움. */
+const withTimeout=(p,ms)=>new Promise((ok,no)=>{const t=setTimeout(()=>no(new Error('timeout')),ms);Promise.resolve(p).then(v=>{clearTimeout(t);ok(v);},e=>{clearTimeout(t);no(e);});});
+var wipeBusy=false,wipeRe=null;   // var: 시작 때 save() 가 불러도 안전하게
+// 서버에 있는 내 것 지우기. 지울 게 없으면 조용히 끝나고, 못 지우면 throw
+async function wipeServer(){
+  for(let i=0;i<40&&FBX.busy;i++)await new Promise(r=>setTimeout(r,250));   // 앱을 켠 직후 연결 중이면 잠깐 기다림
+  if(!(await fbAuthInit()))return;   // 설정 없음 = 서버를 안 쓰는 앱
+  if(!FBX.auth.currentUser&&!S.link)return;   // 저장된 로그인도 가족방도 없음 = 서버에 지울 게 없음
+  await wipeReauth();   // 구글을 이은 계정이면 서버를 건드리기 전에 먼저 (계정 삭제는 최근 로그인이 필요해서, 나중에 막혀 일부만 지워지는 일이 없게)
+  const {F,db,uid}=await famReady(),L=S.link;
+  // 서버에 닿는지 · 내 자리가 아직 있는지를 서버에서 직접 확인 (오프라인이면 여기서 멈춰서, 쓰기가 대기열에 쌓이지 않음)
+  const mine=await withTimeout(F.getDocFromServer(L?famMember(F,db,L.hid,uid):F.doc(db,'ping',uid)),15000);
+  if(L&&mine.exists())await withTimeout(L.role==='host'?famDissolve(L.hid):famRemoveMember(L.hid,uid),45000);
+  famDevKey='';famUserKey='';
+  await withTimeout(Promise.all(['devices','users','ping'].map(c=>F.deleteDoc(F.doc(db,c,uid)))),20000);   // 알림 주소 · 가족방 번호 쪽지 · 연결 시험 쪽지
+  await wipeUser();
+}
+// 구글 계정을 이은 사람은 구글 로그인을 한 번 더 (최근 로그인이어야 계정을 지울 수 있음)
+async function wipeReauth(){
+  const u=FBX.auth.currentUser;
+  if(!u||!u.providerData.some(p=>p.providerId==='google.com'))return;
+  if(!googleOn()||!confirm('구글 계정 연결까지 지우려면 구글 로그인을 한 번 더 해야 해요.\n\n[확인]을 누르면 구글 로그인 창이 열려요.'))throw new Error('reauth');
+  await withTimeout(new Promise((ok,no)=>{wipeRe=r=>r?ok():no(new Error('reauth'));googleStart('reauth');}),180000).finally(()=>{wipeRe=null;});
+}
+// 로그인 계정(익명 · 구글 연결)까지 서버에서 지움
+async function wipeUser(){
+  const A=window.FB.auth;if(!FBX.auth.currentUser)return;
+  try{await withTimeout(A.deleteUser(FBX.auth.currentUser),20000);}
+  catch(e){
+    const c=String((e&&e.code)||'');
+    if(/user-not-found|user-token-expired|invalid-user-token/.test(c)){try{await A.signOut(FBX.auth);}catch(x){}return;}   // 서버에 이미 없는 계정
+    if(c.includes('requires-recent-login')){
+      if(FBX.auth.currentUser.providerData.some(p=>p.providerId==='google.com'))throw new Error('recent');
+      try{await A.signOut(FBX.auth);}catch(x){}return;   // 익명 계정(이름 · 이메일 없는 무작위 번호)을 서버가 지우기 거부하면 로그아웃만
+    }
+    throw e;
+  }
+}
+// 이 폰에 남은 Firebase 사본(오프라인 저장 · 기다리던 쓰기)을 비우고 연결 상태를 처음으로
+async function fbForget(){
+  famStop();
+  try{if(FBX.db&&window.FB){const F=window.FB.fs;await withTimeout(F.terminate(FBX.db),5000);await withTimeout(F.clearIndexedDbPersistence(FBX.db),5000);}}catch(e){}
+  FBX.st='off';FBX.uid='';FBX.err='';FBX.db=null;FBX.ping=null;
+}
+function wipeBox(on){
+  let b=document.getElementById('wipeBox');
+  if(!on){if(b)b.remove();return;}
+  if(b)return;
+  b=document.createElement('div');b.id='wipeBox';b.setAttribute('role','alert');
+  b.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:700 17px/1.4 system-ui,sans-serif';
+  b.textContent='지우는 중이에요…';document.body.appendChild(b);
+}
+const wipeWhy=e=>e&&e.message==='timeout'?'서버가 응답하지 않아요':e&&e.message==='reauth'?'구글 로그인을 하지 않았어요':e&&e.message==='recent'?'계정 확인이 더 필요해요':famErr(e);
+function wipeLocal(){
+  try{if(hasBridge('driveUnlink'))window.AndroidBridge.driveUnlink();}catch(e){}   // 드라이브 연결 끊기 (만들어 둔 백업 파일은 사용자 드라이브에 남음)
+  famClear();
+  try{Object.keys(localStorage).filter(k=>/^(eonjeswieo|shiftcal):/.test(k)).forEach(k=>localStorage.removeItem(k));}catch(e){}   // 이 앱이 저장한 값 전부 (데이터 · 공휴일 사본 · 오류 기록 · 복원 사본)
   S=defaults();save();
   try{if(hasBridge('setAlarms'))window.AndroidBridge.setAlarms('[]');}catch(e){}
   closePage();tab='cal';render();startOnboarding();
+}
+async function wipeAll(){
+  if(wipeBusy)return;
+  const L=S.link,drive=!!(S.drive&&S.drive.last);
+  if(!confirm('근무표·메모·알람·설정을 모두 지울까요?\n\n지우면 되돌릴 수 없어요.'
+    +(L?(L.role==='host'?'\n\n내가 만든 가족방도 없어지고, 가족은 가족방에서 나가져요.':'\n\n가족방에서도 나가요.')+'\n서버에 있는 내 정보와 로그인 계정까지 지워서 인터넷이 필요해요.':'')
+    +(drive?'\n\n구글 드라이브에 만들어 둔 백업 파일은 안 지워져요 (구글 드라이브 설정 › 앱 관리에서 지울 수 있어요).':'')))return;
+  if(!confirm('정말 모두 지울까요?'))return;
+  wipeBusy=true;wipeBox(true);famStop();clearTimeout(famT);   // 지우는 동안 가족 쪽 일은 모두 멈춤
+  try{
+    try{await wipeServer();}
+    catch(e){
+      await fbForget();   // 서버에 쓰다 멈춘 것이 나중에 몰래 실행되지 않게
+      wipeBox(false);
+      if(!confirm(`서버에 있는 정보를 지우지 못했어요 (일부는 이미 지워졌을 수 있어요).\n(${wipeWhy(e)})\n\n인터넷을 확인하고 다시 해 보시길 권해요.\n\n[확인] 그래도 이 폰의 것만 지우기\n    (서버에 남은 정보는 문의 메일로 알려 주시면 지워 드려요)\n[취소] 지우지 않고 돌아가기`)){wipeBusy=false;if(S.link)famBoot();return;}
+      wipeBox(true);
+    }
+    await fbForget();
+    wipeLocal();
+  }finally{wipeBox(false);wipeBusy=false;}
 }
 
 /* ================= 처음 시작 설정 ================= */
@@ -5491,6 +5604,7 @@ document.addEventListener('click',e=>{
     case 'page-close':closePage();break;
     case 'pop-close':closePop();break;
     case 'lnk':if(lnkHeld){lnkHeld=false;break;}e.stopPropagation();lnkOpen(t.dataset.u,!!t.dataset.fam);break;
+    case 'nudge-bk':closePop();openBackupPage();break;
     case 'lnk-go':closePop();lnkGo(t.dataset.u);break;
     case 'lnk-open2':closePop();lnkOpen(t.dataset.u,!!t.dataset.fam);break;
     case 'lnk-copy':closePop();lnkCopy(t.dataset.u);break;
@@ -5964,7 +6078,7 @@ document.addEventListener('click',e=>{
     case 'more-wipe':wipeAll();break;
     case 'font':S.fontScale=Number(t.dataset.v);save();applyFont();render();break;
     case 'thememode':S.theme=t.dataset.v;save();applyTheme();render();break;
-    case 'mcolor':S.memoColors[t.dataset.k]=t.dataset.v;save();applyTheme();openColorsPage();break;
+    case 'mcolor':if(t.dataset.v!==S.memoColors[t.dataset.k==='fam'?'my':'fam']||S.memoColors.fam===S.memoColors.my)S.memoColors[t.dataset.k]=t.dataset.v;save();applyTheme();openColorsPage();break;
     case 'mcolor-reset':S.memoColors={fam:'#7b5cf0',my:'#6b7280'};save();applyTheme();openColorsPage();break;
     case 'paint-open':paintStart(t.dataset.k);break;
     case 'paint-k':paint.k=t.dataset.s;render();break;
@@ -6277,20 +6391,29 @@ function fbErrText(e){
   if(c.includes('load:'))return 'Firebase 파일을 못 불러왔어요';
   return c.slice(0,140);
 }
+// 설정 · SDK · 저장된 로그인 복원까지만 (새 익명 계정은 안 만듦). Firebase 설정이 없으면 null
+async function fbAuthInit(){
+  if(FBX.auth)return FBX.auth;
+  if(window.FIREBASE_CONFIG===undefined){try{await fbLoadJs('firebase/config.js');}catch(e){}}
+  const cfg=window.FIREBASE_CONFIG;FBX.cfg=!!cfg;
+  if(!cfg)return null;
+  if(!window.FB)await fbLoadJs('firebase/fb-sdk.js');
+  const {emulator,...web}=cfg,A=window.FB.auth;
+  const app=window.FB.initializeApp(web);
+  const auth=A.initializeAuth(app,{persistence:[A.indexedDBLocalPersistence,A.browserLocalPersistence]});
+  if(emulator&&emulator.auth)A.connectAuthEmulator(auth,emulator.auth,{disableWarnings:true});
+  await new Promise(res=>{const un=A.onAuthStateChanged(auth,u=>{un();res(u);});});   // 저장된 로그인 복원 기다림
+  FBX.app=app;FBX.auth=auth;
+  return auth;
+}
 async function fbConnect(){
   if(FBX.st==='ok')return true;
   if(FBX.busy)return false;
   FBX.busy=true;FBX.st='loading';FBX.err='';
   try{
-    if(window.FIREBASE_CONFIG===undefined){try{await fbLoadJs('firebase/config.js');}catch(e){}}
-    const cfg=window.FIREBASE_CONFIG;FBX.cfg=!!cfg;
-    if(!cfg){FBX.st='off';FBX.err='설정이 아직 없어요 (firebase/config.js)';return false;}
-    if(!window.FB)await fbLoadJs('firebase/fb-sdk.js');
-    const {emulator,...web}=cfg,{auth:A,fs:F}=window.FB;
-    const app=window.FB.initializeApp(web);
-    const auth=A.initializeAuth(app,{persistence:[A.indexedDBLocalPersistence,A.browserLocalPersistence]});
-    if(emulator&&emulator.auth)A.connectAuthEmulator(auth,emulator.auth,{disableWarnings:true});
-    await new Promise(res=>{const un=A.onAuthStateChanged(auth,u=>{un();res(u);});});   // 저장된 로그인 복원 기다림
+    const auth=await fbAuthInit();
+    if(!auth){FBX.st='off';FBX.err='설정이 아직 없어요 (firebase/config.js)';return false;}
+    const {emulator}=window.FIREBASE_CONFIG,{auth:A,fs:F}=window.FB,app=FBX.app;
     if(!auth.currentUser)await A.signInAnonymously(auth);
     let db;
     try{db=F.initializeFirestore(app,{localCache:F.persistentLocalCache({tabManager:F.persistentSingleTabManager()}),experimentalAutoDetectLongPolling:true});}   // 오프라인 저장 · 안드로이드 웹뷰에서 연결이 멈추지 않게 자동으로 맞춤
@@ -6515,7 +6638,7 @@ function famPayload(){
 }
 function famHash(t){let a=5381,b=52711;for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);a=((a<<5)+a^c)>>>0;b=((b<<5)+b+c*31)>>>0;}return a.toString(16)+b.toString(16);}
 function famSoon(){
-  if(!S||!S.link||!fbCfg())return;
+  if(!S||!S.link||!fbCfg()||wipeBusy)return;
   clearTimeout(famT);famT=setTimeout(()=>{if(!famView())famPush().catch(()=>{});famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});},2500);
 }
 async function famPush(force){
@@ -6574,7 +6697,7 @@ function famSchChange(u,o,n){
 // 실시간 연결이 멈췄을 때를 위해: 화면을 보는 동안 가끔 서버에서 직접 확인 (같은 처리 함수를 씀)
 let famPollAt=0,famPolling=false;
 async function famPoll(force){
-  if(!S.link||!fbCfg()||famPolling)return;
+  if(!S.link||!fbCfg()||famPolling||wipeBusy)return;
   if(!force&&document.visibilityState!=='visible')return;
   famPolling=true;famPollAt=Date.now();
   try{
@@ -6630,6 +6753,12 @@ function googleStart(req){
 window.__onGoogle=async o=>{
   if(!o||!gBusy)return;
   try{
+    if(o.req==='reauth'){   // 모두 지우기 도중: 구글 계정을 지우려고 한 번 더 로그인
+      const f=wipeRe;wipeRe=null;if(!f)return;
+      if(o.error){f(false);return;}
+      try{const A=window.FB.auth;await A.reauthenticateWithCredential(FBX.auth.currentUser,A.GoogleAuthProvider.credential(o.idToken));f(true);}catch(e){f(false);}
+      return;
+    }
     if(o.error){if(o.error!=='cancel')toast(o.error==='not_ready'?'구글 로그인은 아직 준비 중이에요':'구글 로그인을 하지 못했어요');return;}
     const {F}=await famReady();const A=window.FB.auth,cred=A.GoogleAuthProvider.credential(o.idToken);
     if(o.req==='link'){
@@ -6661,7 +6790,7 @@ window.__onGoogle=async o=>{
 // 내 가족방 번호 쪽지 (users/내uid) — 새 폰에서 찾는 용도
 let famUserKey='';
 async function famRegUser(force){
-  if(!S.link||!fbCfg())return;
+  if(!S.link||!fbCfg()||wipeBusy)return;
   const key=S.link.hid+'|'+S.link.uid;if(!force&&famUserKey===key)return;
   const {F,db}=await famReady();if(!S.link)return;
   await F.setDoc(F.doc(db,'users',S.link.uid),{hid:S.link.hid,updatedAt:F.serverTimestamp()});
@@ -6676,7 +6805,7 @@ function googleRow(){
 const pushBridge=()=>!!(window.AndroidBridge&&typeof window.AndroidBridge.fcmToken==='function');
 let famDevKey='';
 async function famRegDevice(){
-  if(!S.link||!fbCfg()||!pushBridge())return;
+  if(!S.link||!fbCfg()||!pushBridge()||wipeBusy)return;
   const tk=String(window.AndroidBridge.fcmToken()||'');if(tk.length<20)return;
   const on=S.pushOn!==false;
   // 자는 시간(앞으로 2주): 서버가 이 안에서는 소리 · 진동 없는 알림 통로로 보냄 [시작,끝,시작,끝…] (밀리초)
@@ -6704,7 +6833,7 @@ function pushRow(){
   return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">가족 알림 받기<small>내용은 빼고 이름 · 날짜만 알려줘요</small></div><label class="sw"><input type="checkbox" id="famPushOn" ${S.pushOn!==false?'checked':''}><i></i></label></div>${S.pushOn!==false?`<div class="prow"><div class="pl2">자는 시간엔 소리 없이<small>자는 시간 알림은 소리 없이 쌓여요</small></div><label class="sw"><input type="checkbox" id="famPushQuiet" ${S.pushQuiet!==false?'checked':''}><i></i></label></div>`:''}${off?'<div class="hint" style="padding:6px 16px 10px;color:#e5484d">폰 설정에서 이 앱의 알림이 꺼져 있어요. 폰 설정 › 앱 › 언제쉬어 › 알림을 켜 주세요.</div>':''}</div>`;
 }
 async function famBoot(){
-  if(!fbCfg()||!S.link||famBooting)return;famBooting=true;
+  if(!fbCfg()||!S.link||famBooting||wipeBusy)return;famBooting=true;
   try{await famSync();if(S.link){await famListen();if(!famView())famPush().catch(()=>{});famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});famRegUser().catch(()=>{});}else famClear();}
   catch(e){}finally{famBooting=false;}
 }
@@ -7321,7 +7450,73 @@ window.__refresh=()=>{
   // 권한 화면에서 돌아오면 바로 ✓ 로
   if(ob&&ob.step==='alarm')renderOb();else if(pageMode==='perm')openPermPage();
   widgetSync();pushAlarmsToNative();pushWidgetToNative();refreshHolidays();autoBackup();famBoot();famPoll(true);
+  setTimeout(backupNudge,1500);
 };
+
+/* ================= 접근성 (화면 읽기 TalkBack · 작은 버튼) =================
+ * 이 앱은 눌림을 맨 위에서 한꺼번에 받는 방식(data-act)이라, 버튼이 아닌 칸에는 role · 이름 · tabindex 를 달아 줘야 화면 읽기가 "누를 수 있는 것"으로 읽어요.
+ * 작은 버튼은 보이는 크기는 그대로 두고 누르는 자리만 넓혀요 (최소 44px). 화면이 바뀔 때마다 한 번씩(0.2초 모아서) 해요. */
+const A11Y_ACT={prev:'이전 달',next:'다음 달','open-month-picker':'달 고르기',aadd:'알람 추가','picker-prev-y':'이전 해','picker-next-y':'다음 해','pi-prev':'이전 달','pi-next':'다음 달','page-close':'닫기','pop-close':'닫기',close:'닫기','memo-chk':'완료','memo-send':'보내기','fam-edit':'고치기'};
+const A11Y_SYM={'‹':'이전','›':'다음','✕':'닫기','×':'닫기','＋':'추가','+':'추가','↻':'새로고침','⋯':'더 보기'};
+function a11yCell(k){   // 달력 칸 하나를 한 줄로 읽어 줌: 날짜 · 요일 · 근무 · 공휴일 · 메모 수 · 스티커 수
+  const d=parse(k),sh=shiftOf(d),hol=holName(k),ch=compHol(k),parts=[`${d.getMonth()+1}월 ${d.getDate()}일 ${DOW[d.getDay()]}요일`];
+  if(persOn(k))parts.push('개인 캘린더');
+  else if(sh!==''&&sh!==NONE_K)parts.push(shiftLabel(sh)+(S.overrides[k]?' (바꾼 날)':''));
+  if(hol)parts.push(hol.split('·').join(' '));
+  if(ch)parts.push('회사 휴무 '+ch);
+  const nm=visibleMemos(k).length+boardOnDate(k).length;if(nm)parts.push(`메모 ${nm}개`);
+  const ns=stampsOn(k).length;if(ns)parts.push(`스티커 ${ns}개`);
+  return parts.join(', ');
+}
+let a11yT=null;
+function a11yPass(){
+  a11yT=null;
+  try{
+    const tr=document.getElementById('track');   // 달력은 가운데 달만 읽히게 (양옆 달은 숨김)
+    if(tr)[...tr.children].forEach((p,i)=>{const v=i===1?'false':'true';if(p.getAttribute('aria-hidden')!==v)p.setAttribute('aria-hidden',v);});
+    document.querySelectorAll('#track .panel:nth-child(2) .cell[data-k]:not([aria-label])').forEach(c=>{c.setAttribute('aria-label',a11yCell(c.dataset.k));});
+    document.querySelectorAll('#nav button').forEach(b=>{b.setAttribute('role','tab');b.setAttribute('aria-selected',b.classList.contains('on')?'true':'false');});
+    ['pop','sheet','page','onboard'].forEach(id=>{const e=document.getElementById(id);if(!e)return;const open=e.classList.contains('open')&&e.innerHTML.trim().length>0;if(open){e.setAttribute('role','dialog');e.setAttribute('aria-modal','true');}else e.removeAttribute('aria-modal');});
+    document.querySelectorAll('label.sw > input[type="checkbox"]:not([aria-label])').forEach(i=>{   // 스위치: 같은 줄의 제목을 이름으로
+      const row=i.closest('.prow'),pl=row&&row.querySelector('.pl2');
+      const t=pl?((pl.firstChild&&pl.firstChild.nodeType===3?pl.firstChild.textContent:pl.textContent)||'').trim():'';
+      if(t)i.setAttribute('aria-label',t.slice(0,40));
+      i.setAttribute('role','switch');
+    });
+    const els=document.querySelectorAll('[data-act]:not([data-a11y]),label.sw:not([data-a11y])');
+    els.forEach(e=>{
+      e.setAttribute('data-a11y','1');
+      if(e.classList.contains('stz')){e.setAttribute('aria-hidden','true');return;}   // 칸 위쪽의 눈에 안 보이는 스티커 누르는 자리: 화면 읽기에서는 뺌 (날짜 창에서 스티커를 누를 수 있음)
+      const tag=e.tagName,native=tag==='BUTTON'||tag==='INPUT'||tag==='LABEL'||tag==='SELECT'||tag==='TEXTAREA';
+      if(!native&&!e.hasAttribute('role'))e.setAttribute('role','button');
+      if(!native&&!e.hasAttribute('tabindex'))e.setAttribute('tabindex','0');
+      if(!e.hasAttribute('aria-label')&&tag!=='LABEL'&&tag!=='INPUT'){
+        const t=(e.textContent||'').trim();
+        if(!t||t.length<=2){const nm=A11Y_ACT[e.dataset.act]||A11Y_SYM[t];if(nm)e.setAttribute('aria-label',nm);}
+      }
+    });
+    // 작은 버튼: 누르는 자리 넓히기 (측정은 한 번에 모아서)
+    const todo=[];
+    els.forEach(e=>{
+      if(e.classList.contains('stz')||e.closest('.cell')||e.tagName==='INPUT'||e.hasAttribute('aria-hidden'))return;
+      const r=e.getBoundingClientRect();
+      if(r.width>0&&r.height>0&&(r.width<44||r.height<44))todo.push([e,r.width,r.height]);
+    });
+    todo.forEach(([e,w,h])=>{
+      const cs=getComputedStyle(e);
+      if(cs.display==='none'||cs.visibility==='hidden')return;
+      let cls=cs.position==='static'?'tapx':'tapz';
+      if(getComputedStyle(e,'::after').content!=='none'&&cls!=='tapb'){   // 이미 꾸밈에 ::after 를 쓰고 있으면 ::before 로
+        if(getComputedStyle(e,'::before').content!=='none')return;
+        cls='tapb';if(cs.position==='static')e.style.position='relative';
+      }
+      e.style.setProperty('--tx',Math.max(0,Math.ceil((44-w)/2))+'px');e.style.setProperty('--ty',Math.max(0,Math.ceil((44-h)/2))+'px');
+      e.classList.add(cls);
+    });
+  }catch(err){try{window.__logErr&&window.__logErr(err&&err.message,'a11y');}catch(x){}}
+}
+function a11ySoon(){if(a11yT)return;a11yT=setTimeout(a11yPass,200);}
+try{new MutationObserver(a11ySoon).observe(document.body,{childList:true,subtree:true});}catch(e){}
 
 const bootStep=f=>{try{f();}catch(e){try{window.__logErr&&window.__logErr(e&&e.message,'boot');}catch(x){}}};
 bootStep(applyTheme);bootStep(applyFont);bootStep(applyBand);
@@ -7336,7 +7531,9 @@ setTimeout(widgetSync,150);
 setTimeout(introNotice,800);
 setTimeout(addonNotice,1200);
 setTimeout(autoBackup,4000);
+setTimeout(backupNudge,6000);
 setTimeout(()=>{if(loadNote==='parse')toast('저장된 데이터를 읽지 못해 새로 시작했어요 · 설정 › 백업 · 복원에서 되살릴 수 있어요');else if(loadNote==='partial')toast('일부 저장 값이 깨져서 그 부분만 기본값으로 돌렸어요');},1600);
+setTimeout(a11yPass,300);
 if(bootOk)window.__booted=true;
 })();
 

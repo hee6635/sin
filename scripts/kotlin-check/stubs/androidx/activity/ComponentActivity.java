@@ -1,0 +1,7 @@
+package androidx.activity;
+import androidx.activity.result.*;
+import androidx.activity.result.contract.ActivityResultContract;
+public class ComponentActivity extends android.app.Activity {
+  public OnBackPressedDispatcher getOnBackPressedDispatcher() { return null; }
+  public final <I, O> ActivityResultLauncher<I> registerForActivityResult(ActivityResultContract<I, O> c, ActivityResultCallback<O> cb) { return null; }
+}

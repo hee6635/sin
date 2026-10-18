@@ -10,6 +10,9 @@ on:
       - 'scripts/**'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,3 +35,30 @@ jobs:
         with:
           name: eonjeswieo-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+
+  # 출시용(release) 빌드가 되는지만 미리 점검 (시험 키로 서명하고 올리지는 않음 — 이렇게 만든 앱은 출시에 쓰면 안 됨)
+  release-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: 출시용 빌드 점검 (assembleRelease)
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease -PallowTestSigning=true
+
+      - name: 서명 키가 없으면 출시용 빌드가 막히는지 점검
+        run: |
+          if ./gradlew --no-daemon :app:validateSigningRelease > /tmp/sign.log 2>&1; then
+            echo "::error::서명 키 없이도 출시용 서명 점검이 통과했어요 (공개된 시험 키로 출시용 앱이 만들어질 수 있음)"
+            cat /tmp/sign.log
+            exit 1
+          fi
+          echo "서명 키가 없어서 막힘 (정상)"

@@ -6,6 +6,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Bitmap
@@ -23,6 +24,7 @@ import android.os.Bundle
 import android.provider.OpenableColumns
 import android.util.Base64
 import android.webkit.JsResult
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -245,21 +247,27 @@ class MainActivity : ComponentActivity() {
     private var pendingPush: String = ""
 
     private fun readPush(i: Intent?) {
-        val t = i?.getStringExtra("type") ?: return
-        if (t.isEmpty()) return
-        pendingPush = JSONObject().put("type", t).put("date", i.getStringExtra("date") ?: "")
-            .put("hid", i.getStringExtra("hid") ?: "").toString()
-        i.removeExtra("type")
+        try {   // 다른 앱이 엉뚱한 값을 실어 보내도 앱이 죽지 않게
+            val t = i?.getStringExtra("type") ?: return
+            if (t.isEmpty()) return
+            pendingPush = JSONObject().put("type", t).put("date", i.getStringExtra("date") ?: "")
+                .put("hid", i.getStringExtra("hid") ?: "").toString()
+            i.removeExtra("type")
+        } catch (e: Exception) {
+        }
     }
 
     // 위젯 창의 [앱에서 열기]로 열렸을 때 (날짜). 화면이 준비되면 웹이 가져감
     private var pendingOpenDate: String = ""
 
     private fun readOpenDate(i: Intent?) {
-        val k = i?.getStringExtra("openDate") ?: return
-        if (k.isEmpty()) return
-        pendingOpenDate = k
-        i.removeExtra("openDate")
+        try {
+            val k = i?.getStringExtra("openDate") ?: return
+            if (k.isEmpty()) return
+            pendingOpenDate = k
+            i.removeExtra("openDate")
+        } catch (e: Exception) {
+        }
     }
 
     fun takeOpenDate(): String { val p = pendingOpenDate; pendingOpenDate = ""; return p }
@@ -324,66 +332,35 @@ class MainActivity : ComponentActivity() {
         webView.post { webView.evaluateJavascript(code, null) }
     }
 
+    /** 웹 화면(WebView) 하나를 설정: 저장 · 통로(AndroidBridge) · 주소 열기 · 확인창 · 파일 고르기 */
     @SuppressLint("SetJavaScriptEnabled")
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        readPush(intent)
-        readOpenDate(intent)
-        initPush()
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+    private fun configureWebView(w: WebView) {
+        w.setBackgroundColor(Color.TRANSPARENT)
 
-        themeMode = getSharedPreferences("ui", MODE_PRIVATE).getString("theme", "system") ?: "system"
-        val root = FrameLayout(this)
-        rootView = root
-        root.setBackgroundColor(if (isNight()) Color.parseColor("#111318") else Color.WHITE)
-        webView = WebView(this)
-        root.addView(
-            webView,
-            FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-        )
-        setContentView(root)
-
-        // 상태바·내비게이션바·키보드를 피해서 그리기
-        // (키보드가 올라오면 그 높이만큼 화면을 줄여서 입력칸이 가려지지 않게)
-        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
-            val bars = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            )
-            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
-            v.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, ime.bottom))
-            WindowInsetsCompat.CONSUMED
-        }
-        val controller = WindowCompat.getInsetsController(window, root)
-        controller.isAppearanceLightStatusBars = !isNight()
-        controller.isAppearanceLightNavigationBars = !isNight()
-        webView.setBackgroundColor(Color.TRANSPARENT)
-
-        webView.settings.apply {
+        w.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true   // 웹 화면의 localStorage 저장에 필요
             allowContentAccess = false
             allowFileAccess = false
         }
 
-        drive = DriveBackup(this)
-        drive.launchConsent = { pi ->
-            consent.launch(IntentSenderRequest.Builder(pi.intentSender).build())
-        }
-
         // 웹 화면 → 안드로이드 통로 (알람 등록, 권한 상태, 공유, 백업 …)
-        webView.addJavascriptInterface(AlarmBridge(this), "AndroidBridge")
+        w.addJavascriptInterface(AlarmBridge(this), "AndroidBridge")
 
         // 앱 안의 assets 폴더를 https://appassets.androidplatform.net/assets/ 주소로 열기
         val assets = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
 
-        webView.webViewClient = object : WebViewClient() {
+        w.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
                 assets.shouldInterceptRequest(request.url)
+
+            // 웹 화면을 그리는 프로세스가 죽었을 때(메모리 부족 등): 앱 전체가 꺼지지 않고 화면만 다시 만들어 띄움 (알람은 안드로이드가 울리니 그대로)
+            override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                recoverWebView()
+                return true
+            }
 
             // 내 화면 밖으로 나가는 링크는 막기 (메일 쓰기만 메일 앱으로)
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
@@ -397,7 +374,7 @@ class MainActivity : ComponentActivity() {
         }
 
         // 웹의 confirm()/alert() 창이 WebView 에서는 기본으로 안 뜨므로 직접 띄워준다
-        webView.webChromeClient = object : WebChromeClient() {
+        w.webChromeClient = object : WebChromeClient() {
             override fun onJsConfirm(
                 view: WebView?, url: String?, message: String?, result: JsResult?
             ): Boolean {
@@ -435,6 +412,83 @@ class MainActivity : ComponentActivity() {
                 return true
             }
         }
+    }
+
+    private var goneAt = 0L
+    private var goneN = 0
+
+    /** 죽은 WebView 를 버리고 새로 만들어 같은 화면을 다시 연다 (저장된 데이터는 그대로). 짧은 시간에 거듭 죽으면 앱을 닫음 */
+    private fun recoverWebView() {
+        val root = rootView ?: return
+        val now = System.currentTimeMillis()
+        goneN = if (now - goneAt < 10_000L) goneN + 1 else 1
+        goneAt = now
+        if (goneN >= 3) {
+            finish()
+            return
+        }
+        try {
+            root.removeView(webView)
+            webView.destroy()
+        } catch (e: Exception) {
+        }
+        webView = WebView(this)
+        root.addView(webView, 0, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        configureWebView(webView)
+        webView.loadUrl(START_URL)
+    }
+
+    /** 폰은 세로로 고정 (가로로 돌리면 달력 칸이 잘림). 큰 화면(태블릿 · 폴더블 펼친 화면)은 돌릴 수 있음 */
+    private fun applyOrientationLock() {
+        requestedOrientation = if (resources.configuration.smallestScreenWidthDp < 600) ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+        else ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        applyOrientationLock()   // 폴더블을 접고 펴면 화면 크기가 바뀜
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        applyOrientationLock()
+        readPush(intent)
+        readOpenDate(intent)
+        initPush()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        themeMode = getSharedPreferences("ui", MODE_PRIVATE).getString("theme", "system") ?: "system"
+        val root = FrameLayout(this)
+        rootView = root
+        root.setBackgroundColor(if (isNight()) Color.parseColor("#111318") else Color.WHITE)
+        webView = WebView(this)
+        root.addView(
+            webView,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+        setContentView(root)
+
+        // 상태바·내비게이션바·키보드를 피해서 그리기
+        // (키보드가 올라오면 그 높이만큼 화면을 줄여서 입력칸이 가려지지 않게)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            v.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, ime.bottom))
+            WindowInsetsCompat.CONSUMED
+        }
+        val controller = WindowCompat.getInsetsController(window, root)
+        controller.isAppearanceLightStatusBars = !isNight()
+        controller.isAppearanceLightNavigationBars = !isNight()
+        drive = DriveBackup(this)
+        drive.launchConsent = { pi ->
+            consent.launch(IntentSenderRequest.Builder(pi.intentSender).build())
+        }
+        configureWebView(webView)
 
         // 뒤로가기: 웹 화면이 먼저 처리(시트 닫기, 달력으로 돌아가기), 처리할 게 없으면 앱 종료
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {

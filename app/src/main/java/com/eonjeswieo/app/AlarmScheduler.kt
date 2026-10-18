@@ -4,7 +4,9 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Build
+import android.os.UserManager
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Calendar
@@ -57,7 +59,33 @@ object AlarmScheduler {
     private const val PREFS = "alarm_list"
     private const val KEY = "json"
     private const val KEY_SNOOZE = "snooze"      // "다시 울림"으로 만든 알람 (웹 목록과 따로 보관)
+    private const val KEY_CONT = "cont"          // 반복 알람이 켜져 있어서 목록 끝 뒤로도 알람이 이어져야 하는지
     private const val REQ_NEXT = 4242
+    private const val REQ_TAIL = 4243
+    private var migrated = false
+
+    /**
+     * 알람 목록 저장소. 폰을 켠 직후 잠금을 풀기 전에도 읽히는 저장소(device protected)에 둬서,
+     * 밤사이 폰이 저절로 다시 켜져도 잠금을 풀지 않은 채로 알람을 다시 예약할 수 있게 한다.
+     */
+    private fun prefs(ctx: Context): SharedPreferences {
+        val app = ctx.applicationContext ?: ctx
+        if (Build.VERSION.SDK_INT < 24) return app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val de = app.createDeviceProtectedStorageContext()
+        if (!migrated) {
+            // 예전 버전은 잠금을 푼 뒤에만 읽히는 저장소에 목록을 두었음 → 한 번 옮김 (잠금이 풀려 있을 때만 가능)
+            val um = app.getSystemService(UserManager::class.java)
+            if (um == null || um.isUserUnlocked) {
+                try {
+                    de.moveSharedPreferencesFrom(app, PREFS)
+                } catch (e: Exception) {
+                    // 옮기지 못해도 새 목록은 웹이 다시 보내 준다
+                }
+                migrated = true
+            }
+        }
+        return de.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    }
 
     private fun manager(ctx: Context): AlarmManager =
         ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -67,13 +95,50 @@ object AlarmScheduler {
 
     /** 웹이 보낸 목록을 통째로 교체하고 다음 알람 예약 */
     fun saveList(ctx: Context, json: String) {
-        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY, json).apply()
+        prefs(ctx).edit().putString(KEY, json).apply()
         scheduleNext(ctx)
+        scheduleTail(ctx)
+    }
+
+    /** 반복 알람이 켜져 있는지(웹이 알려 줌) — 목록이 끝나기 한 주 전에 "앱을 열어 주세요" 알림을 예약하는 데 씀 */
+    fun setCont(ctx: Context, cont: Boolean) {
+        prefs(ctx).edit().putBoolean(KEY_CONT, cont).apply()
+        scheduleTail(ctx)
+    }
+
+    private fun tailPending(ctx: Context): PendingIntent =
+        PendingIntent.getBroadcast(
+            ctx, REQ_TAIL, Intent(ctx, AlarmTailReceiver::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+    /**
+     * 앱이 알람을 앞으로 180일치만 미리 보내 두므로, 앱을 한 번도 안 열면 그 뒤로는 알람이 끊긴다.
+     * 마지막 알람 7일 전에 알림 한 줄로 알려 준다 (앱을 열면 목록이 새로 채워지면서 이 예약도 새로 잡힘).
+     */
+    fun scheduleTail(ctx: Context) {
+        val am = manager(ctx)
+        am.cancel(tailPending(ctx))
+        if (!prefs(ctx).getBoolean(KEY_CONT, false)) return
+        val last = readKey(ctx, KEY).maxOfOrNull { it.at } ?: return
+        val at = last - 7 * 24 * 3600_000L
+        if (at <= System.currentTimeMillis() + 60_000L) return
+        try {
+            am.setAndAllowWhileIdle(AlarmManager.RTC, at, tailPending(ctx))   // 대략적인 시각이면 충분
+        } catch (e: Exception) {
+            // 예약하지 못해도 알람 자체는 그대로
+        }
+    }
+
+    /** 폰을 다시 켠 뒤 · 앱을 업데이트한 뒤: 다음 알람과 "끊기기 전 알림"을 다시 건다 */
+    fun rescheduleAll(ctx: Context) {
+        scheduleNext(ctx)
+        scheduleTail(ctx)
     }
 
     private fun readKey(ctx: Context, key: String): MutableList<Ring> {
         val out = ArrayList<Ring>()
-        val s = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(key, null) ?: return out
+        val s = prefs(ctx).getString(key, null) ?: return out
         try {
             val arr = JSONArray(s)
             for (i in 0 until arr.length()) out.add(Ring.from(arr.getJSONObject(i)))
@@ -94,7 +159,7 @@ object AlarmScheduler {
     private fun writeKey(ctx: Context, key: String, list: List<Ring>) {
         val arr = JSONArray()
         for (r in list) arr.put(r.toJson())
-        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(key, arr.toString()).apply()
+        prefs(ctx).edit().putString(key, arr.toString()).apply()
     }
 
     /** 가장 가까운 미래 알람 시각 (없으면 0) — 홈 화면 위젯이 "다음 알람"으로 보여줌 */
@@ -146,6 +211,12 @@ object AlarmScheduler {
         } catch (e: SecurityException) {
             // 정확한 알람 권한이 없는 상태 → 앱 화면의 안내 배너에서 설정을 열 수 있다
         }
+    }
+
+    /** 지금 울릴 알람(같은 시각 ±1분 묶음)을 목록은 그대로 둔 채 확인만 (서비스를 띄운 뒤에 consumeDue 로 지움) */
+    fun peekDue(ctx: Context, at: Long): List<Ring> {
+        val isDue = { r: Ring -> r.at >= at - 60_000 && r.at <= at + 60_000 }
+        return (readKey(ctx, KEY) + readKey(ctx, KEY_SNOOZE)).filter(isDue).sortedBy { it.at }
     }
 
     /**

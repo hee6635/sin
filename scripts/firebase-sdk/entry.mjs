@@ -4,13 +4,13 @@ import { initializeApp } from 'firebase/app';
 import {
   initializeAuth, indexedDBLocalPersistence, browserLocalPersistence,
   signInAnonymously, onAuthStateChanged, signOut, connectAuthEmulator,
-  GoogleAuthProvider, linkWithCredential, signInWithCredential,
+  GoogleAuthProvider, linkWithCredential, signInWithCredential, deleteUser, reauthenticateWithCredential,
 } from 'firebase/auth';
 import {
   initializeFirestore, persistentLocalCache, persistentSingleTabManager, memoryLocalCache,
   connectFirestoreEmulator, getFirestore, doc, collection, getDoc, getDocFromServer, getDocs, setDoc, updateDoc,
   deleteDoc, onSnapshot, writeBatch, runTransaction, serverTimestamp, increment, query, where,
-  orderBy, limit, Timestamp, arrayUnion, arrayRemove, deleteField, terminate,
+  orderBy, limit, Timestamp, arrayUnion, arrayRemove, deleteField, terminate, clearIndexedDbPersistence,
 } from 'firebase/firestore';
 
 window.FB = {
@@ -18,12 +18,12 @@ window.FB = {
   auth: {
     initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, signInAnonymously,
     onAuthStateChanged, signOut, connectAuthEmulator, GoogleAuthProvider, linkWithCredential,
-    signInWithCredential,
+    signInWithCredential, deleteUser, reauthenticateWithCredential,
   },
   fs: {
     initializeFirestore, persistentLocalCache, persistentSingleTabManager, memoryLocalCache,
     connectFirestoreEmulator, getFirestore, doc, collection, getDoc, getDocFromServer, getDocs, setDoc, updateDoc,
     deleteDoc, onSnapshot, writeBatch, runTransaction, serverTimestamp, increment, query, where,
-    orderBy, limit, Timestamp, arrayUnion, arrayRemove, deleteField, terminate,
+    orderBy, limit, Timestamp, arrayUnion, arrayRemove, deleteField, terminate, clearIndexedDbPersistence,
   },
 };

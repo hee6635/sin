@@ -10,6 +10,8 @@ service cloud.firestore {
     function isMember(hid) { return signedIn() && exists(memberPath(hid, request.auth.uid)); }
     function isOwner(hid) { return signedIn() && request.auth.uid == hid; }   // 가족방 번호(hid) = 호스트의 uid
     function validName(n) { return n is string && n.size() >= 1 && n.size() <= 12; }
+    // 메모 · 근무 요청을 보낼 수 있는 사람 = 가족방 구성원 중 권한이 '메모 · 요청 보내기'(write)인 사람 ('보기만'(read)은 앱뿐 아니라 서버에서도 막음)
+    function canWrite(hid) { return isMember(hid) && get(memberPath(hid, request.auth.uid)).data.perm == 'write'; }
 
     // ───────── 연결 시험: 자기 문서(ping/내 uid)만 ─────────
     match /ping/{uid} {
@@ -153,7 +155,7 @@ service cloud.firestore {
       allow read: if isMember(hid)
         && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid || isOwner(hid)
             || request.auth.uid in resource.data.cc);
-      allow create: if signedIn() && isMember(hid)
+      allow create: if signedIn() && canWrite(hid)
         && request.resource.data.keys().hasOnly(['from', 'to', 'fromName', 'toName', 'date', 'want', 'msg', 'st', 'reply', 'held', 'cc', 'grp', 'gn', 'lead', 'createdAt', 'updatedAt'])
         && request.resource.data.get('cc', []) is list && request.resource.data.get('cc', []).size() <= 3
         // 여러 날 요청: 같은 묶음(grp) 날짜별 문서 · 최대 14일 · 첫 문서에 lead (횟수는 묶음 1건 = 같은 묶음의 sent +1 한 번)
@@ -200,7 +202,7 @@ service cloud.firestore {
     match /households/{hid}/memos/{id} {
       allow read: if isMember(hid)
         && (resource.data.by == request.auth.uid || request.auth.uid in resource.data.get('to', []));
-      allow create: if signedIn() && isMember(hid)
+      allow create: if signedIn() && canWrite(hid)
         && request.resource.data.keys().hasOnly(['by', 'byName', 'date', 'text', 'createdAt', 'updatedAt', 'time', 'al', 'to'])
         && request.resource.data.to is list && request.resource.data.to.size() >= 1 && request.resource.data.to.size() <= 12
         && request.auth.uid in request.resource.data.to

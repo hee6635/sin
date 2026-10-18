@@ -6,14 +6,14 @@ plugins {
 
 android {
     namespace = "com.eonjeswieo.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.eonjeswieo.app"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 72
-        versionName = "0.62"
+        targetSdk = 36
+        versionCode = 73
+        versionName = "0.63"
     }
 
     signingConfigs {
@@ -32,12 +32,15 @@ android {
                 storePassword = System.getenv("RELEASE_STORE_PASSWORD")
                 keyAlias = System.getenv("RELEASE_KEY_ALIAS")
                 keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
-            } else {
+            } else if (project.hasProperty("allowTestSigning")) {
+                // CI 에서 "출시용 빌드가 되는지"만 점검할 때 (-PallowTestSigning=true). 이렇게 만든 앱은 출시에 쓰면 안 됨
                 storeFile = rootProject.file("keystore/test.keystore")
                 storePassword = "eonjeswieo"
                 keyAlias = "eonjeswieo"
                 keyPassword = "eonjeswieo"
             }
+            // 둘 다 아니면 서명 정보를 비워 둠 → 출시용 빌드가 "서명 키가 없다"며 실패함
+            // (공개된 시험 키로 출시용 앱이 조용히 만들어지지 않게)
         }
     }
 

@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
@@ -32,6 +33,47 @@ class AlarmService : Service() {
         private const val NOTIF_ID = 1001
         private const val AUTO_STOP_MS = 3 * 60 * 1000L
         private const val RAMP_MS = 30_000L      // 점점 커지는 소리: 30초 동안
+        private const val BACKUP_CHANNEL = "eonjeswieo_alarm_backup"
+
+        private fun ringIntent(ctx: Context, r: Ring): Intent {
+            val i = Intent(ctx, AlarmActivity::class.java)
+            i.putExtra(AlarmActivity.EXTRA_TITLE, r.label)
+            i.putExtra(AlarmActivity.EXTRA_TIME, AlarmScheduler.timeText(r.at))
+            i.putExtra(AlarmActivity.EXTRA_SNOOZE_MIN, if (AlarmScheduler.canSnooze(r)) r.snMin else 0)
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            return i
+        }
+
+        /**
+         * 알람 서비스를 시스템이 못 띄우게 막았을 때의 마지막 수단:
+         * 알람 소리가 나는 알림(+ 전체 화면 알림)을 직접 띄운다. 알림이 막혀 있으면 아무것도 못 함.
+         */
+        fun fallbackNotify(ctx: Context, r: Ring) {
+            try {
+                val nm = ctx.getSystemService(NotificationManager::class.java)
+                val ch = NotificationChannel(BACKUP_CHANNEL, "알람 (보조)", NotificationManager.IMPORTANCE_HIGH)
+                ch.setSound(
+                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
+                    AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
+                )
+                ch.enableVibration(true)
+                ch.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                nm.createNotificationChannel(ch)
+                val pi = PendingIntent.getActivity(ctx, 3, ringIntent(ctx, r), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                val n = Notification.Builder(ctx, BACKUP_CHANNEL)
+                    .setSmallIcon(R.drawable.ic_stat_notify)
+                    .setContentTitle(r.label)
+                    .setContentText(AlarmScheduler.timeText(r.at))
+                    .setCategory(Notification.CATEGORY_ALARM)
+                    .setAutoCancel(true)
+                    .setContentIntent(pi)
+                    .setFullScreenIntent(pi, true)
+                    .build()
+                nm.notify(NOTIF_ID + 1, n)
+            } catch (e: Exception) {
+                // 알림 권한이 없으면 방법이 없음 (앱 화면의 "알람이 잘 울리게"에서 알려 줌)
+            }
+        }
     }
 
     private var player: MediaPlayer? = null
@@ -92,11 +134,7 @@ class AlarmService : Service() {
         val time = AlarmScheduler.timeText(r.at)
         val canSnooze = AlarmScheduler.canSnooze(r)
 
-        val ringIntent = Intent(this, AlarmActivity::class.java)
-        ringIntent.putExtra(AlarmActivity.EXTRA_TITLE, title)
-        ringIntent.putExtra(AlarmActivity.EXTRA_TIME, time)
-        ringIntent.putExtra(AlarmActivity.EXTRA_SNOOZE_MIN, if (canSnooze) r.snMin else 0)
-        ringIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val ringIntent = ringIntent(this, r)
         val ringPi = PendingIntent.getActivity(
             this, 0, ringIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -129,6 +167,13 @@ class AlarmService : Service() {
             startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         } else {
             startForeground(NOTIF_ID, notification)
+        }
+        // 알림을 끈 폰은 전체 화면 알림이 안 떠서 끄는 화면이 없음 → 화면을 직접 열어 봄 (시스템이 막으면 소리만 나고 3분 뒤 멈춤)
+        if (!nm.areNotificationsEnabled()) {
+            try {
+                startActivity(ringIntent)
+            } catch (e: Exception) {
+            }
         }
     }
 
@@ -193,6 +238,10 @@ class AlarmService : Service() {
         stopForeground(STOP_FOREGROUND_REMOVE)
         // 열려 있는 알람 화면도 닫기
         sendBroadcast(Intent(ACTION_STOPPED).setPackage(packageName))
+        try {
+            WidgetRefresher.refreshAll(this)   // 위젯의 "다음 알람" 글자를 바로 갱신
+        } catch (e: Exception) {
+        }
         stopSelf()
     }
 

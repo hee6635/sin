@@ -195,6 +195,12 @@ class AlarmBridge(private val activity: MainActivity) {
         AlarmScheduler.saveList(context, json)
     }
 
+    /** 반복 알람이 켜져 있는지: 켜져 있으면 목록이 끝나기 한 주 전에 "앱을 열어 주세요" 알림을 예약 */
+    @JavascriptInterface
+    fun setAlarmsCont(cont: Boolean) {
+        AlarmScheduler.setCont(context, cont)
+    }
+
     /** 알람에 필요한데 아직 허용되지 않은 항목들 (예: "exact,notif"), 다 됐으면 빈 문자열 */
     @JavascriptInterface
     fun status(): String {
@@ -223,8 +229,8 @@ class AlarmBridge(private val activity: MainActivity) {
                     .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
             "fsi" ->
                 if (Build.VERSION.SDK_INT >= 34) Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, pkg) else null
-            // "배터리 사용 제한 없음으로 할까요?" 창 (안 되는 기기면 배터리 최적화 목록 화면)
-            "batt" -> Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, pkg)
+            // 배터리 최적화 목록 화면 (알람 시계 방식 알람에는 이 권한이 필요 없어서, 허용 창을 바로 띄우는 대신 목록 화면을 열어 줌)
+            "batt" -> Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
             else -> null
         }
         if (intent != null) {
@@ -232,10 +238,7 @@ class AlarmBridge(private val activity: MainActivity) {
             try {
                 context.startActivity(intent)
             } catch (e: Exception) {
-                // 허용 창이 없는 기기면 배터리 최적화 목록 화면으로, 그것도 없으면 무시
-                if (kind == "batt") try {
-                    context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                } catch (e2: Exception) {}
+                // 열 수 있는 화면이 없는 기기면 무시
             }
         }
     }
