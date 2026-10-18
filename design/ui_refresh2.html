@@ -1,0 +1,89 @@
+<!doctype html><meta charset=utf-8><title>언제쉬어 새 모양 시안 B</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{background:#e9e3d6;font-family:"Noto Sans KR","Apple SD Gothic Neo","WenQuanYi Zen Hei",sans-serif;color:#2b2418;padding:28px 30px 34px;width:1640px}
+h1{font-size:26px}.sub{font-size:15px;color:#6b624f;margin:4px 0 20px}
+.row{display:flex;gap:26px}.col{width:380px}
+.cap{font-size:15px;font-weight:700;margin:0 0 8px}.cap small{font-weight:400;color:#7a705c;margin-left:4px}
+.ph{width:380px;height:760px;border-radius:34px;background:#fbf8f1;box-shadow:0 8px 30px #4a3c1e33;position:relative;overflow:hidden;border:6px solid #2b2418}
+.ph.dark{background:#17150f;color:#efe9da}
+.scr{padding:14px 16px 0}
+.bar{display:flex;justify-content:space-between;font-size:12px;color:#9a907a;padding:2px 2px 6px}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;margin:4px 2px 10px}
+.hd .yr{font-size:12px;color:#8a7f68;letter-spacing:2px}.hd .m{font-size:34px;font-weight:900;line-height:1.05;font-family:"Noto Serif KR","WenQuanYi Zen Hei",serif}
+.hd .r{text-align:right;font-size:12px;color:#6b624f;line-height:1.5}.hd .r b{color:#1f8f75;font-size:15px}
+/* 이번 주 띠 */
+.week{background:#fff;border-radius:18px;padding:10px 8px;box-shadow:0 1px 0 #e4dcc8,0 6px 16px #4a3c1e14;display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:12px}
+.week div{font-size:10.5px;color:#8a7f68}.week .b{width:34px;height:34px;border-radius:50%;margin:4px auto 0;display:grid;place-items:center;font-size:13px;font-weight:800}
+.week .t{background:#e4f4ee;border-radius:14px;outline:2px solid #1f8f75;outline-offset:-2px}
+.j{background:#bcd0dc;color:#1c2a31}.y{background:#cdb5ab;color:#2b1f1b}.h{color:#d9455c;font-size:14px!important}
+.wkh{display:flex;justify-content:space-between;font-size:12px;font-weight:800;padding:0 4px 4px;color:#6b624f}
+.mon{background:#fff;border-radius:22px;padding:8px 8px 10px;box-shadow:0 1px 0 #e4dcc8,0 6px 16px #4a3c1e14}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:10.5px;color:#9a907a;font-weight:700;padding:2px 0 4px}
+.g{display:grid;grid-template-columns:repeat(7,1fr)}
+.c{height:60px;position:relative;border-top:1px solid #f0eadb}
+.c .n{position:absolute;left:5px;top:3px;font-size:10.5px;font-weight:700}
+.c.o{opacity:.35}
+.c .s{position:absolute;left:50%;top:18px;transform:translateX(-50%);width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800}
+.c.today .n{background:#1f8f75;color:#fff;border-radius:8px;padding:0 5px;left:3px}
+.c .m{position:absolute;left:3px;right:3px;bottom:2px;height:9px;border-radius:3px;background:#f3eddd;font-size:7px;color:#5a513d;line-height:9px;overflow:hidden;white-space:nowrap;padding-left:3px}
+.c .st{position:absolute;right:3px;top:2px;font-size:9px}
+.sun{color:#d9455c}.sat{color:#3b6fd6}
+.nav{position:absolute;left:0;right:0;bottom:0;height:62px;background:#fff;border-top:1px solid #eee6d3;display:flex;justify-content:space-around;align-items:center;font-size:10.5px;color:#a69c85}
+.nav b{display:flex;flex-direction:column;align-items:center;gap:1px;font-weight:600}.nav b span{font-size:18px}.nav b.on{color:#1f8f75}
+.nav b.on:before{content:"";display:block;width:22px;height:3px;border-radius:2px;background:#1f8f75;margin-bottom:2px}
+.dark .week,.dark .mon,.dark .nav{background:#211e16;box-shadow:none;border-color:#2f2b20}.dark .c{border-color:#2b271c}.dark .c .m{background:#2d291d;color:#d9d2bd}.dark .week .t{background:#173a30}.dark .hd .r{color:#a99f88}.dark .wkh{color:#a99f88}
+/* 가족 */
+.chat{display:flex;gap:10px;align-items:center;background:#fff;border-radius:18px;padding:10px 12px;margin-bottom:8px;box-shadow:0 1px 0 #e4dcc8}
+.av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
+.chat b{font-size:14.5px}.chat span{display:block;font-size:12px;color:#7a705c}
+.st2{margin-left:auto;font-size:11.5px;font-weight:800;border-radius:12px;padding:4px 10px}
+.rest{background:#fde6ea;color:#d9455c}.work{background:#e3ecf2;color:#2c5370}.sch{background:#e6f4ea;color:#1f8f6a}
+.tog{background:#fff;border-radius:20px;padding:12px 14px;margin:10px 0;border-left:6px solid #1f8f75;box-shadow:0 1px 0 #e4dcc8}
+.tog b{font-size:16px}.tog span{display:block;font-size:12px;color:#7a705c;margin-top:2px}.tog i{display:inline-block;margin-top:8px;font-style:normal;background:#1f8f75;color:#fff;border-radius:12px;padding:6px 12px;font-size:12.5px;font-weight:700}
+.tl{background:#fff;border-radius:20px;padding:10px 12px;box-shadow:0 1px 0 #e4dcc8}
+.tr{display:flex;align-items:center;gap:6px;margin:6px 0;font-size:12px;font-weight:800}
+.tr .nm{width:42px}.bars{display:flex;flex:1;gap:3px}.bars i{flex:1;height:24px;border-radius:7px;font-style:normal;font-size:10.5px;display:grid;place-items:center;font-weight:700}
+.k1{background:#dfe9ef;color:#1c2a31}.k2{background:#ebe2dc;color:#2b1f1b}.k3{background:#fdecef;color:#d9455c}.k4{background:#e4f3ea;color:#1f8f6a}
+/* 알람 */
+.al{background:#fff;border-radius:20px;padding:14px;margin-bottom:10px;box-shadow:0 1px 0 #e4dcc8;display:flex;align-items:center;gap:12px}
+.al .tm{font-size:30px;font-weight:900;font-family:"Noto Serif KR","WenQuanYi Zen Hei",serif;line-height:1}.al small{display:block;font-size:12px;color:#7a705c;margin-top:3px}
+.sw{margin-left:auto;width:44px;height:26px;border-radius:13px;background:#1f8f75;position:relative}.sw:after{content:"";position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff}
+.sw.off{background:#d8d0bd}.sw.off:after{right:auto;left:3px}
+.auto{background:#e4f4ee;border:1.5px dashed #1f8f75;border-radius:20px;padding:14px;text-align:center;margin-bottom:12px}
+.auto b{font-size:15px;color:#17614f}.auto span{display:block;font-size:12px;color:#4b6f63;margin:3px 0 8px}.auto i{font-style:normal;display:inline-block;background:#1f8f75;color:#fff;border-radius:14px;padding:8px 16px;font-weight:800;font-size:13px}
+.ttl{font-size:26px;font-weight:900;font-family:"Noto Serif KR","WenQuanYi Zen Hei",serif;padding:4px 2px 10px}
+</style>
+<h1>언제쉬어 — 새 모양 시안 B ("종이 다이어리" 느낌 · 따뜻한 색 · 이번 주 띠 · 초록 강조)</h1>
+<div class=sub>시안 A(푸른 카드 + 보라 그라데이션)와 다른 방향이에요. 지금 앱의 초록(오늘 칸) 색을 살려 따뜻한 종이 느낌으로 만들었고, 달력 위에 "이번 주 한눈에" 띠가 있어요. 구조 · 4개 탭 · 쓰는 방법은 그대로예요.</div>
+<div class=row>
+ <div class=col><div class=cap>① 달력 (홈) <small>이번 주 띠 · 제목 글씨체</small></div><div class=ph id=p1></div></div>
+ <div class=col><div class=cap>② 가족 <small>대화방 느낌 · 같이 쉬는 날</small></div><div class=ph id=p2></div></div>
+ <div class=col><div class=cap>③ 알람 <small>시각을 크게 · 자동 만들기</small></div><div class=ph id=p3></div></div>
+ <div class=col><div class=cap>④ 달력 · 어둡게</div><div class="ph dark" id=p4></div></div>
+</div>
+<script>
+const SH='휴주주휴휴야야'+'휴휴주주휴휴야'+'야휴휴주주휴주'+'야야휴주주주휴'+'휴야야휴휴주주';
+const DD=[27,28,29,30].concat(Array.from({length:31},(_,i)=>i+1));
+const memo={16:'10시 치과',17:'07시 봉사',20:'가족 외식',21:'윤슬 운동회',29:'11시30분 대장'};
+const tg={24:1};
+const cls=s=>s=='주'?'j':s=='야'?'y':'h';
+function cal(){let h='<div class=wk><span class=sun>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class=sat>토</span></div><div class=g>';
+ for(let i=0;i<35;i++){const n=DD[i],o=i<4,s=SH[i],dw=i%7;
+  h+='<div class="c'+(o?' o':'')+(!o&&n==18?' today':'')+'"><span class="n '+(dw==0?'sun':dw==6?'sat':'')+'">'+n+'</span>'+(!o&&tg[n]?'<span class=st>💗</span>':'')+'<span class="s '+cls(s)+'">'+s+'</span>'+(!o&&memo[n]?'<div class=m>'+memo[n]+'</div>':'')+'</div>';}
+ return h+'</div>';}
+const nav=a=>'<div class=nav>'+[['달력','▦'],['가족','👥'],['알람','⏰'],['설정','⚙']].map((x,i)=>'<b class="'+(i==a?'on':'')+'"><span>'+x[1]+'</span>'+x[0]+'</b>').join('')+'</div>';
+const bar='<div class=bar><span>9:41</span><span>● ● ▮</span></div>';
+const wk=['일','월','화','수','목','금','토'],wd=[['18','야'],['19','야'],['20','휴'],['21','주'],['22','주'],['23','주'],['24','휴']];
+function home(){return '<div class=scr>'+bar+'<div class=hd><div><div class=yr>2026</div><div class=m>10월</div></div><div class=r>다음 휴무까지<br><b>D-2 · 20일 화</b></div></div>'+
+ '<div class=wkh><span>이번 주</span><span style="color:#1f8f75">같이 쉬는 날 24일 💗</span></div><div class=week>'+wd.map((d,i)=>'<div class="'+(i==0?'t':'')+'">'+wk[i]+'<div class="b '+cls(d[1])+(d[1]=='휴'?' h':'')+'">'+d[1]+'</div></div>').join('')+'</div>'+
+ '<div class=mon>'+cal()+'</div></div>'+nav(0);}
+p1.innerHTML=home();p4.innerHTML=home();
+const fam=[['엄마','#f28b82','휴무','오늘 쉬는 날','rest'],['동생','#64b5f6','휴무','오늘 · 내일 야간','rest'],['아이','#81c784','학교','15:00 하교','sch'],['할머니','#b39ddb','휴무','일정 없음','rest']];
+const tl=[['나','야 야 휴 주 주 주 휴'],['동생','휴 휴 휴 주 주 야 야'],['아이','휴 학 학 학 학 학 휴'],['엄마','휴 휴 주 주 휴 야 야']],kk={'주':'k1','야':'k2','휴':'k3','학':'k4'};
+p2.innerHTML='<div class=scr>'+bar+'<div class=ttl>우리 가족</div>'+fam.slice(0,3).map(f=>'<div class=chat><div class=av style="background:'+f[1]+'">'+f[0][0]+'</div><div><b>'+f[0]+'</b><span>'+f[3]+'</span></div><div class="st2 '+f[4]+'">'+f[2]+'</div></div>').join('')+
+ '<div class=tog><b>💗 24일 토요일, 모두 쉬어요</b><span>나 · 동생 · 아이 · 엄마</span><i>약속 제안하기</i></div>'+
+ '<div class=tl><div class=wkh style="padding:0 0 4px"><span>이번 주 시간표</span><span style="color:#1f8f75">+ 가족 추가</span></div>'+tl.map(r=>'<div class=tr><div class=nm>'+r[0]+'</div><div class=bars>'+r[1].split(' ').map(x=>'<i class='+kk[x]+'>'+x+'</i>').join('')+'</div></div>').join('')+'</div></div>'+nav(1);
+p3.innerHTML='<div class=scr>'+bar+'<div class=ttl>알람</div><div class=auto><b>근무에 맞춰 알람 만들기</b><span>출근 1시간 전 · 야간 · 주간 따로</span><i>한 번에 만들기</i></div>'+
+ '<div class=al><div><div class=tm>21:00</div><small>야간 출근 · 1시간 전</small></div><div class=sw></div></div><div class=al><div><div class=tm>06:30</div><small>주간 출근 · 1시간 전</small></div><div class=sw></div></div><div class=al><div><div class=tm>07:00</div><small>💊 약 먹기 · 매일</small></div><div class="sw off"></div></div></div>'+nav(2);
+</script>
