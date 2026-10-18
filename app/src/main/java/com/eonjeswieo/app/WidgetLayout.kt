@@ -212,16 +212,18 @@ object WidgetLayout {
      * @param memoMax 칸에 보일 메모 줄 수 최대 (위젯 설정)
      */
     fun solveMonth(rowMemos: IntArray, cw: Float, rowH: Float, u: Float, hasCircle: Boolean, memoMax: Int): MonthPlan {
-        val padX = clamp(cw * 0.07f, 2f * u, 4f * u)
-        val topPad = 3f * u
+        // 칸이 폰 크기(약 58x72dp)보다 커지면 날짜 숫자 · 스티커 · 공휴일 글자 · 메모 줄을 같이 키움 (칸이 커진 비율의 절반쯤 — 동그라미 자리를 지키려고). 폰 크기 이하는 ks = 1 (예전과 같음)
+        val ks = 1f + (clamp(Math.min(cw / (58f * u), rowH / (72f * u)), 1f, 1.6f) - 1f) * 0.55f
+        val padX = clamp(cw * 0.07f, 2f * u, 4f * u * ks)
+        val topPad = 3f * u * ks
         val botPad = 2f * u
         val bottom = rowH - botPad
-        val dateSize = Math.min(clamp(cw * 0.26f, 9f * u, 13f * u), rowH * 0.24f)
+        val dateSize = Math.min(clamp(cw * 0.26f, 9f * u, 13f * u * ks), rowH * 0.24f)
         val dateBase = topPad + dateSize * 0.95f
         val dateBottom = topPad + dateSize * 1.35f
         val ss = dateSize * 0.9f
         val holSize = dateSize * 0.62f
-        val pillH = clamp(rowH * 0.19f, 9f * u, 12f * u)
+        val pillH = clamp(rowH * 0.19f, 9f * u, 12f * u * ks)
         val pg = 1f * u
         val dTop = clamp(Math.min(cw * 0.5f, rowH * 0.4f), 14f * u, 44f * u)   // 근무 동그라미 크기 (칸 폭의 절반 · 칸 높이의 40% 중 작은 쪽 · 상한은 7일 위젯과 같은 44dp — 칸이 큰 위젯에서도 칸에 맞게 커짐)
         val dMin = Math.min(dTop, 12f * u)
@@ -229,11 +231,12 @@ object WidgetLayout {
         fun blk(l: Int): Float = if (l <= 0) 0f else l * pillH + (l - 1) * pg
         fun region(l: Int): Float = bottom - (if (l > 0) blk(l) + pg else 0f) - dateBottom   // 날짜 줄과 메모 사이 (동그라미 자리)
 
+        // (ks > 1 인 큰 위젯에서는 2줄이 동그라미를 칸 기준 크기의 85% 아래로 줄이면 1줄 + "+n" 칩으로 — 동그라미가 작아지지 않게)
         // 메모 줄 수: 칸이 높으면 2줄, 낮으면 1줄, 더 낮으면 0줄. 근무 동그라미가 1줄일 땐 dMin(12dp) · 2줄일 땐 17dp 이상 남아야 하고(둘째 줄 때문에 동그라미가 너무 작아지지 않게),
         // 공휴일 한 글자가 숫자 아래로 내려온 날에도 메모와 안 닿아야 함
         val labelEnd = dateBase + holSize * 1.35f
         var lines = Math.max(0, Math.min(memoMax, 2))
-        while (lines > 0 && (region(lines) < (if (!hasCircle) 0f else if (lines >= 2) Math.min(dTop, 17f * u) + cm else dMin + cm) || bottom - blk(lines) - pg < labelEnd)) lines--
+        while (lines > 0 && (region(lines) < (if (!hasCircle) 0f else if (lines >= 2) Math.max(Math.min(dTop, 17f * u), dTop * 0.85f * clamp((ks - 1f) / 0.1f, 0f, 1f)) + cm else dMin + cm) || bottom - blk(lines) - pg < labelEnd)) lines--
 
         val rowLines = IntArray(rowMemos.size) { Math.min(lines, Math.max(0, rowMemos[it])) }
         val cy = FloatArray(rowMemos.size)

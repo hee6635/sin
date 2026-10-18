@@ -223,7 +223,7 @@ fun monthFuzz(): Int {
         }
         if (hasCircle && rowHDp >= 30f && cwDp >= 34f && p.circleD < 11.5f * u) { small++; f("동그라미가 너무 작음 ${p.circleD / u}dp") }
         if (p.lines.any { it > 0 } && p.pillH < 9f * u - 0.5f) f("메모 줄이 너무 낮음 ${p.pillH / u}dp")
-        if (rowHDp >= 70f && cwDp >= 40f && p.lines.indices.any { Math.min(memoMax, 2).coerceAtMost(rowMemos[it]) != p.lines[it] }) f("크고 넉넉한데 메모 줄이 모자람 ${p.lines.toList()} / 원하는 ${rowMemos.toList()}")
+        if (rowHDp >= 70f && cwDp >= 40f && (cwDp < 58f || rowHDp >= 100f) && p.lines.indices.any { Math.min(memoMax, 2).coerceAtMost(rowMemos[it]) != p.lines[it] }) f("크고 넉넉한데 메모 줄이 모자람 ${p.lines.toList()} / 원하는 ${rowMemos.toList()}")
         if (p.dateSize < 6f * u) f("날짜 숫자가 너무 작음 ${p.dateSize / u}dp")
         lines0 += p.lines.count { it == 0 && true }; lines1 += p.lines.count { it == 1 }; lines2 += p.lines.count { it == 2 }
         // 내용이 달라도(스티커 · 공휴일 · 날짜) 줄 안 · 줄끼리 칸 모양은 같고, 칸 안 그림끼리 겹치지 않아야 함

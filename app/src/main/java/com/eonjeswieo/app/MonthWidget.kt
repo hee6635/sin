@@ -580,7 +580,7 @@ object MonthRenderer {
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
             pp.color = if (family) (if (night) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill
             cv.drawRoundRect(RectF(x0 + pad, py, x0 + cw - pad, py + plan.pillH), plan.pillH * 0.3f, plan.pillH * 0.3f, pp)
-            paint.typeface = Typeface.DEFAULT
+            paint.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)   // 메모 글자는 한 단계 굵게(앱 글씨와 비슷하게)
             paint.textAlign = Paint.Align.LEFT
             paint.color = pal.fg
             paint.textSize = Math.min(plan.pillH * 0.72f, cw * 0.2f)   // (1칸 · 2칸 · 7일 위젯과 같은 비율)
