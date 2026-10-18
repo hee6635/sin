@@ -85,7 +85,23 @@ fun render(name: String, wDp: Int, hDp: Int, count: Int, days: List<Dy>, memoMax
         val dateRight = x0 + row.padX + dateW
         for (q in rects) if (q[1] < y0 + row.dateBase && q[0] < dateRight - 0.5f && (compact || true)) { if (dateRight > q[0] + 1f) { bad("$name 칸${i + 1}: 날짜 글자(${dateW}px)가 스티커와 겹침"); ok = false } }
         for (q in rects) { if (q[2] > x0 + cw + 0.5f || q[0] < x0 - 0.5f) { bad("$name 칸${i + 1}: 스티커가 칸 밖"); ok = false }; if (q[3] > y0 + row.headEnd + 0.5f) { bad("$name 칸${i + 1}: 스티커가 위쪽 끝(${row.headEnd})보다 아래"); ok = false } }
-        if (d.hol.isNotEmpty() && !compact) { g.color = Color(0xD6334A); g.font = Font("SansSerif", Font.PLAIN, row.holSize.toInt()); g.drawString(d.hol, x0 + row.padX, y0 + row.holBase) }
+        if (d.hol.isNotEmpty() && row.holChars > 0) {   // 공휴일 글자: 앱 달력의 두 글자 줄임말 (자리가 모자라면 한 글자) — 글자 수 · 크기는 WidgetLayout 이 칸 크기로 정함
+            val lab = d.hol.take(row.holChars)
+            g.color = Color(0xD6334A); g.font = Font("SansSerif", Font.PLAIN, 12).deriveFont(row.holLabelSize)
+            g.drawString(lab, x0 + row.padX, y0 + row.holBase)
+            val lw = g.fontMetrics.stringWidth(lab).toFloat()
+            val ly0 = y0 + row.holBase - row.holLabelSize * 0.85f; val ly1 = y0 + row.holBase + row.holLabelSize * 0.2f
+            val lx0 = x0 + row.padX; val lx1 = lx0 + lw
+            if (lx1 > x0 + cw - row.padX + 0.5f) { bad("$name 칸${i + 1}: 공휴일 글자가 칸 밖"); ok = false }
+            for (q in rects) if (q[0] < lx1 - 0.5f && q[2] > lx0 + 0.5f && q[1] < ly1 - 0.5f && q[3] > ly0 + 0.5f) { bad("$name 칸${i + 1}: 공휴일 글자가 스티커와 겹침"); ok = false }
+            if (d.circle.isNotEmpty()) {
+                val cx = x0 + cw / 2; val cy = y0 + row.circleCy
+                val nx = Math.max(lx0, Math.min(cx, lx1)); val ny = Math.max(ly0, Math.min(cy, ly1))
+                if (Math.hypot((cx - nx).toDouble(), (cy - ny).toDouble()) < row.circleD / 2 - 0.5f) { bad("$name 칸${i + 1}: 공휴일 글자가 근무 동그라미와 겹침"); ok = false }
+            }
+            val shownH = Math.min(d.memos, row.memoLines)
+            if (shownH > 0 && ly1 > y0 + row.memoTop(shownH) + 0.5f) { bad("$name 칸${i + 1}: 공휴일 글자가 메모와 겹침"); ok = false }
+        }
         // 메모
         val shown = Math.min(d.memos, row.memoLines)
         val mt = row.memoTop(shown)
@@ -127,6 +143,7 @@ fun render(name: String, wDp: Int, hDp: Int, count: Int, days: List<Dy>, memoMax
 fun fuzz(): Int {
     val rnd = java.util.Random(7)
     var fails = 0
+    val hc = Array(2) { IntArray(3) }   // 공휴일 글자 수(2 · 1 · 0)별 크기 수: [7일 / 1칸·2칸]
     val u = 2.75f
     for (n in 0 until 4000) {
         val compact = rnd.nextBoolean()
@@ -143,7 +160,7 @@ fun fuzz(): Int {
         val days2 = days.map { WidgetLayout.DayIn(rnd.nextInt(5), !compact && rnd.nextBoolean(), rnd.nextInt(5), it!!.circle) }
         val r2 = WidgetLayout.solve(days2, cw, ch, u, compact, memoMax)
         fun same(a: Float, b: Float) = Math.abs(a - b) < 0.001f
-        if (!same(r.circleD, r2.circleD) || !same(r.circleCy, r2.circleCy) || r.memoLines != r2.memoLines || !same(r.pillH, r2.pillH) || !same(r.headEnd, r2.headEnd)) f("내용이 달라지면 동그라미 · 메모 자리가 달라짐 (동그라미 ${r.circleD / u}dp ↔ ${r2.circleD / u}dp)")
+        if (!same(r.circleD, r2.circleD) || !same(r.circleCy, r2.circleCy) || r.memoLines != r2.memoLines || !same(r.pillH, r2.pillH) || !same(r.headEnd, r2.headEnd) || r.holChars != r2.holChars || !same(r.holLabelSize, r2.holLabelSize)) f("내용이 달라지면 동그라미 · 메모 자리가 달라짐 (동그라미 ${r.circleD / u}dp ↔ ${r2.circleD / u}dp)")
         if (r.headEnd > r.bottom + 0.5f) f("위쪽(${r.headEnd})이 아래 끝(${r.bottom})보다 아래")
         if (r.memoLines > 0 && r.memoTop(r.memoLines) < r.headEnd - 0.5f) f("메모가 위쪽을 침범")
         if (days.any { it.circle } && r.circleD > 0f) {
@@ -153,6 +170,31 @@ fun fuzz(): Int {
             val lowest = if (r.memoLines > 0) r.memoTop(r.memoLines) else r.bottom
             if (r.circleCy + r.circleD / 2 > lowest + 0.5f) f("동그라미가 아래(메모)를 침범")
             if (r.circleD > cw) f("동그라미가 칸보다 큼")
+        }
+        // 공휴일 글자(숫자 아래): 정한 글자 수 · 크기가 이 칸의 진짜 스티커 · 동그라미 · 메모와 안 겹치는지 (WidgetLayout 안의 계산과 따로 다시 계산)
+        hc[if (compact) 0 else 1][if (r.holChars == 2) 0 else if (r.holChars == 1) 1 else 2]++
+        if (r.holLabelSize > r.holSize + 0.001f) f("공휴일 글자가 원래 크기보다 큼")
+        if (r.holChars == 2 && r.holLabelSize < r.holSize - 0.001f && r.holLabelSize < 5f * u - 0.5f) f("공휴일 글자가 너무 작음 ${r.holLabelSize / u}dp")
+        if (!compact && (r.holChars != 2 || Math.abs(r.holLabelSize - r.holSize) > 0.001f)) f("1칸 · 2칸은 늘 두 글자 · 원래 크기로 들어가야 함 (${r.holChars}글자 ${r.holLabelSize / u}dp)")
+        if (r.holChars > 0) for (d in days) {
+            val hs = r.holLabelSize; val lx0 = r.padX; val lx1 = r.padX + r.holChars * hs   // 실제 한글 폭 ≈ 글자 크기 (WidgetLayout 은 1.06배로 넉넉히 잡음)
+            val ly0 = r.holBase - hs * 0.85f; val ly1 = r.holBase + hs * 0.2f
+            if (lx1 > cw - r.padX + 0.5f) f("공휴일 글자가 칸 밖")
+            if (d.circle && r.circleD > 0f) {
+                val cx = cw / 2; val nx = Math.max(lx0, Math.min(cx, lx1)); val ny = Math.max(ly0, Math.min(r.circleCy, ly1))
+                if (Math.hypot((cx - nx).toDouble(), (r.circleCy - ny).toDouble()) < r.circleD / 2 - 0.5f) f("공휴일 글자가 동그라미와 겹침")
+            }
+            val nn2 = Math.min(d.stickers, 4); val m1 = r.perRow(nn2); val m2 = nn2 - m1
+            for (k in 0 until nn2) {
+                val inRow1 = k < m1; val idx = if (inRow1) k else k - m1
+                val cnt = if (inRow1) m1 else m2
+                val rowW = cnt * r.stkSize + (cnt - 1) * r.stkGap
+                val sx = cw - r.padX - rowW + idx * (r.stkSize + r.stkGap)
+                val sy = r.stkTop + (if (inRow1) 0f else r.stkStep)
+                if (sx < lx1 - 0.5f && sx + r.stkSize > lx0 + 0.5f && sy < ly1 - 0.5f && sy + r.stkSize > ly0 + 0.5f) f("공휴일 글자가 스티커와 겹침")
+            }
+            val shownH = Math.min(d.memos, r.memoLines)
+            if (shownH > 0 && ly1 > r.memoTop(shownH) + 0.5f) f("공휴일 글자가 메모와 겹침")
         }
         for (d in days) {
             val nn = Math.min(d.stickers, 4)
@@ -166,6 +208,7 @@ fun fuzz(): Int {
         // 칸이 충분히 크면(높이 130dp 이상 · 폭 60dp 이상) 원하는 메모 줄을 다 보여야 함
         if (chDp >= 130f && cwDp >= 60f && r.memoLines < want) f("크고 넉넉한데 메모가 ${r.memoLines}/${want}줄")
     }
+    println(String.format("공휴일 글자(무작위 크기): 7일 위젯 두 글자 %d · 한 글자 %d · 안 그림 %d / 1칸 · 2칸 두 글자 %d · 한 글자 %d · 안 그림 %d", hc[0][0], hc[0][1], hc[0][2], hc[1][0], hc[1][1], hc[1][2]))
     println(if (fails == 0) "무작위 4000개: 겹침 · 넘침 없음" else "무작위 시험 실패 ${fails}개")
     return fails
 }
@@ -174,7 +217,7 @@ fun main(args: Array<String>) {
     problems += fuzz()
     val out = File(args.getOrElse(0) { "/tmp/widget-preview" }); out.mkdirs()
     val dens = 2.75f
-    fun week(stk: Int, memos: Int, hol: Boolean = false, partial: Boolean = false) = List(7) { Dy(10 + it, it, if (it % 2 == 0) stk else Math.max(0, stk - 1), if (hol && it == 3) "Holiday" else "", if (it == 2) memos else Math.max(0, memos - 1), if (it == 5) "" else "D", partial) }
+    fun week(stk: Int, memos: Int, hol: Boolean = true, partial: Boolean = false) = List(7) { Dy(10 + it, it, if (it % 2 == 0) stk else Math.max(0, stk - 1), if (hol && it == 3) "추석" else if (hol && it == 4) "대체공휴일(설날)" else if (hol && it == 5) "부처님오신날" else "", if (it == 2) memos else Math.max(0, memos - 1), if (it == 5) "" else "D", partial) }
     println("7일 위젯")
     render("7일 최소(250x70) 스티커0 메모1", 250, 70, 7, week(0, 1), 2, dens, out)
     render("7일 최소(250x70) 스티커4 메모3", 250, 70, 7, week(4, 3), 2, dens, out)
@@ -186,12 +229,12 @@ fun main(args: Array<String>) {
     render("7일 태블릿(700x180) 스티커4 메모4", 700, 180, 7, week(4, 4), 2, dens, out)
     render("7일 가로(520x90) 스티커3 메모3", 520, 90, 7, week(3, 3), 2, dens, out)
     println("2칸 위젯")
-    render("2칸 최소(140x70) 스티커4 메모3 휴일", 140, 70, 2, listOf(Dy(12, 1, 4, "Holiday", 3), Dy(13, 2, 2, "", 2)), 2, dens, out)
-    render("2칸(180x110) 스티커4 메모4", 180, 110, 2, listOf(Dy(12, 1, 4, "Holiday", 4), Dy(13, 2, 3, "", 4, partial = true)), 2, dens, out)
-    render("2칸 큼(300x160) 스티커4 메모4", 300, 160, 2, listOf(Dy(12, 1, 4, "Holiday", 4), Dy(13, 2, 3, "", 4)), 2, dens, out)
+    render("2칸 최소(140x70) 스티커4 메모3 휴일", 140, 70, 2, listOf(Dy(12, 1, 4, "대체공휴일(설날)", 3), Dy(13, 2, 2, "", 2)), 2, dens, out)
+    render("2칸(180x110) 스티커4 메모4", 180, 110, 2, listOf(Dy(12, 1, 4, "추석", 4), Dy(13, 2, 3, "", 4, partial = true)), 2, dens, out)
+    render("2칸 큼(300x160) 스티커4 메모4", 300, 160, 2, listOf(Dy(12, 1, 4, "부처님오신날", 4), Dy(13, 2, 3, "", 4)), 2, dens, out)
     println("1칸 위젯")
-    render("1칸 최소(70x70) 스티커4 메모3", 70, 70, 1, listOf(Dy(12, 1, 4, "Holiday", 3)), 2, dens, out)
-    render("1칸(110x110) 스티커4 메모3 휴일", 110, 110, 1, listOf(Dy(12, 1, 4, "Holiday", 3)), 2, dens, out)
+    render("1칸 최소(70x70) 스티커4 메모3", 70, 70, 1, listOf(Dy(12, 1, 4, "대체공휴일(설날)", 3)), 2, dens, out)
+    render("1칸(110x110) 스티커4 메모3 휴일", 110, 110, 1, listOf(Dy(12, 1, 4, "대체공휴일(설날)", 3)), 2, dens, out)
     render("1칸 큼(180x180) 스티커2 메모4", 180, 180, 1, listOf(Dy(12, 1, 2, "", 4)), 2, dens, out)
     render("1칸 좁고 긴(65x130) 스티커4 메모3", 65, 130, 1, listOf(Dy(18, 0, 4, "", 3)), 2, dens, out)
     render("1칸 중간(90x120) 스티커3 메모3", 90, 120, 1, listOf(Dy(18, 0, 3, "", 3)), 2, dens, out)

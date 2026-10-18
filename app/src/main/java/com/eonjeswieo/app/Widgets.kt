@@ -582,12 +582,15 @@ object WidgetRenderer {
         paint.textSize = row.dateSize
         while (paint.measureText(dateText) > availDate && paint.textSize > row.dateSize * 0.6f) paint.textSize = paint.textSize * 0.92f
         cv.drawText(TextUtils.ellipsize(dateText, paint, availDate, TextUtils.TruncateAt.END).toString(), x0 + pad, y0 + row.dateBase, paint)
-        if (hol.isNotEmpty() && !compact) {   // 공휴일 이름은 넓은 칸에서만 (날짜 아래)
+        if (hol.isNotEmpty() && row.holChars > 0) {   // 공휴일 · 명절: 날짜 숫자 아래 빨간 두 글자 (앱 달력과 같은 줄임말 · 7일 위젯 · 2칸 · 1칸 모두). 자리가 모자라는 크기는 한 글자 · 글자 크기와 글자 수는 WidgetLayout 이 칸 크기로 정함
+            val short = d.optString(if (row.holChars >= 2) "h2" else "h1", "")
+            val label = (if (short.isNotEmpty()) short else hol).take(row.holChars)   // (h2 · h1 이 없는 옛 위젯 데이터는 이름 앞 글자)
             paint.typeface = Typeface.DEFAULT
             paint.color = dateColor
-            paint.textSize = row.holSize
-            val availHol = cw - pad * 2 - (if (n2 > 0) w2 + sg else 0f)
-            cv.drawText(TextUtils.ellipsize(hol, paint, availHol, TextUtils.TruncateAt.END).toString(), x0 + pad, y0 + row.holBase, paint)
+            paint.textSize = row.holLabelSize
+            val maxW = row.holChars * row.holLabelSize * 1.06f   // WidgetLayout 이 자리를 잡아 둔 폭 — 글꼴이 더 넓게 그리면 이 안에 들어올 때까지 줄임
+            while (paint.measureText(label) > maxW && paint.textSize > row.holLabelSize * 0.7f) paint.textSize = paint.textSize * 0.95f
+            cv.drawText(label, x0 + pad, y0 + row.holBase, paint)
         }
 
         // 메모 (맨 아래부터 쌓음, 줄 수는 줄 전체가 함께 정함)

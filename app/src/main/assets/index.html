@@ -1782,20 +1782,21 @@ function cssHex(v){   // var(--day) 같은 CSS 색을 #rrggbb 로 (위젯은 CSS
     return /^#[0-9a-f]{6}$/i.test(r)?r:'';
   }catch(e){return '';}
 }
+const holPair=h=>h?{h2:holTwo(h),h1:holOne(h)}:{};   // 위젯 칸의 공휴일 글자: 앱 달력과 같은 줄임말 (두 글자 · 한 글자) — 위젯은 자리에 맞춰 둘 중 하나를 그림
 function widgetJson(){
   const t0=new Date(),days=[],ic={};
   for(let i=-6;i<60;i++){   // 이번 주(7일 위젯)가 어느 요일에 시작해도 되도록 오늘 6일 전부터 · 앞으로 60일 (2주 뒤부터는 근무 · 공휴일만)
     const d=addDays(t0,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),pers=persOn(k);
     const c=(pers||sh===''||sh===NONE_K)?null:tColors(typeOf(sh));
     const rest=!pers&&sh!==''&&sh!==NONE_K&&isRest(sh);
-    if(i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',far:1,
+    if(i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',far:1,
       ...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 2주 뒤 날: 근무 · 공휴일 · 회사 휴무 · 기념일 이름만
     const sa=stampsOn(k).slice(0,12).map(x=>{
-      const id=String(x.s.id),nm=String(x.s.name||'').slice(0,12);
-      if(x.s.kind==='pill')return {id,nm,p:1,c:cssHex(x.v&&x.v.col)||'#7e57c2',h:String((x.v&&x.v.shape)||'caps'),n:x.n,N:Math.max(1,Math.min(3,x.v.N||1))};
+      const id=String(x.s.id),nm=String(x.s.name||'').slice(0,12),bell=stAts(x.s).length?{b:1}:{};   // b:1 = 알림 시각을 정해 둔 스티커 (위젯 큰 창에 🔔 · 앱과 같은 기준)
+      if(x.s.kind==='pill')return {id,nm,p:1,c:cssHex(x.v&&x.v.col)||'#7e57c2',h:String((x.v&&x.v.shape)||'caps'),n:x.n,N:Math.max(1,Math.min(3,x.v.N||1)),...bell};
       const e=x.s.emoji;
-      if(isPhoto(e)){const pid=e.slice(1),src=(S.icons||{})[pid];if(typeof src==='string'&&src.length<30000){ic[pid]=src;return {id,nm,i:pid,n:x.n,N:x.v.N};}}
-      return {id,nm,e:icoTxt(e,'⭐'),n:x.n,N:x.v.N};
+      if(isPhoto(e)){const pid=e.slice(1),src=(S.icons||{})[pid];if(typeof src==='string'&&src.length<30000){ic[pid]=src;return {id,nm,i:pid,n:x.n,N:x.v.N,...bell};}}
+      return {id,nm,e:icoTxt(e,'⭐'),n:x.n,N:x.v.N,...bell};
     });
     const stk=sa.slice(0,4);
     const vm=visibleMemos(k),m1=vm.find(x=>x.shared)||vm[0],bd=boardOnDate(k)[0],dd=ddayHits(k)[0];
@@ -1807,7 +1808,7 @@ function widgetJson(){
     vm.forEach(x=>{if(mi.length>=MI)return;const it={r:x.todo&&(!x.shared||x.by===role())?'m':'t',id:String(x.id),t:wm(x.text).slice(0,160),d:!!(x.todo&&x.done)};if(x.time)it.tm=tfmt(x.time);const cc=x.color?cssHex(x.color):'';if(cc)it.c=cc;if(x.shared){it.f=1;if(x.by!==role())it.o=1;}mi.push(it);});
     boardOnDate(k).forEach(n=>{if(n.type==='list'){if(mi.length<MI)mi.push({r:'t',t:('☑ '+(n.title||'할 일')).slice(0,60),d:false});(n.lines||[]).slice(0,12).forEach(l=>{if(mi.length<MI)mi.push({r:'l',pid:String(n.id),lid:String(l.id),t:wm(l.text).slice(0,120),d:!!l.done});});}else if(mi.length<MI)mi.push({r:'t',t:wm(n.text).slice(0,160),d:false});});
     const chn=compHol(k);
-    days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40)),sa,mi,
+    days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40)),sa,mi,
       ...(chn?{ch:String(chn).slice(0,30)}:{}),...(ddayHits(k).length?{an:ddayHits(k).slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});
   }
   return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,lines:S.memoLines===4?4:3,ws:S.weekStart===1?1:0,days,ic});

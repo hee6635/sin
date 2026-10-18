@@ -29,7 +29,9 @@ object WidgetLayout {
         val pillGap: Float,
         val bottom: Float,
         val circleCy: Float,
-        val circleD: Float
+        val circleD: Float,
+        val holChars: Int,
+        val holLabelSize: Float
     ) {
         /** 스티커 n 개를 첫 줄에 몇 개 놓을지 (3개는 2+1, 4개는 칸이 넓으면 한 줄 · 아니면 2+2) */
         fun perRow(n: Int): Int = if (n <= stkCols) n else 2
@@ -125,6 +127,45 @@ object WidgetLayout {
             circleCy = top + (bot - top) / 2f
         }
 
-        return Row(padX, dateSize, dateBase, holSize, holBase, ss, gap, cols, stkTop, step, headEnd, textLimit, lines, ph, pg, bottom, circleCy, circleD)
+        // 공휴일 글자(날짜 숫자 아래 빨간 글자): 앱 달력과 같은 두 글자 줄임말을 동그라미 · 스티커 · 메모와 안 겹치게 넣을 수 있는 가장 큰 크기로.
+        // 이것도 칸 크기로만 정함(그날 스티커가 몇 개든 같음 → 가장 빡빡한 경우인 스티커 4개 · 동그라미 있음으로 계산).
+        // 1칸 · 2칸은 늘 원래 크기(holSize)로 들어가고, 7일 위젯 폰 크기는 글자를 조금 줄여서 넣고, 그래도 안 되면 한 글자, 그것도 안 되면 안 그림(0).
+        val n1w = if (4 <= cols) 4 else 2
+        val n2w = 4 - n1w
+        fun holFits(chars: Int, size: Float): Boolean {
+            val lx0 = padX
+            val lx1 = padX + chars * size * 1.06f   // 한글 한 글자 ≈ 글자 크기 (조금 넉넉하게)
+            val ly0 = holBase - size * 0.85f
+            val ly1 = holBase + size * 0.2f
+            if (lx1 > cw - padX + 0.5f) return false
+            if (hasCircle && circleD > 0f) {   // 동그라미: 사각형에서 동그라미 중심까지 가장 가까운 점이 동그라미 안이면 겹침
+                val cx = cw / 2f
+                val nx = Math.max(lx0, Math.min(cx, lx1))
+                val ny = Math.max(ly0, Math.min(circleCy, ly1))
+                if (Math.hypot((cx - nx).toDouble(), (circleCy - ny).toDouble()) < circleD / 2f - 0.5f) return false
+            }
+            for (k in 0 until 4) {
+                val inRow1 = k < n1w
+                val idx = if (inRow1) k else k - n1w
+                val cnt = if (inRow1) n1w else n2w
+                val rowW = cnt * ss + (cnt - 1) * gap
+                val sx = cw - padX - rowW + idx * (ss + gap)
+                val sy = stkTop + (if (inRow1) 0f else step)
+                if (sx < lx1 - 0.5f && sx + ss > lx0 + 0.5f && sy < ly1 - 0.5f && sy + ss > ly0 + 0.5f) return false
+            }
+            if (lines > 0 && ly1 > bottom - (lines * ph + (lines - 1) * pg) + 0.5f) return false   // 메모
+            return true
+        }
+        var holChars = 0
+        var holLabelSize = holSize
+        var sc = 1.0f
+        while (sc > 0.699f) {
+            val sz = holSize * sc
+            if ((sc >= 0.999f || sz >= 5f * u) && holFits(2, sz)) { holChars = 2; holLabelSize = sz; break }
+            sc -= 0.05f
+        }
+        if (holChars == 0 && holFits(1, holSize)) { holChars = 1; holLabelSize = holSize }
+
+        return Row(padX, dateSize, dateBase, holSize, holBase, ss, gap, cols, stkTop, step, headEnd, textLimit, lines, ph, pg, bottom, circleCy, circleD, holChars, holLabelSize)
     }
 }

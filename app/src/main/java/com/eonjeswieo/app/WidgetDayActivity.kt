@@ -407,6 +407,14 @@ class WidgetDayActivity : Activity() {
         val nlp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         nlp.leftMargin = dp(12)
         row.addView(name, nlp)
+        if (s.optInt("b", 0) == 1) {   // 알림 시각을 정해 둔 스티커: 횟수 왼쪽에 🔔 (앱 설정 · 날짜 창의 🔔 표시와 같은 기준 · 알림이 없으면 아무것도 안 붙음)
+            val bell = tv("🔔", 15f, pal.sub)
+            bell.contentDescription = "알림 있음"
+            val blp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            blp.leftMargin = dp(6)
+            blp.rightMargin = dp(10)
+            row.addView(bell, blp)
+        }
         val cnt = tv(if (total > 1) "$n/$total" else if (n > 0) "✓" else "○", 19f, if (n >= total) pal.accent else pal.sub, true)
         row.addView(cnt)
         row.setOnClickListener { toggleSticker(s.optString("id")) }
