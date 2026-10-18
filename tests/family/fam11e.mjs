@@ -10,6 +10,7 @@ const srv = http.createServer((req, res) => {
   let f = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
   if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { 'content-type': mime[path.extname(f)] || 'application/octet-stream' });
+  if (f.endsWith('.html')) return res.end(fs.readFileSync(f, 'utf8').replace("https://raw.githubusercontent.com; frame-src", "https://raw.githubusercontent.com http://127.0.0.1:9099 http://127.0.0.1:8080; frame-src"));   // 보안 잠금(CSP)을 켠 채로 시험: 에뮬레이터 주소만 더함
   fs.createReadStream(f).pipe(res);
 }).listen(8211, '127.0.0.1');
 const SC = '/tmp/claude-0/-home-user-sin/78e2bc2a-7f65-5612-9a8c-557939742276/scratchpad/v17/e2e11/';

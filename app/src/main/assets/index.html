@@ -590,7 +590,8 @@ textarea{resize:none;min-height:84px}
 .ibar .note{font-size:11.5px;text-align:center;margin-bottom:6px;color:var(--muted)}
 .ibar .note.fam{color:var(--fam)}
 .ibar .editing{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px}
-.ibar .editing a{color:var(--muted);text-decoration:underline;cursor:pointer}
+.ibar .editing a{color:var(--muted);text-decoration:underline;cursor:pointer;padding:6px 2px}
+.ibar .editing .ea{display:flex;gap:14px}
 .mode{display:flex;background:var(--surface);border-radius:17px;padding:3px;flex:none}
 .mode button{height:30px;padding:0 9px;border-radius:15px;font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap}
 .mode button.on.my{background:var(--my);color:#fff}
@@ -1636,7 +1637,7 @@ function normalize(o){
   s.fam2=famCleanFam2(s.fam2);
   s.requests=(Array.isArray(s.requests)?s.requests:[]).filter(r=>isObj(r)&&!r.srv).concat(s.link?famMirrorList(s.fam2):[]);   // 서버에서 받은 요청은 걸러낸 가족 복사본으로 다시 만듦
   if(s.link&&typeof s.link==='object'){if(s.link.mode!=='view')s.link.mode='own';}else s.link=null;
-  const stOld=s.stamps&&typeof s.stamps==='object'?s.stamps:null;s.stamps=Object.assign(defaultStamps(),s.stamps||{});(s.stamps.defs||[]).forEach(x=>{if(!x)return;if(x.id==='s_run'&&x.emoji==='🏃')x.emoji='👟';if(!x.rep)x.rep=x.kind==='pill'?'daily':(Array.isArray(x.days)&&x.days.length?'dow':'none');if(!Array.isArray(x.dates))x.dates=[];if(!Array.isArray(x.skip))x.skip=[];if(x.kind==='mark')x.rt=['am','noon','pm'].includes(x.rt)?x.rt:'';if(x.kind==='pill'&&!/^#[0-9a-f]{6}$/i.test(x.color||''))x.color='#ef4d5a';});if(!Array.isArray(s.stamps.defs))s.stamps.defs=defaultStamps().defs;if(!s.stamps.log||typeof s.stamps.log!=='object')s.stamps.log={};if(!['am','noon','pm'].includes(s.stamps.lastRt))s.stamps.lastRt='';
+  const stOld=s.stamps&&typeof s.stamps==='object'?s.stamps:null;s.stamps=Object.assign(defaultStamps(),s.stamps||{});(s.stamps.defs||[]).forEach(x=>{if(!x)return;if(x.fam!==undefined)x.fam=!!x.fam;if(x.id==='s_run'&&x.emoji==='🏃')x.emoji='👟';if(!x.rep)x.rep=x.kind==='pill'?'daily':(Array.isArray(x.days)&&x.days.length?'dow':'none');if(!Array.isArray(x.dates))x.dates=[];if(!Array.isArray(x.skip))x.skip=[];if(x.kind==='mark')x.rt=['am','noon','pm'].includes(x.rt)?x.rt:'';if(x.kind==='pill'&&!/^#[0-9a-f]{6}$/i.test(x.color||''))x.color='#ef4d5a';});if(!Array.isArray(s.stamps.defs))s.stamps.defs=defaultStamps().defs;if(!s.stamps.log||typeof s.stamps.log!=='object')s.stamps.log={};if(!['am','noon','pm'].includes(s.stamps.lastRt))s.stamps.lastRt='';
   {const st=s.stamps,okT=v=>/^\d{1,2}:\d\d$/.test(v),pt=(Array.isArray(st.pillTimes)&&st.pillTimes.length>=3?st.pillTimes:['08:00','13:00','20:00']).map(v=>okT(v)?v:'08:00'),ix={am:0,noon:1,pm:2};
    if(!isObj(st.log))st.log={};Object.keys(st.log).forEach(k=>{if(!okDate(k)||!isObj(st.log[k]))delete st.log[k];});
    st.defs.forEach(x=>{if(!x)return;x.times=Math.max(1,Math.min(3,+x.times||1));
@@ -1752,7 +1753,7 @@ function nativeIssues(){
 function pushAlarmsToNative(){
   try{
     if(window.AndroidBridge&&typeof window.AndroidBridge.setAlarms==='function'){
-      const list=buildSchedule(60).map(x=>({id:`${x.a.id}_${fmt(x.d)}`,at:x.at.getTime(),label:x.a.label||'',shift:x.sh,shiftName:shiftLabel(x.sh),time:x.a.time,
+      const list=buildSchedule(180).map(x=>({id:`${x.a.id}_${fmt(x.d)}`,at:x.at.getTime(),label:x.a.label||'',shift:x.sh,shiftName:shiftLabel(x.sh),time:x.a.time,
         sound:x.a.sound!==false,vib:x.a.vib!==false,vol:x.a.vol??100,ramp:!!x.a.ramp,tone:x.a.tone||'',snMin:x.a.snMin||5,snMax:x.a.snMax??3}));
       window.AndroidBridge.setAlarms(JSON.stringify(list));
     }
@@ -1771,10 +1772,11 @@ function cssHex(v){   // var(--day) 같은 CSS 색을 #rrggbb 로 (위젯은 CSS
 }
 function widgetJson(){
   const t0=new Date(),days=[],ic={};
-  for(let i=-6;i<14;i++){   // 이번 주(7일 위젯)가 어느 요일에 시작해도 되도록 오늘 6일 전부터
+  for(let i=-6;i<60;i++){   // 이번 주(7일 위젯)가 어느 요일에 시작해도 되도록 오늘 6일 전부터 · 앞으로 60일 (2주 뒤부터는 근무 · 공휴일만)
     const d=addDays(t0,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),pers=persOn(k);
     const c=(pers||sh===''||sh===NONE_K)?null:tColors(typeOf(sh));
     const rest=!pers&&sh!==''&&sh!==NONE_K&&isRest(sh);
+    if(i>=14){days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',far:1});continue;}
     const sa=stampsOn(k).slice(0,12).map(x=>{
       const id=String(x.s.id),nm=String(x.s.name||'').slice(0,12);
       if(x.s.kind==='pill')return {id,nm,p:1,c:cssHex(x.v&&x.v.col)||'#7e57c2',h:String((x.v&&x.v.shape)||'caps'),n:x.n,N:Math.max(1,Math.min(3,x.v.N||1))};
@@ -1791,7 +1793,9 @@ function widgetJson(){
     const MI=40;
     vm.forEach(x=>{if(mi.length>=MI)return;const it={r:x.todo&&(!x.shared||x.by===role())?'m':'t',id:String(x.id),t:wm(x.text).slice(0,160),d:!!(x.todo&&x.done)};if(x.time)it.tm=tfmt(x.time);const cc=x.color?cssHex(x.color):'';if(cc)it.c=cc;if(x.shared){it.f=1;if(x.by!==role())it.o=1;}mi.push(it);});
     boardOnDate(k).forEach(n=>{if(n.type==='list'){if(mi.length<MI)mi.push({r:'t',t:('☑ '+(n.title||'할 일')).slice(0,60),d:false});(n.lines||[]).slice(0,12).forEach(l=>{if(mi.length<MI)mi.push({r:'l',pid:String(n.id),lid:String(l.id),t:wm(l.text).slice(0,120),d:!!l.done});});}else if(mi.length<MI)mi.push({r:'t',t:wm(n.text).slice(0,160),d:false});});
-    days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40)),sa,mi});
+    const chn=compHol(k);
+    days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40)),sa,mi,
+      ...(chn?{ch:String(chn).slice(0,30)}:{}),...(ddayHits(k).length?{an:ddayHits(k).slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});
   }
   return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,lines:S.memoLines===4?4:3,ws:S.weekStart===1?1:0,days,ic});
 }
@@ -2811,7 +2815,7 @@ function pillSvg(n,k,px,col,shape){
     const sg=17/n;p=`<defs><clipPath id="${id}"><ellipse cx="11" cy="11" rx="9" ry="6.2"/></clipPath></defs><g clip-path="url(#${id})">`;
     for(let i=0;i<k;i++)p+=`<rect x="${(2.5+i*sg).toFixed(2)}" y="3" width="${sg.toFixed(2)}" height="16" fill="${RED}"/>`;
     p+=`</g>`;for(let i=1;i<n;i++)p+=ln((2.5+i*sg).toFixed(2),5,(2.5+i*sg).toFixed(2),17);
-    p+=`<ellipse class="pr" cx="11" cy="11" rx="9" ry="6.2" fill="none"/><line class="pr" x1="11" y1="6.5" x2="11" y2="15.5" stroke="${k>=n?'#fff':RED}"/>`;
+    p+=`<ellipse class="pr" cx="11" cy="11" rx="9" ry="6.2" fill="none"/>${n===1?`<line class="pr" x1="11" y1="6.5" x2="11" y2="15.5" stroke="${k>=n?'#fff':RED}"/>`:''}`;   // 가운데 홈 줄은 1번짜리만 (2 · 3번은 칸 나눔 줄과 겹쳐 세로줄이 많아 보임)
   }else if(shape==='drop'){
     const d='M11 2.5C11 2.5 4.2 10 4.2 14.2a6.8 6.8 0 0013.6 0C17.8 10 11 2.5 11 2.5z';
     p=`<defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs><g clip-path="url(#${id})"><rect x="0" y="${(21-(k/n)*19).toFixed(2)}" width="22" height="22" fill="${RED}"/></g>`;
@@ -2932,6 +2936,7 @@ function openStampSlot(id){
   openPop(`<div class="mh">${s.one?'＋ 로 붙인 스티커':`${i+1}번째 칸`}<b>${esc(s.name)}</b></div>
     <div class="mi icn-top"><span class="icn-cur">${stIcon(s,32)}</span><input type="text" id="slotName" value="${esc(s.name)}" maxlength="12" placeholder="이름"></div>
     ${s.kind==='pill'?`<div class="mi"><div class="pl2" style="flex:none;margin-right:10px">색</div>${colDots(s.color,'slot-col',s.id)}</div>`:''}
+    ${stFamShow()?`<div class="mi"><div class="pl2" style="flex:1">👪 가족에게 보이기</div><label class="sw"><input type="checkbox" id="slotFam" data-id="${esc(s.id)}" ${stFam(s)?'checked':''}><i></i></label></div>`:''}
     <div class="mi" style="gap:8px">${s.one?'':`<button class="btn ghost grow" data-act="slot-swap" data-id="${s.id}">다른 스티커로</button>`}<button class="btn ghost grow danger" data-act="slot-clear" data-id="${s.id}">${s.one?'지우기':'비우기'}</button><button class="btn grow" data-act="slot-save" data-id="${s.id}">저장</button></div>`);
 }
 function slotPullName(id){
@@ -2948,7 +2953,7 @@ function stFill(d){const a=Array.isArray(d.ats)?d.ats.slice(0,d.times):[];for(le
 function stDraftOf(s,k,edit,back){
   const kind=s?s.kind:'mark',times=s?stN(s):1;
   const d={k,back:back||'',edit:!!edit,id:s?s.id:'__new',kind,name:s?s.name:'',emoji:(s&&s.emoji)||'🏃',color:(s&&s.color)||STK_COL[0],times,
-    alarm:!!(s&&s.ats&&s.ats.length),ats:s&&s.ats?s.ats.slice():[],shape:(s&&s.shape)||'caps',
+    alarm:!!(s&&s.ats&&s.ats.length),ats:s&&s.ats?s.ats.slice():[],shape:(s&&s.shape)||'caps',fam:s?stFam(s):true,
     rep:edit?(s.rep||'none'):'once',days:s&&s.days&&s.days.length?s.days.slice():[parse(k).getDay()],workMode:(s&&s.workMode)||'rest',
     from:(edit&&s.from)||k,to:(edit&&s.to)||'',noHol:!!(edit&&s.noHol),noWknd:!!(edit&&s.noWknd),noNight:!!(edit&&s.noNight)};
   if(d.alarm)stFill(d);
@@ -2959,7 +2964,7 @@ function openStampReg(k,id,back,ret){
   const isNew=id==='__new'||id==='__newpill';
   const s=isNew||!id?null:S.stamps.defs.find(x=>x.id===id);   // 달력에서 열면 "새 스티커"부터 (옛 스티커가 미리 골라져 있으면 "이날만"이 그 스티커의 매일 규칙과 섞여 보임)
   stDraft=stDraftOf(s,k,!!(s&&back&&id),back);stDraft.ret=ret||'';
-  if(id==='__newpill'){stDraft.kind='pill';stDraft.name='약';}
+  if(id==='__newpill'){stDraft.kind='pill';stDraft.name='약';stDraft.fam=false;}
   if(back==='stamps'&&!stDraft.edit)stDraft.rep='daily';
   renderStampReg();
 }
@@ -3000,6 +3005,7 @@ function renderStampReg(){
     ${d.rep!=='once'&&d.rep!=='none'?`<div class="pg-cap">기간</div><div class="pg-sec" style="margin-top:0">
       <div class="prow"><div class="pl2">📅 기간</div>${tpick('srFrom',d.from,'','date')}<span class="tsep">~</span>${d.to?`${tpick('srTo',d.to,'','date')}<button class="xbtn" data-act="sr-noend" aria-label="끝 없음으로">✕</button>`:'<button class="tbtn" data-act="sr-setend">끝 없음 ›</button>'}</div>
       ${sw('srHol',d.noHol,'🎌 공휴일엔 빼기')}${['daily','work','month'].includes(d.rep)?sw('srWknd',d.noWknd,'📅 토 · 일 빼기'):''}</div>`:''}
+    ${stFamShow()?`<div class="pg-cap">가족</div><div class="pg-sec" style="margin-top:0">${sw('srFam',d.fam,`👪 가족에게 보이기<small>${d.fam?'가족 달력에 보여요':'나만 봐요'}</small>`)}</div>`:''}
     <div class="pg-cap">알림</div>
     <div class="pg-sec" style="margin-top:0">${sw('srAlarm',d.alarm,`⏰ 시각 알림<small>${d.alarm?'아래 시각에 울려요':'끔 · 달력에서만 봐요'}</small>`)}
       ${d.alarm?d.ats.map((t,i)=>`<div class="prow"><div class="pl2">${d.times>1?`${i+1}번째`:'시각'}</div>${tpick('srAt'+i,t)}</div>`).join('')+`<div class="hint" style="margin:0;padding:8px 16px">${stAlarmHint(d)}</div>`:''}</div>
@@ -3031,6 +3037,7 @@ function stampRegSave(){
   }
   if(d.name)s.name=d.name;else if(!s.name)s.name=d.kind==='pill'?'약':'새 스티커';
   s.times=d.times;
+  if(stFamShow())s.fam=!!d.fam;   // 실제 가족이 있어 칸이 보였을 때만 바꿈 (아니면 기본 규칙 그대로)
   if(s.kind==='pill')s.color=d.color||s.color||STK_COL[0];else s.emoji=d.emoji||s.emoji||'🏃';
   if(d.alarm){stFill(d);s.ats=d.ats.slice(0,d.times);s.ats.forEach((t,i)=>{(S.stamps.lastAt=S.stamps.lastAt||[])[i]=t;});}else s.ats=[];   // 마지막에 정한 시각은 다음 새 스티커의 처음 값
   const k=d.k;
@@ -3568,7 +3575,7 @@ function renderFamily(){
   const pend=S.requests.filter(r=>r.st==='pending').sort((a,b)=>a.date.localeCompare(b.date));
   const myReq=S.requests.filter(r=>r.st==='pending'||r.st==='accepted'||r.st==='rejected').sort((a,b)=>b.t-a.t).slice(0,3);
   const reqSum=(()=>{const c=famInCounts();return (c.ask||c.hold)?`<div class="fsec">근무 요청</div><button class="frqsum" data-act="feed-req">📩 답할 요청 ${c.ask}${c.hold?` · 보류 ${c.hold}`:''} <span>›</span></button>`:'';})();
-  const reqHtml=S.link?reqSum:isHost?(pend.length?`<div class="fsec">답장할 요청 ${pend.length}</div>${pend.map(r=>`<div class="frq" data-act="req-go" data-k="${r.date}"><b>${whoName(r.by||'guest')} · ${mdw(r.date)} ${esc(shiftLabel(shiftOf(parse(r.date))))} → ${esc(shiftLabel(r.want))} 요청</b>${r.msg?`<small>"${esc(r.msg)}" · ${rel(r.t)}</small>`:`<small>${rel(r.t)}</small>`}<div class="bt"><button data-act="rqreply" data-id="${r.id}" data-s="pending">보류</button><button class="y" data-act="rqreply" data-id="${r.id}" data-s="accepted">수락</button><button data-act="rqreply" data-id="${r.id}" data-s="rejected">거절</button></div></div>`).join('')}`:'')
+  const reqHtml=S.link?reqSum:isHost?(pend.length?`<div class="fsec">답장할 요청 ${pend.length}</div>${pend.map(r=>`<div class="frq" data-act="req-go" data-k="${r.date}"><b>${esc(whoName(r.by||'guest'))} · ${mdw(r.date)} ${esc(shiftLabel(shiftOf(parse(r.date))))} → ${esc(shiftLabel(r.want))} 요청</b>${r.msg?`<small>"${esc(r.msg)}" · ${rel(r.t)}</small>`:`<small>${rel(r.t)}</small>`}<div class="bt"><button data-act="rqreply" data-id="${r.id}" data-s="pending">보류</button><button class="y" data-act="rqreply" data-id="${r.id}" data-s="accepted">수락</button><button data-act="rqreply" data-id="${r.id}" data-s="rejected">거절</button></div></div>`).join('')}`:'')
     :(myReq.length?`<div class="fsec">내 요청</div>${myReq.map(r=>`<div class="frq g" data-act="req-go" data-k="${r.date}"><b>${mdw(r.date)} ${esc(shiftLabel(r.want))} 요청 · ${REQ_ST[r.st].ic} ${r.st==='pending'?'답장 기다리는 중':REQ_ST[r.st].name}</b>${r.msg?`<small>"${esc(r.msg)}"</small>`:''}</div>`).join('')}`:'');
   return `<div class="famv">${famSyncHtml()}
     <div class="fsec">지금</div>
@@ -3759,7 +3766,7 @@ function piFind(id){return (S.board[boardKey()]||[]).find(x=>x.id===id);}
 const piDone=n=>n.type==='list'&&n.lines.length>0&&n.lines.every(l=>l.done);
 const piCol=n=>n.shared?'p':(PI_COL.includes(n.color)?n.color:'y');
 const PIN_COL={host:'#1d2330',guest:'#e5484d'};
-const piPin=by=>`<i class="pin" style="background:${PIN_COL[by]||'#6b7280'}">${isSolo()?'':by===role()?'나':whoName(by).slice(0,1)}</i>`;
+const piPin=by=>`<i class="pin" style="background:${PIN_COL[by]||'#6b7280'}">${isSolo()?'':by===role()?'나':esc(whoName(by).slice(0,1))}</i>`;
 // 글에서 날짜 찾기: "11/2", "10월 22일", "22일"
 function piDetect(n,mk){
   const txt=[n.title||'',n.text||'',...(n.lines||[]).map(l=>l.text)].join(' ');
@@ -3783,7 +3790,7 @@ function piCard(n){
       (n.lines.length>6?`<div class="pi-more">+${n.lines.length-6}</div>`:'');
   }else body=`<div class="t">${linkify(n.text,{click:true,fam:!!(n.shared&&n.by!==role())}).replace(/\n/g,'<br>')}</div>`;
   const chips=(n.repeat?'<span class="chip rep">🔁 매달</span>':'')+(n.date?`<span class="chip cal">📅 ${+n.date.slice(5,7)!==cur.m+1?`${+n.date.slice(5,7)}/`:''}${+n.date.slice(8)}일</span>`:'');
-  const rx=Object.entries(n.reacts||{}).filter(([,e])=>e).map(([w,e])=>`<span>${e} ${w===role()?'나':whoName(w)}</span>`).join('');
+  const rx=Object.entries(n.reacts||{}).filter(([,e])=>e).map(([w,e])=>`<span>${esc(e)} ${w===role()?'나':esc(whoName(w))}</span>`).join('');
   return `<div class="pi c-${col} ${piRot(n.id)} ${wide?'wide':''} ${done?'done':''}" data-act="pi-open" data-id="${n.id}">
     ${piPin(n.by)}<span class="tg">${n.shared?'♥':'🔒'}</span>${body}
     ${chips?`<div class="chips">${chips}</div>`:''}${rx?`<div class="rx">${rx}</div>`:''}
@@ -3835,13 +3842,13 @@ function renderPiEd(focus){
       <div class="pi-addl"><input type="text" id="piLine" placeholder="＋ 할 일 한 줄 추가" enterkeyhint="done" maxlength="60" value="${esc(piEd.line||'')}"><button data-act="pi-ladd">추가</button></div>`
     :`<textarea id="piText" placeholder="메모를 적어주세요" maxlength="500" ${own?'':'readonly'}>${esc(n.text||'')}</textarea>`;
   const rx=n.reacts||{};
-  const seen=Object.entries(rx).filter(([w,e])=>e&&w!==r).map(([w,e])=>`${e} ${whoName(w)}`).join(' · ');
+  const seen=Object.entries(rx).filter(([w,e])=>e&&w!==r).map(([w,e])=>`${esc(e)} ${esc(whoName(w))}`).join(' · ');
   $('#pop').className='open pi-pop';
   $('#pop').innerHTML=`<div class="pi-ed">
     <div class="pi big c-${col}">${piPin(n.by)}<span class="tg">${n.shared?'♥ 가족':'🔒 나만'}</span>
       ${body}
       <div id="piSug">${piSug(n)}</div>
-      ${!piEd.isNew?`<div class="pi-meta">${n.by===r?'내가':whoName(n.by)+'가'} 붙임 · ${rel(n.t)}</div>`:''}
+      ${!piEd.isNew?`<div class="pi-meta">${n.by===r?'내가':esc(whoName(n.by))+'가'} 붙임 · ${rel(n.t)}</div>`:''}
       ${!piEd.isNew&&n.shared?`<div class="pi-react">${PI_REACT.map(e=>`<button class="${rx[r]===e?'on':''}" data-act="pi-react" data-v="${e}">${e==='✓'?'✓ 확인':e}</button>`).join('')}</div>${seen?`<div class="pi-seen">${seen} 이 봤어요</div>`:''}`:''}
     </div>
     <div class="pi-tools">
@@ -4162,7 +4169,7 @@ function renderCfm(){
     body=`<div class="cfm-q">${esc(c.text)}</div><div class="hint cfm-h">${esc(sel)}에게 보여요 · ${md(c.k)} 날짜에 붙어요</div>${cfmToHtml(c,others)}${rem}`;
   }else if(c.type==='stk'){
     head='⭐ 스티커 보여주기<b>가족에게 보여줄까요?</b>';
-    body=`<div class="cfm-q">내 스티커(약 · 운동 등)가 ${esc(names)}의 가족 달력에 보여요</div><div class="hint cfm-h">언제든 끌 수 있어요 · 끄면 가족 화면에서 바로 사라져요</div>`;ok='켜기';
+    body=`<div class="cfm-q">내 스티커(운동 등)가 ${esc(names)}의 가족 달력에 보여요</div><div class="hint cfm-h">약은 기본으로 안 보여요 · 스티커마다 바꿀 수 있어요 · 언제든 끌 수 있어요</div>`;ok='켜기';
   }else if(c.type==='status'){
     head='📡 실시간 상태<b>가족에게 보여줄까요?</b>';
     body=`<div class="cfm-q">지금 하는 일(근무 중 · 자는 중 등)이 ${esc(names)}에게 실시간으로 보여요</div><div class="hint cfm-h">언제든 끌 수 있어요 · 끄면 가족에게는 근무 · 휴무만 보여요</div>`;ok='켜기';
@@ -4209,7 +4216,7 @@ function memoCard(m,k){
   const ex=m.time?` · 🕐 ${tfmt(m.time)}${m.al!==undefined&&m.al!==''?` · 🔔 ${m.al==='10'?'10분 전':'정시'}`:''}`:'';
   return `<div class="mcard ${cls} ${m.color?'cl':''} ${m.todo&&m.done?'done':''} ${memoEdit===m.id?'sel':''}" ${m.color?`style="background:${esc(m.color)} !important"`:''} data-act="memo-tap" data-mid="${m.id}" data-hold="memo">
     ${m.todo?`<button class="mchk ${m.done?'on':''}" data-act="memo-chk" data-mid="${m.id}" aria-label="완료">${m.done?'✓':''}</button>`:''}
-    <div class="mt2"><span class="tx">${linkify(m.text,{click:true,fam:!!(m.shared&&m.by!==role())})}</span><div class="meta">${m.shared?(isSolo()?'♥ 가족 메모':`<span class="who ${own?'me':''}">${whoName(m.by)}</span>`):'나만'} · ${rel(m.t)}${ex}</div></div>
+    <div class="mt2"><span class="tx">${linkify(m.text,{click:true,fam:!!(m.shared&&m.by!==role())})}</span><div class="meta">${m.shared?(isSolo()?'♥ 가족 메모':`<span class="who ${own?'me':''}">${esc(whoName(m.by))}</span>`):'나만'} · ${rel(m.t)}${ex}</div></div>
     ${own&&!m.shared?`<button class="conv" data-act="memo-conv" data-mid="${m.id}">♡ 가족에게</button>`:''}
   </div>`;
 }
@@ -4222,7 +4229,7 @@ function memoSection(k){
   if(!memoEdit)memoMode=role()==='host'?'my':'fam';   // 입력칸 한 줄 메모는 항상 나만 (가족에게는 "자세히"에서)
   const fm=memoMode==='fam';
   const bar=`<div class="ibar">
-      ${memoEdit?`<div class="editing"><span>✏️ 메모 고치는 중</span><a data-act="memo-cancel">취소</a></div>`:''}
+      ${memoEdit?`<div class="editing"><span>✏️ 메모 고치는 중</span><span class="ea"><a data-act="memo-copy">복사</a><a data-act="memo-cancel">취소</a></span></div>`:''}
       <div class="note ${fm?'fam':''}">${fm?'♥ 가족 모두에게 보여요 · 알림이 가요':'🔒 나만 볼 수 있어요 · 색 · 할 일 · 시간 · 가족에게는 "자세히"에서'}</div>
       <div class="irow">
         <input type="text" id="memoInput" class="${fm?'fam':'my'}" value="${esc(memoText)}" placeholder="${fm?'가족에게 남길 메모':'나만 보는 메모'}" enterkeyhint="send">
@@ -4284,17 +4291,24 @@ function mdSave(){
   mdDraft=null;memoText='';closePage();memoFinish(k,fam?'♥ 가족 메모를 남겼어요':'🔒 나만 보는 메모를 남겼어요');
 }
 function openMemoMenu(mid){
-  if(String(mid).startsWith('s:')){   // 서버에서 온 가족 메모: 방 주인만 지울 수 있어요
+  const copyBtn=`<button class="mi" data-act="mm-copy" data-mid="${esc(mid)}">📋 복사</button>`;
+  if(String(mid).startsWith('s:')){   // 서버에서 온 가족 메모: 누구나 복사, 방 주인은 지우기도
     const rm=famRemoteMemos(sheetKey).find(x=>x.id===mid);if(!rm)return;
-    if(!(S.link&&S.link.role==='host')){toast('가족이 쓴 메모는 고칠 수 없어요');return;}
+    const host=!!(S.link&&S.link.role==='host');
     openPop(`<div class="mh">♥ 가족 메모 · ${esc(whoName(rm.by))}<b>${esc(firstLine(rm.text))}</b></div>
-      <button class="mi d" data-act="srvmm-del" data-sid="${esc(rm.sid)}">🗑 삭제</button>
+      ${copyBtn}
+      ${host?`<button class="mi d" data-act="srvmm-del" data-sid="${esc(rm.sid)}">🗑 삭제</button>`:''}
       <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);return;
   }
   const k=sheetKey,m=memosOf(k).find(x=>x.id===mid);if(!m)return;
   const own=m.by===role(),host=role()==='host';
-  if(!own&&!host){toast('가족이 쓴 메모는 고칠 수 없어요');return;}
+  if(!own&&!host){   // 남이 쓴 메모는 고칠 수 없지만 글은 복사할 수 있어요
+    openPop(`<div class="mh">${m.shared?'♥ 가족 메모':'🔒 메모'}<b>${esc(firstLine(m.text))}</b></div>
+      ${copyBtn}
+      <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);return;
+  }
   openPop(`<div class="mh">${m.shared?'♥ 가족 메모':'🔒 나만 보는 메모'}<b>${esc(firstLine(m.text))}</b></div>
+    ${copyBtn}
     ${own?(m.shared?`<button class="mi" data-act="mm-my" data-mid="${mid}">🔒 나만 보기로 바꾸기</button>`:`<button class="mi f" data-act="mm-fam" data-mid="${mid}">♥ 가족 메모로 바꾸기</button>`):''}
     ${own?`<button class="mi" data-act="mm-edit" data-mid="${mid}">✏️ 고치기</button>`:''}
     ${own?`<div class="mi">📅 다른 날로 옮기기 <input type="date" id="mmDate" value="${k}"><button class="btn sm" data-act="mm-move" data-mid="${mid}">옮기기</button></div>`:''}
@@ -5645,11 +5659,19 @@ document.addEventListener('click',e=>{
     case 'md-notime':mdPull();mdDraft.time='';mdDraft.al='';renderMemoDetail();break;
     case 'md-save':mdSave();break;
     case 'memo-cancel':memoEdit=null;memoText='';openDay(sheetKey);break;
+    case 'memo-copy':{   // 고치는 중인 메모 글 복사 (입력칸에 적힌 그대로, 비었으면 원래 메모)
+      const i=$('#memoInput');let tx=i?i.value:memoText;
+      if(!String(tx||'').trim()){const m0=memoEdit&&memosOf(sheetKey).find(x=>x.id===memoEdit);tx=m0?m0.text:'';}
+      if(!String(tx||'').trim()){toast('복사할 글이 없어요');break;}
+      copyText(tx);break;}
+    case 'mm-copy':{   // 메모 메뉴의 [복사] (내 메모 · 가족이 쓴 메모 모두)
+      const id=t.dataset.mid,m0=String(id).startsWith('s:')?famRemoteMemos(sheetKey).find(x=>x.id===id):memosOf(sheetKey).find(x=>x.id===id);
+      closePop();if(m0)copyText(m0.text);break;}
     case 'memo-tap':{
       if(e.target.closest('.conv,.mchk'))break;
-      if(String(t.dataset.mid).startsWith('s:')){toast(S.link&&S.link.role==='host'?'가족이 쓴 메모예요 · 길게 누르면 지울 수 있어요':'가족이 쓴 메모는 고칠 수 없어요');break;}
+      if(String(t.dataset.mid).startsWith('s:')){toast(S.link&&S.link.role==='host'?'가족이 쓴 메모예요 · 길게 누르면 복사하거나 지울 수 있어요':'가족이 쓴 메모는 고칠 수 없어요 · 길게 누르면 복사할 수 있어요');break;}
       const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);if(!m)break;
-      if(m.by!==role()){toast(role()==='host'?'가족이 쓴 메모예요 · 길게 누르면 지울 수 있어요':'근무자가 쓴 메모는 고칠 수 없어요');break;}
+      if(m.by!==role()){toast(role()==='host'?'가족이 쓴 메모예요 · 길게 누르면 복사하거나 지울 수 있어요':'근무자가 쓴 메모는 고칠 수 없어요 · 길게 누르면 복사할 수 있어요');break;}
       memoEdit=m.id;memoText=m.text;memoMode=m.shared?'fam':'my';openDay(sheetKey);
       const i=$('#memoInput');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}
       break;}
@@ -6079,6 +6101,8 @@ document.addEventListener('change',e=>{
   }else if(t.id==='mdTime'&&mdDraft){if(t.value)mdDraft.time=t.value;
   }else if(t.id==='srWknd'&&stDraft){stDraft.noWknd=t.checked;
   }else if(t.id==='srHol'&&stDraft){stDraft.noHol=t.checked;
+  }else if(t.id==='srFam'&&stDraft){srPull();stDraft.fam=t.checked;renderStampReg();
+  }else if(t.id==='slotFam'){const d0=S.stamps.defs.find(x=>x.id===t.dataset.id);if(d0){d0.fam=t.checked;save();toast(t.checked?'가족 달력에 보여요':'나만 봐요');}
   }else if(t.id==='srAlarm'&&stDraft){srPull();stDraft.alarm=t.checked;if(t.checked)stFill(stDraft);renderStampReg();
   }else if(/^srAt\d$/.test(t.id||'')&&stDraft){if(t.value)stDraft.ats[+t.id.slice(4)]=t.value;
   }else if(t.id==='srNight'&&stDraft){stDraft.noNight=t.checked;
@@ -6454,6 +6478,8 @@ function famPhoto(e){
   im.onload=()=>{try{const cv=document.createElement('canvas');cv.width=cv.height=48;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,48,48);g.drawImage(im,0,0,48,48);const u=cv.toDataURL('image/jpeg',0.7);ph48[id]=u.length<=4200?u:'';famSoon();}catch(err){}};
   im.src=src;return '';
 }
+const stFam=x=>!!x&&(x.fam===true||(x.fam===undefined&&x.kind!=='pill'));   // 이 스티커를 가족에게 보일지: 약은 기본 안 보임 · 나머지는 기본 보임 · 스티커마다 바꿀 수 있음
+const stFamShow=()=>!!(S.link&&S.link.stk&&famOthers().length>0);   // 스티커별 "가족에게 보이기" 칸은 실제 가족이 가족방에 들어와 있을 때만 나옴
 function famStkPayload(){
   const defs=(S.stamps&&S.stamps.defs)||[],used=[],keyIdx={},stk={},from=addK(fmt(new Date()),-35);
   let imgs=0;
@@ -6465,7 +6491,7 @@ function famStkPayload(){
     return o;
   };
   for(let i=0;i<=95;i++){
-    const k=addK(from,i),list=stampsOn(k);if(!list.length)continue;
+    const k=addK(from,i),list=stampsOn(k).filter(x=>stFam(x.s));if(!list.length)continue;
     const str=list.map(x=>{
       const key=x.s.kind==='pill'?`${x.s.id}|${x.v.col}|${x.v.N}|${x.v.shape}`:x.s.id;
       let j=keyIdx[key];
@@ -6688,7 +6714,7 @@ function famSetStk(on){
   if(on){openCfm({type:'stk'});return;}
   S.link.stk=false;save();toast('스티커는 가족에게 안 보여요');
 }
-const stkRow=()=>`<div class="prow"><div class="pl2">내 스티커도 가족에게 보여요</div><label class="sw"><input type="checkbox" id="famStk" ${S.link&&S.link.stk?'checked':''}><i></i></label></div>`;
+const stkRow=()=>`<div class="prow"><div class="pl2">내 스티커도 가족에게 보여요${famOthers().length?'<small>스티커 고치기에서 하나씩 바꿀 수 있어요 · 약은 기본으로 안 보여요</small>':''}</div><label class="sw"><input type="checkbox" id="famStk" ${S.link&&S.link.stk?'checked':''}><i></i></label></div>`;
 async function famSetMode(mode){
   if(!S.link||S.link.role==='host')return;
   try{
@@ -7090,6 +7116,7 @@ function reqTabBody(){
     ${ins.length?'':'<div class="mempty" style="padding:30px 0;text-align:center">답할 요청이 없어요</div>'}`;
 }
 function copyText(t){
+  try{if(hasBridge('copyText')){window.AndroidBridge.copyText(t);toast('복사했어요');return;}}catch(e){}
   try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast('복사했어요'),()=>copyOld(t));return;}}catch(e){}
   copyOld(t);
 }

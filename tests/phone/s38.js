@@ -9,7 +9,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.evaluate(()=>document.querySelector('[data-act="more-widget"]').click());await p.waitForTimeout(300);
  await p.evaluate(()=>document.querySelector('[data-act="wg-theme"][data-v="dark"]').click());await p.waitForTimeout(1000);
  const w=await p.evaluate(()=>window.__wg[window.__wg.length-1]);
- T('위젯 데이터가 넘어감(14일 · 테마 어둡게)',!!w&&w.days.length===20&&w.ws===0&&w.theme==='dark'&&w.alpha===100,JSON.stringify(w).slice(0,200));
+ T('위젯 데이터가 넘어감(오늘 6일 전~60일 뒤 · 테마 어둡게)',!!w&&w.days.length===66&&w.ws===0&&w.theme==='dark'&&w.alpha===100,JSON.stringify(w).slice(0,200));
  T('오늘(10/12)은 근무 글자 · 날짜 숫자',w&&w.days[0].k==='2026-10-06'&&w.days[6].k==='2026-10-12'&&w.days[6].d===12&&typeof w.days[6].t==='string',JSON.stringify(w&&w.days[6]));
  T('10/13 메모가 들어감(한 줄 + 목록)',w&&w.days[7].memo==='병원 가는 날'&&w.days[7].ms[0]==='병원 가는 날',JSON.stringify(w&&w.days[7]));
  await p.evaluate(()=>{const r=document.getElementById('wgAlpha');r.value='60';r.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(1000);

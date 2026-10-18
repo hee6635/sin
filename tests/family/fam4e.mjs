@@ -10,6 +10,7 @@ const srv = http.createServer((req, res) => {
   let f = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
   if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { 'content-type': mime[path.extname(f)] || 'application/octet-stream' });
+  if (f.endsWith('.html')) return res.end(fs.readFileSync(f, 'utf8').replace("https://raw.githubusercontent.com; frame-src", "https://raw.githubusercontent.com http://127.0.0.1:9099 http://127.0.0.1:8080; frame-src"));   // 보안 잠금(CSP)을 켠 채로 시험: 에뮬레이터 주소만 더함
   fs.createReadStream(f).pipe(res);
 }).listen(8127, '127.0.0.1');
 const SC = '/tmp/claude-0/-home-user-sin/78e2bc2a-7f65-5612-9a8c-557939742276/scratchpad/v17/e2e4/';
@@ -131,6 +132,9 @@ await A.click('#nav [data-tab="set"]'); await A.click('[data-act="link-open"]');
 await A.click('#page [data-act="link-leave"]');
 check('엄마가 나가면 서버에서 메모 · 요청도 삭제', await wait(A, async () => { const m = await restRead(`households/${hostUid}/memos`), r = await restRead(`households/${hostUid}/requests`); return (!m.documents || !m.documents.length) && (!r.documents || !r.documents.length); }, 20000));
 check('아빠 폰의 가족 메모 · 요청 복사본도 정리', await wait(H, async () => Object.keys((await S(H)).fam2.memos).length === 0 && !(await S(H)).requests.some(r => r.srv), 20000));
+{ // 보안 잠금(CSP)에 막힌 것이 하나도 없어야 함 (앱이 막힌 요청을 폰 안 오류 기록에 적어 둠)
+  const logs = []; for (const [n, P] of [['host', H], ['mom', A], ['gma', B]]) { const e = await P.evaluate(() => localStorage.getItem('eonjeswieo:err') || '[]'); if (/CSP/.test(e)) logs.push(n + ': ' + e.slice(0, 200)); }
+  check('보안 잠금(CSP)에 막힌 요청 없음', logs.length === 0, logs.join(' | ')); }
 log('\nERRORS', errs.length ? errs : 'none');
 log(`${okN}개 통과, ${ngN}개 실패`);
 await b.close(); srv.close();

@@ -11,6 +11,7 @@ const srv = http.createServer((req, res) => {
   let f = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
   if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { 'content-type': mime[path.extname(f)] || 'application/octet-stream' });
+  if (f.endsWith('.html')) return res.end(fs.readFileSync(f, 'utf8').replace("https://raw.githubusercontent.com; frame-src", "https://raw.githubusercontent.com http://127.0.0.1:9099 http://127.0.0.1:8080; frame-src"));   // 보안 잠금(CSP)을 켠 채로 시험: 에뮬레이터 주소만 더함
   fs.createReadStream(f).pipe(res);
 }).listen(8128, '127.0.0.1');
 const SC = '/tmp/claude-0/-home-user-sin/78e2bc2a-7f65-5612-9a8c-557939742276/scratchpad/v21/e2e5/';
@@ -202,7 +203,7 @@ await A.screenshot({ path: SC + 'a_cfm_stk.png' });
 await A.click('#pop [data-act="cfm-no"]'); await A.waitForTimeout(1500);
 check('취소하면 스위치가 다시 꺼짐', !(await A.$eval('#famStk', e => e.checked)) && !(await S(A)).link.stk);
 await A.click('label.sw:has(#famStk)'); await A.waitForTimeout(300); await A.click('#pop [data-act="cfm-ok"]'); await A.waitForTimeout(500);
-check('켠 뒤 서버 근무표에 스티커(sdefs 2종 · stk 날짜)가 올라감', await wait(H, async () => { const f = (await restRead(`households/${hostUid}/schedules/${momUid}`)).fields || {}; return f.sdefs && f.sdefs.arrayValue.values.length === 3 && f.stk && f.stk.mapValue.fields && !!f.stk.mapValue.fields['2026-10-14']; }, 20000), JSON.stringify(((await restRead(`households/${hostUid}/schedules/${momUid}`)).fields || {}).stk || '').slice(0, 200));
+check('켠 뒤 서버 근무표에 스티커(sdefs 2종 · stk 날짜)가 올라감', await wait(H, async () => { const f = (await restRead(`households/${hostUid}/schedules/${momUid}`)).fields || {}; return f.sdefs && f.sdefs.arrayValue.values.length === 2 && !JSON.stringify(f.sdefs).includes('"k":{"stringValue":"p"}') && f.stk && f.stk.mapValue.fields && !!f.stk.mapValue.fields['2026-10-14']; }, 20000), JSON.stringify(((await restRead(`households/${hostUid}/schedules/${momUid}`)).fields || {}).stk || '').slice(0, 200));
 check('★ 시작 날 바꾸기 전 옛 구간: 달라지는 날이 "바꾼 날"로 올라감(10/09 교)', await wait(H, async () => { const f = (await restRead(`households/${hostUid}/schedules/${momUid}`)).fields || {}; const o = f.overrides?.mapValue?.fields || {}; return o['2026-10-09']?.stringValue === '교' && !o['2026-10-10']; }, 20000));
 check('아빠 폰에 엄마 스티커 정보가 도착', await wait(H, async () => !!(await S(H)).fam2.scheds[momUid]?.stk, 20000));
 check('아빠 폰에 엄마 사진 스티커(48px)가 도착', await wait(H, async () => JSON.stringify((await S(H)).fam2.scheds[momUid] || {}).includes('data:image/jpeg;base64,'), 25000));
@@ -214,11 +215,24 @@ const momChip = (await H.$$('.vchip'))[hchips.findIndex(t => t.includes('엄마'
 await momChip.click(); await H.waitForSelector('#page .cell[data-k="2026-10-14"]', { timeout: 8000 });
 await H.waitForTimeout(300);
 const stkIn = await H.$eval('#page .cell[data-k="2026-10-14"]', e => ({ stp: !!e.querySelector('.stp'), n: e.querySelectorAll('.stp>*').length + e.querySelectorAll('.s2>*').length, t: e.querySelector('.dn').innerText }));
-check('★ 아빠가 보는 엄마 달력 14일에 스티커(약 · 요가 · 사진)가 보임', stkIn.n === 3, JSON.stringify(stkIn));
+check('★ 아빠가 보는 엄마 달력 14일에 스티커(요가 · 사진)가 보임 — 약은 기본으로 안 보임', stkIn.n === 2, JSON.stringify(stkIn));
 const imgIn = await H.$eval('#page .cell[data-k="2026-10-14"]', e => ({ img: e.querySelectorAll('img.ico[src^="data:image/jpeg"]').length, star: e.innerText.includes('⭐') }));
 check('★ 사진 스티커는 사진(48px)으로 보임 (⭐ 아님)', imgIn.img === 1 && !imgIn.star, JSON.stringify(imgIn));
 await H.screenshot({ path: SC + 'h_momcal_stk.png' });
 await toRoot(H);
+// ───── 스티커별 "가족에게 보이기": 엄마(실제 가족이 있음)가 설정 › 스티커 › 약 칸에서 켬
+await toRoot(A); await A.waitForTimeout(300);
+await A.click('#nav [data-tab="set"]'); await A.waitForTimeout(300);
+await A.evaluate(() => document.querySelector('[data-act="stk-board"]')?.click()); await A.waitForTimeout(400);
+await A.evaluate(() => document.querySelector('[data-act="slot-open"][data-id="s_pill"]')?.click()); await A.waitForTimeout(400);
+check('★ 약 칸 팝업에 "가족에게 보이기" 스위치가 있고 꺼져 있음(약 기본)', !!(await A.$('#slotFam')) && !(await A.$eval('#slotFam', e => e.checked)));
+await A.click('label.sw:has(#slotFam)'); await A.waitForTimeout(500);
+check('★ 약을 켜면 서버 근무표 스티커 종류가 3개로(약 포함)', await wait(H, async () => { const f = (await restRead(`households/${hostUid}/schedules/${momUid}`)).fields || {}; return f.sdefs && f.sdefs.arrayValue.values.length === 3 && JSON.stringify(f.sdefs).includes('"k":{"stringValue":"p"}'); }, 20000));
+await toRoot(H); await H.click('#nav [data-tab="fam"]'); await H.waitForTimeout(500);
+{ const hc = await H.$$eval('.vchip', a => a.map(x => x.textContent)); await (await H.$$('.vchip'))[hc.findIndex(t => t.includes('엄마'))].click(); await H.waitForSelector('#page .cell[data-k="2026-10-14"]', { timeout: 8000 }); await H.waitForTimeout(400); }
+check('★ 아빠가 보는 엄마 달력 14일에 약까지 3개가 보임', await wait(H, async () => (await H.$eval('#page .cell[data-k="2026-10-14"]', e => e.querySelectorAll('.stp>*').length + e.querySelectorAll('.s2>*').length)) === 3, 20000));
+await toRoot(H); await toRoot(A); await A.waitForTimeout(300);
+await A.click('#nav [data-tab="set"]'); await A.click('[data-act="link-open"]'); await A.waitForTimeout(1500);
 await A.click('label.sw:has(#famStk)'); await A.waitForTimeout(800);
 check('끄면 확인창 없이 바로 꺼지고 서버에서 스티커 정보가 사라짐', await wait(H, async () => { const f = (await restRead(`households/${hostUid}/schedules/${momUid}`)).fields || {}; return !f.stk && !f.sdefs; }, 20000));
 log('\nERRORS', errs.length ? errs : 'none');
