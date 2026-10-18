@@ -33,15 +33,15 @@ object MonthState {
         return String.format("%04d-%02d-%02d", c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH))
     }
 
-    /** 이번 달 기준으로 넘긴 달 수 (-1 · 0 · +1). 날이 바뀌면 이번 달로 돌아옴 (넘겨 놓고 잊어도 다음 날엔 이번 달) */
+    /** 이번 달 기준으로 넘긴 달 수 (지난 2달 ~ 다음 12달 · 안전하게 ±36 안). 날이 바뀌면 이번 달로 돌아옴 (넘겨 놓고 잊어도 다음 날엔 이번 달) */
     fun offset(ctx: Context, id: Int): Int {
         val p = sp(ctx)
         if (p.getString("offd_$id", "") != today()) return 0
-        return p.getInt("off_$id", 0).coerceIn(-1, 1)
+        return p.getInt("off_$id", 0).coerceIn(-36, 36)
     }
 
     fun setOffset(ctx: Context, id: Int, v: Int) {
-        sp(ctx).edit().putInt("off_$id", v.coerceIn(-1, 1)).putString("offd_$id", today()).apply()
+        sp(ctx).edit().putInt("off_$id", v.coerceIn(-36, 36)).putString("offd_$id", today()).apply()
     }
 
     fun who(ctx: Context, id: Int): String = sp(ctx).getString("who_$id", "") ?: ""
@@ -88,8 +88,10 @@ class MonthNavReceiver : BroadcastReceiver() {
         if (id == AppWidgetManager.INVALID_APPWIDGET_ID) return
         try {
             when (intent.action) {
-                MonthRenderer.ACT_PREV -> MonthState.setOffset(context, id, MonthState.offset(context, id) - 1)
-                MonthRenderer.ACT_NEXT -> MonthState.setOffset(context, id, MonthState.offset(context, id) + 1)
+                MonthRenderer.ACT_PREV, MonthRenderer.ACT_NEXT -> {
+                    val to = MonthState.offset(context, id) + (if (intent.action == MonthRenderer.ACT_PREV) -1 else 1)
+                    if (MonthRenderer.canShow(WidgetStore.load(context), to)) MonthState.setOffset(context, id, to)   // 위젯 데이터가 있는 달까지만 (끝에서는 가만히)
+                }
                 MonthRenderer.ACT_TODAY -> MonthState.setOffset(context, id, 0)
                 MonthRenderer.ACT_WHO -> MonthRenderer.nextWho(context, id)
                 else -> return
@@ -103,7 +105,7 @@ class MonthNavReceiver : BroadcastReceiver() {
 
 /**
  * 한 달 위젯 그림. 맨 윗줄(이름 칩 · ‹ 제목 ›) · 요일 줄 · 날짜 칸 4~6줄.
- * 칸 안의 짜임은 앱 달력과 같음: 날짜(+공휴일 두 글자) · 스티커(최대 2) → 근무(동그라미 · 쉬는 날은 글자만) → 메모(+n 칩). 자리는 WidgetLayout.solveMonth 가 정함.
+ * 칸 안의 짜임은 앱 달력과 같음: 날짜(+공휴일 두 글자) · 스티커(하루 최대 4개: 숫자 옆 2 + 둘째 줄 2) → 근무(동그라미 · 쉬는 날은 글자만) → 메모(+n 칩). 자리는 WidgetLayout.solveMonth · monthTop 이 정함.
  * 누르는 자리는 widget_month_view.xml 의 투명한 칸들 (크기 · 위치가 이 그림과 같은 비율이어야 함).
  */
 object MonthRenderer {
@@ -117,7 +119,6 @@ object MonthRenderer {
     private const val WEEKDAY_DP = 18f
     private const val SIDE_DP = 4f
     private const val BOTTOM_DP = 6f
-    private const val CHIP_ZONE_DP = 104f
 
     private val REST_COL = 0xFFE5484D.toInt()   // 쉬는 날 글자 (1칸 · 2칸 · 7일 위젯과 같은 붉은색)
     private val DOW = arrayOf("일", "월", "화", "수", "목", "금", "토")
@@ -173,6 +174,21 @@ object MonthRenderer {
         return MGrid(year, m0, WidgetLayout.monthWeeks(year, m0, ws), c)
     }
 
+    /** 그 달(offset) 달력 전체가 위젯 데이터에 들어 있는지 — ‹ › 가 넘어갈 수 있는 달 (앱을 오래 안 열어 데이터가 줄어도 저절로 맞음) */
+    internal fun covers(data: JSONObject?, ws: Int, off: Int): Boolean {
+        val days = data?.optJSONArray("days") ?: return false
+        if (days.length() == 0) return false
+        val first = days.optJSONObject(0)?.optString("k", "") ?: ""
+        val last = days.optJSONObject(days.length() - 1)?.optString("k", "") ?: ""
+        if (first.isEmpty() || last.isEmpty()) return false
+        val g = gridOf(ws, off)
+        val e = g.start.clone() as Calendar
+        e.add(Calendar.DAY_OF_MONTH, g.rows * 7 - 1)
+        return WidgetRenderer.dateKey(g.start) >= first && WidgetRenderer.dateKey(e) <= last
+    }
+
+    fun canShow(data: JSONObject?, off: Int): Boolean = covers(data, (data?.optInt("ws", 0) ?: 0).coerceIn(0, 1), off)
+
     /** 칸 하나에 그릴 내용 (나의 달력 · 가족 달력 어느 쪽이든 같은 모양으로 모아 둠) */
     private class Info(
         val key: String,
@@ -190,10 +206,10 @@ object MonthRenderer {
         val memos: List<String>
     )
 
-    private fun firstTwo(arr: JSONArray?): List<JSONObject> {
+    private fun firstN(arr: JSONArray?, n: Int): List<JSONObject> {
         val out = ArrayList<JSONObject>()
         if (arr == null) return out
-        for (q in 0 until Math.min(arr.length(), 2)) {
+        for (q in 0 until Math.min(arr.length(), n)) {
             val s = arr.optJSONObject(q) ?: continue
             out.add(s)
         }
@@ -240,7 +256,7 @@ object MonthRenderer {
                         }
                     }
                     ov = d.optBoolean("ov", false)
-                    stk = firstTwo(d.optJSONArray("stk"))
+                    stk = firstN(d.optJSONArray("stk"), 4)
                     memos = WidgetRenderer.memoList(d)
                 } else {
                     // 가족 달력: 그 사람의 근무 · 그 사람이 공유한 스티커 · 가족 메모(♥)만 (내 개인 메모는 안 보임)
@@ -256,7 +272,7 @@ object MonthRenderer {
                             rest = true
                         }
                     }
-                    stk = firstTwo(kMap?.optJSONArray(key))
+                    stk = firstN(kMap?.optJSONArray(key), 4)
                     val fm = d.optJSONArray("fm")
                     val ml = ArrayList<String>()
                     if (fm != null) {
@@ -349,7 +365,7 @@ object MonthRenderer {
         val title = grid.year.toString() + "년 " + (grid.month0 + 1) + "월"
         val chipName = if (ppl.isEmpty()) null else if (person == null) "나" else person.optString("n", "가족")
         val chipDot = if (person == null) pal.fg else WidgetRenderer.parseColor(person.optString("c", ""), pal.sub)
-        drawHeader(cv, w, u, pal, title, chipName, chipDot, offset > -1, offset < 1)
+        drawHeader(cv, w, u, pal, title, chipName, chipDot, covers(data, ws, offset - 1), covers(data, ws, offset + 1))
 
         // 요일 줄 (앱 설정의 주 시작 요일을 따름)
         val side = SIDE_DP * u
@@ -384,7 +400,7 @@ object MonthRenderer {
         }
     }
 
-    /** 맨 윗줄: [이름 칩] ‹ 2026년 10월 › — 칩이 있으면 제목이 오른쪽으로 비켜서 화살표가 제목 바로 옆에 붙고, 없으면 화살표는 양 끝 */
+    /** 맨 윗줄: [이름 칩] ‹ 2026년 10월 › — 화살표는 칩이 있든 없든 제목 바로 옆에 굵고 진하게 (예전에 칩이 없을 때 위젯 맨 끝에 뒀더니 폰에서 안 보였음). 위치는 WidgetLayout.monthArrows */
     private fun drawHeader(cv: Canvas, w: Float, u: Float, pal: WidgetRenderer.Pal, title: String, chipName: String?, chipDot: Int, canPrev: Boolean, canNext: Boolean) {
         val headH = HEAD_DP * u
         val tp = TextPaint(Paint.ANTI_ALIAS_FLAG)
@@ -392,21 +408,24 @@ object MonthRenderer {
         tp.textSize = 16f * u
         tp.color = pal.fg
         tp.textAlign = Paint.Align.CENTER
-        val chipZone = if (chipName != null) CHIP_ZONE_DP * u else 0f
-        val titleCx = chipZone + (w - chipZone) / 2f   // 제목 누르는 자리(xml 의 mz_title)의 한가운데
-        val tw = tp.measureText(title)
-        cv.drawText(title, titleCx, headH / 2f - (tp.ascent() + tp.descent()) / 2f, tp)
+        var tw = tp.measureText(title)
+        val maxTw = WidgetLayout.monthTitleMax(w, u, chipName != null)
+        if (tw > maxTw) {   // 아주 좁은 위젯 + 이름 칩: 제목 글자를 줄여 화살표 자리를 남김
+            tp.textSize = tp.textSize * maxTw / tw
+            tw = tp.measureText(title)
+        }
+        val ar = WidgetLayout.monthArrows(w, u, chipName != null, tw)
+        cv.drawText(title, ar.titleCx, headH / 2f - (tp.ascent() + tp.descent()) / 2f, tp)   // 제목 가운데 = 제목 누르는 자리(xml 의 mz_title)의 가운데
         val ap = TextPaint(Paint.ANTI_ALIAS_FLAG)
-        ap.textSize = 22f * u
+        ap.typeface = Typeface.DEFAULT_BOLD
+        ap.textSize = 24f * u
         ap.textAlign = Paint.Align.CENTER
-        ap.color = pal.sub
-        val prevX = if (chipName != null) titleCx - tw / 2f - 14f * u else 14f * u
-        val nextX = if (chipName != null) titleCx + tw / 2f + 14f * u else w - 14f * u
-        val ay = headH / 2f + 7f * u
-        ap.alpha = if (canPrev) 255 else 70   // 앞뒤 한 달까지만 넘길 수 있음 — 끝에서는 흐리게
-        cv.drawText("‹", prevX, ay, ap)
-        ap.alpha = if (canNext) 255 else 70
-        cv.drawText("›", nextX, ay, ap)
+        ap.color = pal.fg
+        val ay = headH / 2f + 8f * u
+        ap.alpha = if (canPrev) 200 else 50   // 위젯 데이터가 있는 달까지만 넘길 수 있음 — 끝에서는 그쪽 화살표만 흐리게
+        cv.drawText("‹", ar.prevX, ay, ap)
+        ap.alpha = if (canNext) 200 else 50
+        cv.drawText("›", ar.nextX, ay, ap)
         if (chipName != null) drawChip(cv, chipName, chipDot, pal, headH, u)
     }
 
@@ -532,9 +551,13 @@ object MonthRenderer {
             holW2 = hp.measureText(h2)
         }
         val top = WidgetLayout.monthTop(plan, cw, u, numW, f.stk.size, holW2)
-        for (k in 0 until top.stickers) {
-            val sx = x0 + cw - pad - (top.stickers - k) * plan.stkSize - (top.stickers - k - 1) * plan.stkGap
+        for (k in 0 until top.row1) {   // 스티커 첫 줄: 숫자 옆 (오른쪽 끝)
+            val sx = x0 + cw - pad - (top.row1 - k) * plan.stkSize - (top.row1 - k - 1) * plan.stkGap
             WidgetRenderer.drawSticker(cv, f.stk[k], sx, y0 + plan.stkTop, plan.stkSize, TextPaint(Paint.ANTI_ALIAS_FLAG), icons)
+        }
+        for (j in 0 until top.row2) {   // 3 · 4번째: 바로 아래 줄 오른쪽 끝 (근무 동그라미 오른쪽 위에 살짝 걸쳐도 스티커가 위에 보임 — 앱 달력 · 7일 위젯과 같음)
+            val sx = x0 + cw - pad - (top.row2 - j) * plan.stkSize - (top.row2 - j - 1) * plan.stkGap
+            WidgetRenderer.drawSticker(cv, f.stk[top.row1 + j], sx, y0 + plan.stkTop + plan.stkSize + plan.stkGap, plan.stkSize, TextPaint(Paint.ANTI_ALIAS_FLAG), icons)
         }
         paint.typeface = Typeface.DEFAULT_BOLD
         paint.textAlign = Paint.Align.LEFT

@@ -10,7 +10,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.evaluate(()=>document.querySelector('[data-act="wg-theme"][data-v="dark"]').click());await p.waitForTimeout(1000);
  const w=await p.evaluate(()=>window.__wg[window.__wg.length-1]);
  const dk=k=>w&&w.days.find(x=>x.k===k);
- T('위젯 데이터가 넘어감(지난달 달력 첫 줄 8/30 ~ 12/10 = 103일 · 테마 어둡게)',!!w&&w.days.length===103&&w.days[0].k==='2026-08-30'&&w.days[w.days.length-1].k==='2026-12-10'&&w.ws===0&&w.theme==='dark'&&w.alpha===100,JSON.stringify(w).slice(0,200));
+ T('위젯 데이터가 넘어감(지난 2달 ~ 다음 12달: 8월 달력 첫 줄 7/26 ~ 2027년 10월 달력 끝 줄 11/6 = 469일 · 테마 어둡게)',!!w&&w.days.length===469&&w.days[0].k==='2026-07-26'&&w.days[w.days.length-1].k==='2027-11-06'&&w.ws===0&&w.theme==='dark'&&w.alpha===100,JSON.stringify(w).slice(0,200));
  T('오늘(10/12)은 근무 글자 · 날짜 숫자',!!dk('2026-10-12')&&dk('2026-10-12').d===12&&typeof dk('2026-10-12').t==='string',JSON.stringify(dk('2026-10-12')));
  T('10/13 메모가 들어감(한 줄 + 목록)',!!dk('2026-10-13')&&dk('2026-10-13').memo==='병원 가는 날'&&dk('2026-10-13').ms[0]==='병원 가는 날',JSON.stringify(dk('2026-10-13')));
  await p.evaluate(()=>{const r=document.getElementById('wgAlpha');r.value='60';r.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(1000);

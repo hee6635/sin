@@ -34,7 +34,7 @@ var mProblems = 0
 private fun bad(msg: String) { mProblems++; println("  ✗ $msg") }
 
 /** 한 칸의 안쪽 그림들의 사각형 (겹침 검사용) — 글자 폭은 자바 글꼴로 잼 */
-private class CellBox(val num: Rc, val stickers: List<Rc>, val hol: Rc?, val circle: Triple<Float, Float, Float>?, val memos: List<Rc>)
+private class CellBox(val num: Rc, val stickers: List<Rc>, val row2: List<Rc>, val hol: Rc?, val circle: Triple<Float, Float, Float>?, val memos: List<Rc>)
 
 private fun cellBox(g: Graphics2D, plan: WidgetLayout.MonthPlan, cw: Float, rowH: Float, u: Float, r: Int, d: MDay, hasCircle: Boolean): CellBox {
     g.font = font(true, plan.dateSize)
@@ -46,9 +46,15 @@ private fun cellBox(g: Graphics2D, plan: WidgetLayout.MonthPlan, cw: Float, rowH
     if (d.hol.isNotEmpty()) { hol2 = d.hol.take(2); g.font = font(false, plan.holSize); holW2 = g.fontMetrics.stringWidth(hol2).toFloat() }
     val top = WidgetLayout.monthTop(plan, cw, u, numW, d.stk, holW2)
     val sk = ArrayList<Rc>()
-    for (k in 0 until top.stickers) {
-        val sx = cw - plan.padX - (top.stickers - k) * plan.stkSize - (top.stickers - k - 1) * plan.stkGap
+    for (k in 0 until top.row1) {
+        val sx = cw - plan.padX - (top.row1 - k) * plan.stkSize - (top.row1 - k - 1) * plan.stkGap
         sk.add(Rc(sx, plan.stkTop, sx + plan.stkSize, plan.stkTop + plan.stkSize))
+    }
+    val sk2 = ArrayList<Rc>()   // 3 · 4번째: 바로 아래 줄 오른쪽 끝
+    for (j in 0 until top.row2) {
+        val sx = cw - plan.padX - (top.row2 - j) * plan.stkSize - (top.row2 - j - 1) * plan.stkGap
+        val sy = plan.stkTop + plan.stkSize + plan.stkGap
+        sk2.add(Rc(sx, sy, sx + plan.stkSize, sy + plan.stkSize))
     }
     var holRc: Rc? = null
     if (d.hol.isNotEmpty()) {
@@ -61,10 +67,20 @@ private fun cellBox(g: Graphics2D, plan: WidgetLayout.MonthPlan, cw: Float, rowH
     val mt = plan.memoTop(shown)
     val mm = ArrayList<Rc>()
     for (k in 0 until shown) { val py = mt + k * (plan.pillH + plan.pillGap); mm.add(Rc(plan.padX, py, cw - plan.padX, py + plan.pillH)) }
-    return CellBox(numRc, sk, holRc, circ, mm)
+    return CellBox(numRc, sk, sk2, holRc, circ, mm)
 }
 
 private fun checkCell(tag: String, b: CellBox, plan: WidgetLayout.MonthPlan, cw: Float, rowH: Float, u: Float, f: (String) -> Unit) {
+    for (s in b.row2) {   // 둘째 줄: 칸 안 · 숫자 · 공휴일 글자 · 메모와 안 겹침 · 근무 동그라미 가운데 선(글자 높이)보다는 위
+        if (s.x1 > cw + 0.5f || s.x0 < -0.5f) f("$tag 둘째 줄 스티커가 칸 밖")
+        if (b.num.hit(s)) f("$tag 날짜 숫자와 둘째 줄 스티커가 겹침")
+        if (b.hol != null && b.hol.hit(s)) f("$tag 공휴일 글자와 둘째 줄 스티커가 겹침")
+        for (m in b.memos) if (m.hit(s)) f("$tag 메모와 둘째 줄 스티커가 겹침")
+        for (t in b.stickers) if (t.hit(s)) f("$tag 첫 줄과 둘째 줄 스티커가 겹침")
+        if (s.y1 > plan.bottom + 0.5f) f("$tag 둘째 줄 스티커가 칸 아래로 나감")
+        val c2 = b.circle
+        if (c2 != null && s.y1 > c2.second + 0.5f) f("$tag 둘째 줄 스티커가 근무 동그라미 가운데 선(${c2.second / u}dp)보다 아래로 내려옴 ${s.y1 / u}dp")
+    }
     for (s in b.stickers) {
         if (s.x1 > cw + 0.5f || s.x0 < -0.5f) f("$tag 스티커가 칸 밖")
         if (b.num.hit(s)) f("$tag 날짜 숫자와 스티커가 겹침")
@@ -74,6 +90,7 @@ private fun checkCell(tag: String, b: CellBox, plan: WidgetLayout.MonthPlan, cw:
     if (h != null) {
         if (h.x1 > cw - plan.padX + 0.5f) f("$tag 공휴일 글자가 칸 밖")
         for (s in b.stickers) if (h.hit(s)) f("$tag 공휴일 글자와 스티커가 겹침")
+        for (s in b.row2) if (h.hit(s)) f("$tag 공휴일 글자와 둘째 줄 스티커가 겹침")
         if (b.num.hit(h)) f("$tag 공휴일 글자와 날짜 숫자가 겹침")
         if (b.circle != null && circleHits(b.circle.first, b.circle.second, b.circle.third, h)) f("$tag 공휴일 글자와 근무 동그라미가 겹침")
         for (m in b.memos) if (h.hit(m)) f("$tag 공휴일 글자와 메모가 겹침")
@@ -84,7 +101,7 @@ private fun checkCell(tag: String, b: CellBox, plan: WidgetLayout.MonthPlan, cw:
         if (c.second + c.third > plan.bottom + 0.5f) f("$tag 동그라미가 칸 아래로 나감")
         if (c.third * 2f > cw + 0.5f) f("$tag 동그라미가 칸보다 큼")
         for (m in b.memos) if (m.y0 < c.second + c.third - 0.5f && m.y1 > c.second - c.third + 0.5f && circleHits(c.first, c.second, c.third, m)) f("$tag 동그라미가 메모와 겹침")
-        for (s in b.stickers) if (circleHits(c.first, c.second, c.third, s)) f("$tag 동그라미가 스티커와 겹침")
+        for (s in b.stickers) if (circleHits(c.first, c.second, c.third, s)) f("$tag 동그라미가 첫 줄 스티커와 겹침")   // (둘째 줄은 앱 달력처럼 동그라미 오른쪽 위에 살짝 걸쳐도 됨 — 위에서 가운데 선까지만 검사)
         if (circleHits(c.first, c.second, c.third, b.num)) f("$tag 동그라미가 날짜 숫자와 겹침")
     }
     for (m in b.memos) { if (m.y1 > plan.bottom + 0.5f) f("$tag 메모가 칸 아래로 나감"); if (m.y0 < plan.dateBottom - 0.5f) f("$tag 메모가 날짜 줄을 침범") }
@@ -107,9 +124,43 @@ fun weeksCheck(): Int {
     return f
 }
 
+/** 맨 윗줄 화살표(‹ ›)가 자기 눌리는 칸(앞 달 칸 · 다음 달 칸) 안에 있고 제목 글자와 안 겹치는지: 폭 250~900dp · 이름 칩 있음/없음 · 제목 글자 폭 70~130dp */
+fun arrowsCheck(): Int {
+    var f = 0
+    var n = 0
+    val u = 2.75f
+    val half = 6f * u
+    for (chip in listOf(false, true)) {
+        var wd = 250
+        while (wd <= 900) {
+            var tw = 70
+            while (tw <= 130) {
+                val w = wd * u
+                val twPx = Math.min(tw * u, WidgetLayout.monthTitleMax(w, u, chip))   // 그리는 쪽이 너무 넓은 제목은 줄여서 그림
+                val a = WidgetLayout.monthArrows(w, u, chip, twPx)
+                val chipZone = if (chip) WidgetLayout.MONTH_CHIP_ZONE_DP * u else 0f
+                val cx = chipZone + (w - chipZone) / 2f
+                val zoneHalf = WidgetLayout.MONTH_TITLE_ZONE_DP * u / 2f
+                n++
+                fun bad(m: String) { f++; if (f < 8) println("  ✗ 화살표 폭 ${wd}dp 칩 $chip 제목 ${tw}dp: $m") }
+                if (Math.abs(a.titleCx - cx) > 0.01f) bad("제목 가운데가 눌리는 칸 가운데와 다름")
+                if (a.prevX < chipZone + half - 0.5f || a.prevX > cx - zoneHalf - half + 0.5f) bad("앞 달 화살표가 앞 달 칸 밖 ${a.prevX / u}dp (칸 ${(chipZone + half) / u} ~ ${(cx - zoneHalf - half) / u})")
+                if (a.nextX < cx + zoneHalf + half - 0.5f || a.nextX > w - half + 0.5f) bad("다음 달 화살표가 다음 달 칸 밖 ${a.nextX / u}dp (칸 ${(cx + zoneHalf + half) / u} ~ ${(w - half) / u})")
+                if (a.prevX + half > cx - twPx / 2f + 2f * u) bad("앞 달 화살표가 제목 글자와 겹침")
+                if (a.nextX - half < cx + twPx / 2f - 2f * u) bad("다음 달 화살표가 제목 글자와 겹침")
+                if (a.prevX < half || a.nextX > w - half + 0.5f) bad("화살표가 위젯 밖")
+                tw += 3
+            }
+            wd += 7
+        }
+    }
+    println(if (f == 0) "화살표 위치: ${n}가지(폭 · 칩 · 제목 폭) 모두 자기 눌리는 칸 안 · 제목과 안 겹침" else "화살표 위치 실패 ${f}개")
+    return f
+}
+
 fun monthFuzz(): Int {
     val rnd = java.util.Random(11)
-    var fails = weeksCheck()
+    var fails = weeksCheck() + arrowsCheck()
     val u = 2.75f
     val img = BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB)
     val g = img.createGraphics()
@@ -176,14 +227,14 @@ fun renderMonth(name: String, wDp: Int, hDp: Int, title: String, days: List<MDay
     val headH = 36f * u
     val chipZone = if (chip != null) 104f * u else 0f
     g.font = font(true, 16f * u); g.color = col(pal.fg)
-    val tw = g.fontMetrics.stringWidth(title).toFloat()
-    val titleCx = chipZone + (w - chipZone) / 2f
-    g.drawString(title, titleCx - tw / 2f, 24f * u)
-    g.font = font(false, 22f * u); g.color = col(pal.sub)
-    val prevX = if (chip != null) titleCx - tw / 2f - 14f * u else 14f * u
-    val nextX = if (chip != null) titleCx + tw / 2f + 14f * u else w - 14f * u
-    g.drawString("‹", prevX - g.fontMetrics.stringWidth("‹") / 2f, 25f * u)
-    g.drawString("›", nextX - g.fontMetrics.stringWidth("›") / 2f, 25f * u)
+    var tw = g.fontMetrics.stringWidth(title).toFloat()
+    val maxTw = WidgetLayout.monthTitleMax(w.toFloat(), u, chip != null)
+    if (tw > maxTw) { g.font = font(true, 16f * u * maxTw / tw); tw = g.fontMetrics.stringWidth(title).toFloat() }
+    val ar = WidgetLayout.monthArrows(w.toFloat(), u, chip != null, tw)   // 화살표는 칩이 있든 없든 제목 바로 옆 (MonthWidget.kt 와 같은 식)
+    g.drawString(title, ar.titleCx - tw / 2f, 24f * u)
+    g.font = font(true, 24f * u); g.color = col(pal.fg, 0.78f)
+    g.drawString("‹", ar.prevX - g.fontMetrics.stringWidth("‹") / 2f, 26f * u)
+    g.drawString("›", ar.nextX - g.fontMetrics.stringWidth("›") / 2f, 26f * u)
     if (chip != null) {
         g.font = font(true, 11.5f * u)
         var nw = g.fontMetrics.stringWidth(chip.first).toFloat()
@@ -229,7 +280,7 @@ fun renderMonth(name: String, wDp: Int, hDp: Int, title: String, days: List<MDay
         }
         // 스티커
         val stkCols = listOf(0xF4B400, 0x26A69A)
-        for ((k, s) in box.stickers.withIndex()) { g.color = col(stkCols[k % 2], a); g.fill(RoundRectangle2D.Float(x0 + s.x0, y0 + s.y0, s.x1 - s.x0, s.y1 - s.y0, 3f * u, 3f * u)) }
+        for ((k, s) in (box.stickers + box.row2).withIndex()) { g.color = col(stkCols[k % 2], a); g.fill(RoundRectangle2D.Float(x0 + s.x0, y0 + s.y0, s.x1 - s.x0, s.y1 - s.y0, 3f * u, 3f * u)) }
         // 날짜 · 공휴일 글자
         g.color = col(if (isRed) pal.sun else if (d.dow == 6) pal.sat else pal.fg, a); g.font = font(true, plan.dateSize)
         g.drawString(d.d.toString(), x0 + plan.padX, y0 + plan.dateBase)

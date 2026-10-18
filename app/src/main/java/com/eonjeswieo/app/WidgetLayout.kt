@@ -246,25 +246,50 @@ object WidgetLayout {
         return MonthPlan(padX, dateSize, dateBase, dateBottom, ss, 1f * u, topPad, holSize, pillH, pg, bottom, Math.max(0f, d), rowLines, cy)
     }
 
-    /** 한 칸의 윗줄(날짜 숫자 · 스티커 · 공휴일 글자) 자리: 숫자 오른쪽 끝에 들어가는 스티커 수 · 공휴일 두 글자를 숫자 옆에 놓을 수 있는지 (못 놓으면 한 글자를 숫자 아래에) */
-    class MonthTop(val stickers: Int, val holBeside: Boolean)
+    /** 한 칸의 윗줄(날짜 숫자 · 스티커 · 공휴일 글자) 자리: 숫자 오른쪽 끝에 들어가는 첫 줄 스티커 수(row1) · 3 · 4번째가 들어가는 둘째 줄 수(row2) · 공휴일 두 글자를 숫자 옆에 놓을 수 있는지 (못 놓으면 한 글자를 숫자 아래에) */
+    class MonthTop(val row1: Int, val row2: Int, val holBeside: Boolean)
 
     /**
      * @param numW 날짜 숫자 글자 폭 · holW2 공휴일 두 글자 폭 (공휴일이 없으면 0) — 글자 폭은 그리는 쪽이 재서 넘겨 줌
-     * @param want 그날 스티커 수 (한 칸에는 최대 2개)
+     * @param want 그날 스티커 수 (앱 달력처럼 하루 최대 4개: 숫자 옆 2개 + 둘째 줄 2개 · 둘째 줄은 오른쪽 끝 · 근무 동그라미 오른쪽 위에 살짝 걸쳐도 스티커가 위에 보임)
      */
     fun monthTop(plan: MonthPlan, cw: Float, u: Float, numW: Float, want: Int, holW2: Float): MonthTop {
         val ss = plan.stkSize
         val gap = plan.stkGap
         val pad = plan.padX
         fun wid(k: Int): Float = if (k <= 0) 0f else k * ss + (k - 1) * gap
-        var n = Math.min(Math.max(0, want), 2)
-        while (n > 0 && pad + numW + 1f * u + wid(n) > cw - pad) n--   // 숫자와 스티커가 닿으면 스티커를 줄임
+        val total = Math.min(Math.max(0, want), 4)
+        var n1 = Math.min(total, 2)
+        while (n1 > 0 && pad + numW + 1f * u + wid(n1) > cw - pad) n1--   // 숫자와 스티커가 닿으면 첫 줄 스티커를 줄임
+        val n2 = Math.min(total - n1, 2)
         var beside = false
-        if (holW2 > 0f) {
-            val room = cw - 2f * pad - numW - 2.5f * u - (if (n > 0) wid(n) + 1f * u else 0f)
+        if (holW2 > 0f && n2 == 0) {   // 둘째 줄이 있는 날은 공휴일 글자를 늘 숫자 아래에 (둘째 줄은 오른쪽 끝이라 안 겹침)
+            val room = cw - 2f * pad - numW - 2.5f * u - (if (n1 > 0) wid(n1) + 1f * u else 0f)
             beside = holW2 <= room
         }
-        return MonthTop(n, beside)
+        return MonthTop(n1, n2, beside)
+    }
+
+    /** 한 달 위젯 맨 윗줄 누르는 자리의 폭(dp) — widget_month_view.xml 의 mz_chip · mz_title 폭과 같아야 함 */
+    const val MONTH_CHIP_ZONE_DP = 104f
+    const val MONTH_TITLE_ZONE_DP = 100f
+
+    class MonthArrows(val prevX: Float, val nextX: Float, val titleCx: Float)
+
+    /** 제목 글자가 이 폭(px)보다 넓으면 줄여서 그림 — 좁은 위젯에서도 양옆 화살표 자리(각 22dp)를 남김 */
+    fun monthTitleMax(w: Float, u: Float, hasChip: Boolean): Float = (w - (if (hasChip) MONTH_CHIP_ZONE_DP * u else 0f)) - 44f * u
+
+    /**
+     * 한 달 위젯 맨 윗줄: 제목 양옆의 ‹ › 글자 가운데 x (제목 가운데 = 이름 칩 자리를 뺀 나머지의 가운데).
+     * 화살표는 칩이 있든 없든 제목 바로 옆(16dp)에 두되, 자기 눌리는 칸(앞 달 칸 · 다음 달 칸) 안쪽으로 밀어 넣음 (좁은 위젯 + 이름 칩 + 넓은 제목일 때만 닿음)
+     */
+    fun monthArrows(w: Float, u: Float, hasChip: Boolean, titleW: Float): MonthArrows {
+        val chipZone = if (hasChip) MONTH_CHIP_ZONE_DP * u else 0f
+        val cx = chipZone + (w - chipZone) / 2f
+        val half = 6f * u   // 화살표 글자 폭의 절반쯤
+        val halfZone = MONTH_TITLE_ZONE_DP * u / 2f
+        val p = clamp(cx - titleW / 2f - 16f * u, chipZone + half, cx - halfZone - half)
+        val n = clamp(cx + titleW / 2f + 16f * u, cx + halfZone + half, w - half)
+        return MonthArrows(p, n, cx)
     }
 }

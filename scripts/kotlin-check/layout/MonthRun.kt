@@ -52,9 +52,31 @@ private fun gridCheck() {
     println(if (fails == 0) "달력 첫 칸 · 줄 수(앞 달 · 이번 달 · 다음 달 · 두 가지 시작 요일): 맞음" else "달력 첫 칸 실패")
 }
 
+/** 위젯 데이터가 덮는 달(MonthRenderer.covers)이 java.time 으로 따로 계산한 값과 같은지 (앞 · 뒤 화살표가 넘어갈 수 있는 달) + 넘길 수 있는 범위 출력 */
+private fun coverCheck(data: JSONObject) {
+    val days = data.optJSONArray("days")!!
+    val first = java.time.LocalDate.parse(days.getJSONObject(0).getString("k"))
+    val last = java.time.LocalDate.parse(days.getJSONObject(days.length() - 1).getString("k"))
+    val ws = data.optInt("ws", 0).coerceIn(0, 1)
+    val today = java.time.LocalDate.now()
+    val reach = ArrayList<Int>()
+    for (off in -6..16) {
+        val f = today.withDayOfMonth(1).plusMonths(off.toLong())
+        val lead = ((f.dayOfWeek.value % 7) - ws + 7) % 7
+        val st = f.minusDays(lead.toLong())
+        val en = st.plusDays(((lead + f.lengthOfMonth() + 6) / 7 * 7 - 1).toLong())
+        val want = !st.isBefore(first) && !en.isAfter(last)
+        val got = MonthRenderer.covers(data, ws, off)
+        if (want != got) { fails++; println("  ✗ covers(offset=$off): $got · 기대 $want (달력 $st ~ $en · 데이터 $first ~ $last)") }
+        if (got) reach.add(off)
+    }
+    println("넘길 수 있는 달(이번 달 기준): ${reach.minOrNull()} ~ ${reach.maxOrNull()} (${reach.size}개 달) · 데이터 $first ~ $last")
+}
+
 fun main(args: Array<String>) {
     gridCheck()
     val data = JSONObject(File(args[0]).readText())
+    coverCheck(data)
     val out = File(args[1]); out.mkdirs()
     val ppl = MonthRenderer.people(data)
     println("위젯 데이터: ${data.optJSONArray("days")?.length()}일 · 가족 ${ppl.size}명 ${ppl.map { it.optString("n") }} · 주 시작 ${data.optInt("ws")}")
@@ -62,6 +84,9 @@ fun main(args: Array<String>) {
     render(data, "내 달력 · 어둡게", 340, 330, 0, -1, true, File(out, "r02_me_dark.png"))
     render(data, "내 달력 · 앞 달(9월)", 340, 330, -1, -1, false, File(out, "r03_me_prev.png"))
     render(data, "내 달력 · 다음 달(11월)", 340, 330, 1, -1, false, File(out, "r04_me_next.png"))
+    render(data, "내 달력 · 2달 뒤(12월)", 340, 330, 2, -1, false, File(out, "r05_me_p2.png"))
+    render(data, "내 달력 · 12달 뒤(맨 끝 달)", 340, 330, 12, -1, false, File(out, "r06_me_p12.png"))
+    render(data, "내 달력 · 2달 전", 340, 330, -2, -1, false, File(out, "r07_me_m2.png"))
     for (i in ppl.indices) render(data, "가족 달력 ${ppl[i].optString("n")}", 340, 330, 0, i, false, File(out, "r1${i}_fam${i}.png"))
     if (ppl.isNotEmpty()) render(data, "가족 달력 마지막 사람 · 다음 달", 340, 330, 1, ppl.size - 1, false, File(out, "r20_fam_last_next.png"))
     render(data, "내 달력 · 세로로 길게", 340, 440, 0, -1, false, File(out, "r30_tall.png"))

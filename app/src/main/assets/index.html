@@ -1787,9 +1787,9 @@ function cssHex(v){   // var(--day) 같은 CSS 색을 #rrggbb 로 (위젯은 CSS
 const holPair=h=>h?{h2:holTwo(h),h1:holOne(h)}:{};   // 위젯 칸의 공휴일 글자: 앱 달력과 같은 줄임말 (두 글자 · 한 글자) — 위젯은 자리에 맞춰 둘 중 하나를 그림
 function widgetJson(){
   const t0=new Date(),days=[],ic={};
-  // 한 달 위젯이 앞 · 뒤 한 달씩 넘겨 볼 수 있게: 지난달 달력 첫 줄 ~ 다음 달 달력 끝 줄까지 (7일 위젯 · 큰 창이 쓰던 6일 전 ~ 60일 뒤도 그대로 포함)
+  // 한 달 위젯이 넘겨 볼 수 있는 달: 지난 2달 ~ 다음 12달 (그 달들의 달력 첫 줄 ~ 끝 줄까지 · 7일 위젯 · 큰 창이 쓰던 6일 전 ~ 60일 뒤도 그대로 포함). 위젯은 데이터가 그 달 달력을 다 덮는 달까지만 넘겨 줌
   const ws=S.weekStart===1?1:0,day0=new Date(t0.getFullYear(),t0.getMonth(),t0.getDate());
-  const p1=new Date(t0.getFullYear(),t0.getMonth()-1,1),nl=new Date(t0.getFullYear(),t0.getMonth()+2,0);
+  const p1=new Date(t0.getFullYear(),t0.getMonth()-2,1),nl=new Date(t0.getFullYear(),t0.getMonth()+12+1,0);
   const gs=addDays(p1,-((p1.getDay()-ws+7)%7)),ge=addDays(nl,6-((nl.getDay()-ws+7)%7));
   const dn=x=>Math.round((new Date(x.getFullYear(),x.getMonth(),x.getDate())-day0)/864e5);
   const iS=Math.min(-6,dn(gs)),iE=Math.max(59,dn(ge));
@@ -1797,7 +1797,7 @@ function widgetJson(){
   const fam=(S.family||[]).concat(famPeers()).slice(0,6);
   const people=fam.map((m,j)=>({id:String(m.id||''),n:String(m.name||'가족').slice(0,6),c:m.color||FAM_COL[j%6],t:{},s:[],k:{}}));
   const stkD=x=>{const q=x.d||{};return q.k==='p'?{p:1,c:/^#[0-9a-f]{6}$/i.test(q.c||'')?q.c:'#7e57c2',h:({r:'round',t:'tab',d:'drop'})[q.h]||'caps',n:x.n,N:Math.max(1,Math.min(3,q.t||1))}:{e:typeof q.img==='string'?'⭐':icoTxt(q.e||'⭐','⭐'),n:x.n,N:1};};
-  for(let i=iS;i<=iE;i++){   // 6일 전 ~ 14일 뒤는 자세히 · 그 밖은 근무 · 공휴일 · 메모 · 스티커 몇 개만 (한 달 칸용)
+  for(let i=iS;i<=iE;i++){   // 6일 전 ~ 14일 뒤는 자세히 · 그 밖은 근무 · 공휴일 · 메모 3줄 · 스티커(하루 최대 4개)만 (한 달 칸용)
     const d=addDays(t0,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),pers=persOn(k);
     const c=(pers||sh===''||sh===NONE_K)?null:tColors(typeOf(sh));
     const rest=!pers&&sh!==''&&sh!==NONE_K&&isRest(sh);
@@ -1824,10 +1824,10 @@ function widgetJson(){
       else{key=m.kind==='student'?'학교':m.kind==='free'?'일정':'회사';col=['#d9dee5','#2b3340'];}
       if(key&&!p.t[key])p.t[key]=col;
       p.s.push(key);
-      if(m.kind==='sched'){const sk=schStk(m.sch,k).slice(0,2).map(stkD);if(sk.length)p.k[k]=sk;}
+      if(m.kind==='sched'){const sk=schStk(m.sch,k).slice(0,4).map(stkD);if(sk.length)p.k[k]=sk;}
     });
     const base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):''};
-    if(i<-6||i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({...base,far:i<-6?2:1,stk:stampsOn(k).slice(0,2).map(mapStk),ms:ml.slice(0,3).map(x=>String(x||'').slice(0,40)),
+    if(i<-6||i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({...base,far:i<-6?2:1,stk:stampsOn(k).slice(0,4).map(x=>{const o=mapStk(x);delete o.id;delete o.b;return o;}),ms:ml.slice(0,3).map(x=>String(x||'').slice(0,40)),
       ...(fm.length?{fm}:{}),...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 먼 날(지난 날 · 2주 뒤부터): 큰 창에는 스티커 · 메모를 안 싣고 앱에서 보게 함
     const sa=stampsOn(k).slice(0,12).map(mapStk);
     const stk=sa.slice(0,4);

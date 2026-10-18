@@ -369,7 +369,7 @@ class WidgetDayActivity : Activity() {
                         if (t.isNotEmpty()) content.addView(memoRow(JSONObject().put("r", "t").put("t", t), pal))
                     }
                 }
-                content.addView(tv((if (far == 2) "지난 날이라 " else "2주 뒤의 날이라 ") + "스티커 · 메모는 앱에서 자세히 볼 수 있어요", 14f, pal.sub))
+                content.addView(tv((if (far == 2) "지난 날이라 " else "2주보다 먼 날이라 ") + "스티커 · 메모는 앱에서 자세히 볼 수 있어요", 14f, pal.sub))
             } else {
                 // 스티커
                 val sa = day.optJSONArray("sa")
