@@ -428,7 +428,7 @@ object WidgetRenderer {
         if (count == 7) {
             drawWeek(cv, data, iw, ih, pal, icons, memoMax)
         } else if (count == 1) {
-            drawRow(cv, listOf(d0), booleanArrayOf(true), 0f, 0f, iw, ih, pal, icons, memoMax, false)
+            drawRow(cv, listOf(d0), booleanArrayOf(false), 0f, 0f, iw, ih, pal, icons, memoMax, false)   // 1칸은 오늘 하루뿐이라 "오늘" 초록 칸 표시는 안 함
         } else {
             val alarm = nextAlarmText(ctx)
             val bottom = if (alarm.isEmpty()) 0f else Math.max(ih * 0.13f, 14f * dens)
