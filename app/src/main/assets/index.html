@@ -2871,7 +2871,7 @@ function openStampDay(k){
     const V=stView(s,k),N=V.N,pill=s.kind==='pill',id=`data-id="${s.id}" data-k="${k}"`;
     let b='';
     if(n<N)b+=`<button class="ok" data-act="sd-done" ${id}>✓ ${pill?'먹음':'완료'}${N>1?` (${n+1}/${N})`:''}</button>`;
-    b+=n?`<button class="un" data-act="sd-undo" ${id}>${N>1&&n<N?'한 번 취소':'완료 취소'}</button>`:`<button data-act="sd-skip" ${id}>${s.one?'지우기':'건너뛰기'}</button>`;
+    b+=n?`<button class="un" data-act="sd-undo" ${id}>${N>1&&n<N?'한 번 취소':'완료 취소'}</button>`:`<button data-act="sd-skip" ${id}>${s.one&&(s.dates||[]).includes(k)?'지우기':'건너뛰기'}</button>`;
     if(['daily','dow','work','month'].includes(s.rep)&&(!s.to||s.to>=k))b+=`<button class="gh" data-act="sd-end" ${id}>그만하기</button>`;   // 반복 스티커: 이날부터 끝내기
     const st=N>1?`${n}/${N}${pill?' 먹음':''}`:pill?(n?'먹음':'아직'):n?'완료':'아직';
     return `<div class="mi sdr"><span class="sic">${pill?pillSvg(N,n,26,V.col,V.shape):`<span class="${n?'':'plan'}">${ico(s.emoji)}</span>`}</span><div class="nm">${esc(s.name)}<small>${esc(stampRule(s))} · ${st}</small></div></div><div class="mi sdbt">${b}</div>`;
@@ -2909,7 +2909,7 @@ function openStampPick(k){
 }
 // 큰 목록(종류별 탭 · 내 사진 · 약 모양 · 직접 입력)에서 하나 고르기. o.onPick(그림, 이름)
 function openStampBig(o){
-  openIcn(Object.assign({title:'스티커 고르기',sub:'',icon:'',name:null,cats:STAMP_CAT,instant:true,needIcon:true,hint:'하나 누르면 바로 골라져요'},o,{onSave:(e,n)=>o.onPick(e,n)}));
+  openIcn(Object.assign({title:'스티커 고르기',sub:'',icon:'',name:null,cats:STAMP_CAT,instant:true,needIcon:true,hint:'하나 누르면 바로 골라져요'},o,{onSave:(e,n,src)=>o.onPick(e,n,src)}));
 }
 // 그림 → 스티커 정의 내용 ('pill:모양' 이면 약, 그 밖은 이모티콘 · @사진)
 function stDefFrom(e,name){
@@ -2920,28 +2920,42 @@ function stDefFrom(e,name){
 function openStampPlus(k){openStampBig({title:'스티커 고르기',sub:md(k),onCancel:()=>openStampPick(k),onPick:(e,n)=>stampExtra(k,e,n)});}
 function stampExtra(k,e,name){
   const f=stDefFrom(e,name);
-  let x=S.stamps.defs.find(y=>y.one&&!y.retired&&y.kind===f.kind&&(f.kind==='pill'?(y.shape||'caps')===f.shape:y.emoji===f.emoji));
+  let x=S.stamps.defs.find(y=>y.one&&!y.retired&&(!y.rep||y.rep==='none')&&y.kind===f.kind&&(f.kind==='pill'?(y.shape||'caps')===f.shape:y.emoji===f.emoji));   // (반복이 남은 것 · 칸에서 옮겨 온 것은 다시 쓰지 않음 → 그 규칙과 섞이지 않게)
   const made=!x;
   if(!x){x=Object.assign({id:'o_'+uid(),one:true,times:1,rep:'none',days:[],dates:[],skip:[],ats:[]},f);S.stamps.defs.push(x);}
   openStampReg(k,x.id,'','plus');if(stDraft)stDraft.newDef=made?x.id:'';
 }
 function stRetire(s){Object.assign(s,{retired:true,rep:'none',dates:[],days:[],skip:[],from:'',to:'',ats:[]});}
-// 칸 채우기(빈 칸) · 바꾸기(옛 스티커는 지난 기록만 남기고 retired)
-function stFillSlot(id,e,n){
-  const defs=S.stamps.defs,i=defs.findIndex(x=>x.id===id),o=defs[i];if(!o)return null;
-  const f=stDefFrom(e,n);
+// 이미 붙인 곳(날짜 · 반복 · 기록)이 하나라도 있는 스티커인지
+const stUsed=s=>(s.dates||[]).length>0||(!!s.rep&&s.rep!=='none')||Object.keys(S.stamps.log).some(k=>S.stamps.log[k]&&S.stamps.log[k][s.id]);
+let stMoved=false;   // 방금 칸을 바꾸면서 옛 스티커를 "＋ 로 붙인 스티커" 쪽으로 옮겼는지 (안내 글용)
+// 칸 채우기(빈 칸) · 바꾸기: 옛 스티커는 지우지 않고 칸 목록에서만 빼서 "＋ 로 붙인 스티커" 쪽으로 옮김 → 이미 붙인 날짜 · 반복 · 알림 · 기록이 그대로.
+// srcId = "＋ 로 붙인 스티커" 줄에서 골랐을 때 그 스티커: 그림 · 이름 (약은 색 · 횟수도) 을 복사해서 새로 만들고 ＋ 쪽은 건드리지 않음
+function stFillSlot(id,e,n,srcId){
+  const defs=S.stamps.defs,i=defs.findIndex(x=>x.id===id),o=defs[i];stMoved=false;if(!o)return null;
+  const f=stDefFrom(e,n),src=srcId?defs.find(x=>x.id===srcId&&x.one&&!x.retired):null;
+  if(src){['color','shape','times'].forEach(p=>{if(src[p]!==undefined)f[p]=src[p];});if(src.fam!==undefined)f.fam=src.fam;}
   if(o.empty){Object.assign(o,f,{empty:false});delete o.empty;return o;}
   if(o.kind==='mark'&&f.kind==='mark'&&o.emoji===f.emoji){o.name=f.name;return o;}
-  stRetire(o);
+  if(stUsed(o)){o.one=true;stMoved=true;}else stRetire(o);
   const nd=Object.assign({id:uid(),times:1,rep:'none',days:[],dates:[],skip:[],ats:[]},f);defs.splice(i,0,nd);return nd;
 }
+// 칸에 넣을 스티커를 고르는 큰 목록 맨 위의 "＋ 로 붙인 스티커" 줄 (있을 때만) — 누르면 그 그림 · 이름으로 칸에 새로 만들고, ＋ 쪽은 그대로
+function stPlusRow(o){
+  const ex=extraDefs();if(!ex.length)return '';
+  const code=s=>s.kind==='pill'?'pill:'+(s.shape||'caps'):s.emoji;
+  return `<div class="mi icn-sec" style="display:block"><div class="icn-lb">＋ 로 붙인 스티커 <small>고르면 칸에 복사해요</small></div><div class="sgrid sg4" style="margin-top:6px">${ex.map(s=>`<button class="${o&&o.srcId===s.id?'on':''}" data-act="icn-pick" data-v="${esc(code(s))}" data-n="${esc(s.name)}" data-mine="1" data-src="${esc(s.id)}"><span class="si">${stIcon(s)}</span><small>${esc(s.name)}</small></button>`).join('')}</div></div>`;
+}
+// 칸 비우기: 칸에서 빼도 이미 붙인 스티커는 그대로 (＋ 로 붙인 스티커 쪽으로 옮김). ＋ 쪽에서 "지우기"는 진짜 지우기 (앞으로 일정은 없어지고 지난 체크 기록만 남음)
 function stSlotClear(id){
-  const defs=S.stamps.defs,i=defs.findIndex(x=>x.id===id),o=defs[i];if(!o)return;
-  stRetire(o);if(!o.one)defs.splice(i,0,{id:uid(),kind:'mark',emoji:'',name:'',empty:true,times:1,rep:'none',days:[],dates:[],skip:[],ats:[]});
+  const defs=S.stamps.defs,i=defs.findIndex(x=>x.id===id),o=defs[i];stMoved=false;if(!o)return;
+  const slot=!o.one;
+  if(slot&&stUsed(o)){o.one=true;stMoved=true;}else stRetire(o);
+  if(slot)defs.splice(i,0,{id:uid(),kind:'mark',emoji:'',name:'',empty:true,times:1,rep:'none',days:[],dates:[],skip:[],ats:[]});
 }
 function openStampSlot(id){
   const s=S.stamps.defs.find(x=>x.id===id);if(!s)return;
-  if(s.empty){openStampBig({title:'칸에 넣을 스티커',onPick:(e,n)=>{stFillSlot(id,e,n);save();render();openStampPage();}});return;}
+  if(s.empty){openStampBig({title:'칸에 넣을 스티커',extra:stPlusRow,onPick:(e,n,src)=>{stFillSlot(id,e,n,src);save();render();openStampPage();}});return;}
   const sl=slotDefs(),i=sl.indexOf(s);
   openPop(`<div class="mh">${s.one?'＋ 로 붙인 스티커':`${i+1}번째 칸`}<b>${esc(s.name)}</b></div>
     <div class="mi icn-top"><span class="icn-cur">${stIcon(s,32)}</span><input type="text" id="slotName" value="${esc(s.name)}" maxlength="12" placeholder="이름"></div>
@@ -3282,7 +3296,7 @@ function renderIcn(){
   const curH=o.icon?ico(o.icon):o.letter?`<i class="icn-l" style="background:${o.color||'#6b7280'}">${esc(o.letter)}</i>`:'<i class="icn-l" style="background:var(--surface)"></i>';
   openPop(`<div class="mh">${esc(o.sub||'')}<b>${esc(o.title)}</b></div>
     <div class="mi icn-top"><span class="icn-cur">${curH}</span>${o.name!==null?`<input type="text" id="icnName" value="${esc(o.name)}" maxlength="${o.maxName}" placeholder="${esc(o.placeholder)}">`:`<span class="icn-hint">${esc(o.hint||'이모티콘을 고르거나 사진을 넣어요')}</span>`}</div>
-    ${o.extra||''}
+    ${typeof o.extra==='function'?o.extra(o):(o.extra||'')}
     ${o.cats?icnCats(o):`<div class="mi icn-sec"><div class="icn-lb">내 사진 <small>길게 누르면 지워요</small></div>${photoGrid(o.icon)}</div>`}
     ${!o.cats&&o.emojis.length?`<div class="mi icn-sec"><div class="icn-lb">이모티콘</div><div class="emo">${o.emojis.map(e=>`<button class="${o.icon===e?'on':''}" data-act="icn-pick" data-v="${e}">${e}</button>`).join('')}<input type="text" id="icnOwn" class="icn-own" maxlength="4" placeholder="직접" value="${esc(o.own)}"></div></div>`:''}
     <div class="mi" style="gap:8px">${o.onReset?`<button class="btn ghost grow" data-act="icn-reset">${esc(o.resetLabel)}</button>`:'<button class="btn ghost grow" data-act="icn-cancel">취소</button>'}${o.instant?'':'<button class="btn grow" data-act="icn-save">저장</button>'}</div>`);
@@ -3307,7 +3321,7 @@ function icnSave(){
   if(o.needIcon&&!icon){toast('아이콘을 골라 주세요');return;}
   const ownName=String((o.name!==null?o.name:o.ownName)||'').trim().slice(0,12);
   if(own&&o.cats)myEmoAdd(own,ownName);
-  icn=null;closePop();o.onSave(icon,o.name===null?(own?ownName:(o.pickName||'')):String(o.name).trim());
+  icn=null;closePop();o.onSave(icon,o.name===null?(own?ownName:(o.pickName||'')):String(o.name).trim(),own?'':(o.srcId||''));
 }
 /* ---- 사진 넣기: 앱에서는 안드로이드 사진 선택 창, 브라우저에서는 파일 고르기 → 맞추기 ---- */
 function icoAdd(){
@@ -5617,7 +5631,7 @@ document.addEventListener('click',e=>{
     case 'tpk-d':if(tpk){tpk.v=t.dataset.v;tpkOk();}break;
     case 'tpk-ok':tpkOk();break;
     /* 아이콘 · 사진 */
-    case 'icn-pick':icnPull();if(icn){icn.icon=t.dataset.v;icn.own='';icn.pickName=t.dataset.mine?(t.dataset.n||''):'';
+    case 'icn-pick':icnPull();if(icn){icn.icon=t.dataset.v;icn.own='';icn.pickName=t.dataset.mine?(t.dataset.n||''):'';icn.srcId=t.dataset.src||'';
       if(icn.instant){icnSave();break;}
       const nm=t.dataset.n;if(nm&&icn.name!==null&&(!icn.name||icn.name===icn.autoWas)){icn.name=nm;icn.autoWas=nm;}
       renderIcn();}break;
@@ -6030,22 +6044,24 @@ document.addEventListener('click',e=>{
       const se=icoTxt(s.emoji,'✔'),msg=a==='sd-undo'?`${s.kind==='pill'?'💊':se} ${s.name} 취소했어요`:s.kind==='pill'?(v>=N?`💊 ${s.name} 오늘 다 먹었어요`:`💊 ${s.name} ${v}/${N} 먹음`):(N>1&&v<N?`${se} ${s.name} ${v}/${N}`:`${se} ${s.name} 완료`);
       toastUndo(msg,()=>{stampSet(s.id,k,n);save();render();if($('#pop').classList.contains('open'))stampReopen(k);});break;}
     case 'sd-skip':{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;
-      if(s.one){s.dates=(s.dates||[]).filter(x=>x!==k);save();render();stampReopen(k);toastUndo(`${icoTxt(s.emoji,'✔')} ${s.name} 지웠어요`,()=>{(s.dates=s.dates||[]).push(k);save();render();});break;}
+      if(s.one&&(s.dates||[]).includes(k)){   // ＋ 로 이날만 붙인 것: 그 날을 지움 (반복으로도 깔리는 날이면 건너뛴 날로 같이)
+        s.dates=s.dates.filter(x=>x!==k);const viaRule=stampPlanned(s,k);if(viaRule)(s.skip=s.skip||[]).push(k);
+        save();render();stampReopen(k);toastUndo(`${icoTxt(s.emoji,'✔')} ${s.name} 지웠어요`,()=>{(s.dates=s.dates||[]).push(k);if(viaRule)s.skip=(s.skip||[]).filter(x=>x!==k);save();render();});break;}
       (s.skip=s.skip||[]).push(k);s.dates=(s.dates||[]).filter(x=>x!==k);save();render();stampReopen(k);toastUndo(`${s.kind==='pill'?'💊':icoTxt(s.emoji,'✔')} ${s.name} 이날은 건너뛰어요`,()=>{s.skip=s.skip.filter(x=>x!==k);save();render();});break;}
     case 'sd-end':{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;
       const old=s.to||'';s.to=addK(k,-1);save();render();stampReopen(k);
       toastUndo(`${s.kind==='pill'?'💊':icoTxt(s.emoji,'✔')} ${s.name} 이날부터 그만해요 (지난 기록은 그대로)`,()=>{s.to=old;save();render();});break;}
     case 'sd-add':if(t.classList.contains('dis')){stampFull();break;}closePop();openStampPick(t.dataset.k);break;
     case 'sp-pick':closePop();openStampReg(t.dataset.k,t.dataset.id);break;
-    case 'sp-fill':{const id=t.dataset.id,k=t.dataset.k;closePop();openStampBig({title:'칸에 넣을 스티커',sub:md(k),onCancel:()=>openStampPick(k),onPick:(e,n)=>{const x=stFillSlot(id,e,n);save();render();if(x)openStampReg(k,x.id,'','fill');}});break;}
+    case 'sp-fill':{const id=t.dataset.id,k=t.dataset.k;closePop();openStampBig({title:'칸에 넣을 스티커',sub:md(k),extra:stPlusRow,onCancel:()=>openStampPick(k),onPick:(e,n,src)=>{const x=stFillSlot(id,e,n,src);save();render();if(x)openStampReg(k,x.id,'','fill');}});break;}
     case 'sp-plus':{const k=t.dataset.k;closePop();openStampPlus(k);break;}
     case 'slot-open':openStampSlot(t.dataset.id);break;
     case 'slot-col':{slotPullName(t.dataset.id);const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x){x.color=t.dataset.v;save();render();openStampPage();openStampSlot(x.id);}break;}
     case 'slot-save':{slotPullName(t.dataset.id);closePop();save();render();openStampPage();break;}
-    case 'slot-clear':{slotPullName(t.dataset.id);const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(!x)break;closePop();stSlotClear(x.id);save();render();openStampPage();toast('비웠어요 · 지난 기록은 그대로예요');break;}
+    case 'slot-clear':{slotPullName(t.dataset.id);const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(!x)break;closePop();const ex=!!x.one;stSlotClear(x.id);save();render();openStampPage();toast(ex?'지웠어요 · 지난 체크 기록은 그대로예요':stMoved?'비웠어요 · 달력에 붙인 스티커는 그대로예요':'비웠어요');break;}
     case 'slot-swap':{slotPullName(t.dataset.id);const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(!x)break;
-      openIcn({title:'다른 스티커로 바꾸기',sub:'옛 스티커는 지난 날짜에 남아요',icon:x.kind==='mark'?x.emoji:'',name:x.name,autoWas:x.name,placeholder:'이름',cats:STAMP_CAT,needIcon:true,
-        onSave:(e,n)=>{stFillSlot(x.id,e,n);save();render();openStampPage();toast('바꿨어요 · 옛 스티커는 지난 날짜에 남아요');}});break;}
+      openIcn({title:'다른 스티커로 바꾸기',sub:'달력에 붙인 옛 스티커는 그대로 남아요',icon:x.kind==='mark'?x.emoji:'',name:x.name,autoWas:x.name,placeholder:'이름',cats:STAMP_CAT,needIcon:true,extra:stPlusRow,
+        onSave:(e,n,src)=>{stFillSlot(x.id,e,n,src);save();render();openStampPage();toast(stMoved?'바꿨어요 · 달력에 붙인 옛 스티커는 그대로예요':'바꿨어요');}});break;}
     case 'sd-manage':closePop();openStampPage();break;
     case 'sr-back':srBack();break;
     case 'sr-rep':srPull();stDraft.rep=t.dataset.v;renderStampReg();break;
