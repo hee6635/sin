@@ -40,6 +40,14 @@ object WidgetLayout {
 
     private fun clamp(v: Float, lo: Float, hi: Float): Float = if (hi < lo) lo else Math.max(lo, Math.min(hi, v))
 
+    /** 7일 위젯 맨 윗줄(월 화 수 …)의 글자 크기(text)와 줄 높이(height). 칸 폭 · 위젯 높이로만 정함 */
+    class Head(val text: Float, val height: Float)
+
+    fun weekHead(cw: Float, h: Float, u: Float): Head {
+        val hs = clamp(Math.min(cw * 0.22f, h * 0.105f), 6f * u, 12f * u)
+        return Head(hs, hs * 1.5f)
+    }
+
     /**
      * @param days 줄의 칸들 (없는 날은 null)
      * @param cw 칸 폭 · ch 칸 높이 (px)

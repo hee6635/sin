@@ -33,10 +33,11 @@ fun render(name: String, wDp: Int, hDp: Int, count: Int, days: List<Dy>, memoMax
     val cells = count
     val cw = iw / cells
     if (compact) {
-        top = Math.min(ih * 0.13f, 17f * dens)
-        g.color = Color.GRAY; g.font = Font("SansSerif", Font.BOLD, (top * 0.62f).toInt())
-        val names = arrayOf("S", "M", "T", "W", "T", "F", "S")
-        for (i in 0 until 7) g.drawString(names[i], cw * i + cw / 2 - 3, top * 0.78f)
+        val head = WidgetLayout.weekHead(cw, ih, dens)
+        top = head.height
+        g.color = Color.GRAY; g.font = Font("SansSerif", Font.BOLD, head.text.toInt())
+        val names = arrayOf("일", "월", "화", "수", "목", "금", "토")
+        for (i in 0 until 7) g.drawString(names[i], cw * i + cw / 2 - g.fontMetrics.stringWidth(names[i]) / 2f, top * 0.78f)
     }
     val ch = ih - top
     val row = WidgetLayout.solve(days.map { WidgetLayout.DayIn(it.stk, it.hol.isNotEmpty(), it.memos, it.circle.isNotEmpty()) }, cw, ch, dens, compact, memoMax)

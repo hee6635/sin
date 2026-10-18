@@ -450,11 +450,12 @@ object WidgetRenderer {
         val keys = weekKeys(data)
         val order = if (ws == 1) intArrayOf(1, 2, 3, 4, 5, 6, 0) else intArrayOf(0, 1, 2, 3, 4, 5, 6)
         val cw = w / 7
-        val hh = Math.min(h * 0.13f, 17f * dens)
+        val head = WidgetLayout.weekHead(cw, h, dens)   // 요일 이름 줄: 글자를 키움 (칸 폭 · 위젯 높이로만 정함)
+        val hh = head.height
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
         paint.textAlign = Paint.Align.CENTER
         paint.typeface = Typeface.DEFAULT_BOLD
-        paint.textSize = hh * 0.62f
+        paint.textSize = head.text
         for (i in 0 until 7) {
             val wd = order[i]
             paint.color = if (wd == 0) pal.sun else if (wd == 6) pal.sat else pal.sub
