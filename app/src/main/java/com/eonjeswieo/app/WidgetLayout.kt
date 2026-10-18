@@ -66,20 +66,22 @@ object WidgetLayout {
      * @param compact 7일 위젯의 좁은 칸 (날짜는 숫자만, 공휴일 이름은 안 씀)
      */
     fun solve(days: List<DayIn?>, cw: Float, ch: Float, u: Float, compact: Boolean, memoMax: Int): Row {
+        // 칸이 폰 크기보다 큰 위젯(접이식 안쪽 · 크게 늘린 위젯)은 날짜 · 스티커 · 메모 · 근무 동그라미의 상한을 칸이 커진 비율의 절반쯤 같이 키움. 폰 크기 이하는 ks = 1 (예전과 같음)
+        val ks = 1f + (clamp(Math.min(cw / ((if (compact) 60f else 110f) * u), ch / ((if (compact) 100f else 110f) * u)), 1f, 1.6f) - 1f) * 0.55f
         val padX = clamp(cw * 0.06f, 2f * u, 8f * u)
         val topPad = clamp(ch * 0.035f, 2f * u, 5f * u)
         val botPad = clamp(ch * 0.035f, 2f * u, 5f * u)
         val bottom = ch - botPad
 
         // 날짜 줄
-        val dateSize = Math.min(if (compact) clamp(cw * 0.25f, 8f * u, 13f * u) else clamp(cw * 0.14f, 10f * u, 17f * u), ch * 0.17f)
+        val dateSize = Math.min(if (compact) clamp(cw * 0.25f, 8f * u, 13f * u * ks) else clamp(cw * 0.14f, 10f * u, 17f * u * ks), ch * 0.17f)
         val rowH = dateSize * 1.25f
         val dateBase = topPad + dateSize * 0.98f
         val holSize = dateSize * 0.6f
         val holBase = topPad + rowH + holSize * 0.98f
 
         // 스티커: 오른쪽 위에 한두 줄로 촘촘히 (한 줄에 최소 2개가 들어가도록 크기를 줄임)
-        var ss = Math.min(clamp(cw * 0.22f, if (compact) 8f * u else 10f * u, if (compact) 16f * u else 20f * u), ch * 0.17f)   // (1칸 · 2칸도 7일 위젯처럼 칸 폭의 22% — 좁은 칸에서도 스티커가 또렷하게)
+        var ss = Math.min(clamp(cw * 0.22f, if (compact) 8f * u else 10f * u, (if (compact) 16f * u else 20f * u) * ks), ch * 0.17f)   // (1칸 · 2칸도 7일 위젯처럼 칸 폭의 22% — 좁은 칸에서도 스티커가 또렷하게)
         val g = ss * 0.12f
         ss = Math.min(ss, (cw * 0.5f - g) / 2f)
         val gap = ss * 0.12f
@@ -94,11 +96,11 @@ object WidgetLayout {
         val headEnd = Math.max(textEnd, stkEnd) + ch * 0.012f
         val textLimit = textEnd + ch * 0.012f
         // 근무 동그라미는 스티커 줄 아래쪽과 조금 겹쳐도 됨 (날짜 글자는 안 가림. 겹치는 높이는 스티커 한 줄 높이의 90% · 동그라미 크기의 18% 중 작은 쪽까지만 → "조금")
-        val dTop = clamp(Math.min(cw * 0.62f, ch * 0.36f), 12f * u, 44f * u)   // 근무 동그라미 크기 (칸 폭의 약 62%)
+        val dTop = clamp(Math.min(cw * 0.62f, ch * 0.36f), 12f * u, 44f * u * ks)   // 근무 동그라미 크기 (칸 폭의 약 62%)
         val bandTop = Math.max(textLimit, headEnd - Math.min(ss * 0.9f, dTop * 0.18f))
 
         val hasCircle = days.any { it != null && it.circle }
-        val phMax = clamp(Math.min(cw * 0.26f, ch * 0.15f), 10f * u, 19f * u)
+        val phMax = clamp(Math.min(cw * 0.26f, ch * 0.15f), 10f * u, 19f * u * ks)
         val phMin = Math.min(phMax, 10f * u)
         val pg = Math.max(1f * u, ch * 0.012f)
         val cg = Math.max(1f * u, ch * 0.012f)

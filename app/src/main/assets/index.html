@@ -95,6 +95,11 @@
   --family-pink:#ff6584;
   --st-pending:#f2b53a; --st-accepted:#3fcf94; --st-rejected:#ff7a8c; --st-applied:#7ea2ff; --st-cancelled:#8a909b;
 }
+/* 배경 "종이"(설정 › 화면 › 배경): 색만 바꿈 · 기본은 위 색 그대로 */
+@media (prefers-color-scheme:light){:root[data-bg="paper"]:not([data-theme="dark"]){--bg:#fbf8f1;--surface:#f3eee2;--line:#eae2d0;--track:#d3cab5;--muted:#8d8470;--fg:#2b2418;--navbar:#fffdf8;--out-bg:#f4efe3;--head-bg:#f8f3e8;--today-bg:#e3f4ec;--band-d:#eeede8;--band-n:#f2ece5}}
+:root[data-bg="paper"][data-theme="light"]{--bg:#fbf8f1;--surface:#f3eee2;--line:#eae2d0;--track:#d3cab5;--muted:#8d8470;--fg:#2b2418;--navbar:#fffdf8;--out-bg:#f4efe3;--head-bg:#f8f3e8;--today-bg:#e3f4ec;--band-d:#eeede8;--band-n:#f2ece5}
+@media (prefers-color-scheme:dark){:root[data-bg="paper"]:not([data-theme="light"]){--bg:#17150f;--surface:#211e16;--line:#2f2b20;--track:#4a4434;--fg:#efe9da;--muted:#9a917b;--navbar:#1c1a13;--out-bg:#1b1812;--head-bg:#1a1812;--today-bg:#173a30;--band-d:#25292b;--band-n:#2a2522}}
+:root[data-bg="paper"][data-theme="dark"]{--bg:#17150f;--surface:#211e16;--line:#2f2b20;--track:#4a4434;--fg:#efe9da;--muted:#9a917b;--navbar:#1c1a13;--out-bg:#1b1812;--head-bg:#1a1812;--today-bg:#173a30;--band-d:#25292b;--band-n:#2a2522}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px); background:#e9eef1;}
@@ -211,7 +216,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .dow .s{color:var(--sun)}.dow .t{color:var(--sat)}
 .grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:1fr;border-top:1px solid var(--line)}
 
-.cell{position:relative;display:flex;flex-direction:column;align-items:center;border-bottom:1.5px solid var(--line);border-right:1px solid var(--line);cursor:pointer;min-height:0;overflow:hidden;container-type:size;--b:calc(max(30px,min(76cqw,44px,calc(100cqh - 68px)))*.75);}
+.cell{position:relative;display:flex;flex-direction:column;align-items:center;border-bottom:1.5px solid var(--line);border-right:1px solid var(--line);cursor:pointer;min-height:0;overflow:hidden;container-type:size;--b:calc(max(30px,min(76cqw,44px,calc(100cqh - 68px)))*.68);}
 .cell:nth-child(7n){border-right:0}
 .cell.out{background:var(--out-bg)}
 .cell.out>*{opacity:.4}
@@ -581,7 +586,7 @@ textarea{resize:none;min-height:84px}
 :root[data-theme="dark"] .pl[style*="--mc"]{background:color-mix(in srgb,var(--mc) 30%,var(--bg));color:var(--fg)}
 .pl.dd{background:color-mix(in srgb,var(--dd) 14%,var(--bg));color:var(--dd);font-weight:800}
 .pl,.req-pill{flex:none;text-overflow:clip}.req-pill{padding:0 2px}
-@media (min-width:600px){.cell{--b:calc(min(70cqw,54px)*.75)}}
+@media (min-width:600px){.cell{--b:calc(min(70cqw,54px)*.68)}}
 .dn.chol{background:linear-gradient(var(--chol),var(--chol)) center/100% calc(100% - 5px) no-repeat}.dn.chol .num,.dn.chol .hn{color:var(--chol-fg)}
 .legend{display:flex;gap:12px;justify-content:center;padding:5px 0 4px;font-size:10.5px;color:var(--muted);flex:none}
 .legend span{display:flex;align-items:center;gap:4px}.legend i{width:20px;height:9px;border-radius:2px;display:inline-block}
@@ -1153,8 +1158,8 @@ button.tbtn{cursor:pointer}
 .stw{font-size:16px;font-weight:800}
 
 /* 스티커 크기: 폭에 비례, 달 전체가 한 크기 (폰 11~16px · 태블릿 최대 18px). 근무 표시는 스티커 크기 − 4px 만큼 아래로 (6~12px) → 둘째 줄 스티커가 동그라미에 살짝만 걸침 */
-:root{--stz:clamp(11px,3.4vw,16px)}
-@media (min-width:600px){:root{--stz:clamp(16px,2.4vw,18px)}}
+:root{--stz:clamp(12px,3.74vw,17.6px)}
+@media (min-width:600px){:root{--stz:clamp(17px,2.64vw,19.8px)}}
 .dn .stp>svg,.s2>svg,.dn .stp .sx svg,.s2 .sx svg{width:var(--stz);height:var(--stz)}
 .dn .stp>.se,.s2>.se,.dn .stp .sx .se,.s2 .sx .se{font-size:calc(var(--stz) - 2px) !important}
 .sx{position:relative;display:inline-block;line-height:0}
@@ -1597,6 +1602,8 @@ const defaults=()=>({
   compHolAsHoliday:true,   // 회사 휴무일 출근도 휴일 근무로 셈
   memoColors:{fam:'#7b5cf0',my:'#6b7280'},
   fontScale:100,
+  stats:true,   // 사용 통계(횟수만) 보내기 · 설정에서 끔
+  bg:'',   // 배경: '' 기본 · 'paper' 종이
   theme:'system',   // 화면 모드: system(폰 설정 따라감) · light · dark
   showBand:false,  // 같은 근무가 이어질 때 칸 사이를 잇는 색 띠 (새로 설치하면 꺼짐, 예전 데이터는 켜짐 그대로)
   drive:{last:0,dirty:false,email:'',auto:true},
@@ -1633,7 +1640,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))) };s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))) };s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#6b7280'})[k];});
   s.drive=Object.assign(defaults().drive,isObj(o.drive)?o.drive:{});
@@ -2134,6 +2141,7 @@ function applyTheme(){
   st.setProperty('--my-line',`color-mix(in srgb, ${m} 28%, var(--bg))`);
   const de=document.documentElement;
   if(S.theme==='light'||S.theme==='dark')de.setAttribute('data-theme',S.theme);else de.removeAttribute('data-theme');
+  if(S.bg==='paper')de.setAttribute('data-bg','paper');else de.removeAttribute('data-bg');
   try{if(window.AndroidBridge&&typeof window.AndroidBridge.setThemeMode==='function')window.AndroidBridge.setThemeMode(S.theme||'system');}catch(e){}
 }
 function applyFont(){
@@ -2246,7 +2254,7 @@ const leadOf=d=>(d.getDay()-(S.weekStart===1?1:0)+7)%7;
 const dowHead=()=>weekOrder().map(w=>`<span class="${w===0?'s':w===6?'t':''}">${DOW[w]}</span>`).join('');
 // 달력 칸 메모: 줄 수는 설정(3 · 4줄 · 태블릿은 +1 · 개인 캘린더는 4줄 이상). 메모 영역은 날짜 줄 · 근무 표시 아래부터 칸 끝까지 → 줄이 남는 높이를 나눠 가져 3줄이 차면 아래 여백이 없음
 // 줄 높이 --plh(글자 · 줄 간격)는 "줄 수로 나눈 높이"(상한: 폰 20px · 태블릿 24px), 메모가 적은 날도 같은 높이로 위에서부터 쌓음(--plmax)
-const stzPx=()=>{const w=innerWidth;return w>=600?Math.max(16,Math.min(18,w*.024)):Math.max(11,Math.min(16,w*.034));};
+const stzPx=()=>{const w=innerWidth;return w>=600?Math.max(17,Math.min(19.8,w*.0264)):Math.max(12,Math.min(17.6,w*.0374));};
 function memoLines(){
   const tab=innerWidth>=600,g=document.querySelector('.grid');
   const ch=g&&g.clientHeight?g.clientHeight/6:(innerHeight-230)/6;
@@ -2259,7 +2267,7 @@ function memoLines(){
   let n=want;while(n>1&&(avail-(n-1))/n<minLh)n--;
   const per=(avail-(n-1))/n,lh=Math.max(minLh,Math.min(capLh,Math.floor(per)));
   const fs=Math.min(capFs,Math.max(9,Math.round(lh*0.6*2)/2));
-  const r=document.documentElement.style;r.setProperty('--plh',lh+'px');r.setProperty('--plhf',Math.max(lh,Math.min(tab?34:30,Math.floor(per)))+'px');r.setProperty('--plf',fs+'px');r.setProperty('--plmax',(Math.max(lh,Math.min(tab?34:30,Math.floor(per)))+1)+'px');
+  const r=document.documentElement.style;r.setProperty('--plh',lh+'px');const ph=Math.max(lh,Math.min(Math.round(lh*1.3),Math.floor(per)));r.setProperty('--plhf',ph+'px');r.setProperty('--plf',fs+'px');r.setProperty('--plmax',(ph+1)+'px');
   return n;
 }
 let lastLines=0;
@@ -3109,7 +3117,7 @@ function stampRegSave(){
   if(!s){
     s=d.kind==='pill'?{id:uid(),kind:'pill',emoji:'💊',name:'약',times:1,color:STK_COL[0],rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]}
       :{id:uid(),kind:'mark',emoji:d.emoji||'🏃',name:'새 스티커',times:1,rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]};
-    if(d.kind==='pill')S.stamps.defs.unshift(s);else S.stamps.defs.push(s);
+    track(d.kind==='pill'?'sticker_pill':'sticker_mark');if(d.kind==='pill')S.stamps.defs.unshift(s);else S.stamps.defs.push(s);
   }
   if(d.name)s.name=d.name;else if(!s.name)s.name=d.kind==='pill'?'약':'새 스티커';
   s.times=d.times;
@@ -4189,7 +4197,7 @@ function openReply(id,st){
 /* ================= 날짜 메모 ================= */
 let memoTab='all',memoMode='my',memoEdit=null,memoText='';
 function addMemo(k,text,shared,countUsage,x){
-  const mm={id:uid(),text,shared,by:role(),t:Date.now()};if(x)mdApply(mm,x);
+  const mm={id:uid(),text,shared,by:role(),t:Date.now()};if(x)mdApply(mm,x);track(shared?'memo_family':'memo_mine');
   (S.memos[k]=S.memos[k]||[]).push(mm);
   if(shared)pushEvent(other(),'memo',k,`♥ ${md(k)}에 ${role()==='host'?'근무자':'가족'}가 메모를 남겼어요: "${firstLine(text).slice(0,24)}"`);
   if(countUsage&&!S.syncSettings.isPro)consumeUsage();else save();
@@ -4682,6 +4690,7 @@ function renderMore(){
         <button class="${fs<=100?'on':''}" data-act="font" data-v="100">보통</button><button class="${fs>100?'on':''}" data-act="font" data-v="120">크게</button></div></div>
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('🌓')}</span>화면 모드</div><div class="chips">
         <button class="${S.theme==='light'?'on':''}" data-act="thememode" data-v="light">라이트</button><button class="${S.theme==='dark'?'on':''}" data-act="thememode" data-v="dark">다크</button><button class="${S.theme!=='light'&&S.theme!=='dark'?'on':''}" data-act="thememode" data-v="system">시스템</button></div></div>
+      <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('🎨')}</span>배경</div><div class="chips"><button class="${S.bg==='paper'?'':'on'}" data-act="bgmode" data-v="">기본</button><button class="${S.bg==='paper'?'on':''}" data-act="bgmode" data-v="paper">종이</button></div></div>
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('📅')}</span>주 시작 요일</div><div class="chips"><button class="${S.weekStart===1?'':'on'}" data-act="weekstart" data-v="0">일요일</button><button class="${S.weekStart===1?'on':''}" data-act="weekstart" data-v="1">월요일</button></div></div>
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('📝')}</span>달력 메모 줄 수</div><div class="chips"><button class="${S.memoLines===4?'':'on'}" data-act="memolines" data-v="3">3줄</button><button class="${S.memoLines===4?'on':''}" data-act="memolines" data-v="4">4줄</button></div></div>
       ${S.personal?`<div class="prow tap" data-act="personal-off"><div class="pl2"><span class="e e-in">${lineIcon('🔁')}</span>근무표 쓰기</div><div class="pv">›</div></div>`:`<div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('▬')}</span>근무 띠 표시</div><label class="sw"><input type="checkbox" id="showBand" ${S.showBand!==false?'checked':''}><i></i></label></div>`}
@@ -4696,6 +4705,7 @@ function renderMore(){
     ${cap('정보')}
     <div class="pg-sec" style="margin-top:0">
       ${item('✉️','문의하기 · 오류 신고','more-mail')}
+      <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('📊')}</span>사용 통계 보내기 <small style="color:var(--muted)">(횟수만)</small></div><label class="sw"><input type="checkbox" id="statsOn" ${S.stats!==false?'checked':''}><i></i></label></div>
       ${item('🔒','개인정보처리방침','more-privacy')}
       ${item('🗑','내 데이터 모두 지우기','more-wipe')}
       <div class="mi2" data-act="about-tap" style="cursor:default"><span class="e">${lineIcon('ℹ️')}</span><span>앱 정보</span><small>${appVersion()}</small></div>
@@ -4732,17 +4742,24 @@ function openAddonPage(){
     </div>`,'addons');
 }
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
+// "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
+const NEWS={
+  'v0.76':`· <b>위젯</b>: 한 달 위젯(‹ › 로 12월 · 내년까지, 가족 달력으로 바꿔 보기) · 큰 위젯에서는 글자도 같이 커져요<br>
+      · <b>배경</b>: 설정 › 화면 › 배경에서 "종이"를 고를 수 있어요 (기본 그대로도 돼요)<br>
+      · <b>달력 메모</b>: 칸이 높은 화면에서 메모 칸이 글자에 맞게 줄었어요<br>
+      · <b>사용 통계</b>: 앱을 더 좋게 만들려고 어떤 기능을 얼마나 쓰는지 횟수만 모아요(내용 · 메모 · 이름은 안 모아요). 설정 › 개인정보에서 끌 수 있어요`
+};
+// 사용 통계: 이름만 보냄(내용 없음). 설정에서 끄면 안 보냄 · 앱(안드로이드)에서만 동작
+function track(name){if(S.stats===false)return;try{if(window.AndroidBridge&&window.AndroidBridge.logEvent)window.AndroidBridge.logEvent(String(name));}catch(e){}}
+function applyStats(){try{if(window.AndroidBridge&&window.AndroidBridge.setStatsEnabled)window.AndroidBridge.setStatsEnabled(S.stats!==false);}catch(e){}}
 function introNotice(){
   const v=appVersion();
   if(!v||!S.onboarded||ob||S.seenVer===v||pageMode||$('#pop').classList.contains('open')||$('#sheet').classList.contains('open'))return;
   S.seenVer=v;save();
+  if(!NEWS[v])return;
   openPop(`<div class="mh">${esc(v)}<b>새로 생겼어요</b></div>
     <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0;line-height:1.7">
-      · <b>알람</b>: 폰이 저절로 다시 켜져도 잠금을 풀기 전에 알람이 다시 걸려요 · 앞으로 180일치 · 앱을 오래 안 열면 끊기기 전에 알려요<br>
-      · <b>위젯</b>: 칸 배치 정리 · 스티커 "1/2" 숫자 · 큰 창에서 옆으로 밀거나 ‹ › 로 앞뒤 날짜 보기<br>
-      · <b>메모</b>: 길게 눌러 복사 · 스티커마다 가족에게 보일지 고르기 (가족이 있을 때)<br>
-      · <b>데이터 안전</b>: 저장 값이 깨져도 앱이 열리고, 가족이 보낸 값은 한 번 더 걸러서 받아요<br>
-      · 설정 › 개인정보처리방침이 새 글로 · 모두 지우기는 서버(가족방 · 로그인 계정)까지 지워요<br><br>
+      ${NEWS[v]}<br><br>
       <span style="color:var(--muted)">업데이트해도 내 데이터는 그대로예요.</span></div></div>
     <div class="mi"><button class="btn grow" data-act="pop-close">확인</button></div>`);
 }
@@ -5211,7 +5228,7 @@ function exportBad(){
   if(hasBridge('shareFile')){try{window.AndroidBridge.shareFile(name,raw);return;}catch(e){}}
   toast('앱에서만 보낼 수 있어요');
 }
-const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
+const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -5295,7 +5312,7 @@ function sendInquiry(){
   location.href=`mailto:${SUPPORT_MAIL}?subject=${encodeURIComponent('[언제쉬어] 문의')}&body=${encodeURIComponent(body)}`;
 }
 const SUPPORT_MAIL='eonjeswieo.app@gmail.com';   // 문의 받을 메일 주소 (운영용)
-const PRIVACY_URL='https://eonjeswieo.web.app/privacy',DELETE_URL='https://eonjeswieo.web.app/delete',PRIVACY_DATE='2026년 10월 18일';
+const PRIVACY_URL='https://eonjeswieo.web.app/privacy',DELETE_URL='https://eonjeswieo.web.app/delete',PRIVACY_DATE='2026년 10월 19일';
 function openPrivacyPage(){
   openPage(`
     ${pageHead('개인정보처리방침')}
@@ -5312,6 +5329,7 @@ function openPrivacyPage(){
       서버는 구글 클라우드(Firebase)이고, 데이터는 한국(서울) 서버에 저장돼요. 가족방 사람만 읽을 수 있도록 보안 규칙으로 막아 둬요.
       <h4>4. 구글 드라이브 백업 (선택)</h4>켜면 내 구글 드라이브의 "앱 전용 숨김 폴더"에 백업 파일이 저장돼요. 다른 앱이나 저희는 볼 수 없어요.
       <h4>5. 인터넷 사용</h4>공휴일 목록(공공 정보)을 하루 한 번 받아 와요. 이때 사용자 정보는 보내지 않아요.
+      <h4>5-1. 사용 통계 (횟수만)</h4>앱을 더 좋게 만들려고 어떤 기능을 몇 번 쓰는지 <b>횟수와 종류만</b> 구글 분석(Firebase Analytics)으로 모아요(예: 앱을 켰다 · 가족 메모를 보냈다 · 스티커를 만들었다 · 어떤 크기의 위젯을 놓았다). 메모 · 이름 · 날짜 · 근무 내용은 모으지 않고 광고 식별자도 모으지 않아요. 설정 › 사용 통계 보내기를 끄면 모으지 않아요.
       <h4>6. 제3자 제공 · 국외 이전</h4>구글(Google LLC)이 로그인 · 데이터 저장 · 푸시 알림 · 드라이브 · 구글 로그인 서비스를 제공하기 위해 위 정보를 처리해요. 서비스를 쓰는 동안 인터넷으로 전송되고, 구글 서버(한국 · 미국 등)에 보관돼요. 광고나 마케팅 목적으로 다른 곳에 주지 않아요.
       <h4>7. 보관과 지우기</h4>
       · 이 폰의 정보: 앱을 지우거나 "내 데이터 모두 지우기"를 할 때까지.<br>
@@ -6151,6 +6169,7 @@ document.addEventListener('click',e=>{
     case 'more-wipe':wipeAll();break;
     case 'font':S.fontScale=Number(t.dataset.v);save();applyFont();render();break;
     case 'thememode':S.theme=t.dataset.v;save();applyTheme();render();break;
+    case 'bgmode':S.bg=t.dataset.v==='paper'?'paper':'';save();applyTheme();render();break;
     case 'mcolor':if(t.dataset.v!==S.memoColors[t.dataset.k==='fam'?'my':'fam']||S.memoColors.fam===S.memoColors.my)S.memoColors[t.dataset.k]=t.dataset.v;save();applyTheme();openColorsPage();break;
     case 'mcolor-reset':S.memoColors={fam:'#7b5cf0',my:'#6b7280'};save();applyTheme();openColorsPage();break;
     case 'paint-open':paintStart(t.dataset.k);break;
@@ -6296,6 +6315,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='famOwn'){famSetMode(t.checked?'own':'view');
   }else if(t.id==='famStk'){famSetStk(t.checked);
   }else if(t.id==='wgAlpha'){S.widget.alpha=+t.value;save();const e=$('#wgAv');if(e)e.textContent=S.widget.alpha+'%';
+  }else if(t.id==='statsOn'){S.stats=t.checked;save();applyStats();
   }else if(t.id==='showBand'){S.showBand=t.checked;save();applyBand();
   }else if(t.id==='famPushQuiet'){S.pushQuiet=t.checked;save();famRegDevice().catch(()=>{});toast(t.checked?'자는 시간엔 소리 없이 알려요':'자는 시간에도 소리로 알려요');
   }else if(t.id==='famPushOn'){S.pushOn=t.checked;save();famRegDevice().catch(()=>{});toast(t.checked?'가족 알림을 받아요':'가족 알림을 끌게요');
@@ -6612,6 +6632,7 @@ async function famLookup(code){
   return {ok:true,hid:d.hid,perm:d.perm,name:d.name,hostName:d.hostName,patternName:d.patternName};
 }
 async function famJoin(code,info,name,mode){
+  track('family_join');
   mode=mode==='view'?'view':'own';
   const {F,db,uid}=await famReady();
   const b=F.writeBatch(db);
@@ -7259,6 +7280,7 @@ function famOnCc(snap){
   S.fam2.reqCc=m;famSaveLocal();famRefreshUi();
 }
 async function famSendReqs(toUid,dates,want,msg,cc){
+  track('request_send');
   const {F,db,uid}=await famReady();const hid=S.link.hid;
   const col=F.collection(db,'households',hid,'requests'),b=F.writeBatch(db),n=dates.length;
   const grp=n>1?F.doc(col).id:'';
@@ -7602,6 +7624,7 @@ bootStep(famBoot);
 setTimeout(()=>{try{if(window.AndroidBridge&&typeof window.AndroidBridge.takePush==='function'){const p=String(window.AndroidBridge.takePush()||'');if(p)window.__onPush(JSON.parse(p));}}catch(e){}},700);
 setTimeout(widgetSync,150);
 setTimeout(introNotice,800);
+applyStats();track('app_start');
 setTimeout(addonNotice,1200);
 setTimeout(autoBackup,4000);
 setTimeout(backupNudge,6000);

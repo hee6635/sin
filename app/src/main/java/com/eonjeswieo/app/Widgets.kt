@@ -142,6 +142,14 @@ object WidgetRefresher {
         }
     }
 
+    /** 놓인 위젯 종류(사용 통계용 · 예: "1+7+m") — 개수가 아니라 종류만 */
+    fun kinds(ctx: Context): String {
+        val mgr = AppWidgetManager.getInstance(ctx)
+        val names = listOf(TodayWidget1Provider::class.java to "1", TodayWidget2Provider::class.java to "2", WeekWidgetProvider::class.java to "7", MonthWidgetProvider::class.java to "m")
+        val on = names.filter { mgr.getAppWidgetIds(ComponentName(ctx, it.first)).isNotEmpty() }.map { it.second }
+        return if (on.isEmpty()) "none" else on.joinToString("+")
+    }
+
     /** 놓인 위젯이 하나라도 있는지 */
     fun hasAny(ctx: Context): Boolean {
         val mgr = AppWidgetManager.getInstance(ctx)

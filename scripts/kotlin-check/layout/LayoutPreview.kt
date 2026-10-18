@@ -42,7 +42,7 @@ fun render(name: String, wDp: Int, hDp: Int, count: Int, days: List<Dy>, memoMax
     val ch = ih - top
     val row = WidgetLayout.solve(days.map { WidgetLayout.DayIn(it.stk, it.hol.isNotEmpty(), it.memos, it.circle.isNotEmpty()) }, cw, ch, dens, compact, memoMax)
     var ok = true
-    val dTopMax = Math.max(12f * dens, Math.min(44f * dens, Math.min(cw * 0.62f, ch * 0.36f)))   // 풀이 쪽(WidgetLayout.solve)이 쓰는 근무 동그라미 최대 크기
+    val dTopMax = Math.max(12f * dens, Math.min(44f * dens * ksOf(cw, ch, dens, compact), Math.min(cw * 0.62f, ch * 0.36f)))   // 풀이 쪽(WidgetLayout.solve)이 쓰는 근무 동그라미 최대 크기
     for (i in 0 until cells) {
         val d = days[i]
         val x0 = cw * i; val y0 = top
@@ -139,6 +139,10 @@ fun render(name: String, wDp: Int, hDp: Int, count: Int, days: List<Dy>, memoMax
     return ok
 }
 
+/** WidgetLayout.solve 의 배율 ks 와 같은 식 (칸이 폰 크기보다 클 때 날짜 · 스티커 · 메모 · 동그라미 상한을 같이 키움) */
+fun ksOf(cw: Float, ch: Float, u: Float, compact: Boolean): Float =
+    1f + (Math.max(1f, Math.min(1.6f, Math.min(cw / ((if (compact) 60f else 110f) * u), ch / ((if (compact) 100f else 110f) * u)))) - 1f) * 0.55f
+
 // 아무 크기 · 아무 내용이나 많이 넣어 봐도 겹침 · 넘침이 없는지 (무작위 시험)
 fun fuzz(): Int {
     val rnd = java.util.Random(7)
@@ -165,7 +169,7 @@ fun fuzz(): Int {
         if (r.memoLines > 0 && r.memoTop(r.memoLines) < r.headEnd - 0.5f) f("메모가 위쪽을 침범")
         if (days.any { it.circle } && r.circleD > 0f) {
             if (r.circleCy - r.circleD / 2 < r.textLimit - 0.5f) f("동그라미가 날짜 · 공휴일 글자를 침범 ${r.circleCy - r.circleD / 2} < ${r.textLimit}")
-            val dTopMax = Math.max(12f * u, Math.min(44f * u, Math.min(cw * 0.62f, ch * 0.36f)))
+            val dTopMax = Math.max(12f * u, Math.min(44f * u * ksOf(cw, ch, u, compact), Math.min(cw * 0.62f, ch * 0.36f)))
             if (r.circleCy - r.circleD / 2 < r.headEnd - Math.min(r.stkSize * 0.9f, dTopMax * 0.18f) - 0.5f) f("동그라미가 스티커 줄과 너무 많이 겹침 (스티커 줄 90% · 동그라미 18% 중 작은 쪽까지만)")
             val lowest = if (r.memoLines > 0) r.memoTop(r.memoLines) else r.bottom
             if (r.circleCy + r.circleD / 2 > lowest + 0.5f) f("동그라미가 아래(메모)를 침범")

@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import android.webkit.JavascriptInterface
+import com.google.firebase.analytics.FirebaseAnalytics
 import org.json.JSONObject
 
 /** 웹 화면(자바스크립트)에서 window.AndroidBridge 로 부르는 함수들 */
@@ -27,6 +28,29 @@ class AlarmBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun shareFile(name: String, content: String) {
         activity.runOnUiThread { activity.shareTextFile(name, content) }
+    }
+
+    /**
+     * 사용 통계(횟수만): 이벤트 이름만 보냄 — 메모 · 이름 · 날짜 같은 내용은 안 보냄. 영문 소문자 · 숫자 · _ 이름만 허용.
+     * app_start 때 놓인 위젯 종류(1 · 2 · 7 · m)도 같이 기록. 설정에서 끄면(setStatsEnabled) 아무것도 안 보냄.
+     */
+    @JavascriptInterface
+    fun logEvent(name: String) {
+        if (!Regex("[a-z][a-z0-9_]{0,31}").matches(name)) return
+        try {
+            val fa = FirebaseAnalytics.getInstance(context)
+            if (name == "app_start") fa.setUserProperty("widgets", WidgetRefresher.kinds(context))
+            fa.logEvent(name, null)
+        } catch (e: Throwable) {
+        }
+    }
+
+    @JavascriptInterface
+    fun setStatsEnabled(on: Boolean) {
+        try {
+            FirebaseAnalytics.getInstance(context).setAnalyticsCollectionEnabled(on)
+        } catch (e: Throwable) {
+        }
     }
 
     /** 글자 크기 (100 = 보통, 115 = 크게, 130 = 아주 크게) */
