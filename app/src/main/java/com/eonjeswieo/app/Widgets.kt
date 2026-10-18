@@ -405,7 +405,7 @@ object WidgetRenderer {
         cv.drawRoundRect(RectF(0f, 0f, w, h), r, r, bgPaint)
 
         val icons = data?.optJSONObject("ic")
-        val memoMax = (data?.optInt("lines", 3) ?: 3).coerceIn(1, 4)
+        val memoMax = (data?.optInt("lines", 3) ?: 3).coerceIn(1, 2)   // 위젯 칸에는 메모를 최대 2개까지만 (그래야 근무 동그라미 · 스티커 자리가 넉넉함)
         val today = Calendar.getInstance()
         val tom = Calendar.getInstance()
         tom.add(Calendar.DAY_OF_YEAR, 1)
@@ -518,6 +518,33 @@ object WidgetRenderer {
         val hol = d.optString("hol", "")
         val dateColor = if (hol.isNotEmpty() || dow == 0) pal.sun else if (dow == 6) pal.sat else pal.fg
 
+        // 근무 동그라미: 위(날짜·스티커)와 아래(메모) 사이 한가운데 — 스티커 줄 아래쪽과 조금 겹칠 수 있어서 스티커보다 먼저 그림 (스티커가 위에 보이게)
+        val t = d.optString("t", "")
+        if (t.isNotEmpty() && row.circleD > 0f) {
+            val rad = row.circleD / 2f
+            val cpaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
+            val cx = x0 + cw / 2
+            val cyc = y0 + row.circleCy
+            val bg = d.optString("bg", "")
+            cpaint.typeface = Typeface.DEFAULT_BOLD
+            cpaint.textAlign = Paint.Align.CENTER
+            cpaint.textSize = rad * 1.0f
+            if (bg.isNotEmpty()) {
+                val cp = Paint(Paint.ANTI_ALIAS_FLAG)
+                cp.color = parseColor(bg, pal.pill)
+                cv.drawCircle(cx, cyc, rad, cp)
+                cpaint.color = parseColor(d.optString("fg", ""), pal.fg)
+            } else {
+                cpaint.color = 0xFFE5484D.toInt()   // 휴무: 색 없이 붉은 글자
+            }
+            cv.drawText(t, cx, cyc + rad * 0.36f, cpaint)
+            if (d.optBoolean("ov", false)) {   // 근무를 바꾼 날: 왼쪽에 붉은 점
+                val dp = Paint(Paint.ANTI_ALIAS_FLAG)
+                dp.color = 0xFFE5322D.toInt()
+                cv.drawCircle(x0 + pad * 1.6f, cyc, 3.2f * dens, dp)
+            }
+        }
+
         // 스티커 (오른쪽 위, 한두 줄로 촘촘히)
         val stk = d.optJSONArray("stk")
         val n = if (stk == null) 0 else Math.min(stk.length(), 4)
@@ -568,32 +595,6 @@ object WidgetRenderer {
             paint.color = pal.fg
             paint.textSize = Math.min(row.pillH * 0.72f, cw * (if (compact) 0.2f else 0.11f))
             drawRich(cv, memos[i], x0 + pad * 1.4f, py + row.pillH * 0.72f, cw - pad * 2.6f, paint, pal.fg, pal.link)
-        }
-
-        // 근무 동그라미: 위(날짜·스티커)와 아래(메모) 사이 한가운데
-        val t = d.optString("t", "")
-        if (t.isNotEmpty() && row.circleD > 0f) {
-            val rad = row.circleD / 2f
-            val cx = x0 + cw / 2
-            val cyc = y0 + row.circleCy
-            val bg = d.optString("bg", "")
-            paint.typeface = Typeface.DEFAULT_BOLD
-            paint.textAlign = Paint.Align.CENTER
-            paint.textSize = rad * 1.0f
-            if (bg.isNotEmpty()) {
-                val cp = Paint(Paint.ANTI_ALIAS_FLAG)
-                cp.color = parseColor(bg, pal.pill)
-                cv.drawCircle(cx, cyc, rad, cp)
-                paint.color = parseColor(d.optString("fg", ""), pal.fg)
-            } else {
-                paint.color = 0xFFE5484D.toInt()   // 휴무: 색 없이 붉은 글자
-            }
-            cv.drawText(t, cx, cyc + rad * 0.36f, paint)
-            if (d.optBoolean("ov", false)) {   // 근무를 바꾼 날: 왼쪽에 붉은 점
-                val dp = Paint(Paint.ANTI_ALIAS_FLAG)
-                dp.color = 0xFFE5322D.toInt()
-                cv.drawCircle(x0 + pad * 1.6f, cyc, 3.2f * dens, dp)
-            }
         }
     }
 

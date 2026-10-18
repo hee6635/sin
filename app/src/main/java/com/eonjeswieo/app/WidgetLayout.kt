@@ -23,6 +23,7 @@ object WidgetLayout {
         val stkTop: Float,
         val stkStep: Float,
         val headEnd: Float,
+        val textLimit: Float,
         val memoLines: Int,
         val pillH: Float,
         val pillGap: Float,
@@ -67,76 +68,46 @@ object WidgetLayout {
         val step = ss + gap
         val stkTop = topPad
 
-        // 위쪽 끝 = 칸들 중 가장 많이 차지하는 칸에 맞춤
-        var head = topPad + rowH
-        for (d in days) {
-            if (d == null) continue
-            val left = topPad + rowH + (if (d.hol && !compact) holSize * 1.3f else 0f)
-            val n = Math.min(d.stickers, 4)
-            val rows = if (n == 0) 0 else if (n <= cols) 1 else 2   // (n 이 cols 보다 크면 2줄)
-            val right = if (rows == 0) 0f else stkTop + rows * ss + (rows - 1) * gap
-            head = Math.max(head, Math.max(left, right))
-        }
-        val headEnd = head + ch * 0.012f
+        // 위쪽 · 메모 · 근무 동그라미의 크기와 자리는 칸 크기로만 정함 (그날 메모 · 스티커가 몇 개든 같음 → 동그라미가 날마다 달라지지 않게).
+        // 날짜 · 공휴일 글자 끝(textEnd)과 스티커 두 줄째 끝(stkEnd)을 늘 같은 기준으로 잡음
+        val textEnd = topPad + rowH + (if (compact) 0f else holSize * 1.3f)
+        val stkEnd = stkTop + 2 * ss + gap
+        val headEnd = Math.max(textEnd, stkEnd) + ch * 0.012f
+        val textLimit = textEnd + ch * 0.012f
+        // 근무 동그라미는 스티커 줄 아래쪽과 조금 겹쳐도 됨 (날짜 글자는 안 가림, 스티커 한 줄 높이의 90%까지)
+        val bandTop = Math.max(textLimit, headEnd - ss * 0.9f)
 
-        // 메모 줄 수 · 줄 높이 · 근무 동그라미 (남는 세로 길이 안에서 같이 풀기)
-        var want = 0
-        var hasCircle = false
-        for (d in days) {
-            if (d == null) continue
-            want = Math.max(want, Math.min(d.memos, memoMax))
-            if (d.circle) hasCircle = true
-        }
-        val avail = Math.max(0f, bottom - headEnd)
+        val hasCircle = days.any { it != null && it.circle }
         val phMax = clamp(Math.min(cw * 0.26f, ch * 0.15f), 10f * u, 19f * u)
         val phMin = Math.min(phMax, 10f * u)
         val pg = Math.max(1f * u, ch * 0.012f)
         val cg = Math.max(1f * u, ch * 0.012f)
-        val dMax = clamp(Math.min(cw * 0.46f, ch * 0.34f), 12f * u, 30f * u)
-        val dMin = Math.min(dMax, 14f * u)
+        val dTop = clamp(Math.min(cw * 0.62f, ch * 0.36f), 12f * u, 44f * u)   // 근무 동그라미 크기 (칸 폭의 약 62%)
+        val dMin = Math.min(dTop, 14f * u)
+        val availMemo = Math.max(0f, bottom - headEnd)    // 메모는 스티커 줄 아래에만
+        val availCircle = Math.max(0f, bottom - bandTop)  // 동그라미는 스티커 줄 아래쪽과 조금 겹쳐도 됨
+        fun blk(l: Int, p: Float): Float = if (l <= 0) 0f else l * p + (l - 1) * pg
+        fun fits(l: Int, p: Float, dm: Float): Boolean = blk(l, p) <= availMemo && blk(l, p) + (if (hasCircle) dm + 2 * cg else 0f) <= availCircle
 
-        var lines = 0
-        var dFloor = dMin
-        var l = want
-        while (l >= 1) {
-            val need = l * phMin + (l - 1) * pg + (if (hasCircle) dMin + 2 * cg else 0f)
-            if (need <= avail) {
-                lines = l
-                break
-            }
-            l--
-        }
-        if (lines == 0 && want >= 1) {   // 그래도 메모 한 줄은 보이게: 동그라미를 조금 줄여서라도
-            val dSmall = if (hasCircle) dMin * 0.75f else 0f
-            if (phMin + (if (hasCircle) dSmall + 2 * cg else 0f) <= avail) {
-                lines = 1
-                dFloor = dSmall
-            }
-        }
-        // 남는 길이 나누기: 동그라미를 알맞은 크기까지 → 메모 줄 높이를 최대까지 → 남으면 동그라미를 더 키움
-        var extra = avail - (lines * phMin + Math.max(0, lines - 1) * pg) - (if (hasCircle) dFloor + 2 * cg else 0f)
-        if (extra < 0f) extra = 0f
-        var circleD = if (hasCircle) dFloor else 0f
-        var ph = if (lines == 0) 0f else phMin
-        if (hasCircle) {
-            val dPref = clamp(Math.min(cw * 0.34f, ch * 0.22f), dFloor, dMax)
-            val grow = Math.min(extra, dPref - circleD)
-            circleD += grow
-            extra -= grow
-        }
-        if (lines > 0) {
-            val grow = Math.min(extra / lines, phMax - ph)
-            ph += grow
-            extra -= grow * lines
-        }
-        if (hasCircle) {
-            val grow = Math.min(extra, dMax - circleD)
-            circleD += grow
-        }
-        val memoBlock = if (lines == 0) 0f else lines * ph + (lines - 1) * pg
-        val band = avail - memoBlock
-        val circleCy = headEnd + band / 2f
+        // 메모 자리(줄 수 · 줄 높이)는 칸이 넉넉하면 목표대로, 좁으면 줄 높이 → 줄 수 순으로 줄임 (그래도 한 줄은 동그라미를 조금 줄여서라도 보이게)
+        var lines = Math.max(0, memoMax)
+        var ph = phMax
+        if (lines > 0 && !fits(lines, ph, dMin)) ph = phMin
+        while (lines > 1 && !fits(lines, ph, dMin)) lines--
+        if (lines > 0 && !fits(lines, ph, dMin) && !fits(lines, ph, dMin * 0.75f)) lines = 0
+        if (lines == 0) ph = 0f
+        val memoBlock = blk(lines, ph)
 
-        return Row(padX, dateSize, dateBase, holSize, holBase, ss, gap, cols, stkTop, step, headEnd, lines, ph, pg, bottom, circleCy, circleD)
+        // 근무 동그라미: 메모 자리 위 ~ 날짜 · 스티커 아래 사이 한가운데 (자리가 모자라면 그 안에서만 줄임)
+        var circleD = 0f
+        var circleCy = bandTop
+        if (hasCircle) {
+            val top = bandTop
+            val bot = bottom - memoBlock
+            circleD = Math.max(0f, Math.min(dTop, bot - top - 2 * cg))
+            circleCy = top + (bot - top) / 2f
+        }
+
+        return Row(padX, dateSize, dateBase, holSize, holBase, ss, gap, cols, stkTop, step, headEnd, textLimit, lines, ph, pg, bottom, circleCy, circleD)
     }
 }

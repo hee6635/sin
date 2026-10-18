@@ -46,6 +46,16 @@ fun render(name: String, wDp: Int, hDp: Int, count: Int, days: List<Dy>, memoMax
         val x0 = cw * i; val y0 = top
         if (i == 0) { g.color = Color(0xE3F5EF); g.fill(RoundRectangle2D.Float(x0 + 2 * dens, y0 + 2 * dens, cw - 4 * dens, ch - 4 * dens, 8 * dens, 8 * dens)) }
         g.color = Color(0xDDDDDD); g.drawRect(x0.toInt(), y0.toInt(), cw.toInt(), ch.toInt())
+        // 근무 동그라미
+        if (d.circle.isNotEmpty()) {
+            val rad = row.circleD / 2
+            g.color = Color(0x7986CB); g.fill(java.awt.geom.Ellipse2D.Float(x0 + cw / 2 - rad, y0 + row.circleCy - rad, rad * 2, rad * 2))
+            g.color = Color.WHITE; g.font = Font("SansSerif", Font.BOLD, rad.toInt()); val tw = g.fontMetrics.stringWidth(d.circle); g.drawString(d.circle, x0 + cw / 2 - tw / 2f, y0 + row.circleCy + rad * 0.36f)
+            if (y0 + row.circleCy - rad < y0 + row.textLimit - 0.5f) { bad("$name 칸${i + 1}: 동그라미가 날짜 · 공휴일 글자를 침범"); ok = false }
+            if (y0 + row.circleCy - rad < y0 + row.headEnd - row.stkSize * 0.9f - 0.5f) { bad("$name 칸${i + 1}: 동그라미가 스티커 줄과 너무 많이 겹침"); ok = false }
+            if (y0 + row.circleCy + rad > y0 + row.memoTop(row.memoLines) + 0.5f && row.memoLines > 0) { bad("$name 칸${i + 1}: 동그라미가 메모를 침범"); ok = false }
+            if (rad * 2 > cw + 0.5f) { bad("$name 칸${i + 1}: 동그라미가 칸보다 큼"); ok = false }
+        }
         // 날짜
         val label = if (compact) "${d.d}" else "${d.d}(M)"
         g.color = Color.BLACK; g.font = Font("SansSerif", Font.BOLD, row.dateSize.toInt())
@@ -85,15 +95,6 @@ fun render(name: String, wDp: Int, hDp: Int, count: Int, days: List<Dy>, memoMax
         }
         if (shown > 0 && mt < row.headEnd - 0.5f) { bad("$name 칸${i + 1}: 메모가 위쪽(${row.headEnd})을 침범 mt=$mt"); ok = false }
         if (d.memos > 0 && row.memoLines < Math.min(d.memos, memoMax)) { /* 줄 수가 줄어든 것은 정보로만 */ }
-        // 근무 동그라미
-        if (d.circle.isNotEmpty()) {
-            val rad = row.circleD / 2
-            g.color = Color(0x7986CB); g.fill(java.awt.geom.Ellipse2D.Float(x0 + cw / 2 - rad, y0 + row.circleCy - rad, rad * 2, rad * 2))
-            g.color = Color.WHITE; g.font = Font("SansSerif", Font.BOLD, rad.toInt()); val tw = g.fontMetrics.stringWidth(d.circle); g.drawString(d.circle, x0 + cw / 2 - tw / 2f, y0 + row.circleCy + rad * 0.36f)
-            if (y0 + row.circleCy - rad < y0 + row.headEnd - 0.5f) { bad("$name 칸${i + 1}: 동그라미가 위쪽을 침범"); ok = false }
-            if (y0 + row.circleCy + rad > y0 + row.memoTop(row.memoLines) + 0.5f && row.memoLines > 0) { bad("$name 칸${i + 1}: 동그라미가 메모를 침범"); ok = false }
-            if (rad * 2 > cw + 0.5f) { bad("$name 칸${i + 1}: 동그라미가 칸보다 큼"); ok = false }
-        }
         if (row.pillH > 0 && row.pillH < 9.5f * dens) { bad("$name: 메모 줄 높이가 너무 낮음 ${row.pillH / dens}dp"); ok = false }
     }
     val wantAll = days.maxOf { Math.min(it.memos, memoMax) }
@@ -113,16 +114,22 @@ fun fuzz(): Int {
         val cells = if (compact) 7 else 1 + rnd.nextInt(2)
         val cwDp = if (compact) 28f + rnd.nextFloat() * 90f else 60f + rnd.nextFloat() * 170f
         val chDp = 40f + rnd.nextFloat() * 170f
-        val memoMax = 3 + rnd.nextInt(2)
+        val memoMax = 1 + rnd.nextInt(2)
         val days = List(cells) { WidgetLayout.DayIn(rnd.nextInt(5), !compact && rnd.nextBoolean(), rnd.nextInt(5), rnd.nextInt(4) != 0) }
         val cw = cwDp * u; val ch = chDp * u
         val r = WidgetLayout.solve(days, cw, ch, u, compact, memoMax)
         val tag = "cw=${cwDp} ch=${chDp} compact=$compact"
         fun f(m: String) { fails++; if (fails < 15) println("  ✗ $tag: $m") }
+        // 그날 메모 · 스티커 · 공휴일이 달라도 동그라미 · 메모 자리의 크기와 위치는 똑같아야 함 (동그라미가 날마다 달라지지 않게)
+        val days2 = days.map { WidgetLayout.DayIn(rnd.nextInt(5), !compact && rnd.nextBoolean(), rnd.nextInt(5), it!!.circle) }
+        val r2 = WidgetLayout.solve(days2, cw, ch, u, compact, memoMax)
+        fun same(a: Float, b: Float) = Math.abs(a - b) < 0.001f
+        if (!same(r.circleD, r2.circleD) || !same(r.circleCy, r2.circleCy) || r.memoLines != r2.memoLines || !same(r.pillH, r2.pillH) || !same(r.headEnd, r2.headEnd)) f("내용이 달라지면 동그라미 · 메모 자리가 달라짐 (동그라미 ${r.circleD / u}dp ↔ ${r2.circleD / u}dp)")
         if (r.headEnd > r.bottom + 0.5f) f("위쪽(${r.headEnd})이 아래 끝(${r.bottom})보다 아래")
         if (r.memoLines > 0 && r.memoTop(r.memoLines) < r.headEnd - 0.5f) f("메모가 위쪽을 침범")
         if (days.any { it.circle } && r.circleD > 0f) {
-            if (r.circleCy - r.circleD / 2 < r.headEnd - 0.5f) f("동그라미가 위쪽을 침범 ${r.circleCy - r.circleD / 2} < ${r.headEnd}")
+            if (r.circleCy - r.circleD / 2 < r.textLimit - 0.5f) f("동그라미가 날짜 · 공휴일 글자를 침범 ${r.circleCy - r.circleD / 2} < ${r.textLimit}")
+            if (r.circleCy - r.circleD / 2 < r.headEnd - r.stkSize * 0.9f - 0.5f) f("동그라미가 스티커 줄과 너무 많이 겹침")
             val lowest = if (r.memoLines > 0) r.memoTop(r.memoLines) else r.bottom
             if (r.circleCy + r.circleD / 2 > lowest + 0.5f) f("동그라미가 아래(메모)를 침범")
             if (r.circleD > cw) f("동그라미가 칸보다 큼")
@@ -149,25 +156,25 @@ fun main(args: Array<String>) {
     val dens = 2.75f
     fun week(stk: Int, memos: Int, hol: Boolean = false, partial: Boolean = false) = List(7) { Dy(10 + it, it, if (it % 2 == 0) stk else Math.max(0, stk - 1), if (hol && it == 3) "Holiday" else "", if (it == 2) memos else Math.max(0, memos - 1), if (it == 5) "" else "D", partial) }
     println("7일 위젯")
-    render("7일 최소(250x70) 스티커0 메모1", 250, 70, 7, week(0, 1), 3, dens, out)
-    render("7일 최소(250x70) 스티커4 메모3", 250, 70, 7, week(4, 3), 3, dens, out)
-    render("7일 폰(360x110) 스티커2 메모3", 360, 110, 7, week(2, 3), 3, dens, out)
-    render("7일 폰(360x110) 스티커4 메모4", 360, 110, 7, week(4, 4), 4, dens, out)
-    render("7일 폰(360x160) 스티커4 메모4", 360, 160, 7, week(4, 4), 4, dens, out)
-    render("7일 태블릿(640x130) 스티커4 메모3", 640, 130, 7, week(4, 3), 3, dens, out)
-    render("7일 태블릿(640x130) 스티커4 메모4", 640, 130, 7, week(4, 4), 4, dens, out)
-    render("7일 태블릿(700x180) 스티커4 메모4", 700, 180, 7, week(4, 4), 4, dens, out)
-    render("7일 가로(520x90) 스티커3 메모3", 520, 90, 7, week(3, 3), 3, dens, out)
+    render("7일 최소(250x70) 스티커0 메모1", 250, 70, 7, week(0, 1), 2, dens, out)
+    render("7일 최소(250x70) 스티커4 메모3", 250, 70, 7, week(4, 3), 2, dens, out)
+    render("7일 폰(360x110) 스티커2 메모3", 360, 110, 7, week(2, 3), 2, dens, out)
+    render("7일 폰(360x110) 스티커4 메모4", 360, 110, 7, week(4, 4), 2, dens, out)
+    render("7일 폰(360x160) 스티커4 메모4", 360, 160, 7, week(4, 4), 2, dens, out)
+    render("7일 태블릿(640x130) 스티커4 메모3", 640, 130, 7, week(4, 3), 2, dens, out)
+    render("7일 태블릿(640x130) 스티커4 메모4", 640, 130, 7, week(4, 4), 2, dens, out)
+    render("7일 태블릿(700x180) 스티커4 메모4", 700, 180, 7, week(4, 4), 2, dens, out)
+    render("7일 가로(520x90) 스티커3 메모3", 520, 90, 7, week(3, 3), 2, dens, out)
     println("2칸 위젯")
-    render("2칸 최소(140x70) 스티커4 메모3 휴일", 140, 70, 2, listOf(Dy(12, 1, 4, "Holiday", 3), Dy(13, 2, 2, "", 2)), 3, dens, out)
-    render("2칸(180x110) 스티커4 메모4", 180, 110, 2, listOf(Dy(12, 1, 4, "Holiday", 4), Dy(13, 2, 3, "", 4, partial = true)), 4, dens, out)
-    render("2칸 큼(300x160) 스티커4 메모4", 300, 160, 2, listOf(Dy(12, 1, 4, "Holiday", 4), Dy(13, 2, 3, "", 4)), 4, dens, out)
+    render("2칸 최소(140x70) 스티커4 메모3 휴일", 140, 70, 2, listOf(Dy(12, 1, 4, "Holiday", 3), Dy(13, 2, 2, "", 2)), 2, dens, out)
+    render("2칸(180x110) 스티커4 메모4", 180, 110, 2, listOf(Dy(12, 1, 4, "Holiday", 4), Dy(13, 2, 3, "", 4, partial = true)), 2, dens, out)
+    render("2칸 큼(300x160) 스티커4 메모4", 300, 160, 2, listOf(Dy(12, 1, 4, "Holiday", 4), Dy(13, 2, 3, "", 4)), 2, dens, out)
     println("1칸 위젯")
-    render("1칸 최소(70x70) 스티커4 메모3", 70, 70, 1, listOf(Dy(12, 1, 4, "Holiday", 3)), 3, dens, out)
-    render("1칸(110x110) 스티커4 메모3 휴일", 110, 110, 1, listOf(Dy(12, 1, 4, "Holiday", 3)), 3, dens, out)
-    render("1칸 큼(180x180) 스티커2 메모4", 180, 180, 1, listOf(Dy(12, 1, 2, "", 4)), 4, dens, out)
+    render("1칸 최소(70x70) 스티커4 메모3", 70, 70, 1, listOf(Dy(12, 1, 4, "Holiday", 3)), 2, dens, out)
+    render("1칸(110x110) 스티커4 메모3 휴일", 110, 110, 1, listOf(Dy(12, 1, 4, "Holiday", 3)), 2, dens, out)
+    render("1칸 큼(180x180) 스티커2 메모4", 180, 180, 1, listOf(Dy(12, 1, 2, "", 4)), 2, dens, out)
     println("엇갈린 칸: 어떤 칸은 메모가 많고 어떤 칸은 스티커가 많음")
-    render("7일 섞임(360x110)", 360, 110, 7, listOf(Dy(10, 0, 4, "", 0), Dy(11, 1, 0, "", 3), Dy(12, 2, 2, "", 1), Dy(13, 3, 0, "", 0, ""), Dy(14, 4, 1, "", 2), Dy(15, 5, 3, "", 3), Dy(16, 6, 0, "", 1)), 3, dens, out)
+    render("7일 섞임(360x110)", 360, 110, 7, listOf(Dy(10, 0, 4, "", 0), Dy(11, 1, 0, "", 3), Dy(12, 2, 2, "", 1), Dy(13, 3, 0, "", 0, ""), Dy(14, 4, 1, "", 2), Dy(15, 5, 3, "", 3), Dy(16, 6, 0, "", 1)), 2, dens, out)
     println(if (problems == 0) "문제 없음" else "문제 ${problems}개")
     System.exit(if (problems == 0) 0 else 1)
 }
