@@ -77,7 +77,7 @@ object WidgetLayout {
         val holBase = topPad + rowH + holSize * 0.98f
 
         // 스티커: 오른쪽 위에 한두 줄로 촘촘히 (한 줄에 최소 2개가 들어가도록 크기를 줄임)
-        var ss = Math.min(if (compact) clamp(cw * 0.22f, 8f * u, 16f * u) else clamp(cw * 0.15f, 10f * u, 20f * u), ch * 0.17f)
+        var ss = Math.min(clamp(cw * 0.22f, if (compact) 8f * u else 10f * u, if (compact) 16f * u else 20f * u), ch * 0.17f)   // (1칸 · 2칸도 7일 위젯처럼 칸 폭의 22% — 좁은 칸에서도 스티커가 또렷하게)
         val g = ss * 0.12f
         ss = Math.min(ss, (cw * 0.5f - g) / 2f)
         val gap = ss * 0.12f
@@ -91,15 +91,15 @@ object WidgetLayout {
         val stkEnd = stkTop + 2 * ss + gap
         val headEnd = Math.max(textEnd, stkEnd) + ch * 0.012f
         val textLimit = textEnd + ch * 0.012f
-        // 근무 동그라미는 스티커 줄 아래쪽과 조금 겹쳐도 됨 (날짜 글자는 안 가림, 스티커 한 줄 높이의 90%까지)
-        val bandTop = Math.max(textLimit, headEnd - ss * 0.9f)
+        // 근무 동그라미는 스티커 줄 아래쪽과 조금 겹쳐도 됨 (날짜 글자는 안 가림. 겹치는 높이는 스티커 한 줄 높이의 90% · 동그라미 크기의 18% 중 작은 쪽까지만 → "조금")
+        val dTop = clamp(Math.min(cw * 0.62f, ch * 0.36f), 12f * u, 44f * u)   // 근무 동그라미 크기 (칸 폭의 약 62%)
+        val bandTop = Math.max(textLimit, headEnd - Math.min(ss * 0.9f, dTop * 0.18f))
 
         val hasCircle = days.any { it != null && it.circle }
         val phMax = clamp(Math.min(cw * 0.26f, ch * 0.15f), 10f * u, 19f * u)
         val phMin = Math.min(phMax, 10f * u)
         val pg = Math.max(1f * u, ch * 0.012f)
         val cg = Math.max(1f * u, ch * 0.012f)
-        val dTop = clamp(Math.min(cw * 0.62f, ch * 0.36f), 12f * u, 44f * u)   // 근무 동그라미 크기 (칸 폭의 약 62%)
         val dMin = Math.min(dTop, 14f * u)
         val availMemo = Math.max(0f, bottom - headEnd)    // 메모는 스티커 줄 아래에만
         val availCircle = Math.max(0f, bottom - bandTop)  // 동그라미는 스티커 줄 아래쪽과 조금 겹쳐도 됨

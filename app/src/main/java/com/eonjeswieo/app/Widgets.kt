@@ -243,7 +243,7 @@ class WeekWidgetProvider : AppWidgetProvider() {
  * 날짜(+공휴일 이름) → 근무 동그라미 → 스티커 → 메모 한 줄.
  */
 object WidgetRenderer {
-    private class Pal(val bg: Int, val fg: Int, val sub: Int, val pill: Int, val sun: Int, val sat: Int, val line: Int, val link: Int, val chip: Int = 0xFF6B7380.toInt(), val chipFg: Int = 0xFFFFFFFF.toInt())
+    private class Pal(val bg: Int, val fg: Int, val sub: Int, val pill: Int, val sun: Int, val sat: Int, val line: Int, val link: Int, val chip: Int = 0xFF6B7380.toInt(), val chipFg: Int = 0xFFFFFFFF.toInt(), val divider: Int = 0xFFC9CED6.toInt())
 
     private val LIGHT = Pal(
         0xFFFFFFFF.toInt(), 0xFF1F2328.toInt(), 0xFF8A919A.toInt(), 0xFFEAECEF.toInt(),
@@ -252,7 +252,7 @@ object WidgetRenderer {
     private val DARK = Pal(
         0xFF23282E.toInt(), 0xFFF2F4F7.toInt(), 0xFF9AA3AD.toInt(), 0xFF39414A.toInt(),
         0xFFFF6B7F.toInt(), 0xFF7BA2FF.toInt(), 0xFF3A424B.toInt(), 0xFF7BA2FF.toInt(),
-        0xFFB4BCC6.toInt(), 0xFF23282E.toInt()
+        0xFFB4BCC6.toInt(), 0xFF23282E.toInt(), 0xFF4B545E.toInt()
     )
     private val iconCache = HashMap<String, Bitmap?>()
     private var dens = 3f   // 화면 밀도 (dp 계산용)
@@ -495,6 +495,13 @@ object WidgetRenderer {
     private fun drawRow(cv: Canvas, days: List<JSONObject?>, today: BooleanArray, x0: Float, y0: Float, w: Float, ch: Float, pal: Pal, icons: JSONObject?, memoMax: Int, compact: Boolean) {
         val cw = w / days.size
         val row = WidgetLayout.solve(days.map { dayIn(it, compact) }, cw, ch, dens, compact, memoMax)
+        if (days.size > 1) {   // 날짜 사이 연한 세로선 (위아래 4dp 안쪽에서 · 오늘 초록 칸은 그 위에 그려짐)
+            val lp = Paint(Paint.ANTI_ALIAS_FLAG)
+            lp.color = pal.divider
+            lp.strokeWidth = 1f * dens
+            val inset = 4f * dens
+            for (i in 1 until days.size) cv.drawLine(x0 + cw * i, y0 + inset, x0 + cw * i, y0 + ch - inset, lp)
+        }
         for (i in days.indices) drawCell(cv, days[i], x0 + cw * i, y0, cw, ch, pal, icons, today[i], row, compact)
     }
 
@@ -596,7 +603,7 @@ object WidgetRenderer {
             paint.typeface = Typeface.DEFAULT
             paint.textAlign = Paint.Align.LEFT
             paint.color = pal.fg
-            paint.textSize = Math.min(row.pillH * 0.72f, cw * (if (compact) 0.2f else 0.11f))
+            paint.textSize = Math.min(row.pillH * 0.72f, cw * 0.2f)   // (7일 · 1칸 · 2칸 모두 같은 비율)
             val chipW = if (more > 0 && i == shown - 1) WidgetLayout.moreBadge(row.pillH)[0] else 0f
             drawRich(cv, memos[i], x0 + pad * 1.4f, py + row.pillH * 0.72f, cw - pad * 2.6f - (if (chipW > 0f) chipW + row.pillH * 0.15f else 0f), paint, pal.fg, pal.link)
             if (chipW > 0f) drawMoreChip(cv, more, x0 + cw - pad - row.pillH * 0.12f, py, row.pillH, pal)

@@ -42,18 +42,19 @@ fun render(name: String, wDp: Int, hDp: Int, count: Int, days: List<Dy>, memoMax
     val ch = ih - top
     val row = WidgetLayout.solve(days.map { WidgetLayout.DayIn(it.stk, it.hol.isNotEmpty(), it.memos, it.circle.isNotEmpty()) }, cw, ch, dens, compact, memoMax)
     var ok = true
+    val dTopMax = Math.max(12f * dens, Math.min(44f * dens, Math.min(cw * 0.62f, ch * 0.36f)))   // 풀이 쪽(WidgetLayout.solve)이 쓰는 근무 동그라미 최대 크기
     for (i in 0 until cells) {
         val d = days[i]
         val x0 = cw * i; val y0 = top
         if (i == 0) { g.color = Color(0xE3F5EF); g.fill(RoundRectangle2D.Float(x0 + 2 * dens, y0 + 2 * dens, cw - 4 * dens, ch - 4 * dens, 8 * dens, 8 * dens)) }
-        g.color = Color(0xDDDDDD); g.drawRect(x0.toInt(), y0.toInt(), cw.toInt(), ch.toInt())
+        if (i > 0) { g.color = Color(0xC9CED6); g.fill(java.awt.geom.Rectangle2D.Float(x0 - dens / 2f, y0 + 4f * dens, dens, ch - 8f * dens)) }
         // 근무 동그라미
         if (d.circle.isNotEmpty()) {
             val rad = row.circleD / 2
             g.color = Color(0x7986CB); g.fill(java.awt.geom.Ellipse2D.Float(x0 + cw / 2 - rad, y0 + row.circleCy - rad, rad * 2, rad * 2))
             g.color = Color.WHITE; g.font = Font("SansSerif", Font.BOLD, rad.toInt()); val tw = g.fontMetrics.stringWidth(d.circle); g.drawString(d.circle, x0 + cw / 2 - tw / 2f, y0 + row.circleCy + rad * 0.36f)
             if (y0 + row.circleCy - rad < y0 + row.textLimit - 0.5f) { bad("$name 칸${i + 1}: 동그라미가 날짜 · 공휴일 글자를 침범"); ok = false }
-            if (y0 + row.circleCy - rad < y0 + row.headEnd - row.stkSize * 0.9f - 0.5f) { bad("$name 칸${i + 1}: 동그라미가 스티커 줄과 너무 많이 겹침"); ok = false }
+            if (y0 + row.circleCy - rad < y0 + row.headEnd - Math.min(row.stkSize * 0.9f, dTopMax * 0.18f) - 0.5f) { bad("$name 칸${i + 1}: 동그라미가 스티커 줄과 너무 많이 겹침 (스티커 줄 90% · 동그라미 18% 중 작은 쪽까지만)"); ok = false }
             if (y0 + row.circleCy + rad > y0 + row.memoTop(row.memoLines) + 0.5f && row.memoLines > 0) { bad("$name 칸${i + 1}: 동그라미가 메모를 침범"); ok = false }
             if (rad * 2 > cw + 0.5f) { bad("$name 칸${i + 1}: 동그라미가 칸보다 큼"); ok = false }
         }
@@ -91,7 +92,7 @@ fun render(name: String, wDp: Int, hDp: Int, count: Int, days: List<Dy>, memoMax
         for (k in 0 until shown) {
             val py = y0 + mt + k * (row.pillH + row.pillGap)
             g.color = Color(0xEAECEF); g.fill(RoundRectangle2D.Float(x0 + row.padX, py, cw - 2 * row.padX, row.pillH, row.pillH * 0.3f, row.pillH * 0.3f))
-            g.color = Color.BLACK; g.font = Font("SansSerif", Font.PLAIN, Math.max(6, Math.min(row.pillH * 0.7f, cw * (if (compact) 0.2f else 0.11f)).toInt()))
+            g.color = Color.BLACK; g.font = Font("SansSerif", Font.PLAIN, Math.max(6, Math.min(row.pillH * 0.7f, cw * 0.2f).toInt()))
             val moreN = d.memos - shown
             if (moreN > 0 && k == shown - 1) {   // 메모가 더 있으면 마지막 줄 끝에 "+n" 칩
                 val bg = WidgetLayout.moreBadge(row.pillH)
@@ -103,7 +104,7 @@ fun render(name: String, wDp: Int, hDp: Int, count: Int, days: List<Dy>, memoMax
                 g.color = Color.WHITE; g.font = Font("SansSerif", Font.BOLD, Math.max(5, (bg[1] * 0.66f).toInt()))
                 val lab = WidgetLayout.moreLabel(moreN); val lw = g.fontMetrics.stringWidth(lab)
                 g.drawString(lab, right - bg[0] / 2f - lw / 2f, py + row.pillH / 2f + bg[1] * 0.24f)
-                g.color = Color.BLACK; g.font = Font("SansSerif", Font.PLAIN, Math.max(6, Math.min(row.pillH * 0.7f, cw * (if (compact) 0.2f else 0.11f)).toInt()))
+                g.color = Color.BLACK; g.font = Font("SansSerif", Font.PLAIN, Math.max(6, Math.min(row.pillH * 0.7f, cw * 0.2f).toInt()))
             }
             // 앱처럼 글자 자리(칩이 있으면 칩만큼 줄어듦)를 넘으면 … 로 줄임
             var label = "memo ${k + 1}"
@@ -147,7 +148,8 @@ fun fuzz(): Int {
         if (r.memoLines > 0 && r.memoTop(r.memoLines) < r.headEnd - 0.5f) f("메모가 위쪽을 침범")
         if (days.any { it.circle } && r.circleD > 0f) {
             if (r.circleCy - r.circleD / 2 < r.textLimit - 0.5f) f("동그라미가 날짜 · 공휴일 글자를 침범 ${r.circleCy - r.circleD / 2} < ${r.textLimit}")
-            if (r.circleCy - r.circleD / 2 < r.headEnd - r.stkSize * 0.9f - 0.5f) f("동그라미가 스티커 줄과 너무 많이 겹침")
+            val dTopMax = Math.max(12f * u, Math.min(44f * u, Math.min(cw * 0.62f, ch * 0.36f)))
+            if (r.circleCy - r.circleD / 2 < r.headEnd - Math.min(r.stkSize * 0.9f, dTopMax * 0.18f) - 0.5f) f("동그라미가 스티커 줄과 너무 많이 겹침 (스티커 줄 90% · 동그라미 18% 중 작은 쪽까지만)")
             val lowest = if (r.memoLines > 0) r.memoTop(r.memoLines) else r.bottom
             if (r.circleCy + r.circleD / 2 > lowest + 0.5f) f("동그라미가 아래(메모)를 침범")
             if (r.circleD > cw) f("동그라미가 칸보다 큼")
@@ -191,6 +193,8 @@ fun main(args: Array<String>) {
     render("1칸 최소(70x70) 스티커4 메모3", 70, 70, 1, listOf(Dy(12, 1, 4, "Holiday", 3)), 2, dens, out)
     render("1칸(110x110) 스티커4 메모3 휴일", 110, 110, 1, listOf(Dy(12, 1, 4, "Holiday", 3)), 2, dens, out)
     render("1칸 큼(180x180) 스티커2 메모4", 180, 180, 1, listOf(Dy(12, 1, 2, "", 4)), 2, dens, out)
+    render("1칸 좁고 긴(65x130) 스티커4 메모3", 65, 130, 1, listOf(Dy(18, 0, 4, "", 3)), 2, dens, out)
+    render("1칸 중간(90x120) 스티커3 메모3", 90, 120, 1, listOf(Dy(18, 0, 3, "", 3)), 2, dens, out)
     println("엇갈린 칸: 어떤 칸은 메모가 많고 어떤 칸은 스티커가 많음")
     render("7일 섞임(360x110)", 360, 110, 7, listOf(Dy(10, 0, 4, "", 0), Dy(11, 1, 0, "", 3), Dy(12, 2, 2, "", 1), Dy(13, 3, 0, "", 0, ""), Dy(14, 4, 1, "", 2), Dy(15, 5, 3, "", 3), Dy(16, 6, 0, "", 1)), 2, dens, out)
     println(if (problems == 0) "문제 없음" else "문제 ${problems}개")
