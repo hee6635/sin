@@ -5,6 +5,62 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
+<!-- 보안 잠금: 이 앱이 쓰는 곳(앱 안 파일 · 구글 서버 · 공휴일 자료)으로만 통신하고, 외부 스크립트 · 액자(iframe) · 폼 전송은 막음 -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://raw.githubusercontent.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<script>
+/* 오류 기록 + 시작 실패 안전 화면 (본 스크립트가 못 떠도 동작하도록 따로 둠)
+ * - 최근 오류 5개를 폰에만 적어 두고, 문의하기 메일에 같이 붙임 (자동으로 어디에 보내지 않음)
+ * - 앱을 여는 중에 오류가 나면 빈 화면 대신 "다시 열기 · 데이터 파일로 보내기 · 새로 시작" 화면을 보여 줌 (데이터는 지우지 않음) */
+(function(){
+  var KE='eonjeswieo:err',KV='eonjeswieo:v1';
+  window.__booted=false;
+  function rd(){try{var a=JSON.parse(localStorage.getItem(KE)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+  function log(m,src){
+    try{
+      var a=rd(),t=Date.now(),l=a[a.length-1];
+      m=String(m||'').slice(0,160);src=String(src||'').slice(0,60);
+      if(l&&l.m===m&&t-l.t<3000)return;
+      a.push({t:t,m:m,s:src});if(a.length>5)a=a.slice(-5);
+      localStorage.setItem(KE,JSON.stringify(a));
+    }catch(e){}
+  }
+  window.__logErr=log;
+  window.addEventListener('error',function(e){
+    var f=e&&e.filename?String(e.filename).split('/').pop():'';
+    log(e&&e.message,f+(e&&e.lineno?':'+e.lineno:''));
+    if(!window.__booted)crash(e&&e.message);
+  });
+  window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;log('promise: '+((r&&r.message)||r),'');});
+  document.addEventListener('securitypolicyviolation',function(e){log('CSP '+e.violatedDirective+' '+String(e.blockedURI||'').slice(0,60),'');});
+  function crash(msg){
+    try{
+      if(document.getElementById('crashBox'))return;
+      var mk=function(t,css){var e=document.createElement('div');if(t)e.textContent=t;if(css)e.style.cssText=css;return e;};
+      var box=mk('','position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:#fff;color:#1f2328;padding:28px 22px;overflow:auto;font:15px/1.5 sans-serif;');
+      box.id='crashBox';
+      box.appendChild(mk('앱을 여는 중 문제가 생겼어요','font-size:20px;font-weight:800;margin-bottom:10px'));
+      box.appendChild(mk('저장해 둔 내 데이터는 지우지 않았어요. 아래 중 하나를 눌러 주세요.','margin-bottom:18px;color:#555'));
+      var btn=function(t,fn,css){var b=document.createElement('button');b.textContent=t;b.style.cssText='display:block;width:100%;padding:14px;margin:0 0 10px;border:1px solid #cfd4da;border-radius:12px;background:#f5f6f8;font-size:16px;font-weight:700;'+(css||'');b.onclick=fn;box.appendChild(b);};
+      btn('다시 열기',function(){location.reload();});
+      btn('내 데이터를 파일로 보내 두기',function(){
+        var raw='';try{raw=localStorage.getItem(KV)||'';}catch(e){}
+        if(!raw){alert('저장된 데이터가 없어요');return;}
+        try{if(window.AndroidBridge&&window.AndroidBridge.shareFile){window.AndroidBridge.shareFile('eonjeswieo-data.json',raw);return;}}catch(e){}
+        alert('앱에서만 보낼 수 있어요');
+      });
+      btn('새로 시작하기 (데이터 지움)',function(){
+        if(!confirm('저장된 데이터가 모두 지워져요.\n먼저 "내 데이터를 파일로 보내 두기"를 해 두셨나요?'))return;
+        if(!confirm('정말 새로 시작할까요?'))return;
+        try{localStorage.removeItem(KV);}catch(e){}
+        location.reload();
+      },'color:#d64560');
+      box.appendChild(mk(String(msg||'').slice(0,120),'margin-top:14px;font-size:12px;color:#8b919a;word-break:break-all'));
+      (document.body||document.documentElement).appendChild(box);
+    }catch(e){}
+  }
+  window.__crash=crash;
+})();
+</script>
 <title>언제쉬어</title>
 <style>
 :root{
@@ -1251,6 +1307,74 @@ const dayNum=d=>Math.round(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/86
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
 const DOW=['일','월','화','수','목','금','토'];
+/* ---- 받은 값 검사 ----
+ * 가족이 서버에 올린 값 · 백업 파일 · 깨진 저장 값은 그대로 믿지 않고, 모양이 맞는 것만 씀 (화면에 그리기 전에 한 번 걸러냄) */
+const isObj=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
+const okDate=v=>typeof v==='string'&&/^\d{4}-\d\d-\d\d$/.test(v);
+const okTime=v=>typeof v==='string'&&/^\d{1,2}:\d\d$/.test(v);
+const okId=v=>typeof v==='string'&&/^[A-Za-z0-9_.:\-]{1,100}$/.test(v);
+const okHex=v=>typeof v==='string'&&/^#[0-9a-fA-F]{6}$/.test(v);
+const okImg=v=>typeof v==='string'&&v.length<=300000&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(v);
+const FAM_IMG=/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]{1,6000}$/;
+const cutTxt=(v,n)=>String(v==null?'':v).replace(/[\u0000-\u001f\u007f]/g,' ').slice(0,n);   // 한 줄 글 (이름 등)
+const cutMulti=(v,n)=>String(v==null?'':v).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,'').slice(0,n);   // 줄바꿈이 있는 글 (메모 등)
+const safeColor=(c,fb)=>(c===''||c==='v:day'||c==='v:night'||okHex(c))?c:(fb===undefined?'':fb);
+const REQ_STS=['pending','accepted','rejected','applied','cancelled'];
+function famCleanStkDef(d){   // 가족이 올린 스티커 종류 한 개 (자리 번호가 어긋나지 않게 못 쓰는 것은 null)
+  if(!isObj(d))return null;
+  const i=cutTxt(d.i,20);
+  if(d.k==='p')return {i,k:'p',t:Math.max(1,Math.min(3,Math.round(+d.t)||1)),c:/^#[0-9a-fA-F]{3,8}$/.test(d.c||'')?d.c:'#7e57c2',h:['r','t','d','c'].includes(d.h)?d.h:'c'};
+  const o={i,k:'m',e:cutTxt(d.e,8)||'⭐'};
+  if(typeof d.img==='string'&&FAM_IMG.test(d.img))o.img=d.img;
+  return o;
+}
+function famCleanSched(v){   // 가족 근무표 한 건 → 모양이 맞는 것만 남긴 새 객체 (근무표로 못 쓰면 null)
+  if(!isObj(v)||!okDate(v.anchor))return null;
+  const pat=(Array.isArray(v.pattern)?v.pattern:[]).slice(0,60).map(x=>cutTxt(x,6));
+  const o={v:1,patternName:cutTxt(v.patternName,20),teamName:cutTxt(v.teamName,10),pattern:pat.length?pat:[''],anchor:v.anchor,types:[],overrides:{},holRest:!!v.holRest,updatedAt:+v.updatedAt||0};
+  (Array.isArray(v.types)?v.types:[]).slice(0,24).forEach(t=>{if(isObj(t)&&typeof t.k==='string'&&t.k&&t.k.length<=6)o.types.push({k:cutTxt(t.k,6),name:cutTxt(t.name||t.k,12),color:safeColor(t.color,''),rest:!!t.rest});});
+  if(isObj(v.overrides)){let n=0;for(const k of Object.keys(v.overrides)){const x=v.overrides[k];if(okDate(k)&&typeof x==='string'&&x.length<=6&&n++<520)o.overrides[k]=x;}}
+  if(isObj(v.stk)){
+    o.stk={};let n=0;
+    for(const k of Object.keys(v.stk)){const x=v.stk[k];if(okDate(k)&&typeof x==='string'&&/^[0-9a-z]{0,120}$/.test(x)&&n++<420)o.stk[k]=x;}
+    o.sdefs=(Array.isArray(v.sdefs)?v.sdefs:[]).slice(0,60).map(famCleanStkDef);o.sv=v.sv===2?2:1;
+  }
+  return o;
+}
+function famCleanMember(m,id){
+  const uid=okId(id)?id:(isObj(m)&&okId(m.uid)?m.uid:'');
+  if(!isObj(m)||!uid)return null;
+  return {uid,role:m.role==='host'?'host':'guest',name:cutTxt(m.name,12)||'가족',mode:m.mode==='view'?'view':'own'};
+}
+function famCleanMemo(v,t){
+  if(!isObj(v)||!okDate(v.date)||!okId(v.by))return null;
+  return {by:v.by,byName:cutTxt(v.byName,12)||'가족',date:v.date,text:cutMulti(v.text,200),to:Array.isArray(v.to)?v.to.filter(okId).slice(0,12):null,
+    rev:Math.max(0,Math.min(1e6,Math.round(+v.rev)||0)),time:/^\d\d:\d\d$/.test(v.time||'')?v.time:'',al:(v.al==='0'||v.al==='10')?v.al:'',t:+t||+v.t||Date.now()};
+}
+function famCleanReq(v,t,u){
+  if(!isObj(v)||!okDate(v.date))return null;
+  return {from:okId(v.from)?v.from:'',to:okId(v.to)?v.to:'',fromName:cutTxt(v.fromName,12)||'가족',toName:cutTxt(v.toName,12)||'가족',date:v.date,want:cutTxt(v.want,4),msg:cutMulti(v.msg,60),
+    st:REQ_STS.includes(v.st)?v.st:'pending',reply:cutMulti(v.reply,100),held:!!v.held,mode:(v.mode==='keep'||v.mode==='change')?v.mode:'',prev:cutTxt(v.prev,4),
+    grp:okId(v.grp)?v.grp:'',gn:Math.max(1,Math.min(14,Math.round(+v.gn)||1)),lead:!!v.lead,t:+t||+v.t||Date.now(),u:+u||+v.u||0};
+}
+function famCleanCc(v){
+  if(!isObj(v)||!okDate(v.date))return null;
+  return {fromName:cutTxt(v.fromName,12)||'가족',toName:cutTxt(v.toName,12)||'가족',date:v.date,want:cutTxt(v.want,4),grp:okId(v.grp)?v.grp:'',lead:!!v.lead};
+}
+function famCleanFam2(f){   // 폰에 저장해 둔 가족 복사본 (옛 버전이 걸러내지 않고 저장한 것도 여기서 한 번 더 걸러냄)
+  f=isObj(f)?f:{};
+  const out={scheds:{},members:[],memos:{},reqIn:{},reqOut:{},memoRev:{},reqCc:{},me:{sent:0,bonus:0},seenMemo:[],init:!!f.init};
+  if(isObj(f.scheds))Object.keys(f.scheds).forEach(id=>{const c=okId(id)?famCleanSched(f.scheds[id]):null;if(c)out.scheds[id]=c;});
+  if(Array.isArray(f.members))f.members.forEach(m=>{const c=famCleanMember(m,isObj(m)?m.uid:'');if(c)out.members.push(c);});
+  if(isObj(f.memos))Object.keys(f.memos).forEach(id=>{const c=okId(id)?famCleanMemo(f.memos[id]):null;if(c)out.memos[id]=c;});
+  ['reqIn','reqOut'].forEach(k=>{if(isObj(f[k]))Object.keys(f[k]).forEach(id=>{const c=okId(id)?famCleanReq(f[k][id]):null;if(c)out[k][id]=c;});});
+  if(isObj(f.reqCc))Object.keys(f.reqCc).forEach(id=>{const c=okId(id)?famCleanCc(f.reqCc[id]):null;if(c)out.reqCc[id]=c;});
+  if(isObj(f.memoRev))Object.keys(f.memoRev).forEach(id=>{if(okId(id))out.memoRev[id]=Math.max(0,Math.round(+f.memoRev[id])||0);});
+  if(isObj(f.me))out.me={sent:Math.max(0,Math.round(+f.me.sent)||0),bonus:Math.max(0,Math.round(+f.me.bonus)||0)};
+  if(Array.isArray(f.seenMemo))out.seenMemo=f.seenMemo.filter(okId).slice(-300);
+  if(+f.syncAt>0)out.syncAt=+f.syncAt;
+  return out;
+}
 //#HELPERS_END
 
 /* ================= 한국 공휴일 =================
@@ -1384,11 +1508,13 @@ const typeOf=k=>k===''?BLANK_T:((S.types||[]).find(t=>t.k===k)||{k,name:k,color:
 const shiftLabel=k=>typeOf(k).name;
 const isRest=k=>!!typeOf(k).rest;
 function tColors(t){
-  if(!t.color)return null;
-  if(t.color==='v:day')return {bg:'var(--day)',fg:'var(--day-fg)'};
-  if(t.color==='v:night')return {bg:'var(--night)',fg:'var(--night-fg)'};
-  const h=t.color.replace('#',''),R=parseInt(h.slice(0,2),16),G=parseInt(h.slice(2,4),16),B=parseInt(h.slice(4,6),16);
-  return {bg:t.color,fg:(R*299+G*587+B*114)/1000>150?'#1f2328':'#ffffff'};
+  const c=t&&t.color;
+  if(!c)return null;
+  if(c==='v:day')return {bg:'var(--day)',fg:'var(--day-fg)'};
+  if(c==='v:night')return {bg:'var(--night)',fg:'var(--night-fg)'};
+  if(!okHex(c))return null;   // 모양이 다른 값(가족이 올린 이상한 글자 등)은 색 없음(빨간 글자만)으로
+  const h=c.replace('#',''),R=parseInt(h.slice(0,2),16),G=parseInt(h.slice(2,4),16),B=parseInt(h.slice(4,6),16);
+  return {bg:c,fg:(R*299+G*587+B*114)/1000>150?'#1f2328':'#ffffff'};
 }
 /* 근무 동그라미 html. extra: 'sm' 등 추가 클래스 */
 function badge(k,extra,inner){
@@ -1467,17 +1593,27 @@ const defaults=()=>({
 });
 const REM_DAYS=[7,3,2,1,0],REM_SHORT={7:'1주',3:'3일',2:'2일',1:'전날',0:'당일'},REM_LABEL={7:'1주 전',3:'3일 전',2:'2일 전',1:'전날',0:'당일'},REM_AT=['08:00','12:00','20:00','22:00'];
 function normalize(o){
-  const d=defaults(),s=Object.assign(d,o);
-  s.syncSettings=Object.assign(defaults().syncSettings,o&&o.syncSettings);
-  s.pay=Object.assign({wage:0,hours:12},o&&o.pay);
-  if(!Array.isArray(s.pattern)||s.pattern.length<2)s.pattern=d.pattern;
+  if(!isObj(o))o={};
+  const d=defaults(),s=Object.assign({},d,o);   // (d 는 그대로 둬야 아래 "깨진 값은 기본값으로"가 먹음)
+  s.syncSettings=Object.assign(defaults().syncSettings,isObj(o.syncSettings)?o.syncSettings:{});
+  s.pay=Object.assign({wage:0,hours:12},isObj(o.pay)?o.pay:{});s.pay.wage=Math.max(0,+s.pay.wage||0);s.pay.hours=Math.max(1,Math.min(24,+s.pay.hours||12));
+  // 깨진 값 방어: 모양이 안 맞는 칸은 기본값으로 (첫 화면이 안 뜨거나 저장 데이터를 못 읽는 일을 막음)
+  if(!Array.isArray(s.pattern)||s.pattern.length<2||s.pattern.length>366)s.pattern=d.pattern;
+  s.pattern=s.pattern.map(x=>cutTxt(x,6));
+  if(!okDate(s.anchor))s.anchor=d.anchor;
+  if(!isObj(s.overrides))s.overrides={};else Object.keys(s.overrides).forEach(k=>{if(!okDate(k)||typeof s.overrides[k]!=='string')delete s.overrides[k];});
+  if(!isObj(s.board))s.board={};else Object.keys(s.board).forEach(k=>{if(!Array.isArray(s.board[k]))delete s.board[k];else s.board[k]=s.board[k].filter(isObj);});
+  if(!isObj(s.memos))s.memos={};
+  if(isObj(s.stamps)&&Array.isArray(s.stamps.defs))s.stamps.defs=s.stamps.defs.filter(isObj);
   {const okD=v=>/^\d{4}-\d\d-\d\d$/.test(v||'');
    s.patOld=(Array.isArray(s.patOld)?s.patOld:[]).filter(o=>o&&okD(o.until)&&okD(o.anchor)&&Array.isArray(o.pattern)&&o.pattern.length>=2&&o.pattern.length<=60).map(o=>({until:o.until,anchor:o.anchor,pattern:o.pattern.map(String)})).sort((a,b)=>a.until<b.until?-1:1).slice(0,20);}
   s.noPat=!!s.noPat;
   s.myset=(o&&o.myset!==undefined)?!!o.myset:true;   // 예전 사용자는 근무표를 만든 걸로
-  if(!Array.isArray(s.alarms))s.alarms=[];
+  s.alarms=(Array.isArray(s.alarms)?s.alarms:[]).filter(a=>isObj(a)&&okTime(a.time)).slice(0,100);
 
-  if(!Array.isArray(s.types)||!s.types.length)s.types=DEFAULT_TYPES();
+  if(!Array.isArray(s.types))s.types=[];
+  s.types=s.types.filter(t=>isObj(t)&&typeof t.k==='string'&&t.k&&t.k.length<=6).map(t=>Object.assign({},t,{k:cutTxt(t.k,6),name:cutTxt(t.name||t.k,20),color:safeColor(t.color,''),rest:!!t.rest}));
+  if(!s.types.length)s.types=DEFAULT_TYPES();
   BUILTIN.forEach((k,i)=>{if(!s.types.some(t=>t.k===k))s.types.splice(i,0,DEFAULT_TYPES()[i]);});
   if(!Array.isArray(s.teamOffsets)||!s.teamOffsets.length||s.teamOffsets.length>8)s.teamOffsets=[6,4,0,2];
   s.teamOffsets=s.teamOffsets.map(x=>Number(x)||0);
@@ -1486,20 +1622,23 @@ function normalize(o){
   if(!Array.isArray(s.teamNames))s.teamNames=[];
   s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))) };s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
-  s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},o&&o.memoColors);
-  s.drive=Object.assign(defaults().drive,o&&o.drive);
-  s.status=Object.assign(defaults().status,o&&o.status);if(!s.status.labels||typeof s.status.labels!=='object')s.status.labels={};
-  if(!s.shiftTimes||typeof s.shiftTimes!=='object')s.shiftTimes={};
-  if(!Array.isArray(s.family))s.family=[];
-  if(!s.icons||typeof s.icons!=='object'||Array.isArray(s.icons))s.icons={};
+  s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#6b7280'})[k];});
+  s.drive=Object.assign(defaults().drive,isObj(o.drive)?o.drive:{});
+  s.status=Object.assign(defaults().status,isObj(o.status)?o.status:{});if(!isObj(s.status.labels))s.status.labels={};
+  if(!isObj(s.shiftTimes))s.shiftTimes={};else Object.keys(s.shiftTimes).forEach(k=>{const v=s.shiftTimes[k];if(!isObj(v)||!okTime(v.start)||!okTime(v.end))delete s.shiftTimes[k];});
+  s.family=(Array.isArray(s.family)?s.family:[]).filter(isObj).map(x=>Object.assign({},x,{name:cutTxt(x.name,40),color:okHex(x.color)?x.color:'#8a8f99',days:Array.isArray(x.days)?x.days:[],vac:(Array.isArray(x.vac)?x.vac:[]).filter(v=>isObj(v)&&okDate(v.from)&&okDate(v.to))}));
+  if(!isObj(s.icons))s.icons={};else Object.keys(s.icons).forEach(k=>{if(!okId(k)||!okImg(s.icons[k]))delete s.icons[k];});
   {const raw=o&&o.addons,had=!!(raw&&typeof raw==='object'&&!Array.isArray(raw));
    const a=had?raw:{};s.addons={};['comp','cheer','together','colleague','stats','status'].forEach(k=>{s.addons[k]=!!a[k];});
    if(!had)s.addonNote=(o&&o.onboarded)?'old':'new';
    else if(!['new','old','done'].includes(o&&o.addonNote))s.addonNote='done';}
   if(!s.link&&Array.isArray(s.requests))s.requests=s.requests.filter(r=>!(r&&r.srv));
-  s.fam2=(s.fam2&&typeof s.fam2==='object')?s.fam2:{};if(!s.fam2.scheds||typeof s.fam2.scheds!=='object'||Array.isArray(s.fam2.scheds))s.fam2.scheds={};if(!Array.isArray(s.fam2.members))s.fam2.members=[];['memos','reqIn','reqOut','memoRev','reqCc'].forEach(k=>{if(!s.fam2[k]||typeof s.fam2[k]!=='object'||Array.isArray(s.fam2[k]))s.fam2[k]={};});if(!s.fam2.me||typeof s.fam2.me!=='object')s.fam2.me={sent:0,bonus:0};if(!Array.isArray(s.fam2.seenMemo))s.fam2.seenMemo=[];s.fam2.init=!!s.fam2.init;if(s.link&&typeof s.link==='object'){if(s.link.mode!=='view')s.link.mode='own';}else s.link=null;
+  s.fam2=famCleanFam2(s.fam2);
+  s.requests=(Array.isArray(s.requests)?s.requests:[]).filter(r=>isObj(r)&&!r.srv).concat(s.link?famMirrorList(s.fam2):[]);   // 서버에서 받은 요청은 걸러낸 가족 복사본으로 다시 만듦
+  if(s.link&&typeof s.link==='object'){if(s.link.mode!=='view')s.link.mode='own';}else s.link=null;
   const stOld=s.stamps&&typeof s.stamps==='object'?s.stamps:null;s.stamps=Object.assign(defaultStamps(),s.stamps||{});(s.stamps.defs||[]).forEach(x=>{if(!x)return;if(x.id==='s_run'&&x.emoji==='🏃')x.emoji='👟';if(!x.rep)x.rep=x.kind==='pill'?'daily':(Array.isArray(x.days)&&x.days.length?'dow':'none');if(!Array.isArray(x.dates))x.dates=[];if(!Array.isArray(x.skip))x.skip=[];if(x.kind==='mark')x.rt=['am','noon','pm'].includes(x.rt)?x.rt:'';if(x.kind==='pill'&&!/^#[0-9a-f]{6}$/i.test(x.color||''))x.color='#ef4d5a';});if(!Array.isArray(s.stamps.defs))s.stamps.defs=defaultStamps().defs;if(!s.stamps.log||typeof s.stamps.log!=='object')s.stamps.log={};if(!['am','noon','pm'].includes(s.stamps.lastRt))s.stamps.lastRt='';
   {const st=s.stamps,okT=v=>/^\d{1,2}:\d\d$/.test(v),pt=(Array.isArray(st.pillTimes)&&st.pillTimes.length>=3?st.pillTimes:['08:00','13:00','20:00']).map(v=>okT(v)?v:'08:00'),ix={am:0,noon:1,pm:2};
+   if(!isObj(st.log))st.log={};Object.keys(st.log).forEach(k=>{if(!okDate(k)||!isObj(st.log[k]))delete st.log[k];});
    st.defs.forEach(x=>{if(!x)return;x.times=Math.max(1,Math.min(3,+x.times||1));
      if(!Array.isArray(x.ats)){x.ats=[];if(st.remind){if(x.kind==='pill')x.ats=x.times===1?[pt[0]]:x.times===2?[pt[0],pt[2]]:pt.slice(0,3);else if(x.rt)x.ats=[pt[ix[x.rt]]];}}   // 옛 큰 스위치 · 공통 시각 → 스티커별 시각 (스위치가 꺼져 있었으면 모두 끔)
      x.ats=x.ats.filter(okT).slice(0,x.times);delete x.rt;});
@@ -1515,9 +1654,10 @@ function normalize(o){
    // ＋ 로 고른 스티커 중 날짜 · 규칙 · 기록이 하나도 없는 것은 정리
    st.defs=st.defs.filter(x=>!(x.one&&!x.retired&&!(x.dates||[]).length&&(!x.rep||x.rep==='none')&&!Object.keys(st.log).some(k=>st.log[k]&&st.log[k][x.id])));}
   s.alarms=s.alarms.map(a=>Object.assign({noHol:false,skipAt:0},a));
-  ['ddays','companyHols','requests','events'].forEach(k=>{if(!Array.isArray(s[k]))s[k]=[];});
+  ['ddays','companyHols','requests','events'].forEach(k=>{if(!Array.isArray(s[k]))s[k]=[];s[k]=s[k].filter(isObj);});
+  s.events=s.events.map(e=>Object.assign({},e,{id:okId(e.id)?e.id:uid(),kind:/^[a-z]{1,12}$/.test(e.kind||'')?e.kind:'memo',to:e.to==='guest'?'guest':'host',k:okDate(e.k)?e.k:'',text:cutMulti(e.text,300)}));
   // 휴무일 · 기념일: kind 'off'(휴무로 표시) | 'memo'(메모만), remind = 전날 알림
-  s.companyHols=s.companyHols.map(x=>Object.assign({kind:'off',emoji:'',remind:false},x));
+  s.companyHols=s.companyHols.filter(x=>okDate(x.date)&&x.name).map(x=>Object.assign({kind:'off',emoji:'',remind:false},x,{name:cutTxt(x.name,30),emoji:cutTxt(x.emoji,8)}));
   // D-day 는 없어짐 → 기념일(메모만)로 옮김
   if(s.ddays.length){
     s.ddays.forEach(x=>{if(x&&x.name&&x.date)s.companyHols.push({id:x.id||uid(),name:x.name,date:x.date,yearly:!!x.yearly,kind:'memo',emoji:x.emoji||'⭐',remind:true});});
@@ -1533,6 +1673,7 @@ function normalize(o){
   // 메모: 예전(문자열 / {text,shared}) → 지금(여러 개 목록)
   const mm={};
   for(const [k,v] of Object.entries(s.memos||{})){
+    if(!okDate(k))continue;
     const list=Array.isArray(v)?v:typeof v==='string'?[{text:v,shared:false}]:[{text:(v&&v.text)||'',shared:!!(v&&v.shared)}];
     const clean=list.filter(x=>x&&x.text).map(x=>({id:x.id||uid(),text:String(x.text),shared:!!x.shared,by:x.by||'host',t:x.t||Date.now(),...(x.notify?{notify:true}:{}),...(Array.isArray(x.to)&&x.to.length?{to:x.to.filter(u=>typeof u==='string').slice(0,12)}:{}),...(/^#[0-9a-f]{6}$/i.test(x.color||'')?{color:x.color}:{}),...(x.todo?{todo:true}:{}),...(x.todo&&x.done?{done:true}:{}),...(/^\d{1,2}:\d\d$/.test(x.time||'')?{time:x.time,...(x.al==='0'||x.al==='10'?{al:x.al}:{})}:{})}));   // 메모 색 · 할 일 · 시간 · 알림은 내 폰에만 (다시 켜도 남게)
     if(clean.length)mm[k]=clean;
@@ -1557,7 +1698,7 @@ function normalize(o){
         lists[g].lines.push({id:x.id||uid(),text:String(x.text||''),done:!!x.done,doneBy:x.doneBy||''});
       }else out.push({id:x.id||uid(),type:'note',text:String(x.text||''),shared,by:x.by||'host',t:x.t||Date.now(),color:'y'});
     });
-    s.board[mk]=out.map(n=>Object.assign({title:'',lines:[],text:'',color:'y',repeat:false,dateAuto:true,date:'',reacts:{},torn:false,tornAt:0},n));
+    s.board[mk]=out.map(n=>Object.assign({title:'',lines:[],text:'',color:'y',repeat:false,dateAuto:true,date:'',reacts:{},torn:false,tornAt:0},n)).map(n=>{n.lines=Array.isArray(n.lines)?n.lines.filter(isObj):[];if(!isObj(n.reacts))n.reacts={};return n;});
   }
   if(!s.boardCarry||typeof s.boardCarry!=='object')s.boardCarry={};
   // 알람 새 항목 기본값
@@ -1565,12 +1706,29 @@ function normalize(o){
   if(o&&o.onboarded===undefined&&o.pattern)s.onboarded=true;   // 예전 사용자는 처음 설정 건너뜀
   return s;
 }
+let loadNote='';   // 불러올 때 있었던 일: 'parse'(저장 값을 못 읽음) · 'partial'(문제 칸만 기본값으로 돌림)
+function keepBad(raw,why){   // 못 읽은 저장 값은 지우지 않고 따로 남겨 둠 (나중에 파일로 보내 복구할 수 있게)
+  try{localStorage.setItem(KEY+':bad',String(raw).slice(0,2000000));localStorage.setItem(KEY+':badinfo',JSON.stringify({at:Date.now(),why}));}catch(e){}
+}
+function salvage(o,info){   // normalize 가 걸리면 칸을 하나씩 더해 보며, 문제 되는 칸만 빼고 나머지는 살림
+  const acc={},bad=[];
+  if(isObj(o))for(const k of Object.keys(o)){
+    const t=Object.assign({},acc);t[k]=o[k];
+    try{normalize(JSON.parse(JSON.stringify(t)));acc[k]=o[k];}catch(e){bad.push(k);}
+  }
+  if(info)info.bad=bad;
+  return normalize(JSON.parse(JSON.stringify(acc)));
+}
+function safeNormalize(o,info){try{return normalize(o);}catch(e){return salvage(o,info);}}
 function load(){
-  try{
-    const j=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);
-    if(j)return normalize(JSON.parse(j));
-  }catch(e){}
-  return defaults();
+  let j=null;
+  try{j=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);}catch(e){}
+  if(!j)return defaults();
+  let o;
+  try{o=JSON.parse(j);}catch(e){keepBad(j,'parse');loadNote='parse';return defaults();}
+  try{return normalize(o);}catch(e){}
+  keepBad(j,'normalize');loadNote='partial';
+  try{return salvage(JSON.parse(j));}catch(e){loadNote='parse';return defaults();}
 }
 let S=load();
 
@@ -4917,8 +5075,35 @@ function openBackupPage(){
         <div class="row"><button class="btn ghost sm grow" data-act="backup-export">백업 파일 만들기</button><button class="btn ghost sm grow" data-act="backup-import">백업 파일 불러오기</button></div>
         <input type="file" id="backupFile" accept=".json,application/json,text/plain" style="display:none">
       </div>
+      ${backupRescueHtml()}
     </div>`,'backup');
   if(linked&&driveFiles===null&&!driveBusy){driveBusy=true;window.AndroidBridge.driveList(true);}
+}
+function backupRescueHtml(){   // 복원 직전 사본 · 못 읽은 저장 데이터가 있을 때만 나오는 칸 (없으면 아무것도 안 보임)
+  let prev=null,bad=false;
+  try{prev=JSON.parse(localStorage.getItem(KEY+':prev')||'null');bad=!!localStorage.getItem(KEY+':bad');}catch(e){}
+  const hasPrev=!!(prev&&prev.at&&isObj(prev.s));
+  if(!hasPrev&&!bad)return '';
+  const w=hasPrev?new Date(prev.at):null;
+  return `<div class="pg-cap">되돌리기 · 복구</div><div class="pg-sec" style="margin-top:0">
+    ${hasPrev?`<div class="prow"><div class="pl2">복원 직전 상태로 되돌리기<small>${w.getMonth()+1}월 ${w.getDate()}일 ${pad(w.getHours())}:${pad(w.getMinutes())} 에 복원하기 전 모습</small></div><button class="btn sm" data-act="backup-undo">되돌리기</button></div>`:''}
+    ${bad?`<div class="prow"><div class="pl2">읽지 못한 저장 데이터<small>지우지 않고 남겨 뒀어요 · 파일로 보내 둘 수 있어요</small></div><button class="btn sm" data-act="bad-export">내보내기</button></div>`:''}
+  </div>`;
+}
+function undoRestore(){
+  let prev=null;try{prev=JSON.parse(localStorage.getItem(KEY+':prev')||'null');}catch(e){}
+  if(!prev||!isObj(prev.s)){toast('되돌릴 사본이 없어요');return;}
+  if(!confirm('복원하기 전 상태로 되돌릴까요?\n\n(지금 데이터는 사라져요)'))return;
+  S=safeNormalize(prev.s);save();applyTheme();applyFont();applyBand();
+  try{localStorage.removeItem(KEY+':prev');}catch(e){}
+  closeSheet();if(pageMode)closePage();render();toast('복원하기 전 상태로 되돌렸어요');
+}
+function exportBad(){
+  let raw='';try{raw=localStorage.getItem(KEY+':bad')||'';}catch(e){}
+  if(!raw){toast('남아 있는 데이터가 없어요');return;}
+  const name=`eonjeswieo-unreadable-${fmt(new Date())}.json`;
+  if(hasBridge('shareFile')){try{window.AndroidBridge.shareFile(name,raw);return;}catch(e){}}
+  toast('앱에서만 보낼 수 있어요');
 }
 const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
@@ -4937,8 +5122,12 @@ function applyBackup(d){
   const next={};
   BACKUP_KEYS.forEach(k=>{if(d[k]!==undefined)next[k]=d[k];});
   if(d.familyMemos)next.familyMemos=d.familyMemos;
-  S=normalize(Object.assign({},S,next,{onboarded:true,myset:next.myset!==undefined?!!next.myset:true,noPat:next.noPat!==undefined?!!next.noPat:false}));   // 예전 백업엔 myset · noPat 이 없음 → 근무표가 있는 걸로
-  save();applyTheme();applyFont();applyBand();return true;
+  try{localStorage.setItem(KEY+':prev',JSON.stringify({at:Date.now(),s:S}));}catch(e){}   // 복원 직전 상태를 하나 남겨 둠 (백업 · 복원 화면에서 되돌리기)
+  const info={};
+  S=safeNormalize(Object.assign({},S,next,{onboarded:true,myset:next.myset!==undefined?!!next.myset:true,noPat:next.noPat!==undefined?!!next.noPat:false}),info);   // 예전 백업엔 myset · noPat 이 없음 → 근무표가 있는 걸로
+  save();applyTheme();applyFont();applyBand();
+  if(info.bad&&info.bad.length)setTimeout(()=>toast('백업의 일부 칸은 읽지 못해 기본값으로 두었어요'),400);
+  return true;
 }
 function driveErrText(res){   // 인터넷 문제와 구글 쪽 거절을 나눠서 알려요
   if(res.err!=='http')return '인터넷 연결을 확인해 주세요';
@@ -4992,11 +5181,13 @@ function openPermPage(){
 }
 function sendInquiry(){
   let info={};try{if(hasBridge('appInfo'))info=JSON.parse(window.AndroidBridge.appInfo());}catch(e){}
-  const body=`\n\n\n----\n앱: 언제쉬어 ${info.version||''}\n기기: ${info.device||navigator.userAgent}\n안드로이드: ${info.android||''}`;
+  let errs='';
+  try{const a=JSON.parse(localStorage.getItem('eonjeswieo:err')||'[]');if(Array.isArray(a)&&a.length)errs='\n최근 오류:\n'+a.slice(-5).map(x=>{const d=new Date(+x.t||0);return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())} ${String(x.m||'').slice(0,120)} ${String(x.s||'').slice(0,40)}`;}).join('\n');}catch(e){}
+  const body=`\n\n\n----\n앱: 언제쉬어 ${info.version||''}\n기기: ${info.device||navigator.userAgent}\n안드로이드: ${info.android||''}${errs}`;
   if(hasBridge('sendMail')){window.AndroidBridge.sendMail(SUPPORT_MAIL,'[언제쉬어] 문의',body);return;}
   location.href=`mailto:${SUPPORT_MAIL}?subject=${encodeURIComponent('[언제쉬어] 문의')}&body=${encodeURIComponent(body)}`;
 }
-const SUPPORT_MAIL='';   // 문의 받을 메일 주소 (정해지면 넣기)
+const SUPPORT_MAIL='eonjeswieo.app@gmail.com';   // 문의 받을 메일 주소 (운영용)
 function openPrivacyPage(){
   openPage(`
     ${pageHead('개인정보처리방침')}
@@ -5808,6 +5999,8 @@ document.addEventListener('click',e=>{
       driveBusy=true;window.AndroidBridge.driveRestore(t.dataset.id);toast('불러오는 중…');break;}
     case 'drive-unlink':if(confirm('구글 드라이브 연결을 해제할까요?\n(드라이브에 있는 백업은 그대로 남아요)')){window.AndroidBridge.driveUnlink();driveFiles=null;openBackupPage();}break;
     case 'backup-export':exportBackup();break;
+    case 'backup-undo':undoRestore();break;
+    case 'bad-export':exportBad();break;
     case 'backup-import':{const f=$('#backupFile');if(f){f.value='';f.click();}break;}
     case 'nativefix':{try{window.AndroidBridge.openSettings(t.dataset.k);}catch(err){}break;}
 
@@ -6032,6 +6225,7 @@ function exportBackup(){
   }catch(e){toast('백업 파일을 만들지 못했어요');}
 }
 function importBackup(file){
+  if(file&&file.size>8e6){toast('파일이 너무 커요 (8MB 까지)');return;}
   const rd=new FileReader();
   rd.onload=()=>{
     let d;
@@ -6329,7 +6523,7 @@ function famMarkSync(){if(!S.link||!S.fam2)return;S.fam2.syncAt=Date.now();const
 setInterval(()=>{const e=document.getElementById('syncl');if(e)e.textContent=famSyncTxt();},30000);
 function famApplyScheds(snap){
   const prevAll=S.fam2.scheds||{},m={};
-  snap.docs.forEach(d=>{const v=d.data();m[d.id]={...v,updatedAt:v.updatedAt&&v.updatedAt.toMillis?v.updatedAt.toMillis():0};});
+  snap.docs.forEach(d=>{const v=d.data(),c=okId(d.id)?famCleanSched(v):null;if(c){c.updatedAt=v.updatedAt&&v.updatedAt.toMillis?v.updatedAt.toMillis():0;m[d.id]=c;}});   // 모양이 안 맞는 근무표는 버림
   if(!snap.metadata.fromCache&&S.link){
     famMarkSync();
     if(S.fam2.init)Object.keys(m).forEach(u=>{
@@ -6392,7 +6586,7 @@ async function famListen(){
   famUnsub.push(F.onSnapshot(F.query(F.collection(db,'households',hid,'requests'),F.where('from','==',uid)),snap=>famOnReqs('reqOut',snap),()=>{}));
   famUnsub.push(F.onSnapshot(F.query(F.collection(db,'households',hid,'requests'),F.where('cc','array-contains',uid)),snap=>famOnCc(snap),()=>{}));
   famUnsub.push(F.onSnapshot(F.collection(db,'households',hid,'members'),snap=>{
-    S.fam2.members=snap.docs.map(d=>{const v=d.data();return {uid:d.id,role:v.role,name:v.name,mode:v.mode==='view'?'view':'own'};});
+    S.fam2.members=snap.docs.map(d=>famCleanMember(d.data(),d.id)).filter(Boolean);
     const me=snap.docs.find(d=>d.id===S.link.uid);if(me){const v=me.data();S.fam2.me={sent:+v.sent||0,bonus:+v.bonus||0};}
     famMirrorReqs();famSaveLocal();famRefreshUi();
   },()=>{   // 가족방에서 나가졌거나 가족방이 없어짐 → 서버에 다시 물어봐서 정리
@@ -6523,7 +6717,6 @@ function schStk(sch,k){
   for(let i=0;i+w-1<str.length;i+=w){const d=defs[parseInt(str.slice(i,i+w-1),36)];if(d&&typeof d==='object')out.push({d,n:+str[i+w-1]||0});}
   return out;
 }
-const FAM_IMG=/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]{1,6000}$/;
 const stampIconD=(d,n,px)=>d.k==='p'?pillSvg(d.t,n,px,d.c,({r:'round',t:'tab',d:'drop'})[d.h]||'caps'):`<span class="se ${n?'':'plan'}" style="font-size:${(px||14)-2}px">${typeof d.img==='string'&&FAM_IMG.test(d.img)?`<img class="ico" src="${d.img}" alt="">`:esc(d.e||'⭐')}</span>`;
 function schBadge(sch,k,extra,inner){
   if(k===NONE_K)return noneBadge(extra,inner);
@@ -6764,7 +6957,7 @@ function famClearNotify(mid){
 }
 function famOnMemos(snap){
   const m={};
-  snap.docs.forEach(d=>{const v=d.data();m[d.id]={by:v.by,byName:v.byName,date:v.date,text:v.text,to:Array.isArray(v.to)?v.to:null,rev:+v.rev||0,time:/^\d\d:\d\d$/.test(v.time||'')?v.time:'',al:(v.al==='0'||v.al==='10')?v.al:'',t:tsMs(v.createdAt)||Date.now()};});
+  snap.docs.forEach(d=>{const v=d.data(),c=okId(d.id)?famCleanMemo(v,tsMs(v.createdAt)||Date.now()):null;if(c)m[d.id]=c;});
   const L=S.link;if(!L)return;
   if(!snap.metadata.fromCache)famMarkSync();
   if(!snap.metadata.fromCache){
@@ -6789,20 +6982,23 @@ function famRemoteMemos(k){
     .map(([id,v])=>({id:'s:'+id,sid:id,text:v.text,shared:true,by:'u:'+v.by,t:v.t,srv:true,time:v.time||'',al:v.al||''}));
 }
 // ---- 근무 요청: 받은 것 · 보낸 것
-function famMirrorReqs(){
-  const f=S.fam2;if(!S.link)return;
+function famMirrorList(f){   // 서버에서 받은 요청(받은 것 · 보낸 것)을 요청 목록 모양으로
   const map=(id,v,dir)=>({id,srv:true,dir,date:v.date,want:v.want,msg:v.msg||'',st:v.st,reply:v.reply||'',held:!!v.held,mode:v.mode||null,prev:v.prev||null,grp:v.grp||'',gn:v.gn||1,lead:!!v.lead,
     t:v.t,tu:v.u||v.t,peer:dir==='in'?v.from:v.to,peerName:dir==='in'?v.fromName:v.toName,by:dir==='in'?'guest':'host'});
   const out=[];
-  Object.entries(f.reqIn||{}).forEach(([id,v])=>out.push(map(id,v,'in')));
-  Object.entries(f.reqOut||{}).forEach(([id,v])=>out.push(map(id,v,'out')));
-  S.requests=(S.requests||[]).filter(r=>!r.srv).concat(out);
+  Object.entries((f&&f.reqIn)||{}).forEach(([id,v])=>out.push(map(id,v,'in')));
+  Object.entries((f&&f.reqOut)||{}).forEach(([id,v])=>out.push(map(id,v,'out')));
+  return out;
+}
+function famMirrorReqs(){
+  if(!S.link)return;
+  S.requests=(S.requests||[]).filter(r=>!r.srv).concat(famMirrorList(S.fam2));
 }
 function famOnReqs(field,snap){
   const L=S.link;if(!L)return;
   if(!snap.metadata.fromCache)famMarkSync();
   const prev=S.fam2[field]||{},m={};
-  snap.docs.forEach(d=>{const v=d.data();m[d.id]={from:v.from,to:v.to,fromName:v.fromName,toName:v.toName,date:v.date,want:v.want,msg:v.msg,st:v.st,reply:v.reply,held:!!v.held,mode:v.mode,prev:v.prev,grp:v.grp||'',gn:+v.gn||1,lead:!!v.lead,t:tsMs(v.createdAt)||Date.now(),u:tsMs(v.updatedAt)||0};});
+  snap.docs.forEach(d=>{const v=d.data(),c=okId(d.id)?famCleanReq(v,tsMs(v.createdAt)||Date.now(),tsMs(v.updatedAt)||0):null;if(c)m[d.id]=c;});
   if(!snap.metadata.fromCache&&S.fam2.init){
     const when=n=>{if(!n.grp)return `${+n.date.slice(8)}일`;const ds=Object.values(m).filter(x=>x.grp===n.grp).map(x=>x.date);return `${dateRangeText(ds)} (${ds.length}일)`;};
     Object.keys(m).forEach(id=>{
@@ -6825,7 +7021,7 @@ function famOnReqs(field,snap){
 function famOnCc(snap){
   const L=S.link;if(!L)return;
   const prev=S.fam2.reqCc||{},m={};
-  snap.docs.forEach(d=>{const v=d.data();m[d.id]={fromName:v.fromName,toName:v.toName,date:v.date,want:v.want,grp:v.grp||'',lead:!!v.lead};});
+  snap.docs.forEach(d=>{const c=okId(d.id)?famCleanCc(d.data()):null;if(c)m[d.id]=c;});
   if(snap.metadata.fromCache)return;
   if(S.fam2.init)Object.keys(m).forEach(id=>{
     if(prev[id])return;const n=m[id];if(n.grp&&!n.lead)return;
@@ -7100,17 +7296,21 @@ window.__refresh=()=>{
   widgetSync();pushAlarmsToNative();pushWidgetToNative();refreshHolidays();autoBackup();famBoot();famPoll(true);
 };
 
-applyTheme();applyFont();applyBand();
-render();
-pushAlarmsToNative();pushRemindersToNative();pushWidgetToNative();
-if(!S.onboarded)startOnboarding();
-refreshHolidays();
-famBoot();
+const bootStep=f=>{try{f();}catch(e){try{window.__logErr&&window.__logErr(e&&e.message,'boot');}catch(x){}}};
+bootStep(applyTheme);bootStep(applyFont);bootStep(applyBand);
+let bootOk=true;
+try{render();}catch(e){bootOk=false;try{window.__logErr&&window.__logErr(e&&e.message,'render');window.__crash&&window.__crash(e&&e.message);}catch(x){}}
+bootStep(pushAlarmsToNative);bootStep(pushRemindersToNative);bootStep(pushWidgetToNative);
+if(!S.onboarded)bootStep(startOnboarding);
+bootStep(refreshHolidays);
+bootStep(famBoot);
 setTimeout(()=>{try{if(window.AndroidBridge&&typeof window.AndroidBridge.takePush==='function'){const p=String(window.AndroidBridge.takePush()||'');if(p)window.__onPush(JSON.parse(p));}}catch(e){}},700);
 setTimeout(widgetSync,150);
 setTimeout(introNotice,800);
 setTimeout(addonNotice,1200);
 setTimeout(autoBackup,4000);
+setTimeout(()=>{if(loadNote==='parse')toast('저장된 데이터를 읽지 못해 새로 시작했어요 · 설정 › 백업 · 복원에서 되살릴 수 있어요');else if(loadNote==='partial')toast('일부 저장 값이 깨져서 그 부분만 기본값으로 돌렸어요');},1600);
+if(bootOk)window.__booted=true;
 })();
 
 </script>
