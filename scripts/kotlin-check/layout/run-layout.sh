@@ -8,5 +8,9 @@ CP=$L/kotlin-compiler-embeddable-2.0.21.jar:$L/kotlin-stdlib-2.0.21.jar:$L/kotli
 D=$(dirname "$0")
 rm -rf /tmp/ktcheck/prev && mkdir -p /tmp/ktcheck/prev
 java -Dfile.encoding=UTF-8 -cp $CP org.jetbrains.kotlin.cli.jvm.K2JVMCompiler -no-stdlib -no-reflect -jvm-target 17 -d /tmp/ktcheck/prev -cp $L/kotlin-stdlib-2.0.21.jar \
-  /home/user/sin/app/src/main/java/com/eonjeswieo/app/WidgetLayout.kt $D/LayoutPreview.kt 2>&1 | grep -v "^Picked up" || true
+  /home/user/sin/app/src/main/java/com/eonjeswieo/app/WidgetLayout.kt $D/LayoutPreview.kt $D/MonthCheck.kt 2>&1 | grep -v "^Picked up" || true
 java -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Djava.awt.headless=true -cp /tmp/ktcheck/prev:$L/kotlin-stdlib-2.0.21.jar LayoutPreviewKt "$OUT" 2>&1 | grep -v "^Picked up"
+R1=${PIPESTATUS[0]}
+java -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Djava.awt.headless=true -cp /tmp/ktcheck/prev:$L/kotlin-stdlib-2.0.21.jar monthcheck.MonthCheckKt "$OUT" 2>&1 | grep -v "^Picked up"
+R2=${PIPESTATUS[0]}
+[ "$R1" = 0 ] && [ "$R2" = 0 ]

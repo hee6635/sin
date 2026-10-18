@@ -39,6 +39,8 @@ import org.json.JSONObject
 class WidgetDayActivity : Activity() {
 
     private var key = ""
+    private var who = ""   // 한 달 위젯에서 이름 칩으로 가족 달력을 보다가 눌렀으면 그 사람의 표시 (비어 있으면 내 달력)
+    private var person: JSONObject? = null
     private var data: JSONObject? = null
 
     private class Pal(val bg: Int, val fg: Int, val sub: Int, val chip: Int, val done: Int, val link: Int, val accent: Int)
@@ -157,6 +159,7 @@ class WidgetDayActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         key = intent.getStringExtra("k") ?: ""
+        who = intent.getStringExtra("who") ?: ""
         build(0)
     }
 
@@ -164,6 +167,7 @@ class WidgetDayActivity : Activity() {
         super.onNewIntent(intent)
         setIntent(intent)
         key = intent.getStringExtra("k") ?: key
+        who = intent.getStringExtra("who") ?: ""
         build(0)
     }
 
@@ -174,6 +178,15 @@ class WidgetDayActivity : Activity() {
             if (x.optString("k") == key) return x
         }
         return null
+    }
+
+    /** 위젯 데이터에서 이 날짜가 몇 번째인지 (가족 달력의 근무 · 스티커가 같은 순서로 들어 있음) */
+    private fun indexOfKey(d: JSONObject?): Int {
+        val arr = d?.optJSONArray("days") ?: return -1
+        for (i in 0 until arr.length()) {
+            if (arr.optJSONObject(i)?.optString("k", "") == key) return i
+        }
+        return -1
     }
 
     /** 위젯이 가진 날짜들(앞에서부터 날짜순) */
@@ -245,6 +258,8 @@ class WidgetDayActivity : Activity() {
 
     private fun build(dir: Int) {
         data = WidgetStore.load(this)
+        person = if (who.isEmpty()) null else MonthRenderer.people(data).firstOrNull { MonthRenderer.personKey(it) == who }   // 그 사람이 없어졌으면 내 달력
+        val pj = person
         val pal = palette()
         val day = findDay(data)
 
@@ -275,19 +290,35 @@ class WidgetDayActivity : Activity() {
             head.addView(title)
             head.addView(arrow("›", "다음 날", at >= 0 && at < keys.size - 1, pal, 1))
             head.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
-            val wk = day.optString("t", "")
+            var wk = day.optString("t", "")
+            var wbg = day.optString("bg", "")
+            var wfg = day.optString("fg", "")
+            if (pj != null) {   // 가족 달력: 그 사람의 근무 (앱 가족 탭과 같은 글자 · 색)
+                wk = ""
+                wbg = ""
+                wfg = ""
+                val sKey = pj.optJSONArray("s")?.optString(indexOfKey(data), "") ?: ""
+                val leg = if (sKey.isNotEmpty()) pj.optJSONObject("t")?.optJSONArray(sKey) else null
+                if (leg != null) {
+                    wk = sKey
+                    if (leg.length() >= 2) {
+                        wbg = leg.optString(0, "")
+                        wfg = leg.optString(1, "")
+                    }
+                }
+            }
             if (wk.isNotEmpty()) {
-                val bg = day.optString("bg", "")
-                val badge = tv(wk, 16f, if (bg.isEmpty()) 0xFFE5484D.toInt() else parse(day.optString("fg", ""), pal.fg), true)
+                val badge = tv(wk, 16f, if (wbg.isEmpty()) 0xFFE5484D.toInt() else parse(wfg, pal.fg), true)
                 badge.gravity = Gravity.CENTER
-                if (bg.isNotEmpty()) badge.background = rounded(parse(bg, pal.chip), 40)
+                if (wbg.isNotEmpty()) badge.background = rounded(parse(wbg, pal.chip), 40)
                 head.addView(badge, LinearLayout.LayoutParams(dp(40), dp(40)))
             }
             card.addView(head)
+            if (pj != null) card.addView(tv("● " + pj.optString("n", "가족") + " 달력 · 보기만 해요", 13f, parse(pj.optString("c", ""), pal.sub), true))
             if (hol.isNotEmpty()) card.addView(tv(hol, 13f, 0xFFD6334A.toInt()))
-            val chn = day.optString("ch", "")
+            val chn = if (pj != null) "" else day.optString("ch", "")
             if (chn.isNotEmpty()) card.addView(tv("회사 휴무 · " + chn, 13f, pal.link))
-            val an = day.optJSONArray("an")
+            val an = if (pj != null) null else day.optJSONArray("an")
             if (an != null) {
                 for (i in 0 until an.length()) {
                     val t = an.optString(i, "")
@@ -298,29 +329,69 @@ class WidgetDayActivity : Activity() {
             val content = LinearLayout(this)
             content.orientation = LinearLayout.VERTICAL
 
-            val far = day.optInt("far", 0) == 1
-            // 스티커
-            val sa = day.optJSONArray("sa")
-            if (sa != null && sa.length() > 0) {
-                content.addView(sectionTitle("스티커", pal))
-                for (i in 0 until sa.length()) {
-                    val s = sa.optJSONObject(i) ?: continue
-                    content.addView(stickerRow(s, pal))
+            val far = day.optInt("far", 0)   // 0 = 자세히(앞 6일 ~ 뒤 14일) · 1 = 먼 앞날 · 2 = 지난 날
+            if (pj != null) {
+                // 가족 달력: 그 사람이 공유한 스티커 · 가족 메모(♥)만 — 보기만 (체크는 못 함)
+                val ps = pj.optJSONObject("k")?.optJSONArray(key)
+                val fm = day.optJSONArray("fm")
+                if (ps != null && ps.length() > 0) {
+                    content.addView(sectionTitle("스티커", pal))
+                    for (i in 0 until ps.length()) {
+                        val s = ps.optJSONObject(i) ?: continue
+                        content.addView(stickerRow(s, pal, true))
+                    }
                 }
-            }
-            // 메모 · 할 일
-            val mi = day.optJSONArray("mi")
-            if (mi != null && mi.length() > 0) {
-                content.addView(sectionTitle("메모 · 할 일", pal))
-                for (i in 0 until mi.length()) {
-                    val m = mi.optJSONObject(i) ?: continue
-                    content.addView(memoRow(m, pal))
+                if (fm != null && fm.length() > 0) {
+                    content.addView(sectionTitle("가족 메모", pal))
+                    for (i in 0 until fm.length()) {
+                        val t = fm.optString(i, "")
+                        if (t.isNotEmpty()) content.addView(memoRow(JSONObject().put("r", "t").put("t", t).put("f", 1).put("o", 1), pal))
+                    }
                 }
-            }
-            if (far) {
-                content.addView(tv("2주 뒤의 날이라 스티커 · 메모는 앱에서 볼 수 있어요", 14f, pal.sub))
-            } else if ((sa == null || sa.length() == 0) && (mi == null || mi.length() == 0)) {
-                content.addView(tv("이 날은 스티커도 메모도 없어요", 14f, pal.sub))
+                if ((ps == null || ps.length() == 0) && (fm == null || fm.length() == 0)) {
+                    content.addView(tv("이 날은 보여 줄 스티커도 가족 메모도 없어요", 14f, pal.sub))
+                }
+            } else if (far != 0) {
+                // 먼 날: 달력 칸에 싣는 것만 (스티커 두 개 · 메모 세 줄) — 보기만, 더 자세한 건 앱에서
+                val stk = day.optJSONArray("stk")
+                val ms = day.optJSONArray("ms")
+                if (stk != null && stk.length() > 0) {
+                    content.addView(sectionTitle("스티커", pal))
+                    for (i in 0 until stk.length()) {
+                        val s = stk.optJSONObject(i) ?: continue
+                        content.addView(stickerRow(s, pal, true))
+                    }
+                }
+                if (ms != null && ms.length() > 0) {
+                    content.addView(sectionTitle("메모", pal))
+                    for (i in 0 until ms.length()) {
+                        val t = ms.optString(i, "")
+                        if (t.isNotEmpty()) content.addView(memoRow(JSONObject().put("r", "t").put("t", t), pal))
+                    }
+                }
+                content.addView(tv((if (far == 2) "지난 날이라 " else "2주 뒤의 날이라 ") + "스티커 · 메모는 앱에서 자세히 볼 수 있어요", 14f, pal.sub))
+            } else {
+                // 스티커
+                val sa = day.optJSONArray("sa")
+                if (sa != null && sa.length() > 0) {
+                    content.addView(sectionTitle("스티커", pal))
+                    for (i in 0 until sa.length()) {
+                        val s = sa.optJSONObject(i) ?: continue
+                        content.addView(stickerRow(s, pal))
+                    }
+                }
+                // 메모 · 할 일
+                val mi = day.optJSONArray("mi")
+                if (mi != null && mi.length() > 0) {
+                    content.addView(sectionTitle("메모 · 할 일", pal))
+                    for (i in 0 until mi.length()) {
+                        val m = mi.optJSONObject(i) ?: continue
+                        content.addView(memoRow(m, pal))
+                    }
+                }
+                if ((sa == null || sa.length() == 0) && (mi == null || mi.length() == 0)) {
+                    content.addView(tv("이 날은 스티커도 메모도 없어요", 14f, pal.sub))
+                }
             }
             val maxH = (resources.displayMetrics.heightPixels * 0.6f).toInt()
             val scroll = object : ScrollView(this) {
@@ -376,7 +447,7 @@ class WidgetDayActivity : Activity() {
         return v
     }
 
-    private fun stickerRow(s: JSONObject, pal: Pal): View {
+    private fun stickerRow(s: JSONObject, pal: Pal, readOnly: Boolean = false): View {
         val n = s.optInt("n", 0)
         val total = Math.max(1, s.optInt("N", 1))
         val row = LinearLayout(this)
@@ -403,7 +474,7 @@ class WidgetDayActivity : Activity() {
             }
         }
         row.addView(icon, LinearLayout.LayoutParams(dp(34), dp(34)))
-        val name = tv(s.optString("nm", "스티커"), 17f, pal.fg)
+        val name = tv(s.optString("nm", if (readOnly) "" else "스티커"), 17f, pal.fg)   // (가족이 공유한 스티커는 이름 없이 모양만 옴)
         val nlp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         nlp.leftMargin = dp(12)
         row.addView(name, nlp)
@@ -417,7 +488,7 @@ class WidgetDayActivity : Activity() {
         }
         val cnt = tv(if (total > 1) "$n/$total" else if (n > 0) "✓" else "○", 19f, if (n >= total) pal.accent else pal.sub, true)
         row.addView(cnt)
-        row.setOnClickListener { toggleSticker(s.optString("id")) }
+        if (!readOnly) row.setOnClickListener { toggleSticker(s.optString("id")) }
         val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         lp.bottomMargin = dp(6)
         row.layoutParams = lp

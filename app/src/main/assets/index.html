@@ -1787,33 +1787,60 @@ function cssHex(v){   // var(--day) 같은 CSS 색을 #rrggbb 로 (위젯은 CSS
 const holPair=h=>h?{h2:holTwo(h),h1:holOne(h)}:{};   // 위젯 칸의 공휴일 글자: 앱 달력과 같은 줄임말 (두 글자 · 한 글자) — 위젯은 자리에 맞춰 둘 중 하나를 그림
 function widgetJson(){
   const t0=new Date(),days=[],ic={};
-  for(let i=-6;i<60;i++){   // 이번 주(7일 위젯)가 어느 요일에 시작해도 되도록 오늘 6일 전부터 · 앞으로 60일 (2주 뒤부터는 근무 · 공휴일만)
+  // 한 달 위젯이 앞 · 뒤 한 달씩 넘겨 볼 수 있게: 지난달 달력 첫 줄 ~ 다음 달 달력 끝 줄까지 (7일 위젯 · 큰 창이 쓰던 6일 전 ~ 60일 뒤도 그대로 포함)
+  const ws=S.weekStart===1?1:0,day0=new Date(t0.getFullYear(),t0.getMonth(),t0.getDate());
+  const p1=new Date(t0.getFullYear(),t0.getMonth()-1,1),nl=new Date(t0.getFullYear(),t0.getMonth()+2,0);
+  const gs=addDays(p1,-((p1.getDay()-ws+7)%7)),ge=addDays(nl,6-((nl.getDay()-ws+7)%7));
+  const dn=x=>Math.round((new Date(x.getFullYear(),x.getMonth(),x.getDate())-day0)/864e5);
+  const iS=Math.min(-6,dn(gs)),iE=Math.max(59,dn(ge));
+  // 사람 바꾸기(한 달 위젯 이름 칩): 앱 가족 탭과 같은 사람들 — 날마다 근무 글자(s) + 글자별 색(t: 글자 → [배경, 글씨] · 빈 목록 = 쉬는 날 글자만) + 가족이 올린 스티커(k)
+  const fam=(S.family||[]).concat(famPeers()).slice(0,6);
+  const people=fam.map((m,j)=>({id:String(m.id||''),n:String(m.name||'가족').slice(0,6),c:m.color||FAM_COL[j%6],t:{},s:[],k:{}}));
+  const stkD=x=>{const q=x.d||{};return q.k==='p'?{p:1,c:/^#[0-9a-f]{6}$/i.test(q.c||'')?q.c:'#7e57c2',h:({r:'round',t:'tab',d:'drop'})[q.h]||'caps',n:x.n,N:Math.max(1,Math.min(3,q.t||1))}:{e:typeof q.img==='string'?'⭐':icoTxt(q.e||'⭐','⭐'),n:x.n,N:1};};
+  for(let i=iS;i<=iE;i++){   // 6일 전 ~ 14일 뒤는 자세히 · 그 밖은 근무 · 공휴일 · 메모 · 스티커 몇 개만 (한 달 칸용)
     const d=addDays(t0,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),pers=persOn(k);
     const c=(pers||sh===''||sh===NONE_K)?null:tColors(typeOf(sh));
     const rest=!pers&&sh!==''&&sh!==NONE_K&&isRest(sh);
-    if(i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',far:1,
-      ...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 2주 뒤 날: 근무 · 공휴일 · 회사 휴무 · 기념일 이름만
-    const sa=stampsOn(k).slice(0,12).map(x=>{
+    const mapStk=x=>{
       const id=String(x.s.id),nm=String(x.s.name||'').slice(0,12),bell=stAts(x.s).length?{b:1}:{};   // b:1 = 알림 시각을 정해 둔 스티커 (위젯 큰 창에 🔔 · 앱과 같은 기준)
       if(x.s.kind==='pill')return {id,nm,p:1,c:cssHex(x.v&&x.v.col)||'#7e57c2',h:String((x.v&&x.v.shape)||'caps'),n:x.n,N:Math.max(1,Math.min(3,x.v.N||1)),...bell};
       const e=x.s.emoji;
       if(isPhoto(e)){const pid=e.slice(1),src=(S.icons||{})[pid];if(typeof src==='string'&&src.length<30000){ic[pid]=src;return {id,nm,i:pid,n:x.n,N:x.v.N,...bell};}}
       return {id,nm,e:icoTxt(e,'⭐'),n:x.n,N:x.v.N,...bell};
-    });
-    const stk=sa.slice(0,4);
+    };
     const vm=visibleMemos(k),m1=vm.find(x=>x.shared)||vm[0],bd=boardOnDate(k)[0],dd=ddayHits(k)[0];
     const wm=t=>linkParts(firstLine(t)).map(q=>q.u?'\u0001'+linkUrl(q.u)+'\u0003링크\u0002':q.t).join('');   // 주소는 앱처럼 "링크"(위젯이 파랗게 그림)
     const ml=[];vm.filter(x=>x.shared).concat(vm.filter(x=>!x.shared)).forEach(x=>ml.push(wm(x.text)));boardOnDate(k).forEach(n=>ml.push(wm(piLabel(n))));ddayHits(k).forEach(x=>ml.push(x.name));
+    const fm=vm.filter(x=>x.shared).slice(0,3).map(x=>wm(x.text).slice(0,40));   // 가족 메모(♥): 가족 달력(보기만)에도 보이는 것 — 한 달 위젯에서 다른 사람 달력을 볼 때 씀
+    people.forEach((p,j)=>{
+      const m=fam[j];let key='',col=null;
+      if(m.kind==='sched'||m.kind==='shift'){
+        const s2=m.kind==='sched'?schShift(m.sch,d):famShift(m,d);
+        if(s2!==''&&s2!==NONE_K){
+          const cc=tColors(m.kind==='sched'?schType(m.sch,s2):typeOf(s2));
+          if(cc){key=s2;col=[cssHex(cc.bg),cssHex(cc.fg)];}else if(m.kind==='sched'?schRest(m.sch,s2):isRest(s2)){key=s2;col=[];}
+        }
+      }else if(memberOff(m,d)){key='휴';col=[];}
+      else{key=m.kind==='student'?'학교':m.kind==='free'?'일정':'회사';col=['#d9dee5','#2b3340'];}
+      if(key&&!p.t[key])p.t[key]=col;
+      p.s.push(key);
+      if(m.kind==='sched'){const sk=schStk(m.sch,k).slice(0,2).map(stkD);if(sk.length)p.k[k]=sk;}
+    });
+    const base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):''};
+    if(i<-6||i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({...base,far:i<-6?2:1,stk:stampsOn(k).slice(0,2).map(mapStk),ms:ml.slice(0,3).map(x=>String(x||'').slice(0,40)),
+      ...(fm.length?{fm}:{}),...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 먼 날(지난 날 · 2주 뒤부터): 큰 창에는 스티커 · 메모를 안 싣고 앱에서 보게 함
+    const sa=stampsOn(k).slice(0,12).map(mapStk);
+    const stk=sa.slice(0,4);
     const memo=m1?firstLine(m1.text):bd?piLabel(bd):dd?dd.name:'';
     const mi=[];   // 위젯 창에서 크게 보여줄 메모 · 할 일 (r: m=메모 할 일(체크) · l=포스트잇 체크 줄 · t=글만 / tm=시간 · c=색)
     const MI=40;
     vm.forEach(x=>{if(mi.length>=MI)return;const it={r:x.todo&&(!x.shared||x.by===role())?'m':'t',id:String(x.id),t:wm(x.text).slice(0,160),d:!!(x.todo&&x.done)};if(x.time)it.tm=tfmt(x.time);const cc=x.color?cssHex(x.color):'';if(cc)it.c=cc;if(x.shared){it.f=1;if(x.by!==role())it.o=1;}mi.push(it);});
     boardOnDate(k).forEach(n=>{if(n.type==='list'){if(mi.length<MI)mi.push({r:'t',t:('☑ '+(n.title||'할 일')).slice(0,60),d:false});(n.lines||[]).slice(0,12).forEach(l=>{if(mi.length<MI)mi.push({r:'l',pid:String(n.id),lid:String(l.id),t:wm(l.text).slice(0,120),d:!!l.done});});}else if(mi.length<MI)mi.push({r:'t',t:wm(n.text).slice(0,160),d:false});});
     const chn=compHol(k);
-    days.push({k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40)),sa,mi,
-      ...(chn?{ch:String(chn).slice(0,30)}:{}),...(ddayHits(k).length?{an:ddayHits(k).slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});
+    days.push({...base,stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40)),sa,mi,
+      ...(fm.length?{fm}:{}),...(chn?{ch:String(chn).slice(0,30)}:{}),...(ddayHits(k).length?{an:ddayHits(k).slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});
   }
-  return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,lines:S.memoLines===4?4:3,ws:S.weekStart===1?1:0,days,ic});
+  return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,lines:S.memoLines===4?4:3,ws,days,ic,...(people.length?{people}:{})});
 }
 /* 위젯 창에서 체크한 것(대기 목록)을 앱 기록에 반영 + 위젯 [앱에서 열기]로 온 날짜 열기 */
 function applyWidgetActions(){
@@ -4682,7 +4709,7 @@ function openWidgetPage(){
       <div class="pg-cap">배경</div>
       <div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${[['light','밝게'],['dark','어둡게'],['system','폰 설정 따라']].map(([v,n])=>`<button class="${w.theme===v?'on':''}" data-act="wg-theme" data-v="${v}">${n}</button>`).join('')}</div>
         <div class="prow" style="padding:12px 0 0"><div class="pl2">진하기 <b id="wgAv">${w.alpha}%</b></div><input type="range" id="wgAlpha" min="0" max="100" step="10" value="${w.alpha}" style="flex:1"></div></div>
-      <div class="hint" style="padding:12px 16px">홈 화면을 길게 눌러 위젯 › 언제쉬어 1칸 · 2칸을 골라요.<br>달력 칸처럼 날짜 · 근무 · 스티커 · 메모가 보여요.</div>
+      <div class="hint" style="padding:12px 16px">홈 화면을 길게 눌러 위젯 › 언제쉬어 1칸 · 2칸 · 7일 · 한 달을 골라요.<br>달력 칸처럼 날짜 · 근무 · 스티커 · 메모가 보여요.${(S.family||[]).length+famPeers().length>0?'<br>한 달 위젯은 왼쪽 위 이름 칩(● 나 ▾)을 누르면 가족 달력으로 바뀌어요.':''}</div>
     </div>`,'widget');
 }
 /* ================= 부가 기능 (설정 › 부가 기능) =================

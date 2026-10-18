@@ -7,4 +7,6 @@
     <string name="widget2_desc">오늘 · 내일 근무와 다음 알람</string>
     <string name="widget7_label">언제쉬어 7일</string>
     <string name="widget7_desc">이번 주 7일의 근무 · 스티커 · 메모</string>
+    <string name="widget_month_label">언제쉬어 한 달</string>
+    <string name="widget_month_desc">한 달 달력: 근무 · 스티커 · 메모 (가족이 있으면 이름 칩으로 가족 달력도)</string>
 </resources>

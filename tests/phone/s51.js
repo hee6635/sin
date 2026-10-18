@@ -63,7 +63,7 @@ const {mkT,base}=require('./lib.js');
     await q.click('#nav [data-tab="set"]');await q.waitForTimeout(200);
     await q.evaluate(()=>document.querySelector('[data-act="memolines"][data-v="4"]').click());await q.waitForTimeout(1000);
     const ww=await q.evaluate(()=>window.__wg[window.__wg.length-1]);
-    T('알림이 하나도 없으면 스티커 항목에 b 가 하나도 없음',ww&&ww.days.every(x=>(x.sa||[]).every(s=>!('b' in s))),JSON.stringify(ww&&ww.days[7]&&ww.days[7].sa));
+    T('알림이 하나도 없으면 스티커 항목에 b 가 하나도 없음',ww&&ww.days.every(x=>(x.sa||[]).every(s=>!('b' in s))),JSON.stringify(ww&&ww.days.find(x=>x.k==='2026-10-13')&&ww.days.find(x=>x.k==='2026-10-13').sa));
     T('오류 없음(2)',q.errs.length===0,q.errs.join('|'));
     await q.close();
   }

@@ -132,6 +132,21 @@
                 android:resource="@xml/widget7_info" />
         </receiver>
         <receiver
+            android:name=".MonthWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_month_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_month_info" />
+        </receiver>
+        <!-- 한 달 위젯의 ‹ › · 제목 · 이름 칩을 누를 때 (앱 안에서만 받음) -->
+        <receiver
+            android:name=".MonthNavReceiver"
+            android:exported="false" />
+        <receiver
             android:name=".WidgetTickReceiver"
             android:exported="false" />
 

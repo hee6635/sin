@@ -137,12 +137,15 @@ object WidgetRefresher {
         for (id in mgr.getAppWidgetIds(ComponentName(ctx, WeekWidgetProvider::class.java))) {
             WidgetRenderer.update(ctx, mgr, id, 7)
         }
+        for (id in mgr.getAppWidgetIds(ComponentName(ctx, MonthWidgetProvider::class.java))) {
+            MonthRenderer.update(ctx, mgr, id)
+        }
     }
 
     /** 놓인 위젯이 하나라도 있는지 */
     fun hasAny(ctx: Context): Boolean {
         val mgr = AppWidgetManager.getInstance(ctx)
-        return arrayOf(TodayWidget1Provider::class.java, TodayWidget2Provider::class.java, WeekWidgetProvider::class.java)
+        return arrayOf(TodayWidget1Provider::class.java, TodayWidget2Provider::class.java, WeekWidgetProvider::class.java, MonthWidgetProvider::class.java)
             .any { mgr.getAppWidgetIds(ComponentName(ctx, it)).isNotEmpty() }
     }
 
@@ -243,19 +246,19 @@ class WeekWidgetProvider : AppWidgetProvider() {
  * 날짜(+공휴일 이름) → 근무 동그라미 → 스티커 → 메모 한 줄.
  */
 object WidgetRenderer {
-    private class Pal(val bg: Int, val fg: Int, val sub: Int, val pill: Int, val sun: Int, val sat: Int, val line: Int, val link: Int, val chip: Int = 0xFF6B7380.toInt(), val chipFg: Int = 0xFFFFFFFF.toInt(), val divider: Int = 0xFFC9CED6.toInt())
+    internal class Pal(val bg: Int, val fg: Int, val sub: Int, val pill: Int, val sun: Int, val sat: Int, val line: Int, val link: Int, val chip: Int = 0xFF6B7380.toInt(), val chipFg: Int = 0xFFFFFFFF.toInt(), val divider: Int = 0xFFC9CED6.toInt())
 
-    private val LIGHT = Pal(
+    internal val LIGHT = Pal(
         0xFFFFFFFF.toInt(), 0xFF1F2328.toInt(), 0xFF8A919A.toInt(), 0xFFEAECEF.toInt(),
         0xFFD6334A.toInt(), 0xFF3B6FD6.toInt(), 0xFFE3E5E8.toInt(), 0xFF2F6FDE.toInt()
     )
-    private val DARK = Pal(
+    internal val DARK = Pal(
         0xFF23282E.toInt(), 0xFFF2F4F7.toInt(), 0xFF9AA3AD.toInt(), 0xFF39414A.toInt(),
         0xFFFF6B7F.toInt(), 0xFF7BA2FF.toInt(), 0xFF3A424B.toInt(), 0xFF7BA2FF.toInt(),
         0xFFB4BCC6.toInt(), 0xFF23282E.toInt(), 0xFF4B545E.toInt()
     )
     private val iconCache = HashMap<String, Bitmap?>()
-    private var dens = 3f   // 화면 밀도 (dp 계산용)
+    internal var dens = 3f   // 화면 밀도 (dp 계산용)
 
     /** 사진 스티커: 앱이 data URL(base64)로 보내 준 작은 그림을 비트맵으로 (한 번 풀어서 기억) */
     @Synchronized
@@ -279,38 +282,47 @@ object WidgetRenderer {
 
     private val DOW = arrayOf("일", "월", "화", "수", "목", "금", "토")
 
-    private fun dateKey(cal: Calendar): String =
+    internal fun dateKey(cal: Calendar): String =
         String.format("%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
 
-    private fun parseColor(s: String, fallback: Int): Int =
+    internal fun parseColor(s: String, fallback: Int): Int =
         try {
             if (s.isEmpty()) fallback else Color.parseColor(s)
         } catch (e: Exception) {
             fallback
         }
 
+    /** 위젯 그림 크기(px): 놓인 크기(dp)에 화면 밀도를 곱함. 너무 크면 줄이고 dp 계산(dens)도 같이 줄임. 결과 [폭, 높이] */
+    internal fun bitmapSize(ctx: Context, mgr: AppWidgetManager, id: Int, defW: Int, defH: Int): IntArray {
+        val opts = mgr.getAppWidgetOptions(id)
+        val density = ctx.resources.displayMetrics.density
+        dens = density
+        // 가로로 돌린 화면은 (최대 폭 · 최소 높이), 세로는 (최소 폭 · 최대 높이)가 실제 크기라서 방향에 맞게 골라야 그림이 늘어나지 않음
+        val land = ctx.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val optW = opts.getInt(if (land) AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH else AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
+        val optH = opts.getInt(if (land) AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT else AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+        val wDp = if (optW > 0) optW else defW
+        val hDp = if (optH > 0) optH else defH
+        var w = (wDp * density).toInt().coerceAtLeast(120)
+        var h = (hDp * density).toInt().coerceAtLeast(120)
+        val maxPx = 700_000
+        if (w * h > maxPx) {
+            val f = Math.sqrt(maxPx.toDouble() / (w * h))
+            w = (w * f).toInt()
+            h = (h * f).toInt()
+            dens = density * f.toFloat()   // 그림을 줄인 만큼 dp 계산도 같이 줄임
+        }
+        return intArrayOf(w, h)
+    }
+
+    @Synchronized
     fun update(ctx: Context, mgr: AppWidgetManager, id: Int, count: Int) {
         try {
-            val opts = mgr.getAppWidgetOptions(id)
-            val density = ctx.resources.displayMetrics.density
-            dens = density
-            // 가로로 돌린 화면은 (최대 폭 · 최소 높이), 세로는 (최소 폭 · 최대 높이)가 실제 크기라서 방향에 맞게 골라야 그림이 늘어나지 않음
-            val land = ctx.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
             val defW = if (count == 1) 70 else if (count == 7) 250 else 140
             val defH = if (count == 1) 70 else 110
-            val optW = opts.getInt(if (land) AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH else AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
-            val optH = opts.getInt(if (land) AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT else AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
-            val wDp = if (optW > 0) optW else defW
-            val hDp = if (optH > 0) optH else defH
-            var w = (wDp * density).toInt().coerceAtLeast(120)
-            var h = (hDp * density).toInt().coerceAtLeast(120)
-            val maxPx = 700_000
-            if (w * h > maxPx) {
-                val f = Math.sqrt(maxPx.toDouble() / (w * h))
-                w = (w * f).toInt()
-                h = (h * f).toInt()
-                dens = density * f.toFloat()   // 그림을 줄인 만큼 dp 계산도 같이 줄임
-            }
+            val size = bitmapSize(ctx, mgr, id, defW, defH)
+            val w = size[0]
+            val h = size[1]
             val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
             draw(ctx, Canvas(bmp), w.toFloat(), h.toFloat(), count)
             val rv = RemoteViews(ctx.packageName, R.layout.widget_view)
@@ -362,13 +374,13 @@ object WidgetRenderer {
         }
     }
 
-    private fun palette(ctx: Context, data: JSONObject?): Pal {
+    internal fun palette(ctx: Context, data: JSONObject?): Pal {
         val theme = data?.optString("theme", "system") ?: "system"
         val night = (ctx.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         return if (theme == "dark" || (theme != "light" && night)) DARK else LIGHT
     }
 
-    private fun findDay(data: JSONObject?, key: String): JSONObject? {
+    internal fun findDay(data: JSONObject?, key: String): JSONObject? {
         val arr: JSONArray = data?.optJSONArray("days") ?: return null
         for (i in 0 until arr.length()) {
             val d = arr.optJSONObject(i) ?: continue
@@ -476,7 +488,7 @@ object WidgetRenderer {
         return WidgetLayout.DayIn(n, d.optString("hol", "").isNotEmpty() && !compact, memoList(d).size, d.optString("t", "").isNotEmpty())
     }
 
-    private fun memoList(d: JSONObject): ArrayList<String> {
+    internal fun memoList(d: JSONObject): ArrayList<String> {
         val memos = ArrayList<String>()
         val msArr = d.optJSONArray("ms")
         if (msArr != null) {
@@ -614,7 +626,7 @@ object WidgetRenderer {
     }
 
     /** 메모가 더 있다는 작은 칩 ("+1"): 메모 글자가 아니라 표시라는 걸 알 수 있게 색을 칠한 작은 알약 모양 (오른쪽 끝 기준) */
-    private fun drawMoreChip(cv: Canvas, more: Int, right: Float, py: Float, pillH: Float, pal: Pal) {
+    internal fun drawMoreChip(cv: Canvas, more: Int, right: Float, py: Float, pillH: Float, pal: Pal) {
         val g = WidgetLayout.moreBadge(pillH)
         val rect = RectF(right - g[0], py + (pillH - g[1]) / 2f, right, py + (pillH + g[1]) / 2f)
         val bp = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -629,7 +641,7 @@ object WidgetRenderer {
     }
 
     /** 메모 한 줄: \u0001 주소 \u0003 글자 \u0002 (앱의 "링크")는 글자만 파랗게 + 밑줄, 폭을 넘으면 … 로 줄임 */
-    private fun drawRich(cv: Canvas, text: String, x: Float, y: Float, maxW: Float, paint: TextPaint, fg: Int, link: Int) {
+    internal fun drawRich(cv: Canvas, text: String, x: Float, y: Float, maxW: Float, paint: TextPaint, fg: Int, link: Int) {
         val parts = ArrayList<Pair<String, Boolean>>()
         var cur = StringBuilder()
         var mode = 0   // 0 보통 · 1 주소(건너뜀) · 2 링크 글자
@@ -671,7 +683,7 @@ object WidgetRenderer {
     }
 
     /** 스티커 하나 (사진 · 이모티콘 · 알약). 안 한 것은 연하게, 덜 한 것(1/2 · 1/3 · 2/3)은 작은 숫자 배지 */
-    private fun drawSticker(cv: Canvas, s: JSONObject, sx: Float, sy: Float, sz: Float, paint: TextPaint, icons: JSONObject?) {
+    internal fun drawSticker(cv: Canvas, s: JSONObject, sx: Float, sy: Float, sz: Float, paint: TextPaint, icons: JSONObject?) {
         val n = s.optInt("n", 0)
         val total = Math.max(1, s.optInt("N", 1))
         val done = n > 0
