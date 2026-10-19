@@ -47,7 +47,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     for(let i=0;i<7;i++)await p.evaluate(()=>document.querySelector('[data-act="about-tap"]').click());await p.waitForTimeout(500);
     T('앱 정보를 7번 누르면 개발자 메뉴에 "모양 조정" 버튼',await p.evaluate(()=>!!document.querySelector('[data-act="tune-open"]')));
     await p.evaluate(()=>document.querySelector('[data-act="tune-open"]').click());await p.waitForTimeout(500);
-    T('모양 조정 화면: 앱 달력 미리보기 + 슬라이더 21개(앱 · 커버 · 안쪽 × 7)',await p.evaluate(()=>!!document.querySelector('#tnPrev .grid .cell')&&document.querySelectorAll('.tn-r').length===21),String(await p.evaluate(()=>document.querySelectorAll('.tn-r').length)));
+    T('모양 조정 화면: 앱 달력 미리보기(일주일 줄만 · 7칸) + 슬라이더 21개(앱 · 커버 · 안쪽 × 7)',await p.evaluate(()=>document.querySelectorAll('#tnPrev .grid .cell').length===7&&document.querySelectorAll('.tn-r').length===21),String(await p.evaluate(()=>document.querySelectorAll('.tn-r').length)));
     T('이상한 저장 값은 범위 안으로(99 → 1.6 · 글자 → 기본 1)',await p.evaluate(()=>{const s=document.querySelector('.tn-r[data-g="app"][data-k="stk"]'),i=document.querySelector('.tn-r[data-g="app"][data-k="ink"]');return +s.value===1.6&&+i.value===1;}));
     const setR=(g,k,v)=>p.evaluate(([g,k,v])=>{const e=document.querySelector(`.tn-r[data-g="${g}"][data-k="${k}"]`);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));},[g,k,v]);
     await setR('app','stk',1.3);await setR('app','ink',0.8);await setR('app','memo',1.2);await p.waitForTimeout(300);

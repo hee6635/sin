@@ -1281,7 +1281,7 @@ html[data-cal="fill"] .cell.rq-ask .badge{box-shadow:inset 0 0 0 2.5px #f08a00}
 html[data-cal="fill"] .cell.rq-hold .badge{box-shadow:inset 0 0 0 2.5px #0e9bb0}
 html[data-cal="fill"] .cell.rq-ok .badge{box-shadow:inset 0 0 0 2.5px #1fa971}
 html[data-cal="fill"] .cell.rq-no .badge{box-shadow:inset 0 0 0 2.5px #d12f4a}
-.tn-prev{height:340px;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:var(--bg);margin:8px 12px 0}
+.tn-prev{position:sticky;top:0;z-index:5;box-shadow:0 6px 12px rgba(0,0,0,.10);height:140px;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:var(--bg);margin:8px 12px 0}
 .tn-g{padding:8px 14px 4px}.tn-g h4{margin:10px 0 2px;font-size:14px}
 .tn-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px}.tn-row span{flex:0 0 112px}.tn-row input{flex:1}.tn-row b{flex:0 0 40px;text-align:right;font-variant-numeric:tabular-nums}
 #top.cal-top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
@@ -4777,7 +4777,16 @@ function openWidgetPage(){
  * 앱 달력(위에 미리보기) · 한 달 위젯(커버 · 안쪽)의 스티커 · 주야 글자 · 메모 크기와 위치를 움직여 보고, "값 복사"로 개발자에게 전하면 기본값으로 반영해요. */
 const tuneFmt=v=>(Math.round(v*100)/100).toFixed(2);
 function tuneRows(g){const t=S.tune[g];return TUNE_KEYS.map(([k,nm,lo,hi,st])=>`<div class="tn-row"><span>${nm}</span><input type="range" class="tn-r" data-g="${g}" data-k="${k}" min="${lo}" max="${hi}" step="${st}" value="${t[k]}"><b id="tnv_${g}_${k}">${tuneFmt(t[k])}</b></div>`).join('');}
-function tunePrev(){const e=$('#tnPrev');if(e)e.innerHTML=calPanel(cur.y,cur.m);}
+function tunePrev(){   // 미리보기는 "일주일 줄"만: 스티커 · 메모 · 요청이 가장 많은 주 (없으면 오늘이 있는 주) · 칸 높이는 실제 달력 칸과 비슷하게
+  const e=$('#tnPrev');if(!e)return;
+  e.innerHTML=calPanel(cur.y,cur.m);
+  const g=e.querySelector('.grid');if(!g)return;
+  const cells=[...g.children],rows=Math.floor(cells.length/7);let best=0,bs=-9;
+  for(let r=0;r<rows;r++){let sc=0;for(let c=0;c<7;c++){const x=cells[r*7+c];sc+=x.querySelectorAll('.pl').length*2+x.querySelectorAll('.stp>*,.s2>*').length*2+(/rq-/.test(x.className)?3:0)+(x.classList.contains('today')?1:0)-(x.classList.contains('out')?3:0);}if(sc>bs){bs=sc;best=r;}}
+  cells.forEach((x,i)=>{if(Math.floor(i/7)!==best)x.remove();});
+  g.style.gridTemplateRows='1fr';
+  e.style.height=(Math.max(90,Math.round((innerHeight-230)/6))+34)+'px';
+}
 function openTunePage(){
   openPage(`${pageHead('모양 조정')}
     <div class="pg-b">
