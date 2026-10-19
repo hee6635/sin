@@ -90,5 +90,22 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     }
     T('스티커 2개 + 한글날: 자리가 있으면 한 줄에 그대로(옆으로 옮겨도 아래로 안 밀림 · 이름도 숫자 옆)',res[0].s1===2&&res[0].s2===0&&res[1].s1===2&&res[1].s2===0&&!res[0].hnb&&!res[1].hnb,JSON.stringify(res));
   }
+  // ── 모양 조정을 열었다 닫아도 달력 메모 줄 수가 달라지지 않음 (미리보기 달력을 메인 달력으로 착각해 1줄로 줄던 문제)
+  {
+    const m=(id,text)=>({id,text,shared:false,by:'host',t});
+    const p=await boot(b,{...base,memos:{'2026-10-16':[m('a','첫째'),m('b','둘째'),m('c','셋째')]}},{touch:true});
+    const cnt=()=>p.evaluate(()=>document.querySelectorAll('.track .panel:nth-child(2) .cell[data-k="2026-10-16"] .pill-wrap>*').length);
+    const before=await cnt();
+    await toSet(p);
+    for(let i=0;i<7;i++)await p.evaluate(()=>document.querySelector('[data-act="about-tap"]').click());await p.waitForTimeout(400);
+    await p.evaluate(()=>document.querySelector('[data-act="tune-open"]').click());await p.waitForTimeout(500);
+    await p.evaluate(()=>document.querySelector('[data-act="page-close"]').click());await p.waitForTimeout(300);
+    await p.evaluate(()=>document.querySelector('[data-act="page-close"]')&&document.querySelector('[data-act="page-close"]').click());
+    await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(500);
+    const after=await cnt();
+    T('모양 조정을 열었다 닫은 뒤에도 메모 줄 수가 그대로',before>=2&&after===before,before+' → '+after);
+    T('닫으면 미리보기 달력이 남아 있지 않음',await p.evaluate(()=>!document.querySelector('#tnPrev')));
+    T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
   T.sum();await b.close();
 })();
