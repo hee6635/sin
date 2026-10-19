@@ -1262,6 +1262,28 @@ button.tbtn{cursor:pointer}
 .cell.rq-hold .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 6px #0e9bb0}
 .cell.rq-ok .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 6px #1fa971}
 .cell.rq-no .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 6px #e0455c}
+
+/* 달력 모양 · 모양 조정(숨은 화면): 칸 채우기 (설정 › 화면 › 달력 모양) — 칸 전체를 근무 색으로, 동그라미 없이 글자만, 오늘은 날짜 도장, 요청은 글자 주위 링 */
+.cell .stp,.cell .s2{translate:calc(var(--tstkx,0)*12cqw) calc(var(--tstky,0)*8cqh);scale:var(--tstk,1);transform-origin:right center}
+.bwrap .badge{scale:var(--tink,1);translate:0 calc(var(--tinky,0)*6cqh)}
+html[data-cal="fill"] .grid{gap:2px;padding:2px;border-top:0}
+html[data-cal="fill"] .cell{border:0;border-radius:9px;background:transparent}
+html[data-cal="fill"] .cell.today{background:transparent}
+html[data-cal="fill"] .cell.today::after{display:none}
+html[data-cal="fill"] .cell.today .dn .num{background:var(--fg);color:var(--bg);border-radius:10px;padding:0 6px;line-height:1.4}
+html[data-cal="fill"]{--cbm:26%}html[data-cal="fill"][data-theme="dark"]{--cbm:44%}
+@media (prefers-color-scheme:dark){html[data-cal="fill"]:not([data-theme="light"]){--cbm:44%}}
+html[data-cal="fill"] .cell[style*="--cb"]{background:color-mix(in srgb,var(--cb) var(--cbm),var(--bg))}
+html[data-cal="fill"] .cell.out{background:color-mix(in srgb,var(--cb,transparent) 12%,var(--bg))}
+html[data-cal="fill"] .band{display:none}
+html[data-cal="fill"] .bwrap .badge.c{background:transparent;color:color-mix(in srgb,var(--tb) 40%,var(--fg));font-size:calc(var(--b)*.5);font-weight:600}
+html[data-cal="fill"] .cell.rq-ask .badge{box-shadow:inset 0 0 0 2.5px #f08a00}
+html[data-cal="fill"] .cell.rq-hold .badge{box-shadow:inset 0 0 0 2.5px #0e9bb0}
+html[data-cal="fill"] .cell.rq-ok .badge{box-shadow:inset 0 0 0 2.5px #1fa971}
+html[data-cal="fill"] .cell.rq-no .badge{box-shadow:inset 0 0 0 2.5px #d12f4a}
+.tn-prev{height:340px;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:var(--bg);margin:8px 12px 0}
+.tn-g{padding:8px 14px 4px}.tn-g h4{margin:10px 0 2px;font-size:14px}
+.tn-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px}.tn-row span{flex:0 0 112px}.tn-row input{flex:1}.tn-row b{flex:0 0 40px;text-align:right;font-variant-numeric:tabular-nums}
 #top.cal-top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
 .rqhp{display:inline-flex;align-items:center;height:26px;padding:0 9px;border-radius:13px;font-size:12.5px;font-weight:800;margin-left:4px;white-space:nowrap;color:#fff}
 .rqhp.ask{background:#f08a00}.rqhp.hold{background:#0e9bb0}
@@ -1613,6 +1635,9 @@ const defaults=()=>({
   nudgeBk:0                // 그 안내를 보여준 때 (0 = 아직)
 });
 const REM_DAYS=[7,3,2,1,0],REM_SHORT={7:'1주',3:'3일',2:'2일',1:'전날',0:'당일'},REM_LABEL={7:'1주 전',3:'3일 전',2:'2일 전',1:'전날',0:'당일'},REM_AT=['08:00','12:00','20:00','22:00'];
+// 모양 조정(숨은 화면): 앱 달력 · 한 달 위젯(커버 · 안쪽)의 스티커 · 주야 글자 · 메모 크기 · 위치를 배율 · 위치로 저장. 값은 [키, 이름, 최소, 최대, 한 칸, 기본]
+const TUNE_KEYS=[['stk','스티커 크기',.6,1.6,.05,1],['stkX','스티커 좌우 위치',-1,1,.05,0],['stkY','스티커 높이 위치',-1,1,.05,0],['ink','주야 크기',.6,1.5,.05,1],['inkY','주야 높이 위치',-1,1,.05,0],['memo','메모 글자 크기',.7,1.6,.05,1],['pill','메모 칸 높이',.7,1.6,.05,1]];
+function tuneClean(o){const r={};TUNE_KEYS.forEach(([k,,lo,hi,,df])=>{const v=o&&typeof o==='object'?+o[k]:NaN;r[k]=Number.isFinite(v)?Math.max(lo,Math.min(hi,Math.round(v*100)/100)):df;});return r;}
 function normalize(o){
   if(!isObj(o))o={};
   const d=defaults(),s=Object.assign({},d,o);   // (d 는 그대로 둬야 아래 "깨진 값은 기본값으로"가 먹음)
@@ -1642,7 +1667,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune={app:tuneClean(o&&o.tune&&o.tune.app),cover:tuneClean(o&&o.tune&&o.tune.cover),inner:tuneClean(o&&o.tune&&o.tune.inner)};s.calLook=(o&&o.calLook)==='fill'?'fill':'circle';s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,stkAsked:s.link.stkAsked?1:0,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#6b7280'})[k];});
   s.drive=Object.assign(defaults().drive,isObj(o.drive)?o.drive:{});
@@ -1851,7 +1876,7 @@ function widgetJson(){
     days.push({...base,stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40)),sa,mi,
       ...(fm.length?{fm}:{}),...(chn?{ch:String(chn).slice(0,30)}:{}),...(ddayHits(k).length?{an:ddayHits(k).slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});
   }
-  return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,look:S.widget.look,lines:S.memoLines===4?4:3,ws,days,ic,...(people.length?{people}:{})});
+  return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,look:S.widget.look,tune:{cover:S.tune.cover,inner:S.tune.inner},lines:S.memoLines===4?4:3,ws,days,ic,...(people.length?{people}:{})});
 }
 /* 위젯 창에서 체크한 것(대기 목록)을 앱 기록에 반영 + 위젯 [앱에서 열기]로 온 날짜 열기 */
 function applyWidgetActions(){
@@ -2146,6 +2171,7 @@ function applyTheme(){
   const de=document.documentElement;
   if(S.theme==='light'||S.theme==='dark')de.setAttribute('data-theme',S.theme);else de.removeAttribute('data-theme');
   if(S.bg==='paper')de.setAttribute('data-bg','paper');else de.removeAttribute('data-bg');
+  applyTune();
   try{if(window.AndroidBridge&&typeof window.AndroidBridge.setThemeMode==='function')window.AndroidBridge.setThemeMode(S.theme||'system');}catch(e){}
 }
 function applyFont(){
@@ -2258,6 +2284,12 @@ const leadOf=d=>(d.getDay()-(S.weekStart===1?1:0)+7)%7;
 const dowHead=()=>weekOrder().map(w=>`<span class="${w===0?'s':w===6?'t':''}">${DOW[w]}</span>`).join('');
 // 달력 칸 메모: 줄 수는 설정(3 · 4줄 · 태블릿은 +1 · 개인 캘린더는 4줄 이상). 메모 영역은 날짜 줄 · 근무 표시 아래부터 칸 끝까지 → 줄이 남는 높이를 나눠 가져 3줄이 차면 아래 여백이 없음
 // 줄 높이 --plh(글자 · 줄 간격)는 "줄 수로 나눈 높이"(상한: 폰 20px · 태블릿 24px), 메모가 적은 날도 같은 높이로 위에서부터 쌓음(--plmax)
+const tuneApp=()=>(S&&S.tune&&S.tune.app)||tuneClean(null);
+function applyTune(){
+  const de=document.documentElement,st=de.style,t=tuneApp();
+  st.setProperty('--tstk',t.stk);st.setProperty('--tstkx',t.stkX);st.setProperty('--tstky',t.stkY);st.setProperty('--tink',t.ink);st.setProperty('--tinky',t.inkY);
+  if(S.calLook==='fill')de.setAttribute('data-cal','fill');else de.removeAttribute('data-cal');
+}
 const stzPx=()=>{const w=innerWidth;return w>=600?Math.max(17,Math.min(19.8,w*.0264)):Math.max(12,Math.min(17.6,w*.0374));};
 function memoLines(){
   const tab=innerWidth>=600,g=document.querySelector('.grid');
@@ -2270,8 +2302,8 @@ function memoLines(){
   const minLh=tab?14:12,capLh=tab?24:20,capFs=tab?14:12.5;
   let n=want;while(n>1&&(avail-(n-1))/n<minLh)n--;
   const per=(avail-(n-1))/n,lh=Math.max(minLh,Math.min(capLh,Math.floor(per)));
-  const fs=Math.min(capFs,Math.max(9,Math.round(lh*0.6*2)/2));
-  const r=document.documentElement.style;r.setProperty('--plh',lh+'px');const ph=Math.max(lh,Math.min(Math.round(lh*1.15),Math.floor(per)));r.setProperty('--plhf',ph+'px');r.setProperty('--plf',fs+'px');r.setProperty('--plmax',(ph+1)+'px');
+  const TN=tuneApp(),fs=Math.min(capFs,Math.max(9,Math.round(lh*0.6*2)/2))*TN.memo;
+  const r=document.documentElement.style;r.setProperty('--plh',lh+'px');const ph=Math.max(lh,Math.min(Math.round(lh*1.15),Math.floor(per)))*TN.pill;r.setProperty('--plhf',ph+'px');r.setProperty('--plf',fs+'px');r.setProperty('--plmax',(ph+1)+'px');
   return n;
 }
 let lastLines=0;
@@ -2388,7 +2420,8 @@ function calPanel(y,m){
     const showHn=!!hnHtml&&!holTag&&(hol?!st0.length:(!narrow||!st0.length||st0.length<2));
     const stRow=st0.slice(0,2),stMore=st0.slice(2);
 
-    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${pers?'pers':''} ${stMore.length?'m3':''} ${rcls}" data-act="day" data-k="${k}">
+    const tcc=pers||sh===''||sh===NONE_K?null:tColors(typeOf(sh)),cb=tcc&&!isRest(sh)?` style="--cb:${tcc.bg}"`:'';   // 칸 채우기 모양: 칸 전체를 근무 색으로
+    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${pers?'pers':''} ${stMore.length?'m3':''} ${rcls}" data-act="day" data-k="${k}"${cb}>
       <i class="stz" data-act="stamp-dn" data-k="${k}"></i><div class="dn ${hol?'hol':ch?'chol':''} ${cls} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1" data-o="${esc(honeO)}">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIcon(x,0)).join('')}</span>`:''}${showHn?`<span class="hn ${shortHol(hol).length>3&&hol?'sm':''}">${hnHtml}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIcon(x,0)).join('')}</div>`:''}
       <div class="bwrap">${pers?(stAll.length?`<div class="pstk n${stAll.length}">${stAll.slice(0,4).map(x=>stampIcon(x,0)).join('')}</div>`:''):bwrapHtml(d,k)}</div>
       <div class="pill-wrap${pills.length>=maxLines?' full':''}">${pills.join('')}</div>
@@ -4669,7 +4702,7 @@ window.__onTone=o=>{
 
 /* ================= 더 보기 ================= */
 /* 설정 목록 아이콘: 이모티콘 대신 같은 굵기 · 같은 색(보라) 선 아이콘 */
-const LINE_ICON={'🌓':'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>','▬':'<rect x="3" y="9" width="18" height="6" rx="3"/>','🔗':'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>','🔁':'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>','🕐':'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>','👥':'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>','🏢':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>','💊':'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>','📊':'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>','👪':'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>','👁':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>','🎨':'<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>','🖼':'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>','☁️':'<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>','✉️':'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>','🔒':'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>','🗑':'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>','ℹ️':'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>','🔤':'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>'};
+const LINE_ICON={'▦':'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 12h16M12 4v16"/>','🌓':'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>','▬':'<rect x="3" y="9" width="18" height="6" rx="3"/>','🔗':'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>','🔁':'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>','🕐':'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>','👥':'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>','🏢':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>','💊':'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>','📊':'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>','👪':'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>','👁':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>','🎨':'<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>','🖼':'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>','☁️':'<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>','✉️':'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>','🔒':'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>','🗑':'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>','ℹ️':'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>','🔤':'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>'};
 LINE_ICON['▣']='<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>';
 Object.assign(LINE_ICON,{'📅':'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>','📝':'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>','🧩':'<path d="M10 4a2 2 0 1 1 4 0v2h4v4h-2a2 2 0 1 0 0 4h2v6h-5v-2a2 2 0 1 0-4 0v2H5v-5h2a2 2 0 1 0 0-4H5V6h5z"/>'});
 const lineIcon=e=>LINE_ICON[e]?`<svg class="li" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LINE_ICON[e]}</svg>`:e;
@@ -4705,6 +4738,7 @@ function renderMore(){
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('🌓')}</span>화면 모드</div><div class="chips">
         <button class="${S.theme==='light'?'on':''}" data-act="thememode" data-v="light">라이트</button><button class="${S.theme==='dark'?'on':''}" data-act="thememode" data-v="dark">다크</button><button class="${S.theme!=='light'&&S.theme!=='dark'?'on':''}" data-act="thememode" data-v="system">시스템</button></div></div>
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('🎨')}</span>배경</div><div class="chips"><button class="${S.bg==='paper'?'':'on'}" data-act="bgmode" data-v="">기본</button><button class="${S.bg==='paper'?'on':''}" data-act="bgmode" data-v="paper">종이</button></div></div>
+      <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('▦')}</span>달력 모양</div><div class="chips"><button class="${S.calLook==='fill'?'':'on'}" data-act="callook" data-v="circle">동그라미</button><button class="${S.calLook==='fill'?'on':''}" data-act="callook" data-v="fill">칸 채우기</button></div></div>
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('📅')}</span>주 시작 요일</div><div class="chips"><button class="${S.weekStart===1?'':'on'}" data-act="weekstart" data-v="0">일요일</button><button class="${S.weekStart===1?'on':''}" data-act="weekstart" data-v="1">월요일</button></div></div>
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('📝')}</span>달력 메모 줄 수</div><div class="chips"><button class="${S.memoLines===4?'':'on'}" data-act="memolines" data-v="3">3줄</button><button class="${S.memoLines===4?'on':''}" data-act="memolines" data-v="4">4줄</button></div></div>
       ${S.personal?`<div class="prow tap" data-act="personal-off"><div class="pl2"><span class="e e-in">${lineIcon('🔁')}</span>근무표 쓰기</div><div class="pv">›</div></div>`:`<div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('▬')}</span>근무 띠 표시</div><label class="sw"><input type="checkbox" id="showBand" ${S.showBand!==false?'checked':''}><i></i></label></div>`}
@@ -4739,6 +4773,36 @@ function openWidgetPage(){
       <div class="hint" style="padding:12px 16px">홈 화면을 길게 눌러 위젯 › 언제쉬어 1칸 · 2칸 · 7일 · 한 달을 골라요.<br>달력 칸처럼 날짜 · 근무 · 스티커 · 메모가 보여요.${(S.family||[]).length+famPeers().length>0?'<br>한 달 위젯은 왼쪽 위 이름 칩(● 나 ▾)을 누르면 가족 달력으로 바뀌어요.':''}</div>
     </div>`,'widget');
 }
+/* ================= 모양 조정 (숨은 화면: 설정 › 앱 정보를 7번 눌러 나오는 개발자 메뉴 안) =================
+ * 앱 달력(위에 미리보기) · 한 달 위젯(커버 · 안쪽)의 스티커 · 주야 글자 · 메모 크기와 위치를 움직여 보고, "값 복사"로 개발자에게 전하면 기본값으로 반영해요. */
+const tuneFmt=v=>(Math.round(v*100)/100).toFixed(2);
+function tuneRows(g){const t=S.tune[g];return TUNE_KEYS.map(([k,nm,lo,hi,st])=>`<div class="tn-row"><span>${nm}</span><input type="range" class="tn-r" data-g="${g}" data-k="${k}" min="${lo}" max="${hi}" step="${st}" value="${t[k]}"><b id="tnv_${g}_${k}">${tuneFmt(t[k])}</b></div>`).join('');}
+function tunePrev(){const e=$('#tnPrev');if(e)e.innerHTML=calPanel(cur.y,cur.m);}
+function openTunePage(){
+  openPage(`${pageHead('모양 조정')}
+    <div class="pg-b">
+      <div class="hint" style="padding:10px 16px 0">움직이면 바로 바뀌어요. 다 맞추고 아래 "값 복사"를 눌러 전해 주세요. 위젯 값은 홈 화면 위젯에 바로 반영돼요.</div>
+      <div class="tn-g"><h4>앱 달력 모양</h4><div class="chips"><button class="${S.calLook==='fill'?'':'on'}" data-act="callook" data-v="circle">동그라미</button><button class="${S.calLook==='fill'?'on':''}" data-act="callook" data-v="fill">칸 채우기</button></div></div>
+      <div class="tn-prev" id="tnPrev"></div>
+      <div class="tn-g"><h4>앱 달력</h4>${tuneRows('app')}</div>
+      <div class="tn-g"><h4>한 달 위젯 · 커버 화면(작은 위젯)</h4>${tuneRows('cover')}</div>
+      <div class="tn-g"><h4>한 달 위젯 · 안쪽 화면(큰 위젯)</h4>${tuneRows('inner')}</div>
+      <div style="padding:12px 14px 24px;display:flex;gap:8px"><button class="btn ghost grow" data-act="tune-reset">처음 값으로</button><button class="btn grow" data-act="tune-copy">값 복사</button></div>
+    </div>`,'tune');
+  tunePrev();
+}
+function tuneText(){
+  const f=g=>{const t=S.tune[g];return `스티커 ${t.stk} · 좌우 ${t.stkX} · 높이 ${t.stkY} / 주야 ${t.ink} · 높이 ${t.inkY} / 메모 글자 ${t.memo} · 칸 ${t.pill}`;};
+  return `[모양 조정] 앱 달력(${S.calLook==='fill'?'칸 채우기':'동그라미'}): ${f('app')}\n위젯 커버: ${f('cover')}\n위젯 안쪽: ${f('inner')}\n위젯 모양: ${S.widget.look==='circle'?'동그라미':'칸 채우기'}`;
+}
+document.addEventListener('input',e=>{
+  const t=e.target;if(!t.classList||!t.classList.contains('tn-r'))return;
+  const g=t.dataset.g,k=t.dataset.k;if(!S.tune[g])return;
+  S.tune[g]=tuneClean({...S.tune[g],[k]:+t.value});
+  const b=$('#tnv_'+g+'_'+k);if(b)b.textContent=tuneFmt(S.tune[g][k]);
+  if(g==='app'){applyTune();memoLines();tunePrev();}
+  save();
+});
 /* ================= 부가 기능 (설정 › 부가 기능) =================
  * 기본은 모두 꺼짐. 꺼도 저장된 내용은 그대로이고, 켜면 그 자리에 바로 생겨요. */
 const ADDONS=[
@@ -4761,6 +4825,7 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
+  'v0.79':`· <b>달력 모양</b>: 설정 › 화면 › 달력 모양에서 "칸 채우기"를 고를 수 있어요 (근무를 연한 칸 색으로 · 오늘은 날짜 도장 · 요청은 글자 주위 링). 기본은 예전 그대로 "동그라미"예요`,
   'v0.78':`· <b>한 달 위젯</b>: 새 모양 "칸 채우기"(근무를 연한 칸 색으로 · 오늘은 날짜 도장 · 가족 메모는 보라 선) · 설정 › 홈 화면 위젯에서 예전 "동그라미"로 바꿀 수 있어요 · 근무 요청은 위젯에서도 둥근 링으로 보여요<br>
       · <b>달력</b>: 요청이 있는 날 숫자가 빨갛게 변하지 않고 링만 보여요 · 메모 칸 높이를 더 줄였어요<br>
       · <b>공유</b>: 달력 공유에 "복사하기"(클립보드에만 담아 붙여넣기) · <b>사진 스티커</b>: 투명한 PNG 는 투명 그대로`,
@@ -5260,7 +5325,7 @@ function exportBad(){
   if(hasBridge('shareFile')){try{window.AndroidBridge.shareFile(name,raw);return;}catch(e){}}
   toast('앱에서만 보낼 수 있어요');
 }
-const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
+const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','tune','calLook','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -6214,6 +6279,10 @@ document.addEventListener('click',e=>{
     case 'more-wipe':wipeAll();break;
     case 'font':S.fontScale=Number(t.dataset.v);save();applyFont();render();break;
     case 'thememode':S.theme=t.dataset.v;save();applyTheme();render();break;
+    case 'callook':S.calLook=t.dataset.v==='fill'?'fill':'circle';save();applyTune();if(pageMode==='tune')openTunePage();else render();break;
+    case 'tune-open':openTunePage();break;
+    case 'tune-reset':S.tune={app:tuneClean(null),cover:tuneClean(null),inner:tuneClean(null)};save();applyTune();openTunePage();break;
+    case 'tune-copy':copyText(tuneText());break;
     case 'bgmode':S.bg=t.dataset.v==='paper'?'paper':'';save();applyTheme();render();break;
     case 'mcolor':if(t.dataset.v!==S.memoColors[t.dataset.k==='fam'?'my':'fam']||S.memoColors.fam===S.memoColors.my)S.memoColors[t.dataset.k]=t.dataset.v;save();applyTheme();openColorsPage();break;
     case 'mcolor-reset':S.memoColors={fam:'#7b5cf0',my:'#6b7280'};save();applyTheme();openColorsPage();break;
@@ -6598,6 +6667,7 @@ function openFirebasePage(){
       <div class="pg-sec" style="margin-top:14px;padding:14px 16px">
         <button class="btn" style="width:100%" data-act="fb-test" ${f.busy?'disabled':''}>${f.busy?'연결 중…':'연결 시험하기'}</button>
         ${ok?'<button class="btn ghost" style="width:100%;margin-top:8px" data-act="fb-out">익명 로그아웃</button>':''}
+        <button class="btn ghost" style="width:100%;margin-top:8px" data-act="tune-open">모양 조정 (앱 달력 · 위젯)</button>
       </div>
     </div>`,'fb');
 }
@@ -7079,7 +7149,8 @@ function vcGrid(p){
     const pls=vcPills(k,mxl);
     const ring=rqRing(S.requests.filter(r=>r.srv&&r.dir==='out'&&r.peer===p.uid&&r.date===k).map(r=>r.st==='applied'?{...r,st:'accepted'}:r));
     const st0=schStk(sch,k),hone=hol&&st0.length?holOne(hol):'',stRow=st0.slice(0,2),stMore=st0.slice(2);
-    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${stMore.length?'m3':''} ${ring} ${vsCls(p,k)}" data-act="vc-day" data-k="${k}"><div class="dn ${hol?'hol':''} ${hol||dow===0?'sun':dow===6?'sat':''} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIconD(x.d,x.n,hone?12:13)).join('')}</span>`:''}${!st0.length&&hol&&shortHol(hol)?`<span class="hn ${shortHol(hol).length>3?'sm':''}">${esc(shortHol(hol))}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIconD(x.d,x.n,12)).join('')}</div>`:''}<div class="bwrap">${band}${sh===''?'':schBadge(sch,sh,'',ov?'<i class="dot"></i>':'')}</div>${pls}</div>`;
+    const cb=c&&!schRest(sch,sh)?` style="--cb:${c.bg}"`:'';
+    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${stMore.length?'m3':''} ${ring} ${vsCls(p,k)}" data-act="vc-day" data-k="${k}"${cb}><div class="dn ${hol?'hol':''} ${hol||dow===0?'sun':dow===6?'sat':''} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIconD(x.d,x.n,hone?12:13)).join('')}</span>`:''}${!st0.length&&hol&&shortHol(hol)?`<span class="hn ${shortHol(hol).length>3?'sm':''}">${esc(shortHol(hol))}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIconD(x.d,x.n,12)).join('')}</div>`:''}<div class="bwrap">${band}${sh===''?'':schBadge(sch,sh,'',ov?'<i class="dot"></i>':'')}</div>${pls}</div>`;
   }
   return `<div class="calwrap"><div class="dow">${dowHead()}</div><div class="grid" style="grid-template-rows:repeat(${rows},1fr)">${cells}</div></div>`;
 }

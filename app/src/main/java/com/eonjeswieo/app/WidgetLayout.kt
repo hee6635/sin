@@ -213,7 +213,7 @@ object WidgetLayout {
      * @param hasCircle 이 달에 근무 동그라미가 하나라도 있는지
      * @param memoMax 칸에 보일 메모 줄 수 최대 (위젯 설정)
      */
-    fun solveMonth(rowMemos: IntArray, cw: Float, rowH: Float, u: Float, hasCircle: Boolean, memoMax: Int): MonthPlan {
+    fun solveMonth(rowMemos: IntArray, cw: Float, rowH: Float, u: Float, hasCircle: Boolean, memoMax: Int, stkK: Float = 1f, pillK: Float = 1f): MonthPlan {
         // 칸이 폰 크기(약 58x72dp)보다 커지면 날짜 숫자 · 스티커 · 공휴일 글자 · 메모 줄을 같이 키움 (칸이 커진 비율의 절반쯤 — 동그라미 자리를 지키려고). 폰 크기 이하는 ks = 1 (예전과 같음)
         val ks = 1f + (clamp(Math.min(cw / (58f * u), rowH / (72f * u)), 1f, 1.6f) - 1f) * 0.55f
         val padX = clamp(cw * 0.07f, 2f * u, 4f * u * ks)
@@ -223,9 +223,9 @@ object WidgetLayout {
         val dateSize = Math.min(clamp(cw * 0.26f, 9f * u, 13f * u * ks), rowH * 0.24f)
         val dateBase = topPad + dateSize * 0.95f
         val dateBottom = topPad + dateSize * 1.35f
-        val ss = dateSize * 0.9f
+        val ss = Math.min(dateSize * 0.9f * stkK, cw * 0.34f)   // 모양 조정(스티커 크기 배율) · 기본 1
         val holSize = dateSize * 0.62f
-        val pillH = clamp(rowH * 0.19f, 9f * u, 12f * u * ks)
+        val pillH = Math.min(clamp(rowH * 0.19f, 9f * u, 12f * u * ks) * pillK, rowH * 0.34f)   // 모양 조정(메모 칸 높이 배율) · 기본 1
         val pg = 1f * u
         val dTop = clamp(Math.min(cw * 0.5f, rowH * 0.4f), 14f * u, 44f * u)   // 근무 동그라미 크기 (칸 폭의 절반 · 칸 높이의 40% 중 작은 쪽 · 상한은 7일 위젯과 같은 44dp — 칸이 큰 위젯에서도 칸에 맞게 커짐)
         val dMin = Math.min(dTop, 12f * u)

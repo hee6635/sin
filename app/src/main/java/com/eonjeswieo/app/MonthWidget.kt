@@ -210,6 +210,18 @@ object MonthRenderer {
         val nf: Int
     )
 
+    /** 모양 조정(앱 숨은 화면)에서 정한 배율 · 위치: 위젯 가로 폭이 440dp 보다 좁으면 "커버" 값 · 넓으면 "안쪽" 값. 없으면 전부 기본(1 · 0) */
+    internal class Tune(val stk: Float, val stkX: Float, val stkY: Float, val ink: Float, val inkY: Float, val memo: Float, val pill: Float) {
+        companion object {
+            val NONE = Tune(1f, 0f, 0f, 1f, 0f, 1f, 1f)
+            fun from(data: JSONObject?, wDp: Float): Tune {
+                val o = data?.optJSONObject("tune")?.optJSONObject(if (wDp < 440f) "cover" else "inner") ?: return NONE
+                fun g(k: String, d: Float, lo: Float, hi: Float): Float = o.optDouble(k, d.toDouble()).toFloat().coerceIn(lo, hi)
+                return Tune(g("stk", 1f, 0.6f, 1.6f), g("stkX", 0f, -1f, 1f), g("stkY", 0f, -1f, 1f), g("ink", 1f, 0.6f, 1.5f), g("inkY", 0f, -1f, 1f), g("memo", 1f, 0.7f, 1.6f), g("pill", 1f, 0.7f, 1.6f))
+            }
+        }
+    }
+
     private fun firstN(arr: JSONArray?, n: Int): List<JSONObject> {
         val out = ArrayList<JSONObject>()
         if (arr == null) return out
@@ -399,7 +411,8 @@ object MonthRenderer {
             for (c in 0 until 7) m = Math.max(m, cells[r * 7 + c].memos.size)
             m
         }
-        val plan = WidgetLayout.solveMonth(rowMemos, cw, rowH, u, hasCircle, 2)
+        val tn = Tune.from(data, w / u)
+        val plan = WidgetLayout.solveMonth(rowMemos, cw, rowH, u, hasCircle, 2, tn.stk, tn.pill)
         val icons = data?.optJSONObject("ic")
         val fill = data?.optString("look", "fill") != "circle"   // 칸 채우기(기본) · 동그라미(예전 모양) — 앱 설정 › 홈 화면 위젯
         val alphaF = 0.55f + 0.45f * ((data?.optInt("alpha", 100) ?: 100).coerceIn(0, 100) / 100f)   // 칸 색은 위젯 바탕이 투명해져도 너무 옅어지지 않게
@@ -407,7 +420,7 @@ object MonthRenderer {
             val f = cells[i]
             val r = i / 7
             val c = i % 7
-            drawCell(cv, f, side + cw * c, top + rowH * r, cw, rowH, r, plan, pal, icons, person != null, f.inMonth && f.key == todayKey, u, fill, alphaF)
+            drawCell(cv, f, side + cw * c, top + rowH * r, cw, rowH, r, plan, pal, icons, person != null, f.inMonth && f.key == todayKey, u, fill, alphaF, tn)
         }
     }
 
@@ -532,7 +545,7 @@ object MonthRenderer {
         }
     }
 
-    private fun drawCell(cv: Canvas, f: Info, x0: Float, y0: Float, cw: Float, rowH: Float, r: Int, plan: WidgetLayout.MonthPlan, pal: WidgetRenderer.Pal, icons: JSONObject?, family: Boolean, isToday: Boolean, u: Float, fill: Boolean, alphaF: Float) {
+    private fun drawCell(cv: Canvas, f: Info, x0: Float, y0: Float, cw: Float, rowH: Float, r: Int, plan: WidgetLayout.MonthPlan, pal: WidgetRenderer.Pal, icons: JSONObject?, family: Boolean, isToday: Boolean, u: Float, fill: Boolean, alphaF: Float, tn: Tune) {
         val night = pal === WidgetRenderer.DARK
         if (isToday && !fill) {   // 달력의 오늘 칸처럼: 연한 초록 바탕 + 초록 테두리
             val inset = 1.5f * u
@@ -573,7 +586,7 @@ object MonthRenderer {
         // 근무: 일하는 날은 동그라미 · 쉬는 날은 글자만 (줄 안에서 높이가 같음 · 모든 동그라미가 같은 크기)
         if (f.shift.isNotEmpty() && plan.circleD > 0f && (f.circle || f.rest)) {
             val cx = x0 + cw / 2f
-            val cy = y0 + plan.circleCy[r]
+            val cy = y0 + plan.circleCy[r] + tn.inkY * rowH * 0.1f
             val rad = plan.circleD / 2f
             paint.typeface = Typeface.DEFAULT_BOLD
             paint.textAlign = Paint.Align.CENTER
@@ -581,21 +594,22 @@ object MonthRenderer {
                 if (fill) {   // 칸 채우기: 동그라미 없이 근무 색을 진하게 한 글자
                     paint.color = inkOf(f.bg, night)
                     paint.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-                    paint.textSize = rad * 1.12f
-                    fitText(paint, f.shift, plan.circleD * 0.9f)
+                    paint.textSize = rad * 1.12f * tn.ink
+                    fitText(paint, f.shift, plan.circleD * 0.9f * tn.ink)
                 } else {
                     val cp = Paint(Paint.ANTI_ALIAS_FLAG)
                     cp.color = f.bg
-                    cv.drawCircle(cx, cy, rad, cp)
+                    val rr2 = Math.min(rad * tn.ink, rad * 1.25f)   // 주야 크기 배율: 동그라미도 같이 (칸에서 넘치지 않게 최대 1.25배)
+                    cv.drawCircle(cx, cy, rr2, cp)
                     paint.color = f.fg
-                    paint.textSize = rad * 1.04f
-                    fitText(paint, f.shift, plan.circleD * 0.82f)
+                    paint.textSize = rr2 * 1.04f
+                    fitText(paint, f.shift, rr2 * 2f * 0.82f)
                 }
             } else {
                 paint.color = if (fill) (if (night) 0xFFF28B9B.toInt() else 0xFFD9677B.toInt()) else REST_COL
                 if (fill) paint.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-                paint.textSize = rad * 1.24f
-                fitText(paint, f.shift, plan.circleD * 1.1f)
+                paint.textSize = rad * 1.24f * tn.ink
+                fitText(paint, f.shift, plan.circleD * 1.1f * tn.ink)
             }
             cv.drawText(f.shift, cx, cy + paint.textSize * 0.36f, paint)
             if (f.rq.isNotEmpty()) {   // 근무 요청 링 (답할 요청 주황 · 보류 청록 · 승인 초록 · 거절 빨강 — 앱 달력과 같은 색)
@@ -608,7 +622,7 @@ object MonthRenderer {
                     "ok" -> 0xFF1FA971.toInt()
                     else -> 0xFFD12F4A.toInt()
                 }
-                cv.drawCircle(cx, cy, rad * (if (fill) 0.98f else 1.06f), rp)
+                cv.drawCircle(cx, cy, Math.min(rad * tn.ink, rad * 1.25f) * (if (fill) 0.98f else 1.06f), rp)
             }
             if (f.ov) {   // 근무를 바꾼 날: 왼쪽에 붉은 점
                 val op = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -639,12 +653,12 @@ object MonthRenderer {
         }
         val top = WidgetLayout.monthTop(plan, cw, u, numW, f.stk.size, holW2)
         for (k in 0 until top.row1) {   // 스티커 첫 줄: 숫자 옆 (오른쪽 끝)
-            val sx = x0 + cw - pad - (top.row1 - k) * plan.stkSize - (top.row1 - k - 1) * plan.stkGap
-            WidgetRenderer.drawSticker(cv, f.stk[k], sx, y0 + plan.stkTop, plan.stkSize, TextPaint(Paint.ANTI_ALIAS_FLAG), icons)
+            val sx = x0 + cw - pad - (top.row1 - k) * plan.stkSize - (top.row1 - k - 1) * plan.stkGap + tn.stkX * cw * 0.12f
+            WidgetRenderer.drawSticker(cv, f.stk[k], sx, y0 + plan.stkTop + tn.stkY * rowH * 0.08f, plan.stkSize, TextPaint(Paint.ANTI_ALIAS_FLAG), icons)
         }
         for (j in 0 until top.row2) {   // 3 · 4번째: 바로 아래 줄 오른쪽 끝 (근무 동그라미 오른쪽 위에 살짝 걸쳐도 스티커가 위에 보임 — 앱 달력 · 7일 위젯과 같음)
-            val sx = x0 + cw - pad - (top.row2 - j) * plan.stkSize - (top.row2 - j - 1) * plan.stkGap
-            WidgetRenderer.drawSticker(cv, f.stk[top.row1 + j], sx, y0 + plan.stkTop + plan.stkSize + plan.stkGap, plan.stkSize, TextPaint(Paint.ANTI_ALIAS_FLAG), icons)
+            val sx = x0 + cw - pad - (top.row2 - j) * plan.stkSize - (top.row2 - j - 1) * plan.stkGap + tn.stkX * cw * 0.12f
+            WidgetRenderer.drawSticker(cv, f.stk[top.row1 + j], sx, y0 + plan.stkTop + plan.stkSize + plan.stkGap + tn.stkY * rowH * 0.08f, plan.stkSize, TextPaint(Paint.ANTI_ALIAS_FLAG), icons)
         }
         paint.typeface = Typeface.DEFAULT_BOLD
         paint.textAlign = Paint.Align.LEFT
@@ -686,7 +700,7 @@ object MonthRenderer {
             paint.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)   // 메모 글자는 한 단계 굵게(앱 글씨와 비슷하게)
             paint.textAlign = Paint.Align.LEFT
             paint.color = pal.fg
-            paint.textSize = Math.min(plan.pillH * 0.77f, cw * 0.215f)   // 메모 글자 한 단계 키움 (눌러서 큰 창에서 자세히)
+            paint.textSize = Math.min(Math.min(plan.pillH * 0.77f, cw * 0.215f) * tn.memo, plan.pillH * 0.95f)   // 메모 글자 (모양 조정 배율 · 칸 높이를 넘지 않게)
             val chipW = if (more > 0 && k == shown - 1) WidgetLayout.moreBadge(plan.pillH)[0] else 0f
             WidgetRenderer.drawRich(cv, f.memos[k], x0 + pad * 1.4f + barW, py + plan.pillH * 0.74f, cw - pad * 2.6f - barW - (if (chipW > 0f) chipW + plan.pillH * 0.15f else 0f), paint, pal.fg, pal.link)
             if (chipW > 0f) WidgetRenderer.drawMoreChip(cv, more, x0 + cw - pad - plan.pillH * 0.12f, py, plan.pillH, pal)
