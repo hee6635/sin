@@ -578,6 +578,10 @@ class MainActivity : ComponentActivity() {
                 bmp = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, m, true)
             }
             val out = ByteArrayOutputStream()
+            if (bmp.hasAlpha()) {   // 투명한 곳이 있는 그림(투명 PNG): JPEG 로 바꾸면 투명이 검게 변하므로 PNG 로 (사진 스티커에서 투명을 살림)
+                bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
+                return "data:image/png;base64," + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+            }
             bmp.compress(Bitmap.CompressFormat.JPEG, 88, out)
             "data:image/jpeg;base64," + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
         } catch (e: Exception) { "" }
@@ -611,20 +615,39 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** 지금 보이는 화면을 PNG 파일로 저장 (공유 · 복사에 같이 씀) */
+    private fun captureScreen(): java.io.File? {
+        if (webView.width == 0 || webView.height == 0) return null
+        val bmp = Bitmap.createBitmap(webView.width, webView.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bmp)
+        canvas.drawColor(if (isNight()) Color.parseColor("#111318") else Color.WHITE)
+        webView.draw(canvas)
+        val file = shareDir().resolve("eonjeswieo.png")
+        file.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        bmp.recycle()
+        return file
+    }
+
     /** 지금 보이는 화면을 PNG 로 저장하고 공유 시트 열기 */
     fun shareScreenshot() {
-        if (webView.width == 0 || webView.height == 0) return
         try {
-            val bmp = Bitmap.createBitmap(webView.width, webView.height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bmp)
-            canvas.drawColor(if (isNight()) Color.parseColor("#111318") else Color.WHITE)
-            webView.draw(canvas)
-            val file = shareDir().resolve("eonjeswieo.png")
-            file.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
-            bmp.recycle()
+            val file = captureScreen() ?: return
             share(file, "image/png", "달력 공유")
         } catch (e: Exception) {
             Toast.makeText(this, "화면을 저장하지 못했어요", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /** 지금 보이는 화면을 PNG 로 저장해 클립보드에만 담기 (공유 창 없음 · 붙여넣기로 카톡 등에 보냄) */
+    fun copyScreenshot() {
+        try {
+            val file = captureScreen() ?: return
+            val uri = FileProvider.getUriForFile(this, "$packageName.files", file)
+            val cm = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            cm.setPrimaryClip(android.content.ClipData.newUri(contentResolver, "달력", uri))
+            Toast.makeText(this, "달력 그림을 복사했어요", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "복사하지 못했어요", Toast.LENGTH_SHORT).show()
         }
     }
 

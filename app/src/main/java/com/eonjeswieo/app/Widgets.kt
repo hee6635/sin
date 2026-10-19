@@ -621,7 +621,7 @@ object WidgetRenderer {
         for (i in 0 until shown) {
             val py = memoTop + i * (row.pillH + row.pillGap)
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
-            pp.color = pal.pill
+            pp.color = if (i < d.optInt("nf", 0)) (if (pal === DARK) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill   // 가족 메모는 연보라 칸 (한 달 위젯과 같음)
             cv.drawRoundRect(RectF(x0 + pad, py, x0 + cw - pad, py + row.pillH), row.pillH * 0.3f, row.pillH * 0.3f, pp)
             paint.typeface = Typeface.DEFAULT
             paint.textAlign = Paint.Align.LEFT

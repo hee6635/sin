@@ -1258,10 +1258,10 @@ button.tbtn{cursor:pointer}
 .jopt.on{outline:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--bg))}
 
 /* 근무 요청 상태 링 (근무 색과 따로): 답할 요청 주황 · 보류 청록 · 승인 초록 · 거절 빨강 */
-.cell.rq-ask .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 6px #f08a00}.cell.rq-ask .dn .num{color:#f08a00 !important;font-weight:900}
-.cell.rq-hold .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 6px #0e9bb0}.cell.rq-hold .dn .num{color:#0e9bb0 !important;font-weight:900}
-.cell.rq-ok .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 6px #1fa971}.cell.rq-ok .dn .num{color:#1fa971 !important;font-weight:900}
-.cell.rq-no .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 6px #e0455c}.cell.rq-no .dn .num{color:#e0455c !important;font-weight:900}
+.cell.rq-ask .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 6px #f08a00}
+.cell.rq-hold .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 6px #0e9bb0}
+.cell.rq-ok .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 6px #1fa971}
+.cell.rq-no .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 6px #e0455c}
 #top.cal-top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
 .rqhp{display:inline-flex;align-items:center;height:26px;padding:0 9px;border-radius:13px;font-size:12.5px;font-weight:800;margin-left:4px;white-space:nowrap;color:#fff}
 .rqhp.ask{background:#f08a00}.rqhp.hold{background:#0e9bb0}
@@ -1291,6 +1291,7 @@ button.tbtn{cursor:pointer}
     <div class="shrow"><label class="shm"><input type="checkbox" id="shareMemo"> 📝 가족 메모 넣기</label><label class="shm"><input type="checkbox" id="shareStk"> ⭐ 스티커 넣기</label></div>
     <div class="shnote">🔒 나만 보는 메모는 항상 빠져요</div>
     <button class="btn ghost grow" data-act="cancel-share">취소</button>
+    <button class="btn ghost grow" data-act="copy-share">복사하기</button>
     <button class="btn grow" data-act="do-share">공유하기</button>
   </div>
 
@@ -1641,7 +1642,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))) };s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,stkAsked:s.link.stkAsked?1:0,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#6b7280'})[k];});
   s.drive=Object.assign(defaults().drive,isObj(o.drive)?o.drive:{});
@@ -1834,7 +1835,9 @@ function widgetJson(){
       p.s.push(key);
       if(m.kind==='sched'){const sk=schStk(m.sch,k).slice(0,4).map(stkD);if(sk.length)p.k[k]=sk;}
     });
-    const base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):''};
+    const rq0=rqRing((S.requests||[]).filter(r=>r.date===k&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r)).slice(3),   // 요청 링 (한 달 위젯 · 칸 채우기 모양): ask · hold · ok · no — 달력과 같은 기준(답한 요청은 3일 뒤 사라짐)
+      nfm=vm.filter(x=>x.shared&&x.text.trim()).length,   // 메모 줄 맨 앞 nfm 개가 가족 메모(♥) — 위젯이 연보라 칸으로 그림
+      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{})};
     if(i<-6||i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({...base,far:i<-6?2:1,stk:stampsOn(k).slice(0,4).map(x=>{const o=mapStk(x);delete o.id;delete o.b;return o;}),ms:ml.slice(0,3).map(x=>String(x||'').slice(0,40)),
       ...(fm.length?{fm}:{}),...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 먼 날(지난 날 · 2주 뒤부터): 큰 창에는 스티커 · 메모를 안 싣고 앱에서 보게 함
     const sa=stampsOn(k).slice(0,12).map(mapStk);
@@ -1848,7 +1851,7 @@ function widgetJson(){
     days.push({...base,stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40)),sa,mi,
       ...(fm.length?{fm}:{}),...(chn?{ch:String(chn).slice(0,30)}:{}),...(ddayHits(k).length?{an:ddayHits(k).slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});
   }
-  return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,lines:S.memoLines===4?4:3,ws,days,ic,...(people.length?{people}:{})});
+  return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,look:S.widget.look,lines:S.memoLines===4?4:3,ws,days,ic,...(people.length?{people}:{})});
 }
 /* 위젯 창에서 체크한 것(대기 목록)을 앱 기록에 반영 + 위젯 [앱에서 열기]로 온 날짜 열기 */
 function applyWidgetActions(){
@@ -2268,7 +2271,7 @@ function memoLines(){
   let n=want;while(n>1&&(avail-(n-1))/n<minLh)n--;
   const per=(avail-(n-1))/n,lh=Math.max(minLh,Math.min(capLh,Math.floor(per)));
   const fs=Math.min(capFs,Math.max(9,Math.round(lh*0.6*2)/2));
-  const r=document.documentElement.style;r.setProperty('--plh',lh+'px');const ph=Math.max(lh,Math.min(Math.round(lh*1.3),Math.floor(per)));r.setProperty('--plhf',ph+'px');r.setProperty('--plf',fs+'px');r.setProperty('--plmax',(ph+1)+'px');
+  const r=document.documentElement.style;r.setProperty('--plh',lh+'px');const ph=Math.max(lh,Math.min(Math.round(lh*1.15),Math.floor(per)));r.setProperty('--plhf',ph+'px');r.setProperty('--plf',fs+'px');r.setProperty('--plmax',(ph+1)+'px');
   return n;
 }
 let lastLines=0;
@@ -3429,11 +3432,21 @@ function cropDraw(){
   if(im){im.style.width=f.W+'px';im.style.height=f.H+'px';im.style.transform=`translate(${f.left}px,${f.top}px)`;}
   clearTimeout(crp.pt);crp.pt=setTimeout(()=>{if(!crp)return;const u=cropOut(96);['cpv1','cpv2','cpv3'].forEach(id=>{const e=$('#'+id);if(e)e.src=u;});},50);
 }
-// 128×128 정사각형 JPEG 로 줄여서 (한 장에 5KB 안팎)
+// 128×128 정사각형 JPEG 로 줄여서 (한 장에 5KB 안팎) · 투명한 곳이 있는 그림(투명 PNG)은 투명을 살려 PNG 로 (너무 크면 흰 바탕 JPEG)
 function cropOut(size){
   const f=cropFit(),cv=document.createElement('canvas');cv.width=cv.height=size;
-  const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,size,size);
-  g.drawImage(crp.img,-f.left/f.k,-f.top/f.k,crp.box/f.k,crp.box/f.k,0,0,size,size);
+  const g=cv.getContext('2d');
+  const draw=()=>g.drawImage(crp.img,-f.left/f.k,-f.top/f.k,crp.box/f.k,crp.box/f.k,0,0,size,size);
+  if(/^data:image\/(png|webp|gif)/.test(crp.img.src||'')){
+    draw();
+    try{
+      const px=g.getImageData(0,0,size,size).data;let clear=false;
+      for(let i=3;i<px.length;i+=4)if(px[i]<250){clear=true;break;}
+      if(clear){const u=cv.toDataURL('image/png');if(u.length<=28000)return u;}
+    }catch(e){}
+    g.clearRect(0,0,size,size);
+  }
+  g.fillStyle='#fff';g.fillRect(0,0,size,size);draw();
   return cv.toDataURL('image/jpeg',0.86);
 }
 function cropOk(){
@@ -4720,6 +4733,9 @@ function openWidgetPage(){
       <div class="pg-cap">배경</div>
       <div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${[['light','밝게'],['dark','어둡게'],['system','폰 설정 따라']].map(([v,n])=>`<button class="${w.theme===v?'on':''}" data-act="wg-theme" data-v="${v}">${n}</button>`).join('')}</div>
         <div class="prow" style="padding:12px 0 0"><div class="pl2">진하기 <b id="wgAv">${w.alpha}%</b></div><input type="range" id="wgAlpha" min="0" max="100" step="10" value="${w.alpha}" style="flex:1"></div></div>
+      <div class="pg-cap">한 달 위젯 모양</div>
+      <div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${[['fill','칸 채우기'],['circle','동그라미']].map(([v,n])=>`<button class="${w.look===v?'on':''}" data-act="wg-look" data-v="${v}">${n}</button>`).join('')}</div>
+        <div class="hint" style="padding:8px 0 0">칸 채우기는 근무를 연한 칸 색으로, 동그라미는 지금까지처럼 둥근 표시로 보여줘요. 근무 요청은 둥근 링으로 알려줘요.</div></div>
       <div class="hint" style="padding:12px 16px">홈 화면을 길게 눌러 위젯 › 언제쉬어 1칸 · 2칸 · 7일 · 한 달을 골라요.<br>달력 칸처럼 날짜 · 근무 · 스티커 · 메모가 보여요.${(S.family||[]).length+famPeers().length>0?'<br>한 달 위젯은 왼쪽 위 이름 칩(● 나 ▾)을 누르면 가족 달력으로 바뀌어요.':''}</div>
     </div>`,'widget');
 }
@@ -4745,6 +4761,9 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
+  'v0.78':`· <b>한 달 위젯</b>: 새 모양 "칸 채우기"(근무를 연한 칸 색으로 · 오늘은 날짜 도장 · 가족 메모는 보라 선) · 설정 › 홈 화면 위젯에서 예전 "동그라미"로 바꿀 수 있어요 · 근무 요청은 위젯에서도 둥근 링으로 보여요<br>
+      · <b>달력</b>: 요청이 있는 날 숫자가 빨갛게 변하지 않고 링만 보여요 · 메모 칸 높이를 더 줄였어요<br>
+      · <b>공유</b>: 달력 공유에 "복사하기"(클립보드에만 담아 붙여넣기) · <b>사진 스티커</b>: 투명한 PNG 는 투명 그대로`,
   'v0.77':`· <b>가족 메모</b>: 남의 달력(보기만) 날짜 창에서도 내가 쓴 가족 메모를 고치고 지울 수 있어요 · 메모 칸이 꽉 차도 글자에 맞게 보여요<br>
       · <b>가족</b>: 가족이 생기면 내 스티커를 지금 것부터 보여 줄지 앞으로 것부터 보여 줄지 고를 수 있어요 · 내 근무표를 가족에게 올리지 못하면 이유를 알려 줘요`,
   'v0.76':`· <b>위젯</b>: 한 달 위젯(‹ › 로 12월 · 내년까지, 가족 달력으로 바꿔 보기) · 큰 위젯에서는 글자도 같이 커져요<br>
@@ -6131,6 +6150,7 @@ document.addEventListener('click',e=>{
     case 'more-addons':closeSheet();openAddonPage();break;
     case 'more-widget':closeSheet();openWidgetPage();break;
     case 'wg-theme':S.widget.theme=t.dataset.v;save();openWidgetPage();break;
+    case 'wg-look':S.widget.look=t.dataset.v==='circle'?'circle':'fill';save();openWidgetPage();break;
     case 'addon-go':closePop();tab='set';render();openAddonPage();break;
     case 'stk-board':closeSheet();openStampPage();break;
     case 'sb-prev':{let y=sbY,m=sbM-1;if(m<0){m=11;y--;}openStickerBoard(y,m);break;}
@@ -6260,6 +6280,7 @@ document.addEventListener('click',e=>{
     /* 공유 */
     case 'cancel-share':shareEnd();break;
     case 'do-share':shareScreen();break;
+    case 'copy-share':shareScreen(true);break;
 
     /* 처음 시작 설정 */
     case 'ob-mine':obGo('way');break;
@@ -6457,16 +6478,17 @@ V.addEventListener('touchend',()=>{
 },{passive:true});
 
 /* ================= 화면 공유 · 파일 백업 ================= */
-function shareScreen(){
+function shareScreen(copy){   // copy=true: 공유 창을 열지 않고 달력 그림을 클립보드에만 담음 (붙여넣기로 보냄)
   const app=$('#app');
   const done=()=>setTimeout(()=>{app.classList.remove('capturing');shareEnd();},400);
-  if(hasBridge('shareScreen')){
+  const fn=copy?'copyScreen':'shareScreen';
+  if(hasBridge(fn)){
     app.classList.add('capturing');
     requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{
-      try{window.AndroidBridge.shareScreen();}catch(e){toast('공유하지 못했어요');}
+      try{window.AndroidBridge[fn]();}catch(e){toast(copy?'복사하지 못했어요':'공유하지 못했어요');}
       done();
     },120)));
-  }else{toast('앱에서는 이 화면이 이미지로 공유돼요');done();}
+  }else{toast(copy?'앱에서는 이 화면이 이미지로 복사돼요':'앱에서는 이 화면이 이미지로 공유돼요');done();}
 }
 function exportBackup(){
   const json=JSON.stringify(backupData(),null,1);
@@ -6717,7 +6739,10 @@ function famPhoto(e){
   const src=(S.icons||{})[id];if(!src)return '';
   ph48[id]='';
   const im=new Image();
-  im.onload=()=>{try{const cv=document.createElement('canvas');cv.width=cv.height=48;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,48,48);g.drawImage(im,0,0,48,48);const u=cv.toDataURL('image/jpeg',0.7);ph48[id]=u.length<=4200?u:'';famSoon();}catch(err){}};
+  im.onload=()=>{try{const cv=document.createElement('canvas');cv.width=cv.height=48;const g=cv.getContext('2d');let u='';
+      if(/^data:image\/png/.test(src)){g.drawImage(im,0,0,48,48);u=cv.toDataURL('image/png');if(u.length>4200)u='';}   // 투명 PNG 는 투명 그대로(작으면) — 크면 흰 바탕 JPEG
+      if(!u){g.clearRect(0,0,48,48);g.fillStyle='#fff';g.fillRect(0,0,48,48);g.drawImage(im,0,0,48,48);u=cv.toDataURL('image/jpeg',0.7);}
+      ph48[id]=u.length<=4200?u:'';famSoon();}catch(err){}};
   im.src=src;return '';
 }
 const stFam=x=>!!x&&(x.fam===true||(x.fam===undefined&&x.kind!=='pill'));   // 이 스티커를 가족에게 보일지: 약은 기본 안 보임 · 나머지는 기본 보임 · 스티커마다 바꿀 수 있음

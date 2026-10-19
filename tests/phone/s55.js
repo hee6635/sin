@@ -60,7 +60,7 @@ const {mkT,base}=require('./lib.js');
     const memo=n=>Array.from({length:n},(_,i)=>({id:'q'+i,text:'병원 '+(i+1),shared:false}));
     for(const [w,h,nm] of [[390,844,'폰'],[360,1100,'긴 폰']]){
       const p=await boot(b,{...base,memos:{'2026-10-13':memo(1),'2026-10-14':memo(3),'2026-10-15':memo(6)},pattern:['주','야','휴','휴'],anchor:'2026-10-02'},{w,h,touch:true});
-      const r=await p.evaluate(()=>{const cs=getComputedStyle(document.documentElement),lh=parseFloat(cs.getPropertyValue('--plh')),cap=Math.round(lh*1.3)+1;
+      const r=await p.evaluate(()=>{const cs=getComputedStyle(document.documentElement),lh=parseFloat(cs.getPropertyValue('--plh')),cap=Math.round(lh*1.15)+1;
         const mx=k=>Math.max(0,...[...document.querySelectorAll(`.track .panel:nth-child(2) .cell[data-k="${k}"] .pill-wrap>.pl`)].map(e=>e.getBoundingClientRect().height));
         return {lh,cap,h1:mx('2026-10-13'),h3:mx('2026-10-14'),h6:mx('2026-10-15')};});
       T(`${nm}: 메모가 줄을 꽉 채워도 알약 높이 ≤ 글자 줄 높이의 1.3배`,r.h1<=r.cap+0.5&&r.h3<=r.cap+0.5&&r.h6<=r.cap+0.5&&r.h6>0,JSON.stringify(r));

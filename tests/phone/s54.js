@@ -83,7 +83,7 @@ const {mkT,base}=require('./lib.js');
       const p=await boot(b,{...base,memos,pattern:['주','야','휴','휴'],anchor:'2026-10-02'},{w,h,touch:true});
       const r=await p.evaluate(()=>{const cs=getComputedStyle(document.documentElement);const lh=parseFloat(cs.getPropertyValue('--plh')),ph=parseFloat(cs.getPropertyValue('--plhf'));
         const e=document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-13"] .pill-wrap>.pl');return {lh,ph,real:e?e.getBoundingClientRect().height:0};});
-      T(`${nm}: 알약 높이(${r.ph}px) ≤ 글자 줄 높이(${r.lh}px)의 1.3배`,r.ph<=Math.round(r.lh*1.3)+0.5&&r.real<=r.ph+1.5&&r.real>0,JSON.stringify(r));
+      T(`${nm}: 알약 높이(${r.ph}px) ≤ 글자 줄 높이(${r.lh}px)의 1.15배`,r.ph<=Math.round(r.lh*1.15)+0.5&&r.real<=r.ph+1.5&&r.real>0,JSON.stringify(r));
       T(`${nm}: 오류 없음`,p.errs.length===0,p.errs.join('|'));await p.close();
     }
   }

@@ -24,6 +24,12 @@ class AlarmBridge(private val activity: MainActivity) {
         activity.runOnUiThread { activity.shareScreenshot() }
     }
 
+    /** 지금 보이는 달력 화면을 이미지로 찍어 클립보드에만 담기 (공유 창을 열지 않음 · 붙여넣기로 보냄) */
+    @JavascriptInterface
+    fun copyScreen() {
+        activity.runOnUiThread { activity.copyScreenshot() }
+    }
+
     /** 백업 파일(JSON)을 만들어 공유 시트로 보내기 (카톡 나에게 보내기, 드라이브 저장 등) */
     @JavascriptInterface
     fun shareFile(name: String, content: String) {
