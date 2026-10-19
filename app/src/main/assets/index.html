@@ -4786,6 +4786,7 @@ function tunePrev(){   // 미리보기는 "일주일 줄"만: 스티커 · 메�
   cells.forEach((x,i)=>{if(Math.floor(i/7)!==best)x.remove();});
   g.style.gridTemplateRows='1fr';
   e.style.height=(Math.max(90,Math.round((innerHeight-230)/6))+34)+'px';
+  try{fitDn(e);}catch(err){}   // 실제 달력처럼 날짜 줄에 안 들어가면 공휴일 이름을 줄이고 스티커를 아래 줄로 (미리보기도 똑같이)
 }
 function openTunePage(){
   openPage(`${pageHead('모양 조정')}
