@@ -336,7 +336,13 @@ object MonthRenderer {
             val bmp: Bitmap = synchronized(WidgetRenderer) {   // (WidgetRenderer.dens 를 같이 쓰므로 다른 위젯 그리기와 차례로)
                 val size = WidgetRenderer.bitmapSize(ctx, mgr, id, 300, 300)
                 val b = Bitmap.createBitmap(size[0], size[1], Bitmap.Config.ARGB_8888)
-                draw(Canvas(b), size[0].toFloat(), size[1].toFloat(), data, grid, ws, offset, ppl, person, WidgetRenderer.palette(ctx, data))
+                // 모양 조정의 "커버 / 안쪽" 구분은 그림 폭이 아니라 위젯의 (세로 화면 기준) 최소 폭으로 — 가로 · 세로나 화면에 따라 그림 폭이 달라져도 같은 값을 씀
+                val opts = mgr.getAppWidgetOptions(id)
+                val minW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0).toFloat()
+                val maxW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0).toFloat()
+                val pw = if (minW > 0f) minW else size[0] / WidgetRenderer.dens
+                WidgetStore.note(ctx, "한 달 위젯 #" + id, "그림 " + size[0] + "x" + size[1] + "px · 밀도 " + WidgetRenderer.dens + " · 최소폭 " + minW.toInt() + "dp · 최대폭 " + maxW.toInt() + "dp → " + (if (pw < 440f) "커버" else "안쪽") + " 값")
+                draw(Canvas(b), size[0].toFloat(), size[1].toFloat(), data, grid, ws, offset, ppl, person, WidgetRenderer.palette(ctx, data), pw)
                 b
             }
             val rv = RemoteViews(ctx.packageName, R.layout.widget_month_view)
@@ -364,7 +370,7 @@ object MonthRenderer {
     }
 
     /** 그림 한 장을 그림 (안드로이드 화면과 따로 컴퓨터에서도 돌려 볼 수 있게 Context 없이 · 밝게/어둡게는 pal 로) */
-    internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal) {
+    internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal, profileWDp: Float = -1f) {
         val u = WidgetRenderer.dens
         val alpha = ((data?.optInt("alpha", 100) ?: 100).coerceIn(0, 100) * 255 / 100)
         val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -411,7 +417,7 @@ object MonthRenderer {
             for (c in 0 until 7) m = Math.max(m, cells[r * 7 + c].memos.size)
             m
         }
-        val tn = Tune.from(data, w / u)
+        val tn = Tune.from(data, if (profileWDp > 0f) profileWDp else w / u)
         val plan = WidgetLayout.solveMonth(rowMemos, cw, rowH, u, hasCircle, 2, tn.stk, tn.pill)
         val icons = data?.optJSONObject("ic")
         val fill = data?.optString("look", "fill") != "circle"   // 칸 채우기(기본) · 동그라미(예전 모양) — 앱 설정 › 홈 화면 위젯

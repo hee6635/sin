@@ -131,6 +131,10 @@ class AlarmBridge(private val activity: MainActivity) {
         WidgetRefresher.refreshAll(context)
     }
 
+    /** 위젯을 마지막에 그린 상태 (앱 \"모양 조정\" 화면에서 보여 줌) */
+    @JavascriptInterface
+    fun widgetDebug(): String = WidgetStore.notes(context)
+
     /** 위젯 창에서 체크한 것(대기 목록 JSON, 가져가면 비움) */
     @JavascriptInterface
     fun takeWidgetActions(): String = WidgetStore.takeActions(context)

@@ -4789,9 +4789,11 @@ function tunePrev(){   // 미리보기는 "일주일 줄"만: 스티커 · 메�
   try{fitDn(e);}catch(err){}   // 실제 달력처럼 날짜 줄에 안 들어가면 공휴일 이름을 줄이고 스티커를 아래 줄로 (미리보기도 똑같이)
 }
 function openTunePage(){
+  let dbg='';try{if(hasBridge('widgetDebug'))dbg=String(window.AndroidBridge.widgetDebug()||'');}catch(e){}
   openPage(`${pageHead('모양 조정')}
     <div class="pg-b">
       <div class="hint" style="padding:10px 16px 0">움직이면 바로 바뀌어요. 다 맞추고 아래 "값 복사"를 눌러 전해 주세요. 위젯 값은 홈 화면 위젯에 바로 반영돼요.</div>
+      ${dbg?`<div class="hint" style="padding:6px 16px 0;font-size:11.5px">놓인 한 달 위젯 마지막 그림 상태<br>${esc(dbg).replace(/\n/g,'<br>')}</div>`:''}
       <div class="tn-g"><h4>앱 달력 모양</h4><div class="chips"><button class="${S.calLook==='fill'?'':'on'}" data-act="callook" data-v="circle">동그라미</button><button class="${S.calLook==='fill'?'on':''}" data-act="callook" data-v="fill">칸 채우기</button></div></div>
       <div class="tn-prev" id="tnPrev"></div>
       <div class="tn-g"><h4>앱 달력</h4>${tuneRows('app')}</div>

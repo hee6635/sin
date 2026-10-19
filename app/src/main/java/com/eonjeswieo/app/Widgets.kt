@@ -112,6 +112,21 @@ object WidgetStore {
         save(ctx, out)
     }
 
+    /** 위젯을 마지막에 그린 상태(크기 · 어떤 값을 썼는지)를 적어 둠 — 앱 "모양 조정" 화면에서 볼 수 있게 (그림이 예상과 다를 때 원인 찾기용) */
+    fun note(ctx: Context, key: String, value: String) {
+        val sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val o = try { JSONObject(sp.getString("dbg", "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
+        o.put(key, value)
+        sp.edit().putString("dbg", o.toString()).apply()
+    }
+
+    fun notes(ctx: Context): String {
+        val o = try { JSONObject(ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("dbg", "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
+        val sb = StringBuilder()
+        for (k in o.keys()) sb.append(k).append(": ").append(o.optString(k)).append("\n")
+        return sb.toString().trim()
+    }
+
     fun load(ctx: Context): JSONObject? {
         val s = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null) ?: return null
         return try {
