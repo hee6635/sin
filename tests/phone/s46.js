@@ -1,6 +1,7 @@
 // 출시 서류 · 데이터 안전 (v0.63): 개인정보처리방침 새 글 + 웹 주소 · 웹 페이지 파일 · 백업 안내(한 번만) · 메모 색 · 달력 범위(2025~) · 모두 지우기(서버 없는 쪽) · 문의 메일 번호
 const fs=require('fs');
 const {chromium,boot,rich}=require('./x_common.js');
+const richA=()=>{const s=rich();if(s.link)s.link.stkAsked=1;return s;};
 const {mkT}=require('./lib.js');
 (async()=>{
   const T=mkT();const b=await chromium.launch();
@@ -10,7 +11,7 @@ const {mkT}=require('./lib.js');
   const calls=(p,n)=>p.evaluate(n=>window.__calls.filter(c=>c[0]===n),n);
 
   // ── 개인정보처리방침 (앱 안)
-  {const p=await boot(b,rich(),{});await toSet(p);
+  {const p=await boot(b,richA(),{});await toSet(p);
    await p.evaluate(()=>document.querySelector('[data-act="more-privacy"]').click());await p.waitForTimeout(300);
    const txt=await p.$eval('#page .policy',e=>e.innerText);
    T('방침: 시행일',txt.includes('시행일 2026년 10월 19일'));
@@ -40,7 +41,7 @@ const {mkT}=require('./lib.js');
 
   // ── 백업 안내: 며칠 쓴 뒤 한 번만
   {const day=864e5,T0=+new Date('2026-10-12T10:00:00');
-   const mk=(mut)=>{const s=rich();s.born=T0-6*day;mut&&mut(s);return s;};
+   const mk=(mut)=>{const s=richA();s.born=T0-6*day;mut&&mut(s);return s;};
    const bridge=(linked)=>`window.AndroidBridge.driveLinked=()=>${linked};`;
    const run=async(name,state,pre,expectPop)=>{
      const p=await boot(b,state,{preInit:pre,wait:7200});
@@ -63,7 +64,7 @@ const {mkT}=require('./lib.js');
      run('드라이브 기능이 없는 앱(브라우저)',mk(),'delete window.AndroidBridge.driveLinked;',false).then(p=>p.ctx.close()),
      run('쓴 기록이 아직 없음',mk(s=>{s.myset=false;s.memos={};s.overrides={};}),bridge(false),false).then(p=>p.ctx.close())]);
    // 옛 저장 데이터(born 없음): 오류 없이 켜지고 처음 쓴 때가 지금으로 채워짐
-   const old=rich();delete old.born;delete old.nudgeBk;
+   const old=richA();delete old.born;delete old.nudgeBk;
    const p2=await boot(b,old,{preInit:bridge(false),wait:800});
    await p2.click('#nav [data-tab="set"]');await p2.waitForTimeout(200);await p2.click('[data-act="font"][data-v="120"]');await p2.waitForTimeout(300);   // 아무 설정이나 바꿔 저장시킴
    const so=await S(p2);
@@ -71,7 +72,7 @@ const {mkT}=require('./lib.js');
    await p2.ctx.close();}
 
   // ── 메모 색
-  {const p=await boot(b,rich(),{});await toSet(p);
+  {const p=await boot(b,richA(),{});await toSet(p);
    await p.evaluate(()=>{const e=document.createElement('div');e.dataset.act='more-colors';document.body.appendChild(e);e.click();e.remove();});await p.waitForTimeout(300);
    const sw=await p.$$eval('#page .swatch',gs=>gs.map(g=>[...g.querySelectorAll('button')].map(x=>x.dataset.v)));
    T('설정 메모 색: 가족 색 칸에는 나만 보는 색(회색)이 없음',sw[0].length===13&&!sw[0].includes('#6b7280')&&sw[0].includes('#7b5cf0'),JSON.stringify(sw[0]));
@@ -90,7 +91,7 @@ const {mkT}=require('./lib.js');
    await p.ctx.close();}
 
   // ── 달력 범위: 2025년 1월부터 · 2025년 공휴일
-  {const p=await boot(b,rich(),{});
+  {const p=await boot(b,richA(),{});
    await p.evaluate(()=>window.__onPush({date:'2025-10-08',type:'x'}));await p.waitForTimeout(500);
    const sh=await p.evaluate(()=>({open:document.getElementById('sheet').classList.contains('open'),txt:document.getElementById('sheet').innerText}));
    T('2025-10-08 날짜 창이 열리고 대체공휴일로 나옴',sh.open&&sh.txt.includes('대체공휴일'),sh.txt.slice(0,80));
@@ -104,20 +105,20 @@ const {mkT}=require('./lib.js');
    await p.ctx.close();}
 
   // ── 문의 메일: 가족 연결 번호가 자동으로 들어감 (서버에 남은 정보를 찾아 지울 때 씀)
-  {const s=rich();s.link={hid:'dad',role:'guest',name:'엄마',perm:'write',mode:'own',uid:'uidmom123',hash:''};
+  {const s=richA();s.link={hid:'dad',role:'guest',name:'엄마',perm:'write',mode:'own',uid:'uidmom123',hash:''};
    const p=await boot(b,s,{preInit:'window.AndroidBridge.appInfo=()=>JSON.stringify({version:"0.63",device:"Test",android:"15"});'});await toSet(p);
    await p.evaluate(()=>document.querySelector('[data-act="more-mail"]').click());await p.waitForTimeout(250);
    const m=await calls(p,'sendMail');
    T('문의 메일 본문에 가족 연결 번호가 들어감',m.length===1&&m[0][1].includes('uidmom123')&&m[0][1].includes('eonjeswieo.app@gmail.com'),JSON.stringify(m).slice(0,200));
    await p.ctx.close();
-   const p2=await boot(b,rich(),{preInit:'window.AndroidBridge.appInfo=()=>JSON.stringify({version:"0.63"});'});await toSet(p2);
+   const p2=await boot(b,richA(),{preInit:'window.AndroidBridge.appInfo=()=>JSON.stringify({version:"0.63"});'});await toSet(p2);
    await p2.evaluate(()=>document.querySelector('[data-act="more-mail"]').click());await p2.waitForTimeout(250);
    const m2=await calls(p2,'sendMail');
    T('가족 연결을 안 쓰면 번호 줄이 없음',m2.length===1&&!m2[0][1].includes('가족 연결 번호'),JSON.stringify(m2).slice(0,160));
    await p2.ctx.close();}
 
   // ── 내 데이터 모두 지우기 (서버를 안 쓰는 사람)
-  {const s=rich();s.drive={last:+new Date('2026-10-10T10:00:00'),dirty:false,email:'a@b.c',auto:true};
+  {const s=richA();s.drive={last:+new Date('2026-10-10T10:00:00'),dirty:false,email:'a@b.c',auto:true};
    const pre=`window.AndroidBridge.driveLinked=()=>true;window.AndroidBridge.driveUnlink=()=>{window.__unlinked=(window.__unlinked||0)+1;};localStorage.setItem('eonjeswieo:hol','{"fetchedAt":1,"years":{}}');localStorage.setItem('eonjeswieo:err','[{"t":1,"m":"x"}]');localStorage.setItem('shiftcal:v9','{}');localStorage.setItem('other:key','keep');`;
    const p=await boot(b,s,{preInit:pre});accept(p);await toSet(p);
    await p.evaluate(()=>document.querySelector('[data-act="more-wipe"]').click());
@@ -132,11 +133,11 @@ const {mkT}=require('./lib.js');
    T('가림막이 남지 않음',await p.evaluate(()=>!document.getElementById('wipeBox')));
    T('오류 없음',p.errs.length===0,p.errs.join('|'));
    await p.ctx.close();}
-  {const s=rich();const p=await boot(b,s,{});accept(p);await toSet(p);
+  {const s=richA();const p=await boot(b,s,{});accept(p);await toSet(p);
    await p.evaluate(()=>document.querySelector('[data-act="more-wipe"]').click());await p.waitForTimeout(1500);
    T('드라이브를 안 쓴 사람에게는 드라이브 안내 줄이 없음',p.__dialogs.length===2&&!p.__dialogs[0].includes('드라이브'),JSON.stringify(p.__dialogs));
    await p.ctx.close();}
-  {const p=await boot(b,rich(),{});await toSet(p);   // 첫 확인에서 취소하면 아무것도 안 지워짐
+  {const p=await boot(b,richA(),{});await toSet(p);   // 첫 확인에서 취소하면 아무것도 안 지워짐
    await p.evaluate(()=>document.querySelector('[data-act="more-wipe"]').click());await p.waitForTimeout(500);
    T('첫 확인에서 취소(기본 dismiss)하면 그대로',(await S(p)).myset===true&&!(await p.evaluate(()=>document.getElementById('onboard').classList.contains('open'))));
    await p.ctx.close();}

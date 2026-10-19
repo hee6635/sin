@@ -158,6 +158,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .vs-mvrow{display:flex;align-items:center;gap:8px}
 .vs-mvrow .vs-n{flex:1;text-align:center;font-size:14px}
 .vs-mv{min-width:36px;padding:0 10px;font-size:20px;line-height:1}
+.vcm-act{margin-left:auto;display:flex;gap:2px;flex:none}.vcm-act button{width:34px;height:34px;border-radius:10px;font-size:15px;color:var(--muted)}.vcm-act button:active{background:var(--surface)}.vcm-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
 .vcmemo-bar{display:flex;gap:7px;align-items:center;margin-top:8px}
 .vcmemo-bar input{flex:1;min-width:0;height:40px;border-radius:20px;padding:0 14px;font-size:14.5px;background:var(--fam-bg);box-shadow:inset 0 0 0 1.5px var(--fam-line);border:0}
 #ban{position:fixed;left:12px;right:12px;top:calc(8px + env(safe-area-inset-top,0px));z-index:9999;max-width:520px;margin:0 auto;background:#25282e;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.35;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.28);transform:translateY(-140%);opacity:0;transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .2s;pointer-events:none;cursor:pointer;touch-action:none}
@@ -572,7 +573,7 @@ textarea{resize:none;min-height:84px}
 /* 달력 칸 메모 */
 .pill-wrap{gap:1px}
 .pill-wrap>*{flex:1 1 0 !important;min-height:0;max-height:var(--plmax,14px);line-height:var(--plhf,var(--plh,13px))}
-.pill-wrap.full>*{max-height:none}
+.pill-wrap.full>*{max-height:var(--plmax,14px)}   /* 줄이 꽉 차도 글자 줄 높이의 1.3배까지만 (남는 높이는 여백) */
 .pl.withmore{display:flex;align-items:center;gap:2px}   /* 메모가 줄 수보다 많으면 마지막 줄 끝에 "+n" 칩 (위젯 칸과 같은 표시) */
 .pl .pt{flex:1 1 0;min-width:0;overflow:hidden;white-space:nowrap}
 .pl .mc{flex:none;box-sizing:border-box;height:calc(var(--plh,13px)*.8);min-width:calc(var(--plh,13px)*1.04);padding:0 3px;border-radius:99px;background:color-mix(in srgb,var(--fg) 62%,var(--bg));color:var(--bg);font-style:normal;font-weight:800;font-size:calc(var(--plf,9px)*.9);line-height:calc(var(--plh,13px)*.8);text-align:center}
@@ -1641,7 +1642,7 @@ function normalize(o){
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
   s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))) };s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
-  s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
+  s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,stkAsked:s.link.stkAsked?1:0,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#6b7280'})[k];});
   s.drive=Object.assign(defaults().drive,isObj(o.drive)?o.drive:{});
   s.status=Object.assign(defaults().status,isObj(o.status)?o.status:{});if(!isObj(s.status.labels))s.status.labels={};
@@ -4279,7 +4280,7 @@ function renderCfm(){
 function doCfm(c){
   if(c.pg&&(c.type==='memo'||c.type==='memo-edit')&&pageMode==='memodetail'){mdDraft=null;closePage();}
   if(c.type==='status'){S.status.show=true;save();openStatusPage();toast('실시간 상태를 가족에게 보여줘요');return;}
-  if(c.type==='stk'){S.link.stk=true;save();famPush(true).catch(()=>{});if(pageMode==='link')openLinkPage();toast('내 스티커를 가족에게 보여줘요');return;}
+  if(c.type==='stk'){S.link.stk=true;save();famPush(true).catch(famPushFail);if(pageMode==='link')openLinkPage();toast('내 스티커를 가족에게 보여줘요');return;}
   if(c.type==='memo'){
     if(famRemain()<=0){famLimitSheet();return;}
     if(c.vc){memoSetTo(addMemo(c.k,c.text,true,false),c.to);save();vcRerender();openVcDay(c.k);toast('♥ 가족 메모를 남겼어요');return;}
@@ -4744,6 +4745,8 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
+  'v0.77':`· <b>가족 메모</b>: 남의 달력(보기만) 날짜 창에서도 내가 쓴 가족 메모를 고치고 지울 수 있어요 · 메모 칸이 꽉 차도 글자에 맞게 보여요<br>
+      · <b>가족</b>: 가족이 생기면 내 스티커를 지금 것부터 보여 줄지 앞으로 것부터 보여 줄지 고를 수 있어요 · 내 근무표를 가족에게 올리지 못하면 이유를 알려 줘요`,
   'v0.76':`· <b>위젯</b>: 한 달 위젯(‹ › 로 12월 · 내년까지, 가족 달력으로 바꿔 보기) · 큰 위젯에서는 글자도 같이 커져요<br>
       · <b>배경</b>: 설정 › 화면 › 배경에서 "종이"를 고를 수 있어요 (기본 그대로도 돼요)<br>
       · <b>달력 메모</b>: 칸이 높은 화면에서 메모 칸이 글자에 맞게 줄었어요<br>
@@ -4752,6 +4755,16 @@ const NEWS={
 // 사용 통계: 이름만 보냄(내용 없음). 설정에서 끄면 안 보냄 · 앱(안드로이드)에서만 동작
 function track(name){if(S.stats===false)return;try{if(window.AndroidBridge&&window.AndroidBridge.logEvent)window.AndroidBridge.logEvent(String(name));}catch(e){}}
 function applyStats(){try{if(window.AndroidBridge&&window.AndroidBridge.setStatsEnabled)window.AndroidBridge.setStatsEnabled(S.stats!==false);}catch(e){}}
+// 가족이 생기면 한 번: 내 스티커를 가족에게 어떻게 보여 줄지 (이미 켠 사람은 안 물음)
+function stkAskCheck(){
+  const L=S.link;if(!L||L.stkAsked)return;
+  if(L.stk){L.stkAsked=1;famSaveLocal();return;}
+  if(!famOthers().length||!S.onboarded||ob||pageMode||$('#pop').classList.contains('open')||$('#sheet').classList.contains('open'))return;
+  L.stkAsked=1;famSaveLocal();
+  openPop(`<div class="mh">가족이 생겼어요<b>내 스티커를 가족에게 보여 줄까요?</b></div>
+    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0;line-height:1.7">💊 약 스티커는 어느 쪽이든 따로 켜야 보여요. 메모는 쓸 때 ♥로 골라서 보내요. 나중에 설정 › 가족 목록에서 바꿀 수 있어요.</div></div>
+    <div class="mi" style="flex-direction:column;gap:8px"><button class="btn" style="width:100%" data-act="stkshare-now">지금 있는 스티커도 보여 줘요</button><button class="btn ghost" style="width:100%" data-act="stkshare-new">앞으로 만드는 스티커부터 보여 줘요</button><button class="btn ghost" style="width:100%" data-act="stkshare-no">안 보여 줘요</button></div>`);
+}
 function introNotice(){
   const v=appVersion();
   if(!v||!S.onboarded||ob||S.seenVer===v||pageMode||$('#pop').classList.contains('open')||$('#sheet').classList.contains('open'))return;
@@ -6068,6 +6081,18 @@ document.addEventListener('click',e=>{
     case 'vc-multi-from':{const p=vcEnsure();if(!p)break;const k=t.dataset.k;closeSheet();
       const w=(p.sch.types||[]).some(x=>x.k===rqD.want)?rqD.want:vcRest(p);
       vcSel={on:true,uid:p.uid,want:w,dates:new Set(),msg:''};if(vsOk(p,k))vcSel.dates.add(k);vcRerender();vsBar();break;}
+    case 'stkshare-now':if(S.link){S.link.stk=true;S.link.stkAsked=1;}save();famPush(true).catch(famPushFail);closePop();toast('지금 있는 스티커도 가족에게 보여요 (약은 빼고)');break;
+    case 'stkshare-new':if(S.link){S.link.stk=true;S.link.stkAsked=1;(S.stamps.defs||[]).forEach(d=>{d.fam=false;});}save();famPush(true).catch(famPushFail);closePop();toast('앞으로 만드는 스티커부터 가족에게 보여요');break;
+    case 'stkshare-no':if(S.link)S.link.stkAsked=1;save();closePop();break;
+    case 'vc-memo-edit':vcMemoEdit=t.dataset.mid;vcMemoEditK=t.dataset.k;openVcDay(t.dataset.k);break;
+    case 'vc-memo-cancel':vcMemoEdit='';openVcDay(t.dataset.k);break;
+    case 'vc-memo-save':{const k=t.dataset.k,el=$('#vcmedit'),text=el?el.value.trim():'';const m=(S.memos[k]||[]).find(x=>x.id===t.dataset.mid);
+      if(!text){toast('메모를 적어주세요');break;}
+      if(m&&m.by===role()){m.text=text.slice(0,200);save();toast('메모를 고쳤어요');}
+      vcMemoEdit='';openVcDay(k);break;}
+    case 'vc-memo-del':{const k=t.dataset.k;const m=(S.memos[k]||[]).find(x=>x.id===t.dataset.mid);
+      if(!m||m.by!==role())break;if(!confirm('이 가족 메모를 지울까요? 가족 폰에서도 지워져요'))break;
+      S.memos[k]=(S.memos[k]||[]).filter(x=>x.id!==m.id);if(!S.memos[k].length)delete S.memos[k];save();toast('메모를 지웠어요');openVcDay(k);break;}
     case 'vc-memo-send':afterCompose('#vcmemo',()=>{const k=t.dataset.k,el=$('#vcmemo'),text=el?el.value.trim():'';if(!text){toast('메모를 적어주세요');return;}if(famRemain()<=0){famLimitSheet();return;}openCfm({type:'memo',k,text,vc:true});});break;
     case 'ban-go':{if(banSwiped)break;const el=$('#ban'),k=el?el.dataset.k:'',kd=el?el.dataset.kind:'';banHide();window.__onPush({type:kd,date:k});break;}
     case 'vc-multi-off':vcSel.on=false;vcSel.dates=new Set();vcRerender();break;
@@ -6580,7 +6605,7 @@ async function famSync(){
   const snap=await F.getDoc(famMember(F,db,hid,uid));
   const had=!!S.link;
   const old=S.link;
-  if(snap.exists()){const d=snap.data();S.link={hid,role:d.role,name:d.name,perm:d.perm,mode:d.mode==='view'?'view':'own',uid,hash:(old&&old.hid===hid&&old.hash)||'',stk:!!(old&&old.hid===hid&&old.stk)};}
+  if(snap.exists()){const d=snap.data();S.link={hid,role:d.role,name:d.name,perm:d.perm,mode:d.mode==='view'?'view':'own',uid,hash:(old&&old.hid===hid&&old.hash)||'',stk:!!(old&&old.hid===hid&&old.stk),stkAsked:(old&&old.hid===hid&&old.stkAsked)?1:0};}
   else{S.link=null;famClear();}
   save();
   return {had,link:S.link};
@@ -6733,7 +6758,7 @@ function famPayload(){
 function famHash(t){let a=5381,b=52711;for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);a=((a<<5)+a^c)>>>0;b=((b<<5)+b+c*31)>>>0;}return a.toString(16)+b.toString(16);}
 function famSoon(){
   if(!S||!S.link||!fbCfg()||wipeBusy)return;
-  clearTimeout(famT);famT=setTimeout(()=>{if(!famView())famPush().catch(()=>{});famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});},2500);
+  clearTimeout(famT);famT=setTimeout(()=>{if(!famView())famPush().catch(famPushFail);famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});},2500);
 }
 async function famPush(force){
   if(!S.link||famView())return;
@@ -6748,10 +6773,18 @@ async function famPush(force){
   await F.setDoc(F.doc(db,'households',S.link.hid,'schedules',uid),{...p,updatedAt:F.serverTimestamp()});
   if(S.link){S.link.hash=h;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 }
+var famPushWarnAt=0;
+// 내 근무표를 가족에게 올리지 못했을 때: 조용히 넘기지 않고 5분에 한 번 이유를 알려 줌
+function famPushFail(e){
+  const c=String((e&&e.code)||(e&&e.message)||e);
+  if(Date.now()-famPushWarnAt<300000)return;famPushWarnAt=Date.now();
+  toast(c.includes('permission-denied')?'내 근무표를 가족에게 올리지 못했어요 (권한 없음) · 설정 › 문의하기로 알려 주세요':'내 근무표를 가족에게 올리지 못했어요 · '+fbErrText(e));
+}
 function famStop(){famUnsub.forEach(f=>{try{f();}catch(e){}});famUnsub=[];}
 function famClear(){famStop();clearTimeout(famT);if(S){S.fam2={scheds:{},members:[],memos:{},reqIn:{},reqOut:{},me:{sent:0,bonus:0},seenMemo:[],memoRev:{},reqCc:{},init:false};S.requests=(S.requests||[]).filter(r=>!r.srv);}}
 function famSaveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function famRefreshUi(){
+  try{stkAskCheck();}catch(e){}
   const ae=document.activeElement;if(ae&&ae.id==='vcmsg')return;   // 요청 메시지를 쓰는 중이면 건드리지 않음
   if(pageMode==='famcal'){renderFamCalPage();return;}
   if(pageMode==='mancal'){renderManCalPage();return;}
@@ -6928,7 +6961,7 @@ function pushRow(){
 }
 async function famBoot(){
   if(!fbCfg()||!S.link||famBooting||wipeBusy)return;famBooting=true;
-  try{await famSync();if(S.link){await famListen();if(!famView())famPush().catch(()=>{});famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});famRegUser().catch(()=>{});}else famClear();}
+  try{await famSync();if(S.link){await famListen();if(!famView())famPush().catch(famPushFail);famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});famRegUser().catch(()=>{});}else famClear();}
   catch(e){}finally{famBooting=false;}
 }
 // 가족이 "내 근무표 올리기 / 가족 것만 볼래요"를 바꿀 때
@@ -6997,9 +7030,15 @@ function vcPills(k,mx){
   if(pl.length>mx)pl.splice(0,pl.length,...capPills(pl,mx));
   return pl.length?`<div class="pill-wrap${pl.length>=mx?' full':''}">${pl.join('')}</div>`:'';
 }
+var vcMemoEdit='',vcMemoEditK='';
 function vcMemoHtml(k){
   const ms=visibleMemos(k).filter(x=>x.shared);
-  const list=ms.map(m=>`<div class="mcard fam"><div class="mt2"><span class="tx">${linkify(m.text,{click:true,fam:m.by!==role()})}</span><div class="meta"><span class="who ${m.by===role()?'me':''}">${esc(whoName(m.by))}</span> · ${rel(m.t)}</div></div></div>`).join('');
+  if(vcMemoEditK!==k){vcMemoEdit='';vcMemoEditK=k;}
+  const list=ms.map(m=>{
+    const mine=m.by===role()&&!String(m.id).startsWith('s:');   // 내가 쓴 가족 메모는 여기서도 고치고 지울 수 있어요
+    if(mine&&vcMemoEdit===m.id)return `<div class="mcard fam"><div class="mt2" style="width:100%"><input type="text" id="vcmedit" maxlength="200" value="${esc(m.text)}" style="width:100%"><div class="vcm-btns"><button class="btn sm ghost" data-act="vc-memo-cancel" data-k="${k}">취소</button><button class="btn sm" data-act="vc-memo-save" data-k="${k}" data-mid="${m.id}">저장</button></div></div></div>`;
+    return `<div class="mcard fam"><div class="mt2"><span class="tx">${linkify(m.text,{click:true,fam:m.by!==role()})}</span><div class="meta"><span class="who ${m.by===role()?'me':''}">${esc(whoName(m.by))}</span> · ${rel(m.t)}</div></div>${mine?`<span class="vcm-act"><button data-act="vc-memo-edit" data-k="${k}" data-mid="${m.id}" aria-label="고치기">✎</button><button data-act="vc-memo-del" data-k="${k}" data-mid="${m.id}" aria-label="지우기">🗑</button></span>`:''}</div>`;
+  }).join('');
   return `<div class="lbl" style="color:var(--fam);margin-top:12px">♥ 가족 메모</div>${list||'<div class="mempty">아직 메모가 없어요</div>'}
     <div class="vcmemo-bar"><input type="text" id="vcmemo" maxlength="200" placeholder="가족에게 남길 메모" enterkeyhint="send"><button class="send fam" data-act="vc-memo-send" data-k="${k}" aria-label="보내기">${ICON.send}</button></div>
     <div class="usage-hint" style="margin-top:4px">무료 ${famRemain()}건 남음 · 가족 모두에게 보이고 알림이 가요</div>`;
@@ -7624,6 +7663,7 @@ bootStep(famBoot);
 setTimeout(()=>{try{if(window.AndroidBridge&&typeof window.AndroidBridge.takePush==='function'){const p=String(window.AndroidBridge.takePush()||'');if(p)window.__onPush(JSON.parse(p));}}catch(e){}},700);
 setTimeout(widgetSync,150);
 setTimeout(introNotice,800);
+setTimeout(()=>{try{stkAskCheck();}catch(e){}},1800);
 applyStats();track('app_start');
 setTimeout(addonNotice,1200);
 setTimeout(autoBackup,4000);
