@@ -65,5 +65,17 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     T('처음 값으로: 전부 기본(1 · 0)',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('eonjeswieo:v1')).tune;return s.app.stk===1&&s.cover.ink===1&&s.inner.memo===1&&s.app.stkX===0;}));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
+  // ── 공휴일 이름 · 스티커 자리: 이름이 다 안 들어가면 한 글자로 숫자 옆에 두고, 모자라면 스티커를 아래 줄로 (이름을 숫자 아래로 내리지 않음)
+  {
+    const mk=(id,e,n,x={})=>({id,kind:'mark',emoji:e,name:n,times:1,rep:'none',days:[],dates:[],skip:[],ats:[],...x});
+    const defs=[{id:'s_pill',kind:'pill',emoji:'💊',name:'약',times:1,color:'#ef4d5a',rep:'none',days:[],dates:['2026-10-09'],skip:[],ats:[]},mk('a','👟','조깅',{dates:['2026-10-09']}),mk('b','📖','독서',{dates:['2026-10-09']}),mk('c','💰','가계',{dates:['2026-10-09']})];
+    for(const w of [300,390]){
+      const p=await boot(b,{...base,stamps:{defs,log:{},v3:1,v4:1,lastAt:[]}},{w,h:800,touch:true});
+      const r=await p.evaluate(()=>{const c=document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-09"]');return {h1:(c.querySelector('.h1')||{}).textContent||'',hnb:!!c.querySelector('.hnb'),s1:c.querySelectorAll('.dn>.stp>*').length,s2:c.querySelectorAll('.s2>*').length};});
+      T(`한글날 + 스티커 4개 (폭 ${w}): 이름은 숫자 옆 한 글자 · 숫자 아래로 안 내려감`,r.h1==='한'&&!r.hnb&&r.s1+r.s2===4,JSON.stringify(r));
+      if(w===300)T('좁은 폭에서는 스티커가 아래 줄로 내려감',r.s2>=3,JSON.stringify(r));
+      T(`폭 ${w}: 오류 없음`,p.errs.length===0,p.errs.join('|'));await p.close();
+    }
+  }
   T.sum();await b.close();
 })();
