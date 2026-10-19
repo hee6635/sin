@@ -73,7 +73,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
       const p=await boot(b,{...base,stamps:{defs,log:{},v3:1,v4:1,lastAt:[]}},{w,h:800,touch:true});
       const r=await p.evaluate(()=>{const c=document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-09"]');return {h1:(c.querySelector('.h1')||{}).textContent||'',hnb:!!c.querySelector('.hnb'),s1:c.querySelectorAll('.dn>.stp>*').length,s2:c.querySelectorAll('.s2>*').length};});
       T(`한글날 + 스티커 4개 (폭 ${w}): 이름은 숫자 옆 한 글자 · 숫자 아래로 안 내려감`,r.h1==='한'&&!r.hnb&&r.s1+r.s2===4,JSON.stringify(r));
-      if(w===300)T('좁은 폭에서는 스티커가 아래 줄로 내려감',r.s2>=3,JSON.stringify(r));
+      T(`폭 ${w}: 스티커 둘째 줄이 생김(4개는 한 줄에 안 들어감)`,r.s2>=2,JSON.stringify(r));
       T(`폭 ${w}: 오류 없음`,p.errs.length===0,p.errs.join('|'));await p.close();
     }
   }
