@@ -2441,9 +2441,9 @@ function fitStz(root){
   const probe=()=>{const e=document.createElement('i');e.style.cssText='position:absolute;visibility:hidden;width:var(--stz)';document.body.appendChild(e);const w=e.getBoundingClientRect().width;e.remove();return w;};
   const measure=()=>{let need=0;stps.forEach(stp=>{
     const dn=stp.parentNode,h1=dn.querySelector('.h1'),t=h1?h1.textContent:'';if(h1)h1.textContent=h1.dataset.o||t;
-    const r=dn.getBoundingClientRect(),padR=parseFloat(getComputedStyle(dn).paddingRight)||0,last=dn.lastElementChild.getBoundingClientRect();
+    const padR=parseFloat(getComputedStyle(dn).paddingRight)||0,lastE=dn.lastElementChild;
     if(h1)h1.textContent=t;
-    const ov=r.width>0?last.right-(r.right-padR):0;
+    const ov=dn.clientWidth>0?(lastE.offsetLeft+lastE.offsetWidth)-(dn.clientWidth-padR):0;   // 자리 계산은 옮김 · 배율(모양 조정)을 빼고 원래 자리로 (스티커를 조금 옆으로 옮겨도 아래로 밀리지 않게)
     if(ov>.5)need=Math.max(need,ov/Math.max(1,stp.children.length));
   });return need;};
   let cur=probe();const orig=cur;
@@ -2459,8 +2459,8 @@ function fitDn(root){
   fitStz(root);
   const over=dn=>{
     const last=dn.lastElementChild;if(!last)return false;
-    const r=dn.getBoundingClientRect(),padR=parseFloat(getComputedStyle(dn).paddingRight)||0;
-    return r.width>0&&last.getBoundingClientRect().right>r.right-padR+.5;
+    const padR=parseFloat(getComputedStyle(dn).paddingRight)||0;
+    return dn.clientWidth>0&&last.offsetLeft+last.offsetWidth>dn.clientWidth-padR+.5;   // 모양 조정의 옮김 · 배율은 빼고 원래 자리로 잼
   };
   [...(root||document).querySelectorAll('.cell .dn>.stp')].forEach(stp=>{
     const dn=stp.parentNode,h1=dn.querySelector('.h1');
