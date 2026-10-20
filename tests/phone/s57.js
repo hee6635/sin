@@ -49,7 +49,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     await p.evaluate(()=>document.querySelector('[data-act="tune-open"]').click());await p.waitForTimeout(500);
     T('모양 조정 화면: 앱 달력 미리보기(일주일 줄만 · 7칸) + 슬라이더 44개(앱 안쪽 · 앱 커버 · 위젯 커버 · 위젯 안쪽 × 11)',await p.evaluate(()=>document.querySelectorAll('#tnPrev .grid .cell').length===7&&document.querySelectorAll('.tn-r').length===44),String(await p.evaluate(()=>document.querySelectorAll('.tn-r').length)));
     T('모양 조정 화면에 놓인 위젯의 마지막 그림 상태(커버 · 안쪽 중 어느 값을 썼는지)가 보임',await p.evaluate(()=>/최소폭 300dp → 커버 값/.test(document.querySelector('#page').textContent)));
-    T('이상한 저장 값은 범위 안으로(99 → 1.6 · 글자 → 기본 1.1)',await p.evaluate(()=>{const s=document.querySelector('.tn-r[data-g="appCover"][data-k="stk"]'),i=document.querySelector('.tn-r[data-g="appCover"][data-k="ink"]');return +s.value===1.6&&+i.value===1.1;}));
+    T('이상한 저장 값은 범위 안으로(99 → 1.6 · 글자 → 기본 1.15)',await p.evaluate(()=>{const s=document.querySelector('.tn-r[data-g="appCover"][data-k="stk"]'),i=document.querySelector('.tn-r[data-g="appCover"][data-k="ink"]');return +s.value===1.6&&+i.value===1.15;}));
     const setR=(g,k,v)=>p.evaluate(([g,k,v])=>{const e=document.querySelector(`.tn-r[data-g="${g}"][data-k="${k}"]`);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));},[g,k,v]);
     await setR('appCover','stk',1.3);await setR('appCover','ink',0.8);await setR('appCover','memo',1.2);await p.waitForTimeout(300);
     const css=await p.evaluate(()=>{const s=getComputedStyle(document.documentElement);return {stk:s.getPropertyValue('--tstk').trim(),ink:s.getPropertyValue('--tink').trim(),plf:parseFloat(s.getPropertyValue('--plf'))};});
@@ -67,7 +67,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     await p.evaluate(()=>document.querySelector('[data-act="tune-reset"]').click());await p.waitForTimeout(400);
     T('처음 값으로: 화면에서만 기본값(저장은 "저장"을 눌러야)',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('eonjeswieo:v1')).tune;return s.appCover.stk===1.3&&+document.querySelector('.tn-r[data-g="appInner"][data-k="stk"]').value===0.9&&+document.querySelector('.tn-r[data-g="cover"][data-k="ink"]').value===1.5;}));
     await p.evaluate(()=>document.querySelector('[data-act="tune-save"]').click());await p.waitForTimeout(300);
-    T('저장하면 기본값이 됨(앱 커버 주야 1.1 · 앱 안쪽 메모 1.35 · 위젯 안쪽 메모 1.1) · 이전 저장이 기록에 남음',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('eonjeswieo:v1'));return s.tune.appCover.ink===1.1&&s.tune.appInner.memo===1.35&&s.tune.inner.memo===1.1&&s.tuneHist.length>=2;}));
+    T('저장하면 기본값이 됨(앱 커버 주야 1.15 · 앱 안쪽 메모 1 · 위젯 안쪽 메모 1.1) · 이전 저장이 기록에 남음',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('eonjeswieo:v1'));return s.tune.appCover.ink===1.15&&s.tune.appInner.memo===1&&s.tune.inner.memo===1.1&&s.tuneHist.length>=2;}));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   // ── 공휴일 이름 · 스티커 자리: 이름이 다 안 들어가면 한 글자로 숫자 옆에 두고, 모자라면 스티커를 아래 줄로 (이름을 숫자 아래로 내리지 않음)
@@ -116,7 +116,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const st={...base};delete st.tune;
     const rd=async(w,h)=>{const p=await boot(b,st,{w,h,touch:true});const r=await p.evaluate(()=>{const c=getComputedStyle(document.documentElement);return {stk:c.getPropertyValue('--tstk').trim(),ink:c.getPropertyValue('--tink').trim(),err:0};});r.errs=p.errs.length;await p.close();return r;};
     const small=await rd(390,844),big=await rd(820,1100);
-    T('작은 화면(390): 앱 커버 값(기본 스티커 0.9 · 주야 1.1)',small.stk==='0.9'&&small.ink==='1.1'&&small.errs===0,JSON.stringify(small));
+    T('작은 화면(390): 앱 커버 값(기본 스티커 1 · 주야 1.15)',small.stk==='1'&&small.ink==='1.15'&&small.errs===0,JSON.stringify(small));
     T('큰 화면(820): 앱 안쪽 값(기본 스티커 0.9 · 주야 1.15)',big.stk==='0.9'&&big.ink==='1.15'&&big.errs===0,JSON.stringify(big));
     const p=await boot(b,st,{touch:true});await p.evaluate(()=>{window.__wg=[];window.AndroidBridge.setWidgetData=j=>window.__wg.push(JSON.parse(j));});await p.click('#nav [data-tab="set"]');await p.waitForTimeout(300);
     await p.evaluate(()=>document.querySelector('[data-act="more-widget"]').click());await p.waitForTimeout(300);
