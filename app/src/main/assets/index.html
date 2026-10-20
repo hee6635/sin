@@ -1272,8 +1272,10 @@ button.tbtn{cursor:pointer}
 html[data-cal="fill"] .grid{gap:2px;padding:2px;border-top:0}
 html[data-cal="fill"] .cell{border:0;border-radius:9px;background:transparent}
 html[data-cal="fill"] .cell.today{background:transparent}
-html[data-cal="fill"] .cell.today::after{display:none}
-html[data-cal="fill"] .cell.today .dn .num{background:var(--fg);color:var(--bg);border-radius:10px;padding:0 6px;line-height:1.4}
+html[data-cal="fill"] .cell.today::after{content:"";display:block;position:absolute;inset:7px 0 7px auto;border:0;width:3px;height:auto;border-radius:3px;background:color-mix(in srgb,var(--accent) 42%,transparent);z-index:1;pointer-events:none}   /* 오늘: 오른쪽 가장자리 얇은 파스텔 띠 (스티커 · 메모가 위에 그려짐) */
+html[data-cal="fill"] .cell.today .dn .num{background:color-mix(in srgb,var(--accent) 26%,#fff);color:color-mix(in srgb,var(--accent) 72%,#000);border-radius:10px;padding:0 6px;line-height:1.4;font-weight:800}   /* 오늘 도장: 검정 대신 연한 파랑 (폭은 그대로 → 스티커가 안 밀림) */
+html[data-cal="fill"][data-theme="dark"] .cell.today .dn .num{background:color-mix(in srgb,var(--accent) 46%,var(--bg));color:#fff}
+@media (prefers-color-scheme:dark){html[data-cal="fill"]:not([data-theme="light"]) .cell.today .dn .num{background:color-mix(in srgb,var(--accent) 46%,var(--bg));color:#fff}}
 html[data-cal="fill"]{--cbm:26%}html[data-cal="fill"][data-theme="dark"]{--cbm:44%}
 @media (prefers-color-scheme:dark){html[data-cal="fill"]:not([data-theme="light"]){--cbm:44%}}
 html[data-cal="fill"] .cell[style*="--cb"]{background:color-mix(in srgb,var(--cb) var(--cbm),var(--bg))}
