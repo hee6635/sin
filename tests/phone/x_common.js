@@ -44,7 +44,7 @@ function rich(){
   const icon='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=';
   const memo=(id,text,extra={})=>Object.assign({id,text,shared:false,by:'host',t:1760000000000},extra);
   return {
-    onboarded:true,myset:true,noPat:false,addonNote:'done',
+    tune:{appCover:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1},appInner:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1},cover:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1},inner:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1}},onboarded:true,myset:true,noPat:false,addonNote:'done',
     addons:{comp:true,cheer:true,together:true,colleague:true,stats:true,status:true},
     pattern:['주','주','휴','휴','야','야','휴','휴'],patternName:'4조2교대',anchor:'2026-10-02',patOld:[{until:'2026-09-01',anchor:'2026-08-01',pattern:['주','야','휴']}],
     overrides:{'2026-10-14':'야','2026-10-15':'휴','2026-11-03':'연'},
