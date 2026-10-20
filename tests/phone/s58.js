@@ -80,7 +80,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const p=await boot(b,{...base,calLook:'fill'},{touch:true});
     const r=await p.evaluate(()=>{const c=getComputedStyle(document.documentElement);const td=document.querySelector('.track .panel:nth-child(2) .cell.today');return {hb:c.getPropertyValue('--hol-bg').trim(),hx:c.getPropertyValue('--holx').trim(),sh:td?getComputedStyle(td).boxShadow:''};});
     T('칸 채우기: 명절 띠가 연한 분홍(#fcebee) · 글자는 장미빛',r.hb==='#fcebee'&&r.hx==='#c8627a',JSON.stringify(r));
-    T('오늘 칸에 테두리 + 그림자',/rgba?\(/.test(r.sh)&&r.sh!=='none'&&/1\.5px/.test(r.sh),r.sh);
+    T('오늘 칸: 테두리 없이 아래쪽 그림자',/rgba?\(/.test(r.sh)&&r.sh!=='none'&&!/ 0px 0px 0px 1\.5px/.test(r.sh),r.sh);
     const q=await boot(b,{...base},{touch:true});
     T('동그라미 모양은 명절 띠 색 그대로(#f8d5d9)',await q.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--hol-bg').trim()==='#f8d5d9'));
     await q.close();T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
