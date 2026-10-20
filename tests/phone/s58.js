@@ -85,5 +85,16 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     T('동그라미 모양은 명절 띠 색 그대로(#f8d5d9)',await q.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--hol-bg').trim()==='#f8d5d9'));
     await q.close();T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
+  // ── 오늘 칸에 스티커 2개: 일반 날과 같은 줄에 놓임(오늘 도장 때문에 아래로 밀리지 않음)
+  {
+    const mk=(id,e,n,x={})=>({id,kind:'mark',emoji:e,name:n,times:1,rep:'none',days:[],dates:[],skip:[],ats:[],...x});
+    const defs=['👟','📖'].map((e,i)=>mk('m'+i,e,'s'+i,{dates:['2026-10-12','2026-10-13']}));
+    for(const w of [412,390]){
+      const p=await boot(b,{...base,calLook:'fill',stamps:{defs,log:{},v3:1,v4:1,lastAt:[]}},{w,h:900,touch:true});
+      const r=await p.evaluate(()=>['2026-10-12','2026-10-13'].map(k=>{const c=document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"]`);return [c.querySelectorAll('.dn>.stp>*').length,c.querySelectorAll('.s2>*').length];}));
+      T(`폭 ${w}: 오늘(12일)도 일반 날(13일)처럼 스티커 2개가 첫 줄`,JSON.stringify(r)==='[[2,0],[2,0]]',JSON.stringify(r));
+      await p.close();
+    }
+  }
   T.sum();await b.close();
 })();
