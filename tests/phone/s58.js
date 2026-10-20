@@ -49,9 +49,9 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const p=await boot(b,{...st,memos},{touch:true});
     await openTune(p);
     T('값이 무난하면 경고 없음',await p.evaluate(()=>document.querySelector('#tnWarn').textContent.trim()===''));
-    await setR(p,'appCover','memoY',1);await p.waitForTimeout(300);
+    await setR(p,'appCover','memoY',-1);await p.waitForTimeout(300);
     const w=await p.evaluate(()=>document.querySelector('#tnWarn').textContent);
-    T('메모를 위로 많이 올리면 경고가 뜸(근무 글자와 겹침)',/메모/.test(w),w+' | '+await p.evaluate(()=>JSON.stringify({pl:[...document.querySelectorAll('#tnPrev .pill-wrap>*')].map(x=>[x.clientHeight,x.scrollHeight]),plf:getComputedStyle(document.documentElement).getPropertyValue('--plf'),plh:getComputedStyle(document.documentElement).getPropertyValue('--plh'),prevH:document.querySelector('#tnPrev').clientHeight})));
+    T('메모를 위로 많이 올리면(−1) 경고가 뜸(근무 글자와 겹침)',/메모/.test(w),w+' | '+await p.evaluate(()=>JSON.stringify({pl:[...document.querySelectorAll('#tnPrev .pill-wrap>*')].map(x=>[x.clientHeight,x.scrollHeight]),plf:getComputedStyle(document.documentElement).getPropertyValue('--plf'),plh:getComputedStyle(document.documentElement).getPropertyValue('--plh'),prevH:document.querySelector('#tnPrev').clientHeight})));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   // ── 접고 펼 때(폭이 바뀔 때) 그 화면 값으로 바로 바뀜

@@ -1267,7 +1267,7 @@ button.tbtn{cursor:pointer}
 .cell .stp,.cell .s2{translate:calc(var(--tstkx,0)*12cqw) calc(var(--tstky,0)*8cqh);scale:var(--tstk,1);transform-origin:right center}
 .dn .stp,.s2{gap:max(0px,calc(1px + var(--tgx,0)*4px))}   /* 스티커 좌우 간격 */
 .cell .s2{translate:calc(var(--tstkx,0)*12cqw) calc(var(--tstky,0)*8cqh + var(--tgy,0)*6cqh)}   /* 스티커 상하 간격: 둘째 줄만 아래/위로 */
-.cell .pill-wrap{gap:max(0px,calc(1px + var(--tmg,0)*3px));translate:0 calc(var(--tmy,0)*-4cqh)}   /* 메모 줄 사이 간격 · 위로 올리기(메모는 칸 아래에 붙어 있어서 올리는 쪽만) */
+.cell .pill-wrap{gap:max(0px,calc(1px + var(--tmg,0)*3px));translate:0 calc(var(--tmy,0)*4cqh)}   /* 메모 줄 사이 간격 · 위치(위 − · 아래 +) */
 .bwrap .badge{scale:var(--tink,1);translate:0 calc(var(--tinky,0)*6cqh)}
 html[data-cal="fill"] .grid{gap:2px;padding:2px;border-top:0}
 html[data-cal="fill"] .cell{border:0;border-radius:9px;background:transparent}
@@ -1647,7 +1647,7 @@ const defaults=()=>({
 });
 const REM_DAYS=[7,3,2,1,0],REM_SHORT={7:'1주',3:'3일',2:'2일',1:'전날',0:'당일'},REM_LABEL={7:'1주 전',3:'3일 전',2:'2일 전',1:'전날',0:'당일'},REM_AT=['08:00','12:00','20:00','22:00'];
 // 모양 조정(숨은 화면): 앱 달력 · 한 달 위젯(커버 · 안쪽)의 스티커 · 주야 글자 · 메모 크기 · 위치를 배율 · 위치로 저장. 값은 [키, 이름, 최소, 최대, 한 칸, 기본]
-const TUNE_KEYS=[['stk','스티커 크기',.6,1.6,.05,1,'스티커'],['stkX','스티커 좌우 위치',-1,1,.05,0,'스티커'],['stkY','스티커 높이 위치',-1,1,.05,0,'스티커'],['stkGX','스티커 좌우 간격',-1,1,.05,0,'스티커'],['stkGY','스티커 상하 간격',-1,1,.05,0,'스티커'],['ink','주야 크기',.6,1.5,.05,1,'주야'],['inkY','주야 높이 위치',-1,1,.05,0,'주야'],['memo','메모 글자 크기',.7,1.6,.05,1,'메모'],['pill','메모 칸 높이',.7,1.6,.05,1,'메모'],['memoY','메모 위로 올리기',0,1,.05,0,'메모'],['memoG','메모 줄 사이 간격',-1,1,.05,0,'메모']];
+const TUNE_KEYS=[['stk','스티커 크기',.6,1.6,.05,1,'스티커'],['stkX','스티커 좌우 위치',-1,1,.05,0,'스티커'],['stkY','스티커 높이 위치',-1,1,.05,0,'스티커'],['stkGX','스티커 좌우 간격',-1,1,.05,0,'스티커'],['stkGY','스티커 상하 간격',-1,1,.05,0,'스티커'],['ink','주야 크기',.6,1.5,.05,1,'주야'],['inkY','주야 높이 위치',-1,1,.05,0,'주야'],['memo','메모 글자 크기',.7,1.6,.05,1,'메모'],['pill','메모 칸 높이',.7,1.6,.05,1,'메모'],['memoY','메모 위치 (위 − · 아래 +)',-1,1,.05,0,'메모'],['memoG','메모 줄 사이 간격',-1,1,.05,0,'메모']];
 const TUNE_NEUTRAL=Object.fromEntries(TUNE_KEYS.map(k=>[k[0],k[5]]));
 // 기본값(사용자가 폰에서 맞춘 값): 앱 달력은 화면 폭 600dp 이상(폴더폰 안쪽 · 태블릿)이면 "안쪽" · 아니면 "커버" 값 / 한 달 위젯은 위젯 폭(440dp 기준)으로 커버 · 안쪽 (새 값은 0 = 지금 모양 그대로)
 const TUNE_DEF={appCover:{...TUNE_NEUTRAL,stk:.9,stkX:.4,stkY:-.05,ink:1.1,inkY:.1,memo:.9,pill:.8},appInner:{...TUNE_NEUTRAL,stk:.9,stkX:-.05,stkY:-.05,ink:1.15,inkY:.1,memo:1.35,pill:1},cover:{...TUNE_NEUTRAL,stk:1.05,stkX:.8,stkY:.95,ink:1.5,inkY:.65,memo:1.5,pill:1.5},inner:{...TUNE_NEUTRAL,stk:1.2,stkX:.4,stkY:-.1,ink:.95,inkY:-.1,memo:1.1,pill:1.1}};
@@ -4813,6 +4813,7 @@ function tuneWarn(){   // 지금 보는 앱 달력 화면에서 한계에 닿았
     pl.forEach(x=>{if(x.scrollWidth>x.clientWidth+1)txt++;if(x.clientHeight&&x.scrollHeight>x.clientHeight+1)cut++;});
     const pw=c.querySelector('.pill-wrap'),dn0=c.querySelector('.dn'),bw0=c.querySelector('.bwrap');
     if(pw&&pw.children.length&&bw0&&pw.getBoundingClientRect().top<bw0.getBoundingClientRect().bottom-1)memoOvl++;
+    if(pw&&pw.children.length&&pw.getBoundingClientRect().bottom>c.getBoundingClientRect().bottom+1)cut++;
     const hn=c.querySelector('.dn .hn'),h1=c.querySelector('.dn .h1');
     if(hn&&hn.scrollWidth>hn.clientWidth+1)holShort++;
     if(h1&&h1.dataset.o&&h1.textContent.length<h1.dataset.o.length)holShort++;

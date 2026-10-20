@@ -217,7 +217,7 @@ object MonthRenderer {
             fun from(data: JSONObject?, wDp: Float): Tune {
                 val o = data?.optJSONObject("tune")?.optJSONObject(if (wDp < 440f) "cover" else "inner") ?: return NONE
                 fun g(k: String, d: Float, lo: Float, hi: Float): Float = o.optDouble(k, d.toDouble()).toFloat().coerceIn(lo, hi)
-                return Tune(g("stk", 1f, 0.6f, 1.6f), g("stkX", 0f, -1f, 1f), g("stkY", 0f, -1f, 1f), g("ink", 1f, 0.6f, 1.5f), g("inkY", 0f, -1f, 1f), g("memo", 1f, 0.7f, 1.6f), g("pill", 1f, 0.7f, 1.6f), g("stkGX", 0f, -1f, 1f), g("stkGY", 0f, -1f, 1f), g("memoY", 0f, 0f, 1f), g("memoG", 0f, -1f, 1f))
+                return Tune(g("stk", 1f, 0.6f, 1.6f), g("stkX", 0f, -1f, 1f), g("stkY", 0f, -1f, 1f), g("ink", 1f, 0.6f, 1.5f), g("inkY", 0f, -1f, 1f), g("memo", 1f, 0.7f, 1.6f), g("pill", 1f, 0.7f, 1.6f), g("stkGX", 0f, -1f, 1f), g("stkGY", 0f, -1f, 1f), g("memoY", 0f, -1f, 1f), g("memoG", 0f, -1f, 1f))
             }
         }
     }
@@ -700,7 +700,7 @@ object MonthRenderer {
         val more = f.memos.size - shown
         statMemoHid += Math.max(0, more)
         val mGap = plan.pillGap + tn.memoG * plan.pillH * 0.25f
-        val memoTop = y0 + plan.memoTop(shown) + (plan.pillGap - mGap) * Math.max(0, shown - 1) - tn.memoY * rowH * 0.06f   // 줄 간격을 바꿔도 아래 끝은 그대로 · 메모는 칸 아래에 붙어 있어서 "위로 올리기"만
+        val memoTop = y0 + plan.memoTop(shown) + (plan.pillGap - mGap) * Math.max(0, shown - 1) + tn.memoY * rowH * 0.06f   // 줄 간격을 바꿔도 아래 끝은 그대로 · 위치(위 − · 아래 +)
         for (k in 0 until shown) {
             val py = memoTop + k * (plan.pillH + mGap)
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
