@@ -1265,6 +1265,9 @@ button.tbtn{cursor:pointer}
 
 /* 달력 모양 · 모양 조정(숨은 화면): 칸 채우기 (설정 › 화면 › 달력 모양) — 칸 전체를 근무 색으로, 동그라미 없이 글자만, 오늘은 날짜 도장, 요청은 글자 주위 링 */
 .cell .stp,.cell .s2{translate:calc(var(--tstkx,0)*12cqw) calc(var(--tstky,0)*8cqh);scale:var(--tstk,1);transform-origin:right center}
+.dn .stp,.s2{gap:max(0px,calc(1px + var(--tgx,0)*4px))}   /* 스티커 좌우 간격 */
+.cell .s2{translate:calc(var(--tstkx,0)*12cqw) calc(var(--tstky,0)*8cqh + var(--tgy,0)*6cqh)}   /* 스티커 상하 간격: 둘째 줄만 아래/위로 */
+.cell .pill-wrap{gap:max(0px,calc(1px + var(--tmg,0)*3px));translate:0 calc(var(--tmy,0)*-4cqh)}   /* 메모 줄 사이 간격 · 위로 올리기(메모는 칸 아래에 붙어 있어서 올리는 쪽만) */
 .bwrap .badge{scale:var(--tink,1);translate:0 calc(var(--tinky,0)*6cqh)}
 html[data-cal="fill"] .grid{gap:2px;padding:2px;border-top:0}
 html[data-cal="fill"] .cell{border:0;border-radius:9px;background:transparent}
@@ -1281,7 +1284,15 @@ html[data-cal="fill"] .cell.rq-ask .badge{box-shadow:inset 0 0 0 2.5px #f08a00}
 html[data-cal="fill"] .cell.rq-hold .badge{box-shadow:inset 0 0 0 2.5px #0e9bb0}
 html[data-cal="fill"] .cell.rq-ok .badge{box-shadow:inset 0 0 0 2.5px #1fa971}
 html[data-cal="fill"] .cell.rq-no .badge{box-shadow:inset 0 0 0 2.5px #d12f4a}
-.tn-prev{position:sticky;top:0;z-index:5;box-shadow:0 6px 12px rgba(0,0,0,.10);height:140px;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:var(--bg);margin:8px 12px 0}
+/* 칸 채우기: 명절 띠는 파스텔(연한 분홍 + 장미빛 글자) · 오늘 칸은 살짝 떠오른 느낌(테두리 + 약한 그림자, 확대는 안 함) */
+html[data-cal="fill"]{--hol-bg:#fcebee;--holx:#c8627a}
+html[data-cal="fill"][data-theme="dark"]{--hol-bg:#3a2429;--holx:#e49aaa}
+@media (prefers-color-scheme:dark){html[data-cal="fill"]:not([data-theme="light"]){--hol-bg:#3a2429;--holx:#e49aaa}}
+html[data-cal="fill"] .dn.hol .hn,html[data-cal="fill"] .dn.hol .h1{color:var(--holx);font-weight:700}
+html[data-cal="fill"] .dn.hol{border-radius:9px 9px 0 0}
+html[data-cal="fill"] .cell.today{z-index:3;box-shadow:0 0 0 1.5px color-mix(in srgb,var(--fg) 60%,transparent),0 4px 10px rgba(0,0,0,.22)}
+html[data-cal="fill"] .cell.today:not([style*="--cb"]){background:var(--bg)}
+.tn-top{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:4px;box-shadow:0 6px 12px rgba(0,0,0,.10)}.tn-bar{display:flex;align-items:center;gap:6px;padding:6px 12px 0}.tn-bar .btn{padding:6px 12px;font-size:13px;flex:none}.tn-bar .btn[disabled]{opacity:.4}.tn-st{flex:1;font-size:12px;color:var(--muted)}.tn-st.dirty{color:#d9534f;font-weight:700}.tn-warn{padding:2px 14px 0;font-size:12px;color:#c0392b}.tn-warn:empty{display:none}.tn-d summary{font-size:13px;font-weight:700;padding:6px 0;cursor:pointer}.tn-d{border-top:1px solid var(--line)}.tn-prev{height:140px;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:var(--bg);margin:8px 12px 0}
 .tn-g{padding:8px 14px 4px}.tn-g h4{margin:10px 0 2px;font-size:14px}
 .tn-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px}.tn-row span{flex:0 0 112px}.tn-row input{flex:1}.tn-row b{flex:0 0 40px;text-align:right;font-variant-numeric:tabular-nums}
 #top.cal-top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
@@ -1636,11 +1647,11 @@ const defaults=()=>({
 });
 const REM_DAYS=[7,3,2,1,0],REM_SHORT={7:'1주',3:'3일',2:'2일',1:'전날',0:'당일'},REM_LABEL={7:'1주 전',3:'3일 전',2:'2일 전',1:'전날',0:'당일'},REM_AT=['08:00','12:00','20:00','22:00'];
 // 모양 조정(숨은 화면): 앱 달력 · 한 달 위젯(커버 · 안쪽)의 스티커 · 주야 글자 · 메모 크기 · 위치를 배율 · 위치로 저장. 값은 [키, 이름, 최소, 최대, 한 칸, 기본]
-const TUNE_KEYS=[['stk','스티커 크기',.6,1.6,.05,1],['stkX','스티커 좌우 위치',-1,1,.05,0],['stkY','스티커 높이 위치',-1,1,.05,0],['ink','주야 크기',.6,1.5,.05,1],['inkY','주야 높이 위치',-1,1,.05,0],['memo','메모 글자 크기',.7,1.6,.05,1],['pill','메모 칸 높이',.7,1.6,.05,1]];
+const TUNE_KEYS=[['stk','스티커 크기',.6,1.6,.05,1,'스티커'],['stkX','스티커 좌우 위치',-1,1,.05,0,'스티커'],['stkY','스티커 높이 위치',-1,1,.05,0,'스티커'],['stkGX','스티커 좌우 간격',-1,1,.05,0,'스티커'],['stkGY','스티커 상하 간격',-1,1,.05,0,'스티커'],['ink','주야 크기',.6,1.5,.05,1,'주야'],['inkY','주야 높이 위치',-1,1,.05,0,'주야'],['memo','메모 글자 크기',.7,1.6,.05,1,'메모'],['pill','메모 칸 높이',.7,1.6,.05,1,'메모'],['memoY','메모 위로 올리기',0,1,.05,0,'메모'],['memoG','메모 줄 사이 간격',-1,1,.05,0,'메모']];
 const TUNE_NEUTRAL=Object.fromEntries(TUNE_KEYS.map(k=>[k[0],k[5]]));
-// 기본값(사용자가 폰에서 맞춘 값): 앱 달력은 화면 폭 600dp 이상(폴더폰 안쪽 · 태블릿)이면 "안쪽" · 아니면 "커버" 값 / 한 달 위젯은 위젯 폭(440dp 기준)으로 커버 · 안쪽
-const TUNE_DEF={appCover:{...TUNE_NEUTRAL},appInner:{stk:.85,stkX:-.05,stkY:-.05,ink:1.15,inkY:0,memo:1.1,pill:1.05},cover:{stk:1.05,stkX:.8,stkY:.95,ink:1.5,inkY:.65,memo:1.5,pill:1.5},inner:{stk:1.2,stkX:.4,stkY:-.1,ink:.95,inkY:-.1,memo:1.1,pill:1.1}};
-function tuneClean(o,df){const d=df||TUNE_NEUTRAL,r={};TUNE_KEYS.forEach(([k,,lo,hi])=>{const v=o&&typeof o==='object'?+o[k]:NaN;r[k]=Number.isFinite(v)?Math.max(lo,Math.min(hi,Math.round(v*100)/100)):d[k];});return r;}
+// 기본값(사용자가 폰에서 맞춘 값): 앱 달력은 화면 폭 600dp 이상(폴더폰 안쪽 · 태블릿)이면 "안쪽" · 아니면 "커버" 값 / 한 달 위젯은 위젯 폭(440dp 기준)으로 커버 · 안쪽 (새 값은 0 = 지금 모양 그대로)
+const TUNE_DEF={appCover:{...TUNE_NEUTRAL,stk:.9,stkX:.4,stkY:-.05,ink:1.1,inkY:.1,memo:.9,pill:.8},appInner:{...TUNE_NEUTRAL,stk:.9,stkX:-.05,stkY:-.05,ink:1.15,inkY:.1,memo:1.35,pill:1},cover:{...TUNE_NEUTRAL,stk:1.05,stkX:.8,stkY:.95,ink:1.5,inkY:.65,memo:1.5,pill:1.5},inner:{...TUNE_NEUTRAL,stk:1.2,stkX:.4,stkY:-.1,ink:.95,inkY:-.1,memo:1.1,pill:1.1}};
+function tuneClean(o,df){const d=df||TUNE_NEUTRAL,r={};TUNE_KEYS.forEach(([k,,lo,hi])=>{const v=o&&typeof o==='object'&&o[k]!=null?+o[k]:NaN,dv=Number.isFinite(+d[k])?+d[k]:TUNE_NEUTRAL[k];r[k]=Number.isFinite(v)?Math.max(lo,Math.min(hi,Math.round(v*100)/100)):dv;});return r;}
 function tuneAll(t){return {appCover:tuneClean(t&&t.appCover,TUNE_DEF.appCover),appInner:tuneClean(t&&(t.appInner||t.app),TUNE_DEF.appInner),cover:tuneClean(t&&t.cover,TUNE_DEF.cover),inner:tuneClean(t&&t.inner,TUNE_DEF.inner)};}
 function normalize(o){
   if(!isObj(o))o={};
@@ -1671,7 +1682,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.calLook=(o&&o.calLook)==='fill'?'fill':'circle';s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'?'fill':'circle';s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,stkAsked:s.link.stkAsked?1:0,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#6b7280'})[k];});
   s.drive=Object.assign(defaults().drive,isObj(o.drive)?o.drive:{});
@@ -2289,10 +2300,11 @@ const dowHead=()=>weekOrder().map(w=>`<span class="${w===0?'s':w===6?'t':''}">${
 // 달력 칸 메모: 줄 수는 설정(3 · 4줄 · 태블릿은 +1 · 개인 캘린더는 4줄 이상). 메모 영역은 날짜 줄 · 근무 표시 아래부터 칸 끝까지 → 줄이 남는 높이를 나눠 가져 3줄이 차면 아래 여백이 없음
 // 줄 높이 --plh(글자 · 줄 간격)는 "줄 수로 나눈 높이"(상한: 폰 20px · 태블릿 24px), 메모가 적은 날도 같은 높이로 위에서부터 쌓음(--plmax)
 const tuneAppKey=()=>innerWidth>=600?'appInner':'appCover';   // 앱 달력 모양 값: 화면 폭 600dp 이상이면 안쪽(큰 화면) · 아니면 커버
-const tuneApp=()=>(S&&S.tune&&S.tune[tuneAppKey()])||TUNE_NEUTRAL;
+let tuneDraft=null;   // 모양 조정 화면에서 아직 저장 안 한 값 (저장 버튼을 눌러야 S.tune 으로)
+const tuneApp=()=>((tuneDraft||(S&&S.tune))||{})[tuneAppKey()]||TUNE_NEUTRAL;
 function applyTune(){
   const de=document.documentElement,st=de.style,t=tuneApp();
-  st.setProperty('--tstk',t.stk);st.setProperty('--tstkx',t.stkX);st.setProperty('--tstky',t.stkY);st.setProperty('--tink',t.ink);st.setProperty('--tinky',t.inkY);
+  st.setProperty('--tstk',t.stk);st.setProperty('--tstkx',t.stkX);st.setProperty('--tstky',t.stkY);st.setProperty('--tink',t.ink);st.setProperty('--tinky',t.inkY);st.setProperty('--tgx',t.stkGX);st.setProperty('--tgy',t.stkGY);st.setProperty('--tmy',t.memoY);st.setProperty('--tmg',t.memoG);
   if(S.calLook==='fill')de.setAttribute('data-cal','fill');else de.removeAttribute('data-cal');
 }
 const stzPx=()=>{const w=innerWidth;return w>=600?Math.max(17,Math.min(19.8,w*.0264)):Math.max(12,Math.min(17.6,w*.0374));};
@@ -2319,8 +2331,8 @@ function calSub(){
   if(S.noPat)return Object.keys(S.overrides||{}).length?'':'<span class="mkh">날짜를 눌러서 근무를 넣어요</span>';
   return role()==='guest'?'<b>가족 보기</b>':'';
 }
-let lastW=innerWidth;
-window.addEventListener('resize',()=>{const n=memoLines(),w=innerWidth;if((n!==lastLines||w!==lastW)&&document.querySelector('.grid')){lastW=w;render();}else lastW=w;});
+let lastW=innerWidth,lastKey=tuneAppKey();
+window.addEventListener('resize',()=>{const w=innerWidth;if(tuneAppKey()!==lastKey){lastKey=tuneAppKey();applyTune();}const n=memoLines();if((n!==lastLines||w!==lastW)&&document.querySelector('.grid')){lastW=w;render();}else lastW=w;});   // 접고 펼 때(커버↔안쪽) 앱 달력 값(스티커·주야)도 그 화면 값으로 먼저 바꿈
 function render(){
   persSync();expireOnceAlarms();
   const top=$('#top'),v=$('#view');
@@ -3369,7 +3381,7 @@ function openPage(html,mode){
   p.innerHTML=html;p.classList.add('open');
   if(same){const b=p.querySelector('.pg-b');if(b)b.scrollTop=sc;}
 }
-function closePage(){manPaint=null;if(pageMode==='tune')$('#page').innerHTML='';if(pageMode==='alarm')try{if(hasBridge('stopPreview'))window.AndroidBridge.stopPreview();}catch(e){}$('#page').classList.remove('open');pageMode=null;draft=null;render();}
+function closePage(){manPaint=null;if(pageMode==='tune'){if(tuneDirty()&&!confirm('저장하지 않은 값이 있어요.\n저장하지 않고 나갈까요?'))return;tuneDraft=null;applyTune();$('#page').innerHTML='';}if(pageMode==='alarm')try{if(hasBridge('stopPreview'))window.AndroidBridge.stopPreview();}catch(e){}$('#page').classList.remove('open');pageMode=null;draft=null;render();}
 function pageHead(title,right){return `<div class="pg-h"><button class="bk" data-act="page-close" aria-label="뒤로">‹</button><b>${title}</b>${right||'<span style="min-width:56px"></span>'}</div>`;}
 function openPop(html){$('#pop').innerHTML=`<div class="menu">${html}</div>`;$('#pop').classList.add('open');}
 function closePop(){document.querySelectorAll('.cell.selTop').forEach(c=>c.classList.remove('selTop'));$('#pop').className='';$('#pop').innerHTML='';tpk=null;icn=null;crp=null;}
@@ -4781,7 +4793,42 @@ function openWidgetPage(){
 /* ================= 모양 조정 (숨은 화면: 설정 › 앱 정보를 7번 눌러 나오는 개발자 메뉴 안) =================
  * 앱 달력(위에 미리보기) · 한 달 위젯(커버 · 안쪽)의 스티커 · 주야 글자 · 메모 크기와 위치를 움직여 보고, "값 복사"로 개발자에게 전하면 기본값으로 반영해요. */
 const tuneFmt=v=>(Math.round(v*100)/100).toFixed(2);
-function tuneRows(g){const t=S.tune[g];return TUNE_KEYS.map(([k,nm,lo,hi,st])=>`<div class="tn-row"><span>${nm}</span><input type="range" class="tn-r" data-g="${g}" data-k="${k}" min="${lo}" max="${hi}" step="${st}" value="${t[k]}"><b id="tnv_${g}_${k}">${tuneFmt(t[k])}</b></div>`).join('');}
+const tuneVal=()=>tuneDraft||S.tune;
+const tuneDirty=()=>!!tuneDraft&&JSON.stringify(tuneDraft)!==JSON.stringify(S.tune);
+function tuneRows(g){   // 스티커 / 주야 / 메모 묶음으로 접기 · 지금 보는 화면(앱 달력)만 펼쳐 둠
+  const t=tuneVal()[g],open=g===tuneAppKey();
+  return ['스티커','주야','메모'].map(gr=>`<details class="tn-d"${open?' open':''}><summary>${gr}</summary>${TUNE_KEYS.filter(k=>k[6]===gr).map(([k,nm,lo,hi,st])=>`<div class="tn-row"><span>${nm}</span><input type="range" class="tn-r" data-g="${g}" data-k="${k}" min="${lo}" max="${hi}" step="${st}" value="${t[k]}"><b id="tnv_${g}_${k}">${tuneFmt(t[k])}</b></div>`).join('')}</details>`).join('');
+}
+function tuneBar(){   // 저장 · 되돌리기 줄 (미리보기 바로 아래)
+  const e=$('#tnBar');if(!e)return;const d=tuneDirty(),h=(S.tuneHist||[]).length;
+  e.innerHTML=`<span class="tn-st${d?' dirty':''}">${d?'저장 안 한 값이 있어요':'저장된 값이에요'}</span><button class="btn ghost" data-act="tune-undo"${h?'':' disabled'}>이전 저장으로${h?` (${h})`:''}</button><button class="btn" data-act="tune-save"${d?'':' disabled'}>저장</button>`;
+}
+function tuneWarn(){   // 지금 보는 앱 달력 화면에서 한계에 닿았는지: 미리보기를 실제로 재서 알려줌 (막지는 않음)
+  const e=$('#tnWarn'),pv=$('#tnPrev');if(!e||!pv)return;
+  const w=[],cells=[...pv.querySelectorAll('.grid .cell')];
+  const want=memoLines(),cap=S.personal?Math.max(4,S.memoLines):(innerWidth>=600?S.memoLines+1:S.memoLines);
+  let cut=0,txt=0,stkHid=0,holShort=0,ovl=0,memoOvl=0;
+  cells.forEach(c=>{
+    const pl=[...c.querySelectorAll('.pill-wrap>*')];
+    pl.forEach(x=>{if(x.scrollWidth>x.clientWidth+1)txt++;if(x.clientHeight&&x.scrollHeight>x.clientHeight+1)cut++;});
+    const pw=c.querySelector('.pill-wrap'),dn0=c.querySelector('.dn'),bw0=c.querySelector('.bwrap');
+    if(pw&&pw.children.length&&bw0&&pw.getBoundingClientRect().top<bw0.getBoundingClientRect().bottom-1)memoOvl++;
+    const hn=c.querySelector('.dn .hn'),h1=c.querySelector('.dn .h1');
+    if(hn&&hn.scrollWidth>hn.clientWidth+1)holShort++;
+    if(h1&&h1.dataset.o&&h1.textContent.length<h1.dataset.o.length)holShort++;
+    c.querySelectorAll('.stp>*,.s2>*').forEach(x=>{const r=x.getBoundingClientRect(),cr=c.getBoundingClientRect();if(r.right>cr.right+1||r.left<cr.left-1||r.bottom>cr.bottom+1)stkHid++;});
+    const stp=c.querySelector('.dn>.stp'),num=c.querySelector('.dn .num');
+    if(stp&&num&&stp.children.length){const a=stp.getBoundingClientRect(),b=num.getBoundingClientRect();if(a.left<b.right-1)ovl++;}
+  });
+  if(want<cap)w.push(`메모가 ${cap}줄 중 ${want}줄만 보여요`);
+  if(cut)w.push('메모가 칸 밖으로 잘려요');
+  if(memoOvl)w.push('메모가 근무 글자와 겹쳐요');
+  if(txt)w.push('메모 글자가 칸보다 커서 끝이 잘려요');
+  if(holShort)w.push('공휴일 이름이 줄어 보여요');
+  if(stkHid)w.push('스티커가 칸 밖으로 나가요');
+  if(ovl)w.push('스티커가 날짜 숫자와 겹쳐요');
+  e.innerHTML=w.length?w.map(x=>`<div>⚠ ${esc(x)}</div>`).join(''):'';
+}
 function tunePrev(){   // 미리보기는 "일주일 줄"만: 스티커 · 메모 · 요청이 가장 많은 주 (없으면 오늘이 있는 주) · 칸 높이는 실제 달력 칸과 비슷하게
   const e=$('#tnPrev');if(!e)return;
   e.innerHTML=calPanel(cur.y,cur.m);
@@ -4792,15 +4839,17 @@ function tunePrev(){   // 미리보기는 "일주일 줄"만: 스티커 · 메�
   g.style.gridTemplateRows='1fr';
   e.style.height=(Math.max(90,Math.round((innerHeight-230)/6))+34)+'px';
   try{fitDn(e);}catch(err){}   // 실제 달력처럼 날짜 줄에 안 들어가면 공휴일 이름을 줄이고 스티커를 아래 줄로 (미리보기도 똑같이)
+  tuneBar();tuneWarn();
 }
 function openTunePage(){
+  if(!tuneDraft)tuneDraft=JSON.parse(JSON.stringify(S.tune));
   let dbg='';try{if(hasBridge('widgetDebug'))dbg=String(window.AndroidBridge.widgetDebug()||'');}catch(e){}
   openPage(`${pageHead('모양 조정')}
     <div class="pg-b">
-      <div class="hint" style="padding:10px 16px 0">움직이면 바로 바뀌어요. 다 맞추고 아래 "값 복사"를 눌러 전해 주세요. 위젯 값은 홈 화면 위젯에 바로 반영돼요.</div>
+      <div class="hint" style="padding:10px 16px 0">움직이면 미리보기에 바로 보여요. 마음에 들면 "저장"을 눌러야 앱과 홈 화면 위젯에 반영돼요. 잘못 저장했으면 "이전 저장으로"로 돌아갈 수 있어요(최근 5번).</div>
       ${dbg?`<div class="hint" style="padding:6px 16px 0;font-size:11.5px">놓인 한 달 위젯 마지막 그림 상태<br>${esc(dbg).replace(/\n/g,'<br>')}</div>`:''}
       <div class="tn-g"><h4>앱 달력 모양</h4><div class="chips"><button class="${S.calLook==='fill'?'':'on'}" data-act="callook" data-v="circle">동그라미</button><button class="${S.calLook==='fill'?'on':''}" data-act="callook" data-v="fill">칸 채우기</button></div></div>
-      <div class="tn-prev" id="tnPrev"></div>
+      <div class="tn-top"><div class="tn-prev" id="tnPrev"></div><div class="tn-bar" id="tnBar"></div><div class="tn-warn" id="tnWarn"></div></div>
       <div class="tn-g"><h4>앱 달력 · 안쪽 화면(큰 화면)${tuneAppKey()==='appInner'?' ← 지금 이 화면':''}</h4>${tuneRows('appInner')}</div>
       <div class="tn-g"><h4>앱 달력 · 커버 화면(작은 화면)${tuneAppKey()==='appCover'?' ← 지금 이 화면':''}</h4>${tuneRows('appCover')}</div>
       <div class="tn-g"><h4>한 달 위젯 · 커버 화면(작은 위젯)</h4>${tuneRows('cover')}</div>
@@ -4810,16 +4859,15 @@ function openTunePage(){
   tunePrev();
 }
 function tuneText(){
-  const f=g=>{const t=S.tune[g];return `스티커 ${t.stk} · 좌우 ${t.stkX} · 높이 ${t.stkY} / 주야 ${t.ink} · 높이 ${t.inkY} / 메모 글자 ${t.memo} · 칸 ${t.pill}`;};
+  const f=g=>{const t=tuneVal()[g];return `스티커 ${t.stk} · 좌우 ${t.stkX} · 높이 ${t.stkY} / 주야 ${t.ink} · 높이 ${t.inkY} / 메모 글자 ${t.memo} · 칸 ${t.pill}`;};
   return `[모양 조정] 앱 달력 안쪽(${S.calLook==='fill'?'칸 채우기':'동그라미'}): ${f('appInner')}\n앱 달력 커버: ${f('appCover')}\n위젯 커버: ${f('cover')}\n위젯 안쪽: ${f('inner')}\n위젯 모양: ${S.widget.look==='circle'?'동그라미':'칸 채우기'}`;
 }
 document.addEventListener('input',e=>{
   const t=e.target;if(!t.classList||!t.classList.contains('tn-r'))return;
-  const g=t.dataset.g,k=t.dataset.k;if(!S.tune[g])return;
-  S.tune[g]=tuneClean({...S.tune[g],[k]:+t.value});
-  const b=$('#tnv_'+g+'_'+k);if(b)b.textContent=tuneFmt(S.tune[g][k]);
-  if(g===tuneAppKey()){applyTune();memoLines();tunePrev();}   // 지금 보고 있는 화면의 값만 미리보기에 바로 보임
-  save();
+  const g=t.dataset.g,k=t.dataset.k;if(!tuneDraft||!tuneDraft[g])return;
+  tuneDraft[g]=tuneClean({...tuneDraft[g],[k]:+t.value});
+  const b=$('#tnv_'+g+'_'+k);if(b)b.textContent=tuneFmt(tuneDraft[g][k]);
+  if(g===tuneAppKey()){applyTune();memoLines();tunePrev();}else tuneBar();   // 지금 보고 있는 화면의 값만 미리보기에 바로 보임 · 반영은 "저장" 버튼
 });
 /* ================= 부가 기능 (설정 › 부가 기능) =================
  * 기본은 모두 꺼짐. 꺼도 저장된 내용은 그대로이고, 켜면 그 자리에 바로 생겨요. */
@@ -4843,6 +4891,7 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
+  'v0.80':`· <b>칸 채우기</b>: 명절 띠가 연한 분홍으로 · 오늘 칸이 살짝 떠 보여요. 요청 링은 승인 하루 · 거절 3일 뒤 사라져요\n· 접고 펼 때 달력 모양이 그 화면 값으로 바로 바뀌어요`,
   'v0.79':`· <b>달력 모양</b>: 설정 › 화면 › 달력 모양에서 "칸 채우기"를 고를 수 있어요 (근무를 연한 칸 색으로 · 오늘은 날짜 도장 · 요청은 글자 주위 링). 기본은 예전 그대로 "동그라미"예요`,
   'v0.78':`· <b>한 달 위젯</b>: 새 모양 "칸 채우기"(근무를 연한 칸 색으로 · 오늘은 날짜 도장 · 가족 메모는 보라 선) · 설정 › 홈 화면 위젯에서 예전 "동그라미"로 바꿀 수 있어요 · 근무 요청은 위젯에서도 둥근 링으로 보여요<br>
       · <b>달력</b>: 요청이 있는 날 숫자가 빨갛게 변하지 않고 링만 보여요 · 메모 칸 높이를 더 줄였어요<br>
@@ -6299,7 +6348,9 @@ document.addEventListener('click',e=>{
     case 'thememode':S.theme=t.dataset.v;save();applyTheme();render();break;
     case 'callook':S.calLook=t.dataset.v==='fill'?'fill':'circle';save();applyTune();if(pageMode==='tune')openTunePage();else render();break;
     case 'tune-open':openTunePage();break;
-    case 'tune-reset':S.tune=tuneAll(null);save();applyTune();openTunePage();break;
+    case 'tune-reset':tuneDraft=tuneAll(null);applyTune();openTunePage();toast('처음 값으로 돌렸어요 · 저장해야 반영돼요');break;
+    case 'tune-save':if(tuneDirty()){S.tuneHist=[JSON.parse(JSON.stringify(S.tune)),...(S.tuneHist||[])].slice(0,5);S.tune=JSON.parse(JSON.stringify(tuneDraft));save();applyTune();tuneBar();toast('저장했어요');}break;
+    case 'tune-undo':if(!(S.tuneHist||[]).length){toast('돌아갈 저장이 없어요');break;}S.tune=S.tuneHist.shift();tuneDraft=JSON.parse(JSON.stringify(S.tune));save();applyTune();openTunePage();toast('이전 저장 값으로 돌렸어요');break;
     case 'tune-copy':copyText(tuneText());break;
     case 'bgmode':S.bg=t.dataset.v==='paper'?'paper':'';save();applyTheme();render();break;
     case 'mcolor':if(t.dataset.v!==S.memoColors[t.dataset.k==='fam'?'my':'fam']||S.memoColors.fam===S.memoColors.my)S.memoColors[t.dataset.k]=t.dataset.v;save();applyTheme();openColorsPage();break;
@@ -7453,11 +7504,12 @@ function famReqPush(r,patch){
 }
 // 달력 칸 링 (요청 상태): 답할 요청(주황) · 보류(청록) · 승인(초록) · 거절(빨강)
 function rqRing(list){
-  const now=Date.now(),recent=r=>now-(r.tu||r.t||0)<3*864e5;
+  // 끝난 요청 링: 승인은 하루(근무가 바뀐 걸 칸이 알려줌) · 거절은 3일(놓치기 쉬움) · 받는 사람이 처리한 건 바로 사라짐 (내가 한 일이라 이미 앎)
+  const now=Date.now(),recent=(r,d)=>(r.srv&&r.dir==='in')?false:now-(r.tu||r.t||0)<d*864e5;
   if(list.some(r=>r.st==='pending'&&!r.held))return 'rq-ask';
   if(list.some(r=>r.st==='pending'&&r.held))return 'rq-hold';
-  if(list.some(r=>r.st==='accepted'&&recent(r)))return 'rq-ok';
-  if(list.some(r=>r.st==='rejected'&&recent(r)))return 'rq-no';
+  if(list.some(r=>r.st==='accepted'&&recent(r,1)))return 'rq-ok';
+  if(list.some(r=>r.st==='rejected'&&recent(r,3)))return 'rq-no';
   return '';
 }
 /* ---- 여러 날 요청 묶음(grp): 같은 묶음의 요청은 한 줄로 보이고 한 번에 답해요 ---- */

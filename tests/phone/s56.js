@@ -5,7 +5,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   const t=+new Date('2026-10-11T10:00:00');
   const m=(id,text,sh)=>({id,text,shared:!!sh,by:'host',t});
   const reqs=[
-    {id:'q1',date:'2026-10-13',want:'휴',msg:'',st:'accepted',reply:'',prev:null,t,tu:t,by:'guest'},
+    {id:'q1',date:'2026-10-13',want:'휴',msg:'',st:'accepted',reply:'',prev:null,t:t+6*36e5,tu:t+6*36e5,by:'guest'},
     {id:'q2',date:'2026-10-22',want:'휴',msg:'',st:'rejected',reply:'',prev:null,t,tu:t,by:'guest'},
     {id:'q3',date:'2026-10-23',want:'휴',msg:'',st:'pending',reply:'',prev:null,t,tu:t,by:'guest'},
     {id:'q4',date:'2026-10-16',want:'휴',msg:'',st:'pending',held:true,reply:'',prev:null,t,tu:t,by:'guest'},
@@ -22,7 +22,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     await push(p);
     const w=await last(p);
     T('위젯 모양 기본: 칸 채우기',!!w&&w.look==='fill',w&&w.look);
-    T('요청 링 값: 승인 ok · 거절 no · 답할 요청 ask · 보류 hold',day(w,'2026-10-13').rq==='ok'&&day(w,'2026-10-22').rq==='no'&&day(w,'2026-10-23').rq==='ask'&&day(w,'2026-10-16').rq==='hold',JSON.stringify(['13','22','23','16'].map(d=>day(w,'2026-10-'+d).rq)));
+    T('요청 링 값(승인은 하루 안): 승인 ok · 거절 no · 답할 요청 ask · 보류 hold',day(w,'2026-10-13').rq==='ok'&&day(w,'2026-10-22').rq==='no'&&day(w,'2026-10-23').rq==='ask'&&day(w,'2026-10-16').rq==='hold',JSON.stringify(['13','22','23','16'].map(d=>day(w,'2026-10-'+d).rq)));
     T('3일 지난 답한 요청(10/24 거절)은 링이 없음 · 요청 없는 날도 없음',day(w,'2026-10-24').rq===undefined&&day(w,'2026-10-14').rq===undefined);
     T('메모 줄 맨 앞이 가족 메모: 10/16 는 가족 1개(11시 자동차 검사가 먼저)',day(w,'2026-10-16').nf===1&&day(w,'2026-10-16').ms[0]==='11시 자동차 검사'&&day(w,'2026-10-16').ms[1]==='10시 치과',JSON.stringify(day(w,'2026-10-16')));
     T('10/20 가족 1 · 개인 2 (nf=1) · 가족 메모 없는 10/21 은 nf 없음',day(w,'2026-10-20').nf===1&&day(w,'2026-10-21').nf===undefined);

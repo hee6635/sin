@@ -211,13 +211,13 @@ object MonthRenderer {
     )
 
     /** 모양 조정(앱 숨은 화면)에서 정한 배율 · 위치: 위젯 가로 폭이 440dp 보다 좁으면 "커버" 값 · 넓으면 "안쪽" 값. 없으면 전부 기본(1 · 0) */
-    internal class Tune(val stk: Float, val stkX: Float, val stkY: Float, val ink: Float, val inkY: Float, val memo: Float, val pill: Float) {
+    internal class Tune(val stk: Float, val stkX: Float, val stkY: Float, val ink: Float, val inkY: Float, val memo: Float, val pill: Float, val stkGX: Float = 0f, val stkGY: Float = 0f, val memoY: Float = 0f, val memoG: Float = 0f) {
         companion object {
             val NONE = Tune(1f, 0f, 0f, 1f, 0f, 1f, 1f)
             fun from(data: JSONObject?, wDp: Float): Tune {
                 val o = data?.optJSONObject("tune")?.optJSONObject(if (wDp < 440f) "cover" else "inner") ?: return NONE
                 fun g(k: String, d: Float, lo: Float, hi: Float): Float = o.optDouble(k, d.toDouble()).toFloat().coerceIn(lo, hi)
-                return Tune(g("stk", 1f, 0.6f, 1.6f), g("stkX", 0f, -1f, 1f), g("stkY", 0f, -1f, 1f), g("ink", 1f, 0.6f, 1.5f), g("inkY", 0f, -1f, 1f), g("memo", 1f, 0.7f, 1.6f), g("pill", 1f, 0.7f, 1.6f))
+                return Tune(g("stk", 1f, 0.6f, 1.6f), g("stkX", 0f, -1f, 1f), g("stkY", 0f, -1f, 1f), g("ink", 1f, 0.6f, 1.5f), g("inkY", 0f, -1f, 1f), g("memo", 1f, 0.7f, 1.6f), g("pill", 1f, 0.7f, 1.6f), g("stkGX", 0f, -1f, 1f), g("stkGY", 0f, -1f, 1f), g("memoY", 0f, 0f, 1f), g("memoG", 0f, -1f, 1f))
             }
         }
     }
@@ -341,8 +341,10 @@ object MonthRenderer {
                 val minW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0).toFloat()
                 val maxW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0).toFloat()
                 val pw = if (minW > 0f) minW else size[0] / WidgetRenderer.dens
-                WidgetStore.note(ctx, "한 달 위젯 #" + id, "그림 " + size[0] + "x" + size[1] + "px · 밀도 " + WidgetRenderer.dens + " · 최소폭 " + minW.toInt() + "dp · 최대폭 " + maxW.toInt() + "dp → " + (if (pw < 440f) "커버" else "안쪽") + " 값")
+
                 draw(Canvas(b), size[0].toFloat(), size[1].toFloat(), data, grid, ws, offset, ppl, person, WidgetRenderer.palette(ctx, data), pw)
+                val statTxt = " · 가려진 것: 메모 " + statMemoHid + "개 · 스티커 " + statStkHid + "개"
+                WidgetStore.note(ctx, "한 달 위젯 #" + id, "그림 "+ size[0] + "x" + size[1] + "px · 밀도 " + WidgetRenderer.dens + " · 최소폭 " + minW.toInt() + "dp · 최대폭 " + maxW.toInt() + "dp → " + (if (pw < 440f) "커버" else "안쪽") + " 값" + statTxt)
                 b
             }
             val rv = RemoteViews(ctx.packageName, R.layout.widget_month_view)
@@ -370,7 +372,13 @@ object MonthRenderer {
     }
 
     /** 그림 한 장을 그림 (안드로이드 화면과 따로 컴퓨터에서도 돌려 볼 수 있게 Context 없이 · 밝게/어둡게는 pal 로) */
+    // 마지막으로 그린 한 달 위젯에서 가려진 것 (모양 조정 화면에 보여줌)
+    @Volatile internal var statMemoHid = 0
+    @Volatile internal var statStkHid = 0
+
     internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal, profileWDp: Float = -1f) {
+        statMemoHid = 0
+        statStkHid = 0
         val u = WidgetRenderer.dens
         val alpha = ((data?.optInt("alpha", 100) ?: 100).coerceIn(0, 100) * 255 / 100)
         val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -658,13 +666,14 @@ object MonthRenderer {
             holW2 = hp.measureText(h2)
         }
         val top = WidgetLayout.monthTop(plan, cw, u, numW, f.stk.size, holW2)
+        statStkHid += Math.max(0, f.stk.size - top.row1 - top.row2)
         for (k in 0 until top.row1) {   // 스티커 첫 줄: 숫자 옆 (오른쪽 끝)
-            val sx = x0 + cw - pad - (top.row1 - k) * plan.stkSize - (top.row1 - k - 1) * plan.stkGap + tn.stkX * cw * 0.12f
+            val sx = x0 + cw - pad - (top.row1 - k) * plan.stkSize - (top.row1 - k - 1) * plan.stkGap - (top.row1 - k - 1) * tn.stkGX * plan.stkSize * 0.25f + tn.stkX * cw * 0.12f
             WidgetRenderer.drawSticker(cv, f.stk[k], sx, y0 + plan.stkTop + tn.stkY * rowH * 0.08f, plan.stkSize, TextPaint(Paint.ANTI_ALIAS_FLAG), icons)
         }
         for (j in 0 until top.row2) {   // 3 · 4번째: 바로 아래 줄 오른쪽 끝 (근무 동그라미 오른쪽 위에 살짝 걸쳐도 스티커가 위에 보임 — 앱 달력 · 7일 위젯과 같음)
-            val sx = x0 + cw - pad - (top.row2 - j) * plan.stkSize - (top.row2 - j - 1) * plan.stkGap + tn.stkX * cw * 0.12f
-            WidgetRenderer.drawSticker(cv, f.stk[top.row1 + j], sx, y0 + plan.stkTop + plan.stkSize + plan.stkGap + tn.stkY * rowH * 0.08f, plan.stkSize, TextPaint(Paint.ANTI_ALIAS_FLAG), icons)
+            val sx = x0 + cw - pad - (top.row2 - j) * plan.stkSize - (top.row2 - j - 1) * plan.stkGap - (top.row2 - j - 1) * tn.stkGX * plan.stkSize * 0.25f + tn.stkX * cw * 0.12f
+            WidgetRenderer.drawSticker(cv, f.stk[top.row1 + j], sx, y0 + plan.stkTop + plan.stkSize + plan.stkGap + tn.stkGY * plan.stkSize * 0.35f + tn.stkY * rowH * 0.08f, plan.stkSize, TextPaint(Paint.ANTI_ALIAS_FLAG), icons)
         }
         paint.typeface = Typeface.DEFAULT_BOLD
         paint.textAlign = Paint.Align.LEFT
@@ -689,9 +698,11 @@ object MonthRenderer {
         // 메모: 줄 수만큼 (맨 아래부터 쌓음) · 더 있으면 마지막 줄 끝에 "+n" 칩 · 가족 달력의 메모는 연보라 칸
         val shown = Math.min(f.memos.size, plan.lines[r])
         val more = f.memos.size - shown
-        val memoTop = y0 + plan.memoTop(shown)
+        statMemoHid += Math.max(0, more)
+        val mGap = plan.pillGap + tn.memoG * plan.pillH * 0.25f
+        val memoTop = y0 + plan.memoTop(shown) + (plan.pillGap - mGap) * Math.max(0, shown - 1) - tn.memoY * rowH * 0.06f   // 줄 간격을 바꿔도 아래 끝은 그대로 · 메모는 칸 아래에 붙어 있어서 "위로 올리기"만
         for (k in 0 until shown) {
-            val py = memoTop + k * (plan.pillH + plan.pillGap)
+            val py = memoTop + k * (plan.pillH + mGap)
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
             val isFam = family || k < f.nf
             pp.color = if (isFam) (if (night) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill
