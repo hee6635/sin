@@ -1,5 +1,6 @@
 // 접근성 (v0.63): 화면 읽기 이름 · 역할 · 작은 버튼의 누르는 자리 (보이는 크기는 그대로)
-const {chromium,boot,rich}=require('./x_common.js');
+const {chromium,boot,rich:rich0}=require('./x_common.js');
+const rich=()=>{const s=rich0();if(s.link)s.link.stkAsked=1;return s;};   // 가족 스티커 묻는 창이 뜨지 않게
 const {mkT}=require('./lib.js');
 (async()=>{
   const T=mkT();const b=await chromium.launch();
