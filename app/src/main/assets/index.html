@@ -1292,7 +1292,7 @@ html[data-cal="fill"][data-theme="dark"]{--hol-bg:#3a2429;--holx:#e49aaa}
 html[data-cal="fill"] .dn.hol .hn,html[data-cal="fill"] .dn.hol .h1{color:var(--holx);font-weight:700}
 html[data-cal="fill"] .dn.hol{border-radius:9px 9px 0 0}
 /* 칸 채우기 · 오늘 표시(모양 조정 화면에서 고름: data-today a/b/c/d). 띠는 칸의 둥근 오른쪽 선을 따라 휘어서 끝이 가늘어짐 */
-html[data-cal="fill"] .cell.today::after{content:"";display:block;position:absolute;inset:0;border:0;border-right:var(--tdw,4px) solid color-mix(in srgb,var(--accent) var(--tdp,55%),transparent);border-radius:9px;box-sizing:border-box;z-index:1;pointer-events:none}
+html[data-cal="fill"] .cell.today::after{content:"";display:block;position:absolute;inset:0;border:0;border-right:var(--tdw,4px) solid color-mix(in srgb,var(--accent) var(--tdp,55%),transparent);border-radius:9px;box-sizing:border-box;z-index:-1;pointer-events:none}   /* 가장 아래층: 스티커 · 메모 · 글자 어느 것과 겹쳐도 그것들이 위에 보임 */
 html[data-cal="fill"][data-today="a"]{--tdw:3px;--tdp:42%}
 html[data-cal="fill"][data-today="b"]{--tdw:4px;--tdp:55%}
 html[data-cal="fill"][data-today="c"]{--tdw:6px;--tdp:80%}
@@ -2520,7 +2520,7 @@ function fitDn(root,keepStz){
       s2.insertBefore(kids[kids.length-1],s2.firstChild);return true;
     };
     // 모양 조정(옮김 · 배율)으로 스티커가 이름 쪽으로 다가와 겹치는 경우도 보이는 자리(getBoundingClientRect)로 재서 같은 순서로 처리 — 조정할 때마다 2글자 → 1글자 → 스티커 아래 줄을 다시 계산
-    const clash=()=>{const f=stp.firstElementChild;if(!h1||!f)return false;const a=h1.getBoundingClientRect(),b=f.getBoundingClientRect();return a.width>0&&b.width>0&&a.right>b.left-1;};
+    const clash=()=>{const f=stp.firstElementChild;if(!h1||!f)return false;const a=h1.getBoundingClientRect(),b=f.getBoundingClientRect();return a.width>0&&b.width>0&&a.right>b.left+.5;};   // (닿기만 하는 건 겹침이 아님 — 실제로 겹칠 때만)
     if(h1){
       if((over(dn)||clash())&&h1.dataset.o&&h1.textContent!==h1.dataset.o)h1.textContent=h1.dataset.o;
       while((over(dn)||clash())&&toS2()){}
