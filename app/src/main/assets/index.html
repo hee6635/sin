@@ -1273,7 +1273,6 @@ button.tbtn{cursor:pointer}
 html[data-cal="fill"] .grid{gap:2px;padding:2px;border-top:0}
 html[data-cal="fill"] .cell{border:0;border-radius:9px;background:transparent}
 html[data-cal="fill"] .cell.today{background:transparent}
-html[data-cal="fill"] .cell.today::after{content:"";display:block;position:absolute;inset:7px 0 7px auto;border:0;width:3px;height:auto;border-radius:3px;background:color-mix(in srgb,var(--accent) 42%,transparent);z-index:1;pointer-events:none}   /* 오늘: 오른쪽 가장자리 얇은 파스텔 띠 (스티커 · 메모가 위에 그려짐) */
 html[data-cal="fill"] .cell.today .dn{padding-left:5px;padding-top:0}   /* 오늘도 일반 날과 같은 자리 */
 /* 오늘 숫자는 일반 날과 똑같이(알약 · 색 없음): 오늘 표시는 칸 바탕 + 아래 그림자 + 오른쪽 띠가 맡음 */
 html[data-cal="fill"]{--cbm:26%}html[data-cal="fill"][data-theme="dark"]{--cbm:44%}
@@ -1292,11 +1291,18 @@ html[data-cal="fill"][data-theme="dark"]{--hol-bg:#3a2429;--holx:#e49aaa}
 @media (prefers-color-scheme:dark){html[data-cal="fill"]:not([data-theme="light"]){--hol-bg:#3a2429;--holx:#e49aaa}}
 html[data-cal="fill"] .dn.hol .hn,html[data-cal="fill"] .dn.hol .h1{color:var(--holx);font-weight:700}
 html[data-cal="fill"] .dn.hol{border-radius:9px 9px 0 0}
-html[data-cal="fill"] .cell.today{z-index:3;box-shadow:0 5px 8px -4px rgba(0,0,0,.28);background:color-mix(in srgb,var(--accent) 10%,var(--bg))}   /* 오늘: 테두리 없이 연한 강조색 바탕 + 아래쪽에만 약한 그림자 */
-html[data-cal="fill"] .cell.today[style*="--cb"]{background:color-mix(in srgb,var(--accent) 10%,color-mix(in srgb,var(--cb) var(--cbm),var(--bg)))}
-html[data-cal="fill"][data-theme="dark"] .cell.today{background:color-mix(in srgb,var(--accent) 18%,var(--bg))}
-html[data-cal="fill"][data-theme="dark"] .cell.today[style*="--cb"]{background:color-mix(in srgb,var(--accent) 18%,color-mix(in srgb,var(--cb) var(--cbm),var(--bg)))}
-@media (prefers-color-scheme:dark){html[data-cal="fill"]:not([data-theme="light"]) .cell.today{background:color-mix(in srgb,var(--accent) 18%,var(--bg))}html[data-cal="fill"]:not([data-theme="light"]) .cell.today[style*="--cb"]{background:color-mix(in srgb,var(--accent) 18%,color-mix(in srgb,var(--cb) var(--cbm),var(--bg)))}}
+/* 칸 채우기 · 오늘 표시(모양 조정 화면에서 고름: data-today a/b/c/d). 띠는 칸의 둥근 오른쪽 선을 따라 휘어서 끝이 가늘어짐 */
+html[data-cal="fill"] .cell.today::after{content:"";display:block;position:absolute;inset:0;border:0;border-right:var(--tdw,4px) solid color-mix(in srgb,var(--accent) var(--tdp,55%),transparent);border-radius:9px;box-sizing:border-box;z-index:1;pointer-events:none}
+html[data-cal="fill"][data-today="a"]{--tdw:3px;--tdp:42%}
+html[data-cal="fill"][data-today="b"]{--tdw:4px;--tdp:55%}
+html[data-cal="fill"][data-today="c"]{--tdw:6px;--tdp:80%}
+html[data-cal="fill"][data-today="d"]{--tdw:4px;--tdp:55%}
+html[data-cal="fill"][data-today="a"] .cell.today,html[data-cal="fill"][data-today="d"] .cell.today{z-index:3;box-shadow:0 5px 8px -4px rgba(0,0,0,.28)}
+html[data-cal="fill"][data-today="a"] .cell.today{background:color-mix(in srgb,var(--accent) 10%,var(--bg))}
+html[data-cal="fill"][data-today="a"] .cell.today[style*="--cb"]{background:color-mix(in srgb,var(--accent) 10%,color-mix(in srgb,var(--cb) var(--cbm),var(--bg)))}
+html[data-cal="fill"][data-today="a"][data-theme="dark"] .cell.today{background:color-mix(in srgb,var(--accent) 18%,var(--bg))}
+html[data-cal="fill"][data-today="a"][data-theme="dark"] .cell.today[style*="--cb"]{background:color-mix(in srgb,var(--accent) 18%,color-mix(in srgb,var(--cb) var(--cbm),var(--bg)))}
+@media (prefers-color-scheme:dark){html[data-cal="fill"][data-today="a"]:not([data-theme="light"]) .cell.today{background:color-mix(in srgb,var(--accent) 18%,var(--bg))}html[data-cal="fill"][data-today="a"]:not([data-theme="light"]) .cell.today[style*="--cb"]{background:color-mix(in srgb,var(--accent) 18%,color-mix(in srgb,var(--cb) var(--cbm),var(--bg)))}}
 html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box}
 .tn-top{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:4px;box-shadow:0 6px 12px rgba(0,0,0,.10)}.tn-bar{display:flex;align-items:center;gap:6px;padding:6px 12px 0}.tn-bar .btn{padding:6px 12px;font-size:13px;flex:none}.tn-bar .btn[disabled]{opacity:.4}.tn-st{flex:1;font-size:12px;color:var(--muted)}.tn-st.dirty{color:#d9534f;font-weight:700}.tn-warn{padding:2px 14px 0;font-size:12px;color:#c0392b}.tn-warn:empty{display:none}.tn-d summary{font-size:13px;font-weight:700;padding:6px 0;cursor:pointer}.tn-d{border-top:1px solid var(--line)}.tn-prev{height:140px;display:flex;flex-direction:column;border-radius:0;overflow:hidden;background:var(--bg);margin:8px 0 0}
 .tn-g{padding:8px 14px 4px}.tn-g h4{margin:10px 0 2px;font-size:14px}
@@ -1688,7 +1694,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'?'fill':'circle';s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'?'fill':'circle';s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,stkAsked:s.link.stkAsked?1:0,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#6b7280'})[k];});
   s.drive=Object.assign(defaults().drive,isObj(o.drive)?o.drive:{});
@@ -2312,6 +2318,7 @@ function applyTune(){
   const de=document.documentElement,st=de.style,t=tuneApp();
   st.setProperty('--tstk',t.stk);st.setProperty('--tstkx',t.stkX);st.setProperty('--tstky',t.stkY);st.setProperty('--tink',t.ink);st.setProperty('--tinky',t.inkY);st.setProperty('--tgx',t.stkGX);st.setProperty('--tgy',t.stkGY);st.setProperty('--tmy',t.memoY);st.setProperty('--tmg',t.memoG);
   if(S.calLook==='fill')de.setAttribute('data-cal','fill');else de.removeAttribute('data-cal');
+  de.setAttribute('data-today',S.todayLook||'b');
 }
 const stzPx=()=>{const w=innerWidth;return w>=600?Math.max(17,Math.min(19.8,w*.0264)):Math.max(12,Math.min(17.6,w*.0374));};
 function memoLines(){
@@ -2370,10 +2377,11 @@ function render(){
       </div>
       ${mid}
       <div class="hr">${(()=>{const c=famInCounts(),n=c.ask+c.hold;return n?`<button class="rqmail" data-act="feed-req" aria-label="처리할 요청 ${n}개">📩<i class="${c.ask?'':'hold'}">${n}</i></button>`:'';})()}${todayBtn}</div>`;
+    if(!renderAgain){try{stzWindow(v);}catch(err){}}   // 스티커 크기: 앞뒤 3달 기준
     v.innerHTML=renderCal();
-    fitDn(v);
+    fitDn(v,true);
     // 처음 켤 때 · 다른 탭에서 돌아올 때는 그리기 전에는 달력 칸 높이를 잴 수 없어서 어림값으로 메모 줄 수를 정함 → 그린 뒤 실제 높이로 다시 재서 다르면 한 번만 다시 그림
-    if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();fitDn(v);}finally{renderAgain=false;}}}
+    if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();fitDn(v,true);}finally{renderAgain=false;}}}
   }else if(tab==='colleague'){
     top.innerHTML=`<div class="hl"><button class="hb" data-act="back-set" aria-label="뒤로" style="font-size:28px">‹</button></div>${mid}<div class="hr">${todayBtn}</div>`;
     v.innerHTML=renderColleague();
@@ -2479,6 +2487,21 @@ function fitStz(root){
     cur=nx;rt.style.setProperty('--stz',cur+'px');
   }
   if(measure()>0)rt.style.removeProperty('--stz');
+}
+// 스티커 크기는 "보는 달 앞뒤 3달(7달)"에서 가장 빡빡한 칸 기준으로 한 번에 맞춤 → 달을 넘겨도(명절이 있는 달 · 없는 달) 크기가 안 바뀜.
+// 보이지 않는 곳에 7달을 그려서 재고(visibility:hidden) 바로 지움
+function stzWindow(host){
+  host=host||$('#view');if(!host)return;
+  const probe=document.createElement('div');
+  probe.style.cssText=`position:fixed;left:0;top:0;width:${host.clientWidth||innerWidth}px;visibility:hidden;pointer-events:none;overflow:hidden;height:0`;
+  const mk=cur.y*12+cur.m;let html='';
+  for(let d=-3;d<=3;d++){const v=mk+d;if(v<MIN_M||v>MAX_M)continue;html+=`<div class="panel">${calPanel(Math.floor(v/12),v%12)}</div>`;}
+  probe.innerHTML=`<div class="track">${html}</div>`;
+  host.appendChild(probe);
+  try{
+    probe.style.height='auto';
+    fitStz(probe);
+  }finally{probe.remove();}
 }
 function fitDn(root,keepStz){
   if(!keepStz)fitStz(root);   // (keepStz: 조정 화면 미리보기 — 스티커 크기는 한 달 전체로 이미 맞춰 둠)
@@ -4850,7 +4873,7 @@ function tuneWarn(){   // 지금 보는 앱 달력 화면에서 한계에 닿았
 function tunePrev(){   // 미리보기는 "일주일 줄"만: 스티커 · 메모 · 요청이 가장 많은 주 (없으면 오늘이 있는 주) · 칸 높이는 실제 달력 칸과 비슷하게
   const e=$('#tnPrev');if(!e)return;
   e.innerHTML=calPanel(cur.y,cur.m);
-  try{fitStz(e);}catch(err){}   // 스티커 크기는 한 달 전체로 맞춤(실제 달력과 같게) — 그 뒤에 한 주만 남김
+  try{stzWindow($('#page'));}catch(err){}   // 스티커 크기는 실제 달력과 같게(앞뒤 3달 기준) — 그 뒤에 한 주만 남김
   const g=e.querySelector('.grid');if(!g)return;
   const cells=[...g.children],rows=Math.floor(cells.length/7);let best=0,bs=-9;
   for(let r=0;r<rows;r++){let sc=0;for(let c=0;c<7;c++){const x=cells[r*7+c];sc+=x.querySelectorAll('.pl').length*2+x.querySelectorAll('.stp>*,.s2>*').length*2+(/rq-/.test(x.className)?3:0)+(x.classList.contains('today')?1:0)-(x.classList.contains('out')?3:0);}if(sc>bs){bs=sc;best=r;}}
@@ -4868,6 +4891,7 @@ function openTunePage(){
       <div class="hint" style="padding:10px 16px 0">움직이면 미리보기에 바로 보여요. 마음에 들면 "저장"을 눌러야 앱과 홈 화면 위젯에 반영돼요. 잘못 저장했으면 "이전 저장으로"로 돌아갈 수 있어요(최근 5번).</div>
       ${dbg?`<div class="hint" style="padding:6px 16px 0;font-size:11.5px">놓인 한 달 위젯 마지막 그림 상태<br>${esc(dbg).replace(/\n/g,'<br>')}</div>`:''}
       <div class="tn-g"><h4>앱 달력 모양</h4><div class="chips"><button class="${S.calLook==='fill'?'':'on'}" data-act="callook" data-v="circle">동그라미</button><button class="${S.calLook==='fill'?'on':''}" data-act="callook" data-v="fill">칸 채우기</button></div></div>
+      <div class="tn-g"><h4>오늘 표시 (칸 채우기)</h4><div class="chips">${[['a','바탕+그림자+띠'],['b','띠만'],['c','띠 굵고 진하게'],['d','띠+그림자']].map(([v,n])=>`<button class="${S.todayLook===v?'on':''}" data-act="todaylook" data-v="${v}">${n}</button>`).join('')}</div></div>
       <div class="tn-top"><div class="tn-prev" id="tnPrev"></div><div class="tn-bar" id="tnBar"></div><div class="tn-warn" id="tnWarn"></div></div>
       <div class="tn-g"><h4>앱 달력 · 안쪽 화면(큰 화면)${tuneAppKey()==='appInner'?' ← 지금 이 화면':''}</h4>${tuneRows('appInner')}</div>
       <div class="tn-g"><h4>앱 달력 · 커버 화면(작은 화면)${tuneAppKey()==='appCover'?' ← 지금 이 화면':''}</h4>${tuneRows('appCover')}</div>
@@ -5411,7 +5435,7 @@ function exportBad(){
   if(hasBridge('shareFile')){try{window.AndroidBridge.shareFile(name,raw);return;}catch(e){}}
   toast('앱에서만 보낼 수 있어요');
 }
-const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','tune','calLook','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
+const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','tune','calLook','todayLook','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -6365,6 +6389,7 @@ document.addEventListener('click',e=>{
     case 'more-wipe':wipeAll();break;
     case 'font':S.fontScale=Number(t.dataset.v);save();applyFont();render();break;
     case 'thememode':S.theme=t.dataset.v;save();applyTheme();render();break;
+    case 'todaylook':S.todayLook=['a','b','c','d'].includes(t.dataset.v)?t.dataset.v:'b';save();applyTune();openTunePage();break;
     case 'callook':S.calLook=t.dataset.v==='fill'?'fill':'circle';save();applyTune();if(pageMode==='tune')openTunePage();else render();break;
     case 'tune-open':openTunePage();break;
     case 'tune-reset':tuneDraft=tuneAll(null);applyTune();openTunePage();toast('처음 값으로 돌렸어요 · 저장해야 반영돼요');break;
