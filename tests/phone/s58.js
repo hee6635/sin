@@ -96,5 +96,17 @@ const {chromium,boot,mkT,base}=require('./lib.js');
       await p.close();
     }
   }
+  // ── 모양 조정으로 스티커가 이름 쪽에 다가와도(크기 · 좌우) 겹치지 않게 다시 계산: 2글자 → 1글자 → 스티커 아래 줄
+  {
+    const mk=(id,e,n,x={})=>({id,kind:'mark',emoji:e,name:n,times:1,rep:'none',days:[],dates:[],skip:[],ats:[],...x});
+    const defs=['👟','📖'].map((e,i)=>mk('m'+i,e,'s'+i,{dates:['2026-10-09']}));
+    for(const [stk,x] of [[1,0],[1.4,-.6],[1.6,-1]]){
+      const tune={...base.tune,appCover:{...base.tune.appCover,stk,stkX:x}};
+      const p=await boot(b,{...base,tune,stamps:{defs,log:{},v3:1,v4:1,lastAt:[]}},{w:390,h:844,touch:true});
+      const r=await p.evaluate(()=>{const c=document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-09"]'),h=c.querySelector('.h1'),f=c.querySelector('.dn>.stp>*');const a=h.getBoundingClientRect(),b=f?f.getBoundingClientRect():null;return {name:h.textContent,clash:!!b&&a.right>b.left-.5,s1:c.querySelectorAll('.dn>.stp>*').length,s2:c.querySelectorAll('.s2>*').length,hn:!!c.querySelector('.hnb')};});
+      T(`스티커 크기 ${stk} · 좌우 ${x}: 이름이 스티커와 겹치지 않고 숫자 옆에 있음`,!r.clash&&!r.hn&&r.name.length>=1&&r.s1+r.s2===2,JSON.stringify(r));
+      await p.close();
+    }
+  }
   T.sum();await b.close();
 })();

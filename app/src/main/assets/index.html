@@ -2495,9 +2495,11 @@ function fitDn(root){
       if(!s2){s2=document.createElement('div');s2.className='s2';const ref=cell.querySelector('.hnb')||dn;ref.after(s2);cell.classList.add('m3');}
       s2.insertBefore(kids[kids.length-1],s2.firstChild);return true;
     };
+    // 모양 조정(옮김 · 배율)으로 스티커가 이름 쪽으로 다가와 겹치는 경우도 보이는 자리(getBoundingClientRect)로 재서 같은 순서로 처리 — 조정할 때마다 2글자 → 1글자 → 스티커 아래 줄을 다시 계산
+    const clash=()=>{const f=stp.firstElementChild;if(!h1||!f)return false;const a=h1.getBoundingClientRect(),b=f.getBoundingClientRect();return a.width>0&&b.width>0&&a.right>b.left-1;};
     if(h1){
-      if(over(dn)&&h1.dataset.o&&h1.textContent!==h1.dataset.o)h1.textContent=h1.dataset.o;
-      while(over(dn)&&toS2()){}
+      if((over(dn)||clash())&&h1.dataset.o&&h1.textContent!==h1.dataset.o)h1.textContent=h1.dataset.o;
+      while((over(dn)||clash())&&toS2()){}
     }
     if(over(dn))toS2();
   });
