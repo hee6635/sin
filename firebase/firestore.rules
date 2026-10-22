@@ -36,8 +36,11 @@ service cloud.firestore {
         && request.resource.data.guestCount == 0
         && existsAfter(memberPath(hid, hid));
 
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestCount'])
+      // hostSeen = 방장 앱이 하루에 한 번 남기는 "나 여기 있어요"(서버 시각, 방장만). 가족 폰이 방장 연결이 오래 끊겼는지 보는 데 씀
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestCount', 'hostSeen'])
         && request.resource.data.guestCount >= 0 && request.resource.data.guestCount <= 3
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['hostSeen'])
+            || (isOwner(hid) && request.resource.data.hostSeen == request.time))
         && (
           // 호스트: 내보내기 · 정리할 때
           isOwner(hid)

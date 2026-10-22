@@ -633,6 +633,26 @@ await t('A 가족방 구성원은 B 가족방을 읽을 수 없음', async () =>
   await assertFails(getDocs(collection(db('g1'), 'households', 'hostB', 'members')));
 });
 
+// ───────── 방장 접속 표시(hostSeen) ─────────
+await G('방장 접속 표시 (hostSeen)');
+await t('방장은 hostSeen 을 서버 시각으로 남길 수 있음', async () => {
+  await seedFamily(1); await seedGuest('g1');
+  await assertSucceeds(updateDoc(doc(db(H), 'households', H), { hostSeen: serverTimestamp() }));
+});
+await t('방장도 서버 시각이 아닌 값으로는 못 남김', async () => {
+  await seedFamily(1); await seedGuest('g1');
+  await assertFails(updateDoc(doc(db(H), 'households', H), { hostSeen: Timestamp.fromMillis(1) }));
+});
+await t('가족(게스트)은 hostSeen 을 못 바꿈', async () => {
+  await seedFamily(1); await seedGuest('g1');
+  await assertFails(updateDoc(doc(db('g1'), 'households', H), { hostSeen: serverTimestamp() }));
+});
+await t('가족은 방장 접속 표시를 읽을 수 있음', async () => {
+  await seedFamily(1, async (d) => { await updateDoc(doc(d, 'households', H), { hostSeen: Timestamp.now() }); }); await seedGuest('g1');
+  const s = await getDoc(doc(db('g1'), 'households', H));
+  if (!s.data().hostSeen) throw new Error('hostSeen 없음');
+});
+
 await env.cleanup();
 console.log(`\n${pass}개 통과, ${fail}개 실패`);
 process.exit(fail ? 1 : 0);

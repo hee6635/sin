@@ -1304,7 +1304,7 @@ html[data-cal="fill"][data-today="a"][data-theme="dark"] .cell.today{background:
 html[data-cal="fill"][data-today="a"][data-theme="dark"] .cell.today[style*="--cb"]{background:color-mix(in srgb,var(--accent) 18%,color-mix(in srgb,var(--cb) var(--cbm),var(--bg)))}
 @media (prefers-color-scheme:dark){html[data-cal="fill"][data-today="a"]:not([data-theme="light"]) .cell.today{background:color-mix(in srgb,var(--accent) 18%,var(--bg))}html[data-cal="fill"][data-today="a"]:not([data-theme="light"]) .cell.today[style*="--cb"]{background:color-mix(in srgb,var(--accent) 18%,color-mix(in srgb,var(--cb) var(--cbm),var(--bg)))}}
 html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box}
-.tdc-row{display:flex;gap:8px;align-items:center;padding:4px 0}.tdc{width:24px;height:24px;border-radius:50%;border:2px solid transparent;padding:0;flex:none;box-shadow:0 0 0 1px var(--line)}.tdc.on{border-color:var(--fg)}.tdc-pick{position:relative;background:conic-gradient(#e0455c,#f08a00,#1fa971,#2f6bf0,#8a65c9,#e0455c);overflow:hidden}.tdc-pick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}.tn-top{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:4px;box-shadow:0 6px 12px rgba(0,0,0,.10)}.tn-bar{display:flex;align-items:center;gap:6px;padding:6px 12px 0}.tn-bar .btn{padding:6px 12px;font-size:13px;flex:none}.tn-bar .btn[disabled]{opacity:.4}.tn-st{flex:1;font-size:12px;color:var(--muted)}.tn-st.dirty{color:#d9534f;font-weight:700}.tn-warn{padding:2px 14px 0;font-size:12px;color:#c0392b}.tn-warn:empty{display:none}.tn-d summary{font-size:13px;font-weight:700;padding:6px 0;cursor:pointer}.tn-d{border-top:1px solid var(--line)}.tn-prev{height:140px;display:flex;flex-direction:column;border-radius:0;overflow:hidden;background:var(--bg);margin:8px 0 0}
+.tdc-row{display:flex;gap:8px;align-items:center;padding:4px 0}.tdc{width:24px;height:24px;border-radius:50%;border:2px solid transparent;padding:0;flex:none;box-shadow:0 0 0 1px var(--line)}.tdc.on{border-color:var(--fg)}.tdc-pick{position:relative;background:conic-gradient(#e0455c,#f08a00,#1fa971,#2f6bf0,#8a65c9,#e0455c);overflow:hidden}.tdc-pick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}.tpk-fine{display:flex;gap:8px}.tpk-fine button{flex:1;padding:8px 0;border-radius:10px;background:var(--surface);font-weight:700}.tn-top{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:4px;box-shadow:0 6px 12px rgba(0,0,0,.10)}.tn-bar{display:flex;align-items:center;gap:6px;padding:6px 12px 0}.tn-bar .btn{padding:6px 12px;font-size:13px;flex:none}.tn-bar .btn[disabled]{opacity:.4}.tn-st{flex:1;font-size:12px;color:var(--muted)}.tn-st.dirty{color:#d9534f;font-weight:700}.tn-warn{padding:2px 14px 0;font-size:12px;color:#c0392b}.tn-warn:empty{display:none}.tn-d summary{font-size:13px;font-weight:700;padding:6px 0;cursor:pointer}.tn-d{border-top:1px solid var(--line)}.tn-prev{height:140px;display:flex;flex-direction:column;border-radius:0;overflow:hidden;background:var(--bg);margin:8px 0 0}
 .tn-g{padding:8px 14px 4px}.tn-g h4{margin:10px 0 2px;font-size:14px}
 .tn-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px}.tn-row span{flex:0 0 112px}.tn-row input{flex:1}.tn-row b{flex:0 0 40px;text-align:right;font-variant-numeric:tabular-nums}
 #top.cal-top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
@@ -1529,6 +1529,9 @@ function compHolItem(k){
   return (S.companyHols||[]).find(x=>x.kind!=='memo'&&(x.date===k||(x.yearly&&x.date.slice(5)===k.slice(5)&&k>=x.date)))||null;
 }
 function compHol(k){const h=compHolItem(k);return h?h.name:'';}
+// 회사 휴무일(쉬는 날)은 명절처럼: 빨간 날짜 + 띠에 짧은 이름 (창립기념일 → 창립 · 한 글자는 창). 이름 끝의 "기념일 · 휴무"는 뺌
+const compShort=n=>{const t=String(n||'').replace(/(기념일|휴무일|휴무)$/,'').trim();return t||String(n||'').trim();};
+function offHolName(k){const h=compHolItem(k);return h&&h.kind!=='memo'?compShort(h.name):'';}
 const shortHol=n=>!n?'':n==='부처님오신날'?'부처님':n.startsWith('대체')?'대체':n.includes('선거')?'선거':n==='임시공휴일'?'임시휴일':n.split('·')[0];
 // 폰처럼 좁은 칸: "개천…" 대신 짧은 이름 (… 없이)
 const HOL2={'삼일절':'삼일','노동절':'노동','어린이날':'어린','부처님오신날':'부처','현충일':'현충','제헌절':'제헌','광복절':'광복','개천절':'개천','한글날':'한글','성탄절':'성탄','대체공휴일':'대체','임시공휴일':'임시'};
@@ -1694,7 +1697,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'?'fill':'circle';s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.todayColor=/^#[0-9a-f]{6}$/i.test((o&&o.todayColor)||'')?o.todayColor.toLowerCase():'';s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'?'fill':'circle';s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.todayColor=/^#[0-9a-f]{6}$/i.test((o&&o.todayColor)||'')?o.todayColor.toLowerCase():'';s.linkLost=(o&&isObj(o.linkLost)&&typeof o.linkLost.hid==='string')?{hid:cutTxt(o.linkLost.hid,128),role:o.linkLost.role==='host'?'host':'guest',name:cutTxt(o.linkLost.name,12),at:+o.linkLost.at||0}:null;s.linkMissAt=+(o&&o.linkMissAt)||0;s.hostSeenAt=+(o&&o.hostSeenAt)||0;s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,stkAsked:s.link.stkAsked?1:0,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#6b7280'})[k];});
   s.drive=Object.assign(defaults().drive,isObj(o.drive)?o.drive:{});
@@ -1859,7 +1862,7 @@ function widgetJson(){
   const people=fam.map((m,j)=>({id:String(m.id||''),n:String(m.name||'가족').slice(0,6),c:m.color||FAM_COL[j%6],t:{},s:[],k:{}}));
   const stkD=x=>{const q=x.d||{};return q.k==='p'?{p:1,c:/^#[0-9a-f]{6}$/i.test(q.c||'')?q.c:'#7e57c2',h:({r:'round',t:'tab',d:'drop'})[q.h]||'caps',n:x.n,N:Math.max(1,Math.min(3,q.t||1))}:{e:typeof q.img==='string'?'⭐':icoTxt(q.e||'⭐','⭐'),n:x.n,N:1};};
   for(let i=iS;i<=iE;i++){   // 6일 전 ~ 14일 뒤는 자세히 · 그 밖은 근무 · 공휴일 · 메모 3줄 · 스티커(하루 최대 4개)만 (한 달 칸용)
-    const d=addDays(t0,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),pers=persOn(k);
+    const d=addDays(t0,i),k=fmt(d),sh=shiftOf(d),hol=holName(k)||(ad('comp')?offHolName(k):''),pers=persOn(k);
     const c=(pers||sh===''||sh===NONE_K)?null:tColors(typeOf(sh));
     const rest=!pers&&sh!==''&&sh!==NONE_K&&isRest(sh);
     const mapStk=x=>{
@@ -2416,7 +2419,7 @@ function bwrapHtml(d,k,pop){
   const ps=shiftOf(addDays(d,-1)),ns=shiftOf(addDays(d,1));
   const tc=tColors(typeOf(sh));
   const band=tc&&!isRest(sh)&&(ps===sh||ns===sh)?`<i class="band ${ps===sh?'jl':''} ${ns===sh?'jr':''}" style="--tb:${tc.bg}"></i>`:'';
-  const holTag=S.holRest&&hol&&isRest(sh)&&ov==null?holTagName(k,hol):'';
+  const holTag=S.holRest&&hol0&&isRest(sh)&&ov==null?holTagName(k,hol0):'';
   return `${band}${holTag?`<span class="badge r two holtag ${pop?'pop':''}">${esc(holTag)}</span>`:badge(sh,pop?'pop':'',ov?'<i class="dot"></i>':'')}`;
 }
 // 메모가 줄 수(mx)보다 많으면: 보이는 줄은 그대로 두고 마지막 줄 끝에 "+n" 칩 (n = 더 있는 메모 수 · 10개 이상은 9+). 메모 글자가 아니라 "더 있어요" 표시로 보이게 어두운 알약 모양 — 위젯 칸과 같은 표시
@@ -2433,7 +2436,7 @@ function calPanel(y,m){
   let cells='';
   const maxLines=lastLines=memoLines(),narrow=innerWidth<600;
   for(let i=0;i<rows*7;i++){
-    const d=addDays(start,i),k=fmt(d),sh=shiftOf(d),hol=holName(k),chI=hol?null:compHolItem(k),ch=chI?chI.name:'',ov=S.overrides[k],dow=d.getDay();
+    const d=addDays(start,i),k=fmt(d),sh=shiftOf(d),hol0=holName(k),hol=hol0||(ad('comp')?offHolName(k):''),chI=null,ch='',ov=S.overrides[k],dow=d.getDay();   // 회사 휴무일도 공휴일과 같은 모양(빨강)
     const cls=hol||dow===0?'sun':dow===6?'sat':'';
     const vm=visibleMemos(k),fam=vm.filter(x=>x.shared),mine=vm.filter(x=>!x.shared);
     const rcls=sharing?'':rqRing(S.requests.filter(r=>r.date===k&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r));
@@ -2773,6 +2776,7 @@ function renderTpk(){
       <div class="mi"><div class="hseg big"><button class="${pm?'':'on'}" data-act="tpk-ap" data-v="0">오전</button><button class="${pm?'on':''}" data-act="tpk-ap" data-v="1">오후</button></div></div>
       <div class="mi tpk-row"><span class="tpk-lb">시</span><div class="tpk-g">${[...Array(12)].map((_,i)=>`<button class="${i+1===h12?'on':''}" data-act="tpk-h" data-v="${i+1}">${i+1}</button>`).join('')}</div></div>
       <div class="mi tpk-row"><span class="tpk-lb">분</span><div class="tpk-g">${ms.map(m=>`<button class="${m===t.mi?'on':''}" data-act="tpk-mi" data-v="${m}">${pad(m)}</button>`).join('')}</div></div>
+      <div class="mi tpk-row"><span class="tpk-lb">1분</span><div class="tpk-g tpk-fine"><button data-act="tpk-step" data-v="-1" aria-label="1분 빼기">− 1분</button><button data-act="tpk-step" data-v="1" aria-label="1분 더하기">+ 1분</button></div></div>
       <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">취소</button><button class="btn grow" data-act="tpk-ok">정하기</button></div>`);
   }
 }
@@ -5918,6 +5922,7 @@ document.addEventListener('click',e=>{
     case 'tpk':openTpk(t.dataset.id,t.dataset.type);break;
     case 'tpk-ap':if(tpk){tpk.h=tpk.h%12+(t.dataset.v==='1'?12:0);renderTpk();}break;
     case 'tpk-h':if(tpk){tpk.h=(+t.dataset.v%12)+(tpk.h>=12?12:0);renderTpk();}break;
+    case 'tpk-step':if(tpk&&tpk.type==='time'){const n=((tpk.h*60+tpk.mi+(+t.dataset.v||0))%1440+1440)%1440;tpk.h=Math.floor(n/60);tpk.mi=n%60;renderTpk();}break;
     case 'tpk-mi':if(tpk){tpk.mi=+t.dataset.v;renderTpk();}break;
     case 'tpk-m':if(tpk){const v=tpk.y*12+tpk.m+(+t.dataset.v);tpk.y=Math.floor(v/12);tpk.m=v%12;renderTpk();}break;
     case 'tpk-d':if(tpk){tpk.v=t.dataset.v;tpkOk();}break;
@@ -6029,6 +6034,8 @@ document.addEventListener('click',e=>{
     case 'link-retry':famRefresh();break;
     case 'link-invite':openInvitePop();break;
     case 'link-join':openJoinPop();break;
+    case 'lost-dismiss':S.linkLost=null;save();if(pageMode==='link')renderLinkPage();break;
+    case 'link-move':if(confirm('이 가족방에서 나가고, 방장에게 받은 새 초대 코드로 다시 들어갈까요?\n(먼저 방장에게 새 코드를 받아 두세요)'))famDo(async()=>{await famRemoveMember(S.link.hid,FBX.uid);S.link=null;famClear();S.linkLost=null;save();setTimeout(()=>openJoinPop(),200);},'가족방에서 나왔어요');break;
     case 'inv-perm':invPull();invDraft.perm=t.dataset.v;renderInvitePop();break;
     case 'inv-make':invMake();break;
     case 'inv-share':famShare(t.dataset.c);break;
@@ -6821,7 +6828,14 @@ async function famSync(){
   const snap=await F.getDoc(famMember(F,db,hid,uid));
   const had=!!S.link;
   const old=S.link;
-  if(snap.exists()){const d=snap.data();S.link={hid,role:d.role,name:d.name,perm:d.perm,mode:d.mode==='view'?'view':'own',uid,hash:(old&&old.hid===hid&&old.hash)||'',stk:!!(old&&old.hid===hid&&old.stk),stkAsked:(old&&old.hid===hid&&old.stkAsked)?1:0};}
+  if(snap.exists()){const d=snap.data();S.link={hid,role:d.role,name:d.name,perm:d.perm,mode:d.mode==='view'?'view':'own',uid,hash:(old&&old.hid===hid&&old.hash)||'',stk:!!(old&&old.hid===hid&&old.stk),stkAsked:(old&&old.hid===hid&&old.stkAsked)?1:0};S.linkMissAt=0;S.linkLost=null;}
+  else if(old){
+    // 서버에서 내 칸을 못 찾았다고 바로 연결을 지우지 않음: 처음에는 표시만 하고(연결은 그대로), 5분 넘게 계속 못 찾을 때만 끊김으로 처리 + 무엇이 끊겼는지 남겨 둠(복구 안내용)
+    if(!S.linkMissAt){S.linkMissAt=Date.now();save();return {had,link:S.link,miss:true};}
+    if(Date.now()-S.linkMissAt<5*60e3)return {had,link:S.link,miss:true};
+    S.linkLost={hid:old.hid,role:old.role==='host'?'host':'guest',name:String(old.name||'').slice(0,12),at:Date.now()};S.linkMissAt=0;
+    S.link=null;famClear();
+  }
   else{S.link=null;famClear();}
   save();
   return {had,link:S.link};
@@ -7096,6 +7110,10 @@ function googleStart(req){
   if(gBusy)return;if(!googleOn()){toast('구글 로그인은 아직 준비 중이에요');return;}
   gBusy=true;try{window.AndroidBridge.googleSignIn(req);}catch(e){gBusy=false;toast('구글 로그인을 열지 못했어요');}
 }
+async function googleBackToAnon(){   // 구글 로그인으로 바뀐 로그인을 해제하고 새 익명 로그인으로 (연결하지 않을 때)
+  try{await window.FB.auth.signOut(FBX.auth);}catch(e){}
+  FBX.uid=null;FBX.st='idle';try{await fbConnect();}catch(e){}
+}
 window.__onGoogle=async o=>{
   if(!o||!gBusy)return;
   try{
@@ -7122,7 +7140,14 @@ window.__onGoogle=async o=>{
       FBX.uid=FBX.auth.currentUser.uid;
       const us=await F.getDoc(F.doc(FBX.db,'users',FBX.uid));
       const hid=us.exists()?String(us.data().hid||''):'';
-      if(!hid){toast('이 구글 계정에 연결된 가족방이 없어요');return;}
+      if(!hid){toast('이 구글 계정에 연결된 가족방이 없어요');await googleBackToAnon();return;}
+      // 어느 방인지 보여 주고 확인 (옛 폰 · 태블릿의 방에 붙는 일이 있어서): 방장 · 가족 이름 · 만든 날
+      let desc='';
+      try{const ms=await F.getDocs(F.collection(FBX.db,'households',hid,'members'));const hs=await F.getDoc(F.doc(FBX.db,'households',hid));
+        const names=ms.docs.map(d=>{const v=d.data();return `${v.role==='host'?'방장 ':''}${v.name||'?'}`;});
+        const ct=hs.exists()&&hs.data().createdAt&&hs.data().createdAt.toMillis?new Date(hs.data().createdAt.toMillis()):null;
+        desc=`${names.join(' · ')||'구성원 없음'}${ct?`\n만든 날: ${ct.getFullYear()}.${ct.getMonth()+1}.${ct.getDate()}`:''}`;}catch(e){desc='(방 정보를 읽지 못했어요)';}
+      if(!confirm(`이 구글 계정에 연결된 가족방이에요.\n\n${desc}\n\n이 방으로 돌아갈까요?\n(아니요 → 연결하지 않고, 새 가족방을 만들거나 새 초대 코드로 참여할 수 있어요)`)){await googleBackToAnon();toast('연결하지 않았어요');return;}
       S.link={hid,role:'guest',name:'',perm:'write',mode:'own',uid:FBX.uid,hash:''};
       const r=await famSync();
       if(!r.link){toast('가족방을 찾지 못했어요 (이미 없어졌을 수 있어요)');return;}
@@ -7178,9 +7203,17 @@ function pushRow(){
   const off=typeof window.AndroidBridge.notifEnabled==='function'&&!window.AndroidBridge.notifEnabled();
   return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">가족 알림 받기<small>내용은 빼고 이름 · 날짜만 알려줘요</small></div><label class="sw"><input type="checkbox" id="famPushOn" ${S.pushOn!==false?'checked':''}><i></i></label></div>${S.pushOn!==false?`<div class="prow"><div class="pl2">자는 시간엔 소리 없이<small>자는 시간 알림은 소리 없이 쌓여요</small></div><label class="sw"><input type="checkbox" id="famPushQuiet" ${S.pushQuiet!==false?'checked':''}><i></i></label></div>`:''}${off?'<div class="hint" style="padding:6px 16px 10px;color:#e5484d">폰 설정에서 이 앱의 알림이 꺼져 있어요. 폰 설정 › 앱 › 언제쉬어 › 알림을 켜 주세요.</div>':''}</div>`;
 }
+// 방장 앱이 하루에 한 번 "나 여기 있어요"(hostSeen)를 남김 → 가족 폰이 방장 연결이 오래 끊겼는지 알 수 있음 (서버 규칙 배포 전에는 조용히 실패)
+async function famHostSeen(){
+  if(!S.link||S.link.role!=='host')return;
+  if(Date.now()-(S.hostSeenAt||0)<20*36e5)return;
+  const {F,db}=await famReady();
+  await F.updateDoc(F.doc(db,'households',S.link.hid),{hostSeen:F.serverTimestamp()});
+  S.hostSeenAt=Date.now();save();
+}
 async function famBoot(){
   if(!fbCfg()||!S.link||famBooting||wipeBusy)return;famBooting=true;
-  try{await famSync();if(S.link){await famListen();if(!famView())famPush().catch(famPushFail);famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});famRegUser().catch(()=>{});}else famClear();}
+  try{await famSync();if(S.link){await famListen();if(!famView())famPush().catch(famPushFail);famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});famRegUser().catch(()=>{});famHostSeen().catch(()=>{});}else famClear();}
   catch(e){}finally{famBooting=false;}
 }
 // 가족이 "내 근무표 올리기 / 가족 것만 볼래요"를 바꿀 때
@@ -7623,19 +7656,38 @@ async function famRefresh(){
     if(r.had&&!r.link)toast('가족방에서 나온 상태예요 (내보내졌거나 없어졌어요)');
     famUi.members=S.link?await famMembers(S.link.hid):[];
     famUi.invites=S.link&&S.link.role==='host'?await famMyInvites():[];
+    famUi.hostSeen=0;
+    if(S.link&&S.link.role==='guest'){try{const {F,db}=await famReady();const hs=await F.getDoc(F.doc(db,'households',S.link.hid));const t=hs.exists()&&hs.data().hostSeen;famUi.hostSeen=t&&t.toMillis?t.toMillis():0;}catch(e){}}
     famUi.st='ok';
   }catch(e){famUi.st='err';famUi.err=famErr(e);}
   if(pageMode==='link')renderLinkPage();
 }
 function openLinkPage(){famUi.st='loading';renderLinkPage();famRefresh();}
 function lav(n,i){const h=[...String(n)].reduce((a,c)=>a+c.charCodeAt(0),i||0)*47%360;return `<span class="lav" style="background:hsl(${h} 55% 52%)">${esc(String(n).slice(0,1)||'?')}</span>`;}
+// 가족방 연결이 끊겼을 때 안내(끊긴 사실 · 왜 · 어떻게 다시 붙일지). 방장 로그인 번호가 바뀌면 같은 방으로는 못 돌아가서 "새 방 + 가족이 새 코드로 옮기기"가 가장 확실함
+function lostCard(){
+  const x=S.linkLost;if(!x)return '';
+  const ago=x.at?Math.max(0,Math.round((Date.now()-x.at)/864e5)):0,when=ago>0?`${ago}일 전`:'방금';
+  const host=x.role==='host';
+  return `<div class="pg-sec lost-card" style="margin-top:12px;padding:16px"><b style="font-size:15px">⚠ 가족방 연결이 끊어졌어요</b>
+    <div class="hint" style="padding:6px 0 10px;line-height:1.7">${host?'내가 방장이던':'내가 참여하던'} 가족방과 서버의 연결이 ${when} 끊어졌어요. 내 근무표 · 메모는 이 폰에 그대로 있어요.<br>${host?'앱 로그인 정보가 바뀌면 이렇게 돼요. 같은 방으로 못 돌아갈 수 있어서, <b>새 가족방을 만들고 가족이 새 코드로 옮기는</b> 게 가장 확실해요.':'방장이 가족방을 없앴거나 내보냈을 수 있어요. 방장에게 새 초대 코드를 받아서 다시 참여해요.'}</div>
+    ${host?`<button class="btn" style="width:100%" data-act="link-invite">새 가족방 만들고 초대하기</button>`:`<button class="btn" style="width:100%" data-act="link-join">새 초대 코드로 참여하기</button>`}
+    <button class="btn ghost" style="width:100%;margin-top:8px" data-act="lost-dismiss">이 안내 닫기</button></div>`;
+}
+// 방장 폰이 오랫동안 서버에 접속하지 않았을 때 가족 폰에 보여주는 안내 (방장 앱이 하루에 한 번 `hostSeen` 을 남김)
+function hostStaleNote(){
+  const t=famUi.hostSeen;if(!t)return '';
+  const days=Math.floor((Date.now()-t)/864e5);
+  if(days<3)return `<div class="hint" style="padding:6px 16px">방장 마지막 접속: ${days<1?'오늘':days+'일 전'}</div>`;
+  return `<div class="hint" style="padding:8px 16px;color:var(--danger)">⚠ 방장 폰이 ${days}일째 가족방에 접속하지 않았어요. 방장 앱의 연결이 끊어졌을 수 있어요. 방장에게 확인해 보세요 (끊겼다면 방장이 새 가족방을 만들고, 여기서 "새 초대 코드로 옮기기"를 해요).</div>`;
+}
 function renderLinkPage(){
   const L=S.link,u=famUi,host=L&&L.role==='host';
   const guests=u.members.filter(m=>m.role==='guest');
   let body='';
   if(u.st==='loading')body=`<div class="hint" style="padding:30px 16px;text-align:center">불러오는 중…</div>`;
   else if(u.st==='err')body=`<div class="hint" style="padding:16px;color:var(--danger)">${esc(u.err)}</div><div style="padding:0 16px"><button class="btn" style="width:100%" data-act="link-retry">다시 시도</button></div>`;
-  else if(!L)body=`<div class="pg-sec" style="margin-top:12px;padding:18px 16px">
+  else if(!L)body=`${lostCard()}<div class="pg-sec" style="margin-top:12px;padding:18px 16px">
       <b style="font-size:16px">가족과 같이 보려면</b>
       <div class="hint" style="padding:6px 0 14px"><b>초대 코드</b>를 보내면 가족이 코드를 넣고 참여해요 · 가족방은 4명까지예요</div>
       <button class="btn" style="width:100%" data-act="link-invite">가족 초대하기</button>
@@ -7658,7 +7710,9 @@ function renderLinkPage(){
     body=`<div class="pg-cap">참여 중인 가족방</div>
     <div class="pg-sec" style="margin-top:0">${u.members.map((m,i)=>`<div class="prow">${lav(m.name,i)}<div class="pl2">${esc(m.name)}${m.uid===FBX.uid?' (나)':''}<small>${m.role==='host'?'근무자':famModeTxt(m)}</small></div></div>`).join('')}</div>
     <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기</div><span class="muted">${esc(L.name)} ›</span></div>
+      <div class="prow tap" data-act="link-move"><div class="pl2">방장이 새 가족방을 만들었어요<small>새 초대 코드로 옮기기</small></div><span class="muted">›</span></div>
       <div class="prow danger-row" data-act="link-leave">${hostM?esc(hostM.name)+'님의 ':''}가족방에서 나가기</div></div>
+    ${hostStaleNote()}
     <div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">내 근무표를 가족에게 보여요<small>끄면 가족 근무표만 보고, 달력 탭이 가족 달력으로 바뀌어요</small></div><label class="sw"><input type="checkbox" id="famOwn" ${L.mode==='view'?'':'checked'}><i></i></label></div>${!S.myset&&L.mode!=='view'?'<div class="prow tap" data-act="mk-sched" style="color:var(--accent);font-weight:700"><div class="pl2">내 근무표 만들기<small>만들기 전에는 가족에게 내 근무표가 안 보여요</small></div><span class="muted">›</span></div>':''}${S.myset&&L.mode!=='view'?stkRow():''}</div>
     ${pushRow()}
     ${googleRow()}
