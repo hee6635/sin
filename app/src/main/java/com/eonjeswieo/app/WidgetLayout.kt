@@ -231,7 +231,8 @@ object WidgetLayout {
         val dateBottom = topPad + dateSize * 1.35f
         val ss = Math.min(dateSize * 0.9f * stkK, cw * 0.34f)   // 모양 조정(스티커 크기 배율) · 기본 1
         val holSize = dateSize * 0.78f   // 명절 글자 키움
-        val pillH = Math.min(clamp(rowH * 0.19f, 9f * u, 12f * u * ks) * pillK, rowH * 0.34f)   // 모양 조정(메모 칸 높이 배율) · 기본 1
+        val pillFull = Math.min(clamp(rowH * 0.19f, 9f * u, 12f * u * ks) * pillK, rowH * 0.34f)   // 모양 조정(메모 칸 높이 배율) · 기본 1
+        var pillH = pillFull   // (3줄이면 줄 하나를 조금 낮춰서 동그라미 자리를 지킴)
         val pg = 1f * u
         val dTop = clamp(Math.min(cw * 0.5f, rowH * 0.4f), 14f * u, 44f * u)   // 근무 동그라미 크기 (칸 폭의 절반 · 칸 높이의 40% 중 작은 쪽 · 상한은 7일 위젯과 같은 44dp — 칸이 큰 위젯에서도 칸에 맞게 커짐)
         val dMin = Math.min(dTop, 12f * u)
@@ -245,7 +246,17 @@ object WidgetLayout {
         val narrow = 2f * padX + dateSize * 1.3f + 2.5f * u + holSize * 1.05f > cw   // 아주 좁은 칸은 명절 한 글자도 숫자 옆에 못 들어가 숫자 아래에 (예전처럼)
         val labelEnd = if (narrow) dateBase + holSize * 1.35f else dateBottom   // 보통 칸은 명절 글자가 늘 숫자 옆이라 아래로 내려오지 않음
         var lines = Math.max(0, Math.min(memoMax, 3))
-        while (lines > 0 && (region(lines) < (if (!hasCircle) 0f else if (lines >= 2) Math.max(Math.min(dTop, 17f * u), dTop * 0.85f * clamp((ks - 1f) / 0.1f, 0f, 1f)) + cm else dMin + cm) || bottom - blk(lines) - pg < labelEnd)) lines--
+        while (lines > 0) {
+            pillH = if (lines >= 3) pillFull * 0.88f else pillFull
+            if (lines >= 3 && pillH < 9f * u) { lines--; continue }   // 3줄이면 줄이 너무 낮아질 때는 2줄로
+            val need = if (!hasCircle) 0f
+                else if (lines >= 3) Math.max(Math.min(dTop, 17f * u), dTop * 0.62f * clamp((ks - 1f) / 0.1f, 0f, 1f)) + cm
+                else if (lines >= 2) Math.max(Math.min(dTop, 17f * u), dTop * 0.85f * clamp((ks - 1f) / 0.1f, 0f, 1f)) + cm
+                else dMin + cm
+            if (region(lines) >= need && bottom - blk(lines) - pg >= labelEnd) break
+            lines--
+        }
+        if (lines <= 0) pillH = pillFull
 
         val rowLines = IntArray(rowMemos.size) { lines }   // 주마다 · 달마다 위치가 달라 보이지 않게: 메모가 적은 줄도 메모 칸을 똑같이 잡아 둠(스티커 4개 · 명절 · 메모 꽉 참 기준)
         val cy = FloatArray(rowMemos.size)
@@ -310,8 +321,8 @@ object WidgetLayout {
         val cx = chipZone + (w - chipZone) / 2f
         val half = 6f * u   // 화살표 글자 폭의 절반쯤
         val halfZone = MONTH_TITLE_ZONE_DP * u / 2f
-        val p = clamp(cx - titleW / 2f - 16f * u, chipZone + half, cx - halfZone - half)
-        val n = clamp(cx + titleW / 2f + 16f * u, cx + halfZone + half, w - half)
+        val p = clamp(cx - titleW / 2f - 22f * u, chipZone + half, cx - halfZone - half)
+        val n = clamp(cx + titleW / 2f + 22f * u, cx + halfZone + half, w - half)
         return MonthArrows(p, n, cx)
     }
 }

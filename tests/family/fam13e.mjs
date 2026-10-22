@@ -21,7 +21,7 @@ const EMU = { apiKey: 'fake-key', authDomain: 'demo-eonjeswieo.firebaseapp.com',
 const b = await chromium.launch(); const errs = [];
 let okN = 0, ngN = 0;
 const check = (name, cond, extra = '') => { if (cond) { okN++; log('  ✓', name); } else { ngN++; log('  ✕', name, extra, errs.length ? '| ERR: ' + errs.slice(-2).join(' // ').slice(0, 500) : ''); } };
-const T = +new Date('2026-10-12T10:00:00');
+const T = Date.now();   // 서버 시각과 맞춤(초대 코드 만료 규칙)
 const FAKE_G = JSON.stringify({ sub: 'g-test-1', email: 'g1@example.com', email_verified: true });
 async function phone(name, state, opts = {}) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
@@ -35,6 +35,7 @@ async function phone(name, state, opts = {}) {
     window.AndroidBridge = { status: () => '', setAlarms() {}, setReminders() {}, shareText: (t, m) => { window.__shared = m; }, fcmToken: () => 'tok-' + nm + '-' + 'x'.repeat(30), notifEnabled: () => true };
     if (g) { window.AndroidBridge.googleAvailable = () => true;
       window.AndroidBridge.googleSignIn = req => { window.__greq = (window.__greq || []).concat(req); setTimeout(() => window.__onGoogle(window.__gmode === 'cancel' && req === 'reauth' ? { req, error: 'cancel' } : { req, idToken: fake, email: 'g1@example.com' }), 60); }; } }, [state, T, name, !!opts.google, JSON.stringify({ sub: opts.gsub || 'g-test-1', email: (opts.gsub || 'g-test-1') + '@example.com', email_verified: true })]);
+  await p.addInitScript(() => { setInterval(() => { const b = document.querySelector('#pop.open [data-act="stkshare-no"]'); if (b) b.click(); }, 300); });   // 가족 스티커 묻는 창이 시험을 가로막지 않게
   await p.goto('http://127.0.0.1:8214/index.html'); await p.waitForTimeout(700);
   return p;
 }

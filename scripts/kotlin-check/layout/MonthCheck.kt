@@ -207,7 +207,7 @@ fun monthFuzz(): Int {
         val rows = 4 + rnd.nextInt(3)
         val rowMemos = IntArray(rows) { if (rnd.nextInt(3) == 0) 0 else rnd.nextInt(5) }
         val hasCircle = rnd.nextInt(6) != 0
-        val memoMax = 1 + rnd.nextInt(2)
+        val memoMax = 1 + rnd.nextInt(3)
         val cw = cwDp * u; val rowH = rowHDp * u
         val p = WidgetLayout.solveMonth(rowMemos, cw, rowH, u, hasCircle, memoMax)
         val tag = "cw=${"%.1f".format(cwDp)} rowH=${"%.1f".format(rowHDp)} rows=$rows memoMax=$memoMax"
@@ -245,7 +245,7 @@ val DARKM = Pm(0x23282E, 0xF2F4F7, 0x9AA3AD, 0x39414A, 0xFF6B7F, 0x7BA2FF, 0x3A4
 private fun col(v: Int, a: Float = 1f) = Color((v shr 16) and 255, (v shr 8) and 255, v and 255, (a * 255).toInt())
 
 /** 대표 크기 그림 (MonthWidget.kt 의 그리는 순서 · 식과 같게) */
-fun renderMonth(name: String, wDp: Int, hDp: Int, title: String, days: List<MDay>, ws: Int, pal: Pm, out: File, chip: Pair<String, Int>? = null, dens: Float = 2.75f, memoMax: Int = 2): Boolean {
+fun renderMonth(name: String, wDp: Int, hDp: Int, title: String, days: List<MDay>, ws: Int, pal: Pm, out: File, chip: Pair<String, Int>? = null, dens: Float = 2.75f, memoMax: Int = 3): Boolean {
     val u = dens
     val w = (wDp * u).toInt(); val h = (hDp * u).toInt()
     val img = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
@@ -257,7 +257,7 @@ fun renderMonth(name: String, wDp: Int, hDp: Int, title: String, days: List<MDay
     val rr = Math.min(Math.min(w, h) * 0.12f, 22f * u)
     g.color = col(pal.bg); g.fill(RoundRectangle2D.Float(0f, 0f, w.toFloat(), h.toFloat(), rr, rr))
     // 머리줄
-    val headH = 36f * u
+    val headH = 48f * u
     val chipZone = if (chip != null) 104f * u else 0f
     g.font = font(true, 16f * u); g.color = col(pal.fg)
     var tw = g.fontMetrics.stringWidth(title).toFloat()

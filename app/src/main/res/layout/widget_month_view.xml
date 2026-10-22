@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 한 달 위젯: 그림(비트맵) 한 장 + 그 위에 투명한 누르는 자리들. 자리의 크기 · 위치는 MonthWidget.kt 가 그리는 그림과 같은 비율이어야 함:
-     맨 윗줄 36dp(이름 칩 · ‹ · 제목 · ›) · 요일 줄 18dp · 날짜 칸(4~6줄 × 7칸, 안 쓰는 줄은 숨김) · 아래 여백 6dp · 좌우 여백 4dp -->
+     맨 윗줄 48dp(이름 칩 · ‹ · 제목(+오늘로) · ›) · 요일 줄 18dp · 날짜 칸(4~6줄 × 7칸, 안 쓰는 줄은 숨김) · 아래 여백 6dp · 좌우 여백 4dp -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/month_root"
     android:layout_width="match_parent"
@@ -21,7 +21,7 @@
         <!-- 맨 윗줄: 이름 칩(가족이 있을 때만) · 앞 달 · 제목(누르면 이번 달) · 다음 달 -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="36dp"
+            android:layout_height="48dp"
             android:orientation="horizontal">
 
             <FrameLayout

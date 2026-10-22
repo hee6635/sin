@@ -96,7 +96,23 @@ class MonthNavReceiver : BroadcastReceiver() {
                 MonthRenderer.ACT_WHO -> MonthRenderer.nextWho(context, id)
                 else -> return
             }
-            MonthRenderer.update(context, AppWidgetManager.getInstance(context), id)
+            val mgr = AppWidgetManager.getInstance(context)
+            val dir = if (intent.action == MonthRenderer.ACT_PREV) -1 else if (intent.action == MonthRenderer.ACT_NEXT) 1 else 0
+            if (dir == 0) {
+                MonthRenderer.update(context, mgr, id)
+            } else {
+                // 월 넘김 효과: 새 달이 넘긴 쪽에서 미끄러져 들어오는 3장(흐림 · 반쯤 · 완성)을 짧게 이어서 보냄
+                MonthRenderer.update(context, mgr, id, dir, 2)
+                val pr = goAsync()
+                val hd = android.os.Handler(android.os.Looper.getMainLooper())
+                hd.postDelayed({
+                    try { MonthRenderer.update(context, mgr, id, dir, 1) } catch (e: Exception) { }
+                    hd.postDelayed({
+                        try { MonthRenderer.update(context, mgr, id) } catch (e: Exception) { }
+                        try { pr.finish() } catch (e: Exception) { }
+                    }, 90L)
+                }, 90L)
+            }
         } catch (e: Exception) {
             // 눌러도 그림이 안 바뀔 뿐 앱이 죽지 않게
         }
@@ -115,7 +131,7 @@ object MonthRenderer {
     const val ACT_WHO = "com.eonjeswieo.app.MONTH_WHO"
 
     // widget_month_view.xml 과 같은 값 (dp)
-    private const val HEAD_DP = 36f
+    private const val HEAD_DP = 48f   // 맨 윗줄 높이(누르기 쉽게 36 → 48dp)
     private const val WEEKDAY_DP = 18f
     private const val SIDE_DP = 4f
     private const val BOTTOM_DP = 6f
@@ -323,7 +339,7 @@ object MonthRenderer {
         return PendingIntent.getActivity(ctx, id * 100 + idx, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
-    fun update(ctx: Context, mgr: AppWidgetManager, id: Int) {
+    fun update(ctx: Context, mgr: AppWidgetManager, id: Int, slide: Int = 0, frames: Int = 0) {   // slide: 달을 넘긴 방향(-1 앞 · +1 다음) · frames: 넘김 효과 남은 단계(2 → 1 → 0)
         try {
             val data = WidgetStore.load(ctx)
             val offset = MonthState.offset(ctx, id)
@@ -342,7 +358,7 @@ object MonthRenderer {
                 val maxW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0).toFloat()
                 val pw = if (minW > 0f) minW else size[0] / WidgetRenderer.dens
 
-                draw(Canvas(b), size[0].toFloat(), size[1].toFloat(), data, grid, ws, offset, ppl, person, WidgetRenderer.palette(ctx, data), pw)
+                draw(Canvas(b), size[0].toFloat(), size[1].toFloat(), data, grid, ws, offset, ppl, person, WidgetRenderer.palette(ctx, data), pw, slide, frames)
                 val statTxt = " · 가려진 것: 메모 " + statMemoHid + "개 · 스티커 " + statStkHid + "개"
                 WidgetStore.note(ctx, "한 달 위젯 #" + id, "그림 "+ size[0] + "x" + size[1] + "px · 밀도 " + WidgetRenderer.dens + " · 최소폭 " + minW.toInt() + "dp · 최대폭 " + maxW.toInt() + "dp → " + (if (pw < 440f) "커버" else "안쪽") + " 값" + statTxt)
                 b
@@ -379,7 +395,7 @@ object MonthRenderer {
     @Volatile internal var todayLook = "b"
     @Volatile internal var todayColor = 0xFF2F6BF0.toInt()
 
-    internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal, profileWDp: Float = -1f) {
+    internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal, profileWDp: Float = -1f, slide: Int = 0, frames: Int = 0) {
         statMemoHid = 0
         statStkHid = 0
         run {
@@ -410,7 +426,7 @@ object MonthRenderer {
         val title = grid.year.toString() + "년 " + (grid.month0 + 1) + "월"
         val chipName = if (ppl.isEmpty()) null else if (person == null) "나" else person.optString("n", "가족")
         val chipDot = if (person == null) pal.fg else WidgetRenderer.parseColor(person.optString("c", ""), pal.sub)
-        drawHeader(cv, w, u, pal, title, chipName, chipDot, covers(data, ws, offset - 1), covers(data, ws, offset + 1))
+        drawHeader(cv, w, u, pal, title, chipName, chipDot, covers(data, ws, offset - 1), covers(data, ws, offset + 1), offset != 0, frames > 0)
 
         // 요일 줄 (앱 설정의 주 시작 요일을 따름)
         val side = SIDE_DP * u
@@ -440,21 +456,29 @@ object MonthRenderer {
         val icons = data?.optJSONObject("ic")
         val fill = data?.optString("look", "fill") != "circle"   // 칸 채우기(기본) · 동그라미(예전 모양) — 앱 설정 › 홈 화면 위젯
         val alphaF = 0.55f + 0.45f * ((data?.optInt("alpha", 100) ?: 100).coerceIn(0, 100) / 100f)   // 칸 색은 위젯 바탕이 투명해져도 너무 옅어지지 않게
+        // 달을 넘긴 직후 2단계: 새 달이 넘긴 방향에서 미끄러져 들어오며 선명해짐 (앞 단계일수록 많이 밀리고 흐림) → 어느 쪽으로 넘어갔는지 보임
+        val animOuter = if (frames > 0 && slide != 0) cv.save() else -1
+        if (animOuter >= 0) {
+            val k = if (frames >= 2) 1f else 0.45f
+            cv.translate(slide * 30f * u * k, 0f)
+            cv.saveLayerAlpha(RectF(-w, top - 2f * u, 2f * w, h), if (frames >= 2) 90 else 175)
+        }
         for (i in cells.indices) {
             val f = cells[i]
             val r = i / 7
             val c = i % 7
             drawCell(cv, f, side + cw * c, top + rowH * r, cw, rowH, r, plan, pal, icons, person != null, f.inMonth && f.key == todayKey, u, fill, alphaF, tn)
         }
+        if (animOuter >= 0) cv.restoreToCount(animOuter)
     }
 
     /** 맨 윗줄: [이름 칩] ‹ 2026년 10월 › — 화살표는 칩이 있든 없든 제목 바로 옆에 굵고 진하게 (예전에 칩이 없을 때 위젯 맨 끝에 뒀더니 폰에서 안 보였음). 위치는 WidgetLayout.monthArrows */
-    private fun drawHeader(cv: Canvas, w: Float, u: Float, pal: WidgetRenderer.Pal, title: String, chipName: String?, chipDot: Int, canPrev: Boolean, canNext: Boolean) {
+    private fun drawHeader(cv: Canvas, w: Float, u: Float, pal: WidgetRenderer.Pal, title: String, chipName: String?, chipDot: Int, canPrev: Boolean, canNext: Boolean, notToday: Boolean, moving: Boolean) {
         val headH = HEAD_DP * u
         val tp = TextPaint(Paint.ANTI_ALIAS_FLAG)
         tp.typeface = Typeface.DEFAULT_BOLD
-        tp.textSize = 16f * u
-        tp.color = pal.fg
+        tp.textSize = 17f * u
+        tp.color = if (moving) todayColor or 0xFF000000.toInt() else pal.fg   // 달을 넘기는 순간에는 제목을 강조색으로 → 넘어갔다는 표시
         tp.textAlign = Paint.Align.CENTER
         var tw = tp.measureText(title)
         val maxTw = WidgetLayout.monthTitleMax(w, u, chipName != null)
@@ -463,17 +487,41 @@ object MonthRenderer {
             tw = tp.measureText(title)
         }
         val ar = WidgetLayout.monthArrows(w, u, chipName != null, tw)
-        cv.drawText(title, ar.titleCx, headH / 2f - (tp.ascent() + tp.descent()) / 2f, tp)   // 제목 가운데 = 제목 누르는 자리(xml 의 mz_title)의 가운데
+        // 이번 달이 아니면 제목 아래에 "오늘로" 알약 (제목 누르는 자리를 누르면 이번 달로 돌아감) — 제목은 조금 위로
+        val titleCy = if (notToday) headH * 0.40f else headH / 2f
+        cv.drawText(title, ar.titleCx, titleCy - (tp.ascent() + tp.descent()) / 2f, tp)   // 제목 가운데 = 제목 누르는 자리(xml 의 mz_title)의 가운데
+        if (notToday) {
+            val hp = TextPaint(Paint.ANTI_ALIAS_FLAG)
+            hp.typeface = Typeface.DEFAULT_BOLD
+            hp.textSize = 11f * u
+            hp.textAlign = Paint.Align.CENTER
+            val label = "오늘로"
+            val lw = hp.measureText(label)
+            val ph = 17f * u
+            val cy = headH * 0.78f
+            val bg = Paint(Paint.ANTI_ALIAS_FLAG)
+            bg.color = (todayColor and 0x00FFFFFF) or (if (pal === WidgetRenderer.DARK) 0x55000000 else 0x30000000)
+            cv.drawRoundRect(RectF(ar.titleCx - lw / 2f - 10f * u, cy - ph / 2f, ar.titleCx + lw / 2f + 10f * u, cy + ph / 2f), ph / 2f, ph / 2f, bg)
+            hp.color = if (pal === WidgetRenderer.DARK) 0xFFFFFFFF.toInt() else (mixRgb(todayColor or 0xFF000000.toInt(), 0xFF000000.toInt(), 0.72f))
+            cv.drawText(label, ar.titleCx, cy - (hp.ascent() + hp.descent()) / 2f, hp)
+        }
+        // ‹ › : 부드러운 동그란 버튼 위에 크게 (눌러야 하는 자리가 보이게) · 넘길 수 없는 쪽은 흐리게
         val ap = TextPaint(Paint.ANTI_ALIAS_FLAG)
         ap.typeface = Typeface.DEFAULT_BOLD
         ap.textSize = 24f * u
         ap.textAlign = Paint.Align.CENTER
-        ap.color = pal.fg
-        val ay = headH / 2f + 8f * u
-        ap.alpha = if (canPrev) 200 else 50   // 위젯 데이터가 있는 달까지만 넘길 수 있음 — 끝에서는 그쪽 화살표만 흐리게
-        cv.drawText("‹", ar.prevX, ay, ap)
-        ap.alpha = if (canNext) 200 else 50
-        cv.drawText("›", ar.nextX, ay, ap)
+        val ay = headH / 2f - (ap.ascent() + ap.descent()) / 2f
+        val btn = Paint(Paint.ANTI_ALIAS_FLAG)
+        for (side in 0..1) {
+            val ok = if (side == 0) canPrev else canNext
+            val x = if (side == 0) ar.prevX else ar.nextX
+            btn.color = pal.pill
+            btn.alpha = if (ok) 150 else 45
+            cv.drawCircle(x, headH / 2f, 15f * u, btn)
+            ap.color = pal.fg
+            ap.alpha = if (ok) 230 else 60
+            cv.drawText(if (side == 0) "‹" else "›", x, ay - 1.5f * u, ap)
+        }
         if (chipName != null) drawChip(cv, chipName, chipDot, pal, headH, u)
     }
 
