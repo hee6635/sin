@@ -83,35 +83,53 @@ class MonthWidgetProvider : AppWidgetProvider() {
 
 /** 한 달 위젯의 ‹ › · 제목 · 이름 칩을 눌렀을 때 (앱 밖에서는 못 보냄: 매니페스트에서 exported=false) */
 class MonthNavReceiver : BroadcastReceiver() {
+    /** 그림 여러 장을 짧은 간격으로 이어서 보냄(월 넘김 · 오늘 효과). 한 장은 [미끄러짐 방향, 남은 미끄러짐 단계, 빛 단계] */
+    private fun play(ctx: Context, mgr: AppWidgetManager, id: Int, steps: List<IntArray>) {
+        val first = steps[0]
+        MonthRenderer.update(ctx, mgr, id, first[0], first[1], first[2])
+        if (steps.size == 1) return
+        val pr = goAsync()
+        val hd = android.os.Handler(android.os.Looper.getMainLooper())
+        fun next(i: Int) {
+            if (i >= steps.size) { try { pr.finish() } catch (e: Exception) { }; return }
+            hd.postDelayed({
+                try { val st = steps[i]; MonthRenderer.update(ctx, mgr, id, st[0], st[1], st[2]) } catch (e: Exception) { }
+                next(i + 1)
+            }, if (steps[i][2] > 0) 75L else 90L)
+        }
+        next(1)
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
         if (id == AppWidgetManager.INVALID_APPWIDGET_ID) return
+        var fromOffset = 0
         try {
             when (intent.action) {
                 MonthRenderer.ACT_PREV, MonthRenderer.ACT_NEXT -> {
                     val to = MonthState.offset(context, id) + (if (intent.action == MonthRenderer.ACT_PREV) -1 else 1)
                     if (MonthRenderer.canShow(WidgetStore.load(context), to)) MonthState.setOffset(context, id, to)   // 위젯 데이터가 있는 달까지만 (끝에서는 가만히)
                 }
-                MonthRenderer.ACT_TODAY -> MonthState.setOffset(context, id, 0)
+                MonthRenderer.ACT_TODAY -> { fromOffset = MonthState.offset(context, id); MonthState.setOffset(context, id, 0) }
                 MonthRenderer.ACT_WHO -> MonthRenderer.nextWho(context, id)
                 else -> return
             }
             val mgr = AppWidgetManager.getInstance(context)
             val dir = if (intent.action == MonthRenderer.ACT_PREV) -1 else if (intent.action == MonthRenderer.ACT_NEXT) 1 else 0
-            if (dir == 0) {
+            if (intent.action == MonthRenderer.ACT_TODAY) {
+                // "오늘": 이번 달로 쓱 미끄러져 오고 → 오늘 칸 테두리를 따라 은은한 빛이 한 바퀴 지나가고 사라짐
+                val from = fromOffset
+                val sd = if (from > 0) -1 else if (from < 0) 1 else 0
+                val steps = ArrayList<IntArray>()   // [slide, frames, glow]
+                if (sd != 0) { steps.add(intArrayOf(sd, 2, 0)); steps.add(intArrayOf(sd, 1, 0)) }
+                for (g in 1..5) steps.add(intArrayOf(0, 0, g))
+                steps.add(intArrayOf(0, 0, 0))
+                play(context, mgr, id, steps)
+            } else if (dir == 0) {
                 MonthRenderer.update(context, mgr, id)
             } else {
                 // 월 넘김 효과: 새 달이 넘긴 쪽에서 미끄러져 들어오는 3장(흐림 · 반쯤 · 완성)을 짧게 이어서 보냄
-                MonthRenderer.update(context, mgr, id, dir, 2)
-                val pr = goAsync()
-                val hd = android.os.Handler(android.os.Looper.getMainLooper())
-                hd.postDelayed({
-                    try { MonthRenderer.update(context, mgr, id, dir, 1) } catch (e: Exception) { }
-                    hd.postDelayed({
-                        try { MonthRenderer.update(context, mgr, id) } catch (e: Exception) { }
-                        try { pr.finish() } catch (e: Exception) { }
-                    }, 90L)
-                }, 90L)
+                play(context, mgr, id, arrayListOf(intArrayOf(dir, 2, 0), intArrayOf(dir, 1, 0), intArrayOf(0, 0, 0)))
             }
         } catch (e: Exception) {
             // 눌러도 그림이 안 바뀔 뿐 앱이 죽지 않게
@@ -339,7 +357,7 @@ object MonthRenderer {
         return PendingIntent.getActivity(ctx, id * 100 + idx, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
-    fun update(ctx: Context, mgr: AppWidgetManager, id: Int, slide: Int = 0, frames: Int = 0) {   // slide: 달을 넘긴 방향(-1 앞 · +1 다음) · frames: 넘김 효과 남은 단계(2 → 1 → 0)
+    fun update(ctx: Context, mgr: AppWidgetManager, id: Int, slide: Int = 0, frames: Int = 0, glow: Int = 0) {   // slide: 달을 넘긴 방향(-1 앞 · +1 다음) · frames: 넘김 효과 남은 단계(2 → 1 → 0)
         try {
             val data = WidgetStore.load(ctx)
             val offset = MonthState.offset(ctx, id)
@@ -358,7 +376,7 @@ object MonthRenderer {
                 val maxW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0).toFloat()
                 val pw = if (minW > 0f) minW else size[0] / WidgetRenderer.dens
 
-                draw(Canvas(b), size[0].toFloat(), size[1].toFloat(), data, grid, ws, offset, ppl, person, WidgetRenderer.palette(ctx, data), pw, slide, frames)
+                draw(Canvas(b), size[0].toFloat(), size[1].toFloat(), data, grid, ws, offset, ppl, person, WidgetRenderer.palette(ctx, data), pw, slide, frames, glow)
                 val statTxt = " · 가려진 것: 메모 " + statMemoHid + "개 · 스티커 " + statStkHid + "개"
                 WidgetStore.note(ctx, "한 달 위젯 #" + id, "그림 "+ size[0] + "x" + size[1] + "px · 밀도 " + WidgetRenderer.dens + " · 최소폭 " + minW.toInt() + "dp · 최대폭 " + maxW.toInt() + "dp → " + (if (pw < 440f) "커버" else "안쪽") + " 값" + statTxt)
                 b
@@ -392,10 +410,12 @@ object MonthRenderer {
     @Volatile internal var statMemoHid = 0
     @Volatile internal var statStkHid = 0
     // 오늘 띠 모양 · 색 (앱 달력 설정과 같음 · 위젯 JSON 의 `today`)
+    @Volatile internal var glowPhase = 0   // 오늘 버튼을 누른 직후 오늘 칸 테두리를 따라 빛이 한 바퀴 지나가는 단계(1~4 = 위 · 오른쪽 · 아래 · 왼쪽, 5 = 은은히 사라짐)
     @Volatile internal var todayLook = "b"
     @Volatile internal var todayColor = 0xFF2F6BF0.toInt()
 
-    internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal, profileWDp: Float = -1f, slide: Int = 0, frames: Int = 0) {
+    internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal, profileWDp: Float = -1f, slide: Int = 0, frames: Int = 0, glow: Int = 0) {
+        glowPhase = glow
         statMemoHid = 0
         statStkHid = 0
         run {
@@ -487,7 +507,7 @@ object MonthRenderer {
             tw = tp.measureText(title)
         }
         val ar = WidgetLayout.monthArrows(w, u, chipName != null, tw)
-        // 이번 달이 아니면 제목 아래에 "오늘로" 알약 (제목 누르는 자리를 누르면 이번 달로 돌아감) — 제목은 조금 위로
+        // 이번 달이 아니면 제목 아래에 "오늘" 알약 (제목 누르는 자리를 누르면 이번 달로 돌아감) — 제목은 조금 위로
         val titleCy = if (notToday) headH * 0.40f else headH / 2f
         cv.drawText(title, ar.titleCx, titleCy - (tp.ascent() + tp.descent()) / 2f, tp)   // 제목 가운데 = 제목 누르는 자리(xml 의 mz_title)의 가운데
         if (notToday) {
@@ -495,7 +515,7 @@ object MonthRenderer {
             hp.typeface = Typeface.DEFAULT_BOLD
             hp.textSize = 11f * u
             hp.textAlign = Paint.Align.CENTER
-            val label = "오늘로"
+            val label = "오늘"
             val lw = hp.measureText(label)
             val ph = 17f * u
             val cy = headH * 0.78f
@@ -617,6 +637,36 @@ object MonthRenderer {
         }
     }
 
+    /** 오늘 버튼 직후 오늘 칸 테두리를 따라 지나가는 은은한 빛(너무 강하지 않게): 위 → 오른쪽 → 아래 → 왼쪽 으로 한 칸씩, 마지막에 테두리 전체가 옅게 남았다 사라짐 */
+    private fun drawTodayGlow(cv: Canvas, x0: Float, y0: Float, cw: Float, rowH: Float, u: Float, phase: Int) {
+        val gap = 1.2f * u
+        val r = 7f * u
+        val box = RectF(x0 + gap, y0 + gap, x0 + cw - gap, y0 + rowH - gap)
+        val col = todayColor or 0xFF000000.toInt()
+        val soft = Paint(Paint.ANTI_ALIAS_FLAG)
+        soft.style = Paint.Style.STROKE
+        soft.color = (col and 0x00FFFFFF) or (0x2E shl 24)
+        soft.strokeWidth = 5f * u
+        val line = Paint(Paint.ANTI_ALIAS_FLAG)
+        line.style = Paint.Style.STROKE
+        line.color = (col and 0x00FFFFFF) or ((if (phase >= 5) 0x50 else 0xB4) shl 24)
+        line.strokeWidth = 2f * u
+        val save = cv.save()
+        if (phase in 1..4) {   // 한 변(모서리 포함)만 잘라서 그림 → 빛이 변을 따라 돌아가는 것처럼 보임
+            val seg = android.graphics.Path()
+            when (phase) {
+                1 -> seg.addRoundRect(RectF(box.left - 4f * u, box.top - 4f * u, box.right + 4f * u, box.top + r), 0f, 0f, android.graphics.Path.Direction.CW)
+                2 -> seg.addRoundRect(RectF(box.right - r, box.top - 4f * u, box.right + 4f * u, box.bottom + 4f * u), 0f, 0f, android.graphics.Path.Direction.CW)
+                3 -> seg.addRoundRect(RectF(box.left - 4f * u, box.bottom - r, box.right + 4f * u, box.bottom + 4f * u), 0f, 0f, android.graphics.Path.Direction.CW)
+                else -> seg.addRoundRect(RectF(box.left - 4f * u, box.top - 4f * u, box.left + r, box.bottom + 4f * u), 0f, 0f, android.graphics.Path.Direction.CW)
+            }
+            cv.clipPath(seg)
+        }
+        cv.drawRoundRect(box, r, r, soft)
+        cv.drawRoundRect(box, r, r, line)
+        cv.restoreToCount(save)
+    }
+
     /** 오늘 띠: 칸의 둥근 오른쪽 선을 따라 휘는 띠(끝이 가늘어짐). 모양 a~d · 색은 앱 달력과 같은 설정(`today`) */
     private fun drawTodayBand(cv: Canvas, x0: Float, y0: Float, cw: Float, rowH: Float, u: Float, tn: Tune, night: Boolean) {
         val look = todayLook
@@ -681,6 +731,7 @@ object MonthRenderer {
         }
 
         if (fill && isToday) drawTodayBand(cv, x0, y0, cw, rowH, u, tn, night)   // 오늘: 오른쪽 가장자리 띠(앱 달력과 같음 · 가장 아래층)
+        if (isToday && glowPhase > 0) drawTodayGlow(cv, x0, y0, cw, rowH, u, glowPhase)
 
         // 근무: 일하는 날은 동그라미 · 쉬는 날은 글자만 (줄 안에서 높이가 같음 · 모든 동그라미가 같은 크기)
         if (f.shift.isNotEmpty() && plan.circleD > 0f && (f.circle || f.rest)) {

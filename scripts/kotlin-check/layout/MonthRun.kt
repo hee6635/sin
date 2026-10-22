@@ -13,7 +13,7 @@ import javax.imageio.ImageIO
 
 private var fails = 0
 
-private fun render(data: JSONObject, name: String, wDp: Int, hDp: Int, offset: Int, who: Int, dark: Boolean, out: File): Boolean {
+private fun render(data: JSONObject, name: String, wDp: Int, hDp: Int, offset: Int, who: Int, dark: Boolean, out: File, slide: Int = 0, frames: Int = 0, glow: Int = 0): Boolean {
     val u = 2.75f
     return try {
         WidgetRenderer.dens = u
@@ -23,7 +23,7 @@ private fun render(data: JSONObject, name: String, wDp: Int, hDp: Int, offset: I
         val ppl = MonthRenderer.people(data)
         val person = if (who >= 0 && who < ppl.size) ppl[who] else null
         val grid = MonthRenderer.gridOf(ws, offset)
-        MonthRenderer.draw(cv, bmp.width.toFloat(), bmp.height.toFloat(), data, grid, ws, offset, ppl, person, if (dark) WidgetRenderer.DARK else WidgetRenderer.LIGHT)
+        MonthRenderer.draw(cv, bmp.width.toFloat(), bmp.height.toFloat(), data, grid, ws, offset, ppl, person, if (dark) WidgetRenderer.DARK else WidgetRenderer.LIGHT, -1f, slide, frames, glow)
         val img = bmp.javaClass.getField("img").get(bmp) as BufferedImage
         ImageIO.write(img, "png", out)
         println(String.format("  %-44s %3dx%-3ddp  %d줄 %s", name, wDp, hDp, grid.rows, if (person == null) "내 달력" else "가족: " + person.optString("n")))
@@ -99,6 +99,10 @@ fun main(args: Array<String>) {
     render(data, "내 달력 · 큰 위젯 · 6주 달(2달 전)", 545, 561, -2, -1, false, File(out, "r36_big_6weeks.png"))
     render(data, "내 달력 · 아주 큰 위젯(700x640)", 700, 640, 0, -1, false, File(out, "r37_huge.png"))
     if (ppl.isNotEmpty()) render(data, "가족 달력 · 큰 위젯 + 칩", 545, 561, 0, 0, false, File(out, "r38_big_fam.png"))
+    // 월 넘김 · 오늘 효과의 중간 그림(미끄러짐 2단계 · 빛이 오늘 칸 테두리를 도는 5단계)
+    render(data, "넘김 효과 1단계(다음 달)", 340, 330, 1, -1, false, File(out, "r40_slide2.png"), 1, 2, 0)
+    render(data, "넘김 효과 2단계(다음 달)", 340, 330, 1, -1, false, File(out, "r41_slide1.png"), 1, 1, 0)
+    for (g in 1..5) render(data, "오늘 빛 $g 단계", 340, 330, 0, -1, false, File(out, "r4${1 + g}_glow$g.png"), 0, 0, g)
     println(if (fails == 0) "진짜 그리기 코드: 오류 없이 모두 그려짐" else "진짜 그리기 코드: 실패 ${fails}개")
     System.exit(if (fails == 0) 0 else 1)
 }

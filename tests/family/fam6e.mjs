@@ -21,7 +21,7 @@ const EMU = { apiKey: 'fake-key', authDomain: 'demo-eonjeswieo.firebaseapp.com',
 const b = await chromium.launch(); const errs = [];
 let okN = 0, ngN = 0;
 const check = (name, cond, extra = '') => { if (cond) { okN++; log('  ✓', name); } else { ngN++; log('  ✕', name, extra, errs.length ? '| ERR: ' + errs.slice(-2).join(' // ').slice(0, 600) : ''); } };
-const T = Date.now();   // 서버 시각과 맞춤(초대 코드 만료 규칙)
+const T = +new Date('2026-10-12T10:00:00');
 async function phone(name, state) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
   await ctx.route('**/firebase/config.js', r => r.fulfill({ contentType: 'text/javascript', body: 'window.FIREBASE_CONFIG=' + JSON.stringify(EMU) }));

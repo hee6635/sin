@@ -112,6 +112,9 @@ check('아빠: 확인창은 딱 2번', H.dlg.length === 2, JSON.stringify(H.dlg)
 check('서버: 가족방 · 구성원 · 남은 초대 코드가 모두 지워짐', !(await exists(`households/${hostUid}`)) && (await ids(`households/${hostUid}/members`)).length === 0 && (await ids('invites')).filter(x => x).length === 0, JSON.stringify(await ids('invites')));
 check('서버: 아빠 알림 주소 · 쪽지가 지워짐', !(await exists(`devices/${hostUid}`)) && !(await exists(`users/${hostUid}`)));
 check('★ 서버: 아빠의 로그인 계정이 지워짐', !(await accts()).includes(hostUid), JSON.stringify(await accts()));
+// 서버에서 내 칸이 없어지면 처음 한 번은 연결을 그대로 두고(linkMissAt), 5분 넘게 계속 못 찾을 때 끊김으로 처리함 → 시험에서는 5분이 지난 것처럼 되돌려 다시 켬
+const dissolveStrike = async P => { await wait(P, async () => { const x = await S(P); return x.linkMissAt > 0 || !x.link; }, 30000); if ((await S(P)).link) { await P.evaluate(() => { const s = JSON.parse(localStorage.getItem('eonjeswieo:v1')); s.linkMissAt = Date.now() - 10 * 60e3; localStorage.setItem('eonjeswieo:v1', JSON.stringify(s)); }); await P.reload(); await P.waitForTimeout(2500); } };
+await dissolveStrike(B); await dissolveStrike(A);
 check('할머니 폰: 가족방이 없어져 가족 연결이 풀림', await wait(B, async () => !(await S(B)).link, 30000));
 check('엄마 폰(새로 들어온): 가족방이 없어져 가족 연결이 풀림', await wait(A, async () => !(await S(A)).link, 30000));
 check('서버: 가족방 안 남은 메모 · 요청도 없음 (함수가 정리)', (await ids(`households/${hostUid}/memos`)).length === 0 && (await ids(`households/${hostUid}/requests`)).length === 0);

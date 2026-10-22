@@ -6832,7 +6832,7 @@ async function famSync(){
   if(snap.exists()){const d=snap.data();S.link={hid,role:d.role,name:d.name,perm:d.perm,mode:d.mode==='view'?'view':'own',uid,hash:(old&&old.hid===hid&&old.hash)||'',stk:!!(old&&old.hid===hid&&old.stk),stkAsked:(old&&old.hid===hid&&old.stkAsked)?1:0};S.linkMissAt=0;S.linkLost=null;}
   else if(old){
     // 서버에서 내 칸을 못 찾았다고 바로 연결을 지우지 않음: 처음에는 표시만 하고(연결은 그대로), 5분 넘게 계속 못 찾을 때만 끊김으로 처리 + 무엇이 끊겼는지 남겨 둠(복구 안내용)
-    if(!S.linkMissAt){S.linkMissAt=Date.now();save();return {had,link:S.link,miss:true};}
+    if(!S.linkMissAt){S.linkMissAt=Date.now();save();clearTimeout(window.__famMissT);window.__famMissT=setTimeout(()=>{famSync().then(r=>{if(!S.link&&r.had){famClear();toast('가족방에서 나왔어요');render();}}).catch(()=>{});},5*60e3+3000);return {had,link:S.link,miss:true};}   // 5분 뒤 한 번 더 확인
     if(Date.now()-S.linkMissAt<5*60e3)return {had,link:S.link,miss:true};
     S.linkLost={hid:old.hid,role:old.role==='host'?'host':'guest',name:String(old.name||'').slice(0,12),at:Date.now()};S.linkMissAt=0;
     S.link=null;famClear();
