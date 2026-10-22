@@ -1164,7 +1164,7 @@ button.tbtn{cursor:pointer}
 .dn .stp>svg,.s2>svg,.dn .stp .sx svg,.s2 .sx svg{width:var(--stz);height:var(--stz)}
 .dn .stp>.se,.s2>.se,.dn .stp .sx .se,.s2 .sx .se{font-size:calc(var(--stz) - 2px) !important}
 .sx{position:relative;display:inline-block;line-height:0}
-.sx .cb{position:absolute;right:-5px;bottom:-5px;font-size:7.5px;font-weight:800;font-style:normal;line-height:1;color:#fff;background:#f08a00;border-radius:6px;padding:1px 2.5px;white-space:nowrap;filter:none}
+.sx .cb{position:absolute;right:calc(var(--stz,19px)*-.26);bottom:calc(var(--stz,19px)*-.26);font-size:clamp(5px,calc(var(--stz,19px)*.39),8px);font-weight:800;font-style:normal;line-height:1;color:#fff;background:#f08a00;border-radius:6px;padding:calc(var(--stz,19px)*.05) calc(var(--stz,19px)*.13);white-space:nowrap;filter:none}   /* 1/2 배지: 스티커 크기에 비례(안쪽 화면은 지금 크기 그대로 · 좁은 커버는 작게) */
 /* 개인 캘린더: 스티커는 칸 가운데에 크게 (최대 4개) */
 .cell.pers{--b:max(34px,min(100cqw,56px,calc(100cqh - 62px)))}
 .pstk{display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:1px 2px;height:100%;width:100%;--stz:min(28px,44cqw,var(--b))}
@@ -1292,7 +1292,7 @@ html[data-cal="fill"][data-theme="dark"]{--hol-bg:#3a2429;--holx:#e49aaa}
 html[data-cal="fill"] .dn.hol .hn,html[data-cal="fill"] .dn.hol .h1{color:var(--holx);font-weight:700}
 html[data-cal="fill"] .dn.hol{border-radius:9px 9px 0 0}
 /* 칸 채우기 · 오늘 표시(모양 조정 화면에서 고름: data-today a/b/c/d). 띠는 칸의 둥근 오른쪽 선을 따라 휘어서 끝이 가늘어짐 */
-html[data-cal="fill"] .cell.today::after{content:"";display:block;position:absolute;inset:0;border:0;border-right:var(--tdw,4px) solid color-mix(in srgb,var(--accent) var(--tdp,55%),transparent);border-radius:9px;box-sizing:border-box;z-index:-1;pointer-events:none}   /* 가장 아래층: 스티커 · 메모 · 글자 어느 것과 겹쳐도 그것들이 위에 보임 */
+html[data-cal="fill"] .cell.today::after{content:"";display:block;position:absolute;inset:0;border:0;border-right:var(--tdw,4px) solid color-mix(in srgb,var(--tdc,var(--accent)) var(--tdp,55%),transparent);border-radius:9px;box-sizing:border-box;z-index:-1;pointer-events:none}   /* 가장 아래층: 스티커 · 메모 · 글자 어느 것과 겹쳐도 그것들이 위에 보임 */
 html[data-cal="fill"][data-today="a"]{--tdw:3px;--tdp:42%}
 html[data-cal="fill"][data-today="b"]{--tdw:4px;--tdp:55%}
 html[data-cal="fill"][data-today="c"]{--tdw:6px;--tdp:80%}
@@ -1304,7 +1304,7 @@ html[data-cal="fill"][data-today="a"][data-theme="dark"] .cell.today{background:
 html[data-cal="fill"][data-today="a"][data-theme="dark"] .cell.today[style*="--cb"]{background:color-mix(in srgb,var(--accent) 18%,color-mix(in srgb,var(--cb) var(--cbm),var(--bg)))}
 @media (prefers-color-scheme:dark){html[data-cal="fill"][data-today="a"]:not([data-theme="light"]) .cell.today{background:color-mix(in srgb,var(--accent) 18%,var(--bg))}html[data-cal="fill"][data-today="a"]:not([data-theme="light"]) .cell.today[style*="--cb"]{background:color-mix(in srgb,var(--accent) 18%,color-mix(in srgb,var(--cb) var(--cbm),var(--bg)))}}
 html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box}
-.tn-top{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:4px;box-shadow:0 6px 12px rgba(0,0,0,.10)}.tn-bar{display:flex;align-items:center;gap:6px;padding:6px 12px 0}.tn-bar .btn{padding:6px 12px;font-size:13px;flex:none}.tn-bar .btn[disabled]{opacity:.4}.tn-st{flex:1;font-size:12px;color:var(--muted)}.tn-st.dirty{color:#d9534f;font-weight:700}.tn-warn{padding:2px 14px 0;font-size:12px;color:#c0392b}.tn-warn:empty{display:none}.tn-d summary{font-size:13px;font-weight:700;padding:6px 0;cursor:pointer}.tn-d{border-top:1px solid var(--line)}.tn-prev{height:140px;display:flex;flex-direction:column;border-radius:0;overflow:hidden;background:var(--bg);margin:8px 0 0}
+.tdc-row{display:flex;gap:8px;align-items:center;padding:4px 0}.tdc{width:24px;height:24px;border-radius:50%;border:2px solid transparent;padding:0;flex:none;box-shadow:0 0 0 1px var(--line)}.tdc.on{border-color:var(--fg)}.tdc-pick{position:relative;background:conic-gradient(#e0455c,#f08a00,#1fa971,#2f6bf0,#8a65c9,#e0455c);overflow:hidden}.tdc-pick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}.tn-top{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:4px;box-shadow:0 6px 12px rgba(0,0,0,.10)}.tn-bar{display:flex;align-items:center;gap:6px;padding:6px 12px 0}.tn-bar .btn{padding:6px 12px;font-size:13px;flex:none}.tn-bar .btn[disabled]{opacity:.4}.tn-st{flex:1;font-size:12px;color:var(--muted)}.tn-st.dirty{color:#d9534f;font-weight:700}.tn-warn{padding:2px 14px 0;font-size:12px;color:#c0392b}.tn-warn:empty{display:none}.tn-d summary{font-size:13px;font-weight:700;padding:6px 0;cursor:pointer}.tn-d{border-top:1px solid var(--line)}.tn-prev{height:140px;display:flex;flex-direction:column;border-radius:0;overflow:hidden;background:var(--bg);margin:8px 0 0}
 .tn-g{padding:8px 14px 4px}.tn-g h4{margin:10px 0 2px;font-size:14px}
 .tn-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px}.tn-row span{flex:0 0 112px}.tn-row input{flex:1}.tn-row b{flex:0 0 40px;text-align:right;font-variant-numeric:tabular-nums}
 #top.cal-top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
@@ -1659,7 +1659,7 @@ const defaults=()=>({
 });
 const REM_DAYS=[7,3,2,1,0],REM_SHORT={7:'1주',3:'3일',2:'2일',1:'전날',0:'당일'},REM_LABEL={7:'1주 전',3:'3일 전',2:'2일 전',1:'전날',0:'당일'},REM_AT=['08:00','12:00','20:00','22:00'];
 // 모양 조정(숨은 화면): 앱 달력 · 한 달 위젯(커버 · 안쪽)의 스티커 · 주야 글자 · 메모 크기 · 위치를 배율 · 위치로 저장. 값은 [키, 이름, 최소, 최대, 한 칸, 기본]
-const TUNE_KEYS=[['stk','스티커 크기',.6,1.6,.05,1,'스티커'],['stkX','스티커 좌우 위치',-1,1,.05,0,'스티커'],['stkY','스티커 높이 위치',-1,1,.05,0,'스티커'],['stkGX','스티커 좌우 간격',-1,1,.05,0,'스티커'],['stkGY','스티커 상하 간격',-1,1,.05,0,'스티커'],['ink','주야 크기',.6,1.5,.05,1,'주야'],['inkY','주야 높이 위치',-1,1,.05,0,'주야'],['memo','메모 글자 크기',.7,1.6,.05,1,'메모'],['pill','메모 칸 높이',.7,1.6,.05,1,'메모'],['memoY','메모 위치 (위 − · 아래 +)',-1,1,.05,0,'메모'],['memoG','메모 줄 사이 간격',-1,1,.05,0,'메모']];
+const TUNE_KEYS=[['stk','스티커 크기',.6,1.6,.05,1,'스티커'],['stkX','스티커 좌우 위치',-1,1,.05,0,'스티커'],['stkY','스티커 높이 위치',-1,1,.05,0,'스티커'],['stkGX','스티커 좌우 간격',-1,1,.05,0,'스티커'],['stkGY','스티커 상하 간격',-1,1,.05,0,'스티커'],['ink','주야 크기',.6,1.5,.05,1,'주야'],['inkY','주야 높이 위치',-1,1,.05,0,'주야'],['memo','메모 글자 크기',.7,1.6,.05,1,'메모'],['pill','메모 칸 높이',.4,1.6,.05,1,'메모'],['memoY','메모 위치 (위 − · 아래 +)',-1,1,.05,0,'메모'],['memoG','메모 줄 사이 간격',-1,1,.05,0,'메모']];
 const TUNE_NEUTRAL=Object.fromEntries(TUNE_KEYS.map(k=>[k[0],k[5]]));
 // 기본값(사용자가 폰에서 맞춘 값): 앱 달력은 화면 폭 600dp 이상(폴더폰 안쪽 · 태블릿)이면 "안쪽" · 아니면 "커버" 값 / 한 달 위젯은 위젯 폭(440dp 기준)으로 커버 · 안쪽 (새 값은 0 = 지금 모양 그대로)
 const TUNE_DEF={appCover:{...TUNE_NEUTRAL,stk:1,stkX:.15,stkY:-.1,ink:1.15,inkY:.35,memo:.85,pill:.8},appInner:{...TUNE_NEUTRAL,stk:.9,stkX:0,stkY:-.05,ink:1.15,inkY:.1,memo:1,pill:.95},cover:{...TUNE_NEUTRAL,stk:1.05,stkX:.8,stkY:.95,ink:1.5,inkY:.65,memo:1.5,pill:1.5},inner:{...TUNE_NEUTRAL,stk:1.2,stkX:.4,stkY:-.1,ink:.95,inkY:-.1,memo:1.1,pill:1.1}};
@@ -1694,7 +1694,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'?'fill':'circle';s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'?'fill':'circle';s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.todayColor=/^#[0-9a-f]{6}$/i.test((o&&o.todayColor)||'')?o.todayColor.toLowerCase():'';s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=(o&&o.memoLines===4)?4:3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,stkAsked:s.link.stkAsked?1:0,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#6b7280'})[k];});
   s.drive=Object.assign(defaults().drive,isObj(o.drive)?o.drive:{});
@@ -1903,7 +1903,7 @@ function widgetJson(){
     days.push({...base,stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40)),sa,mi,
       ...(fm.length?{fm}:{}),...(chn?{ch:String(chn).slice(0,30)}:{}),...(ddayHits(k).length?{an:ddayHits(k).slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});
   }
-  return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,look:S.widget.look,tune:{cover:S.tune.cover,inner:S.tune.inner},lines:S.memoLines===4?4:3,ws,days,ic,...(people.length?{people}:{})});
+  return JSON.stringify({v:1,theme:S.widget.theme,alpha:S.widget.alpha,look:S.widget.look,today:{look:S.todayLook||'b',color:S.todayColor||''},tune:{cover:S.tune.cover,inner:S.tune.inner},lines:S.memoLines===4?4:3,ws,days,ic,...(people.length?{people}:{})});
 }
 /* 위젯 창에서 체크한 것(대기 목록)을 앱 기록에 반영 + 위젯 [앱에서 열기]로 온 날짜 열기 */
 function applyWidgetActions(){
@@ -2319,6 +2319,7 @@ function applyTune(){
   st.setProperty('--tstk',t.stk);st.setProperty('--tstkx',t.stkX);st.setProperty('--tstky',t.stkY);st.setProperty('--tink',t.ink);st.setProperty('--tinky',t.inkY);st.setProperty('--tgx',t.stkGX);st.setProperty('--tgy',t.stkGY);st.setProperty('--tmy',t.memoY);st.setProperty('--tmg',t.memoG);
   if(S.calLook==='fill')de.setAttribute('data-cal','fill');else de.removeAttribute('data-cal');
   de.setAttribute('data-today',S.todayLook||'b');
+  if(S.todayColor)de.style.setProperty('--tdc',S.todayColor);else de.style.removeProperty('--tdc');
 }
 const stzPx=()=>{const w=innerWidth;return w>=600?Math.max(17,Math.min(19.8,w*.0264)):Math.max(12,Math.min(17.6,w*.0374));};
 function memoLines(){
@@ -2345,7 +2346,9 @@ function calSub(){
   return role()==='guest'?'<b>가족 보기</b>':'';
 }
 let lastW=innerWidth,lastKey=tuneAppKey();
-window.addEventListener('resize',()=>{const w=innerWidth;if(tuneAppKey()!==lastKey){lastKey=tuneAppKey();applyTune();}const n=memoLines();if((n!==lastLines||w!==lastW)&&document.querySelector('.grid')){lastW=w;render();}else lastW=w;});   // 접고 펼 때(커버↔안쪽) 앱 달력 값(스티커·주야)도 그 화면 값으로 먼저 바꿈
+window.addEventListener('resize',()=>{const w=innerWidth;if(tuneAppKey()!==lastKey){lastKey=tuneAppKey();applyTune();}const n=memoLines();if((n!==lastLines||w!==lastW)&&document.querySelector('.grid')){lastW=w;render();}else lastW=w;
+  // 접고 펼 때는 화면 크기가 몇 번에 나눠 바뀜 → 가라앉은 뒤(0.25초)에 스티커 크기 · 줄 수를 한 번 더 맞춤 (안 그러면 안쪽 크기에서 멈춘 채 남음)
+  clearTimeout(window.__rzT);window.__rzT=setTimeout(()=>{if(pageMode||!document.querySelector('#view .grid'))return;render();},250);});   // 접고 펼 때(커버↔안쪽) 앱 달력 값(스티커·주야)도 그 화면 값으로 먼저 바꿈
 function render(){
   persSync();expireOnceAlarms();
   const top=$('#top'),v=$('#view');
@@ -4796,6 +4799,7 @@ function renderMore(){
         <button class="${S.theme==='light'?'on':''}" data-act="thememode" data-v="light">라이트</button><button class="${S.theme==='dark'?'on':''}" data-act="thememode" data-v="dark">다크</button><button class="${S.theme!=='light'&&S.theme!=='dark'?'on':''}" data-act="thememode" data-v="system">시스템</button></div></div>
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('🎨')}</span>배경</div><div class="chips"><button class="${S.bg==='paper'?'':'on'}" data-act="bgmode" data-v="">기본</button><button class="${S.bg==='paper'?'on':''}" data-act="bgmode" data-v="paper">종이</button></div></div>
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('▦')}</span>달력 모양</div><div class="chips"><button class="${S.calLook==='fill'?'':'on'}" data-act="callook" data-v="circle">동그라미</button><button class="${S.calLook==='fill'?'on':''}" data-act="callook" data-v="fill">칸 채우기</button></div></div>
+      ${S.calLook==='fill'?`<div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('▦')}</span>오늘 띠 색</div>${todayColorRow()}</div>`:''}
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('📅')}</span>주 시작 요일</div><div class="chips"><button class="${S.weekStart===1?'':'on'}" data-act="weekstart" data-v="0">일요일</button><button class="${S.weekStart===1?'on':''}" data-act="weekstart" data-v="1">월요일</button></div></div>
       <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('📝')}</span>달력 메모 줄 수</div><div class="chips"><button class="${S.memoLines===4?'':'on'}" data-act="memolines" data-v="3">3줄</button><button class="${S.memoLines===4?'on':''}" data-act="memolines" data-v="4">4줄</button></div></div>
       ${S.personal?`<div class="prow tap" data-act="personal-off"><div class="pl2"><span class="e e-in">${lineIcon('🔁')}</span>근무표 쓰기</div><div class="pv">›</div></div>`:`<div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('▬')}</span>근무 띠 표시</div><label class="sw"><input type="checkbox" id="showBand" ${S.showBand!==false?'checked':''}><i></i></label></div>`}
@@ -4883,6 +4887,11 @@ function tunePrev(){   // 미리보기는 "일주일 줄"만: 스티커 · 메�
   try{fitDn(e,true);}catch(err){}   // 실제 달력처럼 날짜 줄에 안 들어가면 공휴일 이름을 줄이고 스티커를 아래 줄로 (미리보기도 똑같이)
   tuneBar();tuneWarn();
 }
+const TODAY_COLORS=[['','파랑'],['#1fa971','초록'],['#e0455c','분홍'],['#8a65c9','보라'],['#f08a00','주황'],['#6b7280','회색']];
+function todayColorRow(){   // 오늘 띠 색: 동그라미 6개 + 직접 고르기
+  const cur=S.todayColor||'';
+  return `<div class="tdc-row">${TODAY_COLORS.map(([v,n])=>`<button class="tdc${cur===v?' on':''}" data-act="todaycolor" data-v="${v}" aria-label="${n}" style="background:${v||'var(--accent)'}"></button>`).join('')}<label class="tdc tdc-pick${cur&&!TODAY_COLORS.some(x=>x[0]===cur)?' on':''}" aria-label="직접 고르기"><input type="color" id="tdcInput" value="${cur||'#2f6bf0'}"></label></div>`;
+}
 function openTunePage(){
   if(!tuneDraft)tuneDraft=JSON.parse(JSON.stringify(S.tune));
   let dbg='';try{if(hasBridge('widgetDebug'))dbg=String(window.AndroidBridge.widgetDebug()||'');}catch(e){}
@@ -4891,7 +4900,7 @@ function openTunePage(){
       <div class="hint" style="padding:10px 16px 0">움직이면 미리보기에 바로 보여요. 마음에 들면 "저장"을 눌러야 앱과 홈 화면 위젯에 반영돼요. 잘못 저장했으면 "이전 저장으로"로 돌아갈 수 있어요(최근 5번).</div>
       ${dbg?`<div class="hint" style="padding:6px 16px 0;font-size:11.5px">놓인 한 달 위젯 마지막 그림 상태<br>${esc(dbg).replace(/\n/g,'<br>')}</div>`:''}
       <div class="tn-g"><h4>앱 달력 모양</h4><div class="chips"><button class="${S.calLook==='fill'?'':'on'}" data-act="callook" data-v="circle">동그라미</button><button class="${S.calLook==='fill'?'on':''}" data-act="callook" data-v="fill">칸 채우기</button></div></div>
-      <div class="tn-g"><h4>오늘 표시 (칸 채우기)</h4><div class="chips">${[['a','바탕+그림자+띠'],['b','띠만'],['c','띠 굵고 진하게'],['d','띠+그림자']].map(([v,n])=>`<button class="${S.todayLook===v?'on':''}" data-act="todaylook" data-v="${v}">${n}</button>`).join('')}</div></div>
+      <div class="tn-g"><h4>오늘 표시 (칸 채우기)</h4>${todayColorRow()}<div class="chips">${[['a','바탕+그림자+띠'],['b','띠만'],['c','띠 굵고 진하게'],['d','띠+그림자']].map(([v,n])=>`<button class="${S.todayLook===v?'on':''}" data-act="todaylook" data-v="${v}">${n}</button>`).join('')}</div></div>
       <div class="tn-top"><div class="tn-prev" id="tnPrev"></div><div class="tn-bar" id="tnBar"></div><div class="tn-warn" id="tnWarn"></div></div>
       <div class="tn-g"><h4>앱 달력 · 안쪽 화면(큰 화면)${tuneAppKey()==='appInner'?' ← 지금 이 화면':''}</h4>${tuneRows('appInner')}</div>
       <div class="tn-g"><h4>앱 달력 · 커버 화면(작은 화면)${tuneAppKey()==='appCover'?' ← 지금 이 화면':''}</h4>${tuneRows('appCover')}</div>
@@ -4906,6 +4915,7 @@ function tuneText(){
   return `[모양 조정] 앱 달력 안쪽(${S.calLook==='fill'?'칸 채우기':'동그라미'}): ${f('appInner')}\n앱 달력 커버: ${f('appCover')}\n위젯 커버: ${f('cover')}\n위젯 안쪽: ${f('inner')}\n위젯 모양: ${S.widget.look==='circle'?'동그라미':'칸 채우기'}`;
 }
 document.addEventListener('input',e=>{
+  if(e.target&&e.target.id==='tdcInput'){S.todayColor=e.target.value.toLowerCase();save();applyTune();document.querySelectorAll('.tdc.on').forEach(x=>x.classList.remove('on'));const l=e.target.closest('.tdc-pick');if(l)l.classList.add('on');return;}
   const t=e.target;if(!t.classList||!t.classList.contains('tn-r'))return;
   const g=t.dataset.g,k=t.dataset.k;if(!tuneDraft||!tuneDraft[g])return;
   tuneDraft[g]=tuneClean({...tuneDraft[g],[k]:+t.value});
@@ -5435,7 +5445,7 @@ function exportBad(){
   if(hasBridge('shareFile')){try{window.AndroidBridge.shareFile(name,raw);return;}catch(e){}}
   toast('앱에서만 보낼 수 있어요');
 }
-const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','tune','calLook','todayLook','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
+const BACKUP_KEYS=['onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','tune','calLook','todayLook','todayColor','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});return data;}
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -6389,6 +6399,7 @@ document.addEventListener('click',e=>{
     case 'more-wipe':wipeAll();break;
     case 'font':S.fontScale=Number(t.dataset.v);save();applyFont();render();break;
     case 'thememode':S.theme=t.dataset.v;save();applyTheme();render();break;
+    case 'todaycolor':S.todayColor=/^#[0-9a-f]{6}$/i.test(t.dataset.v||'')?t.dataset.v:'';save();applyTune();if(pageMode==='tune')openTunePage();else render();break;
     case 'todaylook':S.todayLook=['a','b','c','d'].includes(t.dataset.v)?t.dataset.v:'b';save();applyTune();openTunePage();break;
     case 'callook':S.calLook=t.dataset.v==='fill'?'fill':'circle';save();applyTune();if(pageMode==='tune')openTunePage();else render();break;
     case 'tune-open':openTunePage();break;

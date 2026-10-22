@@ -201,7 +201,13 @@ object WidgetLayout {
         /** 줄(주)마다 메모에 잡아 둔 줄 수 (그 줄에서 메모가 가장 많은 날 기준 · 한 칸에 보이는 건 이 안에서) */
         val lines: IntArray,
         /** 줄마다 근무 동그라미 한가운데 y */
-        val circleCy: FloatArray
+        val circleCy: FloatArray,
+        /** 둘째 줄 스티커 맨 위 y (명절 글자 아래로 · 모든 칸 같은 자리) */
+        val stk2Top: Float = 0f,
+        /** 둘째 줄 스티커가 메모와 안 겹치게 들어갈 자리가 있는지 (아주 작은 칸에서는 false → 둘째 줄 스티커를 그리지 않음) */
+        val row2Ok: Boolean = true,
+        /** 명절 글자가 숫자 옆에 못 들어갈 만큼 좁은 칸이면 숫자 아래에 한 글자 (그 높이까지 메모와 띄움) */
+        val narrow: Boolean = false
     ) {
         /** 메모를 shown 줄 보일 때 맨 위 y (맨 아래에 붙여 쌓음) */
         fun memoTop(shown: Int): Float = if (shown <= 0) bottom else bottom - (shown * pillH + (shown - 1) * pillGap)
@@ -224,7 +230,7 @@ object WidgetLayout {
         val dateBase = topPad + dateSize * 0.95f
         val dateBottom = topPad + dateSize * 1.35f
         val ss = Math.min(dateSize * 0.9f * stkK, cw * 0.34f)   // 모양 조정(스티커 크기 배율) · 기본 1
-        val holSize = dateSize * 0.62f
+        val holSize = dateSize * 0.78f   // 명절 글자 키움
         val pillH = Math.min(clamp(rowH * 0.19f, 9f * u, 12f * u * ks) * pillK, rowH * 0.34f)   // 모양 조정(메모 칸 높이 배율) · 기본 1
         val pg = 1f * u
         val dTop = clamp(Math.min(cw * 0.5f, rowH * 0.4f), 14f * u, 44f * u)   // 근무 동그라미 크기 (칸 폭의 절반 · 칸 높이의 40% 중 작은 쪽 · 상한은 7일 위젯과 같은 44dp — 칸이 큰 위젯에서도 칸에 맞게 커짐)
@@ -236,11 +242,12 @@ object WidgetLayout {
         // (ks > 1 인 큰 위젯에서는 2줄이 동그라미를 칸 기준 크기의 85% 아래로 줄이면 1줄 + "+n" 칩으로 — 동그라미가 작아지지 않게)
         // 메모 줄 수: 칸이 높으면 2줄, 낮으면 1줄, 더 낮으면 0줄. 근무 동그라미가 1줄일 땐 dMin(12dp) · 2줄일 땐 17dp 이상 남아야 하고(둘째 줄 때문에 동그라미가 너무 작아지지 않게),
         // 공휴일 한 글자가 숫자 아래로 내려온 날에도 메모와 안 닿아야 함
-        val labelEnd = dateBase + holSize * 1.35f
-        var lines = Math.max(0, Math.min(memoMax, 2))
+        val narrow = 2f * padX + dateSize * 1.3f + 2.5f * u + holSize * 1.05f > cw   // 아주 좁은 칸은 명절 한 글자도 숫자 옆에 못 들어가 숫자 아래에 (예전처럼)
+        val labelEnd = if (narrow) dateBase + holSize * 1.35f else dateBottom   // 보통 칸은 명절 글자가 늘 숫자 옆이라 아래로 내려오지 않음
+        var lines = Math.max(0, Math.min(memoMax, 3))
         while (lines > 0 && (region(lines) < (if (!hasCircle) 0f else if (lines >= 2) Math.max(Math.min(dTop, 17f * u), dTop * 0.85f * clamp((ks - 1f) / 0.1f, 0f, 1f)) + cm else dMin + cm) || bottom - blk(lines) - pg < labelEnd)) lines--
 
-        val rowLines = IntArray(rowMemos.size) { Math.min(lines, Math.max(0, rowMemos[it])) }
+        val rowLines = IntArray(rowMemos.size) { lines }   // 주마다 · 달마다 위치가 달라 보이지 않게: 메모가 적은 줄도 메모 칸을 똑같이 잡아 둠(스티커 4개 · 명절 · 메모 꽉 참 기준)
         val cy = FloatArray(rowMemos.size)
         var d = if (hasCircle) dTop else 0f
         for (r in rowMemos.indices) {
@@ -248,31 +255,41 @@ object WidgetLayout {
             cy[r] = dateBottom + reg / 2f
             if (hasCircle) d = Math.min(d, reg - cm)   // 모든 칸의 동그라미는 같은 크기 (가장 빡빡한 줄 기준)
         }
-        return MonthPlan(padX, dateSize, dateBase, dateBottom, ss, 1f * u, topPad, holSize, pillH, pg, bottom, Math.max(0f, d), rowLines, cy)
+        var stk2 = Math.max(topPad + ss + 1f * u, (if (narrow) dateBase + holSize * 1.35f else dateBase + holSize * 0.2f + 0.5f * u))   // 첫 줄(숫자 · 명절 글자) 바로 아래
+        val row2Ok = bottom - blk(lines) - pg >= stk2 + ss && !(hasCircle && cy.isNotEmpty() && stk2 + ss > cy[0] + 0.01f)   // 아주 작은 칸에서 둘째 줄이 메모 · 동그라미와 겹치면 둘째 줄 스티커는 안 그림
+        return MonthPlan(padX, dateSize, dateBase, dateBottom, ss, 1f * u, topPad, holSize, pillH, pg, bottom, Math.max(0f, d), rowLines, cy, stk2, row2Ok, narrow)
     }
 
     /** 한 칸의 윗줄(날짜 숫자 · 스티커 · 공휴일 글자) 자리: 숫자 오른쪽 끝에 들어가는 첫 줄 스티커 수(row1) · 3 · 4번째가 들어가는 둘째 줄 수(row2) · 공휴일 두 글자를 숫자 옆에 놓을 수 있는지 (못 놓으면 한 글자를 숫자 아래에) */
-    class MonthTop(val row1: Int, val row2: Int, val holBeside: Boolean)
+    class MonthTop(val row1: Int, val row2: Int, val holBeside: Boolean, val holChars: Int = 2)
 
     /**
-     * @param numW 날짜 숫자 글자 폭 · holW2 공휴일 두 글자 폭 (공휴일이 없으면 0) — 글자 폭은 그리는 쪽이 재서 넘겨 줌
-     * @param want 그날 스티커 수 (앱 달력처럼 하루 최대 4개: 숫자 옆 2개 + 둘째 줄 2개 · 둘째 줄은 오른쪽 끝 · 근무 동그라미 오른쪽 위에 살짝 걸쳐도 스티커가 위에 보임)
+     * 명절 글자는 앱 달력처럼 늘 숫자 옆: 스티커가 0~1개면 두 글자 · 2개 이상이면 한 글자(자리를 스티커에 양보). 스티커는 숫자 옆(첫 줄)에 들어가는 만큼, 나머지는 둘째 줄(오른쪽 끝).
+     * @param numW 날짜 숫자 글자 폭 · holW2 공휴일 두 글자 폭 · holW1 한 글자 폭 (공휴일이 없으면 0) — 글자 폭은 그리는 쪽이 재서 넘겨 줌
+     * @param want 그날 스티커 수 (하루 최대 4개 · 둘째 줄은 오른쪽 끝 · 근무 동그라미 오른쪽 위에 살짝 걸쳐도 스티커가 위에 보임)
      */
-    fun monthTop(plan: MonthPlan, cw: Float, u: Float, numW: Float, want: Int, holW2: Float): MonthTop {
+    fun monthTop(plan: MonthPlan, cw: Float, u: Float, numW: Float, want: Int, holW2: Float, holW1: Float = 0f): MonthTop {
         val ss = plan.stkSize
         val gap = plan.stkGap
         val pad = plan.padX
         fun wid(k: Int): Float = if (k <= 0) 0f else k * ss + (k - 1) * gap
         val total = Math.min(Math.max(0, want), 4)
-        var n1 = Math.min(total, 2)
-        while (n1 > 0 && pad + numW + 1f * u + wid(n1) > cw - pad) n1--   // 숫자와 스티커가 닿으면 첫 줄 스티커를 줄임
-        val n2 = Math.min(total - n1, 2)
-        var beside = false
-        if (holW2 > 0f && n2 == 0) {   // 둘째 줄이 있는 날은 공휴일 글자를 늘 숫자 아래에 (둘째 줄은 오른쪽 끝이라 안 겹침)
-            val room = cw - 2f * pad - numW - 2.5f * u - (if (n1 > 0) wid(n1) + 1f * u else 0f)
-            beside = holW2 <= room
+        val cap2 = Math.max(2, Math.floor(((cw - 2f * pad + gap) / (ss + gap)).toDouble()).toInt())
+        val hasHol = holW2 > 0f
+        // 명절 글자: 스티커 0~1개면 두 글자 · 아니면 한 글자 (한 글자 폭이 없으면 두 글자의 절반쯤)
+        var chars = if (!hasHol) 0 else if (plan.narrow) 0 else if (total <= 1) 2 else 1
+        fun nameW(c: Int): Float = if (c == 2) holW2 else if (holW1 > 0f) holW1 else holW2 * 0.55f
+        fun fit1(c: Int): Int {
+            val nw = if (c > 0) nameW(c) + 2.5f * u else 0f
+            var n = Math.min(total, 2)
+            while (n > 0 && pad + numW + 1f * u + nw + wid(n) > cw - pad) n--
+            return n
         }
-        return MonthTop(n1, n2, beside)
+        var n1 = fit1(chars)
+        if (chars == 2 && total - n1 > 0 && fit1(1) > n1) { chars = 1; n1 = fit1(1) }   // 두 글자가 첫 줄 스티커를 밀어내면 한 글자로
+        val n2 = if (plan.row2Ok) Math.min(total - n1, cap2) else 0
+        val fits = hasHol && !plan.narrow && pad + numW + 2.5f * u + nameW(Math.max(1, chars)) <= cw - pad + 0.01f
+        return MonthTop(if (hasHol && !fits) Math.min(total, fit1(0)) else n1, if (hasHol && !fits) (if (plan.row2Ok) Math.min(total - Math.min(total, fit1(0)), cap2) else 0) else n2, fits, chars)
     }
 
     /** 한 달 위젯 맨 윗줄 누르는 자리의 폭(dp) — widget_month_view.xml 의 mz_chip · mz_title 폭과 같아야 함 */

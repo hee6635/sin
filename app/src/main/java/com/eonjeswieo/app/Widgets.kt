@@ -736,7 +736,7 @@ object WidgetRenderer {
     private fun drawBadge(cv: Canvas, sx: Float, sy: Float, sz: Float, text: String, paint: TextPaint) {
         paint.typeface = Typeface.DEFAULT_BOLD
         paint.textAlign = Paint.Align.CENTER
-        paint.textSize = Math.max(sz * 0.42f, 6f * dens)
+        paint.textSize = Math.max(sz * 0.40f, 4.5f * dens)
         val bh = paint.textSize * 1.15f
         val bw = paint.measureText(text) + paint.textSize * 0.55f
         val right = sx + sz + sz * 0.12f

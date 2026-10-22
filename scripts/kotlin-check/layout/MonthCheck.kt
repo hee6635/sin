@@ -42,9 +42,10 @@ private fun cellBox(g: Graphics2D, plan: WidgetLayout.MonthPlan, cw: Float, rowH
     val numW = g.fontMetrics.stringWidth(num).toFloat()
     val numRc = Rc(plan.padX, plan.dateBase - plan.dateSize * 0.8f, plan.padX + numW, plan.dateBase + plan.dateSize * 0.02f)   // 숫자는 기준선 아래로 내려가는 부분이 없음
     var holW2 = 0f
+    var holW1 = 0f
     var hol2 = ""
-    if (d.hol.isNotEmpty()) { hol2 = d.hol.take(2); g.font = font(false, plan.holSize); holW2 = g.fontMetrics.stringWidth(hol2).toFloat() }
-    val top = WidgetLayout.monthTop(plan, cw, u, numW, d.stk, holW2)
+    if (d.hol.isNotEmpty()) { hol2 = d.hol.take(2); g.font = font(false, plan.holSize); holW2 = g.fontMetrics.stringWidth(hol2).toFloat(); holW1 = g.fontMetrics.stringWidth(d.hol.take(1)).toFloat() }
+    val top = WidgetLayout.monthTop(plan, cw, u, numW, d.stk, holW2, holW1)
     val sk = ArrayList<Rc>()
     for (k in 0 until top.row1) {
         val sx = cw - plan.padX - (top.row1 - k) * plan.stkSize - (top.row1 - k - 1) * plan.stkGap
@@ -53,13 +54,13 @@ private fun cellBox(g: Graphics2D, plan: WidgetLayout.MonthPlan, cw: Float, rowH
     val sk2 = ArrayList<Rc>()   // 3 · 4번째: 바로 아래 줄 오른쪽 끝
     for (j in 0 until top.row2) {
         val sx = cw - plan.padX - (top.row2 - j) * plan.stkSize - (top.row2 - j - 1) * plan.stkGap
-        val sy = plan.stkTop + plan.stkSize + plan.stkGap
+        val sy = plan.stk2Top
         sk2.add(Rc(sx, sy, sx + plan.stkSize, sy + plan.stkSize))
     }
     var holRc: Rc? = null
     if (d.hol.isNotEmpty()) {
         g.font = font(false, plan.holSize)
-        if (top.holBeside) { val lx = plan.padX + numW + 2.5f * u; holRc = Rc(lx, plan.dateBase - plan.holSize * 0.85f, lx + holW2, plan.dateBase + plan.holSize * 0.2f) }
+        if (top.holBeside) { val lx = plan.padX + numW + 2.5f * u; holRc = Rc(lx, plan.dateBase - plan.holSize * 0.85f, lx + (if (top.holChars == 2) holW2 else holW1), plan.dateBase + plan.holSize * 0.2f) }
         else { val b = plan.dateBase + plan.holSize * 1.15f; val w1 = g.fontMetrics.stringWidth(d.hol.take(1)).toFloat(); holRc = Rc(plan.padX, b - plan.holSize * 0.85f, plan.padX + w1, b + plan.holSize * 0.2f) }
     }
     val circ = if (d.shift.isNotEmpty() && !d.rest && plan.circleD > 0f) Triple(cw / 2f, plan.circleCy[r], plan.circleD / 2f) else null
@@ -213,7 +214,7 @@ fun monthFuzz(): Int {
         fun f(m: String) { fails++; val kind = m.substringAfter(":", m).trim().replace(Regex("[0-9.]+"), "#"); kinds[kind] = (kinds[kind] ?: 0) + 1; if (kinds[kind] == 1) println("  ✗ $tag: $m") }
         if (p.circleD > 0f != hasCircle && hasCircle && rowHDp >= 36f) f("동그라미가 없어짐 (칸 높이 ${rowHDp}dp)")
         for (r in 0 until rows) {
-            if (p.lines[r] > Math.min(memoMax, 2) || p.lines[r] > rowMemos[r]) f("줄 $r 메모 줄 수가 많음 ${p.lines[r]}")
+            if (p.lines[r] > Math.min(memoMax, 3) || p.lines[r] != p.lines[0]) f("줄 $r 메모 줄 수가 다른 줄과 다름 ${p.lines[r]}")
             if (p.lines[r] > 0 && p.memoTop(p.lines[r]) < p.dateBottom - 0.5f) f("메모가 날짜 줄을 침범")
             if (p.circleD > 0f) {
                 if (p.circleCy[r] - p.circleD / 2 < p.dateBottom - 0.5f) f("줄 $r 동그라미가 날짜 줄 위로")
@@ -223,9 +224,9 @@ fun monthFuzz(): Int {
         }
         if (hasCircle && rowHDp >= 30f && cwDp >= 34f && p.circleD < 11.5f * u) { small++; f("동그라미가 너무 작음 ${p.circleD / u}dp") }
         if (p.lines.any { it > 0 } && p.pillH < 9f * u - 0.5f) f("메모 줄이 너무 낮음 ${p.pillH / u}dp")
-        if (rowHDp >= 70f && cwDp >= 40f && (cwDp < 58f || rowHDp >= 100f) && p.lines.indices.any { Math.min(memoMax, 2).coerceAtMost(rowMemos[it]) != p.lines[it] }) f("크고 넉넉한데 메모 줄이 모자람 ${p.lines.toList()} / 원하는 ${rowMemos.toList()}")
+        if (rowHDp >= 70f && cwDp >= 40f && (cwDp < 58f || rowHDp >= 100f) && p.lines[0] < Math.min(memoMax, 2)) f("크고 넉넉한데 메모 줄이 모자람 ${p.lines.toList()} (최대 ${memoMax})")
         if (p.dateSize < 6f * u) f("날짜 숫자가 너무 작음 ${p.dateSize / u}dp")
-        lines0 += p.lines.count { it == 0 && true }; lines1 += p.lines.count { it == 1 }; lines2 += p.lines.count { it == 2 }
+        lines0 += p.lines.count { it == 0 && true }; lines1 += p.lines.count { it == 1 }; lines2 += p.lines.count { it >= 2 }
         // 내용이 달라도(스티커 · 공휴일 · 날짜) 줄 안 · 줄끼리 칸 모양은 같고, 칸 안 그림끼리 겹치지 않아야 함
         for (r in 0 until rows) for (stk in 0..4) for (hol in 0..1) {
             val dd = MDay(1 + rnd.nextInt(31), rnd.nextInt(7), if (hasCircle) "주" else "", false, stk, if (hol == 1) holNames[rnd.nextInt(holNames.size)] else "", List(rowMemos[r]) { "메모$it" })
