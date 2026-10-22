@@ -13,7 +13,7 @@ import javax.imageio.ImageIO
 
 private var fails = 0
 
-private fun render(data: JSONObject, name: String, wDp: Int, hDp: Int, offset: Int, who: Int, dark: Boolean, out: File, slide: Int = 0, frames: Int = 0, glow: Int = 0): Boolean {
+private fun render(data: JSONObject, name: String, wDp: Int, hDp: Int, offset: Int, who: Int, dark: Boolean, out: File): Boolean {
     val u = 2.75f
     return try {
         WidgetRenderer.dens = u
@@ -23,7 +23,7 @@ private fun render(data: JSONObject, name: String, wDp: Int, hDp: Int, offset: I
         val ppl = MonthRenderer.people(data)
         val person = if (who >= 0 && who < ppl.size) ppl[who] else null
         val grid = MonthRenderer.gridOf(ws, offset)
-        MonthRenderer.draw(cv, bmp.width.toFloat(), bmp.height.toFloat(), data, grid, ws, offset, ppl, person, if (dark) WidgetRenderer.DARK else WidgetRenderer.LIGHT, -1f, slide, frames, glow)
+        MonthRenderer.draw(cv, bmp.width.toFloat(), bmp.height.toFloat(), data, grid, ws, offset, ppl, person, if (dark) WidgetRenderer.DARK else WidgetRenderer.LIGHT, -1f)
         val img = bmp.javaClass.getField("img").get(bmp) as BufferedImage
         ImageIO.write(img, "png", out)
         println(String.format("  %-44s %3dx%-3ddp  %d줄 %s", name, wDp, hDp, grid.rows, if (person == null) "내 달력" else "가족: " + person.optString("n")))
@@ -73,6 +73,51 @@ private fun coverCheck(data: JSONObject) {
     println("넘길 수 있는 달(이번 달 기준): ${reach.minOrNull()} ~ ${reach.maxOrNull()} (${reach.size}개 달) · 데이터 $first ~ $last")
 }
 
+/** 월 넘김(옛 달 → 새 달 미끄러짐) · 오늘 빛 프레임을 폰 코드(MonthRenderer.composeSlide · drawGlow)로 겹쳐 그려 PNG 로 저장 */
+private fun effects(data: JSONObject, dir: File) {
+    dir.mkdirs()
+    val wDp = 340; val hDp = 330; val u = 2.75f
+    try {
+        WidgetRenderer.dens = u
+        val w = (wDp * u).toInt(); val h = (hDp * u).toInt()
+        val ws = data.optInt("ws", 0).coerceIn(0, 1)
+        val ppl = MonthRenderer.people(data)
+        fun layer(offset: Int, part: Int, moving: Boolean): Bitmap {
+            val b = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            MonthRenderer.draw(Canvas(b), w.toFloat(), h.toFloat(), data, MonthRenderer.gridOf(ws, offset), ws, offset, ppl, null, WidgetRenderer.LIGHT, -1f, part, moving)
+            return b
+        }
+        fun save(b: Bitmap, name: String) = ImageIO.write(b.javaClass.getField("img").get(b) as BufferedImage, "png", File(dir, name))
+        val top = MonthRenderer.lastTop; val rr = MonthRenderer.lastRr
+        val old = layer(0, 2, false)
+        val nw = layer(1, 2, false)
+        val chrome = layer(1, 1, true)
+        val top2 = MonthRenderer.lastTop; val rr2 = MonthRenderer.lastRr
+        val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val es = floatArrayOf(0.15f, 0.5f, 0.85f)
+        for ((i, e) in es.withIndex()) { MonthRenderer.composeSlide(out, chrome, old, nw, 1, e, top2, rr2, u); save(out, "slide${i + 1}.png") }
+        // 오늘 빛: 같은 달 · 오늘 칸
+        val base = layer(0, 0, false)
+        val box = MonthRenderer.lastToday
+        if (box == null) { fails++; println("  ✗ 오늘 칸 자리를 못 받음") }
+        else {
+            val ts = floatArrayOf(0.06f, 0.18f, 0.30f, 0.42f, 0.54f, 0.66f, 0.78f, 0.90f)
+            for ((i, t) in ts.withIndex()) {
+                val f = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+                val cv = Canvas(f)
+                cv.drawBitmap(base, 0f, 0f, null)
+                MonthRenderer.drawGlow(cv, box, u, t)
+                save(f, "glow${i + 1}.png")
+            }
+            println("효과 프레임 저장: 슬라이드 ${es.size}장 · 빛 ${ts.size}장 (top=${"%.0f".format(top)} rr=${"%.0f".format(rr)} 오늘칸=${box})")
+        }
+    } catch (e: Throwable) {
+        fails++
+        println("  ✗ 효과 프레임: $e")
+        e.printStackTrace(System.out)
+    }
+}
+
 fun main(args: Array<String>) {
     gridCheck()
     val data = JSONObject(File(args[0]).readText())
@@ -99,10 +144,8 @@ fun main(args: Array<String>) {
     render(data, "내 달력 · 큰 위젯 · 6주 달(2달 전)", 545, 561, -2, -1, false, File(out, "r36_big_6weeks.png"))
     render(data, "내 달력 · 아주 큰 위젯(700x640)", 700, 640, 0, -1, false, File(out, "r37_huge.png"))
     if (ppl.isNotEmpty()) render(data, "가족 달력 · 큰 위젯 + 칩", 545, 561, 0, 0, false, File(out, "r38_big_fam.png"))
-    // 월 넘김 · 오늘 효과의 중간 그림(미끄러짐 2단계 · 빛이 오늘 칸 테두리를 도는 5단계)
-    render(data, "넘김 효과 1단계(다음 달)", 340, 330, 1, -1, false, File(out, "r40_slide2.png"), 1, 2, 0)
-    render(data, "넘김 효과 2단계(다음 달)", 340, 330, 1, -1, false, File(out, "r41_slide1.png"), 1, 1, 0)
-    for (g in 1..5) render(data, "오늘 빛 $g 단계", 340, 330, 0, -1, false, File(out, "r4${1 + g}_glow$g.png"), 0, 0, g)
+    // 월 넘김 · 오늘 효과의 중간 프레임: 폰이 쓰는 것과 같은 함수(composeSlide · drawGlow)로 겹쳐서 그림
+    effects(data, File(out, "fx"))
     println(if (fails == 0) "진짜 그리기 코드: 오류 없이 모두 그려짐" else "진짜 그리기 코드: 실패 ${fails}개")
     System.exit(if (fails == 0) 0 else 1)
 }

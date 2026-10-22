@@ -1164,7 +1164,7 @@ button.tbtn{cursor:pointer}
 .dn .stp>svg,.s2>svg,.dn .stp .sx svg,.s2 .sx svg{width:var(--stz);height:var(--stz)}
 .dn .stp>.se,.s2>.se,.dn .stp .sx .se,.s2 .sx .se{font-size:calc(var(--stz) - 2px) !important}
 .sx{position:relative;display:inline-block;line-height:0}
-.sx .cb{position:absolute;right:calc(var(--stz,19px)*-.26);bottom:calc(var(--stz,19px)*-.26);font-size:clamp(5px,calc(var(--stz,19px)*.39),8px);font-weight:800;font-style:normal;line-height:1;color:#fff;background:#f08a00;border-radius:6px;padding:calc(var(--stz,19px)*.05) calc(var(--stz,19px)*.13);white-space:nowrap;filter:none}   /* 1/2 배지: 스티커 크기에 비례(안쪽 화면은 지금 크기 그대로 · 좁은 커버는 작게) */
+.sx .cb{position:absolute;right:calc(var(--stz,19px)*-.3);bottom:calc(var(--stz,19px)*-.3);font-size:10px;font-weight:800;font-style:normal;line-height:1;color:#fff;background:#f08a00;border-radius:7px;padding:1.3px 3.3px;white-space:nowrap;filter:none;transform-origin:100% 100%;scale:var(--cbk,.55)}   /* 1/2 배지: 글자는 10px 로 그려 두고 "배율"로 줄임 — 폰 웹뷰는 8px 아래 글자를 8px 로 키우고(최소 글자 크기) 큰 글씨도 곱해서, 글자 크기로는 못 줄임. 배율(--cbk)은 cbFit() 가 스티커 크기 × .36 에 맞춰 계산 */
 /* 개인 캘린더: 스티커는 칸 가운데에 크게 (최대 4개) */
 .cell.pers{--b:max(34px,min(100cqw,56px,calc(100cqh - 62px)))}
 .pstk{display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:1px 2px;height:100%;width:100%;--stz:min(28px,44cqw,var(--b))}
@@ -1662,7 +1662,7 @@ const defaults=()=>({
 });
 const REM_DAYS=[7,3,2,1,0],REM_SHORT={7:'1주',3:'3일',2:'2일',1:'전날',0:'당일'},REM_LABEL={7:'1주 전',3:'3일 전',2:'2일 전',1:'전날',0:'당일'},REM_AT=['08:00','12:00','20:00','22:00'];
 // 모양 조정(숨은 화면): 앱 달력 · 한 달 위젯(커버 · 안쪽)의 스티커 · 주야 글자 · 메모 크기 · 위치를 배율 · 위치로 저장. 값은 [키, 이름, 최소, 최대, 한 칸, 기본]
-const TUNE_KEYS=[['stk','스티커 크기',.6,1.6,.05,1,'스티커'],['stkX','스티커 좌우 위치',-1,1,.05,0,'스티커'],['stkY','스티커 높이 위치',-1,1,.05,0,'스티커'],['stkGX','스티커 좌우 간격',-1,1,.05,0,'스티커'],['stkGY','스티커 상하 간격',-1,1,.05,0,'스티커'],['ink','주야 크기',.6,1.5,.05,1,'주야'],['inkY','주야 높이 위치',-1,1,.05,0,'주야'],['memo','메모 글자 크기',.7,1.6,.05,1,'메모'],['pill','메모 칸 높이',.4,1.6,.05,1,'메모'],['memoY','메모 위치 (위 − · 아래 +)',-1,1,.05,0,'메모'],['memoG','메모 줄 사이 간격',-1,1,.05,0,'메모']];
+const TUNE_KEYS=[['stk','스티커 크기',.6,1.6,.05,1,'스티커'],['stkX','스티커 좌우 위치',-1,1,.05,0,'스티커'],['stkY','스티커 높이 위치',-1,1,.05,0,'스티커'],['stkGX','스티커 좌우 간격',-1,1,.05,0,'스티커'],['stkGY','스티커 상하 간격',-1,1,.05,0,'스티커'],['ink','주야 크기',.6,1.5,.05,1,'주야'],['inkY','주야 높이 위치',-1,1,.05,0,'주야'],['memo','메모 글자 크기',.7,1.6,.05,1,'메모'],['pill','메모 칸 높이',.4,1.6,.05,1,'메모'],['memoY','메모 위치 (위 − · 아래 +)',-1,3,.05,0,'메모'],['memoG','메모 줄 사이 간격',-1,1,.05,0,'메모']];
 const TUNE_NEUTRAL=Object.fromEntries(TUNE_KEYS.map(k=>[k[0],k[5]]));
 // 기본값(사용자가 폰에서 맞춘 값): 앱 달력은 화면 폭 600dp 이상(폴더폰 안쪽 · 태블릿)이면 "안쪽" · 아니면 "커버" 값 / 한 달 위젯은 위젯 폭(440dp 기준)으로 커버 · 안쪽 (새 값은 0 = 지금 모양 그대로)
 const TUNE_DEF={appCover:{...TUNE_NEUTRAL,stk:1,stkX:.15,stkY:-.1,ink:1.15,inkY:.35,memo:.85,pill:.8},appInner:{...TUNE_NEUTRAL,stk:.9,stkX:0,stkY:-.05,ink:1.15,inkY:.1,memo:1,pill:.95},cover:{...TUNE_NEUTRAL,stk:1.05,stkX:.8,stkY:.95,ink:1.5,inkY:.65,memo:1.5,pill:1.5},inner:{...TUNE_NEUTRAL,stk:1.2,stkX:.4,stkY:-.1,ink:.95,inkY:-.1,memo:1.1,pill:1.1}};
@@ -2509,6 +2509,19 @@ function stzWindow(host){
     fitStz(probe);
   }finally{probe.remove();}
 }
+/* 1/2 배지 크기 맞춤: 실제로 그려진 글자 크기(웹뷰 최소 글자 · 큰 글씨가 곱해진 값)를 재서, 스티커 크기의 .36 배가 되도록 배율을 정함 */
+function cbFit(){
+  const bs=document.querySelectorAll('.sx .cb');if(!bs.length)return;
+  const cs=getComputedStyle(bs[0]);
+  const fz=parseFloat(cs.height)-(parseFloat(cs.paddingTop)||0)-(parseFloat(cs.paddingBottom)||0);   // line-height:1 → 칸 높이 = 글자 크기
+  if(!(fz>0))return;
+  bs.forEach(b=>{
+    const w=b.parentNode.offsetWidth;if(!(w>0))return;
+    const k=Math.max(.3,Math.min(1.3,w*.36/fz)).toFixed(3);
+    if(b.style.getPropertyValue('--cbk')!==k)b.style.setProperty('--cbk',k);
+  });
+}
+try{new MutationObserver(cbFit).observe(document.body,{childList:true,subtree:true});}catch(e){}
 function fitDn(root,keepStz){
   if(!keepStz)fitStz(root);   // (keepStz: 조정 화면 미리보기 — 스티커 크기는 한 달 전체로 이미 맞춰 둠)
   const over=dn=>{
@@ -2540,6 +2553,7 @@ function fitDn(root,keepStz){
     s2.style.paddingRight=pr;s2.style.transformOrigin=`calc(100% - ${pr}) center`;
     if(stp)s2.style.columnGap=getComputedStyle(stp).columnGap;
   });
+  cbFit();
 }
 function renderCal(){
   const mk=cur.y*12+cur.m;
@@ -4948,6 +4962,7 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
+  'v0.82':`· <b>1/2 배지</b>: 커버 화면에서 너무 컸던 걸 스티커 크기에 맞춰 작게 · <b>위젯 "오늘"</b>: 이동과 빛이 훨씬 부드럽게 · <b>메모 위치</b>: 이제 1.0보다 더 아래로 (최대 3.0)`,
   'v0.81':`· <b>위젯</b>: 맨 윗줄이 높아지고 ‹ › 버튼이 보여요 · 달을 넘기면 새 달이 미끄러져 들어와요 · 이번 달이 아니면 \"오늘로\" 버튼 · 메모 3줄 · 명절 글자가 숫자 옆에 · 앞뒤 달은 더 흐리게\n· <b>알람</b>: 시간을 1분 단위로 · 끄기 화면이 파스텔 톤으로\n· <b>달력</b>: 회사 휴무일이 명절처럼 · 오늘 띠 색 고르기(설정 › 달력 모양)\n· <b>가족방</b>: 연결이 끊겨도 바로 지우지 않고 안내해요 · 방장이 오래 안 들어오면 가족 폰에 알려요`,
   'v0.80':`· <b>칸 채우기</b>: 명절 띠가 연한 분홍으로 · 오늘 칸이 살짝 떠 보여요. 요청 링은 승인 하루 · 거절 3일 뒤 사라져요\n· 접고 펼 때 달력 모양이 그 화면 값으로 바로 바뀌어요`,
   'v0.79':`· <b>달력 모양</b>: 설정 › 화면 › 달력 모양에서 "칸 채우기"를 고를 수 있어요 (근무를 연한 칸 색으로 · 오늘은 날짜 도장 · 요청은 글자 주위 링). 기본은 예전 그대로 "동그라미"예요`,

@@ -79,6 +79,11 @@ public class Canvas {
         if (p.typeface == Typeface.MEDIUM) g.drawString(text, x0 + p.textSize * 0.045f, y);
         if (p.underline) { g.setStroke(new BasicStroke(Math.max(1f, p.textSize / 14f))); g.draw(new Line2D.Float(x0, y + p.textSize * 0.12f, x0 + w, y + p.textSize * 0.12f)); }
     }
+    public void drawBitmap(Bitmap b, float left, float top, Paint p) {
+        g.setComposite(AlphaComposite.SrcOver.derive(Math.max(0f, Math.min(1f, (p == null ? 1f : p.getAlpha() / 255f) * layerAlpha))));
+        g.drawImage(b.img, Math.round(left), Math.round(top), null);
+        g.setComposite(AlphaComposite.SrcOver);
+    }
     public void drawBitmap(Bitmap b, Rect src, RectF dst, Paint p) {
         g.setComposite(AlphaComposite.SrcOver.derive(Math.max(0f, Math.min(1f, (p == null ? 1f : p.getAlpha() / 255f) * layerAlpha))));
         g.drawImage(b.img, Math.round(dst.left), Math.round(dst.top), Math.round(dst.width()), Math.round(dst.height()), null);

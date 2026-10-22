@@ -83,21 +83,19 @@ class MonthWidgetProvider : AppWidgetProvider() {
 
 /** 한 달 위젯의 ‹ › · 제목 · 이름 칩을 눌렀을 때 (앱 밖에서는 못 보냄: 매니페스트에서 exported=false) */
 class MonthNavReceiver : BroadcastReceiver() {
-    /** 그림 여러 장을 짧은 간격으로 이어서 보냄(월 넘김 · 오늘 효과). 한 장은 [미끄러짐 방향, 남은 미끄러짐 단계, 빛 단계] */
-    private fun play(ctx: Context, mgr: AppWidgetManager, id: Int, steps: List<IntArray>) {
-        val first = steps[0]
-        MonthRenderer.update(ctx, mgr, id, first[0], first[1], first[2])
-        if (steps.size == 1) return
+    /** 월 넘김 · 오늘 효과는 시간이 걸리는 일이라 따로 스레드에서 (goAsync 로 끝날 때까지 프로세스 유지) — 실패하면 그냥 새로 그리기 */
+    private fun animate(ctx: Context, mgr: AppWidgetManager, id: Int, from: Int, dir: Int, glow: Boolean) {
+        val app = ctx.applicationContext
         val pr = goAsync()
-        val hd = android.os.Handler(android.os.Looper.getMainLooper())
-        fun next(i: Int) {
-            if (i >= steps.size) { try { pr.finish() } catch (e: Exception) { }; return }
-            hd.postDelayed({
-                try { val st = steps[i]; MonthRenderer.update(ctx, mgr, id, st[0], st[1], st[2]) } catch (e: Exception) { }
-                next(i + 1)
-            }, if (steps[i][2] > 0) 75L else 90L)
-        }
-        next(1)
+        Thread {
+            try {
+                MonthRenderer.animate(app, mgr, id, from, dir, glow)
+            } catch (e: Throwable) {
+                try { MonthRenderer.update(app, mgr, id) } catch (e2: Throwable) { }
+            } finally {
+                try { pr.finish() } catch (e: Exception) { }
+            }
+        }.start()
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -105,6 +103,7 @@ class MonthNavReceiver : BroadcastReceiver() {
         if (id == AppWidgetManager.INVALID_APPWIDGET_ID) return
         var fromOffset = 0
         try {
+            val before = MonthState.offset(context, id)
             when (intent.action) {
                 MonthRenderer.ACT_PREV, MonthRenderer.ACT_NEXT -> {
                     val to = MonthState.offset(context, id) + (if (intent.action == MonthRenderer.ACT_PREV) -1 else 1)
@@ -120,16 +119,12 @@ class MonthNavReceiver : BroadcastReceiver() {
                 // "오늘": 이번 달로 쓱 미끄러져 오고 → 오늘 칸 테두리를 따라 은은한 빛이 한 바퀴 지나가고 사라짐
                 val from = fromOffset
                 val sd = if (from > 0) -1 else if (from < 0) 1 else 0
-                val steps = ArrayList<IntArray>()   // [slide, frames, glow]
-                if (sd != 0) { steps.add(intArrayOf(sd, 2, 0)); steps.add(intArrayOf(sd, 1, 0)) }
-                for (g in 1..5) steps.add(intArrayOf(0, 0, g))
-                steps.add(intArrayOf(0, 0, 0))
-                play(context, mgr, id, steps)
+                animate(context, mgr, id, from, sd, true)
             } else if (dir == 0) {
                 MonthRenderer.update(context, mgr, id)
             } else {
-                // 월 넘김 효과: 새 달이 넘긴 쪽에서 미끄러져 들어오는 3장(흐림 · 반쯤 · 완성)을 짧게 이어서 보냄
-                play(context, mgr, id, arrayListOf(intArrayOf(dir, 2, 0), intArrayOf(dir, 1, 0), intArrayOf(0, 0, 0)))
+                // 월 넘김 효과: 새 달이 넘긴 쪽에서 미끄러져 들어오고 옛 달은 반대쪽으로 밀려 사라짐
+                animate(context, mgr, id, before, dir, false)
             }
         } catch (e: Exception) {
             // 눌러도 그림이 안 바뀔 뿐 앱이 죽지 않게
@@ -251,7 +246,7 @@ object MonthRenderer {
             fun from(data: JSONObject?, wDp: Float): Tune {
                 val o = data?.optJSONObject("tune")?.optJSONObject(if (wDp < 440f) "cover" else "inner") ?: return NONE
                 fun g(k: String, d: Float, lo: Float, hi: Float): Float = o.optDouble(k, d.toDouble()).toFloat().coerceIn(lo, hi)
-                return Tune(g("stk", 1f, 0.6f, 1.6f), g("stkX", 0f, -1f, 1f), g("stkY", 0f, -1f, 1f), g("ink", 1f, 0.6f, 1.5f), g("inkY", 0f, -1f, 1f), g("memo", 1f, 0.7f, 1.6f), g("pill", 1f, 0.7f, 1.6f), g("stkGX", 0f, -1f, 1f), g("stkGY", 0f, -1f, 1f), g("memoY", 0f, -1f, 1f), g("memoG", 0f, -1f, 1f))
+                return Tune(g("stk", 1f, 0.6f, 1.6f), g("stkX", 0f, -1f, 1f), g("stkY", 0f, -1f, 1f), g("ink", 1f, 0.6f, 1.5f), g("inkY", 0f, -1f, 1f), g("memo", 1f, 0.7f, 1.6f), g("pill", 1f, 0.7f, 1.6f), g("stkGX", 0f, -1f, 1f), g("stkGY", 0f, -1f, 1f), g("memoY", 0f, -1f, 3f), g("memoG", 0f, -1f, 1f))
             }
         }
     }
@@ -357,51 +352,248 @@ object MonthRenderer {
         return PendingIntent.getActivity(ctx, id * 100 + idx, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
-    fun update(ctx: Context, mgr: AppWidgetManager, id: Int, slide: Int = 0, frames: Int = 0, glow: Int = 0) {   // slide: 달을 넘긴 방향(-1 앞 · +1 다음) · frames: 넘김 효과 남은 단계(2 → 1 → 0)
+    /** 그림 한 장 + 그때의 자리 정보 (오늘 칸 · 칸들이 시작하는 높이 · 바탕 모서리 · dp 배율) */
+    internal class Layer(val bmp: Bitmap, val today: RectF?, val top: Float, val rr: Float, val u: Float)
+
+    /** part: 0 = 전부 · 1 = 바깥 틀(바탕 · 맨 윗줄 · 요일 줄) · 2 = 날짜 칸들만 / moving: 제목을 강조색으로 */
+    internal fun layer(ctx: Context, mgr: AppWidgetManager, id: Int, data: JSONObject?, offset: Int, part: Int, moving: Boolean): Layer {
+        val ppl = people(data)
+        val want = MonthState.who(ctx, id)
+        val person = if (want.isEmpty()) null else ppl.firstOrNull { personKey(it) == want }   // 그 사람이 없어졌으면 내 달력
+        val ws = (data?.optInt("ws", 0) ?: 0).coerceIn(0, 1)
+        val grid = gridOf(ws, offset)
+        return synchronized(WidgetRenderer) {   // (WidgetRenderer.dens 를 같이 쓰므로 다른 위젯 그리기와 차례로)
+            val size = WidgetRenderer.bitmapSize(ctx, mgr, id, 300, 300)
+            val b = Bitmap.createBitmap(size[0], size[1], Bitmap.Config.ARGB_8888)
+            // 모양 조정의 "커버 / 안쪽" 구분은 그림 폭이 아니라 위젯의 (세로 화면 기준) 최소 폭으로 — 가로 · 세로나 화면에 따라 그림 폭이 달라져도 같은 값을 씀
+            val opts = mgr.getAppWidgetOptions(id)
+            val minW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0).toFloat()
+            val maxW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0).toFloat()
+            val pw = if (minW > 0f) minW else size[0] / WidgetRenderer.dens
+
+            draw(Canvas(b), size[0].toFloat(), size[1].toFloat(), data, grid, ws, offset, ppl, person, WidgetRenderer.palette(ctx, data), pw, part, moving)
+            if (part != 1) {
+                val statTxt = " · 가려진 것: 메모 " + statMemoHid + "개 · 스티커 " + statStkHid + "개"
+                WidgetStore.note(ctx, "한 달 위젯 #" + id, "그림 "+ size[0] + "x" + size[1] + "px · 밀도 " + WidgetRenderer.dens + " · 최소폭 " + minW.toInt() + "dp · 최대폭 " + maxW.toInt() + "dp → " + (if (pw < 440f) "커버" else "안쪽") + " 값" + statTxt)
+            }
+            Layer(b, lastToday, lastTop, lastRr, WidgetRenderer.dens)
+        }
+    }
+
+    /** 위젯에 보냄: 그림 + 맨 윗줄 · 날짜 칸을 누르는 자리 (모두 새로 지정) */
+    private fun send(ctx: Context, mgr: AppWidgetManager, id: Int, data: JSONObject?, offset: Int, bmp: Bitmap) {
+        val ppl = people(data)
+        val want = MonthState.who(ctx, id)
+        val person = if (want.isEmpty()) null else ppl.firstOrNull { personKey(it) == want }
+        val who = if (person != null) personKey(person) else ""
+        val ws = (data?.optInt("ws", 0) ?: 0).coerceIn(0, 1)
+        val grid = gridOf(ws, offset)
+        val rv = RemoteViews(ctx.packageName, R.layout.widget_month_view)
+        rv.setImageViewBitmap(R.id.month_img, bmp)
+        // 맨 윗줄: 이름 칩(가족이 있을 때만) · 앞 달 · 제목(이번 달로) · 다음 달
+        rv.setViewVisibility(R.id.mz_chip, if (ppl.isNotEmpty()) View.VISIBLE else View.GONE)
+        if (ppl.isNotEmpty()) rv.setOnClickPendingIntent(R.id.mz_chip, navPi(ctx, id, ACT_WHO, 1))
+        rv.setOnClickPendingIntent(R.id.mz_prev, navPi(ctx, id, ACT_PREV, 2))
+        rv.setOnClickPendingIntent(R.id.mz_next, navPi(ctx, id, ACT_NEXT, 3))
+        rv.setOnClickPendingIntent(R.id.mz_title, navPi(ctx, id, ACT_TODAY, 4))
+        // 날짜 칸: 누르면 그 날짜의 큰 창 (안 쓰는 줄은 숨김)
+        val cal = grid.start.clone() as Calendar
+        for (r in 0 until 6) {
+            rv.setViewVisibility(ROW_IDS[r], if (r < grid.rows) View.VISIBLE else View.GONE)
+            if (r >= grid.rows) continue
+            for (c in 0 until 7) {
+                rv.setOnClickPendingIntent(CELL_IDS[r][c], dayPi(ctx, id, r * 7 + c, WidgetRenderer.dateKey(cal), who))
+                cal.add(Calendar.DAY_OF_MONTH, 1)
+            }
+        }
+        mgr.updateAppWidget(id, rv)
+    }
+
+    fun update(ctx: Context, mgr: AppWidgetManager, id: Int) {
         try {
             val data = WidgetStore.load(ctx)
             val offset = MonthState.offset(ctx, id)
-            val ppl = people(data)
-            val want = MonthState.who(ctx, id)
-            val person = if (want.isEmpty()) null else ppl.firstOrNull { personKey(it) == want }   // 그 사람이 없어졌으면 내 달력
-            val who = if (person != null) personKey(person) else ""
-            val ws = (data?.optInt("ws", 0) ?: 0).coerceIn(0, 1)
-            val grid = gridOf(ws, offset)
-            val bmp: Bitmap = synchronized(WidgetRenderer) {   // (WidgetRenderer.dens 를 같이 쓰므로 다른 위젯 그리기와 차례로)
-                val size = WidgetRenderer.bitmapSize(ctx, mgr, id, 300, 300)
-                val b = Bitmap.createBitmap(size[0], size[1], Bitmap.Config.ARGB_8888)
-                // 모양 조정의 "커버 / 안쪽" 구분은 그림 폭이 아니라 위젯의 (세로 화면 기준) 최소 폭으로 — 가로 · 세로나 화면에 따라 그림 폭이 달라져도 같은 값을 씀
-                val opts = mgr.getAppWidgetOptions(id)
-                val minW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0).toFloat()
-                val maxW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0).toFloat()
-                val pw = if (minW > 0f) minW else size[0] / WidgetRenderer.dens
-
-                draw(Canvas(b), size[0].toFloat(), size[1].toFloat(), data, grid, ws, offset, ppl, person, WidgetRenderer.palette(ctx, data), pw, slide, frames, glow)
-                val statTxt = " · 가려진 것: 메모 " + statMemoHid + "개 · 스티커 " + statStkHid + "개"
-                WidgetStore.note(ctx, "한 달 위젯 #" + id, "그림 "+ size[0] + "x" + size[1] + "px · 밀도 " + WidgetRenderer.dens + " · 최소폭 " + minW.toInt() + "dp · 최대폭 " + maxW.toInt() + "dp → " + (if (pw < 440f) "커버" else "안쪽") + " 값" + statTxt)
-                b
-            }
-            val rv = RemoteViews(ctx.packageName, R.layout.widget_month_view)
-            rv.setImageViewBitmap(R.id.month_img, bmp)
-            // 맨 윗줄: 이름 칩(가족이 있을 때만) · 앞 달 · 제목(이번 달로) · 다음 달
-            rv.setViewVisibility(R.id.mz_chip, if (ppl.isNotEmpty()) View.VISIBLE else View.GONE)
-            if (ppl.isNotEmpty()) rv.setOnClickPendingIntent(R.id.mz_chip, navPi(ctx, id, ACT_WHO, 1))
-            rv.setOnClickPendingIntent(R.id.mz_prev, navPi(ctx, id, ACT_PREV, 2))
-            rv.setOnClickPendingIntent(R.id.mz_next, navPi(ctx, id, ACT_NEXT, 3))
-            rv.setOnClickPendingIntent(R.id.mz_title, navPi(ctx, id, ACT_TODAY, 4))
-            // 날짜 칸: 누르면 그 날짜의 큰 창 (안 쓰는 줄은 숨김)
-            val cal = grid.start.clone() as Calendar
-            for (r in 0 until 6) {
-                rv.setViewVisibility(ROW_IDS[r], if (r < grid.rows) View.VISIBLE else View.GONE)
-                if (r >= grid.rows) continue
-                for (c in 0 until 7) {
-                    rv.setOnClickPendingIntent(CELL_IDS[r][c], dayPi(ctx, id, r * 7 + c, WidgetRenderer.dateKey(cal), who))
-                    cal.add(Calendar.DAY_OF_MONTH, 1)
-                }
-            }
-            mgr.updateAppWidget(id, rv)
+            send(ctx, mgr, id, data, offset, layer(ctx, mgr, id, data, offset, 0, false).bmp)
         } catch (e: Exception) {
             // 그리기에 실패해도 앱이 죽지 않게
+        }
+    }
+
+    // ── 월 넘김 · 오늘 효과 ──────────────────────────────────────────────
+    // 위젯은 그림을 통째로 바꿔 끼우는 방식이라 "프레임"이 곧 그림 한 장. 부드럽게 보이도록
+    //  · 그림은 미리 몇 장만 그려 두고(바깥 틀 · 떠나는 달 칸들 · 들어오는 달 칸들) 프레임마다 위치 · 투명도만 바꿔 겹침 (한 프레임 = 몇 ms)
+    //  · 시간 기준으로 진행: 프레임이 늦으면 건너뛰어도 움직임 속도는 그대로 (느린 화면이 슬로모션이 되지 않게)
+    //  · 중간 프레임은 그림만 가볍게 바꿔 끼우고(partiallyUpdateAppWidget), 누르는 자리는 맨 끝에 한 번만 다시 지정
+    private const val SLIDE_MS = 260L
+    private const val GLOW_MS = 820L
+    private const val FRAME_MS = 28L   // 프레임 사이 최소 간격
+    private const val SLIDE_DP = 36f
+    private val animGen = HashMap<Int, Int>()   // 위젯마다 가장 최근 효과 번호: 새로 누르면 이전 효과는 멈춤
+
+    /** dir: 새 달이 들어오는 쪽(-1 왼쪽 · +1 오른쪽 · 0 없음) · glow: 끝나고 오늘 칸 테두리에 빛 */
+    fun animate(ctx: Context, mgr: AppWidgetManager, id: Int, from: Int, dir: Int, glow: Boolean) {
+        val gen = synchronized(animGen) { val g = (animGen[id] ?: 0) + 1; animGen[id] = g; g }
+        fun alive() = synchronized(animGen) { animGen[id] == gen }
+        val data = WidgetStore.load(ctx)
+        val to = MonthState.offset(ctx, id)
+        val sliding = dir != 0 && from != to
+        if (!sliding && !glow) { update(ctx, mgr, id); return }
+
+        val chrome: Layer?             // 미끄러지는 동안의 바깥 틀 (제목 강조색)
+        val old: Layer?
+        val nw: Layer
+        val base: Bitmap               // 효과가 끝났을 때의 모양 = 마지막에 보내는 그림
+        if (sliding) {
+            old = layer(ctx, mgr, id, data, from, 2, false)
+            nw = layer(ctx, mgr, id, data, to, 2, false)
+            chrome = layer(ctx, mgr, id, data, to, 1, true)
+            base = composeSlide(Bitmap.createBitmap(nw.bmp.width, nw.bmp.height, Bitmap.Config.ARGB_8888), layer(ctx, mgr, id, data, to, 1, false).bmp, null, nw.bmp, 0, 1f, nw.top, nw.rr, nw.u)
+        } else {
+            old = null
+            chrome = null
+            nw = layer(ctx, mgr, id, data, to, 0, false)
+            base = nw.bmp
+        }
+        val bufs = arrayOf(Bitmap.createBitmap(base.width, base.height, Bitmap.Config.ARGB_8888), Bitmap.createBitmap(base.width, base.height, Bitmap.Config.ARGB_8888))
+        var bi = 0
+
+        fun play(ms: Long, frame: (Float, Bitmap) -> Unit) {
+            val start = android.os.SystemClock.uptimeMillis()
+            while (alive()) {
+                val f0 = android.os.SystemClock.uptimeMillis()
+                val t = Math.min(1f, (f0 - start).toFloat() / ms)
+                val out = bufs[bi]; bi = 1 - bi
+                frame(t, out)
+                partial(ctx, mgr, id, out)
+                if (t >= 1f) return
+                val spent = android.os.SystemClock.uptimeMillis() - f0
+                if (spent < FRAME_MS) try { Thread.sleep(FRAME_MS - spent) } catch (e: InterruptedException) { return }
+            }
+        }
+
+        if (sliding && chrome != null) {
+            play(SLIDE_MS) { t, out ->
+                val e = 1f - (1f - t) * (1f - t) * (1f - t)   // 처음엔 빠르게 · 끝에서 부드럽게 멈춤
+                composeSlide(out, chrome.bmp, old?.bmp, nw.bmp, dir, e, nw.top, nw.rr, nw.u)
+            }
+        }
+        val box = nw.today
+        if (glow && box != null) {
+            play(GLOW_MS) { t, out ->
+                out.eraseColor(0)
+                val cv = Canvas(out)
+                cv.drawBitmap(base, 0f, 0f, null)
+                drawGlow(cv, box, nw.u, t)
+            }
+        }
+        if (alive()) send(ctx, mgr, id, data, to, base)   // 마무리: 정상 그림 + 누르는 자리
+    }
+
+    /** 효과 중간 프레임: 그림만 바꿔 끼움 (실패하면 건너뜀 — 마무리에서 어차피 전체를 다시 보냄) */
+    private fun partial(ctx: Context, mgr: AppWidgetManager, id: Int, bmp: Bitmap) {
+        try {
+            val rv = RemoteViews(ctx.packageName, R.layout.widget_month_view)
+            rv.setImageViewBitmap(R.id.month_img, bmp)
+            mgr.partiallyUpdateAppWidget(id, rv)
+        } catch (e: Exception) { }
+    }
+
+    /** 넘김 한 프레임 (e: 0 → 1): 바깥 틀 위에 옛 달 칸들은 반대쪽으로 밀리며 흐려지고, 새 달 칸들은 dir 쪽에서 미끄러져 와 선명해짐 */
+    internal fun composeSlide(out: Bitmap, chrome: Bitmap, old: Bitmap?, nw: Bitmap, dir: Int, e: Float, top: Float, rr: Float, u: Float): Bitmap {
+        out.eraseColor(0)
+        val cv = Canvas(out)
+        cv.drawBitmap(chrome, 0f, 0f, null)
+        val clip = Path()
+        clip.addRoundRect(RectF(0f, top - 2f * rr, out.width.toFloat(), out.height.toFloat()), rr, rr, Path.Direction.CW)   // 칸들이 바탕 모서리 밖으로 안 삐져나오게
+        val sv = cv.save()
+        cv.clipPath(clip)
+        val d = SLIDE_DP * u * dir
+        val p = Paint(Paint.FILTER_BITMAP_FLAG)   // (소수점 위치로 움직여도 부드럽게)
+        if (old != null && e < 1f) { p.alpha = Math.round((1f - e) * 255f); cv.drawBitmap(old, -d * e, 0f, p) }
+        p.alpha = Math.round(e * 255f)
+        cv.drawBitmap(nw, d * (1f - e), 0f, p)
+        cv.restoreToCount(sv)
+        return out
+    }
+
+    // 둥근 네모 테두리 위의 한 점: s = 윗변 왼쪽 끝에서 시계 방향으로 간 길이
+    private fun edgePoint(b: RectF, r: Float, s: Float, out: FloatArray) {
+        val wS = Math.max(0f, b.width() - 2f * r)
+        val hS = Math.max(0f, b.height() - 2f * r)
+        val arc = (Math.PI.toFloat() / 2f) * r
+        var d = s
+        if (d <= wS) { out[0] = b.left + r + d; out[1] = b.top; return }
+        d -= wS
+        if (d <= arc) { val a = d / r; out[0] = b.right - r + r * Math.sin(a.toDouble()).toFloat(); out[1] = b.top + r - r * Math.cos(a.toDouble()).toFloat(); return }
+        d -= arc
+        if (d <= hS) { out[0] = b.right; out[1] = b.top + r + d; return }
+        d -= hS
+        if (d <= arc) { val a = d / r; out[0] = b.right - r + r * Math.cos(a.toDouble()).toFloat(); out[1] = b.bottom - r + r * Math.sin(a.toDouble()).toFloat(); return }
+        d -= arc
+        if (d <= wS) { out[0] = b.right - r - d; out[1] = b.bottom; return }
+        d -= wS
+        if (d <= arc) { val a = d / r; out[0] = b.left + r - r * Math.sin(a.toDouble()).toFloat(); out[1] = b.bottom - r + r * Math.cos(a.toDouble()).toFloat(); return }
+        d -= arc
+        if (d <= hS) { out[0] = b.left; out[1] = b.bottom - r - d; return }
+        d -= hS
+        val a = d / r
+        out[0] = b.left + r - r * Math.cos(a.toDouble()).toFloat(); out[1] = b.top + r - r * Math.sin(a.toDouble()).toFloat()
+    }
+
+    /**
+     * 오늘 칸 테두리를 따라 지나가는 은은한 빛 (t: 0 → 1). 꼬리를 끄는 빛 한 줄이 윗변 왼쪽에서 시계 방향으로 한 바퀴 돌고 사라지는 동안
+     * 테두리 전체가 살짝 빛났다 옅어짐. 너무 강하지 않게 (가장 진할 때도 반쯤 투명)
+     */
+    internal fun drawGlow(cv: Canvas, cell: RectF, u: Float, t: Float) {
+        val gap = 1.2f * u
+        val r = 7f * u
+        val box = RectF(cell.left + gap, cell.top + gap, cell.right - gap, cell.bottom - gap)
+        val rgb = todayColor and 0x00FFFFFF
+        // 테두리 전체: 빠르게 켜졌다가 서서히 사라짐
+        val env = if (t < 0.15f) t / 0.15f else Math.pow((1f - (t - 0.15f) / 0.85f).toDouble(), 1.6).toFloat()
+        if (env > 0.01f) {
+            val soft = Paint(Paint.ANTI_ALIAS_FLAG)
+            soft.style = Paint.Style.STROKE
+            soft.strokeWidth = 5f * u
+            soft.color = rgb or (Math.round(0x30 * env) shl 24)
+            cv.drawRoundRect(box, r, r, soft)
+            val line = Paint(Paint.ANTI_ALIAS_FLAG)
+            line.style = Paint.Style.STROKE
+            line.strokeWidth = 1.6f * u
+            line.color = rgb or (Math.round(0x78 * env) shl 24)
+            cv.drawRoundRect(box, r, r, line)
+        }
+        // 도는 빛
+        val wS = Math.max(0f, box.width() - 2f * r)
+        val hS = Math.max(0f, box.height() - 2f * r)
+        val per = 2f * wS + 2f * hS + 2f * Math.PI.toFloat() * r
+        val len = per * 0.30f
+        val q = Math.min(1f, t / 0.72f)
+        val p = if (q < 0.5f) 2f * q * q else 1f - 2f * (1f - q) * (1f - q)   // 천천히 출발 → 빨라졌다 → 부드럽게 끝
+        val head = p * (per + len)
+        val tail = head - len
+        if (head <= 0f || tail >= per) return
+        val n = 28
+        val a = FloatArray(2)
+        val b = FloatArray(2)
+        val halo = Paint(Paint.ANTI_ALIAS_FLAG)
+        halo.style = Paint.Style.STROKE
+        halo.strokeWidth = 6f * u
+        val core = Paint(Paint.ANTI_ALIAS_FLAG)
+        core.style = Paint.Style.STROKE
+        core.strokeWidth = 2.4f * u
+        for (k in 0 until n) {
+            val s0 = Math.max(0f, tail + len * k / n)
+            val s1 = Math.min(per, tail + len * (k + 1) / n)
+            if (s1 <= s0) continue
+            val f = (k + 1f) / n
+            val lum = f * f   // 머리 쪽이 가장 진하고 꼬리는 사라짐
+            edgePoint(box, r, s0, a)
+            edgePoint(box, r, s1, b)
+            halo.color = rgb or (Math.round(0x38 * lum) shl 24)
+            core.color = rgb or (Math.round(0xC8 * lum) shl 24)
+            cv.drawLine(a[0], a[1], b[0], b[1], halo)
+            cv.drawLine(a[0], a[1], b[0], b[1], core)
         }
     }
 
@@ -410,12 +602,15 @@ object MonthRenderer {
     @Volatile internal var statMemoHid = 0
     @Volatile internal var statStkHid = 0
     // 오늘 띠 모양 · 색 (앱 달력 설정과 같음 · 위젯 JSON 의 `today`)
-    @Volatile internal var glowPhase = 0   // 오늘 버튼을 누른 직후 오늘 칸 테두리를 따라 빛이 한 바퀴 지나가는 단계(1~4 = 위 · 오른쪽 · 아래 · 왼쪽, 5 = 은은히 사라짐)
+    // 마지막으로 그린 그림의 자리 정보 (효과가 씀): 오늘 칸 · 날짜 칸들이 시작하는 높이 · 바탕 모서리 반지름
+    @Volatile internal var lastToday: RectF? = null
+    @Volatile internal var lastTop = 0f
+    @Volatile internal var lastRr = 0f
     @Volatile internal var todayLook = "b"
     @Volatile internal var todayColor = 0xFF2F6BF0.toInt()
 
-    internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal, profileWDp: Float = -1f, slide: Int = 0, frames: Int = 0, glow: Int = 0) {
-        glowPhase = glow
+    internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal, profileWDp: Float = -1f, part: Int = 0, moving: Boolean = false) {   // part: 0 = 전부 · 1 = 바깥 틀(바탕 · 맨 윗줄 · 요일 줄)만 · 2 = 날짜 칸들만 (월 넘김 · 오늘 효과가 따로 그려 겹침)
+        lastToday = null
         statMemoHid = 0
         statStkHid = 0
         run {
@@ -430,7 +625,9 @@ object MonthRenderer {
         val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         bgPaint.color = (pal.bg and 0x00FFFFFF) or (alpha shl 24)
         val rr = Math.min(Math.min(w, h) * 0.12f, 22f * u)
-        cv.drawRoundRect(RectF(0f, 0f, w, h), rr, rr, bgPaint)
+        lastRr = rr
+        lastTop = (HEAD_DP + WEEKDAY_DP) * u
+        if (part != 2) cv.drawRoundRect(RectF(0f, 0f, w, h), rr, rr, bgPaint)
 
         val todayKey = WidgetRenderer.dateKey(Calendar.getInstance())
         if (WidgetRenderer.findDay(data, todayKey) == null) {   // 앱이 데이터를 한 번도 안 보냈거나 너무 오래됨
@@ -438,7 +635,7 @@ object MonthRenderer {
             p.color = pal.sub
             p.textSize = Math.min(w, h) * 0.06f
             p.textAlign = Paint.Align.CENTER
-            cv.drawText("앱을 열어 주세요", w / 2, h / 2, p)
+            if (part != 2) cv.drawText("앱을 열어 주세요", w / 2, h / 2, p)
             return
         }
 
@@ -446,20 +643,23 @@ object MonthRenderer {
         val title = grid.year.toString() + "년 " + (grid.month0 + 1) + "월"
         val chipName = if (ppl.isEmpty()) null else if (person == null) "나" else person.optString("n", "가족")
         val chipDot = if (person == null) pal.fg else WidgetRenderer.parseColor(person.optString("c", ""), pal.sub)
-        drawHeader(cv, w, u, pal, title, chipName, chipDot, covers(data, ws, offset - 1), covers(data, ws, offset + 1), offset != 0, frames > 0)
+        if (part != 2) drawHeader(cv, w, u, pal, title, chipName, chipDot, covers(data, ws, offset - 1), covers(data, ws, offset + 1), offset != 0, moving)
 
         // 요일 줄 (앱 설정의 주 시작 요일을 따름)
         val side = SIDE_DP * u
         val cw = (w - 2f * side) / 7f
-        val wp = TextPaint(Paint.ANTI_ALIAS_FLAG)
-        wp.typeface = Typeface.DEFAULT_BOLD
-        wp.textSize = 11f * u
-        wp.textAlign = Paint.Align.CENTER
-        for (i in 0 until 7) {
-            val wd = (i + ws) % 7
-            wp.color = if (wd == 0) pal.sun else if (wd == 6) pal.sat else pal.sub
-            cv.drawText(DOW[wd], side + cw * i + cw / 2f, headH + 13f * u, wp)
+        if (part != 2) {
+            val wp = TextPaint(Paint.ANTI_ALIAS_FLAG)
+            wp.typeface = Typeface.DEFAULT_BOLD
+            wp.textSize = 11f * u
+            wp.textAlign = Paint.Align.CENTER
+            for (i in 0 until 7) {
+                val wd = (i + ws) % 7
+                wp.color = if (wd == 0) pal.sun else if (wd == 6) pal.sat else pal.sub
+                cv.drawText(DOW[wd], side + cw * i + cw / 2f, headH + 13f * u, wp)
+            }
         }
+        if (part == 1) return
 
         // 날짜 칸
         val top = headH + WEEKDAY_DP * u
@@ -476,20 +676,14 @@ object MonthRenderer {
         val icons = data?.optJSONObject("ic")
         val fill = data?.optString("look", "fill") != "circle"   // 칸 채우기(기본) · 동그라미(예전 모양) — 앱 설정 › 홈 화면 위젯
         val alphaF = 0.55f + 0.45f * ((data?.optInt("alpha", 100) ?: 100).coerceIn(0, 100) / 100f)   // 칸 색은 위젯 바탕이 투명해져도 너무 옅어지지 않게
-        // 달을 넘긴 직후 2단계: 새 달이 넘긴 방향에서 미끄러져 들어오며 선명해짐 (앞 단계일수록 많이 밀리고 흐림) → 어느 쪽으로 넘어갔는지 보임
-        val animOuter = if (frames > 0 && slide != 0) cv.save() else -1
-        if (animOuter >= 0) {
-            val k = if (frames >= 2) 1f else 0.45f
-            cv.translate(slide * 30f * u * k, 0f)
-            cv.saveLayerAlpha(RectF(-w, top - 2f * u, 2f * w, h), if (frames >= 2) 90 else 175)
-        }
         for (i in cells.indices) {
             val f = cells[i]
             val r = i / 7
             val c = i % 7
-            drawCell(cv, f, side + cw * c, top + rowH * r, cw, rowH, r, plan, pal, icons, person != null, f.inMonth && f.key == todayKey, u, fill, alphaF, tn)
+            val isToday = f.inMonth && f.key == todayKey
+            if (isToday) lastToday = RectF(side + cw * c, top + rowH * r, side + cw * (c + 1), top + rowH * (r + 1))
+            drawCell(cv, f, side + cw * c, top + rowH * r, cw, rowH, r, plan, pal, icons, person != null, isToday, u, fill, alphaF, tn)
         }
-        if (animOuter >= 0) cv.restoreToCount(animOuter)
     }
 
     /** 맨 윗줄: [이름 칩] ‹ 2026년 10월 › — 화살표는 칩이 있든 없든 제목 바로 옆에 굵고 진하게 (예전에 칩이 없을 때 위젯 맨 끝에 뒀더니 폰에서 안 보였음). 위치는 WidgetLayout.monthArrows */
@@ -637,36 +831,6 @@ object MonthRenderer {
         }
     }
 
-    /** 오늘 버튼 직후 오늘 칸 테두리를 따라 지나가는 은은한 빛(너무 강하지 않게): 위 → 오른쪽 → 아래 → 왼쪽 으로 한 칸씩, 마지막에 테두리 전체가 옅게 남았다 사라짐 */
-    private fun drawTodayGlow(cv: Canvas, x0: Float, y0: Float, cw: Float, rowH: Float, u: Float, phase: Int) {
-        val gap = 1.2f * u
-        val r = 7f * u
-        val box = RectF(x0 + gap, y0 + gap, x0 + cw - gap, y0 + rowH - gap)
-        val col = todayColor or 0xFF000000.toInt()
-        val soft = Paint(Paint.ANTI_ALIAS_FLAG)
-        soft.style = Paint.Style.STROKE
-        soft.color = (col and 0x00FFFFFF) or (0x2E shl 24)
-        soft.strokeWidth = 5f * u
-        val line = Paint(Paint.ANTI_ALIAS_FLAG)
-        line.style = Paint.Style.STROKE
-        line.color = (col and 0x00FFFFFF) or ((if (phase >= 5) 0x50 else 0xB4) shl 24)
-        line.strokeWidth = 2f * u
-        val save = cv.save()
-        if (phase in 1..4) {   // 한 변(모서리 포함)만 잘라서 그림 → 빛이 변을 따라 돌아가는 것처럼 보임
-            val seg = android.graphics.Path()
-            when (phase) {
-                1 -> seg.addRoundRect(RectF(box.left - 4f * u, box.top - 4f * u, box.right + 4f * u, box.top + r), 0f, 0f, android.graphics.Path.Direction.CW)
-                2 -> seg.addRoundRect(RectF(box.right - r, box.top - 4f * u, box.right + 4f * u, box.bottom + 4f * u), 0f, 0f, android.graphics.Path.Direction.CW)
-                3 -> seg.addRoundRect(RectF(box.left - 4f * u, box.bottom - r, box.right + 4f * u, box.bottom + 4f * u), 0f, 0f, android.graphics.Path.Direction.CW)
-                else -> seg.addRoundRect(RectF(box.left - 4f * u, box.top - 4f * u, box.left + r, box.bottom + 4f * u), 0f, 0f, android.graphics.Path.Direction.CW)
-            }
-            cv.clipPath(seg)
-        }
-        cv.drawRoundRect(box, r, r, soft)
-        cv.drawRoundRect(box, r, r, line)
-        cv.restoreToCount(save)
-    }
-
     /** 오늘 띠: 칸의 둥근 오른쪽 선을 따라 휘는 띠(끝이 가늘어짐). 모양 a~d · 색은 앱 달력과 같은 설정(`today`) */
     private fun drawTodayBand(cv: Canvas, x0: Float, y0: Float, cw: Float, rowH: Float, u: Float, tn: Tune, night: Boolean) {
         val look = todayLook
@@ -731,7 +895,6 @@ object MonthRenderer {
         }
 
         if (fill && isToday) drawTodayBand(cv, x0, y0, cw, rowH, u, tn, night)   // 오늘: 오른쪽 가장자리 띠(앱 달력과 같음 · 가장 아래층)
-        if (isToday && glowPhase > 0) drawTodayGlow(cv, x0, y0, cw, rowH, u, glowPhase)
 
         // 근무: 일하는 날은 동그라미 · 쉬는 날은 글자만 (줄 안에서 높이가 같음 · 모든 동그라미가 같은 크기)
         if (f.shift.isNotEmpty() && plan.circleD > 0f && (f.circle || f.rest)) {
@@ -830,7 +993,9 @@ object MonthRenderer {
         val more = f.memos.size - shown
         statMemoHid += Math.max(0, more)
         val mGap = plan.pillGap + tn.memoG * plan.pillH * 0.25f
-        val memoTop = y0 + plan.memoTop(shown) + (plan.pillGap - mGap) * Math.max(0, shown - 1) + tn.memoY * rowH * 0.06f   // 줄 간격을 바꿔도 아래 끝은 그대로 · 위치(위 − · 아래 +)
+        val memoTop0 = y0 + plan.memoTop(shown) + (plan.pillGap - mGap) * Math.max(0, shown - 1)   // 줄 간격을 바꿔도 아래 끝은 그대로
+        val memoLow = Math.max(memoTop0, y0 + rowH - (shown * plan.pillH + Math.max(0, shown - 1) * mGap))   // 아래로 내려도 칸 아래 끝까지만 (다음 줄 날짜를 안 덮게)
+        val memoTop = Math.min(memoTop0 + tn.memoY * rowH * 0.06f, memoLow)   // 위치(위 − · 아래 +)
         for (k in 0 until shown) {
             val py = memoTop + k * (plan.pillH + mGap)
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
