@@ -12,8 +12,8 @@ android {
         applicationId = "com.eonjeswieo.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 93
-        versionName = "0.83"
+        versionCode = 94
+        versionName = "0.84"
     }
 
     signingConfigs {

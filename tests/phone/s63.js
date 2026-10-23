@@ -179,11 +179,16 @@ const ONLY=process.env.ONLY||'';
     T('"오늘" 누른 순간: 달력을 다시 그리지 않고 이번 달 쪽(왼쪽)으로 미끄러지기 시작 · 옆 칸에 이번 달',r.same&&r.tf==='translateX(0%)'&&r.left===1,JSON.stringify(r));
     await p.waitForTimeout(500);
     T('미끄러진 뒤 이번 달',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell.today')));
-    await p.evaluate(()=>document.querySelector('[data-act="next"]').click());
-    await p.waitForTimeout(80);
-    await p.evaluate(()=>{const b=document.querySelector('[data-act="today"]');if(b)b.click();});
+    await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(600);
+    await p.evaluate(()=>{document.querySelector('[data-act="next"]').click();document.querySelector('[data-act="today"]').click();});
     await p.waitForTimeout(600);
-    T('넘기는 중에 "오늘"을 눌러도 엉뚱한 달로 안 감(다음 달에 머묾)',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell[data-k="2026-11-12"]')));
+    await p.waitForTimeout(500);
+    T('넘기는 중에 "오늘"을 눌러도 버려지지 않고 넘김이 끝나면 이번 달로(한 번만 눌러도)',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell.today')));
+    // 쓸어 넘긴 직후 누르기
+    await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(600);
+    await p.evaluate(([dx])=>{const v=document.querySelector('#view'),r=v.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;const T=(t,x)=>{const tc=new Touch({identifier:1,target:v,clientX:x,clientY:y});v.dispatchEvent(new TouchEvent(t,{touches:t==='touchend'?[]:[tc],changedTouches:[tc],bubbles:true}));};T('touchstart',x);for(let i=1;i<=6;i++)T('touchmove',x+dx*i/6);T('touchend',x+dx);document.querySelector('[data-act="today"]').click();},[-220]);
+    await p.waitForTimeout(1000);
+    T('쓸어 넘긴 바로 뒤 "오늘" 한 번 → 이번 달',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell.today')));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   // ── 고침: 가족 시간표 오늘 열이 작은 동그라미로 줄던 것(오늘 띠 색 버튼과 이름 .tdc 가 같았음)

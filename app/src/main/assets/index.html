@@ -2759,9 +2759,11 @@ function glowFrame(){
   glowRaf=requestAnimationFrame(glowFrame);
 }
 // "오늘" 버튼: ‹ › 처럼 이번 달 쪽으로 바로 미끄러지고(옆 칸에 이번 달을 넣고 넘김), 무거운 다시 그리기는 미끄러진 뒤에 → 누르자마자 반응함
-// 미끄러지는 중에 누르면 무시 (안 그러면 오늘로 갔다가 넘기던 쪽으로 한 달 더 가 버림)
+// 쓸어 넘기는 중(0.25초)에 누르면 버리지 않고 기억했다가 넘김이 끝나자마자 오늘로 (넘기고 바로 "오늘"을 누르는 일이 많음)
+let todayQ=false;
 function todayGo(){
-  if(busy)return;
+  if(busy){todayQ=true;return;}
+  todayQ=false;
   const n=new Date(),y=n.getFullYear(),m=n.getMonth(),to=y*12+m,from=cur.y*12+cur.m,tr=$('#track');
   if(to===from)return;
   if(!tr||tab!=='cal'){setCur(y,m);render();return;}
@@ -6052,6 +6054,7 @@ function shiftMonth(n){
   const v=Math.min(MAX_M,Math.max(MIN_M,cur.y*12+cur.m+n));
   cur={y:Math.floor(v/12),m:v%12};render();
   if(pageMode==='stats')openStatsPage();
+  if(todayQ)setTimeout(todayGo,0);   // 넘기는 중에 "오늘"을 눌렀으면 이어서
 }
 document.addEventListener('click',e=>{
   const nb=e.target.closest('#nav [data-tab]');
