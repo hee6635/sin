@@ -19,7 +19,7 @@ const {mkT,base}=require('./lib.js');
   const p=await boot(b,state(),{touch:true,w:384,preInit:pre});
   await wgOn(p);
   await p.click('#nav [data-tab="set"]');await p.waitForTimeout(200);
-  await p.evaluate(()=>document.querySelector('[data-act="memolines"][data-v="4"]').click());await p.waitForTimeout(1000);
+  await p.evaluate(()=>window.__refresh());await p.waitForTimeout(1000);
   const w=await p.evaluate(()=>window.__wg[window.__wg.length-1]);
   const day=k=>w.days.find(x=>x.k===k);
   // ===== 공휴일 글자 =====
@@ -61,7 +61,7 @@ const {mkT,base}=require('./lib.js');
     const q=await boot(b,st,{touch:true,w:384,preInit:pre});
     await wgOn(q);
     await q.click('#nav [data-tab="set"]');await q.waitForTimeout(200);
-    await q.evaluate(()=>document.querySelector('[data-act="memolines"][data-v="4"]').click());await q.waitForTimeout(1000);
+    await q.evaluate(()=>window.__refresh());await q.waitForTimeout(1000);
     const ww=await q.evaluate(()=>window.__wg[window.__wg.length-1]);
     T('알림이 하나도 없으면 스티커 항목에 b 가 하나도 없음',ww&&ww.days.every(x=>(x.sa||[]).every(s=>!('b' in s))),JSON.stringify(ww&&ww.days.find(x=>x.k==='2026-10-13')&&ww.days.find(x=>x.k==='2026-10-13').sa));
     T('오류 없음(2)',q.errs.length===0,q.errs.join('|'));

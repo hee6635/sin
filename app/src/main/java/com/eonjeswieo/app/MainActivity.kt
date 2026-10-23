@@ -447,6 +447,8 @@ class MainActivity : ComponentActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         applyOrientationLock()   // 폴더블을 접고 펴면 화면 크기가 바뀜
+        // 달력 스티커 크기를 새 화면에 맞게 다시 재 보라고 알려 줌 (화면 크기가 다 바뀐 뒤에 · 두 번)
+        if (::webView.isInitialized) for (d in longArrayOf(400L, 1200L)) webView.postDelayed({ webView.evaluateJavascript("window.__fold&&window.__fold()", null) }, d)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

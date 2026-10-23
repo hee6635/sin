@@ -45,7 +45,7 @@ object WidgetLayout {
     /** 메모가 칸에 다 안 들어갈 때 마지막 메모 줄 끝에 붙이는 작은 알약 모양 표시("+1")의 [가로, 세로] — 글자(메모)가 아니라 그림(이모티콘)처럼 보이게 색을 칠한 작은 칩 */
     fun moreBadge(pillH: Float): FloatArray {
         val h = pillH * 0.8f
-        return floatArrayOf(h * 1.3f, h)
+        return floatArrayOf(h * 0.95f, h)   // (알약 없이 작은 글자 "+1" 만 — 폭이 예전 칩의 3/4)
     }
 
     /** 칩 안의 글자: 더 있는 메모 수 ("+1" … "+9", 열 개 이상은 "9+") */

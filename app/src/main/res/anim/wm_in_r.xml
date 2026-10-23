@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 한 달 위젯 달 넘김: 홈 화면이 직접 움직임(ViewFlipper). 새 달은 넘긴 쪽에서 들어오며 선명해지고 옛 달은 반대쪽으로 밀리며 사라짐 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="260"
+    android:interpolator="@android:anim/decelerate_interpolator">
+    <translate android:fromXDelta="8%" android:toXDelta="0" />
+    <alpha android:fromAlpha="0" android:toAlpha="1" />
+</set>

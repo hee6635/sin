@@ -36,20 +36,6 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     T('조정 화면에도 띠 색 줄 · 메모 칸 높이 하한 0.4',await p.evaluate(()=>!!document.querySelector('#page .tdc-row')&&+document.querySelector('.tn-r[data-g="appCover"][data-k="pill"]').min===0.4));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
-  // ── 시간 고르기: 1분 단위 조정
-  {
-    const p=await boot(b,{...base},{touch:true});
-    await p.click('#nav [data-tab="alarm"]');await p.waitForTimeout(250);
-    await p.evaluate(()=>document.querySelector('[data-act="aadd"]').click());await p.waitForTimeout(500);
-    await p.evaluate(()=>document.querySelector('[data-act="tpk"][data-id="at"]').click());await p.waitForTimeout(400);
-    const before=await p.evaluate(()=>document.querySelector('.tpk-big').textContent);
-    await p.evaluate(()=>document.querySelector('[data-act="tpk-step"][data-v="1"]').click());await p.waitForTimeout(150);
-    const plus=await p.evaluate(()=>document.querySelector('.tpk-big').textContent);
-    await p.evaluate(()=>document.querySelector('[data-act="tpk-step"][data-v="-1"]').click());await p.evaluate(()=>document.querySelector('[data-act="tpk-step"][data-v="-1"]').click());await p.waitForTimeout(150);
-    const minus=await p.evaluate(()=>document.querySelector('.tpk-big').textContent);
-    const m=s=>+s.split(':')[1];
-    T('+1분 · -1분 버튼으로 1분 단위로 바뀜',before!==plus&&((m(plus)-m(before)+60)%60)===1&&((m(before)-m(minus)+60)%60)===1,[before,plus,minus].join(' → '));
-    T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
-  }
+  // (시간 고르기는 v0.83 에서 바퀴로 바뀜 → s63)
   T.sum();await b.close();
 })();

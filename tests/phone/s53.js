@@ -19,7 +19,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     fam2:{members,scheds:{dad:sch,mom:sch},memos:{},reqIn:{},reqOut:{},me:{sent:0,bonus:0},seenMemo:[],init:true},requests:[]});
   const push=async p=>{await p.evaluate(()=>{window.__wg=[];window.AndroidBridge.setWidgetData=j=>window.__wg.push(JSON.parse(j));});
     await p.click('#nav [data-tab="set"]');await p.waitForTimeout(200);
-    await p.evaluate(()=>document.querySelector('[data-act="memolines"][data-v="4"]').click());await p.waitForTimeout(1200);
+    await p.evaluate(()=>window.__refresh());await p.waitForTimeout(1200);
     return p.evaluate(()=>window.__wg[window.__wg.length-1]);};
   const p=await boot(b,state(),{touch:true,w:384});
   const w=await push(p);

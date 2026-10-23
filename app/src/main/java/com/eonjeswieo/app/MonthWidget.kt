@@ -46,13 +46,20 @@ object MonthState {
 
     fun who(ctx: Context, id: Int): String = sp(ctx).getString("who_$id", "") ?: ""
 
+    /** 달 넘김 효과: 방향(r · l)마다 지금 보이는 그림 번호(0 · 1) — 다음 넘김 때 옛 달을 보이는 쪽에, 새 달을 다른 쪽에 넣고 넘김 */
+    fun flip(ctx: Context, id: Int, right: Boolean): Int = sp(ctx).getInt("flip_${id}_" + (if (right) "r" else "l"), 0).coerceIn(0, 1)
+
+    fun setFlip(ctx: Context, id: Int, right: Boolean, v: Int) {
+        sp(ctx).edit().putInt("flip_${id}_" + (if (right) "r" else "l"), v).apply()
+    }
+
     fun setWho(ctx: Context, id: Int, key: String) {
         sp(ctx).edit().putString("who_$id", key).apply()
     }
 
     fun clear(ctx: Context, ids: IntArray) {
         val e = sp(ctx).edit()
-        for (id in ids) e.remove("off_$id").remove("offd_$id").remove("who_$id")
+        for (id in ids) e.remove("off_$id").remove("offd_$id").remove("who_$id").remove("flip_${id}_r").remove("flip_${id}_l")
         e.apply()
     }
 }
@@ -123,8 +130,9 @@ class MonthNavReceiver : BroadcastReceiver() {
             } else if (dir == 0) {
                 MonthRenderer.update(context, mgr, id)
             } else {
-                // 월 넘김 효과: 새 달이 넘긴 쪽에서 미끄러져 들어오고 옛 달은 반대쪽으로 밀려 사라짐
-                animate(context, mgr, id, before, dir, false)
+                // 월 넘김 효과: 새 달이 넘긴 쪽에서 미끄러져 들어오고 옛 달은 반대쪽으로 밀려 사라짐 · 다른 달에서 이번 달로 돌아오면 오늘 칸에 빛도
+                val back = before != 0 && MonthState.offset(context, id) == 0
+                animate(context, mgr, id, before, dir, back)
             }
         } catch (e: Exception) {
             // 눌러도 그림이 안 바뀔 뿐 앱이 죽지 않게
@@ -390,6 +398,10 @@ object MonthRenderer {
         val grid = gridOf(ws, offset)
         val rv = RemoteViews(ctx.packageName, R.layout.widget_month_view)
         rv.setImageViewBitmap(R.id.month_img, bmp)
+        // 효과용 그림은 숨기고 비움 (홈 화면이 이전 그림을 붙잡고 있지 않게)
+        rv.setViewVisibility(R.id.mz_slide, View.GONE)
+        rv.setViewVisibility(R.id.mz_glow, View.GONE)
+        for (v in FX_IMGS) rv.setImageViewBitmap(v, tiny)
         // 맨 윗줄: 이름 칩(가족이 있을 때만) · 앞 달 · 제목(이번 달로) · 다음 달
         rv.setViewVisibility(R.id.mz_chip, if (ppl.isNotEmpty()) View.VISIBLE else View.GONE)
         if (ppl.isNotEmpty()) rv.setOnClickPendingIntent(R.id.mz_chip, navPi(ctx, id, ACT_WHO, 1))
@@ -428,6 +440,9 @@ object MonthRenderer {
     private const val GLOW_MS = 820L
     private const val FRAME_MS = 28L   // 프레임 사이 최소 간격
     private const val SLIDE_DP = 36f
+    private const val GLOW_SCALE = 0.5f   // 빛 그림은 반 크기로 (프레임마다 보내는 양이 1/4 · 빛은 부드러워서 티가 거의 안 남)
+    private val FX_IMGS = intArrayOf(R.id.mz_r0, R.id.mz_r1, R.id.mz_l0, R.id.mz_l1, R.id.mz_glow)
+    private val tiny: Bitmap by lazy { Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888) }
     private val animGen = HashMap<Int, Int>()   // 위젯마다 가장 최근 효과 번호: 새로 누르면 이전 효과는 멈춤
 
     /** dir: 새 달이 들어오는 쪽(-1 왼쪽 · +1 오른쪽 · 0 없음) · glow: 끝나고 오늘 칸 테두리에 빛 */
@@ -454,46 +469,80 @@ object MonthRenderer {
             nw = layer(ctx, mgr, id, data, to, 0, false)
             base = nw.bmp
         }
-        val bufs = arrayOf(Bitmap.createBitmap(base.width, base.height, Bitmap.Config.ARGB_8888), Bitmap.createBitmap(base.width, base.height, Bitmap.Config.ARGB_8888))
-        var bi = 0
-
-        fun play(ms: Long, frame: (Float, Bitmap) -> Unit) {
+        fun play(ms: Long, bw: Int, bh: Int, view: Int, frame: (Float, Bitmap) -> Unit) {
+            val bufs = arrayOf(Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888), Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888))
+            var bi = 0
             val start = android.os.SystemClock.uptimeMillis()
             while (alive()) {
                 val f0 = android.os.SystemClock.uptimeMillis()
                 val t = Math.min(1f, (f0 - start).toFloat() / ms)
                 val out = bufs[bi]; bi = 1 - bi
                 frame(t, out)
-                partial(ctx, mgr, id, out)
+                partial(ctx, mgr, id, view, out)
                 if (t >= 1f) return
                 val spent = android.os.SystemClock.uptimeMillis() - f0
                 if (spent < FRAME_MS) try { Thread.sleep(FRAME_MS - spent) } catch (e: InterruptedException) { return }
             }
         }
 
-        if (sliding && chrome != null) {
-            play(SLIDE_MS) { t, out ->
-                val e = 1f - (1f - t) * (1f - t) * (1f - t)   // 처음엔 빠르게 · 끝에서 부드럽게 멈춤
-                composeSlide(out, chrome.bmp, old?.bmp, nw.bmp, dir, e, nw.top, nw.rr, nw.u)
+        if (sliding && chrome != null && old != null) {
+            // 홈 화면이 직접 미끄러뜨림(앱은 그림 두 장만 보냄) → 폰 화면처럼 매끄러움. 안 되는 홈 화면이면 예전처럼 프레임을 하나씩 보냄
+            if (flipSlide(ctx, mgr, id, chrome.bmp, old.bmp, nw.bmp, dir)) {
+                try { Thread.sleep(SLIDE_MS + 40L) } catch (e: InterruptedException) { }
+            } else {
+                play(SLIDE_MS, base.width, base.height, R.id.month_img) { t, out ->
+                    val e = 1f - (1f - t) * (1f - t) * (1f - t)   // 처음엔 빠르게 · 끝에서 부드럽게 멈춤
+                    composeSlide(out, chrome.bmp, old.bmp, nw.bmp, dir, e, nw.top, nw.rr, nw.u)
+                }
             }
+            if (!alive()) return
+            send(ctx, mgr, id, data, to, base)   // 넘김 끝: 정상 그림 (효과 그림은 숨김)
         }
         val box = nw.today
-        if (glow && box != null) {
-            play(GLOW_MS) { t, out ->
+        if (glow && box != null && alive()) {
+            // 빛만 그린 반 크기 투명 그림을 위젯 위에 겹쳐 바꿈 (바탕 그림은 그대로)
+            val gw = Math.max(1, Math.round(base.width * GLOW_SCALE))
+            val gh = Math.max(1, Math.round(base.height * GLOW_SCALE))
+            play(GLOW_MS, gw, gh, R.id.mz_glow) { t, out ->
                 out.eraseColor(0)
                 val cv = Canvas(out)
-                cv.drawBitmap(base, 0f, 0f, null)
+                cv.scale(gw.toFloat() / base.width, gh.toFloat() / base.height)
                 drawGlow(cv, box, nw.u, t)
             }
+            if (alive()) send(ctx, mgr, id, data, to, base)   // 마무리: 정상 그림 + 누르는 자리
+        } else if (!sliding && alive()) send(ctx, mgr, id, data, to, base)
+    }
+
+    /** 달 넘김을 홈 화면에 맡김: 지금 보이는 쪽에 옛 달 칸, 다른 쪽에 새 달 칸을 넣고 넘기라고 함(ViewFlipper 의 들어오기 · 나가기 움직임). 실패하면 false */
+    private fun flipSlide(ctx: Context, mgr: AppWidgetManager, id: Int, chrome: Bitmap, old: Bitmap, nw: Bitmap, dir: Int): Boolean {
+        return try {
+            val right = dir > 0
+            val cur = MonthState.flip(ctx, id, right)
+            val imgs = if (right) intArrayOf(R.id.mz_r0, R.id.mz_r1) else intArrayOf(R.id.mz_l0, R.id.mz_l1)
+            val flip = if (right) R.id.mz_flip_r else R.id.mz_flip_l
+            val rv = RemoteViews(ctx.packageName, R.layout.widget_month_view)
+            rv.setImageViewBitmap(R.id.month_img, chrome)
+            rv.setViewVisibility(R.id.mz_glow, View.GONE)
+            rv.setViewVisibility(R.id.mz_slide, View.VISIBLE)
+            rv.setViewVisibility(R.id.mz_flip_r, if (right) View.VISIBLE else View.GONE)
+            rv.setViewVisibility(R.id.mz_flip_l, if (right) View.GONE else View.VISIBLE)
+            rv.setImageViewBitmap(imgs[cur], old)
+            rv.setImageViewBitmap(imgs[1 - cur], nw)
+            rv.setDisplayedChild(flip, 1 - cur)
+            mgr.partiallyUpdateAppWidget(id, rv)
+            MonthState.setFlip(ctx, id, right, 1 - cur)
+            true
+        } catch (e: Exception) {
+            false
         }
-        if (alive()) send(ctx, mgr, id, data, to, base)   // 마무리: 정상 그림 + 누르는 자리
     }
 
     /** 효과 중간 프레임: 그림만 바꿔 끼움 (실패하면 건너뜀 — 마무리에서 어차피 전체를 다시 보냄) */
-    private fun partial(ctx: Context, mgr: AppWidgetManager, id: Int, bmp: Bitmap) {
+    private fun partial(ctx: Context, mgr: AppWidgetManager, id: Int, view: Int, bmp: Bitmap) {
         try {
             val rv = RemoteViews(ctx.packageName, R.layout.widget_month_view)
-            rv.setImageViewBitmap(R.id.month_img, bmp)
+            if (view != R.id.month_img) rv.setViewVisibility(view, View.VISIBLE)
+            rv.setImageViewBitmap(view, bmp)
             mgr.partiallyUpdateAppWidget(id, rv)
         } catch (e: Exception) { }
     }

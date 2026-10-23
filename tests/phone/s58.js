@@ -14,7 +14,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const st={...base};delete st.tune;
     const p=await boot(b,{...st,memos:{'2026-10-16':[m('a','첫째'),m('b','둘째'),m('c','셋째')]}},{touch:true});
     await openTune(p);
-    T('슬라이더 44개 · 스티커/주야/메모 묶음(접기) 12개',await p.evaluate(()=>document.querySelectorAll('.tn-r').length===44&&document.querySelectorAll('.tn-d').length===12));
+    T('슬라이더 46개 · 스티커/주야/메모 묶음(접기) 12개',await p.evaluate(()=>document.querySelectorAll('.tn-r').length===46&&document.querySelectorAll('.tn-d').length===12));
     T('지금 화면(앱 커버)의 묶음만 펼쳐져 있음',await p.evaluate(()=>{const ds=[...document.querySelectorAll('.tn-d')];return ds.filter(d=>d.open).length===3;}));
     T('새 값 4개(스티커 좌우 간격 · 상하 간격 · 메모 위치 · 줄 간격)가 있음',await p.evaluate(()=>['stkGX','stkGY','memoY','memoG'].every(k=>!!document.querySelector(`.tn-r[data-g="appCover"][data-k="${k}"]`))));
     T('처음에는 저장된 값 · 저장 버튼 꺼짐 · 되돌리기 꺼짐',await p.evaluate(()=>/저장된 값/.test(document.querySelector('#tnBar').textContent)&&document.querySelector('[data-act="tune-save"]').disabled&&document.querySelector('[data-act="tune-undo"]').disabled));

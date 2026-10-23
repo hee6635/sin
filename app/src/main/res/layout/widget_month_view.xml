@@ -13,6 +13,47 @@
         android:contentDescription="@string/app_name"
         android:scaleType="fitXY" />
 
+    <!-- 달 넘김 효과(평소엔 숨김): 옛 달 칸 · 새 달 칸 두 장을 넣고 홈 화면이 직접 미끄러뜨림. 다음 달(r) · 앞 달(l) 방향마다 하나 -->
+    <FrameLayout
+        android:id="@+id/mz_slide"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <ViewFlipper
+            android:id="@+id/mz_flip_r"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:animateFirstView="true"
+            android:inAnimation="@anim/wm_in_r"
+            android:outAnimation="@anim/wm_out_l"
+            android:visibility="gone">
+            <ImageView android:id="@+id/mz_r0" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:importantForAccessibility="no" />
+            <ImageView android:id="@+id/mz_r1" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:importantForAccessibility="no" />
+        </ViewFlipper>
+
+        <ViewFlipper
+            android:id="@+id/mz_flip_l"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:animateFirstView="true"
+            android:inAnimation="@anim/wm_in_l"
+            android:outAnimation="@anim/wm_out_r"
+            android:visibility="gone">
+            <ImageView android:id="@+id/mz_l0" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:importantForAccessibility="no" />
+            <ImageView android:id="@+id/mz_l1" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:importantForAccessibility="no" />
+        </ViewFlipper>
+    </FrameLayout>
+
+    <!-- 오늘 빛(평소엔 숨김): 위젯 전체를 덮는 반 크기 투명 그림 — 빛만 그려서 프레임마다 이 작은 그림만 바꿈 -->
+    <ImageView
+        android:id="@+id/mz_glow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:visibility="gone" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

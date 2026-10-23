@@ -38,6 +38,13 @@ public class Paint {
 
     Font font() { return new Font("SansSerif", typeface != null && typeface.bold ? Font.BOLD : Font.PLAIN, 12).deriveFont(textSize); }
     public float measureText(String s) { return (float) font().getStringBounds(s, FRC).getWidth(); }
+    /** 앞에서부터 maxWidth 안에 들어가는 글자 수 (안드로이드 Paint.breakText 와 같은 뜻) */
+    public int breakText(String text, boolean measureForwards, float maxWidth, float[] measuredWidth) {
+        int n = 0;
+        for (int i = 1; i <= text.length(); i++) { if (measureText(text.substring(0, i)) <= maxWidth) n = i; else break; }
+        if (measuredWidth != null && measuredWidth.length > 0) measuredWidth[0] = measureText(text.substring(0, n));
+        return n;
+    }
     public float ascent() { return -font().getLineMetrics("가A", FRC).getAscent(); }
     public float descent() { return font().getLineMetrics("가A", FRC).getDescent(); }
 }

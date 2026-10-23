@@ -26,7 +26,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  const p=await boot(b,st,{touch:true,w:384});
  await p.evaluate(()=>{window.__wg=[];window.AndroidBridge.setWidgetData=j=>window.__wg.push(JSON.parse(j));});
  await p.click('#nav [data-tab="set"]');await p.waitForTimeout(200);
- await p.evaluate(()=>document.querySelector('[data-act="memolines"][data-v="4"]').click());await p.waitForTimeout(1000);
+ await p.evaluate(()=>window.__refresh());await p.waitForTimeout(1000);
  const w=await p.evaluate(()=>window.__wg[window.__wg.length-1]);
  T('사진 스티커는 id로 가고 그림은 ic 에 한 번만',!!w&&Object.keys(w.ic||{}).join()==='p1'&&w.days.find(x=>x.k==='2026-10-12').stk.some(x=>x.i==='p1')&&!JSON.stringify(w.days).includes('base64'),JSON.stringify(w).slice(0,260));
  T.sum();await b.close();})();

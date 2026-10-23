@@ -29,11 +29,8 @@ const st={...base,stamps:{defs,log:{'2026-10-09':{a:1}},v3:1,v4:1,lastAt:[]},mem
   T(`${n}: 메모 4개 → 줄 수 제한 + 마지막 줄 끝 "+n" 칩`,info.pills<=(n==='t'?4:3)&&(n==='t'||info.more==='+1'),info.pills+info.more);
   await p.screenshot({path:`/tmp/s22_${n}.png`,clip:{x:0,y:0,width:w,height:Math.min(h,w>500?760:640)}});
   await p.close();}
- // 설정 3/4줄
+ // (v0.83: 메모는 어디서든 3줄 · 설정의 3/4줄 고르기는 없어짐 → s63)
  const p=await boot(b,st,{touch:true});
  await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);
- await p.evaluate(()=>document.querySelector('[data-act="memolines"][data-v="4"]').click());await p.waitForTimeout(300);
- await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(300);
- const n4=await p.evaluate(()=>document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-03"]').querySelectorAll('.pl').length);
- T('설정 4줄 → 달력에서 메모가 더 보임(칸이 허용하면)',n4>=3,String(n4));
+ T('설정에 메모 줄 수 고르기 없음',await p.evaluate(()=>!document.querySelector('[data-act="memolines"]')));
  console.log(p.errs);T.sum();await b.close();})();

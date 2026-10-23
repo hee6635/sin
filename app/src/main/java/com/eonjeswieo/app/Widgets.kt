@@ -652,18 +652,16 @@ object WidgetRenderer {
     internal fun drawMoreChip(cv: Canvas, more: Int, right: Float, py: Float, pillH: Float, pal: Pal) {
         val g = WidgetLayout.moreBadge(pillH)
         val rect = RectF(right - g[0], py + (pillH - g[1]) / 2f, right, py + (pillH + g[1]) / 2f)
-        val bp = Paint(Paint.ANTI_ALIAS_FLAG)
-        bp.color = pal.chip
-        cv.drawRoundRect(rect, g[1] / 2f, g[1] / 2f, bp)
+        // 알약 없이 작은 회색 글자 (앱 달력과 같은 표시 · 메모 글자를 덜 가림)
         val tp = TextPaint(Paint.ANTI_ALIAS_FLAG)
         tp.typeface = Typeface.DEFAULT_BOLD
-        tp.textAlign = Paint.Align.CENTER
-        tp.color = pal.chipFg
-        tp.textSize = g[1] * 0.66f
-        cv.drawText(WidgetLayout.moreLabel(more), rect.centerX(), rect.centerY() + tp.textSize * 0.36f, tp)
+        tp.textAlign = Paint.Align.RIGHT
+        tp.color = (pal.fg and 0x00FFFFFF) or (0x9E shl 24)
+        tp.textSize = g[1] * 0.62f
+        cv.drawText(WidgetLayout.moreLabel(more), rect.right, rect.centerY() + tp.textSize * 0.36f, tp)
     }
 
-    /** 메모 한 줄: \u0001 주소 \u0003 글자 \u0002 (앱의 "링크")는 글자만 파랗게 + 밑줄, 폭을 넘으면 … 로 줄임 */
+    /** 메모 한 줄: \u0001 주소 \u0003 글자 \u0002 (앱의 "링크")는 글자만 파랗게 + 밑줄, 폭을 넘으면 끝에 작은 점 세 개(한 글자 폭 안쪽 — 글꼴의 "…"은 한 글자만큼 넓어서) */
     internal fun drawRich(cv: Canvas, text: String, x: Float, y: Float, maxW: Float, paint: TextPaint, fg: Int, link: Int) {
         val parts = ArrayList<Pair<String, Boolean>>()
         var cur = StringBuilder()
@@ -697,12 +695,25 @@ object WidgetRenderer {
                 cv.drawText(part.first, cx, y, paint)
                 cx += w
             } else {
-                cv.drawText(TextUtils.ellipsize(part.first, paint, room, TextUtils.TruncateAt.END).toString(), cx, y, paint)
+                val dotsW = paint.textSize * 0.62f
+                val n = paint.breakText(part.first, true, Math.max(0f, room - dotsW), null)
+                val head = part.first.substring(0, n).trimEnd()
+                cv.drawText(head, cx, y, paint)
+                drawDots(cv, cx + paint.measureText(head) + paint.textSize * 0.08f, y, paint)
                 break
             }
         }
         paint.isUnderlineText = false
         paint.color = fg
+    }
+
+    /** 잘린 글자 끝의 작은 점 세 개 (글자 크기의 약 반 폭) */
+    internal fun drawDots(cv: Canvas, x: Float, baseline: Float, paint: TextPaint) {
+        val r = paint.textSize * 0.07f
+        val step = paint.textSize * 0.2f
+        val dp = Paint(Paint.ANTI_ALIAS_FLAG)
+        dp.color = (paint.color and 0x00FFFFFF) or ((Math.round(((paint.color ushr 24) and 0xFF) * 0.75f)) shl 24)
+        for (i in 0 until 3) cv.drawCircle(x + r + i * step, baseline - r, r, dp)
     }
 
     /** 스티커 하나 (사진 · 이모티콘 · 알약). 안 한 것은 연하게, 덜 한 것(1/2 · 1/3 · 2/3)은 작은 숫자 배지 */

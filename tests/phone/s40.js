@@ -10,7 +10,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  // 1) 위젯 데이터에 스티커 id · 이름 / 메모 항목이 들어감
  await p.evaluate(()=>{window.__wg=[];window.AndroidBridge.setWidgetData=j=>window.__wg.push(JSON.parse(j));});
  await p.click('#nav [data-tab="set"]');await p.waitForTimeout(200);
- await p.evaluate(()=>document.querySelector('[data-act="memolines"][data-v="4"]').click());await p.waitForTimeout(1000);
+ await p.evaluate(()=>window.__refresh());await p.waitForTimeout(1000);
  const w=await p.evaluate(()=>window.__wg[window.__wg.length-1]);
  const day=w.days.find(x=>x.k===k);
  T('스티커 목록(sa)에 id · 이름 · 횟수',day&&day.sa.some(x=>x.id==='zz1'&&x.nm==='걷기'&&x.N===2),JSON.stringify(day&&day.sa));

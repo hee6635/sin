@@ -26,7 +26,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     T(`${nm}: 메모 6개 → 보이는 줄은 줄 수만큼 · 칩 "+${6-L}" 이 마지막 줄 안에`,i16.n===L&&i16.chip==='+'+(6-L)&&i16.onLast&&i16.chips===1,JSON.stringify(i16));
     T(`${nm}: 예전 "+N" 줄(.pl.more)은 없어짐 · 메모 줄을 먹지 않음 (4개 메모 중 ${Math.min(L,4)}개 그대로 보임)`,!i16.oldMore&&i15.n===Math.min(L,4)&&i16.texts.length===L&&i16.texts.every(t=>t.includes('병원 예약')),JSON.stringify(i16.texts));
     T(`${nm}: 칩은 줄 안쪽 오른쪽 끝 · 메모 글자와 안 겹침 (글자 끝 ↔ 칩 간격 ≥ 0)`,!!i16.geo&&i16.geo.inPill&&i16.geo.gap>=-0.5,JSON.stringify(i16.geo));
-    T(`${nm}: 칩 크기가 줄 높이보다 작음`,!!i16.geo&&i16.geo.h<=i16.geo.ph&&i16.geo.w>=i16.geo.h,JSON.stringify(i16.geo));
+    T(`${nm}: "+n" 이 줄 높이 안 · 폭은 줄 높이의 1.3배 안(알약 없이 작은 글자)`,!!i16.geo&&i16.geo.h<=i16.geo.ph&&i16.geo.w<=i16.geo.ph*1.3,JSON.stringify(i16.geo));
     T(`${nm}: 메모 14개 → "9+" · 화면 읽기용 이름 "메모 n개 더 있음"`,i20.chip==='9+'&&/^메모 \d+개 더 있음$/.test(i20.label)&&i20.label==='메모 '+(14-L)+'개 더 있음',JSON.stringify([i20.chip,i20.label]));
     T(`${nm}: 가족 메모 + 내 메모 섞여도 마지막 줄에 칩 하나`,i21.chips===1&&i21.n===L,JSON.stringify(i21));
     if(nm==='폰')await p.screenshot({path:'/tmp/s52_phone.png',clip:{x:0,y:90,width:w,height:480}});
