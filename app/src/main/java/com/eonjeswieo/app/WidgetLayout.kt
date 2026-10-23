@@ -279,7 +279,7 @@ object WidgetLayout {
      * @param numW 날짜 숫자 글자 폭 · holW2 공휴일 두 글자 폭 · holW1 한 글자 폭 (공휴일이 없으면 0) — 글자 폭은 그리는 쪽이 재서 넘겨 줌
      * @param want 그날 스티커 수 (하루 최대 4개 · 둘째 줄은 오른쪽 끝 · 근무 동그라미 오른쪽 위에 살짝 걸쳐도 스티커가 위에 보임)
      */
-    fun monthTop(plan: MonthPlan, cw: Float, u: Float, numW: Float, want: Int, holW2: Float, holW1: Float = 0f): MonthTop {
+    fun monthTop(plan: MonthPlan, cw: Float, u: Float, numW: Float, want: Int, holW2: Float, holW1: Float = 0f, holW3: Float = 0f): MonthTop {
         val ss = plan.stkSize
         val gap = plan.stkGap
         val pad = plan.padX
@@ -287,17 +287,24 @@ object WidgetLayout {
         val total = Math.min(Math.max(0, want), 4)
         val cap2 = Math.max(2, Math.floor(((cw - 2f * pad + gap) / (ss + gap)).toDouble()).toInt())
         val hasHol = holW2 > 0f
-        // 명절 글자: 스티커 0~1개면 두 글자 · 아니면 한 글자 (한 글자 폭이 없으면 두 글자의 절반쯤)
-        var chars = if (!hasHol) 0 else if (plan.narrow) 0 else if (total <= 1) 2 else 1
-        fun nameW(c: Int): Float = if (c == 2) holW2 else if (holW1 > 0f) holW1 else holW2 * 0.55f
+        // 명절 글자: 자리가 되면 전부(3) → 두 글자(2) → 한 글자(1). 스티커를 첫 줄에서 밀어내는 이름은 한 단계씩 줄임 (한 글자 폭이 없으면 두 글자의 절반쯤)
+        fun nameW(c: Int): Float = if (c == 3) holW3 else if (c == 2) holW2 else if (holW1 > 0f) holW1 else holW2 * 0.55f
         fun fit1(c: Int): Int {
             val nw = if (c > 0) nameW(c) + 2.5f * u else 0f
             var n = Math.min(total, 2)
             while (n > 0 && pad + numW + 1f * u + nw + wid(n) > cw - pad) n--
             return n
         }
-        var n1 = fit1(chars)
-        if (chars == 2 && total - n1 > 0 && fit1(1) > n1) { chars = 1; n1 = fit1(1) }   // 두 글자가 첫 줄 스티커를 밀어내면 한 글자로
+        var chars = if (!hasHol || plan.narrow) 0 else 1
+        if (chars > 0) {
+            val best = fit1(1)
+            val nameOk = { c: Int -> pad + numW + 2.5f * u + nameW(c) <= cw - pad + 0.01f }
+            for (c in intArrayOf(3, 2)) {
+                if (c == 3 && holW3 <= holW2 + 0.5f) continue
+                if (fit1(c) >= best && nameOk(c)) { chars = c; break }
+            }
+        }
+        val n1 = fit1(chars)
         val n2 = if (plan.row2Ok) Math.min(total - n1, cap2) else 0
         val fits = hasHol && !plan.narrow && pad + numW + 2.5f * u + nameW(Math.max(1, chars)) <= cw - pad + 0.01f
         return MonthTop(if (hasHol && !fits) Math.min(total, fit1(0)) else n1, if (hasHol && !fits) (if (plan.row2Ok) Math.min(total - Math.min(total, fit1(0)), cap2) else 0) else n2, fits, chars)

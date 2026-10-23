@@ -408,13 +408,18 @@ object MonthRenderer {
         rv.setOnClickPendingIntent(R.id.mz_prev, navPi(ctx, id, ACT_PREV, 2))
         rv.setOnClickPendingIntent(R.id.mz_next, navPi(ctx, id, ACT_NEXT, 3))
         rv.setOnClickPendingIntent(R.id.mz_title, navPi(ctx, id, ACT_TODAY, 4))
-        // 날짜 칸: 누르면 그 날짜의 큰 창 (안 쓰는 줄은 숨김)
+        // 날짜 칸: 누르면 그 날짜의 큰 창 · 흐린 앞뒤 달 날짜는 그 달로 넘어감(앱 달력과 같음 · ‹ › 와 같은 효과) (안 쓰는 줄은 숨김)
         val cal = grid.start.clone() as Calendar
+        val prevPi = navPi(ctx, id, ACT_PREV, 2)
+        val nextPi = navPi(ctx, id, ACT_NEXT, 3)
         for (r in 0 until 6) {
             rv.setViewVisibility(ROW_IDS[r], if (r < grid.rows) View.VISIBLE else View.GONE)
             if (r >= grid.rows) continue
             for (c in 0 until 7) {
-                rv.setOnClickPendingIntent(CELL_IDS[r][c], dayPi(ctx, id, r * 7 + c, WidgetRenderer.dateKey(cal), who))
+                val m = cal.get(Calendar.MONTH)
+                val pi = if (m == grid.month0) dayPi(ctx, id, r * 7 + c, WidgetRenderer.dateKey(cal), who)
+                    else if ((cal.get(Calendar.YEAR) * 12 + m) < (grid.year * 12 + grid.month0)) prevPi else nextPi
+                rv.setOnClickPendingIntent(CELL_IDS[r][c], pi)
                 cal.add(Calendar.DAY_OF_MONTH, 1)
             }
         }
@@ -1012,8 +1017,10 @@ object MonthRenderer {
         val numW = paint.measureText(num)
         var h2 = ""
         var h1 = ""
+        var h3 = ""
         var holW2 = 0f
         var holW1 = 0f
+        var holW3 = 0f
         if (hol.isNotEmpty() && d != null) {
             h2 = d.optString("h2", "")
             if (h2.isEmpty()) h2 = hol.take(2)
@@ -1023,8 +1030,11 @@ object MonthRenderer {
             hp.textSize = plan.holSize
             holW2 = hp.measureText(h2)
             holW1 = hp.measureText(h1)
+            // 전체 이름: 앱과 같은 짧은 이름 규칙(대체공휴일 · 선거 · 연휴 같은 긴 이름은 두 글자 그대로)
+            val full = hol.split('·')[0]
+            if (full.length in 3..5 && !full.startsWith("대체") && !full.contains("선거") && !full.contains("(") && full != "임시공휴일") { h3 = if (full == "부처님오신날") "부처님" else full; holW3 = hp.measureText(h3) }
         }
-        val top = WidgetLayout.monthTop(plan, cw, u, numW, f.stk.size, holW2, holW1)
+        val top = WidgetLayout.monthTop(plan, cw, u, numW, f.stk.size, holW2, holW1, holW3)
         statStkHid += Math.max(0, f.stk.size - top.row1 - top.row2)
         for (k in 0 until top.row1) {   // 스티커 첫 줄: 숫자 옆 (오른쪽 끝)
             val sx = x0 + cw - pad - (top.row1 - k) * plan.stkSize - (top.row1 - k - 1) * plan.stkGap - (top.row1 - k - 1) * tn.stkGX * plan.stkSize * 0.25f + tn.stkX * cw * 0.12f
@@ -1043,7 +1053,7 @@ object MonthRenderer {
             paint.typeface = if (fill) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
             if (fill) paint.color = if (night) 0xFFE49AAA.toInt() else 0xFFC8627A.toInt()
             paint.textSize = plan.holSize
-            if (top.holBeside) cv.drawText(if (top.holChars == 2) h2 else h1, x0 + pad + numW + 2.5f * u, y0 + plan.dateBase, paint)
+            if (top.holBeside) cv.drawText(if (top.holChars == 3) h3 else if (top.holChars == 2) h2 else h1, x0 + pad + numW + 2.5f * u, y0 + plan.dateBase, paint)
             else cv.drawText(h1, x0 + pad, y0 + plan.dateBase + plan.holSize * 1.15f, paint)   // 아주 좁은 칸: 숫자 아래 한 글자
         }
 

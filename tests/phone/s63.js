@@ -61,8 +61,10 @@ const ONLY=process.env.ONLY||'';
     }
     // 잘린 점은 한 글자 폭 안쪽
     const p=await boot(b,{...base,calLook:'fill',memos},{w:360,h:760,touch:true});
-    const d=await p.evaluate(()=>{const pl=document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] .pl.cut');const a=getComputedStyle(pl,'::after');return {w:parseFloat(a.width),fz:parseFloat(getComputedStyle(pl).fontSize)};});
-    T('잘린 메모 끝 점 세 개: 폭이 글자 크기보다 작음(한 글자 안쪽)',d.w>0&&d.w<d.fz,JSON.stringify(d));
+    const d=await p.evaluate(()=>{const pl=document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] .pl.cut'),e=pl.querySelector('.ell2'),er=e.getBoundingClientRect(),pr=pl.getBoundingClientRect();const rg=document.createRange();const tn=[...pl.childNodes].filter(n=>n.nodeType===3).pop();rg.setStart(tn,tn.data.length-1);rg.setEnd(tn,tn.data.length);const lr=rg.getBoundingClientRect();const base=(()=>{const s=document.createElement('span');s.style.cssText='display:inline-block;width:1px;height:0;vertical-align:baseline';pl.appendChild(s);const y=s.getBoundingClientRect().bottom;s.remove();return y;})();return {w:er.width,fz:parseFloat(getComputedStyle(pl).fontSize),inPill:er.right<=pr.right+.5,lastR:lr.right,dotL:er.left,dotBottom:er.bottom,base,txt:pl.textContent,full:pl.dataset.full};});
+    T('잘린 메모: 마지막 글자 바로 뒤에 점(반쪽 글자 없음) · 점 폭은 한 글자 안쪽 · 칸 안',d.w>0&&d.w<d.fz&&d.inPill&&d.lastR<=d.dotL+.5,JSON.stringify(d));
+    T('점은 글자 아래쪽(밑줄 높이)에',Math.abs(d.dotBottom-d.base)<=1.5,JSON.stringify(d));
+    T('원래 글은 남아 있음(다시 맞출 때 되돌림)',/054-275-1934 전화하기/.test(d.full||''),String(d.full));
     await p.close();
   }
   // ── 9. 근무 변경 빨간 점: 모양 조정 "빨간 점 좌우" (앱 달력만) · 크기 5px · 칸 채우기는 글자 옆 · 요청 링 바깥
@@ -214,6 +216,36 @@ const ONLY=process.env.ONLY||'';
     const t=await p.evaluate(()=>window.__cp[0]||'');
     T('기록에 닿음 → 뗌 → 누름 인정 → 이동 시작 → 그림 순서로 남음',/닿음 버튼 위[\s\S]*뗌[\s\S]*누름 인정[\s\S]*이동 시작 2026\.11 → 2026\.10[\s\S]*그림 2026\.10/.test(t),t);
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
+  // ── "오늘" 안전장치: 폰이 누름(click)을 버려도 눌렀다 떼면 오늘로 · 보통 누름과 겹쳐 두 번 가지 않음
+  if(want('tdfb')){
+    const p=await boot(b,{...base,calLook:'fill'},{touch:true});
+    await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(600);
+    await p.evaluate(()=>{const b=document.querySelector('[data-act="today"]'),r=b.getBoundingClientRect(),o={bubbles:true,clientX:r.left+r.width/2,clientY:r.top+r.height/2,pointerId:7,pointerType:'touch'};b.dispatchEvent(new PointerEvent('pointerdown',o));b.dispatchEvent(new PointerEvent('pointerup',o));});
+    await p.waitForTimeout(800);
+    T('누름이 버려져도(눌렀다 뗌만 있고 click 없음) 0.1초 뒤 앱이 직접 오늘로',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell.today')));
+    await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(600);
+    const a2=await p.evaluate(()=>{const r=document.querySelector('[data-act="today"]').getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];});
+    await p.touchscreen.tap(a2[0],a2[1]);await p.waitForTimeout(800);
+    T('보통 누름도 한 번에 오늘로',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell.today')));
+    await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(800);
+    T('그 뒤 다음 달로 넘겨도 엉뚱하게 오늘로 되돌아가지 않음',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell[data-k="2026-11-12"]')));
+    // 옆으로 쓸 때 폰 스크롤을 막음(preventDefault)
+    const pd=await p.evaluate(()=>{const v=document.querySelector('#view'),r=v.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;const mk=(t,x)=>{const tc=new Touch({identifier:3,target:v,clientX:x,clientY:y});return new TouchEvent(t,{touches:t==='touchend'?[]:[tc],changedTouches:[tc],bubbles:true,cancelable:true});};v.dispatchEvent(mk('touchstart',x));let blocked=false;for(let i=1;i<=4;i++){const ev=mk('touchmove',x-i*15);v.dispatchEvent(ev);if(ev.defaultPrevented)blocked=true;}v.dispatchEvent(mk('touchend',x-60));return blocked;});
+    T('옆으로 쓸면 폰 기본 스크롤을 막음(넘긴 직후 첫 누름이 안 버려지게)',pd===true);
+    T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
+  // ── 명절 이름: 자리가 되면 전부 → 두 글자 → 한 글자 (스티커가 있으면 이름부터 줄임)
+  if(want('holname')){
+    const defs=['👟','📖'].map((e,i)=>mk('h'+i,e,'h'+i,{dates:['2026-10-09']}));
+    for(const [w,exp3,exp9] of [[430,'개천절',null],[360,'개천',null],[820,'개천절','한글날']]){
+      const p=await boot(b,{...base,calLook:'fill',stamps:{defs,log:{},v3:1,v4:1,lastAt:[]}},{w,h:900,touch:true});
+      const r=await p.evaluate(()=>{const g=k=>{const c=document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"]`),e=c.querySelector('.dn .hn,.dn .h1');return e?{t:e.textContent,ov:e.scrollWidth>e.clientWidth+.5}:null;};return {d3:g('2026-10-03'),d9:g('2026-10-09')};});
+      T(`${w}px: 스티커 없는 개천절 → "${exp3}" (잘리지 않음)`,r.d3&&r.d3.t===exp3&&!r.d3.ov,JSON.stringify(r));
+      if(exp9)T(`${w}px: 스티커 2개 있는 한글날도 자리가 되면 전부`,r.d9&&r.d9.t===exp9,JSON.stringify(r));
+      else T(`${w}px: 스티커 2개 있는 한글날은 줄임(두 글자 이하)`,r.d9&&r.d9.t.length<=2,JSON.stringify(r));
+      T(`${w}px: 오류 없음`,p.errs.length===0,p.errs.join('|'));await p.close();
+    }
   }
   T.sum();await b.close();
 })();
