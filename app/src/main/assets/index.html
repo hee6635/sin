@@ -1182,6 +1182,7 @@ button.tbtn{cursor:pointer}
 .dn .stp>svg,.s2>svg,.dn .stp .sx svg,.s2 .sx svg{width:var(--stz);height:var(--stz)}
 .dn .stp>.se,.s2>.se,.dn .stp .sx .se,.s2 .sx .se{font-size:calc(var(--stz) - 2px) !important}
 .sx{position:relative;display:inline-block;line-height:0}
+.sx:not(:last-child) .cb{right:calc(var(--stz,19px)*.04)}   /* 스티커 둘이 나란히 있으면 왼쪽 스티커의 1/2 배지는 자기 스티커 안쪽 모서리 → 오른쪽 스티커를 안 가림 (왼쪽으로 빼면 숫자 · 이름을 가림) */
 .sx .cb{position:absolute;right:calc(var(--stz,19px)*-.1);bottom:calc(var(--stz,19px)*-.14);font-size:10px;font-weight:800;font-style:normal;line-height:1;color:#fff;background:#f08a00;border-radius:7px;padding:1.3px 3.3px;white-space:nowrap;filter:none;transform-origin:100% 100%;scale:var(--cbk,.55)}   /* 1/2 배지: 글자는 10px 로 그려 두고 "배율"로 줄임 — 폰 웹뷰는 8px 아래 글자를 8px 로 키우고(최소 글자 크기) 큰 글씨도 곱해서, 글자 크기로는 못 줄임. 배율(--cbk)은 cbFit() 가 스티커 크기 × .36 에 맞춰 계산 */
 /* 개인 캘린더: 스티커는 칸 가운데에 크게 (최대 4개) */
 .cell.pers{--b:max(34px,min(100cqw,56px,calc(100cqh - 62px)))}
@@ -1196,12 +1197,11 @@ button.tbtn{cursor:pointer}
 .dn .stp>*:nth-child(1){transform:rotate(-7deg)}.dn .stp>*:nth-child(2){transform:rotate(6deg)}
 .cell:nth-child(3n) .dn .stp>*:nth-child(1){transform:rotate(5deg)}.cell:nth-child(3n) .dn .stp>*:nth-child(2){transform:rotate(-6deg)}
 .dn .stp>.plan,.dn .stp>svg.off{transform:none !important}
-.dn .h1{font-size:11px;font-weight:800;color:var(--sun);margin-left:0;flex:none}
-.dn.h1r{padding:0 1px;justify-content:flex-start}.dn.h1r .stp{margin-left:auto;gap:0}
+.dn .h1{font-size:11px;font-weight:800;color:var(--sun);margin-left:2px;flex:none}   /* (숫자와 이름 사이 2px — "3개천"처럼 붙어 보이지 않게) */
+.dn.h1r{padding:0 5px 0 1px;justify-content:flex-start}.dn.h1r .stp{margin-left:auto;gap:0}   /* 이름이 숫자 옆인 명절 날: 왼쪽만 좁힘 · 오른쪽은 다른 날과 같은 5px → 스티커 자리가 같음 */
 .dn .hn.sm{font-size:9px;letter-spacing:-.4px}
-/* 공휴일 이름이 날짜 줄에 안 들어가면(fitDn) 숫자 바로 아래 한 글자 */
-.hnb{position:absolute;left:4px;top:max(20px,calc(var(--stz0,var(--stz)) + 6px));font-size:10px;font-weight:800;font-style:normal;color:var(--sun);line-height:1;z-index:3;pointer-events:none}
-.dn.h1r{padding:0 1px}
+/* 커버 화면 · 스티커 2개 이상인 명절: 이름은 숫자 바로 아래(두 글자 · 아래 줄 스티커와 부딪히면 한 글자). 왼쪽은 fitDn 이 숫자 시작 위치에 맞춤 */
+.hnb{position:absolute;left:5px;top:max(20px,calc(var(--stz0,var(--stz)) + 6px));font-size:12px;font-weight:800;font-style:normal;color:var(--sun);line-height:1;z-index:3;pointer-events:none}
 .badge.nonb{background:none}
 .badge.nonb.ph{border:1.5px dashed var(--muted);border-radius:50%;color:var(--muted);font-size:10.5px;font-weight:700;opacity:.85}
 .badge.tc.nonb.ph{background:none;font-size:11.5px}
@@ -1687,7 +1687,7 @@ const REM_DAYS=[7,3,2,1,0],REM_SHORT={7:'1주',3:'3일',2:'2일',1:'전날',0:'�
 const TUNE_KEYS=[['stk','스티커 크기',.6,1.6,.05,1,'스티커'],['stkX','스티커 좌우 위치',-1,1,.05,0,'스티커'],['stkY','스티커 높이 위치',-1,1,.05,0,'스티커'],['stkGX','스티커 좌우 간격',-1,1,.05,0,'스티커'],['stkGY','스티커 상하 간격',-1,1,.05,0,'스티커'],['ink','주야 크기',.6,1.5,.05,1,'주야'],['inkY','주야 높이 위치',-1,1,.05,0,'주야'],['dotX','변경 표시(빨간 점) 좌우',-1,1,.05,0,'주야','app'],['memo','메모 글자 크기',.7,1.6,.05,1,'메모'],['pill','메모 칸 높이',.4,1.6,.05,1,'메모'],['memoY','메모 위치 (위 − · 아래 +)',-1,3,.05,0,'메모'],['memoG','메모 줄 사이 간격',-1,1,.05,0,'메모']];
 const TUNE_NEUTRAL=Object.fromEntries(TUNE_KEYS.map(k=>[k[0],k[5]]));
 // 기본값(사용자가 폰에서 맞춘 값): 앱 달력은 화면 폭 600dp 이상(폴더폰 안쪽 · 태블릿)이면 "안쪽" · 아니면 "커버" 값 / 한 달 위젯은 위젯 폭(440dp 기준)으로 커버 · 안쪽 (새 값은 0 = 지금 모양 그대로)
-const TUNE_DEF={appCover:{...TUNE_NEUTRAL,stk:1,stkX:.15,stkY:-.1,ink:1.15,inkY:.35,memo:.85,pill:.8},appInner:{...TUNE_NEUTRAL,stk:.9,stkX:0,stkY:-.05,ink:1.15,inkY:.1,memo:1,pill:.95},cover:{...TUNE_NEUTRAL,stk:1.05,stkX:.8,stkY:.95,ink:1.5,inkY:.65,memo:1.5,pill:1.5},inner:{...TUNE_NEUTRAL,stk:1.2,stkX:.4,stkY:-.1,ink:.95,inkY:-.1,memo:1.1,pill:1.1}};
+const TUNE_DEF={appCover:{...TUNE_NEUTRAL,stk:1.15,stkX:.15,stkY:-.1,ink:1.15,inkY:.35,memo:.85,pill:.8},appInner:{...TUNE_NEUTRAL,stk:1.05,stkX:0,stkY:-.05,ink:1.15,inkY:.1,memo:1,pill:.95},cover:{...TUNE_NEUTRAL,stk:1.05,stkX:.8,stkY:.95,ink:1.5,inkY:.65,memo:1.5,pill:1.5},inner:{...TUNE_NEUTRAL,stk:1.2,stkX:.4,stkY:-.1,ink:.95,inkY:-.1,memo:1.1,pill:1.1}};
 function tuneClean(o,df){const d=df||TUNE_NEUTRAL,r={};TUNE_KEYS.forEach(([k,,lo,hi])=>{const v=o&&typeof o==='object'&&o[k]!=null?+o[k]:NaN,dv=Number.isFinite(+d[k])?+d[k]:TUNE_NEUTRAL[k];r[k]=Number.isFinite(v)?Math.max(lo,Math.min(hi,Math.round(v*100)/100)):dv;});return r;}
 function tuneAll(t){return {appCover:tuneClean(t&&t.appCover,TUNE_DEF.appCover),appInner:tuneClean(t&&(t.appInner||t.app),TUNE_DEF.appInner),cover:tuneClean(t&&t.cover,TUNE_DEF.cover),inner:tuneClean(t&&t.inner,TUNE_DEF.inner)};}
 function normalize(o){
@@ -2492,13 +2492,14 @@ function calPanel(y,m){
     const holTag=S.holRest&&hol&&isRest(sh)&&ov==null?holTagName(k,hol):'';
     // 공휴일 이름: 자리가 되면 전부(개천절) → 모자라면 두 글자(개천) → 한 글자(개). 스티커가 있으면 숫자 옆(.h1), 없으면 오른쪽(.hn). 줄이기는 fitDn. 회사 휴무일은 지금처럼
     const hFull=hol?shortHol(hol):'',hTwo=hol?holTwo(hol):'';
-    const hone=hol&&!holTag&&st0.length?(hFull.length>hTwo.length?hFull:hTwo):'',honeO=hone?holOne(hol):'';
+    const below=!!hol&&!holTag&&st0.length>=2&&innerWidth<600;   // 커버 화면 · 스티커 2개 이상: 이름은 숫자 아래(.hnb) → 그날도 날짜 줄은 다른 날과 같은 모양
+    const hone=hol&&!holTag&&st0.length&&!below?(hFull.length>hTwo.length?hFull:hTwo):'',honeO=hone?holOne(hol):'';
     const showHn=!!hnHtml&&!holTag&&(hol?!st0.length:(!narrow||!st0.length||st0.length<2));
     const stRow=st0.slice(0,2),stMore=st0.slice(2);
 
     const tcc=pers||sh===''||sh===NONE_K?null:tColors(typeOf(sh)),cb=tcc&&!isRest(sh)?` style="--cb:${tcc.bg}"`:'';   // 칸 채우기 모양: 칸 전체를 근무 색으로
     cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${pers?'pers':''} ${stMore.length?'m3':''} ${rcls}" data-act="day" data-k="${k}"${cb}>
-      <i class="stz" data-act="stamp-dn" data-k="${k}"></i><div class="dn ${hol?'hol':ch?'chol':''} ${cls} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1" data-f="${esc(hone)}" data-t2="${esc(hTwo)}" data-o="${esc(honeO)}">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIcon(x,0)).join('')}</span>`:''}${showHn?`<span class="hn ${shortHol(hol).length>3&&hol?'sm':''}"${hol?` data-f="${esc(hFull)}" data-t2="${esc(hTwo)}" data-o="${esc(holOne(hol))}"`:''}>${hnHtml}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIcon(x,0)).join('')}</div>`:''}
+      <i class="stz" data-act="stamp-dn" data-k="${k}"></i><div class="dn ${hol?'hol':ch?'chol':''} ${cls} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1" data-f="${esc(hone)}" data-t2="${esc(hTwo)}" data-o="${esc(honeO)}">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIcon(x,0)).join('')}</span>`:''}${showHn?`<span class="hn ${shortHol(hol).length>3&&hol?'sm':''}"${hol?` data-f="${esc(hFull)}" data-t2="${esc(hTwo)}" data-o="${esc(holOne(hol))}"`:''}>${hnHtml}</span>`:''}</div>${below?`<i class="hnb" data-o="${esc(holOne(hol))}">${esc(hTwo)}</i>`:''}${stMore.length?`<div class="s2">${stMore.map(x=>stampIcon(x,0)).join('')}</div>`:''}
       <div class="bwrap">${pers?(stAll.length?`<div class="pstk n${stAll.length}">${stAll.slice(0,4).map(x=>stampIcon(x,0)).join('')}</div>`:''):bwrapHtml(d,k)}</div>
       <div class="pill-wrap${pills.length>=maxLines?' full':''}">${pills.join('')}</div>
     </div>`;
@@ -2518,10 +2519,9 @@ function fitStz(root){
   const measure=()=>{let need=0;stps.forEach(stp=>{
     const dn=stp.parentNode,h1=dn.querySelector('.h1'),t=h1?h1.textContent:'';if(h1)h1.textContent=h1.dataset.o||t;
     const padR=parseFloat(getComputedStyle(dn).paddingRight)||0,lastE=dn.lastElementChild;
-    const cl=dn.closest('.cell'),below=h1&&innerWidth<600&&stp.children.length+((cl&&cl.querySelector(':scope>.s2'))||{children:[]}).children.length>=2;   // 커버 · 스티커 2개 이상: 이름은 숫자 아래라 첫 줄 자리에서 뺌
-    if(h1){h1.textContent=h1.dataset.t2||t;if(below)h1.hidden=true;}   // 스티커 크기는 두 글자 이름 기준 (전부 보이는 이름 때문에 스티커가 작아지지 않게)
+    if(h1)h1.textContent=h1.dataset.t2||t;   // 스티커 크기는 두 글자 이름 기준 (전부 보이는 이름 때문에 스티커가 작아지지 않게)
     const ov=dn.clientWidth>0?(lastE.offsetLeft+lastE.offsetWidth)-(dn.clientWidth-padR):0;
-    if(h1){h1.textContent=t;h1.hidden=false;}   // 자리 계산은 옮김 · 배율(모양 조정)을 빼고 원래 자리로 (스티커를 조금 옆으로 옮겨도 아래로 밀리지 않게)
+    if(h1)h1.textContent=t;   // 자리 계산은 옮김 · 배율(모양 조정)을 빼고 원래 자리로 (스티커를 조금 옆으로 옮겨도 아래로 밀리지 않게)
     if(ov>.5)need=Math.max(need,ov/Math.max(1,stp.children.length));
   });return need;};
   let cur=probe();const orig=cur;
@@ -2589,21 +2589,12 @@ function fitDn(root,keepStz){
     };
     // 모양 조정(옮김 · 배율)으로 스티커가 이름 쪽으로 다가와 겹치는 경우도 보이는 자리(getBoundingClientRect)로 재서 같은 순서로 처리 — 조정할 때마다 2글자 → 1글자 → 스티커 아래 줄을 다시 계산
     const clash=()=>{const f=stp.firstElementChild;if(!h1||!f)return false;const a=h1.getBoundingClientRect(),b=f.getBoundingClientRect();return a.width>0&&b.width>0&&a.right>b.left+.5;};   // (닿기만 하는 건 겹침이 아님 — 실제로 겹칠 때만)
-    const cell0=dn.closest('.cell'),old=cell0.querySelector(':scope>.hnb');if(old)old.remove();
-    if(h1)h1.hidden=false;
-    // 커버 화면(폭 600 미만): 스티커 2개 이상인 명절은 이름을 숫자 아래로 (두 글자 → 아래 줄 스티커와 부딪히면 한 글자) — 첫 줄은 숫자 + 스티커
-    const nStk=stp.children.length+((cell0.querySelector(':scope>.s2')||{children:[]}).children.length);
-    if(h1&&innerWidth<600&&nStk>=2){
-      h1.hidden=true;
-      const hb=document.createElement('i');hb.className='hnb';hb.textContent=h1.dataset.t2||h1.dataset.o||'';hb.dataset.o=h1.dataset.o||'';dn.after(hb);
-    }
-    if(h1&&!h1.hidden){
+    if(h1){
       if(h1.dataset.f)h1.textContent=h1.dataset.f;   // 다시 맞출 때는 전부부터
       if((over(dn)||clash())&&h1.dataset.t2&&h1.textContent!==h1.dataset.t2)h1.textContent=h1.dataset.t2;   // 전부 → 두 글자
       if((over(dn)||clash())&&h1.dataset.o&&h1.textContent!==h1.dataset.o)h1.textContent=h1.dataset.o;   // → 한 글자
       while((over(dn)||clash())&&toS2()){}
     }
-    else while(over(dn)&&toS2()){}
     if(over(dn))toS2();
     // 둘째 줄까지 찼는데도 첫 줄이 칸 오른쪽 밖으로 넘치면(좁은 칸에 날짜 + 이름 + 스티커 둘) 넘친 만큼 안으로 당김 → 1/2 배지가 칸 끝에서 잘리지 않고 둘째 줄과 오른쪽 끝이 같음 (이름 위에 살짝 겹쳐 붙음)
     stp.style.left='';const ov=over(dn)?stp.offsetLeft+stp.offsetWidth-(dn.clientWidth-(parseFloat(getComputedStyle(dn).paddingRight)||0)):0;
@@ -2618,6 +2609,8 @@ function fitDn(root,keepStz){
   });
   // 숫자 아래 이름(.hnb)이 아래 줄 스티커(.s2)와 부딪히면 한 글자
   (root||document).querySelectorAll('.cell>.hnb').forEach(hb=>{
+    const dn=hb.parentNode.querySelector('.dn'),num=dn&&dn.querySelector('.num');if(num)hb.style.left=(dn.offsetLeft+num.offsetLeft)+'px';   // 숫자 시작 위치에 맞춤
+    if(hb.dataset.t2==null)hb.dataset.t2=hb.textContent;else hb.textContent=hb.dataset.t2;   // (다시 맞출 때는 두 글자부터)
     const s2=hb.parentNode.querySelector(':scope>.s2'),f=s2&&s2.firstElementChild;if(!f)return;
     if(hb.getBoundingClientRect().right>f.getBoundingClientRect().left+1.5&&hb.dataset.o)hb.textContent=hb.dataset.o;   // (스티커 상자 가장자리에 살짝 닿는 건 괜찮음 — 그림은 상자보다 안쪽)
   });
