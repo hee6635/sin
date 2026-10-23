@@ -201,5 +201,19 @@ const ONLY=process.env.ONLY||'';
       await p.close();
     }
   }
+  // ── "오늘" 버튼 기록(원인 확인용): 닿음 · 뗌 · 누름 인정 · 이동 · 그림이 남고 개발자 메뉴에서 복사
+  if(want('tdlog')){
+    const p=await boot(b,{...base,calLook:'fill'},{touch:true});
+    await p.evaluate(()=>{window.__cp=[];window.AndroidBridge.copyText=t=>window.__cp.push(t);});
+    await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(600);
+    const a=await p.evaluate(()=>{const r=document.querySelector('[data-act="today"]').getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];});
+    await p.touchscreen.tap(a[0],a[1]);await p.waitForTimeout(700);
+    await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);
+    for(let i=0;i<7;i++)await p.evaluate(()=>document.querySelector('[data-act="about-tap"]')&&document.querySelector('[data-act="about-tap"]').click());await p.waitForTimeout(300);
+    await p.evaluate(()=>document.querySelector('[data-act="td-log"]').click());await p.waitForTimeout(200);
+    const t=await p.evaluate(()=>window.__cp[0]||'');
+    T('기록에 닿음 → 뗌 → 누름 인정 → 이동 시작 → 그림 순서로 남음',/닿음 버튼 위[\s\S]*뗌[\s\S]*누름 인정[\s\S]*이동 시작 2026\.11 → 2026\.10[\s\S]*그림 2026\.10/.test(t),t);
+    T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
   T.sum();await b.close();
 })();

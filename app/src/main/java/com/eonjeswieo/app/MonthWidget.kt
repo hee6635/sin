@@ -930,10 +930,8 @@ object MonthRenderer {
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
         val pad = plan.padX
         val holDay = (d?.optString("hol", "") ?: "").isNotEmpty()
-        if (fill) {   // 칸 채우기: 일하는 날은 근무 색을 연하게 칸 전체에 · 쉬는 공휴일은 연한 붉은 칸 · 그 밖의 쉬는 날은 비움
-            val tint = if (f.shift.isNotEmpty() && f.circle) mixRgb(f.bg, pal.bg, if (night) 0.30f else 0.24f)
-                else if (f.shift.isNotEmpty() && f.rest && holDay) (if (night) 0xFF3B252A.toInt() else 0xFFFBEDEF.toInt())
-                else 0
+        if (fill) {   // 칸 채우기: 일하는 날은 근무 색을 연하게 칸 전체에 · 쉬는 날은 비움 (명절은 칸 전체가 아니라 윗줄 띠 — 아래)
+            val tint = if (f.shift.isNotEmpty() && f.circle) mixRgb(f.bg, pal.bg, if (night) 0.30f else 0.24f) else 0
             if (tint != 0) {
                 val gap = 1.2f * u
                 val box = RectF(x0 + gap, y0 + gap, x0 + cw - gap, y0 + rowH - gap)
@@ -941,6 +939,17 @@ object MonthRenderer {
                 tp.color = (tint and 0x00FFFFFF) or ((alphaF * 255).toInt() shl 24)
                 cv.drawRoundRect(box, 7f * u, 7f * u, tp)
             }
+        }
+
+        if (fill && holDay) {   // 명절: 앱 달력처럼 날짜 줄에 연분홍 띠 (위 모서리만 둥글게)
+            val gap = 1.2f * u
+            val bh = Math.min(rowH - 2f * gap, plan.dateBase + plan.dateSize * 0.34f)
+            val rr = 7f * u
+            val path = Path()
+            path.addRoundRect(RectF(x0 + gap, y0 + gap, x0 + cw - gap, y0 + bh), floatArrayOf(rr, rr, rr, rr, 0f, 0f, 0f, 0f), Path.Direction.CW)
+            val hp = Paint(Paint.ANTI_ALIAS_FLAG)
+            hp.color = ((if (night) 0xFF3A2429.toInt() else 0xFFFCEBEE.toInt()) and 0x00FFFFFF) or ((alphaF * 255).toInt() shl 24)
+            cv.drawPath(path, hp)
         }
 
         if (fill && isToday) drawTodayBand(cv, x0, y0, cw, rowH, u, tn, night)   // 오늘: 오른쪽 가장자리 띠(앱 달력과 같음 · 가장 아래층)
@@ -1030,8 +1039,9 @@ object MonthRenderer {
         paint.color = dateColor
         paint.textSize = plan.dateSize
         cv.drawText(num, x0 + pad, y0 + plan.dateBase, paint)
-        if (hol.isNotEmpty()) {   // 공휴일: 숫자 옆에 빨간 글자 (스티커가 0~1개면 두 글자 · 2개 이상이면 한 글자 — 앱 달력과 같음)
-            paint.typeface = Typeface.DEFAULT
+        if (hol.isNotEmpty()) {   // 공휴일: 숫자 옆에 빨간 글자 (스티커가 0~1개면 두 글자 · 2개 이상이면 한 글자 — 앱 달력과 같음) · 칸 채우기는 띠 위에 장미빛 굵은 글자
+            paint.typeface = if (fill) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+            if (fill) paint.color = if (night) 0xFFE49AAA.toInt() else 0xFFC8627A.toInt()
             paint.textSize = plan.holSize
             if (top.holBeside) cv.drawText(if (top.holChars == 2) h2 else h1, x0 + pad + numW + 2.5f * u, y0 + plan.dateBase, paint)
             else cv.drawText(h1, x0 + pad, y0 + plan.dateBase + plan.holSize * 1.15f, paint)   // 아주 좁은 칸: 숫자 아래 한 글자

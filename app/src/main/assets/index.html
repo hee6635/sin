@@ -575,7 +575,8 @@ textarea{resize:none;min-height:84px}
 .hb svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .bdg{position:absolute;top:3px;right:1px;min-width:17px;height:17px;border-radius:9px;background:var(--rest);color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;padding:0 4px;border:2px solid var(--head-bg);line-height:1}
 .bdg.pur{background:var(--fam)}
-.cal-top .today-btn{font-size:14.5px;padding:0 4px}
+.cal-top .today-btn{font-size:14.5px;padding:0 4px;transition:opacity .08s,transform .08s}
+.cal-top .today-btn:active{opacity:.45;transform:scale(.9)}   /* 눌렸다는 표시 (바로 보임) */
 /* 달력 칸 메모 */
 .pill-wrap{gap:1px}
 .pill-wrap>*{flex:1 1 0 !important;min-height:0;max-height:var(--plmax,14px);line-height:var(--plhf,var(--plh,13px))}
@@ -2425,6 +2426,7 @@ function render(){
     // 처음 켤 때 · 다른 탭에서 돌아올 때는 그리기 전에는 달력 칸 높이를 잴 수 없어서 어림값으로 메모 줄 수를 정함 → 그린 뒤 실제 높이로 다시 재서 다르면 한 번만 다시 그림
     if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();fitDn(v,true);}finally{renderAgain=false;}}}
     glowCheck();
+    if(performance.now()-tdOn<3000)tdl(`그림 ${cur.y}.${cur.m+1}`);
   }else if(tab==='colleague'){
     top.innerHTML=`<div class="hl"><button class="hb" data-act="back-set" aria-label="뒤로" style="font-size:28px">‹</button></div>${mid}<div class="hr">${todayBtn}</div>`;
     v.innerHTML=renderColleague();
@@ -2762,11 +2764,12 @@ function glowFrame(){
 // 쓸어 넘기는 중(0.25초)에 누르면 버리지 않고 기억했다가 넘김이 끝나자마자 오늘로 (넘기고 바로 "오늘"을 누르는 일이 많음)
 let todayQ=false;
 function todayGo(){
-  if(busy){todayQ=true;return;}
+  if(busy){todayQ=true;tdl('넘기는 중 → 기억');return;}
   todayQ=false;
   const n=new Date(),y=n.getFullYear(),m=n.getMonth(),to=y*12+m,from=cur.y*12+cur.m,tr=$('#track');
-  if(to===from)return;
-  if(!tr||tab!=='cal'){setCur(y,m);render();return;}
+  if(to===from){tdl('이미 이번 달');return;}
+  if(!tr||tab!=='cal'){tdl('바로 그림(달력 아님)');setCur(y,m);render();return;}
+  tdl(`이동 시작 ${cur.y}.${cur.m+1} → ${y}.${m+1}`);
   const dir=to>from?1:-1,pn=tr.children[dir>0?2:0];
   if(pn&&Math.abs(to-from)>1)pn.innerHTML=calPanel(y,m);
   busy=true;glowStop();
@@ -2774,6 +2777,16 @@ function todayGo(){
   tr.style.transform=`translateX(${dir>0?'-66.6667%':'0%'})`;
   setTimeout(()=>{busy=false;setCur(y,m);render();},270);
 }
+/* "오늘" 버튼 기록 (원인 확인용 · 저장 안 함): 손가락이 버튼이나 그 옆에 닿음 · 뗌 · 취소 · 누름으로 인정 · 이동 결과 · 다 그린 달을 최근 40줄만.
+ * 개발자 메뉴(설정 › 앱 정보 7번) › "오늘 버튼 기록 복사" 로 보냄 */
+const tdLog=[];let tdOn=0;
+function tdl(t){tdLog.push(`${(performance.now()/1000).toFixed(2)}s ${t}`);if(tdLog.length>40)tdLog.shift();tdOn=performance.now();}
+document.addEventListener('pointerdown',e=>{
+  const b=document.querySelector('#top .today-btn');if(!b)return;const r=b.getBoundingClientRect(),on=!!(e.target.closest&&e.target.closest('.today-btn'));
+  if(on||(e.clientX>r.left-40&&e.clientX<r.right+24&&e.clientY>r.top-24&&e.clientY<r.bottom+24))tdl(`닿음 ${on?'버튼 위':'버튼 옆('+String(e.target.className||e.target.tagName).slice(0,20)+')'} x${e.clientX|0} y${e.clientY|0} 버튼(${r.left|0}~${r.right|0}, ${r.top|0}~${r.bottom|0}) busy=${busy}`);
+},true);
+['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,e=>{if(performance.now()-tdOn<1500&&tdLog.length&&/닿음/.test(tdLog[tdLog.length-1]))tdl(ev==='pointerup'?`뗌 x${e.clientX|0} y${e.clientY|0}`:'취소(폰이 누름이 아니라고 판단)');},true));
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.today-btn'))tdl('누름 인정');},true);
 function slideTo(dir,cb){
   const tr=$('#track'),mk=cur.y*12+cur.m+dir;
   if(mk<MIN_M||mk>MAX_M)return;
@@ -6054,7 +6067,7 @@ function shiftMonth(n){
   const v=Math.min(MAX_M,Math.max(MIN_M,cur.y*12+cur.m+n));
   cur={y:Math.floor(v/12),m:v%12};render();
   if(pageMode==='stats')openStatsPage();
-  if(todayQ)setTimeout(todayGo,0);   // 넘기는 중에 "오늘"을 눌렀으면 이어서
+  if(todayQ){tdl('넘김 끝 → 기억한 오늘 실행');setTimeout(todayGo,0);}   // 넘기는 중에 "오늘"을 눌렀으면 이어서
 }
 document.addEventListener('click',e=>{
   const nb=e.target.closest('#nav [data-tab]');
@@ -6567,6 +6580,7 @@ document.addEventListener('click',e=>{
     case 'todaylook':S.todayLook=['a','b','c','d'].includes(t.dataset.v)?t.dataset.v:'b';save();applyTune();openTunePage();break;
     case 'callook':S.calLook=t.dataset.v==='fill'?'fill':'circle';save();applyTune();if(pageMode==='tune')openTunePage();else render();break;
     case 'tune-open':openTunePage();break;
+    case 'td-log':copyText(`[오늘 버튼 기록] 화면 ${innerWidth}x${innerHeight}\n`+(tdLog.join('\n')||'기록 없음'));break;
     case 'tune-reset':tuneDraft=tuneAll(null);applyTune();openTunePage();toast('처음 값으로 돌렸어요 · 저장해야 반영돼요');break;
     case 'tune-save':if(tuneDirty()){S.tuneHist=[JSON.parse(JSON.stringify(S.tune)),...(S.tuneHist||[])].slice(0,5);S.tune=JSON.parse(JSON.stringify(tuneDraft));save();applyTune();tuneBar();toast('저장했어요');}break;
     case 'tune-undo':if(!(S.tuneHist||[]).length){toast('돌아갈 저장이 없어요');break;}S.tune=S.tuneHist.shift();tuneDraft=JSON.parse(JSON.stringify(S.tune));save();applyTune();openTunePage();toast('이전 저장 값으로 돌렸어요');break;
@@ -6957,6 +6971,7 @@ function openFirebasePage(){
         <button class="btn" style="width:100%" data-act="fb-test" ${f.busy?'disabled':''}>${f.busy?'연결 중…':'연결 시험하기'}</button>
         ${ok?'<button class="btn ghost" style="width:100%;margin-top:8px" data-act="fb-out">익명 로그아웃</button>':''}
         <button class="btn ghost" style="width:100%;margin-top:8px" data-act="tune-open">모양 조정 (앱 달력 · 위젯)</button>
+        <button class="btn ghost" style="width:100%;margin-top:8px" data-act="td-log">"오늘" 버튼 기록 복사 (${tdLog.length}줄)</button>
       </div>
     </div>`,'fb');
 }
