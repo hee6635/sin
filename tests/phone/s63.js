@@ -171,5 +171,20 @@ const ONLY=process.env.ONLY||'';
     T('holRest 켜도 달력이 뜨고 오류 없음 · 휴무인 공휴일에 이름 표시',p.errs.length===0&&await p.evaluate(()=>document.querySelectorAll('.track .panel:nth-child(2) .cell').length>27),p.errs.join('|'));
     await p.close();
   }
+  // ── "오늘" 버튼: 바로 미끄러지고(누른 순간 다시 그리지 않음) · 넘기는 중에 누르면 무시
+  if(want('today')){
+    const p=await boot(b,{...base,calLook:'fill'},{touch:true});
+    for(let i=0;i<3;i++){await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(450);}
+    const r=await p.evaluate(()=>{const tr=document.getElementById('track');document.querySelector('[data-act="today"]').click();return {same:document.getElementById('track')===tr,tf:tr.style.transform,left:tr.children[0].querySelector('.cell[data-k="2026-10-12"]')?1:0};});
+    T('"오늘" 누른 순간: 달력을 다시 그리지 않고 이번 달 쪽(왼쪽)으로 미끄러지기 시작 · 옆 칸에 이번 달',r.same&&r.tf==='translateX(0%)'&&r.left===1,JSON.stringify(r));
+    await p.waitForTimeout(500);
+    T('미끄러진 뒤 이번 달',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell.today')));
+    await p.evaluate(()=>document.querySelector('[data-act="next"]').click());
+    await p.waitForTimeout(80);
+    await p.evaluate(()=>{const b=document.querySelector('[data-act="today"]');if(b)b.click();});
+    await p.waitForTimeout(600);
+    T('넘기는 중에 "오늘"을 눌러도 엉뚱한 달로 안 감(다음 달에 머묾)',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell[data-k="2026-11-12"]')));
+    T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
   T.sum();await b.close();
 })();

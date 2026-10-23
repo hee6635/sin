@@ -2758,6 +2758,20 @@ function glowFrame(){
   e.querySelectorAll('.g-dash').forEach(x=>{x.style.strokeDashoffset=(+x.dataset.l)-head;});
   glowRaf=requestAnimationFrame(glowFrame);
 }
+// "오늘" 버튼: ‹ › 처럼 이번 달 쪽으로 바로 미끄러지고(옆 칸에 이번 달을 넣고 넘김), 무거운 다시 그리기는 미끄러진 뒤에 → 누르자마자 반응함
+// 미끄러지는 중에 누르면 무시 (안 그러면 오늘로 갔다가 넘기던 쪽으로 한 달 더 가 버림)
+function todayGo(){
+  if(busy)return;
+  const n=new Date(),y=n.getFullYear(),m=n.getMonth(),to=y*12+m,from=cur.y*12+cur.m,tr=$('#track');
+  if(to===from)return;
+  if(!tr||tab!=='cal'){setCur(y,m);render();return;}
+  const dir=to>from?1:-1,pn=tr.children[dir>0?2:0];
+  if(pn&&Math.abs(to-from)>1)pn.innerHTML=calPanel(y,m);
+  busy=true;glowStop();
+  tr.style.transition='transform .26s ease';
+  tr.style.transform=`translateX(${dir>0?'-66.6667%':'0%'})`;
+  setTimeout(()=>{busy=false;setCur(y,m);render();},270);
+}
 function slideTo(dir,cb){
   const tr=$('#track'),mk=cur.y*12+cur.m+dir;
   if(mk<MIN_M||mk>MAX_M)return;
@@ -6053,7 +6067,7 @@ document.addEventListener('click',e=>{
     case 'picker-set-m':{setCur(tempPickerYear,parseInt(t.dataset.m));closeSheet();render();break;}
     case 'prev':slideTo(-1);break;
     case 'next':slideTo(1);break;
-    case 'today':{const n=new Date();setCur(n.getFullYear(),n.getMonth());render();break;}
+    case 'today':todayGo();break;
     case 'day':if(paint){if(role()==='host')paintDay(t.dataset.k);break;}if(t.classList.contains('out')){buzz(6);slideTo(monthDirOf(t.dataset.k,cur.y,cur.m));break;}buzz(8);reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(t.dataset.k);break;
     case 'close':closeSheet();break;
     case 'page-close':closePage();break;
