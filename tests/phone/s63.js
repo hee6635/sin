@@ -164,5 +164,12 @@ const ONLY=process.env.ONLY||'';
     T('설정 화면을 연 채 접어도 달력으로 돌아오면 커버 크기',await stz(p)===fresh[390],(await stz(p))+' vs '+fresh[390]);
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
+  // ── 고침: "공휴일 쉬는 날 표시"(holRest)를 켜면 달력 칸에서 오류(hol0)
+  if(want('holrest')){
+    const p=await boot(b,{...base,holRest:true,pattern:['휴','휴','휴','휴']},{touch:true});
+    for(let i=0;i<3;i++){await p.evaluate(()=>document.querySelector('[data-act="prev"]').click());await p.waitForTimeout(450);}
+    T('holRest 켜도 달력이 뜨고 오류 없음 · 휴무인 공휴일에 이름 표시',p.errs.length===0&&await p.evaluate(()=>document.querySelectorAll('.track .panel:nth-child(2) .cell').length>27),p.errs.join('|'));
+    await p.close();
+  }
   T.sum();await b.close();
 })();

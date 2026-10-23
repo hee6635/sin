@@ -2456,7 +2456,7 @@ function bwrapHtml(d,k,pop){
   const ps=shiftOf(addDays(d,-1)),ns=shiftOf(addDays(d,1));
   const tc=tColors(typeOf(sh));
   const band=tc&&!isRest(sh)&&(ps===sh||ns===sh)?`<i class="band ${ps===sh?'jl':''} ${ns===sh?'jr':''}" style="--tb:${tc.bg}"></i>`:'';
-  const holTag=S.holRest&&hol0&&isRest(sh)&&ov==null?holTagName(k,hol0):'';
+  const holTag=S.holRest&&hol&&isRest(sh)&&ov==null?holTagName(k,hol):'';
   return `${band}${holTag?`<span class="badge r two holtag ${pop?'pop':''}">${esc(holTag)}</span>`:badge(sh,pop?'pop':'',ov?'<i class="dot"></i>':'')}`;
 }
 // 메모가 줄 수(mx)보다 많으면: 보이는 줄은 그대로 두고 마지막 줄 끝에 작은 회색 "+n" (n = 더 있는 메모 수 · 10개 이상은 9+) — 위젯 칸과 같은 표시. 글자가 잘리면 그 앞에 작은 점 세 개(.ell)
