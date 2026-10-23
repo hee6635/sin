@@ -40,6 +40,11 @@ class AlarmService : Service() {
             i.putExtra(AlarmActivity.EXTRA_TITLE, r.label)
             i.putExtra(AlarmActivity.EXTRA_TIME, AlarmScheduler.timeText(r.at))
             i.putExtra(AlarmActivity.EXTRA_SNOOZE_MIN, if (AlarmScheduler.canSnooze(r)) r.snMin else 0)
+            i.putExtra(AlarmActivity.EXTRA_COLOR, r.col)
+            i.putExtra(AlarmActivity.EXTRA_ICON, r.ico)
+            i.putExtra(AlarmActivity.EXTRA_SHIFT, if (r.col.isNotEmpty()) r.shiftName else "")
+            i.putExtra(AlarmActivity.EXTRA_SN_MAX, r.snMax)
+            i.putExtra(AlarmActivity.EXTRA_SN_COUNT, r.snCount)
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             return i
         }

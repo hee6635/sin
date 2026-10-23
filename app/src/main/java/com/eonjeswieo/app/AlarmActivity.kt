@@ -23,6 +23,11 @@ class AlarmActivity : Activity() {
         const val EXTRA_TITLE = "title"
         const val EXTRA_TIME = "time"
         const val EXTRA_SNOOZE_MIN = "snoozeMin"   // 0 이면 다시 울림 버튼 숨김 (최대 횟수 다 씀)
+        const val EXTRA_COLOR = "col"      // 근무 색 #rrggbb (빈 값 = 라벤더)
+        const val EXTRA_ICON = "ico"       // 이름 앞 아이콘
+        const val EXTRA_SHIFT = "shiftName" // 이름 옆 작은 근무 표시 (근무 색 알람만)
+        const val EXTRA_SN_MAX = "snMax"   // 다시 울림 최대 횟수 (-1 = 제한 없음)
+        const val EXTRA_SN_COUNT = "snCount" // 지금까지 다시 울린 횟수
     }
 
     private val stopped = object : BroadcastReceiver() {
@@ -32,6 +37,7 @@ class AlarmActivity : Activity() {
     }
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+    private var breathe: android.animation.ValueAnimator? = null
 
     @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,28 +57,63 @@ class AlarmActivity : Activity() {
         val title = intent.getStringExtra(EXTRA_TITLE) ?: "알람"
         val time = intent.getStringExtra(EXTRA_TIME) ?: ""
         val snoozeMin = intent.getIntExtra(EXTRA_SNOOZE_MIN, 0)
+        val colHex = intent.getStringExtra(EXTRA_COLOR) ?: ""
+        val icon = intent.getStringExtra(EXTRA_ICON) ?: ""
+        val shiftName = intent.getStringExtra(EXTRA_SHIFT) ?: ""
+        val snMax = intent.getIntExtra(EXTRA_SN_MAX, 3)
+        val snCount = intent.getIntExtra(EXTRA_SN_COUNT, 0)
 
-        // 파스텔 톤 끄기 화면: 낮에는 연한 라벤더 · 밤(폰 다크 모드)에는 차분한 남색. 큰 시계 → 이름 알약 → 둥근 두 버튼(미루기 · 끄기)
+        // 파스텔 끄기 화면: 근무 색으로 배경(주간 하늘 아침 · 야간 살구 노을 …), 근무와 상관없는 알람은 라벤더 · 밤(폰 다크 모드)은 남색
         val night = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
-        val bg0 = if (night) 0xFF1D2335.toInt() else 0xFFE7EDFA.toInt()
-        val bg1 = if (night) 0xFF2B2842.toInt() else 0xFFF6EAF3.toInt()
-        val ink = if (night) 0xFFEEF0F8.toInt() else 0xFF2A3042.toInt()
-        val sub = if (night) 0xFFB9C0D8.toInt() else 0xFF5D667E.toInt()
-        val chipBg = if (night) 0x33FFFFFF else 0xB3FFFFFF.toInt()
-        val snoozeBg = if (night) 0xFF3A4262.toInt() else 0xFFD3DCF1.toInt()
-        val snoozeInk = if (night) 0xFFD2DAF6.toInt() else 0xFF3B4A78.toInt()
+        val shiftCol = try { if (colHex.isNotEmpty()) Color.parseColor(colHex) else 0 } catch (e: Exception) { 0 }
+        fun mix(c: Int, w: Int, t: Float): Int = Color.rgb(
+            Math.round(Color.red(c) * t + Color.red(w) * (1 - t)), Math.round(Color.green(c) * t + Color.green(w) * (1 - t)), Math.round(Color.blue(c) * t + Color.blue(w) * (1 - t)))
+        fun darker(c: Int, k: Float): Int = Color.rgb(Math.round(Color.red(c) * k), Math.round(Color.green(c) * k), Math.round(Color.blue(c) * k))
+        val white = Color.WHITE
+        val lav0 = 0xFFE7EDFA.toInt(); val lav1 = 0xFFF6EAF3.toInt()
+        val bg0 = if (night) 0xFF1D2335.toInt() else if (shiftCol != 0) mix(shiftCol, white, 0.42f) else lav0
+        val bg1 = if (night) 0xFF2B2842.toInt() else if (shiftCol != 0) mix(shiftCol, lav1, 0.14f) else lav1
+        val accent = if (shiftCol != 0) shiftCol else 0xFFA99BE0.toInt()   // 원 · 빛 · 근무 표시 색
+        val blob1 = if (night) (accent and 0x00FFFFFF) or 0x55000000 else (mix(accent, white, 0.75f) and 0x00FFFFFF) or 0xCC000000.toInt()
+        val blob2 = if (night) 0x554A3550 else (if (shiftCol != 0) 0xCCFBE7C8.toInt() else 0xCCF8D7E6.toInt())
+        val ink = if (night) 0xFFEEF0F8.toInt() else if (shiftCol != 0) darker(shiftCol, 0.22f) else 0xFF2A3042.toInt()
+        val sub = if (night) 0xFFB9C0D8.toInt() else if (shiftCol != 0) darker(shiftCol, 0.5f) else 0xFF5D667E.toInt()
+        val chipBg = if (night) 0x1FFFFFFF else 0xBFFFFFFF.toInt()
+        val snoozeBg = if (night) 0xFF3A4262.toInt() else if (shiftCol != 0) mix(shiftCol, white, 0.45f) else 0xFFD3DCF1.toInt()
+        val snoozeInk = if (night) 0xFFD2DAF6.toInt() else if (shiftCol != 0) darker(shiftCol, 0.35f) else 0xFF3B4A78.toInt()
         val stopBg = if (night) 0xFFE58D9E.toInt() else 0xFFF3A3B1.toInt()
         val stopInk = if (night) 0xFF3A1822.toInt() else 0xFF5A2030.toInt()
+        // 애니메이션 끄기(접근성) 설정이면 숨 쉬는 원도 멈춤
+        val animOn = try { android.provider.Settings.Global.getFloat(contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f } catch (e: Exception) { true }
+
+        val frame = android.widget.FrameLayout(this)
+        frame.background = android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(bg0, bg1))
+        // 배경 뒤 은은한 빛 두 개 (근무 색)
+        fun blob(color: Int, size: Int, g: Int, mx: Int, my: Int) {
+            val v = android.view.View(this)
+            val d = android.graphics.drawable.GradientDrawable()
+            d.shape = android.graphics.drawable.GradientDrawable.OVAL
+            d.gradientType = android.graphics.drawable.GradientDrawable.RADIAL_GRADIENT
+            d.gradientRadius = size / 2f
+            d.colors = intArrayOf(color, color and 0x00FFFFFF)
+            v.background = d
+            val l = android.widget.FrameLayout.LayoutParams(size, size, g)
+            if (g and Gravity.LEFT == Gravity.LEFT) l.leftMargin = mx else l.rightMargin = mx
+            if (g and Gravity.TOP == Gravity.TOP) l.topMargin = my else l.bottomMargin = my
+            frame.addView(v, l)
+        }
+        blob(blob1, dp(380), Gravity.TOP or Gravity.LEFT, -dp(130), -dp(90))
+        blob(blob2, dp(340), Gravity.BOTTOM or Gravity.RIGHT, -dp(140), dp(150))
 
         val root = LinearLayout(this)
         root.orientation = LinearLayout.VERTICAL
         root.gravity = Gravity.CENTER_HORIZONTAL
-        root.background = android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(bg0, bg1))
         root.setPadding(dp(24), dp(24), dp(24), dp(40))
+        frame.addView(root, android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
 
         fun lp(w: Int, h: Int) = LinearLayout.LayoutParams(w, h)
         val top = android.widget.Space(this)
-        root.addView(top, LinearLayout.LayoutParams(1, 0, 1.1f))
+        root.addView(top, LinearLayout.LayoutParams(1, 0, 0.9f))
 
         // 날짜 줄
         val cal = java.util.Calendar.getInstance()
@@ -84,49 +125,109 @@ class AlarmActivity : Activity() {
         dateView.gravity = Gravity.CENTER
         root.addView(dateView, lp(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 
-        // 시계: "오후" 작게 위 · 숫자 크게 (time 이 "오후 07:30" 모양이면 나눔)
+        // 시계: 둘레에 숨 쉬는 원 3겹 · 가운데 "오전" 작게 + 숫자 크게 (time 이 "오후 07:30" 모양이면 나눔)
         val parts = time.split(" ", limit = 2)
         val ap = if (parts.size == 2) parts[0] else ""
-        val clock = if (parts.size == 2) parts[1] else time
+        val clock = (if (parts.size == 2) parts[1] else time).let { if (it.length == 5 && it.startsWith("0")) it.substring(1) else it }
+        val box = android.widget.FrameLayout(this)
+        val boxSize = dp(250)
+        val rings = ArrayList<android.view.View>()
+        for ((k, inset) in listOf(Pair(0, dp(18)), Pair(1, dp(4)), Pair(2, -dp(12)))) {
+            val v = android.view.View(this)
+            val d = android.graphics.drawable.GradientDrawable()
+            d.shape = android.graphics.drawable.GradientDrawable.OVAL
+            d.setStroke(dp(2), accent)
+            if (k == 0) d.setColor(if (night) 0x14FFFFFF else 0x40FFFFFF)
+            v.background = d
+            v.alpha = when (k) { 0 -> 0.6f; 1 -> 0.3f; else -> 0.14f }
+            val l = android.widget.FrameLayout.LayoutParams(boxSize - 2 * inset, boxSize - 2 * inset, Gravity.CENTER)
+            box.addView(v, l)
+            rings.add(v)
+        }
+        val tcol = LinearLayout(this)
+        tcol.orientation = LinearLayout.VERTICAL
+        tcol.gravity = Gravity.CENTER
         if (ap.isNotEmpty()) {
             val apView = TextView(this)
             apView.text = ap
-            apView.textSize = 22f
-            apView.setTextColor(ink)
+            apView.textSize = 20f
+            apView.setTextColor(sub)
+            apView.typeface = Typeface.DEFAULT_BOLD
             apView.gravity = Gravity.CENTER
-            apView.setPadding(0, dp(18), 0, 0)
-            root.addView(apView, lp(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+            tcol.addView(apView)
         }
         val timeView = TextView(this)
         timeView.text = clock
-        timeView.textSize = 72f
+        timeView.textSize = 66f
         timeView.setTextColor(ink)
         timeView.typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
         timeView.gravity = Gravity.CENTER
         timeView.includeFontPadding = false
-        root.addView(timeView, lp(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        tcol.addView(timeView)
+        box.addView(tcol, android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER))
+        box.clipChildren = false
+        val boxLp = lp(boxSize, boxSize)
+        boxLp.topMargin = dp(26)
+        root.addView(box, boxLp)
+        root.clipChildren = false
+        if (animOn) {
+            // 숨 쉬는 원: 약 2초에 한 번 천천히 커졌다 작아짐 (은은하게)
+            val va = android.animation.ValueAnimator.ofFloat(0f, 1f)
+            va.duration = 2000L
+            va.repeatMode = android.animation.ValueAnimator.REVERSE
+            va.repeatCount = android.animation.ValueAnimator.INFINITE
+            va.interpolator = android.view.animation.AccelerateDecelerateInterpolator()
+            va.addUpdateListener { a ->
+                val f = a.animatedValue as Float
+                for ((k, v) in rings.withIndex()) {
+                    val sc = 1f + f * (0.03f + 0.025f * k)
+                    v.scaleX = sc; v.scaleY = sc
+                    v.alpha = (when (k) { 0 -> 0.6f; 1 -> 0.3f; else -> 0.14f }) * (1f - 0.35f * f * (k / 2f))
+                }
+            }
+            va.start()
+            breathe = va
+        }
 
-        // 이름(주간 알람 …) 알약
-        val titleView = TextView(this)
-        titleView.text = title
-        titleView.textSize = 18f
-        titleView.setTextColor(ink)
-        titleView.typeface = Typeface.DEFAULT_BOLD
-        titleView.gravity = Gravity.CENTER
-        titleView.setPadding(dp(20), dp(8), dp(20), dp(8))
+        // 이름 알약: 아이콘 + 이름 + 작은 근무 표시(근무 색)
+        val chipRow = LinearLayout(this)
+        chipRow.orientation = LinearLayout.HORIZONTAL
+        chipRow.gravity = Gravity.CENTER_VERTICAL
+        chipRow.setPadding(dp(18), dp(8), dp(18), dp(8))
         val chip = android.graphics.drawable.GradientDrawable()
         chip.cornerRadius = dp(24).toFloat()
         chip.setColor(chipBg)
-        titleView.background = chip
+        chipRow.background = chip
+        val titleView = TextView(this)
+        titleView.text = (if (icon.isNotEmpty()) "$icon " else "") + title
+        titleView.textSize = 18f
+        titleView.setTextColor(ink)
+        titleView.typeface = Typeface.DEFAULT_BOLD
+        chipRow.addView(titleView)
+        if (shiftName.isNotEmpty()) {
+            val tag = TextView(this)
+            tag.text = shiftName
+            tag.textSize = 12f
+            tag.setTextColor(Color.WHITE)
+            tag.typeface = Typeface.DEFAULT_BOLD
+            tag.setPadding(dp(8), dp(2), dp(8), dp(3))
+            val tb = android.graphics.drawable.GradientDrawable()
+            tb.cornerRadius = dp(10).toFloat()
+            tb.setColor(darker(accent, 0.82f))
+            tag.background = tb
+            val tl = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            tl.leftMargin = dp(8)
+            chipRow.addView(tag, tl)
+        }
         val chipLp = lp(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        chipLp.topMargin = dp(22)
-        root.addView(titleView, chipLp)
+        chipLp.topMargin = dp(24)
+        root.addView(chipRow, chipLp)
 
         val mid = android.widget.Space(this)
-        root.addView(mid, LinearLayout.LayoutParams(1, 0, 1.6f))
+        root.addView(mid, LinearLayout.LayoutParams(1, 0, 1.4f))
 
-        // 둥근 버튼 두 개: 미루기(작게) · 끄기(크게)
-        fun roundBtn(label: String, sub2: String, size: Int, bg: Int, fg: Int, textSp: Float, action: String): LinearLayout {
+        // 둥근 버튼 두 개: 미루기(작게, 아래에 남은 횟수 — 점 ●●○ · 마지막이면 "마지막" · 4번 이상이면 "n번 남음") · 끄기(크게, 바깥 얇은 고리)
+        fun roundBtn(label: String, size: Int, bg: Int, fg: Int, textSp: Float, action: String, extra: android.view.View?, ring: Boolean): android.view.View {
             val c = LinearLayout(this)
             c.orientation = LinearLayout.VERTICAL
             c.gravity = Gravity.CENTER
@@ -134,8 +235,8 @@ class AlarmActivity : Activity() {
             oval.shape = android.graphics.drawable.GradientDrawable.OVAL
             oval.setColor(bg)
             c.background = oval
-            c.isClickable = true
-            c.contentDescription = label + if (sub2.isNotEmpty()) " " + sub2 else ""
+            c.elevation = dp(6).toFloat()
+            c.contentDescription = label
             val t = TextView(this)
             t.text = label
             t.textSize = textSp
@@ -143,35 +244,58 @@ class AlarmActivity : Activity() {
             t.typeface = Typeface.DEFAULT_BOLD
             t.gravity = Gravity.CENTER
             c.addView(t)
-            if (sub2.isNotEmpty()) {
-                val t2 = TextView(this)
-                t2.text = sub2
-                t2.textSize = 13f
-                t2.setTextColor(fg)
-                t2.alpha = 0.8f
-                t2.gravity = Gravity.CENTER
-                c.addView(t2)
-            }
+            if (extra != null) c.addView(extra)
             c.setOnClickListener { sendToService(action) }
-            c.layoutParams = lp(size, size)
-            return c
+            if (!ring) { c.layoutParams = lp(size, size); return c }
+            val wrap = android.widget.FrameLayout(this)
+            val halo = android.view.View(this)
+            val hd = android.graphics.drawable.GradientDrawable()
+            hd.shape = android.graphics.drawable.GradientDrawable.OVAL
+            hd.setStroke(dp(2), (bg and 0x00FFFFFF) or 0x66000000)
+            halo.background = hd
+            wrap.addView(halo, android.widget.FrameLayout.LayoutParams(size + dp(16), size + dp(16), Gravity.CENTER))
+            wrap.addView(c, android.widget.FrameLayout.LayoutParams(size, size, Gravity.CENTER))
+            wrap.layoutParams = lp(size + dp(16), size + dp(16))
+            return wrap
         }
         val row = LinearLayout(this)
         row.orientation = LinearLayout.HORIZONTAL
         row.gravity = Gravity.CENTER
         if (snoozeMin > 0) {
-            val sb = roundBtn("미루기", "${snoozeMin}분", dp(104), snoozeBg, snoozeInk, 18f, AlarmService.ACTION_SNOOZE)
-            row.addView(sb)
+            val left = if (snMax < 0) -1 else Math.max(0, snMax - snCount)
+            val extra: android.view.View? = when {
+                left == 1 -> TextView(this).also { it.text = "마지막"; it.textSize = 13f; it.setTextColor(snoozeInk); it.alpha = 0.85f; it.gravity = Gravity.CENTER }
+                left > 1 && snMax in 2..3 -> LinearLayout(this).also { dots ->
+                    dots.orientation = LinearLayout.HORIZONTAL
+                    dots.gravity = Gravity.CENTER
+                    dots.setPadding(0, dp(6), 0, 0)
+                    for (k in 0 until snMax) {
+                        val d = android.view.View(this)
+                        val dd = android.graphics.drawable.GradientDrawable()
+                        dd.shape = android.graphics.drawable.GradientDrawable.OVAL
+                        dd.setColor(snoozeInk)
+                        d.background = dd
+                        d.alpha = if (k < left) 0.85f else 0.22f
+                        val dl = LinearLayout.LayoutParams(dp(7), dp(7))
+                        if (k > 0) dl.leftMargin = dp(5)
+                        dots.addView(d, dl)
+                    }
+                    dots.contentDescription = "${left}번 남음"
+                }
+                left > 1 -> TextView(this).also { it.text = "${left}번 남음"; it.textSize = 12.5f; it.setTextColor(snoozeInk); it.alpha = 0.85f; it.gravity = Gravity.CENTER }
+                else -> null
+            }
+            row.addView(roundBtn("미루기", dp(104), snoozeBg, snoozeInk, 18f, AlarmService.ACTION_SNOOZE, extra, false))
             val gap = android.widget.Space(this)
-            row.addView(gap, LinearLayout.LayoutParams(dp(36), 1))
+            row.addView(gap, LinearLayout.LayoutParams(dp(28), 1))
         }
-        row.addView(roundBtn("끄기", "", dp(132), stopBg, stopInk, 26f, AlarmService.ACTION_STOP))
+        row.addView(roundBtn("끄기", dp(132), stopBg, stopInk, 26f, AlarmService.ACTION_STOP, null, true))
         root.addView(row, lp(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 
         val bottom = android.widget.Space(this)
         root.addView(bottom, LinearLayout.LayoutParams(1, 0, 0.5f))
 
-        setContentView(root)
+        setContentView(frame)
 
         val filter = IntentFilter(AlarmService.ACTION_STOPPED)
         if (Build.VERSION.SDK_INT >= 33) {
@@ -189,6 +313,7 @@ class AlarmActivity : Activity() {
     }
 
     override fun onDestroy() {
+        try { breathe?.cancel() } catch (e: Exception) { }
         try {
             unregisterReceiver(stopped)
         } catch (e: Exception) {

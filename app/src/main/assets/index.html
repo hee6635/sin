@@ -327,7 +327,16 @@ textarea{resize:none;min-height:84px}
 .next .sub{margin-top:6px; font-size:14px; color:var(--muted);}
 .list-header{display:flex; justify-content:space-between; padding:12px 16px; font-size:13px; color:var(--muted); border-bottom:1px solid var(--line); border-top:1px solid var(--line); background:var(--bg);}
 .list-header .all-off{cursor:pointer;}
-.acard{display:flex; align-items:center; padding:18px 16px; border-bottom:1px solid var(--line); cursor:pointer; background:var(--bg);}
+.list-header{border:0 !important;padding:10px 18px 8px}   /* (알람이 카드 모양이라 구분선 없음) */
+.acard{display:flex; align-items:center; padding:14px 16px 14px 18px; margin:0 12px 10px; border-radius:16px; cursor:pointer; position:relative; overflow:hidden; background:color-mix(in srgb,var(--ac,var(--line)) 18%,var(--bg)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ac,var(--line)) 30%,transparent)}
+.acard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--ac,var(--line))}   /* 근무 색 띠 (달력과 같은 색) */
+.acard-n{display:flex;align-items:center;gap:7px;margin-bottom:4px}.acard-n b{font-size:15.5px;font-weight:800;color:var(--fg)}
+/* 맨 위 "다음 알람" 카드 */
+.anext{margin:12px 12px 6px;padding:16px 18px;border-radius:20px;cursor:pointer;background:linear-gradient(135deg,color-mix(in srgb,var(--ac,#c9b8e8) 42%,var(--bg)),color-mix(in srgb,var(--ac,#c9b8e8) 14%,var(--bg)));box-shadow:0 6px 18px color-mix(in srgb,var(--ac,#c9b8e8) 28%,transparent)}
+.anext-h{font-size:13px;font-weight:700;color:var(--muted)}
+.anext-t{display:flex;align-items:baseline;gap:8px;margin-top:2px}.anext-t .ap{font-size:20px;font-weight:600}.anext-t .tm{font-size:52px;font-weight:500;letter-spacing:-1.5px;line-height:1.05}
+.anext-n{display:flex;align-items:center;gap:7px;margin-top:4px}.anext-n b{font-size:16px;font-weight:800}
+.anext-r{margin-top:8px;font-size:13px;font-weight:700;color:color-mix(in srgb,var(--fg) 70%,var(--bg))}
 .acard.off{opacity:.5}
 .acard-left{flex:1;}
 .acard-top{display:flex; align-items:baseline; gap:8px;}
@@ -1570,7 +1579,10 @@ const holShort=n=>{if(!n)return '';const a=n.split('·')[0];return a.includes('�
 /* 근무타입은 S.types 에 저장 (사용자가 추가·편집 가능)
  * k: 달력에 보이는 글자(1~2자), name: 이름, color: 'v:day' 처럼 테마 색 또는 '#hex', 빈 값이면 빨간 글자만
  * rest: 쉬는 날 종류인지 (통계·대근 계산에 사용) */
-const PALETTE=['#37474f','#546e7a','#ba68c8','#7986cb','#3f51b5',
+// 근무 색: 앞 8개는 파스텔(주간 하늘 · 야간 살구와 어울림, 7 · 8번은 그 둘과 비슷해서 뒤로) · 그 뒤는 예전 색. 새 근무 종류는 PASTEL 순서대로 안 쓰는 색부터
+const PASTEL=['#b9dcb0','#c9b8e8','#f1dc8f','#a8dccf','#f2b8c6','#d9c9b0','#b3c3ef','#f5c7a9'];
+const nextPastel=(used)=>{const u=new Set((used||(S&&S.types)||[]).map(t=>String(t.color||'').toLowerCase()));return PASTEL.find(c=>!u.has(c))||PASTEL[u.size%PASTEL.length];};
+const PALETTE=[...PASTEL,'#37474f','#546e7a','#ba68c8','#7986cb','#3f51b5',
   '#795548','#e91e63','#2196f3','#fbc02d','#8bc34a',
   '#cfd8dc','#d7ccc8','#ffe0b2','#dcedc8','#bbdefb',
   '#c5cae9','#e1bee7','#f8bbd0','#ffccbc','#b2dfdb'];
@@ -1578,8 +1590,8 @@ const DEFAULT_TYPES=()=>[
   {k:'주',name:'주간',color:'v:day',rest:false},
   {k:'야',name:'야간',color:'v:night',rest:false},
   {k:'휴',name:'휴무',color:'',rest:true},
-  {k:'상',name:'상주',color:'#dcedc8',rest:false},
-  {k:'교',name:'교육',color:'#ffe0b2',rest:false}
+  {k:'상',name:'상주',color:'#b9dcb0',rest:false},
+  {k:'교',name:'교육',color:'#c9b8e8',rest:false}
 ];
 /* "+추가"에서 고를 수 있는 기본 목록 [글자, 이름, 설명] */
 const PRESETS=[
@@ -1853,8 +1865,13 @@ function nativeIssues(){
 function pushAlarmsToNative(){
   try{
     if(window.AndroidBridge&&typeof window.AndroidBridge.setAlarms==='function'){
+      // col · ico: 끄기 화면을 근무 색으로(주간 하늘 · 야간 살구 …) · 이름 앞 ☀️/🌙. 매일 알람은 빈 값(라벤더)
+      const colOf={};   // (근무마다 한 번만 계산 · 주간 · 야간은 앱이 어두운 모드여도 밝은 파스텔 값 — 끄기 화면이 폰 모드에 따라 따로 어둡게 그림)
+      const look=x=>{if(x.a.shift==='*')return {col:'',ico:''};const ty=typeOf(x.sh),h=+String(x.a.time||'0').split(':')[0];
+        if(!(x.sh in colOf)){const tc=tColors(ty);colOf[x.sh]=ty.color==='v:day'?'#a6c6e2':ty.color==='v:night'?'#e0b8a3':(tc?cssHex(tc.bg):'');}
+        return {col:colOf[x.sh],ico:ty.color==='v:night'||h>=15||h<3?'🌙':'☀️'};};
       const list=buildSchedule(180).map(x=>({id:`${x.a.id}_${fmt(x.d)}`,at:x.at.getTime(),label:x.a.label||'',shift:x.sh,shiftName:shiftLabel(x.sh),time:x.a.time,
-        sound:x.a.sound!==false,vib:x.a.vib!==false,vol:x.a.vol??100,ramp:!!x.a.ramp,tone:x.a.tone||'',snMin:x.a.snMin||5,snMax:x.a.snMax??3}));
+        sound:x.a.sound!==false,vib:x.a.vib!==false,vol:x.a.vol??100,ramp:!!x.a.ramp,tone:x.a.tone||'',snMin:x.a.snMin||5,snMax:x.a.snMax??3,...look(x)}));
       window.AndroidBridge.setAlarms(JSON.stringify(list));
       // 반복 알람이 켜져 있으면 폰이 "목록이 끝나기 한 주 전" 알림을 예약 (앱을 한 번도 안 열면 180일 뒤 알람이 끊기므로)
       if(typeof window.AndroidBridge.setAlarmsCont==='function')window.AndroidBridge.setAlarmsCont(S.alarms.some(a=>a.on&&!a.once));
@@ -3585,18 +3602,33 @@ function renderAlarm(){
   const nextHtml=S.alarms.length?'':`<div class="next"><div class="big">알람이 없어요</div><div class="sub muted">오른쪽 위 + 로 근무에 맞춘 알람을 추가해보세요</div></div>`;
   const now0=Date.now();
   const order=[...S.alarms].sort((x,y)=>(nextFire[x.id]??8.64e15)-(nextFire[y.id]??8.64e15));
+  // 근무 색(달력과 같은 색): 주간 하늘 · 야간 살구 … / 매일 · 색 없는 근무는 null
+  const shiftCol=a=>{if(a.shift==='*')return null;const c=tColors(typeOf(a.shift));return c?c.bg:null;};
+  // 맨 위 "다음 알람" 카드: 다음에 울릴 알람 하나를 크게 · 남은 시간은 여기에만
+  const nextCard=(()=>{
+    if(!n)return '';const a=n.a,at=n.at,t=ampm(a.time),col=shiftCol(a);
+    const d0=new Date();d0.setHours(0,0,0,0);const dd=Math.round((new Date(at.getFullYear(),at.getMonth(),at.getDate())-d0)/864e5);
+    const day=dd===0?'오늘':dd===1?'내일':dd===2?'모레':`${at.getMonth()+1}월 ${at.getDate()}일 (${DOW[at.getDay()]})`;
+    return `<div class="anext" data-act="aedit" data-id="${a.id}"${col?` style="--ac:${col}"`:''}>
+      <div class="anext-h">다음 알람 · ${day}</div>
+      <div class="anext-t"><span class="ap">${t.ap}</span><span class="tm">${t.tm}</span></div>
+      <div class="anext-n">${a.shift==='*'?'<span class="badge sm r">매일</span>':badge(a.shift,'sm','')}<b>${esc(a.label||(a.shift==='*'?'매일 알람':shiftLabel(a.shift)+' 알람'))}</b></div>
+      <div class="anext-r">⏱ ${remain(at.getTime()-now0)} 후에 울려요</div>
+    </div>`;
+  })();
   const cards=order.map(a=>{
+    const col=shiftCol(a);
     const t=ampm(a.time),iColor=a.on?'var(--icon-on)':'var(--icon-off)';
     const vibOn=a.on&&a.vib!==false,sndOn=a.on&&a.sound!==false;
     const vibSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="${vibOn?iColor:'var(--icon-off)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>${vibOn?'<path d="M1 12h2M21 12h2M3 8h1M20 8h1M3 16h1M20 16h1"></path>':'<line x1="2" y1="2" x2="22" y2="22"></line>'}</svg>`;
     const sndSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="${sndOn?iColor:'var(--icon-off)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>${sndOn?'<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>':'<line x1="23" y1="1" x2="1" y2="23"></line>'}</svg>`;
     const vol=sndOn?Math.max(8,Math.round((a.vol??100)*.6)):60;
     return `
-    <div class="acard ${a.on?'':'off'}" data-act="aedit" data-id="${a.id}">
+    <div class="acard ${a.on?'':'off'}" data-act="aedit" data-id="${a.id}"${col?` style="--ac:${col}"`:''}>
       <div class="acard-left">
+        <div class="acard-n">${a.shift==='*'?'<span class="badge sm r">매일</span>':badge(a.shift,'sm','')}<b>${esc(a.label||(a.shift==='*'?'매일 알람':shiftLabel(a.shift)+' 알람'))}</b></div>
         <div class="acard-top">
           <span class="ap">${t.ap}</span><span class="tm">${t.tm}</span>
-          ${a.shift==='*'?'<span class="badge sm r" style="margin-left:4px;">매일</span>':badge(a.shift,'sm','')}
         </div>
         <div class="icon-row">
           ${OFF_NAME[String(a.offset||0)]?`<span style="font-size:13px;font-weight:600;color:${iColor};margin-right:4px;">${OFF_NAME[String(a.offset||0)]}</span>`:''}
@@ -3604,8 +3636,7 @@ function renderAlarm(){
           ${vibSvg}${sndSvg}
           <div class="vol-bar" style="width:${vol}px;background:${sndOn?'var(--icon-on)':'var(--icon-off)'};"></div>
         </div>
-        ${a.label?`<div class="am">${esc(a.label)}</div>`:''}
-        <div class="aleft">${!a.on?'꺼짐':nextFire[a.id]?`⏱ ${remain(nextFire[a.id]-now0)} 후에 울려요`:'두 달 안에 울릴 날이 없어요'}${a.noHol?' · 공휴일 쉼':''}</div>
+        ${(()=>{const x=!a.on?'꺼짐':!nextFire[a.id]?'두 달 안에 울릴 날이 없어요':'';const y=[x,a.noHol?'공휴일 쉼':''].filter(Boolean).join(' · ');return y?`<div class="aleft">${y}</div>`:'';})()}
         ${a.on&&a.skipAt>now0?`<div class="askip">⏭ ${(()=>{const x=new Date(a.skipAt);return `${x.getMonth()+1}/${x.getDate()} ${ampm(a.time).ap} ${ampm(a.time).tm}`;})()} 한 번 건너뜀 <button data-act="askip-undo" data-id="${a.id}">되돌리기</button></div>`
           :a.on&&nextFire[a.id]&&!a.once&&nextFire[a.id]-now0<24*3600e3?`<button class="askip-btn" data-act="askip" data-id="${a.id}">이번만 끄기</button>`:''}
       </div>
@@ -3613,7 +3644,7 @@ function renderAlarm(){
     </div>`;
   }).join('');
   const issueHtml=nativeIssues().map(k=>`<div class="notice-banner" data-act="nativefix" data-k="${k}" style="margin-top:8px"><span>⚠️ ${ISSUE_TXT[k]||k}</span><b style="font-size:12px;flex:none;margin-left:8px">설정 열기</b></div>`).join('');
-  return `${issueHtml}${nextHtml}
+  return `${issueHtml}${nextHtml}${nextCard}
     ${S.alarms.length?'<div class="list-header"><span>곧 울리는 순</span><span class="all-off" data-act="alloff">전체 끄기</span></div>':''}
     <div>${cards}</div>`;
 }
@@ -5870,8 +5901,8 @@ const OB_PRESETS=[
   {id:'4-2',name:'4조 2교대',sub:'주주휴휴야야휴휴 · 8일 반복',pat:['주','주','휴','휴','야','야','휴','휴'],off:[6,4,0,2]},
   {id:'3-2',name:'3조 2교대',sub:'주주주야야야휴휴휴 · 9일 반복',pat:['주','주','주','야','야','야','휴','휴','휴'],off:[6,3,0]},
   {id:'2',name:'2교대 (주야 맞교대)',sub:'주야휴 · 3일 반복',pat:['주','야','휴'],off:[2,1,0]},
-  {id:'4-3',name:'4조 3교대',sub:'주주오오야야휴휴 · 8일 반복',pat:['주','주','오','오','야','야','휴','휴'],off:[6,4,0,2],add:{k:'오',name:'오후',color:'#ffe0b2',rest:false}},
-  {id:'week',name:'상주 (월~금 근무)',sub:'토·일 · 공휴일 쉬어요',pat:['상','상','상','상','상','휴','휴'],off:[0],hol:true,add:{k:'상',name:'상주',color:'#dcedc8',rest:false}}
+  {id:'4-3',name:'4조 3교대',sub:'주주오오야야휴휴 · 8일 반복',pat:['주','주','오','오','야','야','휴','휴'],off:[6,4,0,2],add:{k:'오',name:'오후',color:'#f1dc8f',rest:false}},
+  {id:'week',name:'상주 (월~금 근무)',sub:'토·일 · 공휴일 쉬어요',pat:['상','상','상','상','상','휴','휴'],off:[0],hol:true,add:{k:'상',name:'상주',color:'#b9dcb0',rest:false}}
 ];
 let ob=null;
 /* entry: 'first' 처음 설치 · 'join' 초대 코드로 참여한 뒤 · 'later' 설정 / 달력 위 안내에서 다시
@@ -5892,8 +5923,8 @@ function obPath(){const w=ob.way;return w==='irregular'?['way']:['way',...(w==='
 const OB_AL_T={주:'05:50',야:'16:30',오:'13:30',상:'07:30'};
 // 직접 만들기: 고른 글자 → 근무타입 (이미 있는 글자는 그대로, 없으면 새로 만듦)
 function obCTypes(){
-  const cols=['#7986cb','#ba68c8','#2196f3','#fbc02d','#8bc34a','#795548'];let ci=0;
-  const mk=(k,rest)=>S.types.find(t=>t.k===k)||{k,name:k===NONE_K?'없음':k,color:rest?'':cols[ci++%cols.length],rest};
+  const used=S.types.slice();
+  const mk=(k,rest)=>{const f=S.types.find(t=>t.k===k);if(f)return f;const t={k,name:k===NONE_K?'없음':k,color:rest?'':nextPastel(used),rest};used.push(t);return t;};   // 새 근무 종류는 파스텔 순서대로 (이미 쓰는 색은 건너뜀)
   return [...ob.wk.map(k=>mk(k,false)),mk(ob.rk,true)];
 }
 const obIsWork=k=>{if(ob.way==='custom'){const t=obCTypes().find(x=>x.k===k);return !!t&&!t.rest;}const p=obPreset();return p.add&&p.add.k===k?!p.add.rest:!isRest(k);};
@@ -6420,11 +6451,11 @@ document.addEventListener('click',e=>{
     case 'day-go':goDay(t.dataset.k);break;
     case 'type-preset':{
       const k=t.dataset.k;
-      if(!S.types.some(x=>x.k===k))S.types.push({k,name:t.dataset.name,color:t.dataset.rest==='1'?'':PALETTE[(S.types.length*3)%PALETTE.length],rest:t.dataset.rest==='1'});
+      if(!S.types.some(x=>x.k===k))S.types.push({k,name:t.dataset.name,color:t.dataset.rest==='1'?'':nextPastel(),rest:t.dataset.rest==='1'});
       if(typeReturn==='day'&&sheetKey)applyShift(k);else{save();afterType();}
       break;}
-    case 'type-new':typeDraft={isNew:true,k:'',name:'',color:'#7986cb',rest:false};openTypeEdit();break;
-    case 'type-new-page':typeReturn='page';typeDraft={isNew:true,k:'',name:'',color:'#7986cb',rest:false};openTypeEdit();break;
+    case 'type-new':typeDraft={isNew:true,k:'',name:'',color:nextPastel(),rest:false};openTypeEdit();break;
+    case 'type-new-page':typeReturn='page';typeDraft={isNew:true,k:'',name:'',color:nextPastel(),rest:false};openTypeEdit();break;
     case 'type-edit-page':{typeReturn='page';const x=typeOf(t.dataset.s);typeDraft={isNew:false,orig:x.k,k:x.k,name:x.name,color:x.color,rest:!!x.rest};openTypeEdit();break;}
     case 'type-color':if(typeDraft){typeDraft.color=t.dataset.c;openTypeEdit();}break;
     case 'type-kind':if(typeDraft){typeDraft.rest=t.dataset.v==='1';openTypeEdit();}break;

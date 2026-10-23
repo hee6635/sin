@@ -243,5 +243,25 @@ const ONLY=process.env.ONLY||'';
     T('스티커를 10px 로 줄여도 주야 위치 · 날짜 줄 높이 그대로',JSON.stringify(a)===JSON.stringify(c),JSON.stringify([a,c]));
     await p.close();
   }
+  // ── v0.89: 근무 종류 파스텔 · 알람 목록(다음 알람 카드 · 근무 색) · 끄기 화면에 근무 색 · 아이콘 전달
+  if(want('v89')){
+    const A=(id,label,time,shift,on=true)=>({id,label,time,shift,offset:0,on,sound:true,vib:true,vol:100,ramp:false,tone:'',toneName:'기본 알람음',snMin:5,snMax:3,once:false,until:0,noHol:false,skipAt:0});
+    const p=await boot(b,{...base,alarms:[A('a1','출근','05:30','주'),A('a2','','16:30','야'),A('a3','약','07:00','*')]},{touch:true});
+    await p.evaluate(()=>{window.__al=null;window.AndroidBridge.setAlarms=j=>{window.__al=JSON.parse(j);};});
+    await p.evaluate(()=>window.__refresh());await p.waitForTimeout(300);
+    const al=await p.evaluate(()=>window.__al);
+    const f=k=>al.find(x=>x.id.startsWith(k));
+    T('알람 전달: 주간 = 하늘 #a6c6e2 · ☀️ / 야간 = 살구 #e0b8a3 · 🌙 / 매일 = 색 없음',f('a1').col==='#a6c6e2'&&f('a1').ico==='☀️'&&f('a2').col==='#e0b8a3'&&f('a2').ico==='🌙'&&f('a3').col===''&&f('a3').ico==='',JSON.stringify([f('a1'),f('a2'),f('a3')].map(x=>x&&[x.col,x.ico])));
+    await p.click('#nav [data-tab="alarm"]');await p.waitForTimeout(400);
+    const r=await p.evaluate(()=>{const n=document.querySelector('.anext');const cards=[...document.querySelectorAll('.acard')];return {next:n&&n.textContent.replace(/\s+/g,' '),nextAc:n&&n.style.getPropertyValue('--ac'),acs:cards.map(c=>c.style.getPropertyValue('--ac')),names:cards.map(c=>(c.querySelector('.acard-n b')||{}).textContent),left:document.querySelectorAll('.acard .aleft').length};});
+    T('맨 위 "다음 알람" 카드: 시각 · 이름 · 남은 시간',!!r.next&&/다음 알람/.test(r.next)&&/후에 울려요/.test(r.next),JSON.stringify(r));
+    T('알람마다 근무 색(주간 · 야간) · 매일은 색 없음 · 이름 굵게(이름 없으면 "야간 알람")',r.acs.filter(Boolean).length===2&&r.names.includes('출근')&&r.names.some(x=>/알람$/.test(x)),JSON.stringify(r));
+    T('목록 줄에는 남은 시간 없음(다음 알람 카드에만)',r.left===0,JSON.stringify(r));
+    // 근무 종류 색: 파스텔이 맨 앞 · 새로 만들면 안 쓰는 파스텔
+    await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);
+    const pal=await p.evaluate(()=>{try{return [PALETTE.slice(0,8),nextPastel()];}catch(e){return null;}});
+    T('색 목록 맨 앞이 파스텔 8색 · 새 근무 색은 아직 안 쓰는 파스텔',!pal||(pal[0][0]==='#b9dcb0'&&pal[0].length===8&&pal[0].includes(pal[1])),JSON.stringify(pal));
+    T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
   T.sum();await b.close();
 })();
