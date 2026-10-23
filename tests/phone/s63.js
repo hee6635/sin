@@ -186,5 +186,15 @@ const ONLY=process.env.ONLY||'';
     T('넘기는 중에 "오늘"을 눌러도 엉뚱한 달로 안 감(다음 달에 머묾)',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell[data-k="2026-11-12"]')));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
+  // ── 고침: 가족 시간표 오늘 열이 작은 동그라미로 줄던 것(오늘 띠 색 버튼과 이름 .tdc 가 같았음)
+  if(want('famtdc')){
+    for(const w of [390,930]){
+      const p=await boot(b,{...base,calLook:'fill',famSwiped:true},{w,h:900,touch:true});
+      await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(600);
+      const r=await p.evaluate(()=>{const t=document.querySelector('.fh.tdc'),o=document.querySelector('.fh:not(.tdc)'),c=document.querySelector('.fc.tdc');return {tw:t.getBoundingClientRect().width,ow:o.getBoundingClientRect().width,cw:c.getBoundingClientRect().width,rad:getComputedStyle(t).borderTopLeftRadius};});
+      T(`${w}px 가족 탭(혼자): 오늘 열 폭 = 다른 열 폭 · 동그라미 아님`,Math.abs(r.tw-r.ow)<1&&Math.abs(r.cw-r.ow)<1&&r.rad!=='50%',JSON.stringify(r));
+      await p.close();
+    }
+  }
   T.sum();await b.close();
 })();
