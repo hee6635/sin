@@ -75,8 +75,8 @@ const {mkT}=require('./lib.js');
   {const p=await boot(b,richA(),{});await toSet(p);
    await p.evaluate(()=>{const e=document.createElement('div');e.dataset.act='more-colors';document.body.appendChild(e);e.click();e.remove();});await p.waitForTimeout(300);
    const sw=await p.$$eval('#page .swatch',gs=>gs.map(g=>[...g.querySelectorAll('button')].map(x=>x.dataset.v)));
-   T('설정 메모 색: 가족 색 칸에는 나만 보는 색(회색)이 없음',sw[0].length===13&&!sw[0].includes('#6b7280')&&sw[0].includes('#7b5cf0'),JSON.stringify(sw[0]));
-   T('설정 메모 색: 나만 보는 색 칸에는 가족 색(보라)이 없음',sw[1].length===13&&!sw[1].includes('#7b5cf0')&&sw[1].includes('#6b7280'),JSON.stringify(sw[1]));
+   T('설정 메모 색: 가족 색 칸에는 나만 보는 색(기본 연한 파랑)이 없음',sw[0].length===14&&!sw[0].includes('#5b8fc7')&&sw[0].includes('#7b5cf0'),JSON.stringify(sw[0]));
+   T('설정 메모 색: 나만 보는 색 칸에는 가족 색(보라)이 없음',sw[1].length===14&&!sw[1].includes('#7b5cf0')&&sw[1].includes('#5b8fc7'),JSON.stringify(sw[1]));
    await p.evaluate(()=>document.querySelector('#page .swatch:nth-of-type(1) button[data-v="#5b8def"], #page [data-k="fam"][data-v="#5b8def"]').click());await p.waitForTimeout(250);
    const sw2=await p.$$eval('#page .swatch',gs=>gs.map(g=>[...g.querySelectorAll('button')].map(x=>x.dataset.v)));
    T('가족 색을 파랑으로 바꾸면 나만 보는 칸에서 파랑이 빠지고 보라가 돌아옴',!sw2[1].includes('#5b8def')&&sw2[1].includes('#7b5cf0'),JSON.stringify(sw2[1]));
@@ -99,7 +99,7 @@ const {mkT}=require('./lib.js');
    let n=0;while(n++<30){const dis=await p.$eval('[data-act="prev"]',e=>e.disabled);if(dis)break;await p.click('[data-act="prev"]');await p.waitForTimeout(80);}
    const hdr=await p.$eval('[data-act="prev"]',e=>e.parentElement.innerText.replace(/\s+/g,' '));
    T('거꾸로 넘기면 2025년 1월에서 멈춤',(await p.$eval('[data-act="prev"]',e=>e.disabled))&&hdr.includes('2025.01'),hdr);
-   const h25=await p.evaluate(()=>[...document.querySelectorAll('.track .panel:nth-child(2) .cell')].filter(c=>/설|신정|연휴/.test(c.innerText)).length);
+   const h25=await p.evaluate(()=>[...document.querySelectorAll('.track .panel:nth-child(2) .cell:not(.out)')].filter(c=>c.querySelector('.dn.hol')).length);   // (v0.87~: 스티커가 많으면 이름이 한 글자라 글자 대신 명절 칸을 셈)
    T('2025년 1월 달력에 설 연휴 · 신정이 표시됨',h25>=3,String(h25));
    T('오류 없음',p.errs.length===0,p.errs.join('|'));
    await p.ctx.close();}

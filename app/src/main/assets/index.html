@@ -66,7 +66,7 @@
 :root{
   --pill-off:#b9bec7;
   --bg:#ffffff;--surface:#f5f6f8;--fg:#1f2328;--muted:#8b919a;--line:#eceef1;--track:#c9ced6;
-  --accent:#2f6bf0;--day:#a9bfca;--day-fg:#1c2a31;--night:#bda89f;--night-fg:#2b1f1b;--band-d:#eef1f3;--band-n:#f3eeeb;--today:#1f8f75;--today-bg:#e3f6f0;--navbar:#ffffff;--navbar-fg:#9aa1ad;--out-bg:#f4f5f7;--head-bg:#f7f7f8;
+  --accent:#2f6bf0;--day:#a6c6e2;--day-fg:#1c2a31;--night:#e0b8a3;--night-fg:#2b1f1b;--band-d:#eef1f3;--band-n:#f3eeeb;--today:#1f8f75;--today-bg:#e3f6f0;--navbar:#ffffff;--navbar-fg:#9aa1ad;--out-bg:#f4f5f7;--head-bg:#f7f7f8;
   --rest:#e0455c;--hol-bg:#f8d5d9;--sat:#3b6fd6;--sun:#d64560;--danger:#d64560;
   --icon-on:#8a65c9; --icon-off:#c9ced6;
   --fab-color:#8a65c9;
@@ -120,7 +120,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .cal-mid{display:flex;flex-direction:column;align-items:center;min-width:0}
 .cal-mid .ym{display:flex;align-items:center;gap:2px}
 .cal-mid .ym .ib{width:34px;height:34px;font-size:22px;color:var(--muted)}
-.cal-mid .ym h1{font-size:26px;font-weight:800;letter-spacing:-.3px;flex:none;cursor:pointer;margin:0 4px}
+.cal-mid .ym h1{font-size:25px;font-weight:700;letter-spacing:-.3px;flex:none;cursor:pointer;margin:0 4px}
 .cal-mid .sub{font-size:12.5px;color:var(--muted);line-height:1.35;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .cal-mid .sub b{color:var(--fg);font-weight:600}
 #top h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.5px;flex:1}
@@ -245,7 +245,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .badge.d{background:var(--day);color:var(--day-fg)}
 .badge.n{background:var(--night);color:var(--night-fg)}
 .badge.r{background:none;color:var(--rest);border-radius:0}
-.bwrap .badge.r{font-size:calc(var(--b)*.37);font-weight:600}
+.bwrap .badge.r{font-size:calc(var(--b)*.37);font-weight:600;color:var(--restx,var(--rest))}   /* 달력 칸의 "휴": 진한 빨강 대신 장미빛 (화면에서 가장 많이 나오는 글자라 부드럽게) */
 .bwrap .badge.r.two{font-size:calc(var(--b)*.36)}
 .badge.s-sang{background:#b8e994;color:#0a3d62;}
 .badge.s-edu{background:#f8c291;color:#b71540;}
@@ -564,7 +564,7 @@ textarea{resize:none;min-height:84px}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 
 /* ================= 1차 추가 화면 ================= */
-:root{--fam:#7b5cf0;--fam-bg:#f3f0ff;--fam-line:#d3c8ff;--fam-fg:#fff;--my:#6b7280;--my-bg:#f1f2f4;--my-line:#dfe2e6;--dd:#2f6bf0;--chol:#e8efff;--chol-fg:#3b6fd6}
+:root{--restx:#d0607a;--fam:#7b5cf0;--fam-bg:#f3f0ff;--fam-line:#d3c8ff;--fam-fg:#fff;--my:#6b7280;--my-bg:#f1f2f4;--my-line:#dfe2e6;--dd:#2f6bf0;--chol:#e8efff;--chol-fg:#3b6fd6}
 /* 상단 */
 #top.cal-top{grid-template-columns:92px 1fr 92px}
 .cal-top .hl,.cal-top .hr{display:flex;align-items:center;gap:2px}
@@ -1310,6 +1310,8 @@ html[data-cal="fill"] .cell.rq-no .badge{box-shadow:inset 0 0 0 2.5px #d12f4a}
 /* 칸 채우기: 명절 띠는 파스텔(연한 분홍 + 장미빛 글자) · 오늘 칸은 살짝 떠오른 느낌(테두리 + 약한 그림자, 확대는 안 함) */
 html[data-cal="fill"]{--hol-bg:#fcebee;--holx:#c8627a}
 html[data-cal="fill"][data-theme="dark"]{--hol-bg:#3a2429;--holx:#e49aaa}
+:root[data-theme="dark"]{--restx:#ec8fa2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--restx:#ec8fa2}}
 @media (prefers-color-scheme:dark){html[data-cal="fill"]:not([data-theme="light"]){--hol-bg:#3a2429;--holx:#e49aaa}}
 html[data-cal="fill"] .dn.hol .hn,html[data-cal="fill"] .dn.hol .h1,html[data-cal="fill"] .hnb{color:var(--holx);font-weight:700}
 html[data-cal="fill"] .dn.hol{border-radius:9px 9px 0 0}
@@ -1672,7 +1674,7 @@ const defaults=()=>({
   /* 회사 휴무일: [{id, date, name, yearly}] */
   companyHols:[],
   compHolAsHoliday:true,   // 회사 휴무일 출근도 휴일 근무로 셈
-  memoColors:{fam:'#7b5cf0',my:'#6b7280'},
+  memoColors:{fam:'#7b5cf0',my:'#5b8fc7'},
   fontScale:100,
   stats:true,   // 사용 통계(횟수만) 보내기 · 설정에서 끔
   bg:'',   // 배경: '' 기본 · 'paper' 종이
@@ -1721,7 +1723,7 @@ function normalize(o){
   if(!Array.isArray(s.teamNames))s.teamNames=[];
   s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'?'fill':'circle';s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.todayColor=/^#[0-9a-f]{6}$/i.test((o&&o.todayColor)||'')?o.todayColor.toLowerCase():'';s.linkLost=(o&&isObj(o.linkLost)&&typeof o.linkLost.hid==='string')?{hid:cutTxt(o.linkLost.hid,128),role:o.linkLost.role==='host'?'host':'guest',name:cutTxt(o.linkLost.name,12),at:+o.linkLost.at||0}:null;s.linkMissAt=+(o&&o.linkMissAt)||0;s.hostSeenAt=+(o&&o.hostSeenAt)||0;s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,stkAsked:s.link.stkAsked?1:0,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
-  s.memoColors=Object.assign({fam:'#7b5cf0',my:'#6b7280'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#6b7280'})[k];});
+  s.memoColors=Object.assign({fam:'#7b5cf0',my:'#5b8fc7'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#5b8fc7'})[k];});if(!(o&&o.memoMig88)&&s.memoColors.my==='#6b7280')s.memoColors.my='#5b8fc7';s.memoMig88=true;   // v0.88: 내 메모 기본색 회색 → 연한 파랑 (옛 기본값 그대로인 사람만 · 한 번만 — 그 뒤에 회색을 고르면 그대로)
   s.drive=Object.assign(defaults().drive,isObj(o.drive)?o.drive:{});
   s.status=Object.assign(defaults().status,isObj(o.status)?o.status:{});if(!isObj(s.status.labels))s.status.labels={};
   if(!isObj(s.shiftTimes))s.shiftTimes={};else Object.keys(s.shiftTimes).forEach(k=>{const v=s.shiftTimes[k];if(!isObj(v)||!okTime(v.start)||!okTime(v.end))delete s.shiftTimes[k];});
@@ -2212,7 +2214,7 @@ const setCur=(y,m)=>{const v=Math.min(MAX_M,Math.max(MIN_M,y*12+m));cur={y:Math.
 function hexRgb(h){h=String(h||'#000000').replace('#','');return [parseInt(h.slice(0,2),16)||0,parseInt(h.slice(2,4),16)||0,parseInt(h.slice(4,6),16)||0];}
 const fgOn=hex=>{const [r,g,b]=hexRgb(hex);return (r*299+g*587+b*114)/1000>165?'#1f2328':'#ffffff';};
 function applyTheme(){
-  const st=document.documentElement.style,f=S.memoColors.fam||'#7b5cf0',m=S.memoColors.my||'#6b7280';
+  const st=document.documentElement.style,f=S.memoColors.fam||'#7b5cf0',m=S.memoColors.my||'#5b8fc7';
   st.setProperty('--fam',f);
   st.setProperty('--fam-fg',fgOn(f));
   st.setProperty('--fam-bg',`color-mix(in srgb, ${f} 20%, var(--bg))`);   // 개인 메모 색(연한 색)과 구분되게 조금 짙게
@@ -5288,7 +5290,7 @@ function openFamilyPage(){
 }
 
 /* ---------- 메모 색 ---------- */
-const MEMO_PAL=['#7b5cf0','#5b8def','#2f6bf0','#0fa3b1','#1f8f75','#43a047','#f08c00','#e8590c','#c2255c','#e0455c','#8a65c9','#6b7280','#3a3d43','#795548'];
+const MEMO_PAL=['#7b5cf0','#5b8fc7','#5b8def','#2f6bf0','#0fa3b1','#1f8f75','#43a047','#f08c00','#e8590c','#c2255c','#e0455c','#8a65c9','#6b7280','#3a3d43','#795548'];
 function openColorsPage(){
   const c=S.memoColors;
   const sw=(key)=>`<div class="swatch">${MEMO_PAL.filter(x=>x===c[key]||x!==c[key==='fam'?'my':'fam']).map(x=>`<button class="${c[key]===x?'on':''}" style="background:${x}" data-act="mcolor" data-k="${key}" data-v="${x}"></button>`).join('')}</div>`;
@@ -6626,7 +6628,7 @@ document.addEventListener('click',e=>{
     case 'tune-copy':copyText(tuneText());break;
     case 'bgmode':S.bg=t.dataset.v==='paper'?'paper':'';save();applyTheme();render();break;
     case 'mcolor':if(t.dataset.v!==S.memoColors[t.dataset.k==='fam'?'my':'fam']||S.memoColors.fam===S.memoColors.my)S.memoColors[t.dataset.k]=t.dataset.v;save();applyTheme();openColorsPage();break;
-    case 'mcolor-reset':S.memoColors={fam:'#7b5cf0',my:'#6b7280'};save();applyTheme();openColorsPage();break;
+    case 'mcolor-reset':S.memoColors={fam:'#7b5cf0',my:'#5b8fc7'};save();applyTheme();openColorsPage();break;
     case 'paint-open':paintStart(t.dataset.k);break;
     case 'paint-k':paint.k=t.dataset.s;render();break;
     case 'paint-done':{const n=paintChanged();paint=null;render();toast(n?`${n}일을 바꿨어요`:'칠하기를 마쳤어요');break;}
