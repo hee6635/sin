@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>알람 울림 화면 시안</title>
+<style>
+/* 알람이 울릴 때 화면 시안 (v0.89 후보): 근무 색 배경 · 숨 쉬는 원 · 미루기 남은 횟수 */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans KR","Noto Sans CJK KR",system-ui,sans-serif;background:#d9dde3;display:flex;gap:28px;padding:28px;flex-wrap:wrap}
+.cap{font-size:15px;color:#3a3f48;margin:0 0 10px 4px;font-weight:700}
+.ph{width:360px;height:760px;border-radius:36px;position:relative;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.18);display:flex;flex-direction:column;align-items:center;color:var(--ink)}
+.ph::before,.ph::after{content:"";position:absolute;border-radius:50%;filter:blur(36px);opacity:.75;pointer-events:none}
+.ph::before{width:300px;height:300px;left:-90px;top:-60px;background:var(--blob1)}
+.ph::after{width:280px;height:280px;right:-110px;bottom:120px;background:var(--blob2)}
+.day{--bg0:#dcecf9;--bg1:#f4f8fd;--blob1:#bfdcf3;--blob2:#fbe7c8;--ink:#1f3346;--sub:#5a7088;--ring:#7fb2dd;--chip:rgba(255,255,255,.75);--sn:#cfe2f3;--snk:#2e4d6b;--st:#f3a3b1;--stk:#5a2030}
+.night{--bg0:#f6dcc9;--bg1:#e7d3e6;--blob1:#f3c4a8;--blob2:#cdbce6;--ink:#3a2a2a;--sub:#7a6060;--ring:#e3a07f;--chip:rgba(255,255,255,.7);--sn:#efd7c7;--snk:#6b3f2c;--st:#f3a3b1;--stk:#5a2030}
+.every{--bg0:#e7edfa;--bg1:#f6eaf3;--blob1:#d9d0f5;--blob2:#f8d7e6;--ink:#2a3042;--sub:#5d667e;--ring:#a99be0;--chip:rgba(255,255,255,.72);--sn:#d3dcf1;--snk:#3b4a78;--st:#f3a3b1;--stk:#5a2030}
+.dark{--bg0:#1d2335;--bg1:#2b2842;--blob1:#2f3f66;--blob2:#4a3550;--ink:#eef0f8;--sub:#b9c0d8;--ring:#7f95d6;--chip:rgba(255,255,255,.12);--sn:#3a4262;--snk:#d2daf6;--st:#e58d9e;--stk:#3a1822}
+.ph{background:linear-gradient(180deg,var(--bg0),var(--bg1))}
+.in{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;height:100%;width:100%}
+.date{margin-top:84px;font-size:16px;color:var(--sub);letter-spacing:.2px}
+.clock{position:relative;margin-top:34px;width:250px;height:250px;display:grid;place-items:center}
+.clock i{position:absolute;inset:0;border-radius:50%;border:2px solid var(--ring);opacity:.0}
+.clock i:nth-child(1){inset:18px;opacity:.55;background:radial-gradient(circle,rgba(255,255,255,.55),rgba(255,255,255,0) 70%)}
+.clock i:nth-child(2){inset:4px;opacity:.28}
+.clock i:nth-child(3){inset:-12px;opacity:.12}
+.t{position:relative;text-align:center;line-height:1}
+.t small{display:block;font-size:20px;color:var(--sub);margin-bottom:6px;font-weight:600}
+.t b{font-size:68px;font-weight:700;letter-spacing:-1.5px}
+.chip{margin-top:26px;background:var(--chip);border-radius:24px;padding:9px 18px;font-size:18px;font-weight:800;display:flex;gap:8px;align-items:center;backdrop-filter:blur(6px);box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.chip em{font-style:normal;font-size:12px;font-weight:800;padding:3px 8px;border-radius:10px;background:var(--ring);color:#fff}
+.sp{flex:1}
+.row{display:flex;align-items:center;gap:34px;margin-bottom:70px}
+.btn{border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;box-shadow:0 8px 22px rgba(0,0,0,.10)}
+.sn{width:104px;height:104px;background:var(--sn);color:var(--snk);font-size:18px}
+.sn span{font-size:12.5px;opacity:.8;font-weight:700;margin-top:3px}
+.st{width:132px;height:132px;background:var(--st);color:var(--stk);font-size:26px;position:relative}
+.st::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--st);opacity:.35}
+.note{font-size:13px;color:#4a505a;margin-top:8px;max-width:360px;line-height:1.5}
+</style></head><body>
+<div><div class="cap">① 주간 알람 — 하늘 아침</div>
+<div class="ph day"><div class="in">
+  <div class="date">10월 23일 금요일</div>
+  <div class="clock"><i></i><i></i><i></i><div class="t"><small>오전</small><b>5:30</b></div></div>
+  <div class="chip">☀️ 출근<em>주간</em></div>
+  <div class="sp"></div>
+  <div class="row"><div class="btn sn">미루기<span>5분 · 2번 남음</span></div><div class="btn st">끄기</div></div>
+</div></div></div>
+
+<div><div class="cap">② 야간 알람 — 살구 노을</div>
+<div class="ph night"><div class="in">
+  <div class="date">10월 23일 금요일</div>
+  <div class="clock"><i></i><i></i><i></i><div class="t"><small>오후</small><b>4:30</b></div></div>
+  <div class="chip">🌙 야간 출근<em>야간</em></div>
+  <div class="sp"></div>
+  <div class="row"><div class="btn sn">미루기<span>마지막</span></div><div class="btn st">끄기</div></div>
+</div></div></div>
+
+<div><div class="cap">③ 근무와 상관없는 알람(매일) — 지금 라벤더</div>
+<div class="ph every"><div class="in">
+  <div class="date">10월 23일 금요일</div>
+  <div class="clock"><i></i><i></i><i></i><div class="t"><small>오전</small><b>7:00</b></div></div>
+  <div class="chip">💊 약 먹기</div>
+  <div class="sp"></div>
+  <div class="row"><div class="btn sn">미루기<span>10분 · 3번 남음</span></div><div class="btn st">끄기</div></div>
+</div></div></div>
+
+<div><div class="cap">④ 어두운 모드(밤)</div>
+<div class="ph dark"><div class="in">
+  <div class="date">10월 23일 금요일</div>
+  <div class="clock"><i></i><i></i><i></i><div class="t"><small>오전</small><b>5:30</b></div></div>
+  <div class="chip">☀️ 출근<em>주간</em></div>
+  <div class="sp"></div>
+  <div class="row"><div class="btn sn">미루기<span>5분 · 1번 남음</span></div><div class="btn st">끄기</div></div>
+</div></div>
+<p class="note">시계 둘레 원 3겹은 실제로는 숨 쉬듯 천천히 커졌다 작아짐(약 2초). 배경 뒤 흐린 동그라미는 근무 색에 맞춘 은은한 빛.</p></div>
+</body></html>
