@@ -70,14 +70,14 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     T('저장하면 기본값이 됨(앱 커버 주야 1.15 · 앱 안쪽 메모 1 · 위젯 안쪽 메모 1.1) · 이전 저장이 기록에 남음',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('eonjeswieo:v1'));return s.tune.appCover.ink===1.15&&s.tune.appInner.memo===1&&s.tune.inner.memo===1.1&&s.tuneHist.length>=2;}));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
-  // ── 공휴일 이름 · 스티커 자리: 이름이 다 안 들어가면 한 글자로 숫자 옆에 두고, 모자라면 스티커를 아래 줄로 (이름을 숫자 아래로 내리지 않음)
+  // ── 공휴일 이름 · 스티커 자리 (v0.87: 커버 화면에서 스티커 2개 이상이면 이름은 숫자 아래 두 글자 · 아래 줄 스티커와 부딪히면 한 글자)
   {
     const mk=(id,e,n,x={})=>({id,kind:'mark',emoji:e,name:n,times:1,rep:'none',days:[],dates:[],skip:[],ats:[],...x});
     const defs=[{id:'s_pill',kind:'pill',emoji:'💊',name:'약',times:1,color:'#ef4d5a',rep:'none',days:[],dates:['2026-10-09'],skip:[],ats:[]},mk('a','👟','조깅',{dates:['2026-10-09']}),mk('b','📖','독서',{dates:['2026-10-09']}),mk('c','💰','가계',{dates:['2026-10-09']})];
     for(const w of [300,390]){
       const p=await boot(b,{...base,stamps:{defs,log:{},v3:1,v4:1,lastAt:[]}},{w,h:800,touch:true});
-      const r=await p.evaluate(()=>{const c=document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-09"]');return {h1:(c.querySelector('.h1')||{}).textContent||'',hnb:!!c.querySelector('.hnb'),s1:c.querySelectorAll('.dn>.stp>*').length,s2:c.querySelectorAll('.s2>*').length};});
-      T(`한글날 + 스티커 4개 (폭 ${w}): 이름은 숫자 옆(두 글자 또는 한 글자) · 숫자 아래로 안 내려감`,(r.h1==='한'||r.h1==='한글')&&!r.hnb&&r.s1+r.s2===4,JSON.stringify(r));
+      const r=await p.evaluate(()=>{const c=document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-09"]');return {h1:(c.querySelector('.h1')||{}).textContent||'',hnb:!!c.querySelector('.hnb'),hbt:(c.querySelector('.hnb')||{}).textContent||'',s1:c.querySelectorAll('.dn>.stp>*').length,s2:c.querySelectorAll('.s2>*').length};});
+      T(`한글날 + 스티커 4개 (폭 ${w}, 커버): 이름은 숫자 아래(두 글자 또는 한 글자)`,r.hnb&&(r.hbt==='한'||r.hbt==='한글')&&r.s1+r.s2===4,JSON.stringify(r));
       T(`폭 ${w}: 스티커 둘째 줄이 생김(4개는 한 줄에 안 들어감)`,r.s2>=2,JSON.stringify(r));
       T(`폭 ${w}: 오류 없음`,p.errs.length===0,p.errs.join('|'));await p.close();
     }
@@ -92,7 +92,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
       res.push(await p.evaluate(()=>{const c=document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-09"]');return {s1:c.querySelectorAll('.dn>.stp>*').length,s2:c.querySelectorAll('.s2>*').length,hnb:!!c.querySelector('.hnb')};}));
       await p.close();
     }
-    T('스티커 2개 + 한글날: 자리가 있으면 한 줄에 그대로(옆으로 옮겨도 아래로 안 밀림 · 이름도 숫자 옆)',res[0].s1===2&&res[0].s2===0&&res[1].s1===2&&res[1].s2===0&&!res[0].hnb&&!res[1].hnb,JSON.stringify(res));
+    T('스티커 2개 + 한글날(커버): 스티커는 한 줄에 그대로(옆으로 옮겨도 아래로 안 밀림) · 이름은 숫자 아래',res[0].s1===2&&res[0].s2===0&&res[1].s1===2&&res[1].s2===0&&res[0].hnb&&res[1].hnb,JSON.stringify(res));
   }
   // ── 모양 조정을 열었다 닫아도 달력 메모 줄 수가 달라지지 않음 (미리보기 달력을 메인 달력으로 착각해 1줄로 줄던 문제)
   {

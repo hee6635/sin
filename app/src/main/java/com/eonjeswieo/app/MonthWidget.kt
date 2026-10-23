@@ -248,13 +248,14 @@ object MonthRenderer {
     )
 
     /** 모양 조정(앱 숨은 화면)에서 정한 배율 · 위치: 위젯 가로 폭이 440dp 보다 좁으면 "커버" 값 · 넓으면 "안쪽" 값. 없으면 전부 기본(1 · 0) */
-    internal class Tune(val stk: Float, val stkX: Float, val stkY: Float, val ink: Float, val inkY: Float, val memo: Float, val pill: Float, val stkGX: Float = 0f, val stkGY: Float = 0f, val memoY: Float = 0f, val memoG: Float = 0f) {
+    internal class Tune(val stk: Float, val stkX: Float, val stkY: Float, val ink: Float, val inkY: Float, val memo: Float, val pill: Float, val stkGX: Float = 0f, val stkGY: Float = 0f, val memoY: Float = 0f, val memoG: Float = 0f, val cover: Boolean = true) {
         companion object {
             val NONE = Tune(1f, 0f, 0f, 1f, 0f, 1f, 1f)
             fun from(data: JSONObject?, wDp: Float): Tune {
-                val o = data?.optJSONObject("tune")?.optJSONObject(if (wDp < 440f) "cover" else "inner") ?: return NONE
+                val cv = wDp < 440f   // 커버 크기 위젯: 스티커 2개 이상인 명절은 이름을 숫자 아래로 (앱 커버 화면과 같음)
+                val o = data?.optJSONObject("tune")?.optJSONObject(if (cv) "cover" else "inner") ?: return Tune(1f, 0f, 0f, 1f, 0f, 1f, 1f, cover = cv)
                 fun g(k: String, d: Float, lo: Float, hi: Float): Float = o.optDouble(k, d.toDouble()).toFloat().coerceIn(lo, hi)
-                return Tune(g("stk", 1f, 0.6f, 1.6f), g("stkX", 0f, -1f, 1f), g("stkY", 0f, -1f, 1f), g("ink", 1f, 0.6f, 1.5f), g("inkY", 0f, -1f, 1f), g("memo", 1f, 0.7f, 1.6f), g("pill", 1f, 0.7f, 1.6f), g("stkGX", 0f, -1f, 1f), g("stkGY", 0f, -1f, 1f), g("memoY", 0f, -1f, 3f), g("memoG", 0f, -1f, 1f))
+                return Tune(g("stk", 1f, 0.6f, 1.6f), g("stkX", 0f, -1f, 1f), g("stkY", 0f, -1f, 1f), g("ink", 1f, 0.6f, 1.5f), g("inkY", 0f, -1f, 1f), g("memo", 1f, 0.7f, 1.6f), g("pill", 1f, 0.7f, 1.6f), g("stkGX", 0f, -1f, 1f), g("stkGY", 0f, -1f, 1f), g("memoY", 0f, -1f, 3f), g("memoG", 0f, -1f, 1f), cv)
             }
         }
     }
@@ -1034,7 +1035,11 @@ object MonthRenderer {
             val full = hol.split('·')[0]
             if (full.length in 3..5 && !full.startsWith("대체") && !full.contains("선거") && !full.contains("(") && full != "임시공휴일") { h3 = if (full == "부처님오신날") "부처님" else full; holW3 = hp.measureText(h3) }
         }
-        val top = WidgetLayout.monthTop(plan, cw, u, numW, f.stk.size, holW2, holW1, holW3)
+        // 숫자 아래로 내린 이름이 주야 글자와 안 겹칠 때만 내림 (위젯 칸은 낮아서 자리가 없으면 지금처럼 숫자 옆)
+        val nameBottom = plan.dateBase + plan.holSize * 1.15f + plan.holSize * 0.25f
+        val inkTop = plan.circleCy[r] + tn.inkY * rowH * 0.1f - Math.min(plan.circleD / 2f * tn.ink, plan.circleD / 2f * 1.25f)
+        val roomBelow = plan.circleD <= 0f || nameBottom <= inkTop - 1f * u
+        val top = WidgetLayout.monthTop(plan, cw, u, numW, f.stk.size, holW2, holW1, holW3, tn.cover && roomBelow)
         statStkHid += Math.max(0, f.stk.size - top.row1 - top.row2)
         for (k in 0 until top.row1) {   // 스티커 첫 줄: 숫자 옆 (오른쪽 끝)
             val sx = x0 + cw - pad - (top.row1 - k) * plan.stkSize - (top.row1 - k - 1) * plan.stkGap - (top.row1 - k - 1) * tn.stkGX * plan.stkSize * 0.25f + tn.stkX * cw * 0.12f
@@ -1054,7 +1059,14 @@ object MonthRenderer {
             if (fill) paint.color = if (night) 0xFFE49AAA.toInt() else 0xFFC8627A.toInt()
             paint.textSize = plan.holSize
             if (top.holBeside) cv.drawText(if (top.holChars == 3) h3 else if (top.holChars == 2) h2 else h1, x0 + pad + numW + 2.5f * u, y0 + plan.dateBase, paint)
-            else cv.drawText(h1, x0 + pad, y0 + plan.dateBase + plan.holSize * 1.15f, paint)   // 아주 좁은 칸: 숫자 아래 한 글자
+            else {   // 숫자 아래: 커버 크기에서 스티커 2개 이상(두 글자 · 아래 줄 스티커와 부딪히면 한 글자) · 아주 좁은 칸(한 글자)
+                var lab = if (top.holChars >= 2) h2 else h1
+                if (lab == h2 && top.row2 > 0) {
+                    val s2x = x0 + cw - pad - top.row2 * plan.stkSize - (top.row2 - 1) * plan.stkGap + tn.stkX * cw * 0.12f
+                    if (x0 + pad + holW2 > s2x - 1f * u) lab = h1
+                }
+                cv.drawText(lab, x0 + pad, y0 + plan.dateBase + plan.holSize * 1.15f, paint)
+            }
         }
 
         // 메모: 줄 수만큼 (맨 아래부터 쌓음) · 더 있으면 마지막 줄 끝에 "+n" 칩 · 가족 달력의 메모는 연보라 칸
@@ -1084,7 +1096,7 @@ object MonthRenderer {
             paint.textSize = Math.min(Math.min(plan.pillH * 0.77f, cw * 0.215f) * tn.memo, plan.pillH * 0.95f)   // 메모 글자 (모양 조정 배율 · 칸 높이를 넘지 않게)
             val chipW = if (more > 0 && k == shown - 1) WidgetLayout.moreBadge(plan.pillH)[0] else 0f
             WidgetRenderer.drawRich(cv, f.memos[k], x0 + pad * 1.4f + barW, py + plan.pillH * 0.74f, cw - pad * 2.6f - barW - (if (chipW > 0f) chipW + plan.pillH * 0.15f else 0f), paint, pal.fg, pal.link)
-            if (chipW > 0f) WidgetRenderer.drawMoreChip(cv, more, x0 + cw - pad - plan.pillH * 0.12f, py, plan.pillH, pal)
+            if (chipW > 0f) WidgetRenderer.drawMoreChip(cv, more, x0 + cw - pad - plan.pillH * 0.12f, py, plan.pillH, pal, paint.textSize)
         }
         if (layer >= 0) cv.restoreToCount(layer)
     }

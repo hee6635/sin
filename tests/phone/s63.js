@@ -203,20 +203,6 @@ const ONLY=process.env.ONLY||'';
       await p.close();
     }
   }
-  // ── "오늘" 버튼 기록(원인 확인용): 닿음 · 뗌 · 누름 인정 · 이동 · 그림이 남고 개발자 메뉴에서 복사
-  if(want('tdlog')){
-    const p=await boot(b,{...base,calLook:'fill'},{touch:true});
-    await p.evaluate(()=>{window.__cp=[];window.AndroidBridge.copyText=t=>window.__cp.push(t);});
-    await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(600);
-    const a=await p.evaluate(()=>{const r=document.querySelector('[data-act="today"]').getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];});
-    await p.touchscreen.tap(a[0],a[1]);await p.waitForTimeout(700);
-    await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);
-    for(let i=0;i<7;i++)await p.evaluate(()=>document.querySelector('[data-act="about-tap"]')&&document.querySelector('[data-act="about-tap"]').click());await p.waitForTimeout(300);
-    await p.evaluate(()=>document.querySelector('[data-act="td-log"]').click());await p.waitForTimeout(200);
-    const t=await p.evaluate(()=>window.__cp[0]||'');
-    T('기록에 닿음 → 뗌 → 누름 인정 → 이동 시작 → 그림 순서로 남음',/닿음 버튼 위[\s\S]*뗌[\s\S]*누름 인정[\s\S]*이동 시작 2026\.11 → 2026\.10[\s\S]*그림 2026\.10/.test(t),t);
-    T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
-  }
   // ── "오늘" 안전장치: 폰이 누름(click)을 버려도 눌렀다 떼면 오늘로 · 보통 누름과 겹쳐 두 번 가지 않음
   if(want('tdfb')){
     const p=await boot(b,{...base,calLook:'fill'},{touch:true});
@@ -240,12 +226,22 @@ const ONLY=process.env.ONLY||'';
     const defs=['👟','📖'].map((e,i)=>mk('h'+i,e,'h'+i,{dates:['2026-10-09']}));
     for(const [w,exp3,exp9] of [[430,'개천절',null],[360,'개천',null],[820,'개천절','한글날']]){
       const p=await boot(b,{...base,calLook:'fill',stamps:{defs,log:{},v3:1,v4:1,lastAt:[]}},{w,h:900,touch:true});
-      const r=await p.evaluate(()=>{const g=k=>{const c=document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"]`),e=c.querySelector('.dn .hn,.dn .h1');return e?{t:e.textContent,ov:e.scrollWidth>e.clientWidth+.5}:null;};return {d3:g('2026-10-03'),d9:g('2026-10-09')};});
+      const r=await p.evaluate(()=>{const g=k=>{const c=document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"]`),e=c.querySelector(':scope>.hnb')||c.querySelector('.dn .hn,.dn .h1:not([hidden])');return e?{t:e.textContent,ov:e.scrollWidth>e.clientWidth+.5}:null;};return {d3:g('2026-10-03'),d9:g('2026-10-09')};});
       T(`${w}px: 스티커 없는 개천절 → "${exp3}" (잘리지 않음)`,r.d3&&r.d3.t===exp3&&!r.d3.ov,JSON.stringify(r));
       if(exp9)T(`${w}px: 스티커 2개 있는 한글날도 자리가 되면 전부`,r.d9&&r.d9.t===exp9,JSON.stringify(r));
-      else T(`${w}px: 스티커 2개 있는 한글날은 줄임(두 글자 이하)`,r.d9&&r.d9.t.length<=2,JSON.stringify(r));
+      else T(`${w}px(커버): 스티커 2개 있는 한글날은 숫자 아래 두 글자`,r.d9&&r.d9.t==='한글',JSON.stringify(r));
       T(`${w}px: 오류 없음`,p.errs.length===0,p.errs.join('|'));await p.close();
     }
+  }
+  // ── 주야 자리 고정: 스티커 크기(--stz)가 달마다 줄어도 날짜 줄 높이 · 주야 위치는 그대로
+  if(want('stz0')){
+    const p=await boot(b,{...base,calLook:'fill'},{w:430,h:998,touch:true});
+    const pos=()=>p.evaluate(()=>{const c=document.querySelector('#track .panel:nth-child(2) .cell[data-k="2026-10-14"]'),bd=c.querySelector('.bwrap .badge');return [+(bd.getBoundingClientRect().top-c.getBoundingClientRect().top).toFixed(1),c.querySelector('.dn').offsetHeight];});
+    const a=await pos();
+    await p.evaluate(()=>document.documentElement.style.setProperty('--stz','10px'));await p.waitForTimeout(100);
+    const c=await pos();
+    T('스티커를 10px 로 줄여도 주야 위치 · 날짜 줄 높이 그대로',JSON.stringify(a)===JSON.stringify(c),JSON.stringify([a,c]));
+    await p.close();
   }
   T.sum();await b.close();
 })();

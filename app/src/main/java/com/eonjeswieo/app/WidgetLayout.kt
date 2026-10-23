@@ -45,7 +45,7 @@ object WidgetLayout {
     /** 메모가 칸에 다 안 들어갈 때 마지막 메모 줄 끝에 붙이는 작은 알약 모양 표시("+1")의 [가로, 세로] — 글자(메모)가 아니라 그림(이모티콘)처럼 보이게 색을 칠한 작은 칩 */
     fun moreBadge(pillH: Float): FloatArray {
         val h = pillH * 0.8f
-        return floatArrayOf(h * 0.95f, h)   // (알약 없이 작은 글자 "+1" 만 — 폭이 예전 칩의 3/4)
+        return floatArrayOf(h * 1.15f, h)   // (알약 없이 글자 "+1" 만 — 메모 글자의 90% 크기가 들어가는 폭)
     }
 
     /** 칩 안의 글자: 더 있는 메모 수 ("+1" … "+9", 열 개 이상은 "9+") */
@@ -279,7 +279,7 @@ object WidgetLayout {
      * @param numW 날짜 숫자 글자 폭 · holW2 공휴일 두 글자 폭 · holW1 한 글자 폭 (공휴일이 없으면 0) — 글자 폭은 그리는 쪽이 재서 넘겨 줌
      * @param want 그날 스티커 수 (하루 최대 4개 · 둘째 줄은 오른쪽 끝 · 근무 동그라미 오른쪽 위에 살짝 걸쳐도 스티커가 위에 보임)
      */
-    fun monthTop(plan: MonthPlan, cw: Float, u: Float, numW: Float, want: Int, holW2: Float, holW1: Float = 0f, holW3: Float = 0f): MonthTop {
+    fun monthTop(plan: MonthPlan, cw: Float, u: Float, numW: Float, want: Int, holW2: Float, holW1: Float = 0f, holW3: Float = 0f, below2: Boolean = false): MonthTop {
         val ss = plan.stkSize
         val gap = plan.stkGap
         val pad = plan.padX
@@ -294,6 +294,11 @@ object WidgetLayout {
             var n = Math.min(total, 2)
             while (n > 0 && pad + numW + 1f * u + nw + wid(n) > cw - pad) n--
             return n
+        }
+        // 커버 크기(below2): 스티커 2개 이상인 명절은 이름을 숫자 아래로(두 글자) → 첫 줄은 숫자 + 스티커
+        if (below2 && hasHol && !plan.narrow && total >= 2) {
+            val r1 = fit1(0)
+            return MonthTop(r1, if (plan.row2Ok) Math.min(total - r1, cap2) else 0, false, 2)
         }
         var chars = if (!hasHol || plan.narrow) 0 else 1
         if (chars > 0) {

@@ -644,20 +644,20 @@ object WidgetRenderer {
             paint.textSize = Math.min(row.pillH * 0.72f, cw * 0.2f)   // (7일 · 1칸 · 2칸 모두 같은 비율)
             val chipW = if (more > 0 && i == shown - 1) WidgetLayout.moreBadge(row.pillH)[0] else 0f
             drawRich(cv, memos[i], x0 + pad * 1.4f, py + row.pillH * 0.72f, cw - pad * 2.6f - (if (chipW > 0f) chipW + row.pillH * 0.15f else 0f), paint, pal.fg, pal.link)
-            if (chipW > 0f) drawMoreChip(cv, more, x0 + cw - pad - row.pillH * 0.12f, py, row.pillH, pal)
+            if (chipW > 0f) drawMoreChip(cv, more, x0 + cw - pad - row.pillH * 0.12f, py, row.pillH, pal, paint.textSize)
         }
     }
 
     /** 메모가 더 있다는 작은 칩 ("+1"): 메모 글자가 아니라 표시라는 걸 알 수 있게 색을 칠한 작은 알약 모양 (오른쪽 끝 기준) */
-    internal fun drawMoreChip(cv: Canvas, more: Int, right: Float, py: Float, pillH: Float, pal: Pal) {
+    internal fun drawMoreChip(cv: Canvas, more: Int, right: Float, py: Float, pillH: Float, pal: Pal, memoSize: Float = 0f) {
         val g = WidgetLayout.moreBadge(pillH)
         val rect = RectF(right - g[0], py + (pillH - g[1]) / 2f, right, py + (pillH + g[1]) / 2f)
         // 알약 없이 작은 회색 글자 (앱 달력과 같은 표시 · 메모 글자를 덜 가림)
         val tp = TextPaint(Paint.ANTI_ALIAS_FLAG)
         tp.typeface = Typeface.DEFAULT_BOLD
         tp.textAlign = Paint.Align.RIGHT
-        tp.color = (pal.fg and 0x00FFFFFF) or (0x9E shl 24)
-        tp.textSize = g[1] * 0.62f
+        tp.color = (pal.fg and 0x00FFFFFF) or (0xD9 shl 24)   // 메모 글자 계열 85% (또렷하게)
+        tp.textSize = if (memoSize > 0f) memoSize * 0.9f else g[1] * 0.85f   // 메모 글자의 90%
         cv.drawText(WidgetLayout.moreLabel(more), rect.right, rect.centerY() + tp.textSize * 0.36f, tp)
     }
 

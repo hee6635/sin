@@ -221,7 +221,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .cell:nth-child(7n){border-right:0}
 .cell.out{background:var(--out-bg)}
 .cell.out>*{opacity:.4}
-.dn{width:100%;height:max(20px,calc(var(--stz) + 6px));flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 5px;font-size:13px;line-height:20px;position:relative;z-index:2;}
+.dn{width:100%;height:max(20px,calc(var(--stz0,var(--stz)) + 6px));flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 5px;font-size:13px;line-height:20px;position:relative;z-index:2;}
 .dn.sun .num{color:var(--sun)}.dn.sat .num{color:var(--sat)}
 .dn.hol{background:linear-gradient(var(--hol-bg),var(--hol-bg)) center/100% calc(100% - 5px) no-repeat}
 .dn .hn{font-size:10px;font-weight:800;color:var(--sun);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none;text-align:right;}
@@ -229,7 +229,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .cell.today::after{content:'';position:absolute;inset:0;border:2px solid var(--today);pointer-events:none;z-index:4}
 .cell.today .dn{padding-left:8px;padding-top:3px}
 
-.bwrap{flex:none;width:100%;height:calc(var(--b) + 2px);position:relative;display:flex;align-items:center;justify-content:center;margin-top:clamp(6px,calc(var(--stz) - 4px),12px)}
+.bwrap{flex:none;width:100%;height:calc(var(--b) + 2px);position:relative;display:flex;align-items:center;justify-content:center;margin-top:clamp(6px,calc(var(--stz0,var(--stz)) - 4px),12px)}
 .cell.pers .bwrap{margin-top:0}
 .band{position:absolute;top:50%;transform:translateY(-50%);height:var(--b);left:50%;right:50%}
 .band{background:color-mix(in srgb,var(--tb) 32%,var(--bg))}
@@ -584,7 +584,7 @@ textarea{resize:none;min-height:84px}
 .pl.withmore{display:flex;align-items:center;gap:2px}   /* 메모가 줄 수보다 많으면 마지막 줄 끝에 "+n" 칩 (위젯 칸과 같은 표시) */
 .pl .pt{flex:1 1 0;min-width:0;overflow:hidden;white-space:nowrap}
 /* "+n": 알약 없이 작은 회색 글자. 글자는 10px 로 그려 두고 배율(--mck)로 줄임 — 폰 웹뷰는 8px 아래 글자를 8px 로 키워서(최소 글자 크기) 글자 크기로는 못 줄임. 폭(--mcw) · 배율은 plFit() 가 실제로 재서 정함 */
-.pl .mc{flex:none;position:relative;align-self:stretch;width:var(--mcw,1.4em);font-style:normal;color:color-mix(in srgb,currentColor 62%,transparent)}
+.pl .mc{flex:none;position:relative;align-self:stretch;width:var(--mcw,1.4em);font-style:normal;color:color-mix(in srgb,currentColor 85%,transparent)}
 .pl .mc b{position:absolute;left:0;top:50%;font-size:10px;line-height:1;font-weight:800;white-space:nowrap;transform-origin:0 50%;transform:translateY(-50%) scale(var(--mck,.75))}
 /* 글자가 칸 폭에 잘리면: 다 들어가는 마지막 글자까지만 남기고 바로 뒤에 작은 점 세 개(한 글자 폭 안쪽 · 글자 아래쪽 높이 = 보통 "…" 자리).
    점은 글자가 아니라 그림이라 최소 글자 크기와 상관없음. 자르기는 plFit() 가 실제로 재서 (원래 글은 data-full 에 두고 다시 맞출 때 되돌림) */
@@ -1177,8 +1177,8 @@ button.tbtn{cursor:pointer}
 .stw{font-size:16px;font-weight:800}
 
 /* 스티커 크기: 폭에 비례, 달 전체가 한 크기 (폰 11~16px · 태블릿 최대 18px). 근무 표시는 스티커 크기 − 4px 만큼 아래로 (6~12px) → 둘째 줄 스티커가 동그라미에 살짝만 걸침 */
-:root{--stz:clamp(12px,3.74vw,17.6px)}
-@media (min-width:600px){:root{--stz:clamp(17px,2.64vw,19.8px)}}
+:root{--stz:clamp(12px,3.74vw,17.6px);--stz0:clamp(12px,3.74vw,17.6px)}
+@media (min-width:600px){:root{--stz:clamp(17px,2.64vw,19.8px);--stz0:clamp(17px,2.64vw,19.8px)}}   /* --stz0: 화면 기준 스티커 크기(줄이기 전) — 날짜 줄 높이 · 주야 자리는 이걸로 정해서, 달마다 스티커를 줄여도(--stz) 주야가 안 움직임 */
 .dn .stp>svg,.s2>svg,.dn .stp .sx svg,.s2 .sx svg{width:var(--stz);height:var(--stz)}
 .dn .stp>.se,.s2>.se,.dn .stp .sx .se,.s2 .sx .se{font-size:calc(var(--stz) - 2px) !important}
 .sx{position:relative;display:inline-block;line-height:0}
@@ -1200,7 +1200,7 @@ button.tbtn{cursor:pointer}
 .dn.h1r{padding:0 1px;justify-content:flex-start}.dn.h1r .stp{margin-left:auto;gap:0}
 .dn .hn.sm{font-size:9px;letter-spacing:-.4px}
 /* 공휴일 이름이 날짜 줄에 안 들어가면(fitDn) 숫자 바로 아래 한 글자 */
-.hnb{position:absolute;left:4px;top:max(20px,calc(var(--stz) + 6px));font-size:10px;font-weight:800;font-style:normal;color:var(--sun);line-height:1;z-index:3;pointer-events:none}
+.hnb{position:absolute;left:4px;top:max(20px,calc(var(--stz0,var(--stz)) + 6px));font-size:10px;font-weight:800;font-style:normal;color:var(--sun);line-height:1;z-index:3;pointer-events:none}
 .dn.h1r{padding:0 1px}
 .badge.nonb{background:none}
 .badge.nonb.ph{border:1.5px dashed var(--muted);border-radius:50%;color:var(--muted);font-size:10.5px;font-weight:700;opacity:.85}
@@ -1219,7 +1219,7 @@ button.tbtn{cursor:pointer}
 .fillchips .badge.r{background:var(--surface);border-radius:50%}
 .fillgrid{margin-top:14px}.fillgrid .pc .badge{width:32px;height:32px;font-size:14px}.fillgrid .pc .badge.r{background:none}
 .ob-f .lk small{font-weight:400;font-size:12px}
-.s2{position:absolute;left:0;right:0;top:max(21px,calc(var(--stz) + 7px));height:calc(var(--stz) + 2px);display:flex;align-items:center;justify-content:flex-end;gap:1px;padding:0 3px;z-index:8;pointer-events:none}   /* 3~4번째 스티커: 근무 동그라미 오른쪽 위에 살짝 걸쳐 붙임 (동그라미 크기는 그대로) */
+.s2{position:absolute;left:0;right:0;top:max(21px,calc(var(--stz0,var(--stz)) + 7px));height:calc(var(--stz) + 2px);display:flex;align-items:center;justify-content:flex-end;gap:1px;padding:0 3px;z-index:8;pointer-events:none}   /* 3~4번째 스티커: 근무 동그라미 오른쪽 위에 살짝 걸쳐 붙임 (동그라미 크기는 그대로) */
 .s2>svg:not(.off),.s2>.se:not(.plan),.s2>.sx{filter:drop-shadow(0 0 1.2px var(--bg)) drop-shadow(0 1px 1.2px rgba(0,0,0,.35))}
 /* 스티커 색 고르기 */
 .cdots{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
@@ -1311,7 +1311,7 @@ html[data-cal="fill"] .cell.rq-no .badge{box-shadow:inset 0 0 0 2.5px #d12f4a}
 html[data-cal="fill"]{--hol-bg:#fcebee;--holx:#c8627a}
 html[data-cal="fill"][data-theme="dark"]{--hol-bg:#3a2429;--holx:#e49aaa}
 @media (prefers-color-scheme:dark){html[data-cal="fill"]:not([data-theme="light"]){--hol-bg:#3a2429;--holx:#e49aaa}}
-html[data-cal="fill"] .dn.hol .hn,html[data-cal="fill"] .dn.hol .h1{color:var(--holx);font-weight:700}
+html[data-cal="fill"] .dn.hol .hn,html[data-cal="fill"] .dn.hol .h1,html[data-cal="fill"] .hnb{color:var(--holx);font-weight:700}
 html[data-cal="fill"] .dn.hol{border-radius:9px 9px 0 0}
 /* 칸 채우기 · 오늘 표시(모양 조정 화면에서 고름: data-today a/b/c/d). 띠는 칸의 둥근 오른쪽 선을 따라 휘어서 끝이 가늘어짐 */
 html[data-cal="fill"] .cell.today::after{content:"";display:block;position:absolute;inset:0;border:0;border-right:var(--tdw,4px) solid color-mix(in srgb,var(--tdc,var(--accent)) var(--tdp,55%),transparent);border-radius:9px;box-sizing:border-box;z-index:-1;pointer-events:none}   /* 가장 아래층: 스티커 · 메모 · 글자 어느 것과 겹쳐도 그것들이 위에 보임 */
@@ -2424,7 +2424,6 @@ function render(){
     // 처음 켤 때 · 다른 탭에서 돌아올 때는 그리기 전에는 달력 칸 높이를 잴 수 없어서 어림값으로 메모 줄 수를 정함 → 그린 뒤 실제 높이로 다시 재서 다르면 한 번만 다시 그림
     if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();fitDn(v,true);}finally{renderAgain=false;}}}
     glowCheck();
-    if(performance.now()-tdOn<3000)tdl(`그림 ${cur.y}.${cur.m+1}`);
   }else if(tab==='colleague'){
     top.innerHTML=`<div class="hl"><button class="hb" data-act="back-set" aria-label="뒤로" style="font-size:28px">‹</button></div>${mid}<div class="hr">${todayBtn}</div>`;
     v.innerHTML=renderColleague();
@@ -2519,9 +2518,10 @@ function fitStz(root){
   const measure=()=>{let need=0;stps.forEach(stp=>{
     const dn=stp.parentNode,h1=dn.querySelector('.h1'),t=h1?h1.textContent:'';if(h1)h1.textContent=h1.dataset.o||t;
     const padR=parseFloat(getComputedStyle(dn).paddingRight)||0,lastE=dn.lastElementChild;
-    if(h1)h1.textContent=h1.dataset.t2||t;   // 스티커 크기는 두 글자 이름 기준 (전부 보이는 이름 때문에 스티커가 작아지지 않게)
+    const cl=dn.closest('.cell'),below=h1&&innerWidth<600&&stp.children.length+((cl&&cl.querySelector(':scope>.s2'))||{children:[]}).children.length>=2;   // 커버 · 스티커 2개 이상: 이름은 숫자 아래라 첫 줄 자리에서 뺌
+    if(h1){h1.textContent=h1.dataset.t2||t;if(below)h1.hidden=true;}   // 스티커 크기는 두 글자 이름 기준 (전부 보이는 이름 때문에 스티커가 작아지지 않게)
     const ov=dn.clientWidth>0?(lastE.offsetLeft+lastE.offsetWidth)-(dn.clientWidth-padR):0;
-    if(h1)h1.textContent=t;   // 자리 계산은 옮김 · 배율(모양 조정)을 빼고 원래 자리로 (스티커를 조금 옆으로 옮겨도 아래로 밀리지 않게)
+    if(h1){h1.textContent=t;h1.hidden=false;}   // 자리 계산은 옮김 · 배율(모양 조정)을 빼고 원래 자리로 (스티커를 조금 옆으로 옮겨도 아래로 밀리지 않게)
     if(ov>.5)need=Math.max(need,ov/Math.max(1,stp.children.length));
   });return need;};
   let cur=probe();const orig=cur;
@@ -2589,12 +2589,21 @@ function fitDn(root,keepStz){
     };
     // 모양 조정(옮김 · 배율)으로 스티커가 이름 쪽으로 다가와 겹치는 경우도 보이는 자리(getBoundingClientRect)로 재서 같은 순서로 처리 — 조정할 때마다 2글자 → 1글자 → 스티커 아래 줄을 다시 계산
     const clash=()=>{const f=stp.firstElementChild;if(!h1||!f)return false;const a=h1.getBoundingClientRect(),b=f.getBoundingClientRect();return a.width>0&&b.width>0&&a.right>b.left+.5;};   // (닿기만 하는 건 겹침이 아님 — 실제로 겹칠 때만)
-    if(h1){
+    const cell0=dn.closest('.cell'),old=cell0.querySelector(':scope>.hnb');if(old)old.remove();
+    if(h1)h1.hidden=false;
+    // 커버 화면(폭 600 미만): 스티커 2개 이상인 명절은 이름을 숫자 아래로 (두 글자 → 아래 줄 스티커와 부딪히면 한 글자) — 첫 줄은 숫자 + 스티커
+    const nStk=stp.children.length+((cell0.querySelector(':scope>.s2')||{children:[]}).children.length);
+    if(h1&&innerWidth<600&&nStk>=2){
+      h1.hidden=true;
+      const hb=document.createElement('i');hb.className='hnb';hb.textContent=h1.dataset.t2||h1.dataset.o||'';hb.dataset.o=h1.dataset.o||'';dn.after(hb);
+    }
+    if(h1&&!h1.hidden){
       if(h1.dataset.f)h1.textContent=h1.dataset.f;   // 다시 맞출 때는 전부부터
       if((over(dn)||clash())&&h1.dataset.t2&&h1.textContent!==h1.dataset.t2)h1.textContent=h1.dataset.t2;   // 전부 → 두 글자
       if((over(dn)||clash())&&h1.dataset.o&&h1.textContent!==h1.dataset.o)h1.textContent=h1.dataset.o;   // → 한 글자
       while((over(dn)||clash())&&toS2()){}
     }
+    else while(over(dn)&&toS2()){}
     if(over(dn))toS2();
     // 둘째 줄까지 찼는데도 첫 줄이 칸 오른쪽 밖으로 넘치면(좁은 칸에 날짜 + 이름 + 스티커 둘) 넘친 만큼 안으로 당김 → 1/2 배지가 칸 끝에서 잘리지 않고 둘째 줄과 오른쪽 끝이 같음 (이름 위에 살짝 겹쳐 붙음)
     stp.style.left='';const ov=over(dn)?stp.offsetLeft+stp.offsetWidth-(dn.clientWidth-(parseFloat(getComputedStyle(dn).paddingRight)||0)):0;
@@ -2607,6 +2616,11 @@ function fitDn(root,keepStz){
     s2.style.paddingRight=pr;s2.style.transformOrigin=`calc(100% - ${pr}) center`;
     if(stp)s2.style.columnGap=getComputedStyle(stp).columnGap;
   });
+  // 숫자 아래 이름(.hnb)이 아래 줄 스티커(.s2)와 부딪히면 한 글자
+  (root||document).querySelectorAll('.cell>.hnb').forEach(hb=>{
+    const s2=hb.parentNode.querySelector(':scope>.s2'),f=s2&&s2.firstElementChild;if(!f)return;
+    if(hb.getBoundingClientRect().right>f.getBoundingClientRect().left+1.5&&hb.dataset.o)hb.textContent=hb.dataset.o;   // (스티커 상자 가장자리에 살짝 닿는 건 괜찮음 — 그림은 상자보다 안쪽)
+  });
   // 스티커 없는 날의 공휴일 이름(.hn): 자리가 되면 전부 → 두 글자 → 한 글자 ("개…"처럼 잘리지 않게)
   (root||document).querySelectorAll('.cell .dn>.hn[data-f]').forEach(hn=>{
     hn.textContent=hn.dataset.f;
@@ -2616,13 +2630,13 @@ function fitDn(root,keepStz){
   });
   cbFit();plFit(root);
 }
-/* 메모 줄: ① "+n" 크기 — 실제로 그려진 10px 글자 높이를 재서 메모 글자의 .8 배가 되도록 배율 · 폭을 정함 ② 글자가 칸 폭에 잘린 줄에만 .cut (끝에 작은 점 세 개) */
+/* 메모 줄: ① "+n" 크기 — 실제로 그려진 10px 글자 높이를 재서 메모 글자의 .9 배가 되도록 배율 · 폭을 정함 ② 글자가 칸 폭에 잘린 줄에만 .cut (끝에 작은 점 세 개) */
 function plFit(root){
   const pls=[...(root||document).querySelectorAll('.cell .pl')];if(!pls.length)return;
   const mcs=pls.map(p=>p.querySelector('.mc>b')).filter(Boolean);
   if(mcs.length){
     const h=mcs[0].offsetHeight,fz=parseFloat(getComputedStyle(mcs[0].closest('.pl')).fontSize)||9;
-    if(h>0){const k=Math.max(.3,Math.min(1.2,fz*.8/h));mcs.forEach(b=>{const mc=b.parentNode;mc.style.setProperty('--mck',k.toFixed(3));mc.style.setProperty('--mcw',(b.offsetWidth*k+1).toFixed(1)+'px');});}
+    if(h>0){const k=Math.max(.3,Math.min(1.2,fz*.9/h));mcs.forEach(b=>{const mc=b.parentNode;mc.style.setProperty('--mck',k.toFixed(3));mc.style.setProperty('--mcw',(b.offsetWidth*k+1).toFixed(1)+'px');});}
   }
   pls.forEach(p=>{
     const t=p.querySelector('.pt')||p;
@@ -2798,12 +2812,11 @@ function glowFrame(){
 // 쓸어 넘기는 중(0.25초)에 누르면 버리지 않고 기억했다가 넘김이 끝나자마자 오늘로 (넘기고 바로 "오늘"을 누르는 일이 많음)
 let todayQ=false;
 function todayGo(){
-  if(busy){todayQ=true;tdl('넘기는 중 → 기억');return;}
+  if(busy){todayQ=true;return;}
   todayQ=false;
   const n=new Date(),y=n.getFullYear(),m=n.getMonth(),to=y*12+m,from=cur.y*12+cur.m,tr=$('#track');
-  if(to===from){tdl('이미 이번 달');return;}
-  if(!tr||tab!=='cal'){tdl('바로 그림(달력 아님)');setCur(y,m);render();return;}
-  tdl(`이동 시작 ${cur.y}.${cur.m+1} → ${y}.${m+1}`);
+  if(to===from)return;
+  if(!tr||tab!=='cal'){setCur(y,m);render();return;}
   const dir=to>from?1:-1,pn=tr.children[dir>0?2:0];
   if(pn&&Math.abs(to-from)>1)pn.innerHTML=calPanel(y,m);
   busy=true;glowStop();
@@ -2811,16 +2824,7 @@ function todayGo(){
   tr.style.transform=`translateX(${dir>0?'-66.6667%':'0%'})`;
   setTimeout(()=>{busy=false;setCur(y,m);render();todayQ=false;},270);   // (그 사이 또 누른 것은 이미 오늘이라 버림)
 }
-/* "오늘" 버튼 기록 (원인 확인용 · 저장 안 함): 손가락이 버튼이나 그 옆에 닿음 · 뗌 · 취소 · 누름으로 인정 · 이동 결과 · 다 그린 달을 최근 40줄만.
- * 개발자 메뉴(설정 › 앱 정보 7번) › "오늘 버튼 기록 복사" 로 보냄 */
-const tdLog=[];let tdOn=0;
-function tdl(t){tdLog.push(`${(performance.now()/1000).toFixed(2)}s ${t}`);if(tdLog.length>40)tdLog.shift();tdOn=performance.now();}
-document.addEventListener('pointerdown',e=>{
-  const b=document.querySelector('#top .today-btn');if(!b)return;const r=b.getBoundingClientRect(),on=!!(e.target.closest&&e.target.closest('.today-btn'));
-  if(on||(e.clientX>r.left-40&&e.clientX<r.right+24&&e.clientY>r.top-24&&e.clientY<r.bottom+24))tdl(`닿음 ${on?'버튼 위':'버튼 옆('+String(e.target.className||e.target.tagName).slice(0,20)+')'} x${e.clientX|0} y${e.clientY|0} 버튼(${r.left|0}~${r.right|0}, ${r.top|0}~${r.bottom|0}) busy=${busy}`);
-},true);
-['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,e=>{if(performance.now()-tdOn<1500&&tdLog.length&&/닿음/.test(tdLog[tdLog.length-1]))tdl(ev==='pointerup'?`뗌 x${e.clientX|0} y${e.clientY|0}`:'취소(폰이 누름이 아니라고 판단)');},true));
-document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.today-btn')){clearTimeout(tdFb);tdl('누름 인정');}},true);
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.today-btn'))clearTimeout(tdFb);},true);
 // 안전장치: 버튼 위에서 짧게 눌렀다 뗐는데 0.1초 안에 누름(click)이 안 오면 앱이 직접 "오늘" (폰이 누름을 버리는 경우)
 let tdDown=null,tdFb=0;
 document.addEventListener('pointerdown',e=>{tdDown=e.target.closest&&e.target.closest('#top .today-btn')?{x:e.clientX,y:e.clientY,t:performance.now()}:null;},true);
@@ -2828,7 +2832,7 @@ document.addEventListener('pointerup',e=>{
   const d=tdDown;tdDown=null;if(!d)return;
   const on=e.target.closest&&e.target.closest('#top .today-btn');
   if(!on||Math.abs(e.clientX-d.x)+Math.abs(e.clientY-d.y)>12||performance.now()-d.t>600)return;
-  clearTimeout(tdFb);tdFb=setTimeout(()=>{tdl('누름이 안 와서 대신 실행');todayGo();},100);
+  clearTimeout(tdFb);tdFb=setTimeout(todayGo,100);
 },true);
 function slideTo(dir,cb){
   const tr=$('#track'),mk=cur.y*12+cur.m+dir;
@@ -6110,7 +6114,7 @@ function shiftMonth(n){
   const v=Math.min(MAX_M,Math.max(MIN_M,cur.y*12+cur.m+n));
   cur={y:Math.floor(v/12),m:v%12};render();
   if(pageMode==='stats')openStatsPage();
-  if(todayQ){tdl('넘김 끝 → 기억한 오늘 실행');setTimeout(todayGo,0);}   // 넘기는 중에 "오늘"을 눌렀으면 이어서
+  if(todayQ)setTimeout(todayGo,0);   // 넘기는 중에 "오늘"을 눌렀으면 이어서
 }
 document.addEventListener('click',e=>{
   const nb=e.target.closest('#nav [data-tab]');
@@ -6623,7 +6627,6 @@ document.addEventListener('click',e=>{
     case 'todaylook':S.todayLook=['a','b','c','d'].includes(t.dataset.v)?t.dataset.v:'b';save();applyTune();openTunePage();break;
     case 'callook':S.calLook=t.dataset.v==='fill'?'fill':'circle';save();applyTune();if(pageMode==='tune')openTunePage();else render();break;
     case 'tune-open':openTunePage();break;
-    case 'td-log':copyText(`[오늘 버튼 기록] 화면 ${innerWidth}x${innerHeight}\n`+(tdLog.join('\n')||'기록 없음'));break;
     case 'tune-reset':tuneDraft=tuneAll(null);applyTune();openTunePage();toast('처음 값으로 돌렸어요 · 저장해야 반영돼요');break;
     case 'tune-save':if(tuneDirty()){S.tuneHist=[JSON.parse(JSON.stringify(S.tune)),...(S.tuneHist||[])].slice(0,5);S.tune=JSON.parse(JSON.stringify(tuneDraft));save();applyTune();tuneBar();toast('저장했어요');}break;
     case 'tune-undo':if(!(S.tuneHist||[]).length){toast('돌아갈 저장이 없어요');break;}S.tune=S.tuneHist.shift();tuneDraft=JSON.parse(JSON.stringify(S.tune));save();applyTune();openTunePage();toast('이전 저장 값으로 돌렸어요');break;
@@ -7016,7 +7019,6 @@ function openFirebasePage(){
         <button class="btn" style="width:100%" data-act="fb-test" ${f.busy?'disabled':''}>${f.busy?'연결 중…':'연결 시험하기'}</button>
         ${ok?'<button class="btn ghost" style="width:100%;margin-top:8px" data-act="fb-out">익명 로그아웃</button>':''}
         <button class="btn ghost" style="width:100%;margin-top:8px" data-act="tune-open">모양 조정 (앱 달력 · 위젯)</button>
-        <button class="btn ghost" style="width:100%;margin-top:8px" data-act="td-log">"오늘" 버튼 기록 복사 (${tdLog.length}줄)</button>
       </div>
     </div>`,'fb');
 }
