@@ -3,7 +3,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  const memos={'2026-10-14':[{id:'m1',text:'등록해야함 https://www.example.com/aaaa/bbbb/cccc?x=1.',shared:false,t:1},{id:'m2',text:'www.naver.com 확인',shared:false,t:2},{id:'m3',text:'점 없는 글 abc.def 그냥',shared:false,t:3},{id:'m4',text:'javascript:alert(1)',shared:false,t:4}]};
  const p=await boot(b,{...base,memos},{touch:true});
  await p.addInitScript(()=>{});
- const calTxt=await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-14"]',e=>e.innerText.replace(/\s+/g,' '));
+ const calTxt=await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-14"]',e=>e.textContent.replace(/\s+/g,' '));
  console.log(calTxt);
  T('달력 칸: 긴 주소 대신 "링크"',calTxt.includes('등록해야함 링크')&&!calTxt.includes('https'));
  T('달력 칸 링크는 파란 밑줄(누르는 요소 아님)',await p.evaluate(()=>{const e=document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-14"] .pl .lnk');const c=getComputedStyle(e);return e.tagName==='SPAN'&&c.textDecorationLine.includes('underline')&&!e.dataset.act;}));
