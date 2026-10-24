@@ -38,7 +38,7 @@ service cloud.firestore {
 
       // hostSeen = 방장 앱이 하루에 한 번 남기는 "나 여기 있어요"(서버 시각, 방장만). 가족 폰이 방장 연결이 오래 끊겼는지 보는 데 씀
       allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestCount', 'hostSeen'])
-        && request.resource.data.guestCount >= 0 && request.resource.data.guestCount <= 3
+        && request.resource.data.guestCount >= 0 && request.resource.data.guestCount <= 4
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['hostSeen'])
             || (isOwner(hid) && request.resource.data.hostSeen == request.time))
         && (
@@ -89,7 +89,7 @@ service cloud.firestore {
           && request.time < get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.expireAt
           && request.resource.data.perm == get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.perm
           && getAfter(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.usedBy == uid
-          && get(/databases/$(database)/documents/households/$(hid)).data.guestCount < 3
+          && get(/databases/$(database)/documents/households/$(hid)).data.guestCount < 4
           && getAfter(/databases/$(database)/documents/households/$(hid)).data.guestCount
              == get(/databases/$(database)/documents/households/$(hid)).data.guestCount + 1;
 
@@ -229,6 +229,34 @@ service cloud.firestore {
         && request.resource.data.text is string && request.resource.data.text.size() >= 1 && request.resource.data.text.size() <= 200
         && request.resource.data.updatedAt == request.time;
       allow delete: if signedIn() && (resource.data.by == request.auth.uid || isOwner(hid));
+    }
+
+    // ───────── 가족 포스트잇: households/{hid}/board/{쓴사람uid_포스트잇id} ─────────
+    // 가족방 사람 모두 읽기. 쓴 사람: 다 고치기 · 지우기 / 다른 가족: 줄(체크 · 추가) · 떼기 · 반응만. 방장은 지우기도 (나간 사람 것 정리)
+    function boardOk(d) {
+      return d.keys().hasOnly(['by', 'byName', 'mk', 'type', 'title', 'text', 'date', 'dateAuto', 'repeat', 'rootId', 'torn', 'tornAt', 't', 'reacts', 'lines', 'ua', 'ub'])
+        && d.by is string && d.mk is string && d.mk.matches('[0-9]{4}-[0-9]{2}')
+        && d.type in ['list', 'note']
+        && d.title is string && d.title.size() <= 30
+        && d.text is string && d.text.size() <= 500
+        && d.lines is map && d.lines.size() <= 60
+        && d.reacts is map && d.reacts.size() <= 12
+        && d.ub == request.auth.uid
+        && d.ua == request.time;
+    }
+    match /households/{hid}/board/{id} {
+      allow read: if isMember(hid);
+      allow create: if signedIn() && canWrite(hid)
+        && request.resource.data.by == request.auth.uid
+        && id.matches(request.auth.uid + '_[A-Za-z0-9]{1,40}')
+        && boardOk(request.resource.data);
+      allow update: if signedIn() && canWrite(hid)
+        && boardOk(request.resource.data)
+        && request.resource.data.by == resource.data.by
+        && request.resource.data.mk == resource.data.mk
+        && (resource.data.by == request.auth.uid
+            || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lines', 'torn', 'tornAt', 'reacts', 'ua', 'ub']));
+      allow delete: if signedIn() && isMember(hid) && (resource.data.by == request.auth.uid || isOwner(hid));
     }
 
     // ───────── 초대 코드: invites/{8자리 코드} ─────────

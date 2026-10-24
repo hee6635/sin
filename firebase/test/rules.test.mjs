@@ -2,7 +2,7 @@
 import { initializeTestEnvironment, assertSucceeds, assertFails } from '@firebase/rules-unit-testing';
 import {
   doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, collection, getDocs, writeBatch,
-  increment, query, where, Timestamp,
+  increment, query, where, Timestamp, deleteField,
 } from 'firebase/firestore';
 import { readFileSync } from 'node:fs';
 
@@ -185,13 +185,14 @@ await t('이미 구성원인 사람이 다시 참여 막힘', async () => {
   await seedInvite('AGAN2345');
   await assertFails(join(db('g1'), 'g1', { code: 'AGAN2345' }));
 });
-await t('가족은 호스트 제외 3명까지 (4번째 막힘)', async () => {
+await t('가족은 호스트 제외 4명까지 = 방 전체 5명 (5번째 막힘)', async () => {
   await env.clearFirestore(); await seedFamily();
-  for (const [i, u] of ['a1', 'a2', 'a3', 'a4'].entries()) await seedInvite('KNVT234' + (i + 2));
+  for (const [i, u] of ['a1', 'a2', 'a3', 'a4', 'a5'].entries()) await seedInvite('KNVT234' + (i + 2));
   await assertSucceeds(join(db('a1'), 'a1', { code: 'KNVT2342' }));
   await assertSucceeds(join(db('a2'), 'a2', { code: 'KNVT2343' }));
   await assertSucceeds(join(db('a3'), 'a3', { code: 'KNVT2344' }));
-  await assertFails(join(db('a4'), 'a4', { code: 'KNVT2345' }));
+  await assertSucceeds(join(db('a4'), 'a4', { code: 'KNVT2345' }));
+  await assertFails(join(db('a5'), 'a5', { code: 'KNVT2346' }));
 });
 await t('구성원이 아닌 사람은 구성원 목록 · 가족방 읽기 막힘', async () => {
   await assertFails(getDocs(collection(db('outsider'), 'households', H, 'members')));
@@ -651,6 +652,69 @@ await t('가족은 방장 접속 표시를 읽을 수 있음', async () => {
   await seedFamily(1, async (d) => { await updateDoc(doc(d, 'households', H), { hostSeen: Timestamp.now() }); }); await seedGuest('g1');
   const s = await getDoc(doc(db('g1'), 'households', H));
   if (!s.data().hostSeen) throw new Error('hostSeen 없음');
+});
+
+// ───────── 가족 포스트잇 (board) ─────────
+await G('가족 포스트잇');
+const pi = (by, o = {}) => ({ by, byName: '아빠', mk: '2026-10', type: 'list', title: '장보기', text: '', date: '', dateAuto: true, repeat: false, rootId: '',
+  torn: false, tornAt: 0, t: 1, reacts: {}, lines: { a1: { x: '우유', d: false, b: '', o: 0 } }, ua: serverTimestamp(), ub: by, ...o });
+const PID = H + '_p1';
+const seedPi = (o = {}) => env.withSecurityRulesDisabled(async (c) => setDoc(doc(c.firestore(), 'households', H, 'board', PID), { ...pi(H), ua: Timestamp.now(), ...o }));
+await t('구성원은 자기 포스트잇을 만들 수 있음 (문서 id = 내 uid_…)', async () => {
+  await seedFamily(1); await seedGuest('g1');
+  await assertSucceeds(setDoc(doc(db(H), 'households', H, 'board', PID), pi(H)));
+});
+await t('남의 uid 로 · 다른 id 모양으로 만들기 막힘', async () => {
+  await assertFails(setDoc(doc(db('g1'), 'households', H, 'board', H + '_p2'), pi(H, { ub: 'g1' })));
+  await assertFails(setDoc(doc(db('g1'), 'households', H, 'board', 'g1_p2'), pi(H, { ub: 'g1' })));
+  await assertFails(setDoc(doc(db('g1'), 'households', H, 'board', 'xx_p2'), pi('g1')));
+});
+await t('구성원이 아니면 읽기 · 만들기 막힘', async () => {
+  await assertFails(getDoc(doc(db('outsider'), 'households', H, 'board', PID)));
+  await assertFails(setDoc(doc(db('outsider'), 'households', H, 'board', 'outsider_p1'), pi('outsider')));
+});
+await t('가족은 남의 포스트잇을 읽고 줄 체크 · 줄 추가 · 반응 · 떼기 가능', async () => {
+  await seedFamily(1); await seedGuest('g1'); await seedPi();
+  await assertSucceeds(getDoc(doc(db('g1'), 'households', H, 'board', PID)));
+  await assertSucceeds(updateDoc(doc(db('g1'), 'households', H, 'board', PID), { 'lines.a1.d': true, 'lines.a1.b': 'g1', ua: serverTimestamp(), ub: 'g1' }));
+  await assertSucceeds(updateDoc(doc(db('g1'), 'households', H, 'board', PID), { 'lines.b2': { x: '계란', d: false, b: '', o: 1 }, ua: serverTimestamp(), ub: 'g1' }));
+  await assertSucceeds(updateDoc(doc(db('g1'), 'households', H, 'board', PID), { 'reacts.g1': '👍', ua: serverTimestamp(), ub: 'g1' }));
+  await assertSucceeds(updateDoc(doc(db('g1'), 'households', H, 'board', PID), { torn: true, tornAt: 5, ua: serverTimestamp(), ub: 'g1' }));
+});
+await t('가족은 남의 포스트잇 제목 · 내용 · 날짜 고치기 · 지우기 막힘', async () => {
+  await seedFamily(1); await seedGuest('g1'); await seedPi();
+  await assertFails(updateDoc(doc(db('g1'), 'households', H, 'board', PID), { title: '바꿈', ua: serverTimestamp(), ub: 'g1' }));
+  await assertFails(updateDoc(doc(db('g1'), 'households', H, 'board', PID), { date: '2026-10-20', ua: serverTimestamp(), ub: 'g1' }));
+  await assertFails(updateDoc(doc(db('g1'), 'households', H, 'board', PID), { by: 'g1', ua: serverTimestamp(), ub: 'g1' }));
+  await assertFails(deleteDoc(doc(db('g1'), 'households', H, 'board', PID)));
+});
+await t('고칠 때 ub(누가) · ua(서버 시각)가 맞아야 함', async () => {
+  await seedFamily(1); await seedGuest('g1'); await seedPi();
+  await assertFails(updateDoc(doc(db('g1'), 'households', H, 'board', PID), { 'lines.a1.d': true, ua: serverTimestamp(), ub: H }));
+  await assertFails(updateDoc(doc(db('g1'), 'households', H, 'board', PID), { 'lines.a1.d': true, ua: Timestamp.now(), ub: 'g1' }));
+});
+await t('쓴 사람은 다 고치고 지울 수 있음 · 줄 지우기', async () => {
+  await seedFamily(1); await seedGuest('g1'); await seedPi();
+  await assertSucceeds(updateDoc(doc(db(H), 'households', H, 'board', PID), { title: '장보기2', 'lines.a1': deleteField(), ua: serverTimestamp(), ub: H }));
+  await assertSucceeds(deleteDoc(doc(db(H), 'households', H, 'board', PID)));
+});
+await t('방장은 나간 가족의 포스트잇을 지울 수 있음', async () => {
+  await seedFamily(1); await seedGuest('g1');
+  await env.withSecurityRulesDisabled(async (c) => setDoc(doc(c.firestore(), 'households', H, 'board', 'g1_p9'), { ...pi('g1'), ua: Timestamp.now() }));
+  await assertSucceeds(deleteDoc(doc(db(H), 'households', H, 'board', 'g1_p9')));
+});
+await t('줄 60개 · 제목 30자 넘으면 막힘 · 모르는 칸 막힘', async () => {
+  await seedFamily(1);
+  const many = {}; for (let i = 0; i < 61; i++) many['l' + i] = { x: 'a', d: false, b: '', o: i };
+  await assertFails(setDoc(doc(db(H), 'households', H, 'board', H + '_q1'), pi(H, { lines: many })));
+  await assertFails(setDoc(doc(db(H), 'households', H, 'board', H + '_q2'), pi(H, { title: 'x'.repeat(31) })));
+  await assertFails(setDoc(doc(db(H), 'households', H, 'board', H + '_q3'), pi(H, { evil: 1 })));
+});
+await t('보기만 권한(read) 가족은 고치기 막힘 · 읽기는 됨', async () => {
+  await seedFamily(1); await seedPi();
+  await env.withSecurityRulesDisabled(async (c) => setDoc(doc(c.firestore(), 'households', H, 'members', 'g2'), { role: 'guest', name: '딸', perm: 'read', joinedAt: Timestamp.now(), inviteCode: CODE }));
+  await assertSucceeds(getDoc(doc(db('g2'), 'households', H, 'board', PID)));
+  await assertFails(updateDoc(doc(db('g2'), 'households', H, 'board', PID), { 'lines.a1.d': true, ua: serverTimestamp(), ub: 'g2' }));
 });
 
 await env.cleanup();

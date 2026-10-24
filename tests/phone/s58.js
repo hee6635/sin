@@ -14,13 +14,13 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const st={...base};delete st.tune;
     const p=await boot(b,{...st,memos:{'2026-10-16':[m('a','첫째'),m('b','둘째'),m('c','셋째')]}},{touch:true});
     await openTune(p);
-    T('슬라이더 46개 · 스티커/주야/메모 묶음(접기) 12개',await p.evaluate(()=>document.querySelectorAll('.tn-r').length===46&&document.querySelectorAll('.tn-d').length===12));
+    T('슬라이더 44개(앱 달력은 메모 위치 없음) · 스티커/주야/메모 묶음(접기) 12개',await p.evaluate(()=>document.querySelectorAll('.tn-r').length===44&&document.querySelectorAll('.tn-d').length===12));
     T('지금 화면(앱 커버)의 묶음만 펼쳐져 있음',await p.evaluate(()=>{const ds=[...document.querySelectorAll('.tn-d')];return ds.filter(d=>d.open).length===3;}));
-    T('새 값 4개(스티커 좌우 간격 · 상하 간격 · 메모 위치 · 줄 간격)가 있음',await p.evaluate(()=>['stkGX','stkGY','memoY','memoG'].every(k=>!!document.querySelector(`.tn-r[data-g="appCover"][data-k="${k}"]`))));
+    T('새 값 3개(스티커 좌우 간격 · 상하 간격 · 줄 간격)가 있음 · 앱 달력엔 메모 위치 없음 · 위젯엔 있음',await p.evaluate(()=>['stkGX','stkGY','memoG'].every(k=>!!document.querySelector(`.tn-r[data-g="appCover"][data-k="${k}"]`))&&!document.querySelector('.tn-r[data-g="appCover"][data-k="memoY"]')&&!document.querySelector('.tn-r[data-g="appInner"][data-k="memoY"]')&&!!document.querySelector('.tn-r[data-g="cover"][data-k="memoY"]')));
     T('처음에는 저장된 값 · 저장 버튼 꺼짐 · 되돌리기 꺼짐',await p.evaluate(()=>/저장된 값/.test(document.querySelector('#tnBar').textContent)&&document.querySelector('[data-act="tune-save"]').disabled&&document.querySelector('[data-act="tune-undo"]').disabled));
-    await setR(p,'appCover','stkGX',0.5);await setR(p,'appCover','stkGY',-0.4);await setR(p,'appCover','memoY',0.3);await setR(p,'appCover','memoG',0.6);await p.waitForTimeout(300);
-    const css=await p.evaluate(()=>{const s=getComputedStyle(document.documentElement);return ['--tgx','--tgy','--tmy','--tmg'].map(k=>s.getPropertyValue(k).trim());});
-    T('새 값이 CSS 로 바로 반영',JSON.stringify(css)===JSON.stringify(['0.5','-0.4','0.3','0.6']),JSON.stringify(css));
+    await setR(p,'appCover','stkGX',0.5);await setR(p,'appCover','stkGY',-0.4);await setR(p,'appCover','memoG',0.6);await p.waitForTimeout(300);
+    const css=await p.evaluate(()=>{const s=getComputedStyle(document.documentElement);return ['--tgx','--tgy','--tmg'].map(k=>s.getPropertyValue(k).trim());});
+    T('새 값이 CSS 로 바로 반영',JSON.stringify(css)===JSON.stringify(['0.5','-0.4','0.6']),JSON.stringify(css));
     T('저장 전에는 저장소가 그대로 · "저장 안 한 값" 표시 · 저장 켜짐',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('eonjeswieo:v1'));return (!s.tune||s.tune.appCover.stkGX===undefined||s.tune.appCover.stkGX===0)&&/저장 안 한/.test(document.querySelector('#tnBar').textContent)&&!document.querySelector('[data-act="tune-save"]').disabled;}));
     await p.evaluate(()=>document.querySelector('[data-act="tune-save"]').click());await p.waitForTimeout(300);
     let s=await saved(p);
@@ -49,9 +49,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const p=await boot(b,{...st,memos},{touch:true});
     await openTune(p);
     T('값이 무난하면 경고 없음',await p.evaluate(()=>document.querySelector('#tnWarn').textContent.trim()===''));
-    await setR(p,'appCover','memoY',-1);await p.waitForTimeout(300);
-    const w=await p.evaluate(()=>document.querySelector('#tnWarn').textContent);
-    T('메모를 위로 많이 올리면(−1) 경고가 뜸(근무 글자와 겹침)',/메모/.test(w),w+' | '+await p.evaluate(()=>JSON.stringify({pl:[...document.querySelectorAll('#tnPrev .pill-wrap>*')].map(x=>[x.clientHeight,x.scrollHeight]),plf:getComputedStyle(document.documentElement).getPropertyValue('--plf'),plh:getComputedStyle(document.documentElement).getPropertyValue('--plh'),prevH:document.querySelector('#tnPrev').clientHeight})));
+    // (메모를 위로 올려 근무 글자와 겹치는 경고는 앱 달력 메모 위치가 빠지면서 생길 수 없음)
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   // ── 접고 펼 때(폭이 바뀔 때) 그 화면 값으로 바로 바뀜

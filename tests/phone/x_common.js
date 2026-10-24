@@ -11,6 +11,9 @@ async function boot(browser,state,opts={}){
   p.on('pageerror',e=>errs.push('PAGEERR '+e.message));
   p.on('console',m=>{if(m.type()==='error')errs.push('CONSOLE '+m.text());});
   p.on('dialog',d=>{p.__dialogs=(p.__dialogs||[]);p.__dialogs.push(d.message());d.dismiss().catch(()=>{});});
+  if(!opts.fold)await p.addInitScript(()=>{   // (v0.92 날짜 창 근무타입 접기 전에 쓴 시험들: 늘 펼친 채로 · 접기 자체는 s64 가 {fold:true} 로 시험)
+    document.addEventListener('DOMContentLoaded',()=>{const st=document.createElement('style');st.textContent='.shsec .sh-body{transition:none!important}';document.head.appendChild(st);
+      new MutationObserver(()=>{document.querySelectorAll('.shsec:not(.open)').forEach(e=>{if(!e.dataset.tOpen){e.dataset.tOpen=1;e.classList.add('open');}});}).observe(document.body,{subtree:true,childList:true});});});
   await p.addInitScript(([d,T,o])=>{
     if(o.freeze!==false){const D=Date;globalThis.Date=class extends D{constructor(...a){super(...(a.length?a:[T]))}static now(){return T}};}
     window.__rem=[];window.__theme='';window.__calls=[];

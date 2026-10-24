@@ -22,6 +22,6 @@ s=re.sub(r'(20\d\d)-(\d\d)-(\d\d)',sh,s)
 open(b,'w',encoding='utf-8').write(s)
 PY
 fi
-timeout 300 npx firebase emulators:exec --only auth,firestore,functions --project demo-eonjeswieo "node $src" > /tmp/run_$f.out 2>&1
+timeout ${TMO:-300} npx firebase emulators:exec --only auth,firestore,functions --project demo-eonjeswieo "node $src" > /tmp/run_$f.out 2>&1
 echo "exit $?" >> /tmp/run_$f.out
 rm -f $S/_shift_$f.mjs

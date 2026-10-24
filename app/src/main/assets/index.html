@@ -66,10 +66,10 @@
 :root{
   --pill-off:#b9bec7;
   --bg:#ffffff;--surface:#f5f6f8;--fg:#1f2328;--muted:#8b919a;--line:#eceef1;--track:#c9ced6;
-  --accent:#2f6bf0;--day:#a6c6e2;--day-fg:#1c2a31;--night:#e0b8a3;--night-fg:#2b1f1b;--band-d:#eef1f3;--band-n:#f3eeeb;--today:#1f8f75;--today-bg:#e3f6f0;--navbar:#ffffff;--navbar-fg:#9aa1ad;--out-bg:#f4f5f7;--head-bg:#f7f7f8;
+  --accent:#5a7fd6;--acc-soft:#e3e9f8;--acc-ink:#34508c;--acc-sw:#7f9be0;--day:#a6c6e2;--day-fg:#1c2a31;--night:#e0b8a3;--night-fg:#2b1f1b;--band-d:#eef1f3;--band-n:#f3eeeb;--today:#1f8f75;--today-bg:#e3f6f0;--navbar:#ffffff;--navbar-fg:#9aa1ad;--out-bg:#f4f5f7;--head-bg:#f7f7f8;
   --rest:#e0455c;--hol-bg:#f8d5d9;--sat:#3b6fd6;--sun:#d64560;--danger:#d64560;
-  --icon-on:#8a65c9; --icon-off:#c9ced6;
-  --fab-color:#8a65c9;
+  --icon-on:#7b93cf; --icon-off:#c9ced6;
+  --fab-color:#7b93cf;
   --family-pink:#ff4d6d;
   --stat-dae:#ff9f43; --stat-vac:#ee5253; --stat-edu:#10ac84;
   --st-pending:#d99100; --st-accepted:#1fa971; --st-rejected:#e0455c; --st-applied:#2f6bf0; --st-cancelled:#8b919a;
@@ -80,18 +80,18 @@
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#111318;--surface:#1a1d24;--fg:#e8eaee;--muted:#8a909b;--line:#262a33;--track:#3a3f4a;
-    --accent:#5b8cff;--day:#4d6068;--day-fg:#eef3f5;--night:#65554f;--night-fg:#f6ece9;--band-d:#232c31;--band-n:#2b2523;--today:#35b894;--today-bg:#173229;--navbar:#23252c;--navbar-fg:#8a8d98;--out-bg:#16181e;--head-bg:#15171c;
+    --accent:#7b9be6;--acc-soft:#2c3752;--acc-ink:#d3ddf9;--acc-sw:#6f8bd6;--day:#4d6068;--day-fg:#eef3f5;--night:#65554f;--night-fg:#f6ece9;--band-d:#232c31;--band-n:#2b2523;--today:#35b894;--today-bg:#173229;--navbar:#23252c;--navbar-fg:#8a8d98;--out-bg:#16181e;--head-bg:#15171c;
     --rest:#ff6b81;--hol-bg:#4a2129;--sat:#7ea2ff;--sun:#ff7a8c;--danger:#ff7a8c;--chol:#1d2944;--chol-fg:#8fb0ff;--pill-off:#5b616c;
-    --icon-on:#a385db; --icon-off:#4a4f59; --fab-color:#a385db;
+    --icon-on:#93a9e0; --icon-off:#4a4f59; --fab-color:#93a9e0;
     --family-pink:#ff6584;
     --st-pending:#f2b53a; --st-accepted:#3fcf94; --st-rejected:#ff7a8c; --st-applied:#7ea2ff; --st-cancelled:#8a909b;
   }
 }
 :root[data-theme="dark"]{
   --bg:#111318;--surface:#1a1d24;--fg:#e8eaee;--muted:#8a909b;--line:#262a33;--track:#3a3f4a;
-  --accent:#5b8cff;--day:#4d6068;--day-fg:#eef3f5;--night:#65554f;--night-fg:#f6ece9;--band-d:#232c31;--band-n:#2b2523;--today:#35b894;--today-bg:#173229;--navbar:#23252c;--navbar-fg:#8a8d98;--out-bg:#16181e;--head-bg:#15171c;
+  --accent:#7b9be6;--acc-soft:#2c3752;--acc-ink:#d3ddf9;--acc-sw:#6f8bd6;--day:#4d6068;--day-fg:#eef3f5;--night:#65554f;--night-fg:#f6ece9;--band-d:#232c31;--band-n:#2b2523;--today:#35b894;--today-bg:#173229;--navbar:#23252c;--navbar-fg:#8a8d98;--out-bg:#16181e;--head-bg:#15171c;
   --rest:#ff6b81;--hol-bg:#4a2129;--sat:#7ea2ff;--sun:#ff7a8c;--danger:#ff7a8c;--chol:#1d2944;--chol-fg:#8fb0ff;--pill-off:#5b616c;
-  --icon-on:#a385db; --icon-off:#4a4f59; --fab-color:#a385db;
+  --icon-on:#93a9e0; --icon-off:#4a4f59; --fab-color:#93a9e0;
   --family-pink:#ff6584;
   --st-pending:#f2b53a; --st-accepted:#3fcf94; --st-rejected:#ff7a8c; --st-applied:#7ea2ff; --st-cancelled:#8a909b;
 }
@@ -350,7 +350,7 @@ textarea{resize:none;min-height:84px}
 .sw input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;z-index:1}
 .sw i{position:absolute;inset:0;border-radius:15px;background:var(--track);transition:background .2s;pointer-events:none}
 .sw i::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,0.2);}
-.sw input:checked+i{background:var(--accent)}
+.sw input:checked+i{background:var(--acc-sw)}
 .sw input:checked+i::after{transform:translateX(22px)}
 
 /* 가족 메모 */
@@ -408,7 +408,7 @@ textarea{resize:none;min-height:84px}
 /* 월 선택기 */
 .m-grid {display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:16px; padding-bottom:16px;}
 .m-btn {height:48px; border-radius:12px; background:var(--surface); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:600; transition:0.1s;}
-.m-btn.on {background:var(--accent); color:#fff;}
+.m-btn.on{background:var(--acc-soft);color:var(--acc-ink);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 40%,transparent)}
 .m-btn:active {transform:scale(0.95);}
 
 /* 설정 */
@@ -418,7 +418,7 @@ textarea{resize:none;min-height:84px}
 .pcap{display:flex;justify-content:space-between;align-items:center}.pcap span{font-weight:600;color:var(--accent);font-size:12px}.pcap button{font-weight:800;color:var(--accent);font-size:12.5px}
 .rbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:36px;height:36px;border-radius:10px;font-size:15px;flex:none;color:var(--muted)}
 .rbtn small{font-size:9.5px;font-weight:700;line-height:1.1;white-space:nowrap;color:var(--accent)}
-.remc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.remc button{font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:16px;background:var(--surface);color:var(--muted)}.remc button.on{background:var(--accent);color:#fff}
+.remc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.remc button{font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:16px;background:var(--surface);color:var(--muted)}.remc button.on{background:var(--acc-soft);color:var(--acc-ink);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 40%,transparent)}
 .bwrap .badge.holtag{color:var(--sun);letter-spacing:-.5px}
 .bwrap .badge.r:not(.holtag){opacity:.8}
 /* 날짜 누르는 느낌 · 칠하기 */
@@ -476,9 +476,20 @@ textarea{resize:none;min-height:84px}
 .sec-t{font-size:14px;color:var(--muted);font-weight:600;margin-bottom:10px}
 .sec-t span{font-weight:400;font-size:12px}
 .tchips{display:flex;flex-wrap:wrap;gap:10px 8px}
+/* 근무타입 접기: 평소엔 알약 하나(지금 근무 ▾) → 누르면 칩 줄. 앱을 쓰는 동안은 열린 채, 앱을 나가고 5분 지나면 다시 접힘 */
+.shsec .sh-pill{display:inline-flex;align-items:center;gap:7px;padding:6px 13px 6px 7px;border-radius:18px;background:var(--surface);font-size:14.5px;font-weight:800;color:var(--fg)}
+.shsec .sh-pill .badge{opacity:1}
+.shsec .sh-pill i{font-style:normal;font-size:11px;color:var(--muted);margin-left:1px}
+.shsec .sh-pill em{font-style:normal;font-size:11px;font-weight:700;color:var(--muted)}
+.shsec .sh-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease}
+.shsec .sh-body>div{min-height:0;overflow:hidden;padding:8px 6px 4px;margin:-8px -6px -4px}
+.shsec.open .sh-body{grid-template-rows:1fr}
+.shsec.open .sh-pill,.shsec:not(.open) .sec-t{display:none}
+.shsec .sh-fold{float:right;font-size:13px;color:var(--muted);padding:0 2px 0 10px}
+@media (prefers-reduced-motion:reduce){.shsec .sh-body{transition:none}}
 .tchip{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:48px;-webkit-touch-callout:none}
 .tchip small{font-size:10.5px;color:var(--muted);white-space:nowrap}
-.badge.tc{width:46px;height:46px;font-size:17px;font-weight:500;opacity:.45}
+.badge.tc{width:46px;height:46px;font-size:17px;font-weight:500;opacity:.72}
 .badge.tc.r{font-size:15px;font-weight:600;border-radius:50%;background:var(--surface)}
 .badge.tc.two{font-size:13px}
 .badge.three{letter-spacing:-1.2px}.bwrap .badge.three,.bwrap .badge.r.three{font-size:calc(var(--b)*.28)}.badge.sm.three{font-size:8.5px}.badge.xs.three{font-size:7.5px}.badge.tc.three{font-size:10.5px}.badge.big.three{font-size:15px}
@@ -584,6 +595,7 @@ textarea{resize:none;min-height:84px}
 .hb svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .bdg{position:absolute;top:3px;right:1px;min-width:17px;height:17px;border-radius:9px;background:var(--rest);color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;padding:0 4px;border:2px solid var(--head-bg);line-height:1}
 .bdg.pur{background:var(--fam)}
+.hb.pi-btn{position:relative}.pi-dot{position:absolute;left:2px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--rest);box-shadow:0 0 0 2px var(--bg)}   /* 가족이 포스트잇을 고쳤을 때 작은 점 (알림 대신) */
 .cal-top .today-btn{font-size:14.5px;padding:0 4px;transition:opacity .08s,transform .08s}
 .cal-top .today-btn:active{opacity:.45;transform:scale(.9)}   /* 눌렸다는 표시 (바로 보임) */
 /* 달력 칸 메모 */
@@ -715,7 +727,7 @@ textarea{resize:none;min-height:84px}
 .prow.tap{cursor:pointer}.prow.tap:active{background:var(--surface)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
 .chips button{height:34px;padding:0 13px;border-radius:17px;background:var(--surface);font-size:13.5px;font-weight:700;color:var(--muted)}
-.chips button.on{background:var(--accent);color:#fff}
+.chips button.on{background:var(--acc-soft);color:var(--acc-ink);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 40%,transparent)}   /* 고른 것: 진한 파랑 대신 파스텔 바탕 + 진한 글자 */
 .chips.left{justify-content:flex-start}
 .timebox{position:relative;font-size:30px;font-weight:300;letter-spacing:-1px;color:var(--fg)}
 .timebox em{font-style:normal;font-size:14px;margin-right:4px;letter-spacing:0}
@@ -817,7 +829,7 @@ textarea{resize:none;min-height:84px}
 .fam-mem i.me{background:var(--fg);color:var(--bg)}.fam-mem i.gu{background:var(--fam)}
 .fam-mem i.add{background:var(--surface);color:var(--muted);box-shadow:inset 0 0 0 2px var(--line);font-size:22px}
 .fam-mem small{font-size:10.5px;color:var(--muted);font-weight:600}
-.fam-now{border-radius:16px;padding:12px 14px;background:linear-gradient(135deg,#5b4bd6,#3b6fd6);color:#fff;margin-bottom:12px}
+.fam-now{border-radius:16px;padding:12px 14px;background:linear-gradient(135deg,#e3ddf9,#dae6f8);color:#2c3150;margin-bottom:12px}
 .fam-now small{font-size:12px;opacity:.85;font-weight:700}.fam-now b{display:block;font-size:17px;font-weight:800;margin-top:2px}
 .dd-link{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;margin-bottom:12px;border-radius:12px;background:color-mix(in srgb,var(--dd) 10%,var(--bg));color:var(--fg);font-size:14.5px;font-weight:700;text-align:left}
 .dd-link span{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--dd);color:#fff;font-weight:900;font-family:ui-monospace,Menlo,monospace}
@@ -946,8 +958,11 @@ textarea{resize:none;min-height:84px}
 .nc .st{font-size:16px;font-weight:800;margin:5px 0 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .now.one .nc .st{font-size:21px}
 .nc .sm{font-size:11.5px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nc.w{background:linear-gradient(135deg,#5b4bd6,#3b6fd6);color:#fff}
-.nc.w .nwho,.nc.w .sm{color:rgba(255,255,255,.88)}
+.nc.w{background:linear-gradient(135deg,#e3ddf9,#dae6f8);color:#2c3150}   /* "나" 카드: 진한 보라 → 파스텔 (강조색 통일) */
+.nc.w .nwho,.nc.w .sm{color:#5d6383}
+.nc.w .bar{background:rgba(70,80,140,.14)}.nc.w .got{background:rgba(255,255,255,.6)}
+:root[data-theme="dark"] .nc.w{background:linear-gradient(135deg,#34305a,#2c3a5c);color:#eef0fb}:root[data-theme="dark"] .nc.w .nwho,:root[data-theme="dark"] .nc.w .sm{color:#c3c9e6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .nc.w{background:linear-gradient(135deg,#34305a,#2c3a5c);color:#eef0fb}:root:not([data-theme="light"]) .nc.w .nwho,:root:not([data-theme="light"]) .nc.w .sm{color:#c3c9e6}}
 .nc.sl{background:#2b3446;color:#fff}.nc.sl .nwho,.nc.sl .sm{color:rgba(255,255,255,.8)}
 .nc .bar{height:5px;border-radius:3px;background:rgba(255,255,255,.25);margin:6px 0 4px;overflow:hidden}.nc .bar i{display:block;height:100%;background:#ffd166}
 .nc .got{display:inline-block;margin-top:6px;font-size:11px;font-weight:800;background:rgba(255,255,255,.18);border-radius:8px;padding:3px 7px}
@@ -967,7 +982,7 @@ textarea{resize:none;min-height:84px}
 .fh.tdc{border-radius:9px 9px 0 0;box-shadow:inset 2px 0 0 var(--today),inset -2px 0 0 var(--today),inset 0 2px 0 var(--today)}
 .fc.tdc.lr{border-radius:0 0 9px 9px;box-shadow:inset 2px 0 0 var(--today),inset -2px 0 0 var(--today),inset 0 -2px 0 var(--today)}
 .fwt{font-size:13px;font-weight:700}.fwk{gap:8px}.fwk .fnow{margin-left:auto;font-size:12.5px;font-weight:800}.fwk .fmode{display:inline-flex;gap:3px;margin-left:auto}.fwk .fnow:not([hidden])+.fmode{margin-left:0}
-.fmode button{height:26px;padding:0 9px;border-radius:13px;background:var(--bg);font-size:11.5px;font-weight:700;color:var(--muted)}.fmode button.on{background:var(--accent);color:#fff}
+.fmode button{height:26px;padding:0 9px;border-radius:13px;background:var(--bg);font-size:11.5px;font-weight:700;color:var(--muted)}.fmode button.on{background:var(--acc-soft);color:var(--acc-ink);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 40%,transparent)}
 .fghint{padding:6px 2px 0;text-align:center}
 .fh.all,.fc.all{background:#ffe9a8}.fh.day,.fc.day{background:#fff5d6}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .fh.all,:root:not([data-theme="light"]) .fc.all{background:#5c4a12}:root:not([data-theme="light"]) .fh.day,:root:not([data-theme="light"]) .fc.day{background:#3b331a}}
@@ -1097,7 +1112,7 @@ a.lnk{cursor:pointer;-webkit-tap-highlight-color:transparent}a.lnk:active{opacit
 .sr-hd .si{font-size:30px;line-height:34px;display:flex}
 .icn-tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 16px 8px}
 .icn-tabs button{flex:0 0 auto;padding:6px 11px;border-radius:14px;background:var(--surface);font-size:13px;font-weight:700;color:var(--fg)}
-.icn-tabs button.on{background:var(--accent);color:#fff}
+.icn-tabs button.on{background:var(--acc-soft);color:var(--acc-ink);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 40%,transparent)}
 .stp-add{flex:1;padding:14px 0;font-size:14.5px;font-weight:700;color:var(--accent)}
 .stp-add+.stp-add{border-left:1px solid var(--line)}
 
@@ -1189,17 +1204,19 @@ button.tbtn{cursor:pointer}
 :root{--stz:clamp(12px,3.74vw,17.6px);--stz0:clamp(12px,3.74vw,17.6px)}
 @media (min-width:600px){:root{--stz:clamp(17px,2.64vw,19.8px);--stz0:clamp(17px,2.64vw,19.8px)}}   /* --stz0: 화면 기준 스티커 크기(줄이기 전) — 날짜 줄 높이 · 주야 자리는 이걸로 정해서, 달마다 스티커를 줄여도(--stz) 주야가 안 움직임 */
 .dn .stp>svg,.s2>svg,.dn .stp .sx svg,.s2 .sx svg{width:var(--stz);height:var(--stz)}
-.dn .stp>.se,.s2>.se,.dn .stp .sx .se,.s2 .sx .se{font-size:calc(var(--stz) - 2px) !important}
+/* --tz: 글자 크게(폰 textZoom 120%)일 때 1.2 → 이모지 스티커는 글자처럼 커지지 않게 나눠 둠 (그림 스티커는 원래 안 커짐) */
+:root{--tz:1}
+.dn .stp>.se,.s2>.se,.dn .stp .sx .se,.s2 .sx .se{font-size:calc((var(--stz) - 2px) / var(--tz)) !important}
 .sx{position:relative;display:inline-block;line-height:0}
 .sx:not(:last-child) .cb{right:calc(var(--stz,19px)*.04)}   /* 스티커 둘이 나란히 있으면 왼쪽 스티커의 1/2 배지는 자기 스티커 안쪽 모서리 → 오른쪽 스티커를 안 가림 (왼쪽으로 빼면 숫자 · 이름을 가림) */
-.sx .cb{position:absolute;right:calc(var(--stz,19px)*-.1);bottom:calc(var(--stz,19px)*-.14);font-size:10px;font-weight:800;font-style:normal;line-height:1;color:#fff;background:#f08a00;border-radius:7px;padding:1.3px 3.3px;white-space:nowrap;filter:none;transform-origin:100% 100%;scale:var(--cbk,.55)}   /* 1/2 배지: 글자는 10px 로 그려 두고 "배율"로 줄임 — 폰 웹뷰는 8px 아래 글자를 8px 로 키우고(최소 글자 크기) 큰 글씨도 곱해서, 글자 크기로는 못 줄임. 배율(--cbk)은 cbFit() 가 스티커 크기 × .36 에 맞춰 계산 */
+.sx .cb{position:absolute;right:calc(var(--stz,19px)*-.1);bottom:calc(var(--stz,19px)*-.14);font-size:calc(10px / var(--tz,1));font-weight:800;font-style:normal;line-height:1;color:#fff;background:#f08a00;border-radius:7px;padding:1.3px 3.3px;white-space:nowrap;filter:none;transform-origin:100% 100%;scale:var(--cbk,.55)}   /* 1/2 배지: 글자는 10px 로 그려 두고 "배율"로 줄임 — 폰 웹뷰는 8px 아래 글자를 8px 로 키우고(최소 글자 크기) 큰 글씨도 곱해서, 글자 크기로는 못 줄임. 배율(--cbk)은 cbFit() 가 스티커 크기 × .36 에 맞춰 계산 */
 /* 개인 캘린더: 스티커는 칸 가운데에 크게 (최대 4개) */
 .cell.pers{--b:max(34px,min(100cqw,56px,calc(100cqh - 62px)))}
 .pstk{display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:1px 2px;height:100%;width:100%;--stz:min(28px,44cqw,var(--b))}
 .pstk.n3{--stz:min(22px,calc((100cqw - 6px)/3),calc(var(--b)*.7));flex-wrap:nowrap}
 .pstk.n4{--stz:min(24px,46cqw,calc(var(--b)/2 - 1px))}
 .pstk>svg,.pstk .sx svg{width:var(--stz);height:var(--stz)}
-.pstk>.se,.pstk .sx .se{font-size:calc(var(--stz)*.8) !important;line-height:1.2}
+.pstk>.se,.pstk .sx .se{font-size:calc(var(--stz)*.8 / var(--tz)) !important;line-height:1.2}
 .pstk>svg:not(.off),.pstk>.se:not(.plan),.pstk>.sx{filter:drop-shadow(0 0 1.2px var(--bg)) drop-shadow(0 1px 1.4px rgba(0,0,0,.3))}
 /* 스티커 외형: 흰 테두리 + 그림자 + 살짝 기울기 (붙인 것만, 안 붙인 흐린 것은 그대로) */
 .dn .stp>svg:not(.off),.dn .stp>.se:not(.plan),.dn .stp>.sx{filter:drop-shadow(0 0 1.2px var(--bg)) drop-shadow(0 0 1.2px var(--bg)) drop-shadow(0 1.2px 1.4px rgba(0,0,0,.35))}
@@ -1295,7 +1312,7 @@ button.tbtn{cursor:pointer}
 .dn .stp,.s2{gap:max(0px,calc(1px + var(--tgx,0)*4px))}   /* 스티커 좌우 간격 */
 .dn.h1r .stp{gap:max(0px,calc(var(--tgx,0)*4px))}   /* (이름이 있는 날은 기본 0 — 위 규칙보다 구체적이라 따로 적어야 간격 조정이 먹음) */
 .cell .s2{translate:calc(var(--tstkx,0)*12cqw) calc(var(--tstky,0)*8cqh + var(--tgy,0)*6cqh)}   /* 스티커 상하 간격: 둘째 줄만 아래/위로 */
-.cell .pill-wrap{gap:max(0px,calc(1px + var(--tmg,0)*3px));translate:0 calc(var(--tmy,0)*4cqh)}   /* 메모 줄 사이 간격 · 위치(위 − · 아래 +) */
+.cell .pill-wrap{gap:max(0px,calc(1px + var(--tmg,0)*3px))}   /* 메모 줄 사이 간격 (앱 달력은 메모 위치 조정 없음: 3줄이 칸 바닥까지 채우므로 내리면 잘림 · 위치는 위젯만) */
 .bwrap .badge{scale:var(--tink,1);translate:0 calc(var(--tinky,0)*6cqh)}
 html[data-cal="fill"] .grid{gap:2px;padding:2px;border-top:0}
 html[data-cal="fill"] .cell{border:0;border-radius:9px;background:transparent}
@@ -1466,6 +1483,8 @@ function famCleanFam2(f){   // 폰에 저장해 둔 가족 복사본 (옛 버전
   if(isObj(f.me))out.me={sent:Math.max(0,Math.round(+f.me.sent)||0),bonus:Math.max(0,Math.round(+f.me.bonus)||0)};
   if(Array.isArray(f.seenMemo))out.seenMemo=f.seenMemo.filter(okId).slice(-300);
   if(+f.syncAt>0)out.syncAt=+f.syncAt;
+  out.board={};if(isObj(f.board))Object.keys(f.board).slice(0,600).forEach(id=>{const c=okId(id)?famCleanBoardDoc(f.board[id]):null;if(c)out.board[id]=c;});   // 가족 포스트잇 복사본
+  if(+f.boardSeen>0)out.boardSeen=+f.boardSeen;if(f.boardDot)out.boardDot=1;if(f.boardInit)out.boardInit=1;if(okId(f.boardMe))out.boardMe=f.boardMe;
   return out;
 }
 //#HELPERS_END
@@ -1958,7 +1977,7 @@ function applyWidgetActions(){
     if(!a||!a.k)return;
     if(a.t==='stk'){const d=S.stamps.defs.find(x=>x.id===a.id);if(!d)return;const N=stView(d,a.k).N;stampSet(d.id,a.k,Math.max(0,Math.min(N,+a.n||0)));n++;}
     else if(a.t==='memo'){const m=memosOf(a.k).find(x=>String(x.id)===a.id);if(!m||!m.todo)return;if(a.d)m.done=true;else delete m.done;n++;}
-    else if(a.t==='line'){const p=(S.board[a.k.slice(0,7)]||[]).find(x=>String(x.id)===a.pid),l=p&&(p.lines||[]).find(x=>String(x.id)===a.lid);if(!l)return;l.done=!!a.d;l.doneBy=l.done?role():'';n++;}
+    else if(a.t==='line'){const p=boardList(a.k.slice(0,7)).find(x=>String(x.id)===a.pid),l=p&&(p.lines||[]).find(x=>String(x.id)===a.lid);if(!l)return;l.done=!!a.d;l.doneBy=l.done?role():'';if(p.srv)piSrvPush(p);n++;}
   });
   if(n){save();render();toast(`위젯에서 체크한 ${n}개를 반영했어요`);}
   return n;
@@ -2247,6 +2266,8 @@ function applyTheme(){
 }
 function applyFont(){
   const pct=S.fontScale>100?120:100;
+  let tz=1;try{tz=window.AndroidBridge&&typeof window.AndroidBridge.setTextZoom==='function'?pct/100:1;}catch(e){}
+  document.documentElement.style.setProperty('--tz',tz);   // 스티커는 글자 크기와 상관없이 그대로 (위 --tz)
   try{
     if(window.AndroidBridge&&typeof window.AndroidBridge.setTextZoom==='function'){window.AndroidBridge.setTextZoom(pct);return;}
   }catch(e){}
@@ -2360,7 +2381,7 @@ let tuneDraft=null;   // 모양 조정 화면에서 아직 저장 안 한 값 (�
 const tuneApp=()=>((tuneDraft||(S&&S.tune))||{})[tuneAppKey()]||TUNE_NEUTRAL;
 function applyTune(){
   const de=document.documentElement,st=de.style,t=tuneApp();
-  st.setProperty('--tstk',t.stk);st.setProperty('--tstkx',t.stkX);st.setProperty('--tstky',t.stkY);st.setProperty('--tink',t.ink);st.setProperty('--tinky',t.inkY);st.setProperty('--tgx',t.stkGX);st.setProperty('--tgy',t.stkGY);st.setProperty('--tmy',t.memoY);st.setProperty('--tmg',t.memoG);st.setProperty('--tdot',t.dotX||0);
+  st.setProperty('--tstk',t.stk);st.setProperty('--tstkx',t.stkX);st.setProperty('--tstky',t.stkY);st.setProperty('--tink',t.ink);st.setProperty('--tinky',t.inkY);st.setProperty('--tgx',t.stkGX);st.setProperty('--tgy',t.stkGY);st.setProperty('--tmg',t.memoG);st.setProperty('--tdot',t.dotX||0);
   if(S.calLook==='fill')de.setAttribute('data-cal','fill');else de.removeAttribute('data-cal');
   de.setAttribute('data-today',S.todayLook||'b');
   if(S.todayColor)de.style.setProperty('--tdc',S.todayColor);else de.style.removeProperty('--tdc');
@@ -2433,7 +2454,7 @@ function render(){
     const todoN=boardLeft(boardKey());
     top.innerHTML=`
       <div class="hl">
-        <button class="hb pi-btn" data-act="open-board" aria-label="월 포스트잇"><span class="pi-ic"></span>${todoN?`<span class="bdg pur">${todoN>9?'9+':todoN}</span>`:''}</button>
+        <button class="hb pi-btn" data-act="open-board" aria-label="월 포스트잇"><span class="pi-ic"></span>${todoN?`<span class="bdg pur">${todoN>9?'9+':todoN}</span>`:''}${S.link&&S.fam2&&S.fam2.boardDot?'<i class="pi-dot" aria-label="가족이 포스트잇을 고쳤어요"></i>':''}</button>
       </div>
       ${mid}
       <div class="hr">${(()=>{const c=famInCounts(),n=c.ask+c.hold;return n?`<button class="rqmail" data-act="feed-req" aria-label="처리할 요청 ${n}개">📩<i class="${c.ask?'':'hold'}">${n}</i></button>`:'';})()}${todayBtn}</div>`;
@@ -4185,27 +4206,33 @@ const PI_REACT=['✓','👍','❤️','😂'];
 function boardKey(){return `${cur.y}-${pad(cur.m+1)}`;}
 // 매달 반복: 이전 달의 마지막 판이 "매달"이면 이번 달에 새로 붙임 (체크는 비워서)
 function ensureRepeats(mk){
-  const latest={};
-  Object.keys(S.board).filter(k=>k<mk).sort().forEach(k=>(S.board[k]||[]).forEach(n=>{latest[n.rootId||n.id]=n;}));
-  const list=S.board[mk]||[];let added=false;
+  const latest={},r=role(),mine=piSrvList().filter(x=>x.by===r);   // 가족 포스트잇은 쓴 사람 폰에서만 새 달에 붙임
+  const mks=[...new Set(Object.keys(S.board).concat(mine.map(x=>x.mk)))].filter(k=>k<mk).sort();
+  mks.forEach(k=>(S.board[k]||[]).concat(mine.filter(x=>x.mk===k)).forEach(n=>{latest[n.rootId||n.id]=n;}));
+  const list=S.board[mk]||[],have=boardList(mk);let added=false;
   Object.entries(latest).forEach(([root,n])=>{
-    if(!n.repeat||list.some(x=>(x.rootId||x.id)===root))return;
+    if(!n.repeat||have.some(x=>(x.rootId||x.id)===root))return;
     let date='';
     if(n.date){const [y,m]=mk.split('-').map(Number),dd=new Date(y,m-1,+n.date.slice(8));if(dd.getMonth()===m-1)date=fmt(dd);}
-    list.push(Object.assign({},n,{id:uid(),rootId:root,t:Date.now(),torn:false,tornAt:0,reacts:{},date,
-      lines:(n.lines||[]).map(l=>({id:uid(),text:l.text,done:false,doneBy:''}))}));
+    const c=Object.assign({},n,{id:uid(),rootId:root,t:Date.now(),torn:false,tornAt:0,reacts:{},date,
+      lines:(n.lines||[]).map(l=>({id:uid(),text:l.text,done:false,doneBy:''}))});
+    delete c.srv;delete c._v;delete c.mk;if(n.srv){c.by=r;c.shared=true;c.color='y';}
+    list.push(c);
     added=true;
   });
   if(added){S.board[mk]=list;save();}
 }
-function boardAll(mk){ensureRepeats(mk);return S.board[mk]||[];}
+// 그 달 포스트잇 = 폰에 있는 것 + 가족방 서버의 가족 포스트잇 (같은 id 면 서버 것 · 올리는 중에 둘 다 보이지 않게)
+function boardList(mk){const loc=S.board[mk]||[],srv=piSrvList().filter(x=>x.mk===mk);if(!srv.length)return loc;const ids=new Set(srv.map(x=>x.id));return loc.filter(x=>!ids.has(x.id)).concat(srv);}
+function boardAll(mk){ensureRepeats(mk);return boardList(mk);}
 function boardItems(mk){const r=role();return boardAll(mk).filter(x=>!x.torn&&(x.shared||x.by===r));}
 function boardLeft(mk){return boardItems(mk).reduce((s,n)=>s+(n.type==='list'?n.lines.filter(l=>!l.done).length:0),0);}
 // 달력에도 표시한 포스트잇 (그 날짜)
-function boardOnDate(k){const r=role();return (S.board[k.slice(0,7)]||[]).filter(n=>n.date===k&&!n.torn&&(n.shared||n.by===r));}
+function boardOnDate(k){const r=role();return boardList(k.slice(0,7)).filter(n=>n.date===k&&!n.torn&&(n.shared||n.by===r));}
 const piLabel=n=>n.type==='list'?(n.title||'할 일'):firstLine(n.text);
 function piRot(id){let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))|0;return 'r'+(Math.abs(h)%4+1);}
-function piFind(id){return (S.board[boardKey()]||[]).find(x=>x.id===id);}
+function piFind(id){return boardList(boardKey()).find(x=>x.id===id);}
+function piSave(n){save();if(n&&n.srv)piSrvPush(n);}   // 가족방 서버 포스트잇이면 바뀐 곳만 서버로
 const piDone=n=>n.type==='list'&&n.lines.length>0&&n.lines.every(l=>l.done);
 const piCol=n=>n.shared?'p':(PI_COL.includes(n.color)?n.color:'y');
 const PIN_COL={host:'#1d2330',guest:'#e5484d'};
@@ -4242,6 +4269,7 @@ function piCard(n){
 function openBoard(){
   if($('#sheet').classList.contains('open'))closeSheet();
   const mk=boardKey(),r=role(),all=boardAll(mk);
+  if(S.fam2&&S.fam2.boardDot){S.fam2.boardDot=0;S.fam2.boardSeen=Math.max(+S.fam2.boardSeen||0,...Object.values(S.fam2.board||{}).map(v=>+v.ua||0));famSaveLocal();}
   const items=all.filter(x=>!x.torn&&(x.shared||x.by===r)).sort((a,b)=>(a.order??a.t)-(b.order??b.t));
   const torn=all.filter(x=>x.torn&&(x.shared||x.by===r));
   const left=boardLeft(mk),nf=items.filter(n=>n.shared).length,nm=items.length-nf;
@@ -4300,7 +4328,7 @@ function renderPiEd(focus){
       ${own&&!n.shared?`<div class="pi-cols">${PI_COL.map(c=>`<button class="c-${c} ${n.color===c?'on':''}" data-act="pi-color" data-v="${c}" aria-label="색"></button>`).join('')}</div>`:''}
       ${own?`<button class="pi-tb ${n.repeat?'on':''}" data-act="pi-repeat">🔁 매달 반복</button>`:''}
       ${!piEd.isNew&&piDone(n)?'<button class="pi-tb" data-act="pi-tear">📤 떼기</button>':''}
-      ${!piEd.isNew&&(own||r==='host')?'<button class="pi-tb del" data-act="pi-del">🗑</button>':''}
+      ${!piEd.isNew&&(own||(r==='host'&&!n.srv))?'<button class="pi-tb del" data-act="pi-del">🗑</button>':''}
       <button class="pi-go" data-act="pi-save">${piEd.isNew?'붙이기':'완료'}</button>
     </div></div>`;
   if(focus&&piEd.isNew){const f=$(isList?'#piTitle':'#piText');if(f)setTimeout(()=>f.focus(),60);}
@@ -4316,15 +4344,16 @@ function piCommit(){
     if(n.type==='list'&&!n.title&&!n.lines.length)return false;
     n.t=Date.now();
     const mk=boardKey();(S.board[mk]=S.board[mk]||[]).push(n);
-    if(n.shared)pushEvent(other(),'board',mk,`🗒 ${cur.m+1}월 포스트잇: "${piLabel(n).slice(0,24)}"`);
+    if(n.shared&&!S.link)pushEvent(other(),'board',mk,`🗒 ${cur.m+1}월 포스트잇: "${piLabel(n).slice(0,24)}"`);
+    if(n.shared&&S.link)famSyncBoardSoon();
   }
-  save();return true;
+  piSave(n);return true;
 }
 function piAddLine(){
   const n=piTarget(),li=$('#piLine');if(!n||!li)return;
   const v=li.value.trim();if(!v){li.focus();return;}
   piPull();piEd.line='';n.lines.push({id:uid(),text:v.slice(0,60),done:false,doneBy:''});
-  if(!piEd.isNew){save();if(n.shared)pushEvent(other(),'board',boardKey(),`📝 "${(n.title||'할 일').slice(0,12)}"에 추가: ${v.slice(0,20)}`);}
+  if(!piEd.isNew){piSave(n);if(n.shared&&!n.srv)pushEvent(other(),'board',boardKey(),`📝 "${(n.title||'할 일').slice(0,12)}"에 추가: ${v.slice(0,20)}`);}
   renderPiEd();const l2=$('#piLine');if(l2)l2.focus();
 }
 function piClose(commit){
@@ -4332,11 +4361,11 @@ function piClose(commit){
   piEd=null;$('#pop').className='';$('#pop').innerHTML='';
   if(pageMode==='board'){render();openBoard();}
 }
-function piTear(n){n.torn=true;n.tornAt=Date.now();save();toast('📤 떼어서 "지난 메모"에 보관했어요');}
+function piTear(n){n.torn=true;n.tornAt=Date.now();piSave(n);toast('📤 떼어서 "지난 메모"에 보관했어요');}
 function openPiPast(){
-  const r=role(),torn=(S.board[boardKey()]||[]).filter(x=>x.torn&&(x.shared||x.by===r)).sort((a,b)=>b.tornAt-a.tornAt);
+  const r=role(),torn=boardList(boardKey()).filter(x=>x.torn&&(x.shared||x.by===r)).sort((a,b)=>b.tornAt-a.tornAt);
   openPop(`<div class="mh">🗂 ${cur.m+1}월 · 뗀 포스트잇<b>되돌리면 다시 벽에 붙어요</b></div>
-    ${torn.map(n=>`<div class="mi"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.shared?'♥':'🔒'} ${esc(piLabel(n))}</span><button class="btn sm ghost" data-act="pi-restore" data-id="${n.id}">되돌리기</button>${n.by===r||r==='host'?`<button class="xbtn" data-act="pi-purge" data-id="${n.id}" aria-label="지우기">✕</button>`:''}</div>`).join('')||'<div class="mi" style="color:var(--muted)">없어요</div>'}
+    ${torn.map(n=>`<div class="mi"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.shared?'♥':'🔒'} ${esc(piLabel(n))}</span><button class="btn sm ghost" data-act="pi-restore" data-id="${n.id}">되돌리기</button>${n.by===r||(r==='host'&&!n.srv)?`<button class="xbtn" data-act="pi-purge" data-id="${n.id}" aria-label="지우기">✕</button>`:''}</div>`).join('')||'<div class="mi" style="color:var(--muted)">없어요</div>'}
     <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);
 }
 // 달 넘김: 이번 달 처음 열 때 지난달 안 끝난 할 일을 물어봄 (한 번만)
@@ -4346,7 +4375,7 @@ function boardCarryCheck(mk){
   if(mk!==cm||S.boardCarry[mk]||$('#pop').classList.contains('open'))return;
   const pd=new Date(now.getFullYear(),now.getMonth()-1,1),pm=`${pd.getFullYear()}-${pad(pd.getMonth()+1)}`,r=role();
   const cand=[];
-  (S.board[pm]||[]).forEach(n=>{if(n.repeat||n.type!=='list'||!(n.shared||n.by===r))return;n.lines.forEach(l=>{if(!l.done)cand.push({n,l});});});
+  boardList(pm).forEach(n=>{if(n.repeat||n.type!=='list'||!(n.shared||n.by===r)||(n.srv&&n.by!==r))return;n.lines.forEach(l=>{if(!l.done)cand.push({n,l});});});   // 가족 포스트잇은 쓴 사람만 옮김
   if(!cand.length)return;
   carryCand={mk,cand};
   const reps=(S.board[mk]||[]).filter(n=>n.rootId).map(piLabel);
@@ -4362,10 +4391,10 @@ function boardCarryDo(go){
     const groups=new Map();
     cand.forEach((c,i)=>{const cb=$('#carry'+i);if(cb&&!cb.checked)return;if(!groups.has(c.n))groups.set(c.n,[]);groups.get(c.n).push(c.l);});
     groups.forEach((lines,src)=>{
-      (S.board[mk]=S.board[mk]||[]).push({id:uid(),type:'list',title:src.title||'할 일',text:'',shared:src.shared,by:src.by,color:src.color,repeat:false,dateAuto:false,date:'',reacts:{},torn:false,t:Date.now(),
+      (S.board[mk]=S.board[mk]||[]).push({id:uid(),type:'list',title:src.title||'할 일',text:'',shared:src.shared,by:src.srv?role():src.by,color:src.srv?'y':src.color,repeat:false,dateAuto:false,date:'',reacts:{},torn:false,t:Date.now(),
         lines:lines.map(l=>({id:uid(),text:l.text,done:false,doneBy:''}))});
     });
-    if(groups.size)toast('이번 달로 옮겼어요');
+    if(groups.size){toast('이번 달로 옮겼어요');if(S.link)famSyncBoardSoon();}
   }
   S.boardCarry[mk]=1;carryCand=null;save();closePop();openBoard();
 }
@@ -4384,7 +4413,7 @@ document.addEventListener('pointermove',e=>{
 document.addEventListener('pointerup',e=>{
   if(!piSwipe)return;
   const dx=e.clientX-piSwipe.x,el=piSwipe.el;piSwipe=null;
-  if(Math.abs(dx)>90){const n=piFind(el.dataset.id);if(n){piTear(n);render();openBoard();}}
+  if(Math.abs(dx)>90){const n=piFind(el.dataset.id);if(n){piTear(n);render();openBoard();}}   // (가족 포스트잇도 누구나 뗄 수 있음)
   else{el.style.transform='';el.style.opacity='';}
 });
 
@@ -4797,16 +4826,23 @@ function openDay(k){
     const shiftBtns=quick.map(x=>`<button class="tchip ${c===x.k?'on':''}" data-act="setshift" data-s="${esc(x.k)}">
         ${badge(x.k,'tc')}<small>${esc(x.name)}</small>${ov&&x.k===base?'<i class="orig">원래</i>':''}</button>`).join('');
     topPart=persOn(k)?`${warn}`:`${dayReqs.length?`<div class="lbl" style="color:var(--accent);margin-top:12px;">📩 이 날의 근무 요청</div>${reqHtml}`:''}
-      <div class="sec">
-        <div class="sec-t">근무타입<button class="paint-lk" data-act="paint-open" data-k="${esc(c)}">🖌 여러 날 칠하기</button></div>
+      <div class="sec shsec${shiftOpenNow()?' open':''}">
+        <button class="sh-pill" data-act="shift-tog" aria-label="근무 바꾸기">${badge(c,'sm','')}${esc(shiftLabel(c))}${ov?'<em>· 바뀜</em>':''}<i>▾</i></button>
+        <div class="sec-t">근무타입<button class="sh-fold" data-act="shift-tog" aria-label="근무타입 접기">▴ 접기</button><button class="paint-lk" data-act="paint-open" data-k="${esc(c)}">🖌 여러 날 칠하기</button></div>
+        <div class="sh-body"><div>
         <div class="tchips">${shiftBtns}${S.types.length>quick.length?'<button class="tchip add" data-act="type-more"><span class="badge tc add">＋ 더보기</span></button>':''}</div>
         ${ov?`<div class="hint" style="margin:6px 0 0">원래 근무: ${esc(shiftLabel(base))} · <a data-act="resetshift">되돌리기</a></div>`:''}
+        </div></div>
       </div>${warn}`;
   }
   openSheet(`${head}${topPart}${memoSection(k)}`,true);
   dstripCenter();
 }
 
+/* 날짜 창 근무타입 접기: 처음엔 접힘(불규칙 근무표는 날마다 넣으니 펼침) · 열면 앱을 쓰는 동안 그대로 · 앱을 나가고 5분 지나면 다시 접힘 (저장 안 함) */
+let shiftOpen=null,shiftHidAt=0;
+const shiftOpenNow=()=>shiftOpen===null?!!S.noPat:shiftOpen;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)shiftHidAt=Date.now();else{if(shiftHidAt&&Date.now()-shiftHidAt>5*60*1000)shiftOpen=null;shiftHidAt=0;}});
 /* ---------- 근무타입 고르기 / 편집 ---------- */
 let typeReturn='day';
 function afterType(){if(typeReturn==='page'){closeSheet();openPatternPage();}else openDay(sheetKey);}
@@ -5089,7 +5125,7 @@ const tuneVal=()=>tuneDraft||S.tune;
 const tuneDirty=()=>!!tuneDraft&&JSON.stringify(tuneDraft)!==JSON.stringify(S.tune);
 function tuneRows(g){   // 스티커 / 주야 / 메모 묶음으로 접기 · 지금 보는 화면(앱 달력)만 펼쳐 둠
   const t=tuneVal()[g],open=g===tuneAppKey();
-  return ['스티커','주야','메모'].map(gr=>`<details class="tn-d"${open?' open':''}><summary>${gr}</summary>${TUNE_KEYS.filter(k=>k[6]===gr&&(!k[7]||g.startsWith('app'))).map(([k,nm,lo,hi,st])=>`<div class="tn-row"><span>${nm}</span><input type="range" class="tn-r" data-g="${g}" data-k="${k}" min="${lo}" max="${hi}" step="${st}" value="${t[k]}"><b id="tnv_${g}_${k}">${tuneFmt(t[k])}</b></div>`).join('')}</details>`).join('');
+  return ['스티커','주야','메모'].map(gr=>`<details class="tn-d"${open?' open':''}><summary>${gr}</summary>${TUNE_KEYS.filter(k=>k[6]===gr&&(!k[7]||g.startsWith('app'))&&!(k[0]==='memoY'&&g.startsWith('app'))).map(([k,nm,lo,hi,st])=>`<div class="tn-row"><span>${nm}</span><input type="range" class="tn-r" data-g="${g}" data-k="${k}" min="${lo}" max="${hi}" step="${st}" value="${t[k]}"><b id="tnv_${g}_${k}">${tuneFmt(t[k])}</b></div>`).join('')}</details>`).join('');
 }
 function tuneBar(){   // 저장 · 되돌리기 줄 (미리보기 바로 아래)
   const e=$('#tnBar');if(!e)return;const d=tuneDirty(),h=(S.tuneHist||[]).length;
@@ -6196,22 +6232,24 @@ document.addEventListener('click',e=>{
       const l=n.lines.find(x=>x.id===t.dataset.l);if(!l)break;
       if(piEd)piPull();
       l.done=!l.done;l.doneBy=l.done?role():'';
-      if(!piEd||!piEd.isNew){if(l.done&&n.shared)pushEvent(other(),'board',boardKey(),`☑ "${l.text.slice(0,20)}" 완료했어요`);save();}
+      if(!piEd||!piEd.isNew){if(l.done&&n.shared&&!n.srv)pushEvent(other(),'board',boardKey(),`☑ "${l.text.slice(0,20)}" 완료했어요`);piSave(n);}
       if(piEd)renderPiEd();else{render();openBoard();}
       break;}
     case 'pi-ladd':piAddLine();break;
-    case 'pi-ldel':{const n=piTarget();if(!n)break;piPull();n.lines=n.lines.filter(x=>x.id!==t.dataset.l);if(!piEd.isNew)save();renderPiEd();break;}
+    case 'pi-ldel':{const n=piTarget();if(!n)break;piPull();n.lines=n.lines.filter(x=>x.id!==t.dataset.l);if(!piEd.isNew)piSave(n);renderPiEd();break;}
     case 'pi-type':{const n=piTarget();if(!n)break;piPull();n.type=t.dataset.v;if(n.type==='list'&&!n.lines.length&&n.text.trim()){n.text.split('\n').map(x=>x.trim()).filter(Boolean).forEach(x=>n.lines.push({id:uid(),text:x.slice(0,60),done:false,doneBy:''}));n.text='';}renderPiEd(true);break;}
-    case 'pi-share':{const n=piTarget();if(!n)break;piPull();n.shared=t.dataset.v==='1';if(!piEd.isNew){save();if(n.shared)pushEvent(other(),'board',boardKey(),`🗒 ${cur.m+1}월 포스트잇: "${piLabel(n).slice(0,24)}"`);}renderPiEd();break;}
+    case 'pi-share':{let n=piTarget();if(!n)break;piPull();
+      if(n.srv){if(t.dataset.v==='1')break;n=piUnshare(n);if(!n)break;piEd={isNew:false,id:n.id};renderPiEd();break;}   // 가족 → 나만: 서버에서 내 폰으로 되돌림
+      n.shared=t.dataset.v==='1';if(!piEd.isNew){save();if(n.shared&&!S.link)pushEvent(other(),'board',boardKey(),`🗒 ${cur.m+1}월 포스트잇: "${piLabel(n).slice(0,24)}"`);if(n.shared&&S.link)famSyncBoardSoon();}renderPiEd();break;}
     case 'pi-color':{const n=piTarget();if(!n)break;piPull();n.color=t.dataset.v;if(!piEd.isNew)save();renderPiEd();break;}
-    case 'pi-repeat':{const n=piTarget();if(!n)break;piPull();n.repeat=!n.repeat;if(!piEd.isNew)save();renderPiEd();toast(n.repeat?'🔁 다음 달부터 매달 자동으로 붙어요':'매달 반복을 껐어요');break;}
-    case 'pi-react':{const n=piTarget();if(!n)break;piPull();n.reacts=n.reacts||{};const r=role();n.reacts[r]=n.reacts[r]===t.dataset.v?'':t.dataset.v;save();renderPiEd();break;}
+    case 'pi-repeat':{const n=piTarget();if(!n)break;piPull();n.repeat=!n.repeat;if(!piEd.isNew)piSave(n);renderPiEd();toast(n.repeat?'🔁 다음 달부터 매달 자동으로 붙어요':'매달 반복을 껐어요');break;}
+    case 'pi-react':{const n=piTarget();if(!n)break;piPull();n.reacts=n.reacts||{};const r=role();n.reacts[r]=n.reacts[r]===t.dataset.v?'':t.dataset.v;piSave(n);renderPiEd();break;}
     case 'pi-tear':{const n=piTarget();if(!n)break;piCommit();piTear(n);piEd=null;piClose(false);break;}
-    case 'pi-del':{const n=piTarget();if(!n||!confirm('이 포스트잇을 지울까요?'))break;const mk=boardKey();S.board[mk]=(S.board[mk]||[]).filter(x=>x.id!==n.id);save();piEd=null;piClose(false);break;}
+    case 'pi-del':{const n=piTarget();if(!n||!confirm('이 포스트잇을 지울까요?'))break;if(n.srv)piSrvDelete(n);else{const mk=boardKey();S.board[mk]=(S.board[mk]||[]).filter(x=>x.id!==n.id);}save();piEd=null;piClose(false);break;}
     case 'pi-save':afterCompose('#piText,#piTitle,#piLine',()=>{if(piCommit()){const isNew=piEd&&piEd.isNew;piEd=null;piClose(false);if(isNew)toast('📌 붙였어요');}});break;
     case 'pi-past':openPiPast();break;
-    case 'pi-restore':{const n=piFind(t.dataset.id);if(n){n.torn=false;save();}closePop();openBoard();break;}
-    case 'pi-purge':{if(!confirm('완전히 지울까요?'))break;const mk=boardKey();S.board[mk]=(S.board[mk]||[]).filter(x=>x.id!==t.dataset.id);save();openPiPast();break;}
+    case 'pi-restore':{const n=piFind(t.dataset.id);if(n){n.torn=false;piSave(n);}closePop();openBoard();break;}
+    case 'pi-purge':{if(!confirm('완전히 지울까요?'))break;const n=piFind(t.dataset.id);if(n&&n.srv)piSrvDelete(n);else{const mk=boardKey();S.board[mk]=(S.board[mk]||[]).filter(x=>x.id!==t.dataset.id);}save();openPiPast();break;}
     case 'pi-carry-go':boardCarryDo(true);break;
     case 'pi-carry-skip':boardCarryDo(false);break;
     case 'open-dday':openDday();break;
@@ -6314,6 +6352,7 @@ document.addEventListener('click',e=>{
       const fm=visibleMemos(sheetKey).filter(m=>m.shared&&m.by!=='host');
       if(fm.length&&!confirm(`♥ 가족 메모: "${firstLine(fm[0].text)}"\n\n정말 근무를 바꿀까요?`))return;
       applyShift(t.dataset.s);break;}
+    case 'shift-tog':{shiftOpen=!shiftOpenNow();document.querySelectorAll('.shsec').forEach(e=>e.classList.toggle('open',shiftOpen));break;}
     case 'resetshift':delete S.overrides[sheetKey];save();openDay(sheetKey);render();break;
 
     /* 날짜 메모 */
@@ -7052,7 +7091,7 @@ function openFirebasePage(){
  * 가족방 번호(hid) = 호스트(근무자)의 Firebase 로그인 번호(uid).
  * 구조 · 규칙: firebase/firestore.rules (households / members / invites)
  * 아직 근무표 · 메모 · 요청은 안 주고받아요 (2단계 이후). 설정(firebase/config.js)이 없으면 이 화면은 안 보여요. */
-const FAM_ALPHA='ABCDEFGHJKMNPQRSTUVWXYZ23456789',FAM_MAX=3,FAM_DAYS=7;   // 헷갈리는 0 O 1 I L 빼고
+const FAM_ALPHA='ABCDEFGHJKMNPQRSTUVWXYZ23456789',FAM_MAX=4,FAM_DAYS=7;   // 헷갈리는 0 O 1 I L 빼고
 const fbCfg=()=>!!window.FIREBASE_CONFIG;
 const famRe=/^[A-HJKMNP-Z2-9]{8}$/;
 const famFmt=c=>c?c.slice(0,4)+'-'+c.slice(4):'';
@@ -7237,7 +7276,7 @@ function famPayload(){
 function famHash(t){let a=5381,b=52711;for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);a=((a<<5)+a^c)>>>0;b=((b<<5)+b+c*31)>>>0;}return a.toString(16)+b.toString(16);}
 function famSoon(){
   if(!S||!S.link||!fbCfg()||wipeBusy)return;
-  clearTimeout(famT);famT=setTimeout(()=>{if(!famView())famPush().catch(famPushFail);famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});},2500);
+  clearTimeout(famT);famT=setTimeout(()=>{if(!famView())famPush().catch(famPushFail);famSyncMemos().catch(()=>{});famSyncBoard().catch(()=>{});famRegDevice().catch(()=>{});},2500);
 }
 async function famPush(force){
   if(!S.link||famView())return;
@@ -7260,7 +7299,7 @@ function famPushFail(e){
   toast(c.includes('permission-denied')?'내 근무표를 가족에게 올리지 못했어요 (권한 없음) · 설정 › 문의하기로 알려 주세요':'내 근무표를 가족에게 올리지 못했어요 · '+fbErrText(e));
 }
 function famStop(){famUnsub.forEach(f=>{try{f();}catch(e){}});famUnsub=[];}
-function famClear(){famStop();clearTimeout(famT);if(S){S.fam2={scheds:{},members:[],memos:{},reqIn:{},reqOut:{},me:{sent:0,bonus:0},seenMemo:[],memoRev:{},reqCc:{},init:false};S.requests=(S.requests||[]).filter(r=>!r.srv);}}
+function famClear(){famStop();clearTimeout(famT);if(S){try{piSrvToLocal();}catch(e){}S.fam2={scheds:{},members:[],memos:{},reqIn:{},reqOut:{},me:{sent:0,bonus:0},seenMemo:[],memoRev:{},reqCc:{},init:false};S.requests=(S.requests||[]).filter(r=>!r.srv);}}
 function famSaveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function famRefreshUi(){
   try{stkAskCheck();}catch(e){}
@@ -7309,13 +7348,13 @@ async function famPoll(force){
   try{
     const {F,db}=await famReady();if(!S.link)return;
     const hid=S.link.hid,uid=S.link.uid,col=n=>F.collection(db,'households',hid,n);
-    const [sc,mm,ri,ro,rc]=await Promise.all([
+    const [sc,mm,ri,ro,rc,bd]=await Promise.all([
       F.getDocs(col('schedules')),Promise.all([F.getDocs(F.query(col('memos'),F.where('to','array-contains',uid))),F.getDocs(F.query(col('memos'),F.where('by','==',uid)))]),
       F.getDocs(F.query(col('requests'),F.where('to','==',uid))),
       F.getDocs(F.query(col('requests'),F.where('from','==',uid))),
-      F.getDocs(F.query(col('requests'),F.where('cc','array-contains',uid)))]);
+      F.getDocs(F.query(col('requests'),F.where('cc','array-contains',uid))),F.getDocs(col('board')).catch(()=>null)]);
     if(!S.link)return;
-    famApplyScheds(sc);famOnMemos({docs:famMemoDocs(mm[0].docs,mm[1].docs),metadata:{fromCache:false}});famOnReqs('reqIn',ri);famOnReqs('reqOut',ro);famOnCc(rc);
+    famApplyScheds(sc);famOnMemos({docs:famMemoDocs(mm[0].docs,mm[1].docs),metadata:{fromCache:false}});famOnReqs('reqIn',ri);famOnReqs('reqOut',ro);famOnCc(rc);if(bd)famOnBoard({docs:bd.docs,metadata:{fromCache:false}});
   }catch(e){}finally{famPolling=false;}
 }
 setInterval(()=>{if(S&&S.link&&document.visibilityState==='visible'&&Date.now()-famPollAt>110000)famPoll();},30000);
@@ -7340,6 +7379,7 @@ async function famListen(){
   famUnsub.push(F.onSnapshot(F.query(F.collection(db,'households',hid,'requests'),F.where('to','==',uid)),snap=>famOnReqs('reqIn',snap),()=>{}));
   famUnsub.push(F.onSnapshot(F.query(F.collection(db,'households',hid,'requests'),F.where('from','==',uid)),snap=>famOnReqs('reqOut',snap),()=>{}));
   famUnsub.push(F.onSnapshot(F.query(F.collection(db,'households',hid,'requests'),F.where('cc','array-contains',uid)),snap=>famOnCc(snap),()=>{}));
+  famUnsub.push(F.onSnapshot(F.collection(db,'households',hid,'board'),snap=>famOnBoard(snap),()=>{}));   // 가족 포스트잇
   famUnsub.push(F.onSnapshot(F.collection(db,'households',hid,'members'),snap=>{
     S.fam2.members=snap.docs.map(d=>famCleanMember(d.data(),d.id)).filter(Boolean);
     const me=snap.docs.find(d=>d.id===S.link.uid);if(me){const v=me.data();S.fam2.me={sent:+v.sent||0,bonus:+v.bonus||0};}
@@ -7739,6 +7779,139 @@ async function famSyncMemos(){
     F.deleteDoc(F.doc(db,'households',hid,'memos',id)).catch(()=>{}).finally(()=>{delete famBusyMemo[id];});
   }
 }
+/* ================= 포스트잇 가족 공유: households/{hid}/board/{내uid_포스트잇id} =================
+ * 가족방에 있을 때 "♥ 가족" 포스트잇은 서버에 두고 폰엔 복사본(S.fam2.board) · "🔒 나만"은 지금처럼 폰에만.
+ * 쓴 사람: 제목 · 내용 · 날짜 · 매달 · 지우기 / 가족 누구나: 줄 체크 · 줄 추가 · 떼기 · 반응.
+ * 줄은 lines.{줄id} 로 따로 고침 → 둘이 동시에 다른 줄을 체크해도 안 덮임. 알림 없음(포스트잇 아이콘에 작은 점만). */
+const PI_SRV_LINES=60;
+function famCleanBoardDoc(v){   // (앱을 켤 때 normalize 가 먼저 부름 → 이 안에서는 아래쪽 const 를 쓰면 안 됨)
+  if(!isObj(v)||!okId(v.by)||!/^\d{4}-\d\d$/.test(v.mk||''))return null;
+  const o={by:v.by,byName:cutTxt(v.byName,12),mk:v.mk,type:v.type==='list'?'list':'note',title:cutTxt(v.title,30),text:cutMulti(v.text,500),
+    date:okDate(v.date)?v.date:'',dateAuto:v.dateAuto!==false,repeat:!!v.repeat,rootId:okId(v.rootId)?v.rootId:'',torn:!!v.torn,tornAt:+v.tornAt||0,t:+v.t||0,
+    reacts:{},lines:{},ua:+v.ua||0,ub:okId(v.ub)?v.ub:''};
+  if(isObj(v.reacts))Object.keys(v.reacts).slice(0,12).forEach(u=>{const e=v.reacts[u];if(okId(u)&&typeof e==='string'&&e&&e.length<=8)o.reacts[u]=e;});
+  if(isObj(v.lines))Object.keys(v.lines).slice(0,60).forEach(id=>{const l=v.lines[id];if(/^[A-Za-z0-9_]{1,40}$/.test(id)&&isObj(l))o.lines[id]={x:cutTxt(l.x,60),d:!!l.d,b:okId(l.b)?l.b:'',o:Number.isFinite(+l.o)?+l.o:0};});
+  return o;
+}
+const piMe=()=>(S.link&&S.link.uid)||(S.fam2&&S.fam2.boardMe)||'';
+const piWho=u=>!u?'':u===piMe()?role():'u:'+u;   // 서버 uid → 포스트잇 화면의 "누구"(나는 role())
+const piUid=w=>!w?'':w===role()?piMe():String(w).startsWith('u:')?String(w).slice(2):'';
+let piSrvCache={};
+function piAdapt(id,v){
+  const lines=Object.entries(v.lines).sort((a,b)=>a[1].o-b[1].o||(a[0]<b[0]?-1:1)).map(([lid,l])=>({id:lid,text:l.x,done:l.d,doneBy:l.d?piWho(l.b):''}));
+  const reacts={};Object.entries(v.reacts).forEach(([u,e])=>{reacts[piWho(u)]=e;});
+  return {_v:v,srv:id,mk:v.mk,id:id.slice(id.indexOf('_')+1),type:v.type,title:v.title,text:v.text,lines,shared:true,by:piWho(v.by),color:'y',
+    repeat:v.repeat,dateAuto:v.dateAuto,date:v.date,rootId:v.rootId,reacts,torn:v.torn,tornAt:v.tornAt,t:v.t};
+}
+function piSrvList(){   // 서버 포스트잇을 포스트잇 모양으로 (서버 값이 그대로면 같은 객체를 계속 씀 → 화면에서 고친 값이 남음)
+  const B=(S&&S.link&&S.fam2&&S.fam2.board)||{},out=[];
+  for(const id in B){let a=piSrvCache[id];if(!a||a._v!==B[id]){a=piAdapt(id,B[id]);piSrvCache[id]=a;}out.push(a);}
+  for(const id in piSrvCache)if(!B[id])delete piSrvCache[id];
+  return out;
+}
+// 포스트잇 → 서버 모양 (base: 서버에 있는 것 · 줄 순서는 있던 건 그대로, 새 줄은 맨 뒤)
+function piShape(n,base,mk){
+  const me=piMe();let mo=-1,k=0;if(base)Object.values(base.lines).forEach(l=>{if(l.o>mo)mo=l.o;});
+  const lines={};
+  (n.lines||[]).slice(0,PI_SRV_LINES).forEach((l,i)=>{const lid=/^[A-Za-z0-9_]{1,40}$/.test(l.id||'')?l.id:(l.id=uid());const b0=base&&base.lines[lid];
+    lines[lid]={x:cutTxt(l.text,60),d:!!l.done,b:l.done?(piUid(l.doneBy)||me):'',o:b0?b0.o:(base?mo+1+(k++):i)};});
+  const reacts={};Object.entries(n.reacts||{}).forEach(([w,e])=>{const u=piUid(w);if(u&&e)reacts[u]=String(e).slice(0,8);});
+  return {by:base?base.by:me,byName:base?base.byName:cutTxt(S.link.name,12),mk:base?base.mk:mk,type:n.type==='list'?'list':'note',title:cutTxt(n.title,30),text:cutMulti(n.text,500),
+    date:okDate(n.date)?n.date:'',dateAuto:n.dateAuto!==false,repeat:!!n.repeat,rootId:okId(n.rootId)?n.rootId:'',torn:!!n.torn,tornAt:+n.tornAt||0,t:base?base.t:(+n.t||Date.now()),reacts,lines,ua:Date.now(),ub:me};
+}
+const piWarned={};
+function piWarn(k,e){if(piWarned[k])return;piWarned[k]=1;setTimeout(()=>{delete piWarned[k];},60000);const c=String((e&&e.code)||(e&&e.message)||e);toast(c.includes('permission-denied')?'가족 포스트잇을 고치지 못했어요 (권한 없음)':'가족 포스트잇을 고치지 못했어요 · '+fbErrText(e));}
+// 가족 포스트잇을 고쳤을 때: 바뀐 곳만 서버로 (쓴 사람이 아니면 줄 · 떼기 · 반응만)
+function piSrvPush(n){
+  if(!n||!n.srv||!S.link||!S.fam2||!S.fam2.board)return;
+  const id=n.srv,base=S.fam2.board[id];if(!base)return;
+  const me=piMe(),own=base.by===me,tgt=piShape(n,base),ch={},del=[];
+  if(own)['type','title','text','date','dateAuto','repeat','rootId'].forEach(k=>{if(tgt[k]!==base[k])ch[k]=tgt[k];});
+  ['torn','tornAt'].forEach(k=>{if(tgt[k]!==base[k])ch[k]=tgt[k];});
+  const nl=Object.assign({},base.lines);
+  Object.keys(tgt.lines).forEach(lid=>{const a=tgt.lines[lid],b=base.lines[lid];
+    if(!b){ch['lines.'+lid]=a;nl[lid]=a;return;}
+    const c={...b};if(a.d!==b.d||a.b!==b.b){ch['lines.'+lid+'.d']=a.d;ch['lines.'+lid+'.b']=a.b;c.d=a.d;c.b=a.b;}
+    if(own&&a.x!==b.x){ch['lines.'+lid+'.x']=a.x;c.x=a.x;}nl[lid]=c;});
+  Object.keys(base.lines).forEach(lid=>{if(!tgt.lines[lid]){del.push('lines.'+lid);delete nl[lid];}});
+  const rx=Object.assign({},base.reacts),myR=tgt.reacts[me]||'';
+  if(myR!==(base.reacts[me]||'')){if(myR)rx[me]=myR;else delete rx[me];}
+  const rxCh=myR!==(base.reacts[me]||'');
+  if(!Object.keys(ch).length&&!del.length&&!rxCh)return;
+  const nv={...base,...(own?{type:tgt.type,title:tgt.title,text:tgt.text,date:tgt.date,dateAuto:tgt.dateAuto,repeat:tgt.repeat,rootId:tgt.rootId}:{}),torn:tgt.torn,tornAt:tgt.tornAt,lines:nl,reacts:rx,ua:Date.now(),ub:me};
+  S.fam2.board[id]=nv;n._v=nv;piSrvCache[id]=n;famSaveLocal();   // 화면은 바로 (서버는 뒤에서)
+  famReady().then(({F,db})=>{
+    if(!S.link)return;
+    const patch={...ch,ua:F.serverTimestamp(),ub:me};del.forEach(k=>{patch[k]=F.deleteField();});
+    if(rxCh)patch['reacts.'+me]=myR?myR:F.deleteField();
+    return F.updateDoc(F.doc(db,'households',S.link.hid,'board',id),patch);
+  }).catch(e=>piWarn('u'+id,e));
+}
+async function piSrvCreate(n,mk){   // 내 폰의 가족 포스트잇 → 서버로 옮김 (올라가면 폰 쪽 원본은 지움)
+  const me=piMe(),id=me+'_'+n.id,tgt=piShape(n,null,mk);
+  const {F,db}=await famReady();if(!S.link||S.link.uid!==me)return;
+  await F.setDoc(F.doc(db,'households',S.link.hid,'board',id),{...tgt,ua:F.serverTimestamp()});
+  if(!S.link)return;
+  S.fam2.board[id]=S.fam2.board[id]||tgt;
+  S.board[mk]=(S.board[mk]||[]).filter(x=>x.id!==n.id);
+  if(piEd&&!piEd.isNew&&piEd.id===n.id){}   // 열린 창은 같은 id 로 서버 것을 계속 봄
+  save();
+}
+function piSrvDelete(n){
+  const id=n.srv;if(!id||!S.link)return;
+  delete S.fam2.board[id];famSaveLocal();
+  famReady().then(({F,db})=>S.link&&F.deleteDoc(F.doc(db,'households',S.link.hid,'board',id))).catch(e=>piWarn('d'+id,e));
+}
+// 가족 → 나만 (쓴 사람만): 서버 것을 내 폰으로 되돌리고 서버에서 지움
+function piLocalCopy(a,shared){
+  return {id:a.id,type:a.type,title:a.title,text:a.text,lines:a.lines.map(l=>({id:l.id,text:l.text,done:l.done,doneBy:l.done?l.doneBy:''})),shared,by:role(),color:'y',
+    repeat:a.repeat,dateAuto:a.dateAuto,date:a.date,rootId:a.rootId,reacts:{},torn:a.torn,tornAt:a.tornAt,t:a.t};
+}
+function piUnshare(a){
+  if(!a.srv||a.by!==role())return null;
+  const c=piLocalCopy(a,false),mk=a.mk;(S.board[mk]=S.board[mk]||[]).push(c);
+  piSrvDelete(a);save();return c;
+}
+// 가족방을 떠날 때: 내가 쓴 가족 포스트잇은 내 폰으로 되돌려 둠 (가족 것은 사라짐)
+function piSrvToLocal(){
+  const me=piMe(),B=(S.fam2&&S.fam2.board)||{};
+  Object.keys(B).forEach(id=>{const v=B[id];if(!me||v.by!==me)return;const a=piAdapt(id,v),mk=v.mk;
+    const list=(S.board[mk]=S.board[mk]||[]);if(!list.some(x=>x.id===a.id))list.push(piLocalCopy(a,true));});
+}
+var piBusy={};
+async function famSyncBoard(){   // 폰에만 있는 내 "♥ 가족" 포스트잇 → 서버로 (새로 쓴 것 · 가족방에 들어오기 전에 쓴 것 · 매달 반복 · 옮긴 할 일)
+  if(!S.link||!fbCfg()||!S.link.uid||!S.fam2)return;
+  S.fam2.board=S.fam2.board||{};S.fam2.boardMe=S.link.uid;
+  const r=role(),me=S.link.uid;
+  for(const mk of Object.keys(S.board||{})){
+    for(const n of (S.board[mk]||[]).slice()){
+      if(!n.shared||n.by!==r||!/^[A-Za-z0-9]{1,40}$/.test(String(n.id)))continue;
+      const key=mk+'/'+n.id;if(piBusy[key])continue;
+      if(S.fam2.board[me+'_'+n.id]){S.board[mk]=(S.board[mk]||[]).filter(x=>x!==n);famSaveLocal();continue;}   // 이미 올라감
+      piBusy[key]=1;
+      try{await piSrvCreate(n,mk);}catch(e){piWarn('c'+key,e);}finally{delete piBusy[key];}
+    }
+  }
+}
+let piSoonT=0;
+function famSyncBoardSoon(){clearTimeout(piSoonT);piSoonT=setTimeout(()=>{famSyncBoard().then(()=>{if(pageMode==='board'&&!piEd)openBoard();}).catch(()=>{});},300);}
+function famOnBoard(snap){
+  if(!S.link)return;
+  const me=S.link.uid,old=S.fam2.board||{},m={};
+  snap.docs.forEach(d=>{const v=d.data({serverTimestamps:'estimate'})||{};const c=okId(d.id)?famCleanBoardDoc({...v,ua:tsMs(v.ua)||+v.ua||0}):null;if(c)m[d.id]=c;});
+  Object.keys(m).forEach(id=>{const o=old[id];if(o&&JSON.stringify({...o,ua:0})===JSON.stringify({...m[id],ua:0}))m[id]=o;});   // 그대로면 같은 객체 (화면 다시 안 만듦)
+  if(!snap.metadata.fromCache){
+    const seen=+S.fam2.boardSeen||0;let mx=seen,dot=false;
+    Object.values(m).forEach(v=>{if(v.ua>seen&&v.ub&&v.ub!==me)dot=true;if(v.ua>mx)mx=v.ua;});
+    if(!S.fam2.boardInit){S.fam2.boardInit=1;S.fam2.boardSeen=mx;dot=false;}
+    if(dot&&pageMode!=='board')S.fam2.boardDot=1;
+    if(pageMode==='board')S.fam2.boardSeen=mx;
+  }
+  S.fam2.board=m;S.fam2.boardMe=me;famSaveLocal();
+  if(pageMode==='board'){if(!piEd)openBoard();else if(!piEd.isNew&&!($('#pop').contains(document.activeElement)&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)))renderPiEd();}
+  else famRefreshUi();
+  famSyncBoard().catch(()=>{});
+}
 function famClearNotify(mid){
   let hit=false;Object.keys(S.memos||{}).forEach(k=>(S.memos[k]||[]).forEach(m=>{if(m.id===mid&&m.notify){delete m.notify;hit=true;}}));
   if(hit)famSaveLocal();
@@ -7936,7 +8109,7 @@ function renderLinkPage(){
   else if(u.st==='err')body=`<div class="hint" style="padding:16px;color:var(--danger)">${esc(u.err)}</div><div style="padding:0 16px"><button class="btn" style="width:100%" data-act="link-retry">다시 시도</button></div>`;
   else if(!L)body=`${lostCard()}<div class="pg-sec" style="margin-top:12px;padding:18px 16px">
       <b style="font-size:16px">가족과 같이 보려면</b>
-      <div class="hint" style="padding:6px 0 14px"><b>초대 코드</b>를 보내면 가족이 코드를 넣고 참여해요 · 가족방은 4명까지예요</div>
+      <div class="hint" style="padding:6px 0 14px"><b>초대 코드</b>를 보내면 가족이 코드를 넣고 참여해요 · 가족방은 5명까지예요</div>
       <button class="btn" style="width:100%" data-act="link-invite">가족 초대하기</button>
       <button class="btn ghost" style="width:100%;margin-top:8px" data-act="link-join">초대 코드가 있어요</button>
       ${googleOn()?'<button class="btn ghost" style="width:100%;margin-top:8px" data-act="g-restore">전에 쓰던 폰의 가족방 불러오기 (구글 로그인)</button>':''}

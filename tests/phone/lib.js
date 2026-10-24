@@ -4,6 +4,9 @@ const base={tune:{appCover:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1},appI
 async function boot(b,state,opts={}){
   const p=await b.newPage({viewport:{width:opts.w||390,height:opts.h||844},deviceScaleFactor:2,hasTouch:!!opts.touch,reducedMotion:opts.rm?'reduce':'no-preference',bypassCSP:opts.csp!==true});
   const errs=[];p.on('pageerror',e=>errs.push('PAGEERR '+e.message));p.on('console',m=>{if(m.type()==='error')errs.push('CONSOLE '+m.text());});
+  if(!opts.fold)await p.addInitScript(()=>{   // (v0.92 날짜 창 근무타입 접기 전에 쓴 시험들: 늘 펼친 채로 · 접기 자체는 s64 가 {fold:true} 로 시험)
+    document.addEventListener('DOMContentLoaded',()=>{const st=document.createElement('style');st.textContent='.shsec .sh-body{transition:none!important}';document.head.appendChild(st);
+      new MutationObserver(()=>{document.querySelectorAll('.shsec:not(.open)').forEach(e=>{if(!e.dataset.tOpen){e.dataset.tOpen=1;e.classList.add('open');}});}).observe(document.body,{subtree:true,childList:true});});});
   await p.addInitScript(([d,T,mock])=>{const D=Date;globalThis.Date=class extends D{constructor(...a){super(...(a.length?a:[T]))}static now(){return T}};
     window.__rem=[];window.__theme='';
     window.AndroidBridge={status:()=>'',setAlarms(){},setReminders(j){window.__rem=JSON.parse(j);},setThemeMode(m){window.__theme=m;},setTextZoom(){},takePush:()=>''};
