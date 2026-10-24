@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>조업 일지 시안</title>
+<style>
+/* 조업 일지(업무 메모 · 나만 씀) 시안: 날짜 창 카드 · 전용 화면 · 처음 안내 · 이름 바꾸기 · 달력 칸 */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans KR","Noto Sans CJK KR",system-ui,sans-serif;background:#dfe3e8;display:flex;gap:26px;padding:26px;flex-wrap:wrap;align-items:flex-start;color:#1f2430}
+.cap{font-size:15px;font-weight:800;margin:0 0 10px 4px;color:#3a3f48}
+.ph{width:340px;height:700px;border-radius:30px;background:#fff;overflow:hidden;position:relative;box-shadow:0 14px 34px rgba(0,0,0,.14);display:flex;flex-direction:column}
+.note{font-size:12.5px;color:#4a505a;margin:8px 4px 0;max-width:340px;line-height:1.55}
+/* 날짜 창 머리 */
+.bk{font-size:14px;color:#7a818c;font-weight:700;padding:16px 18px 0}
+.hd{display:flex;align-items:center;justify-content:space-between;padding:6px 18px 0}
+.hd i{font-style:normal;font-size:22px;color:#333}
+.hd b{font-size:21px;font-weight:800}
+.hd small{display:block;text-align:center;font-size:12.5px;color:#8a909a;font-weight:500;margin-top:2px}
+.strip{display:flex;justify-content:space-between;background:#f4f5f7;margin-top:12px;padding:10px 12px}
+.strip div{text-align:center;font-size:11px;color:#7a818c;font-weight:700;width:38px}
+.strip span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;margin:5px auto 0;font-size:12px;font-weight:800}
+.strip .d{background:#a9c7e3;color:#1f3346}.strip .n{background:#e3b8a2;color:#4a2a1c}.strip .r{color:#d0566e}
+.strip .on span{outline:2px solid #3d6fe0;outline-offset:2px;border-radius:9px}
+.body{padding:14px 16px;display:flex;flex-direction:column;gap:12px;flex:1}
+/* 조업 일지 카드 (날짜 창 맨 위) */
+.wl{border-radius:18px;padding:14px 15px 13px;background:linear-gradient(135deg,#ece8fb,#e4eef9);box-shadow:0 3px 12px rgba(80,90,140,.08)}
+.wl .t{display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:16px;color:#2c3150}
+.wl .t em{font-style:normal;font-size:20px;color:#7c82a6}
+.bdg{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.bdg span{font-size:12px;font-weight:800;padding:4px 9px;border-radius:10px}
+.k1{background:#d6e6f8;color:#2f5f8f}.k2{background:#d7eedd;color:#2f6b43}.k3{background:#f8dde2;color:#9a3a4c}.k4{background:#fbefc6;color:#86630e}
+.pv{margin-top:10px;font-size:13.5px;color:#3a3f55;background:rgba(255,255,255,.65);border-radius:10px;padding:8px 10px;line-height:1.45}
+.pv b{color:#86630e}
+.add{font-size:13.5px;color:#7a6fc0;font-weight:700;padding:4px 2px}
+/* 근무 알약 (접힌 근무타입) · 메모 */
+.sh{align-self:flex-start;font-size:13.5px;font-weight:800;padding:7px 13px;border-radius:16px;background:#f3ebe6;color:#6b3f2c}
+.sh.d{background:#e6eef8;color:#2e4d6b}
+.mm{font-size:13px;color:#8a909a;font-weight:700;margin-top:4px}
+.mrow{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px dotted #d9dce2;font-size:15px}
+.mrow i{width:16px;height:16px;border:1.6px solid #9aa0aa;border-radius:50%}
+.inp{margin-top:auto;border-bottom:1.5px solid #cfd3da;padding:10px 2px;color:#a0a6b0;font-size:15px}
+/* 전용 화면 */
+.top{display:flex;align-items:center;gap:8px;padding:16px 16px 4px}
+.top .bk2{font-size:22px;color:#555}
+.top b{font-size:19px;font-weight:800;flex:1}
+.top .gear{font-size:18px;color:#8a909a}
+.sub{padding:0 18px 10px 44px;font-size:12.5px;color:#8a909a}
+.sec{border-radius:16px;background:#fafbfc;border:1px solid #eef0f3;padding:11px 12px 9px}
+.sec h4{display:flex;align-items:center;gap:8px;font-size:13px}
+.sec h4 span{font-size:12px;font-weight:800;padding:3px 9px;border-radius:9px}
+.sec h4 small{margin-left:auto;font-size:11.5px;color:#a0a6b0;font-weight:600}
+.ln{font-size:14px;line-height:1.5;padding:5px 0 5px 12px;position:relative;color:#2a2f3a}
+.ln::before{content:"";position:absolute;left:2px;top:12px;width:4px;height:4px;border-radius:50%;background:#b5bac4}
+.pl{font-size:13px;color:#a0a6b0;padding:4px 0 0 12px}
+.scr{overflow:hidden;display:flex;flex-direction:column;gap:9px;padding:6px 14px 14px}
+/* 안내창 */
+.dim{position:absolute;inset:0;background:rgba(30,34,45,.38);display:flex;align-items:center;justify-content:center}
+.pop{width:300px;background:#fff;border-radius:22px;padding:22px 20px 16px;text-align:center;box-shadow:0 18px 40px rgba(0,0,0,.2)}
+.pop .ic{font-size:34px}
+.pop h3{font-size:17px;margin-top:8px}
+.pop p{font-size:13px;word-break:keep-all;color:#5a606c;line-height:1.6;margin-top:8px}
+.pop button{margin-top:16px;width:100%;border:0;border-radius:14px;padding:12px;font-size:15px;font-weight:800;background:#dfe7f8;color:#2f4c86;font-family:inherit}
+/* 설정(이름 바꾸기) */
+.grp{font-size:12.5px;color:#8a909a;font-weight:700;margin:6px 2px 0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips span{font-size:13px;padding:7px 11px;border-radius:14px;background:#f2f3f5;color:#4a505a;font-weight:700}
+.chips span.on{background:#e6e1fa;color:#4a3f8f;outline:1.5px solid #b8adf0}
+.row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid #f0f1f3;font-size:14.5px}
+.row .g{color:#c0c4cc;font-size:16px}
+.row input{flex:1;min-width:0;width:0;border:0;font:inherit;font-weight:700;color:#2a2f3a;background:transparent}
+.row .hide{font-size:12px;color:#8a909a;white-space:nowrap;flex:none}.row .dot{display:block;flex:none;width:12px;height:12px;border-radius:50%}
+.sw{width:42px;height:24px;border-radius:12px;background:#c9ccd3;position:relative;margin-left:auto;flex:none}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+.tiny{font-size:11.5px;color:#9aa0aa;margin:2px 4px 0;line-height:1.5}
+/* 달력 칸 */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:10px 6px}
+.c{height:104px;border-radius:10px;padding:4px 3px;font-size:12px;font-weight:700;position:relative}
+.c .s{display:block;text-align:center;margin-top:12px;font-size:15px}
+.c.d{background:#e6eef8}.c.n{background:#f5ece6}
+.c .r{display:block;text-align:center;margin-top:12px;font-size:11px;color:#d0566e}
+.p{font-size:10.5px;font-weight:700;margin-top:6px;padding:2px 3px;border-left:2.5px solid #6a8fd0;background:#eaf0fa;border-radius:3px;white-space:nowrap;overflow:hidden}
+.p.w{border-left-color:#8b7fd6;background:#efecfb;color:#3e3680}
+.wk{font-size:11px;color:#8a909a;text-align:center;padding-top:8px;display:grid;grid-template-columns:repeat(7,1fr)}
+</style></head><body>
+
+<div><div class="cap">① 날짜 창 — 일지 있는 날</div>
+<div class="ph">
+  <div class="bk">‹ 달력</div>
+  <div class="hd"><i>‹</i><div><b>10월 23일 (금)</b><small>야간</small></div><i>›</i></div>
+  <div class="strip"><div>20일<span class="r">휴</span></div><div>21일<span class="r">휴</span></div><div>22일<span class="d">주</span></div><div class="on">23일<span class="n">야</span></div><div>24일<span class="r">휴</span></div><div>25일<span class="r">휴</span></div><div>26일<span class="d">주</span></div></div>
+  <div class="body">
+    <div class="wl"><div class="t">📋 조업 일지<em>›</em></div>
+      <div class="bdg"><span class="k1">인수 1</span><span class="k2">인계 2</span><span class="k3">지시 1</span><span class="k4">특이 1</span></div>
+      <div class="pv"><b>특이</b> · 2호기 냉각수 압력 낮음, 다음 근무 확인</div></div>
+    <div class="sh">야간 ▾</div>
+    <div class="mm">메모</div>
+    <div class="mrow"><i></i>엄마 생신 저녁</div>
+    <div class="inp">나만 보는 메모</div>
+  </div>
+</div>
+<p class="note">맨 위에 살짝 큰 파스텔 카드. 칸별 개수 + 중요한 한 줄(특이 → 없으면 인계 첫 줄). 카드를 누르면 ③ 전용 화면. 근무타입은 접힌 알약(다음 빌드의 접기 규칙).</p></div>
+
+<div><div class="cap">② 날짜 창 — 일지 없는 날</div>
+<div class="ph">
+  <div class="bk">‹ 달력</div>
+  <div class="hd"><i>‹</i><div><b>10월 22일 (목)</b><small>주간</small></div><i>›</i></div>
+  <div class="strip"><div>19일<span class="n">야</span></div><div>20일<span class="r">휴</span></div><div>21일<span class="r">휴</span></div><div class="on">22일<span class="d">주</span></div><div>23일<span class="n">야</span></div><div>24일<span class="r">휴</span></div><div>25일<span class="r">휴</span></div></div>
+  <div class="body">
+    <div class="add">＋ 조업 일지 쓰기</div>
+    <div class="sh d">주간 ▾</div>
+    <div class="mm">메모</div>
+    <div class="inp">나만 보는 메모</div>
+  </div>
+</div>
+<p class="note">일지가 없는 날은 작은 글자 한 줄만. 부가 기능 "업무 메모"를 꺼 두면 이 줄도 없음 → 안 쓰는 사람 화면은 그대로.</p></div>
+
+<div><div class="cap">③ 조업 일지 화면</div>
+<div class="ph">
+  <div class="top"><span class="bk2">‹</span><b>📋 조업 일지</b><span class="gear">⚙</span></div>
+  <div class="sub">10월 23일 (금) · 야간</div>
+  <div class="scr">
+    <div class="sec"><h4><span class="k1">인수</span><small>1</small></h4>
+      <div class="ln">주간조: 3번 라인 점검 끝남, 필터 교체 완료</div><div class="pl">＋ 쓰기</div></div>
+    <div class="sec"><h4><span class="k2">인계</span><small>2</small></h4>
+      <div class="ln">원료 B 재고 40% — 아침에 발주 확인</div><div class="ln">야간 순찰 2회 완료</div><div class="pl">＋ 쓰기</div></div>
+    <div class="sec"><h4><span class="k3">지시</span><small>1</small></h4>
+      <div class="ln">과장님: 금요일까지 안전 점검표 제출</div><div class="pl">＋ 쓰기</div></div>
+    <div class="sec"><h4><span class="k4">특이</span><small>1</small></h4>
+      <div class="ln">2호기 냉각수 압력 낮음, 다음 근무 확인</div><div class="pl">＋ 쓰기</div></div>
+  </div>
+</div>
+<p class="note">네 칸, 줄마다 한 가지. "＋ 쓰기"를 누르면 그 칸에 바로 입력. 줄을 누르면 고치기 · 지우기. ⚙ = ⑤ 이름 바꾸기. 옆으로 밀면 앞뒤 날 일지.</p></div>
+
+<div><div class="cap">④ 처음 쓸 때 한 번</div>
+<div class="ph">
+  <div class="top"><span class="bk2">‹</span><b>📋 조업 일지</b><span class="gear">⚙</span></div>
+  <div class="sub">10월 23일 (금) · 야간</div>
+  <div class="scr">
+    <div class="sec"><h4><span class="k1">인수</span></h4><div class="pl">＋ 쓰기</div></div>
+    <div class="sec"><h4><span class="k2">인계</span></h4><div class="pl">＋ 쓰기</div></div>
+    <div class="sec"><h4><span class="k3">지시</span></h4><div class="pl">＋ 쓰기</div></div>
+    <div class="sec"><h4><span class="k4">특이</span></h4><div class="pl">＋ 쓰기</div></div>
+  </div>
+  <div class="dim"><div class="pop"><div class="ic">📋</div><h3>조업 일지는 백업되지 않아요</h3>
+    <p>회사 보안을 위해 폰에만 저장돼요.<br>그래도 백업하시려면 설정에서 켜 주세요.</p><button>확인</button></div></div>
+</div>
+<p class="note">사용자가 정한 문구 그대로. 한 번 보면 다시 안 뜸.</p></div>
+
+<div><div class="cap">⑤ ⚙ 이름 바꾸기 · 백업</div>
+<div class="ph">
+  <div class="top"><span class="bk2">‹</span><b>일지 설정</b></div>
+  <div class="body" style="gap:9px">
+    <div class="grp">제목</div>
+    <div class="chips"><span class="on">📋 조업 일지</span><span>🔁 인수인계</span><span>💼 업무 메모</span><span>📒 근무 일지</span><span>✏️ 직접 쓰기</span></div>
+    <div class="grp" style="margin-top:8px">칸 이름 (최대 4칸)</div>
+    <div class="row"><span class="g">≡</span><span class="dot k1"></span><input value="인수"><span class="hide">숨기기</span></div>
+    <div class="row"><span class="g">≡</span><span class="dot k2"></span><input value="인계"><span class="hide">숨기기</span></div>
+    <div class="row"><span class="g">≡</span><span class="dot k3"></span><input value="지시"><span class="hide">숨기기</span></div>
+    <div class="row"><span class="g">≡</span><span class="dot k4"></span><input value="특이"><span class="hide">숨기기</span></div>
+    <div class="grp" style="margin-top:8px">백업</div>
+    <div class="row" style="border:0">일지도 백업에 넣기<span class="sw"></span></div>
+    <div class="tiny">꺼 두면 폰을 바꿀 때 일지는 옮겨지지 않아요.</div>
+  </div>
+</div>
+<p class="note">제목은 고르거나 직접 쓰기. 칸 이름 바꾸기 · 안 쓰는 칸 숨기기. 백업 스위치는 기본 꺼짐.</p></div>
+
+<div><div class="cap">⑥ 달력 칸</div>
+<div class="ph" style="height:auto;padding-bottom:12px">
+  <div class="wk"><span style="color:#d0566e">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span style="color:#4a72d0">토</span></div>
+  <div class="cal">
+    <div class="c" style="color:#d0566e">18<span class="r">휴</span></div>
+    <div class="c n">19<span class="s">야</span><div class="p w">📋 일지</div></div>
+    <div class="c">20<span class="r">휴</span></div>
+    <div class="c">21<span class="r">휴</span></div>
+    <div class="c d">22<span class="s">주</span><div class="p w">📋 일지</div></div>
+    <div class="c n">23<span class="s">야</span><div class="p w">📋 일지</div><div class="p">엄마 생…</div></div>
+    <div class="c" style="color:#4a72d0">24<span class="r">휴</span></div>
+  </div>
+</div>
+<p class="note">개인 메모 한 줄처럼 "📋 일지" (연보라 줄). 가족 메모 · 가족 달력에는 절대 안 나옴.</p></div>
+</body></html>
