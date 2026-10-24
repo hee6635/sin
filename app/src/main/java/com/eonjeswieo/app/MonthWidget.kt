@@ -1085,9 +1085,8 @@ object MonthRenderer {
         val memoLow = Math.max(memoTop0, y0 + rowH - (shown * plan.pillH + Math.max(0, shown - 1) * mGap))   // 아래로 내려도 칸 아래 끝까지만 (다음 줄 날짜를 안 덮게)
         val memoTop = Math.min(memoTop0 + tn.memoY * rowH * 0.06f, memoLow)   // 위치(위 − · 아래 +)
         val wlOff = if (!family && f.day != null && f.day.optInt("wl", 0) == 1 && f.memos.isNotEmpty()) 1 else 0   // 업무 일지 줄(맨 위 · 표시만)
-        val swap = wlOff == 1 && shown == 1 && f.memos.size > 1   // 한 줄밖에 안 들어가는 칸: 메모를 먼저 (일지는 "+n" 에 셈)
         for (k in 0 until shown) {
-            val mi = if (swap) 1 else k
+            val mi = k   // 업무 일지는 칸이 작아도 늘 맨 위 (사용자)
             val py = memoTop + k * (plan.pillH + mGap)
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
             val isWl = mi < wlOff

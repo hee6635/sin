@@ -659,6 +659,7 @@ textarea{resize:none;min-height:84px}
 .srch-entry{display:flex;align-items:center;gap:8px;width:calc(100% - 32px);margin:2px 16px 6px;height:44px;padding:0 14px;border-radius:14px;background:var(--surface);color:var(--muted);font-size:15px;text-align:left}
 .srbox{padding:8px 16px 4px}.srbox input{width:100%;height:44px;border-radius:12px;padding:0 12px;font-size:16px;background:var(--surface)}
 .srbox .hseg{margin-top:8px}
+.gwarn .prow{background:color-mix(in srgb,#f5b400 12%,var(--bg))}.gwarn .pl2{font-weight:800}
 .srwt{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .srwt button{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 12px 0 5px;border-radius:19px;background:var(--surface);font-size:14px;font-weight:700;color:var(--muted)}
 .srwt button .badge{opacity:.6}.srwt button.on{background:var(--acc-soft);color:var(--acc-ink);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 40%,transparent)}.srwt button.on .badge{opacity:1}
@@ -2028,7 +2029,7 @@ function widgetJson(){
     });
     const rq0=rqRing((S.requests||[]).filter(r=>r.date===k&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r)).slice(3),   // 요청 링 (한 달 위젯 · 칸 채우기 모양): ask · hold · ok · no — 달력과 같은 기준(답한 요청은 3일 뒤 사라짐)
       nfm=vm.filter(x=>x.shared&&x.text.trim()).length,   // 메모 줄 맨 앞 nfm 개가 가족 메모(♥) — 위젯이 연보라 칸으로 그림
-      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · ')}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
+      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · '),...(i>=-6&&i<14?{s:wlSecTexts(k)}:{})}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
     if(i<-6||i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({...base,far:i<-6?2:1,stk:stampsOn(k).slice(0,4).map(x=>{const o=mapStk(x);delete o.id;delete o.b;return o;}),ms:ml.slice(0,3).map(x=>String(x||'').slice(0,40)),
       ...(fm.length?{fm}:{}),...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 먼 날(지난 날 · 2주 뒤부터): 큰 창에는 스티커 · 메모를 안 싣고 앱에서 보게 함
     const sa=stampsOn(k).slice(0,12).map(mapStk);
@@ -2536,9 +2537,9 @@ function render(){
       <div class="hr">${(()=>{const c=famInCounts(),n=c.ask+c.hold;return n?`<button class="rqmail" data-act="feed-req" aria-label="처리할 요청 ${n}개">📩<i class="${c.ask?'':'hold'}">${n}</i></button>`:'';})()}${todayBtn}</div>`;
     if(!renderAgain){try{stzWindow(v);}catch(err){}}   // 스티커 크기: 앞뒤 3달 기준
     v.innerHTML=renderCal();
-    fitDn(v,true);
+    fitDn(v,true);memoShift(v);
     // 처음 켤 때 · 다른 탭에서 돌아올 때는 그리기 전에는 달력 칸 높이를 잴 수 없어서 어림값으로 메모 줄 수를 정함 → 그린 뒤 실제 높이로 다시 재서 다르면 한 번만 다시 그림
-    if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();fitDn(v,true);}finally{renderAgain=false;}}}
+    if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();fitDn(v,true);memoShift(v);}finally{renderAgain=false;}}}
     glowCheck();
   }else if(tab==='colleague'){
     top.innerHTML=`<div class="hl"><button class="hb" data-act="back-set" aria-label="뒤로" style="font-size:28px">‹</button></div>${mid}<div class="hr">${todayBtn}</div>`;
@@ -2687,6 +2688,18 @@ function cbFit(){
   });
 }
 try{new MutationObserver(cbFit).observe(document.body,{childList:true,subtree:true});}catch(e){}
+// 앱 달력 메모 위치(모양 조정 "메모 위치"): 아래(+)로는 칸 바닥을 넘지 않을 만큼만 내림 (3줄이 꽉 찬 날은 그대로 · 잘리지 않게) · 위(−)는 값 그대로
+function memoShift(root){
+  const y=+(tuneApp().memoY)||0;
+  (root||document).querySelectorAll('.cell .pill-wrap').forEach(w=>{
+    w.style.translate='';if(!y||!w.children.length)return;
+    const c=w.closest('.cell');if(!c)return;
+    if(y<0){w.style.translate=`0 ${(y*0.04*c.clientHeight).toFixed(1)}px`;return;}
+    const wr=w.getBoundingClientRect(),lb=w.lastElementChild.getBoundingClientRect().bottom,cb=c.getBoundingClientRect().bottom;
+    const free=Math.max(0,Math.min(wr.bottom,cb)-lb-1);
+    w.style.translate=`0 ${Math.min(y*0.12*c.clientHeight,free).toFixed(1)}px`;   // (바닥에서 막히니까 범위를 넓힘: 3 이면 칸 높이의 36% · 1줄 메모도 바닥까지)
+  });
+}
 function fitDn(root,keepStz){
   if(!keepStz)fitStz(root);   // (keepStz: 조정 화면 미리보기 — 스티커 크기는 한 달 전체로 이미 맞춰 둠)
   const over=dn=>{
@@ -5212,7 +5225,7 @@ const tuneVal=()=>tuneDraft||S.tune;
 const tuneDirty=()=>!!tuneDraft&&JSON.stringify(tuneDraft)!==JSON.stringify(S.tune);
 function tuneRows(g){   // 스티커 / 주야 / 메모 묶음으로 접기 · 지금 보는 화면(앱 달력)만 펼쳐 둠
   const t=tuneVal()[g],open=g===tuneAppKey();
-  return ['스티커','주야','메모'].map(gr=>`<details class="tn-d"${open?' open':''}><summary>${gr}</summary>${TUNE_KEYS.filter(k=>k[6]===gr&&(!k[7]||g.startsWith('app'))&&!(k[0]==='memoY'&&g.startsWith('app'))).map(([k,nm,lo,hi,st])=>`<div class="tn-row"><span>${nm}</span><input type="range" class="tn-r" data-g="${g}" data-k="${k}" min="${lo}" max="${hi}" step="${st}" value="${t[k]}"><b id="tnv_${g}_${k}">${tuneFmt(t[k])}</b></div>`).join('')}</details>`).join('');
+  return ['스티커','주야','메모'].map(gr=>`<details class="tn-d"${open?' open':''}><summary>${gr}</summary>${TUNE_KEYS.filter(k=>k[6]===gr&&(!k[7]||g.startsWith('app'))).map(([k,nm,lo,hi,st])=>`<div class="tn-row"><span>${nm}</span><input type="range" class="tn-r" data-g="${g}" data-k="${k}" min="${lo}" max="${hi}" step="${st}" value="${t[k]}"><b id="tnv_${g}_${k}">${tuneFmt(t[k])}</b></div>`).join('')}</details>`).join('');
 }
 function tuneBar(){   // 저장 · 되돌리기 줄 (미리보기 바로 아래)
   const e=$('#tnBar');if(!e)return;const d=tuneDirty(),h=(S.tuneHist||[]).length;
@@ -5255,7 +5268,7 @@ function tunePrev(){   // 미리보기는 "일주일 줄"만: 스티커 · 메�
   cells.forEach((x,i)=>{if(Math.floor(i/7)!==best)x.remove();});
   g.style.gridTemplateRows='1fr';
   e.style.height=(Math.max(90,Math.round((innerHeight-230)/6))+34)+'px';
-  try{fitDn(e,true);}catch(err){}   // 실제 달력처럼 날짜 줄에 안 들어가면 공휴일 이름을 줄이고 스티커를 아래 줄로 (미리보기도 똑같이)
+  try{fitDn(e,true);memoShift(e);}catch(err){}   // 실제 달력처럼 날짜 줄에 안 들어가면 공휴일 이름을 줄이고 스티커를 아래 줄로 (미리보기도 똑같이)
   tuneBar();tuneWarn();
 }
 const TODAY_COLORS=[['','파랑'],['#1fa971','초록'],['#e0455c','분홍'],['#8a65c9','보라'],['#f08a00','주황'],['#6b7280','회색']];
@@ -6285,7 +6298,7 @@ document.addEventListener('click',e=>{
     case 'day':if(paint){if(role()==='host')paintDay(t.dataset.k);break;}if(t.classList.contains('out')){buzz(6);slideTo(monthDirOf(t.dataset.k,cur.y,cur.m));break;}buzz(8);reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(t.dataset.k);break;
     case 'close':closeSheet();break;
     case 'page-close':closePage();break;
-    case 'pop-close':closePop();break;
+    case 'pop-close':closePop();gAskPop();break;   // (가족방을 새로 만들고 코드 창을 닫으면 → 구글 연결 안내)
     case 'lnk':if(lnkHeld){lnkHeld=false;break;}e.stopPropagation();lnkOpen(t.dataset.u,!!t.dataset.fam);break;
     case 'nudge-bk':closePop();openBackupPage();break;
     case 'lnk-go':closePop();lnkGo(t.dataset.u);break;
@@ -6350,6 +6363,7 @@ document.addEventListener('click',e=>{
     case 'wl-renok':wlCommitInputs();if(wlEd){wlEd.ren=false;renderWl(false);}break;
     case 'wl-set':if(wlEd)wlClose();openWlSet();break;
     case 'wl-close':wlClose();break;
+    case 'wl-copy':{if(!wlEd)break;wlCommitInputs();const tx=wlCopyText(wlEd.k);if(!tx){toast('복사할 내용이 없어요');break;}copyText(tx);break;}
     case 'wls-nm':{S.wlog.name=t.dataset.v;save();openWlSet();break;}
     case 'srch-open':srchOpen(t.dataset.v);break;
     case 'srch-kind':srch.kind=t.dataset.v==='wl'?'wl':'memo';S.srchKind=srch.kind;save();renderSrch(false);break;
@@ -6414,8 +6428,9 @@ document.addEventListener('click',e=>{
     case 'cheer-del':{const l=cheerPull();l.splice(+t.dataset.i,1);S.famCheer=l.length?l:null;openCheerEdit();break;}
     case 'cheer-reset':S.famCheer=null;save();closePop();if(pageMode==='famset')openFamSetPage();toast('기본 응원 버튼으로 되돌렸어요');break;
     case 'cheer-save':S.famCheer=cheerPull();save();closePop();if(pageMode==='famset')openFamSetPage();render();toast('응원 버튼을 저장했어요');break;
-    case 'g-link':googleStart('link');break;
+    case 'g-link':if(S.link&&S.link.role!=='host'&&!confirm('구글 계정 하나는 기기 하나에만 연결돼요.\n\n방장 폰에 먼저 연결해 두는 게 좋아요. 이 기기(가족)에 먼저 연결하면, 나중에 방장 폰은 이 구글 계정으로 가족방을 지킬 수 없어요.\n\n그래도 이 기기에 연결할까요? (방장과 다른 구글 계정이면 괜찮아요)'))break;googleStart('link');break;
     case 'g-restore':googleStart('restore');break;
+    case 'g-link-pop':closePop();googleStart('link');break;
     case 'link-open':if(!fbCfg()){toast('가족 연결은 준비 중이에요');break;}openLinkPage();break;
     case 'link-retry':famRefresh();break;
     case 'link-invite':openInvitePop();break;
@@ -7266,6 +7281,14 @@ async function famEnsureHouse(hostName){
   b.set(famMember(F,db,uid,uid),{role:'host',name:hostName,perm:'write',joinedAt:F.serverTimestamp()});
   await b.commit();
   S.link={hid:uid,role:'host',name:hostName,perm:'write',mode:'own',uid,hash:''};save();famBoot();
+  if(googleOn()&&!S.gAcct)gAskAfter=true;   // 가족방을 새로 만들었으면 코드 창 다음에 바로 구글 연결 안내
+}
+let gAskAfter=false;
+function gAskPop(){
+  if(!gAskAfter||!googleOn()||S.gAcct||!S.link||S.link.role!=='host')return;gAskAfter=false;
+  openPop(`<div class="mh">🔐 가족방 지키기<b>이 폰(방장)에 구글 계정을 연결해 둘까요?</b></div>
+    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0;line-height:1.7">가족방 번호는 방장 폰에 묶여 있어요. 폰을 바꾸거나 로그인이 바뀌면 가족방에서 튕길 수 있는데, 구글 계정을 연결해 두면 같은 방으로 돌아와요.<br>구글 계정 하나는 기기 하나에만 연결돼요 · 태블릿보다 방장 폰에 먼저 연결하세요.</div></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">나중에</button><button class="btn grow" data-act="g-link-pop">연결하기</button></div>`);
 }
 async function famCreateInvite(perm,name){
   const {F,db,uid}=await famReady();
@@ -7531,7 +7554,7 @@ window.__onGoogle=async o=>{
       try{await A.linkWithCredential(FBX.auth.currentUser,cred);}
       catch(e){
         const c=String((e&&e.code)||'');
-        if(c.includes('credential-already-in-use')){toast('이 구글 계정은 이미 다른 가족방에 연결돼 있어요');return;}
+        if(c.includes('credential-already-in-use')){alert(`이 구글 계정은 이미 다른 기기(예: 태블릿 · 옛 폰)에 연결돼 있어요.\n\n구글 계정 하나는 기기 하나에만 연결돼요.${S.link&&S.link.role==='host'?'\n이 폰이 방장이면 다른 구글 계정으로 연결해 주세요.':''}`);return;}
         if(!c.includes('provider-already-linked'))throw e;
       }
       S.gAcct=String(o.email||'').slice(0,80)||'연결됨';famRegUser(true).catch(()=>{});save();toast('구글 계정에 연결했어요');
@@ -7547,6 +7570,8 @@ window.__onGoogle=async o=>{
       let desc='';
       try{const ms=await F.getDocs(F.collection(FBX.db,'households',hid,'members'));const hs=await F.getDoc(F.doc(FBX.db,'households',hid));
         const names=ms.docs.map(d=>{const v=d.data();return `${v.role==='host'?'방장 ':''}${v.name||'?'}`;});
+        const mine=ms.docs.find(d=>d.id===FBX.uid),mv=mine?mine.data():null;   // 이 구글 계정이 그 방에서 누구인지 (예: 태블릿 · 가족)
+        if(mv)names.push(`\n→ 이 구글 계정은 이 방에 "${mv.name||'?'}"(${mv.role==='host'?'방장':'가족'})로 들어가 있어요${mv.role!=='host'&&S.linkLost&&S.linkLost.role==='host'?'\n⚠️ 이 폰이 방장이었다면, 돌아가도 방장이 아니라 "'+(mv.name||'가족')+'"(으)로 들어가요. 새 가족방을 만드는 게 나아요':''}`);
         const ct=hs.exists()&&hs.data().createdAt&&hs.data().createdAt.toMillis?new Date(hs.data().createdAt.toMillis()):null;
         desc=`${names.join(' · ')||'구성원 없음'}${ct?`\n만든 날: ${ct.getFullYear()}.${ct.getMonth()+1}.${ct.getDate()}`:''}`;}catch(e){desc='(방 정보를 읽지 못했어요)';}
       if(!confirm(`이 구글 계정에 연결된 가족방이에요.\n\n${desc}\n\n이 방으로 돌아갈까요?\n(아니요 → 연결하지 않고, 새 가족방을 만들거나 새 초대 코드로 참여할 수 있어요)`)){await googleBackToAnon();toast('연결하지 않았어요');return;}
@@ -7571,8 +7596,10 @@ async function famRegUser(force){
 }
 function googleRow(){
   if(!googleOn())return '';
-  if(S.gAcct)return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">구글 계정에 연결됨<small>${esc(S.gAcct)}</small></div><span class="muted">✓</span></div></div>`;
-  return `<div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="g-link"><div class="pl2">구글 계정으로 가족방 지키기<small>폰을 바꿔도 가족방을 불러와요</small></div><span class="muted">›</span></div></div>`;
+  if(S.gAcct)return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">구글 계정에 연결됨<small>${esc(S.gAcct)} · 구글 계정 하나는 기기 하나에만 연결돼요</small></div><span class="muted">✓</span></div></div>`;
+  const host=!!(S.link&&S.link.role==='host');
+  if(host)return `<div class="pg-sec gwarn" style="margin-top:16px"><div class="prow tap" data-act="g-link"><div class="pl2">🔐 방장 폰은 구글 계정 연결을 꼭 해 두세요<small>이 폰을 바꾸거나 로그인이 바뀌어도 같은 가족방으로 돌아와요 · 구글 계정 하나는 기기 하나에만 연결돼요(태블릿 · 가족 폰에 먼저 연결하면 방장은 못 써요)</small></div><span class="muted">›</span></div></div>`;
+  return `<div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="g-link"><div class="pl2">구글 계정으로 가족방 지키기<small>방장 폰에 먼저 연결하세요 · 구글 계정 하나는 기기 하나에만 연결돼요</small></div><span class="muted">›</span></div></div>`;
 }
 // ---- 푸시 알림: 이 폰의 알림 주소를 서버(devices/내uid)에 등록 → 서버 함수가 가족 일이 생기면 알려 줌
 const pushBridge=()=>!!(window.AndroidBridge&&typeof window.AndroidBridge.fcmToken==='function');
@@ -7907,6 +7934,12 @@ const wlSecs=()=>S.wlog.secs.filter(x=>!x.h);
 const wlLines=t=>String(t||'').split('\n').filter(x=>x.trim());
 function wlCounts(k){const d=S.wlog&&S.wlog.days[k];if(!d)return [];return wlSecs().map(sc=>[sc,wlLines(d[sc.id]).length]).filter(x=>x[1]);}
 const wlHas=k=>wlOn()&&wlCounts(k).length>0;
+// 위젯 날짜 창에서 펼쳐 보기용 칸별 글 (가까운 날만 · 하루 1500자까지 · 폰 안 위젯 저장소에만 감)
+function wlSecTexts(k){
+  const day=(S.wlog&&S.wlog.days[k])||{},out=[];let left=1500;
+  wlSecs().forEach(sc=>{const t=String(day[sc.id]||'').replace(/\s+$/,'');if(!t.trim()||left<=0)return;const c=t.slice(0,left);left-=c.length;out.push({id:sc.id,n:sc.n,t:c});});
+  return out;
+}
 function wlRowHtml(k){const c=wlCounts(k);return `<button class="wlrow" data-act="wl-open" data-k="${k}"><span class="ic">📋</span><span class="tx"><b>${esc(wlName())}</b><small>${c.map(([sc,n])=>`${esc(sc.n)} ${n}`).join(' · ')}</small></span><span class="go">›</span></button>`;}
 let wlEd=null,wlNameK='',wlNoticeK='',wlsT=0;
 function wlNamePrompt(k){
@@ -7937,11 +7970,17 @@ function renderWl(focus){
   $('#pop').className='open wl-pop';
   $('#pop').innerHTML=`<div class="wlp" role="dialog" aria-label="${esc(wlName())}"><div class="grab"></div>
     <div class="hd">${e.ren?`<input type="text" class="tin" id="wlRen" maxlength="12" value="${esc(wlName())}" enterkeyhint="done"><button class="ib2" data-act="wl-renok" aria-label="이름 저장">✓</button>`:`<button class="ttl" data-act="wl-ren" aria-label="이름 바꾸기">📋 ${esc(wlName())}<i>✎</i></button>`}
-      <button class="ib2" data-act="srch-open" data-v="wl" aria-label="일지 찾기">🔍</button><button class="ib2" data-act="wl-set" aria-label="일지 설정">⚙</button><button class="ib2" data-act="wl-close" aria-label="닫기">✕</button></div>
+      <button class="ib2" data-act="wl-copy" aria-label="전체 복사">⧉</button><button class="ib2" data-act="srch-open" data-v="wl" aria-label="일지 찾기">🔍</button><button class="ib2" data-act="wl-set" aria-label="일지 설정">⚙</button><button class="ib2" data-act="wl-close" aria-label="닫기">✕</button></div>
     <div class="sub">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})${sh?` · ${esc(sh)}`:''} · 쓰는 대로 저장돼요</div>
     <div class="bd">${wlSecs().map(sec).join('')}</div></div>`;
   document.querySelectorAll('.wlta').forEach(wlGrow);
   if(focus){const f=$('#wlRen');if(f)setTimeout(()=>{f.focus();f.setSelectionRange(f.value.length,f.value.length);},60);}
+}
+// 전체 복사: "10/23(금) 야간" + 빈 줄 + 칸 이름 줄 · 글 (칸 사이 빈 줄 · 빈 칸 · 숨긴 칸은 뺌) → 카톡 등에 그대로 붙여 넣기
+function wlCopyText(k){
+  const d=parse(k),day=S.wlog.days[k]||{},sh=persOn(k)?'':shiftLabel(shiftOf(d));
+  const parts=wlSecs().filter(sc=>String(day[sc.id]||'').trim()).map(sc=>sc.n+'\n'+String(day[sc.id]).replace(/\s+$/,''));
+  return parts.length?`${d.getMonth()+1}/${d.getDate()}(${DOW[d.getDay()]})${sh?' '+sh:''}\n\n`+parts.join('\n\n'):'';
 }
 function wlGrow(t){t.style.height='auto';t.style.height=Math.max(56,t.scrollHeight+2)+'px';}   // 쓰는 만큼 칸이 늘어남
 let wlSaveT=0;

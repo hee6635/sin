@@ -634,9 +634,8 @@ object WidgetRenderer {
         val more = memos.size - shown   // 칸에 다 못 보이는 메모 수 (있으면 마지막 줄 끝에 "+n" 칩)
         val memoTop = y0 + row.memoTop(shown)
         val wlOff = if (d.optInt("wl", 0) == 1 && memos.isNotEmpty()) 1 else 0   // 업무 일지 줄(맨 위 · 표시만)
-        val swap = wlOff == 1 && shown == 1 && memos.size > 1   // 한 줄밖에 안 들어가는 칸: 메모를 먼저
         for (i0 in 0 until shown) {
-            val i = if (swap) 1 else i0
+            val i = i0   // 업무 일지는 칸이 작아도 늘 맨 위 (사용자)
             val py = memoTop + i0 * (row.pillH + row.pillGap)
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
             pp.color = if (i < wlOff) (if (pal === DARK) 0xFF2C2A48.toInt() else 0xFFEFECFB.toInt())

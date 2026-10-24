@@ -47,7 +47,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     for(let i=0;i<7;i++)await p.evaluate(()=>document.querySelector('[data-act="about-tap"]').click());await p.waitForTimeout(500);
     T('앱 정보를 7번 누르면 개발자 메뉴에 "모양 조정" 버튼',await p.evaluate(()=>!!document.querySelector('[data-act="tune-open"]')));
     await p.evaluate(()=>document.querySelector('[data-act="tune-open"]').click());await p.waitForTimeout(500);
-    T('모양 조정 화면: 앱 달력 미리보기(일주일 줄만 · 7칸) + 슬라이더 44개(앱 안쪽 · 앱 커버 × 11(메모 위치 없음) · 위젯 커버 · 위젯 안쪽 × 11)',await p.evaluate(()=>document.querySelectorAll('#tnPrev .grid .cell').length===7&&document.querySelectorAll('.tn-r').length===44),String(await p.evaluate(()=>document.querySelectorAll('.tn-r').length)));
+    T('모양 조정 화면: 앱 달력 미리보기(일주일 줄만 · 7칸) + 슬라이더 46개(앱 안쪽 · 앱 커버 × 12 · 위젯 커버 · 위젯 안쪽 × 11)',await p.evaluate(()=>document.querySelectorAll('#tnPrev .grid .cell').length===7&&document.querySelectorAll('.tn-r').length===46),String(await p.evaluate(()=>document.querySelectorAll('.tn-r').length)));
     T('모양 조정 화면에 놓인 위젯의 마지막 그림 상태(커버 · 안쪽 중 어느 값을 썼는지)가 보임',await p.evaluate(()=>/최소폭 300dp → 커버 값/.test(document.querySelector('#page').textContent)));
     T('이상한 저장 값은 범위 안으로(99 → 1.6 · 글자 → 기본 1.15)',await p.evaluate(()=>{const s=document.querySelector('.tn-r[data-g="appCover"][data-k="stk"]'),i=document.querySelector('.tn-r[data-g="appCover"][data-k="ink"]');return +s.value===1.6&&+i.value===1.15;}));
     const setR=(g,k,v)=>p.evaluate(([g,k,v])=>{const e=document.querySelector(`.tn-r[data-g="${g}"][data-k="${k}"]`);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));},[g,k,v]);

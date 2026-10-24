@@ -14,7 +14,7 @@ const ONLY=process.env.ONLY||'';
     const r=await p.evaluate(()=>{const j=window.__wg[window.__wg.length-1];const o=JSON.parse(j);let d=null;const w=x=>{if(Array.isArray(x))x.forEach(w);else if(x&&typeof x==='object'){if(x.k==='2026-10-12'&&x.ms)d=x;Object.values(x).forEach(w);}};w(o);return {d,raw:j};});
     T('위젯: 메모 맨 위 "📋 인수인계" · wl:1 · 가족 메모 수(nf)는 그대로',r.d&&r.d.ms[0]==='📋 인수인계'&&r.d.wl===1&&r.d.nf===1&&r.d.ms[1]==='가족 메모',JSON.stringify(r.d&&{ms:r.d.ms,wl:r.d.wl,nf:r.d.nf}));
     T('위젯 날짜 창용 요약 "인계 2 · 특이 1"',r.d&&r.d.wlr&&r.d.wlr.n==='인수인계'&&r.d.wlr.c==='인계 2 · 특이 1',JSON.stringify(r.d&&r.d.wlr));
-    T('일지 글(내용)은 위젯 데이터에 안 들어감',!/비밀 압력|원료 확인/.test(r.raw));
+    T('일지 글은 홈 화면 칸 줄(ms)에는 안 들어감 · 위젯 날짜 창 펼쳐 보기용(wlr.s)에만 (v0.95)',!/비밀 압력|원료 확인/.test(JSON.stringify(r.d.ms))&&/원료 확인/.test(JSON.stringify(r.d.wlr.s)));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
     // 업무 메모를 끄면 위젯에도 없음
     const q=await boot(b,{...base,wlog,memos:{'2026-10-12':[memo('m1','엄마 생신')]}},{});

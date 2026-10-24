@@ -37,6 +37,11 @@ import org.json.JSONObject
  * 체크한 것은 위젯에 바로 반영하고, 대기 목록에 적어 두었다가 앱이 열릴 때 기록에 넣는다.
  */
 class WidgetDayActivity : Activity() {
+    companion object {
+        /** 업무 일지를 펼쳐 둔 채 ‹ › 로 넘기면 다음 날도 펼친 채 */
+        @JvmStatic var wlOpen = false
+    }
+
 
     private var key = ""
     private var who = ""   // 한 달 위젯에서 이름 칩으로 가족 달력을 보다가 눌렀으면 그 사람의 표시 (비어 있으면 내 달력)
@@ -160,6 +165,7 @@ class WidgetDayActivity : Activity() {
         super.onCreate(savedInstanceState)
         key = intent.getStringExtra("k") ?: ""
         who = intent.getStringExtra("who") ?: ""
+        if (savedInstanceState == null) wlOpen = false   // 위젯에서 새로 열 때는 접힌 채 (‹ › 로 넘길 때만 펼친 채 유지)
         build(0)
     }
 
@@ -168,6 +174,7 @@ class WidgetDayActivity : Activity() {
         setIntent(intent)
         key = intent.getStringExtra("k") ?: key
         who = intent.getStringExtra("who") ?: ""
+        wlOpen = false
         build(0)
     }
 
@@ -543,40 +550,81 @@ class WidgetDayActivity : Activity() {
         return row
     }
 
-    /** 업무 일지가 있는 날: "📋 이름 / 인계 2 · 특이 1 ›" 줄 (글 내용은 안 보냄 · 회사 보안) → 누르면 앱이 그 날짜 + 일지 팝업으로 */
+    /** 업무 일지가 있는 날: "📋 이름 / 인계 2 · 특이 1" 줄. 누르면 이 창 안에서 칸별 글이 펼쳐짐(보기만 · ‹ › 로 넘겨도 펼친 채) ·
+     *  "✏️ 앱에서 고치기"만 앱으로. 먼 날(글을 안 보낸 날)은 눌러서 앱으로 */
     private fun wlRowView(day: JSONObject, pal: Pal): View? {
         val w = day.optJSONObject("wlr") ?: return null
         val name = w.optString("n", "")
         if (name.isEmpty()) return null
         val dark = pal.bg != 0xFFFFFFFF.toInt()
+        val key = day.optString("k", "")
+        val secs = w.optJSONArray("s")
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.VERTICAL
         val row = LinearLayout(this)
         row.orientation = LinearLayout.HORIZONTAL
         row.gravity = Gravity.CENTER_VERTICAL
         row.setPadding(dp(12), dp(12), dp(14), dp(12))
         row.background = rounded(if (dark) 0xFF2C2A48.toInt() else 0xFFEFECFB.toInt(), 16)
-        val ic = tv("📋", 18f, pal.fg, false)
         val ilp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         ilp.rightMargin = dp(10)
-        row.addView(ic, ilp)
+        row.addView(tv("📋", 18f, pal.fg, false), ilp)
         val col = LinearLayout(this)
         col.orientation = LinearLayout.VERTICAL
         col.addView(tv(name, 16f, if (dark) 0xFFCFC6FA.toInt() else 0xFF4A3F9A.toInt(), true))
         val c = w.optString("c", "")
         if (c.isNotEmpty()) col.addView(tv(c, 12.5f, if (dark) 0xFFA99FE0.toInt() else 0xFF7A70B8.toInt(), true))
         row.addView(col, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        row.addView(tv("›", 20f, if (dark) 0xFFA99FE0.toInt() else 0xFF8A7FD0.toInt(), true))
-        val key = day.optString("k", "")
-        row.setOnClickListener {
+        val canView = secs != null && secs.length() > 0
+        val arrowV = tv(if (canView) (if (wlOpen) "▴" else "▾") else "›", 18f, if (dark) 0xFFA99FE0.toInt() else 0xFF8A7FD0.toInt(), true)
+        row.addView(arrowV)
+        box.addView(row)
+        val openApp = {
             val go = Intent(this, MainActivity::class.java)
             go.putExtra("openDate", "$key#wl")
             go.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             startActivity(go)
             finish()
         }
+        if (canView) {
+            val detail = LinearLayout(this)
+            detail.orientation = LinearLayout.VERTICAL
+            detail.setPadding(dp(4), dp(8), dp(4), 0)
+            val chipBg = mapOf("a" to (if (dark) 0xFF24384F else 0xFFD6E6F8), "b" to (if (dark) 0xFF21392A else 0xFFD7EEDD), "c" to (if (dark) 0xFF45252D else 0xFFF8DDE2), "d" to (if (dark) 0xFF41361A else 0xFFFBEFC6))
+            val chipFg = mapOf("a" to (if (dark) 0xFFA9C8EC else 0xFF2F5F8F), "b" to (if (dark) 0xFF9FD3AE else 0xFF2F6B43), "c" to (if (dark) 0xFFEFA9B6 else 0xFF9A3A4C), "d" to (if (dark) 0xFFECD38A else 0xFF86630E))
+            for (i in 0 until secs!!.length()) {
+                val sc = secs.optJSONObject(i) ?: continue
+                val id = sc.optString("id", "a")
+                val chip = tv(sc.optString("n", ""), 12f, (chipFg[id] ?: 0xFF555555).toInt(), true)
+                chip.setPadding(dp(9), dp(3), dp(9), dp(3))
+                chip.background = rounded((chipBg[id] ?: 0xFFEEEEEE).toInt(), 9)
+                val clp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                clp.topMargin = dp(if (i == 0) 0 else 10)
+                detail.addView(chip, clp)
+                val body = tv(sc.optString("t", ""), 14.5f, pal.fg, false)
+                body.setTextIsSelectable(true)
+                body.setLineSpacing(0f, 1.25f)
+                body.setPadding(dp(4), dp(5), dp(4), 0)
+                detail.addView(body)
+            }
+            val edit = tv("✏️ 앱에서 고치기", 13.5f, pal.sub, true)
+            edit.setPadding(dp(4), dp(12), dp(4), dp(4))
+            edit.setOnClickListener { openApp() }
+            detail.addView(edit)
+            detail.visibility = if (wlOpen) View.VISIBLE else View.GONE
+            box.addView(detail)
+            row.setOnClickListener {
+                wlOpen = !wlOpen
+                detail.visibility = if (wlOpen) View.VISIBLE else View.GONE
+                arrowV.text = if (wlOpen) "▴" else "▾"
+            }
+        } else {
+            row.setOnClickListener { openApp() }
+        }
         val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         lp.bottomMargin = dp(10)
-        row.layoutParams = lp
-        return row
+        box.layoutParams = lp
+        return box
     }
 
     private fun memoRow(m: JSONObject, pal: Pal): View {
