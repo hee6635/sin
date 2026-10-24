@@ -31,6 +31,17 @@ body{font-family:"Noto Sans KR","Noto Sans CJK KR",system-ui,sans-serif;backgrou
 .pv{margin-top:10px;font-size:13.5px;color:#3a3f55;background:rgba(255,255,255,.65);border-radius:10px;padding:8px 10px;line-height:1.45}
 .pv b{color:#86630e}
 .add{font-size:13.5px;color:#7a6fc0;font-weight:700;padding:4px 2px}
+/* 메모 줄 안의 일지 링크 */
+.mrow.wlk{border-bottom:1px dotted #d9dce2}
+.mrow .wi{width:26px;height:26px;border-radius:8px;background:#ece8fb;display:grid;place-items:center;font-size:14px;border:0;flex:none}
+.mrow .mt{flex:1}
+.mrow .mt small{display:block;font-size:12px;color:#8a7fd0;font-weight:700;margin-top:2px}
+.mrow .go{color:#8a7fd0;font-size:18px;font-weight:800}
+.mrow .meta{display:block;font-size:12px;color:#9aa0aa;margin-top:2px}
+.inr{margin-top:auto;display:flex;align-items:center;gap:10px;border-bottom:1.5px solid #cfd3da;padding:8px 2px}
+.inr span{flex:1;color:#a0a6b0;font-size:15px}
+.inr .lg{font-size:12.5px;font-weight:800;color:#6f64c0;background:#ece8fb;border-radius:12px;padding:6px 10px}
+.inr .sd{color:#9aa0aa;font-size:18px}
 /* 근무 알약 (접힌 근무타입) · 메모 */
 .sh{align-self:flex-start;font-size:13.5px;font-weight:800;padding:7px 13px;border-radius:16px;background:#f3ebe6;color:#6b3f2c}
 .sh.d{background:#e6eef8;color:#2e4d6b}
@@ -82,22 +93,20 @@ body{font-family:"Noto Sans KR","Noto Sans CJK KR",system-ui,sans-serif;backgrou
 .wk{font-size:11px;color:#8a909a;text-align:center;padding-top:8px;display:grid;grid-template-columns:repeat(7,1fr)}
 </style></head><body>
 
-<div><div class="cap">① 날짜 창 — 일지 있는 날</div>
+<div><div class="cap">① 날짜 창 — 일지 있는 날 (메모 안 링크)</div>
 <div class="ph">
   <div class="bk">‹ 달력</div>
   <div class="hd"><i>‹</i><div><b>10월 23일 (금)</b><small>야간</small></div><i>›</i></div>
   <div class="strip"><div>20일<span class="r">휴</span></div><div>21일<span class="r">휴</span></div><div>22일<span class="d">주</span></div><div class="on">23일<span class="n">야</span></div><div>24일<span class="r">휴</span></div><div>25일<span class="r">휴</span></div><div>26일<span class="d">주</span></div></div>
   <div class="body">
-    <div class="wl"><div class="t">📋 조업 일지<em>›</em></div>
-      <div class="bdg"><span class="k1">인수 1</span><span class="k2">인계 2</span><span class="k3">지시 1</span><span class="k4">특이 1</span></div>
-      <div class="pv"><b>특이</b> · 2호기 냉각수 압력 낮음, 다음 근무 확인</div></div>
     <div class="sh">야간 ▾</div>
     <div class="mm">메모</div>
-    <div class="mrow"><i></i>엄마 생신 저녁</div>
-    <div class="inp">나만 보는 메모</div>
+    <div class="mrow wlk"><i class="wi">📋</i><div class="mt">조업 일지<small>인계 2 · 지시 1 · 특이 1</small></div><span class="go">›</span></div>
+    <div class="mrow"><i></i><div class="mt">엄마 생신 저녁<span class="meta">나만 · 방금 전</span></div></div>
+    <div class="inr"><span>나만 보는 메모</span><b class="lg">📋 일지</b><b class="sd">➤</b></div>
   </div>
 </div>
-<p class="note">맨 위에 살짝 큰 파스텔 카드. 칸별 개수 + 중요한 한 줄(특이 → 없으면 인계 첫 줄). 카드를 누르면 ③ 전용 화면. 근무타입은 접힌 알약(다음 빌드의 접기 규칙).</p></div>
+<p class="note">일지는 개인 메모 목록 맨 위에 한 줄(📋 + 칸별 개수 + ›). 누르면 ③ 일지 화면. 새 카드 없음 → 날짜 창 모양은 지금과 같음.</p></div>
 
 <div><div class="cap">② 날짜 창 — 일지 없는 날</div>
 <div class="ph">
@@ -105,13 +114,12 @@ body{font-family:"Noto Sans KR","Noto Sans CJK KR",system-ui,sans-serif;backgrou
   <div class="hd"><i>‹</i><div><b>10월 22일 (목)</b><small>주간</small></div><i>›</i></div>
   <div class="strip"><div>19일<span class="n">야</span></div><div>20일<span class="r">휴</span></div><div>21일<span class="r">휴</span></div><div class="on">22일<span class="d">주</span></div><div>23일<span class="n">야</span></div><div>24일<span class="r">휴</span></div><div>25일<span class="r">휴</span></div></div>
   <div class="body">
-    <div class="add">＋ 조업 일지 쓰기</div>
     <div class="sh d">주간 ▾</div>
     <div class="mm">메모</div>
-    <div class="inp">나만 보는 메모</div>
+    <div class="inr"><span>나만 보는 메모</span><b class="lg">📋 일지</b><b class="sd">➤</b></div>
   </div>
 </div>
-<p class="note">일지가 없는 날은 작은 글자 한 줄만. 부가 기능 "업무 메모"를 꺼 두면 이 줄도 없음 → 안 쓰는 사람 화면은 그대로.</p></div>
+<p class="note">일지 쓰기는 메모 입력 줄 옆 작은 "📋 일지" 버튼 하나(부가 기능 켠 사람만). 누르면 그 날짜 일지 화면이 바로 열림. 이미 있는 날엔 ① 의 줄로 들어감.</p></div>
 
 <div><div class="cap">③ 조업 일지 화면</div>
 <div class="ph">
