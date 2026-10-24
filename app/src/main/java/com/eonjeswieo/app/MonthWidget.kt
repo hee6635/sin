@@ -1084,17 +1084,21 @@ object MonthRenderer {
         val memoTop0 = y0 + plan.memoTop(shown) + (plan.pillGap - mGap) * Math.max(0, shown - 1)   // 줄 간격을 바꿔도 아래 끝은 그대로
         val memoLow = Math.max(memoTop0, y0 + rowH - (shown * plan.pillH + Math.max(0, shown - 1) * mGap))   // 아래로 내려도 칸 아래 끝까지만 (다음 줄 날짜를 안 덮게)
         val memoTop = Math.min(memoTop0 + tn.memoY * rowH * 0.06f, memoLow)   // 위치(위 − · 아래 +)
+        val wlOff = if (!family && f.day != null && f.day.optInt("wl", 0) == 1 && f.memos.isNotEmpty()) 1 else 0   // 업무 일지 줄(맨 위 · 표시만)
+        val swap = wlOff == 1 && shown == 1 && f.memos.size > 1   // 한 줄밖에 안 들어가는 칸: 메모를 먼저 (일지는 "+n" 에 셈)
         for (k in 0 until shown) {
+            val mi = if (swap) 1 else k
             val py = memoTop + k * (plan.pillH + mGap)
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
-            val isFam = family || k < f.nf
-            pp.color = if (isFam) (if (night) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill
+            val isWl = mi < wlOff
+            val isFam = family || (mi >= wlOff && mi - wlOff < f.nf)
+            pp.color = if (isWl) (if (night) 0xFF2C2A48.toInt() else 0xFFEFECFB.toInt()) else if (isFam) (if (night) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill
             cv.drawRoundRect(RectF(x0 + pad, py, x0 + cw - pad, py + plan.pillH), plan.pillH * 0.3f, plan.pillH * 0.3f, pp)
             var barW = 0f
             if (fill) {   // 왼쪽 가는 선: 가족 메모는 보라 · 내 메모는 회색 (앱 달력과 같은 구분)
                 barW = Math.max(1.6f, 2.2f * u)
                 val bp = Paint(Paint.ANTI_ALIAS_FLAG)
-                bp.color = if (isFam) (if (night) 0xFFA58BFF.toInt() else 0xFF7F63DB.toInt()) else (if (night) 0xFF8A8F98.toInt() else 0xFFB0B5BC.toInt())
+                bp.color = if (isWl) (if (night) 0xFFA99FE0.toInt() else 0xFF8B7FD6.toInt()) else if (isFam) (if (night) 0xFFA58BFF.toInt() else 0xFF7F63DB.toInt()) else (if (night) 0xFF8A8F98.toInt() else 0xFFB0B5BC.toInt())
                 cv.drawRoundRect(RectF(x0 + pad, py + plan.pillH * 0.12f, x0 + pad + barW, py + plan.pillH * 0.88f), barW / 2f, barW / 2f, bp)
             }
             paint.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)   // 메모 글자는 한 단계 굵게(앱 글씨와 비슷하게)
@@ -1102,7 +1106,7 @@ object MonthRenderer {
             paint.color = pal.fg
             paint.textSize = Math.min(Math.min(plan.pillH * 0.77f, cw * 0.215f) * tn.memo, plan.pillH * 0.95f)   // 메모 글자 (모양 조정 배율 · 칸 높이를 넘지 않게)
             val chipW = if (more > 0 && k == shown - 1) WidgetLayout.moreBadge(plan.pillH)[0] else 0f
-            WidgetRenderer.drawRich(cv, f.memos[k], x0 + pad * 1.4f + barW, py + plan.pillH * 0.74f, cw - pad * 2.6f - barW - (if (chipW > 0f) chipW + plan.pillH * 0.15f else 0f), paint, pal.fg, pal.link)
+            WidgetRenderer.drawRich(cv, f.memos[mi], x0 + pad * 1.4f + barW, py + plan.pillH * 0.74f, cw - pad * 2.6f - barW - (if (chipW > 0f) chipW + plan.pillH * 0.15f else 0f), paint, pal.fg, pal.link)
             if (chipW > 0f) WidgetRenderer.drawMoreChip(cv, more, x0 + cw - pad - plan.pillH * 0.12f, py, plan.pillH, pal, paint.textSize)
         }
         if (layer >= 0) cv.restoreToCount(layer)

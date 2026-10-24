@@ -633,16 +633,20 @@ object WidgetRenderer {
         val shown = Math.min(memos.size, row.memoLines)
         val more = memos.size - shown   // 칸에 다 못 보이는 메모 수 (있으면 마지막 줄 끝에 "+n" 칩)
         val memoTop = y0 + row.memoTop(shown)
-        for (i in 0 until shown) {
-            val py = memoTop + i * (row.pillH + row.pillGap)
+        val wlOff = if (d.optInt("wl", 0) == 1 && memos.isNotEmpty()) 1 else 0   // 업무 일지 줄(맨 위 · 표시만)
+        val swap = wlOff == 1 && shown == 1 && memos.size > 1   // 한 줄밖에 안 들어가는 칸: 메모를 먼저
+        for (i0 in 0 until shown) {
+            val i = if (swap) 1 else i0
+            val py = memoTop + i0 * (row.pillH + row.pillGap)
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
-            pp.color = if (i < d.optInt("nf", 0)) (if (pal === DARK) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill   // 가족 메모는 연보라 칸 (한 달 위젯과 같음)
+            pp.color = if (i < wlOff) (if (pal === DARK) 0xFF2C2A48.toInt() else 0xFFEFECFB.toInt())
+                else if (i - wlOff < d.optInt("nf", 0)) (if (pal === DARK) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill   // 가족 메모는 연보라 칸 (한 달 위젯과 같음)
             cv.drawRoundRect(RectF(x0 + pad, py, x0 + cw - pad, py + row.pillH), row.pillH * 0.3f, row.pillH * 0.3f, pp)
             paint.typeface = Typeface.DEFAULT
             paint.textAlign = Paint.Align.LEFT
             paint.color = pal.fg
             paint.textSize = Math.min(row.pillH * 0.72f, cw * 0.2f)   // (7일 · 1칸 · 2칸 모두 같은 비율)
-            val chipW = if (more > 0 && i == shown - 1) WidgetLayout.moreBadge(row.pillH)[0] else 0f
+            val chipW = if (more > 0 && i0 == shown - 1) WidgetLayout.moreBadge(row.pillH)[0] else 0f
             drawRich(cv, memos[i], x0 + pad * 1.4f, py + row.pillH * 0.72f, cw - pad * 2.6f - (if (chipW > 0f) chipW + row.pillH * 0.15f else 0f), paint, pal.fg, pal.link)
             if (chipW > 0f) drawMoreChip(cv, more, x0 + cw - pad - row.pillH * 0.12f, py, row.pillH, pal, paint.textSize)
         }

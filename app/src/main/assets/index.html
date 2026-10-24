@@ -639,6 +639,11 @@ textarea{resize:none;min-height:84px}
 .wls h4 small{margin-left:auto;font-size:11.5px;color:var(--muted);font-weight:600}
 .wln{display:block;width:100%;text-align:left;font-size:14.5px;line-height:1.5;padding:6px 0 6px 12px;position:relative;color:var(--fg);white-space:pre-wrap;word-break:break-all}
 .wln::before{content:"";position:absolute;left:2px;top:15px;width:4px;height:4px;border-radius:50%;background:var(--muted)}
+.wlta{display:block;width:100%;min-height:56px;resize:none;overflow:hidden;border:0;border-radius:10px;padding:2px 10px 4px;font-size:15px;line-height:26px;color:var(--fg);
+  background-color:#fffdf6;background-image:repeating-linear-gradient(transparent 0 25px,#ece3c9 25px 26px);background-attachment:local;box-shadow:inset 0 0 0 1px #efe8d4;margin-top:4px}
+.wlta::placeholder{color:#b7b2a2}
+:root[data-theme="dark"] .wlta{background-color:#22242c;background-image:repeating-linear-gradient(transparent 0 25px,#33363f 25px 26px);box-shadow:inset 0 0 0 1px #33363f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .wlta{background-color:#22242c;background-image:repeating-linear-gradient(transparent 0 25px,#33363f 25px 26px);box-shadow:inset 0 0 0 1px #33363f}}
 .wladd{display:block;font-size:13px;color:var(--muted);padding:8px 0 6px 12px;min-height:36px}
 .wlin{display:flex;gap:6px;align-items:center;margin:4px 0}
 .wlin input{flex:1;min-width:0;border:1.5px solid #b8adf0;border-radius:10px;padding:9px 10px;font-size:14.5px;background:var(--bg)}
@@ -654,6 +659,9 @@ textarea{resize:none;min-height:84px}
 .srch-entry{display:flex;align-items:center;gap:8px;width:calc(100% - 32px);margin:2px 16px 6px;height:44px;padding:0 14px;border-radius:14px;background:var(--surface);color:var(--muted);font-size:15px;text-align:left}
 .srbox{padding:8px 16px 4px}.srbox input{width:100%;height:44px;border-radius:12px;padding:0 12px;font-size:16px;background:var(--surface)}
 .srbox .hseg{margin-top:8px}
+.srwt{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.srwt button{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 12px 0 5px;border-radius:19px;background:var(--surface);font-size:14px;font-weight:700;color:var(--muted)}
+.srwt button .badge{opacity:.6}.srwt button.on{background:var(--acc-soft);color:var(--acc-ink);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 40%,transparent)}.srwt button.on .badge{opacity:1}
 .srow{display:grid;grid-template-columns:1fr auto;gap:2px 8px;width:100%;text-align:left;padding:10px 4px;border-bottom:1px solid var(--line)}
 .srow .sd{font-size:12px;color:var(--muted);font-weight:700}
 .srow .sg{grid-row:1;grid-column:2;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:9px;background:var(--surface);color:var(--muted);align-self:start}
@@ -1528,7 +1536,9 @@ function wlogClean(w){   // 업무 일지 (앱을 켤 때 normalize 가 부름 �
   if(secs.every(x=>x.h))secs.forEach(x=>{x.h=false;});
   const o={name:cutTxt(w.name,12).trim(),secs,backup:!!w.backup,seen:!!w.seen,days:{}};
   if(isObj(w.days))Object.keys(w.days).slice(-4000).forEach(k=>{const d=w.days[k];if(!okDate(k)||!isObj(d))return;const day={};
-    ids.forEach(id=>{if(!Array.isArray(d[id]))return;const l=d[id].filter(x=>isObj(x)&&typeof x.t==='string'&&x.t.trim()).slice(0,40).map(x=>({id:okId(x.id)?x.id:Math.random().toString(36).slice(2,9),t:cutMulti(x.t,300)}));if(l.length)day[id]=l;});
+    ids.forEach(id=>{let v=d[id];
+      if(Array.isArray(v))v=v.filter(x=>isObj(x)&&typeof x.t==='string'&&x.t.trim()).map(x=>x.t).join('\n');   // v0.93 줄 목록 → 메모장 글 (줄바꿈으로 이어 붙임)
+      if(typeof v!=='string')return;v=cutMulti(v,4000).replace(/\s+$/,'');if(v.trim())day[id]=v;});
     if(Object.keys(day).length)o.days[k]=day;});
   return o;
 }
@@ -1846,7 +1856,8 @@ function normalize(o){
    // 약 기록 보존(그날 먹은 기록에 같이 저장한 색 · 횟수 · 모양) 검사
    if(!st.snap||typeof st.snap!=='object'||Array.isArray(st.snap))st.snap={};
    Object.keys(st.snap).forEach(k=>{const o=st.snap[k];if(!o||typeof o!=='object'||!st.log[k]){delete st.snap[k];return;}Object.keys(o).forEach(id=>{const v=o[id];if(!v||!/^#[0-9a-f]{6}$/i.test(v.c||'')||!(v.t>=1&&v.t<=3)||!st.log[k][id])delete o[id];else v.h=['round','tab','drop'].includes(v.h)?v.h:'caps';});if(!Object.keys(o).length)delete st.snap[k];});
-   st.defs.forEach(x=>{if(x.kind==='pill')x.shape=['round','tab','drop'].includes(x.shape)?x.shape:'caps';if(x.empty){x.empty=true;x.kind='mark';x.emoji='';x.name='';}});
+   st.defs.forEach(x=>{if(x.kind==='pill')x.shape=['round','tab','drop'].includes(x.shape)?x.shape:'caps';if(x.empty){x.empty=true;x.kind='mark';x.emoji='';x.name='';}
+     if(x.wtypes!==undefined)x.wtypes=Array.isArray(x.wtypes)?x.wtypes.filter(k=>typeof k==='string'&&k.length<=6).slice(0,30):[];});   // 근무 맞춤 근무타입
    // ＋ 로 고른 스티커 중 날짜 · 규칙 · 기록이 하나도 없는 것은 정리
    st.defs=st.defs.filter(x=>!(x.one&&!x.retired&&!(x.dates||[]).length&&(!x.rep||x.rep==='none')&&!Object.keys(st.log).some(k=>st.log[k]&&st.log[k][x.id])));}
   s.alarms=s.alarms.map(a=>Object.assign({noHol:false,skipAt:0},a));
@@ -1998,7 +2009,8 @@ function widgetJson(){
     };
     const vm=visibleMemos(k),m1=vm.find(x=>x.shared)||vm[0],bd=boardOnDate(k)[0],dd=ddayHits(k)[0];
     const wm=t=>linkParts(firstLine(t)).map(q=>q.u?'\u0001'+linkUrl(q.u)+'\u0003링크\u0002':q.t).join('');   // 주소는 앱처럼 "링크"(위젯이 파랗게 그림)
-    const ml=[];vm.filter(x=>x.shared).concat(vm.filter(x=>!x.shared)).forEach(x=>ml.push(wm(x.text)));boardOnDate(k).forEach(n=>ml.push(wm(piLabel(n))));ddayHits(k).forEach(x=>ml.push(x.name));
+    const ml=[],wl1=wlHas(k);if(wl1)ml.push('📋 '+wlName());   // 업무 일지: 메모 맨 위 한 줄(표시만 · 글은 안 보냄) → 위젯은 wl:1 로 첫 줄을 연보라로
+    vm.filter(x=>x.shared).concat(vm.filter(x=>!x.shared)).forEach(x=>ml.push(wm(x.text)));boardOnDate(k).forEach(n=>ml.push(wm(piLabel(n))));ddayHits(k).forEach(x=>ml.push(x.name));
     const fm=vm.filter(x=>x.shared).slice(0,3).map(x=>wm(x.text).slice(0,40));   // 가족 메모(♥): 가족 달력(보기만)에도 보이는 것 — 한 달 위젯에서 다른 사람 달력을 볼 때 씀
     people.forEach((p,j)=>{
       const m=fam[j];let key='',col=null;
@@ -2016,7 +2028,7 @@ function widgetJson(){
     });
     const rq0=rqRing((S.requests||[]).filter(r=>r.date===k&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r)).slice(3),   // 요청 링 (한 달 위젯 · 칸 채우기 모양): ask · hold · ok · no — 달력과 같은 기준(답한 요청은 3일 뒤 사라짐)
       nfm=vm.filter(x=>x.shared&&x.text.trim()).length,   // 메모 줄 맨 앞 nfm 개가 가족 메모(♥) — 위젯이 연보라 칸으로 그림
-      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
+      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · ')}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
     if(i<-6||i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({...base,far:i<-6?2:1,stk:stampsOn(k).slice(0,4).map(x=>{const o=mapStk(x);delete o.id;delete o.b;return o;}),ms:ml.slice(0,3).map(x=>String(x||'').slice(0,40)),
       ...(fm.length?{fm}:{}),...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 먼 날(지난 날 · 2주 뒤부터): 큰 창에는 스티커 · 메모를 안 싣고 앱에서 보게 함
     const sa=stampsOn(k).slice(0,12).map(mapStk);
@@ -2050,8 +2062,8 @@ function widgetSync(){
   try{applyWidgetActions();}catch(e){}
   try{
     if(window.AndroidBridge&&typeof window.AndroidBridge.takeOpenDate==='function'){
-      const k=String(window.AndroidBridge.takeOpenDate()||'');
-      if(/^\d{4}-\d\d-\d\d$/.test(k)){const d=parse(k);if(pageMode)closePage();tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);}
+      const raw=String(window.AndroidBridge.takeOpenDate()||''),mm=raw.match(/^(\d{4}-\d\d-\d\d)(#wl)?$/),k=mm?mm[1]:'';   // "#wl": 위젯 날짜 창의 업무 일지 줄 → 일지 팝업까지
+      if(k){const d=parse(k);if(pageMode)closePage();tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);if(mm[2]&&wlOn())wlOpen(k);}
     }
   }catch(e){}
 }
@@ -3316,7 +3328,7 @@ function stampPlanned(s,k){
   if(s.rep==='daily')on=true;
   else if(s.rep==='dow')on=(s.days||[]).includes(d.getDay());
   else if(s.rep==='month'){const md=s.mday||(s.from?parse(s.from).getDate():1);on=d.getDate()===Math.min(md,new Date(d.getFullYear(),d.getMonth()+1,0).getDate());}   // 31일 없는 달은 말일
-  else if(s.rep==='work'){if(!persOn(k)){const r=isRest(shiftOf(d));on=s.workMode==='work'?!r:r;}}
+  else if(s.rep==='work'){if(!persOn(k)){const sh=shiftOf(d);if(Array.isArray(s.wtypes)&&s.wtypes.length)on=s.wtypes.includes(sh);else{const r=isRest(sh);on=s.workMode==='work'?!r:r;}}}   // 근무 맞춤: 고른 근무타입(wtypes) · 옛 값은 휴무 날만/근무 날만
   if(on&&s.noHol&&(holName(k)||compHol(k)))on=false;
   if(on&&s.noWknd&&(d.getDay()===0||d.getDay()===6))on=false;
   return on;
@@ -3324,7 +3336,7 @@ function stampPlanned(s,k){
 const pillActive=(s,k)=>s.kind==='pill'&&stampPlanned(s,k);
 const markPlanned=(s,k)=>s.kind==='mark'&&stampPlanned(s,k);
 function stampRule(s){
-  const r=s.rep==='daily'?'매일':s.rep==='month'?`매달 ${s.mday||(s.from?parse(s.from).getDate():1)}일`:s.rep==='dow'?([1,2,3,4,5,6,0].filter(w=>(s.days||[]).includes(w)).map(w=>DOW[w]).join('·')||'요일 없음'):s.rep==='work'?(s.workMode==='work'?'근무 날만':'휴무 날만'):'이날만';
+  const r=s.rep==='daily'?'매일':s.rep==='month'?`매달 ${s.mday||(s.from?parse(s.from).getDate():1)}일`:s.rep==='dow'?([1,2,3,4,5,6,0].filter(w=>(s.days||[]).includes(w)).map(w=>DOW[w]).join('·')||'요일 없음'):s.rep==='work'?(Array.isArray(s.wtypes)&&s.wtypes.length?s.wtypes.map(x=>shiftLabel(x)).join(' · ')+' 날':(s.workMode==='work'?'근무 날만':'휴무 날만')):'이날만';
   const ex=[s.noHol?'공휴일 빼기':'',s.noWknd?'토 · 일 빼기':'',s.to&&s.rep!=='none'&&s.rep!=='once'?`~${+s.to.slice(5,7)}/${+s.to.slice(8)}`:''].filter(Boolean).join(' · ');
   return (stN(s)>1?`하루 ${stN(s)}번 · `:'')+r+(ex?' · '+ex:'');
 }
@@ -3441,11 +3453,16 @@ const fmtTm12=t=>{const [h,m]=String(t).split(':').map(Number);return `${h}:${pa
 // 알림을 처음 켤 때 시각: 마지막에 정한 시각 (없으면 8시), 2·3번째는 6시간씩 뒤
 function stAtInit(i){const l=S.stamps.lastAt||[];if(l[i])return l[i];const b=String(l[0]||'08:00').split(':').map(Number);return `${pad((b[0]+6*i)%24)}:${pad(b[1]||0)}`;}
 function stFill(d){const a=Array.isArray(d.ats)?d.ats.slice(0,d.times):[];for(let i=a.length;i<d.times;i++)a.push(stAtInit(i));d.ats=a;}
+// 근무 맞춤에서 골라 둔 근무타입 (옛 "휴무 날만/근무 날만"은 그에 맞는 근무타입을 모두 고른 것으로 보여 줌)
+function wtypesOf(s){
+  if(s&&Array.isArray(s.wtypes)&&s.wtypes.length)return s.wtypes.filter(k=>S.types.some(t=>t.k===k));
+  const work=!!(s&&s.workMode==='work');return S.types.filter(t=>t.k!==NONE_K&&(work?!t.rest:t.rest)).map(t=>t.k);
+}
 function stDraftOf(s,k,edit,back){
   const kind=s?s.kind:'mark',times=s?stN(s):1;
   const d={k,back:back||'',edit:!!edit,id:s?s.id:'__new',kind,name:s?s.name:'',emoji:(s&&s.emoji)||'🏃',color:(s&&s.color)||STK_COL[0],times,
     alarm:!!(s&&s.ats&&s.ats.length),ats:s&&s.ats?s.ats.slice():[],shape:(s&&s.shape)||'caps',fam:s?stFam(s):true,
-    rep:edit?(s.rep||'none'):'once',days:s&&s.days&&s.days.length?s.days.slice():[parse(k).getDay()],workMode:(s&&s.workMode)||'rest',
+    rep:edit?(s.rep||'none'):'once',days:s&&s.days&&s.days.length?s.days.slice():[parse(k).getDay()],workMode:(s&&s.workMode)||'rest',wtypes:wtypesOf(s),
     from:(edit&&s.from)||k,to:(edit&&s.to)||'',noHol:!!(edit&&s.noHol),noWknd:!!(edit&&s.noWknd),noNight:!!(edit&&s.noNight)};
   if(d.alarm)stFill(d);
   return d;
@@ -3491,7 +3508,8 @@ function renderStampReg(){
     <div class="pg-cap">얼마나</div>
     <div style="padding:0 16px"><div class="hseg big five">${d.edit?seg('none','반복 없음'):seg('once','이날만')}${seg('dow','요일')}${seg('daily','매일')}${persAll()?'':seg('work','근무 맞춤')}${seg('month','매달')}</div>
     ${d.rep==='dow'?`<div class="sdays big">${[1,2,3,4,5,6,0].map(w=>`<button class="${d.days.includes(w)?'on':''}" data-act="sr-day" data-v="${w}">${DOW[w]}</button>`).join('')}</div>`:''}
-    ${d.rep==='work'?`<div class="hseg big" style="margin-top:8px"><button class="${d.workMode==='rest'?'on':''}" data-act="sr-work" data-v="rest">휴무 날만</button><button class="${d.workMode==='work'?'on':''}" data-act="sr-work" data-v="work">근무 날만</button></div>`:''}
+    ${d.rep==='work'?`<div class="srwt">${S.types.filter(t=>t.k!==NONE_K).map(t=>`<button class="${d.wtypes.includes(t.k)?'on':''}" data-act="sr-wt" data-v="${esc(t.k)}" aria-pressed="${d.wtypes.includes(t.k)}">${badge(t.k,'sm','')}<span>${esc(t.name||t.k)}</span></button>`).join('')}</div>
+      <div class="hint" style="margin:6px 0 0;padding:0">고른 근무인 날에만 나와요 · 여러 개 고를 수 있어요</div>`:''}
     ${d.rep==='month'?`<div class="hint" style="margin:8px 0 0;padding:0">매달 ${parse(d.from||d.k).getDate()}일 · 그 날이 없는 달은 말일</div>`:''}
     ${d.rep==='none'?'':d.rep==='once'?`<div class="hint" style="margin:8px 0 0;padding:0;${covered?'color:var(--danger)':''}">${covered?'이 스티커는 이 날에 이미 깔려 있어요 (반복 규칙).':restTxt}</div>`:''}</div>
     ${d.rep!=='once'&&d.rep!=='none'?`<div class="pg-cap">기간</div><div class="pg-sec" style="margin-top:0">
@@ -3531,6 +3549,7 @@ function stampRegSave(){
   let s=S.stamps.defs.find(x=>x.id===d.id);
   const isNewDef=!s;
   if(d.rep==='once'&&s&&stampPlanned(s,d.k)){toast('이 스티커는 이 날에 이미 깔려 있어요 · 새 스티커는 "＋ 새로"');return;}
+  if(d.rep==='work'&&!d.wtypes.length){toast('근무를 하나 이상 골라 주세요');return;}
   const snap=JSON.stringify(S.stamps);   // 한도 때문에 가려지면 "등록 취소"로 돌아가기 위한 사본
   if(!s){
     s=d.kind==='pill'?{id:uid(),kind:'pill',emoji:'💊',name:'약',times:1,color:STK_COL[0],rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]}
@@ -3550,7 +3569,7 @@ function stampRegSave(){
     if(!stampPlanned(s,k))(s.dates=s.dates||[]).push(k);
   }else{
     const old=d.edit?JSON.parse(JSON.stringify(s)):null;
-    Object.assign(s,{rep:d.rep,days:d.days.slice(),workMode:d.workMode,from:d.from||'',to:d.to||'',noHol:d.noHol,noWknd:d.noWknd&&['daily','work','month'].includes(d.rep),noNight:d.noNight});
+    Object.assign(s,{rep:d.rep,days:d.days.slice(),workMode:d.workMode,wtypes:d.rep==='work'?d.wtypes.slice(0,30):[],from:d.from||'',to:d.to||'',noHol:d.noHol,noWknd:d.noWknd&&['daily','work','month'].includes(d.rep),noNight:d.noNight});
     if(old&&d.from===(old.from||d.k))s.from=old.from||'';   // 시작일을 안 건드렸으면 그대로 (고르는 칸에 보이는 기본값 = 그 날)
     if(d.rep==='month')s.mday=parse(d.from||d.k).getDate();
     if(s.to&&s.from&&s.from>s.to)[s.from,s.to]=[s.to,s.from];
@@ -3676,6 +3695,7 @@ function openStampPage(){
       <div class="pg-cap">내 스티커 <small style="font-weight:600;color:var(--muted)">눌러서 바꾸고 · 꾹 눌러 끌어서 순서</small></div>
       <div class="pg-sec sgrid sg5 stgrid" data-grp="slot" style="margin-top:0;padding:10px">${slotDefs().map(btn).join('')}</div>
       ${ex.length?`<div class="pg-cap">＋ 로 붙인 스티커</div><div class="pg-sec sgrid sg5 stgrid" data-grp="extra" style="margin-top:0;padding:10px">${ex.map(btn).join('')}</div>`:''}
+      ${hasBridge('openSettings')?`<div class="pg-sec"><div class="prow" data-act="remind-sound" style="cursor:pointer"><div class="pl2"><span class="e e-in">${lineIcon('🔔')}</span>알림 소리 바꾸기<small>스티커 · 기념일 알림 소리와 크기는 폰 설정에서 정해요</small></div><span style="color:var(--muted)">›</span></div></div>`:''}
     </div>`,'stamps');
 }
 
@@ -6326,12 +6346,7 @@ document.addEventListener('click',e=>{
     case 'wl-nmchip':{const i=$('#wlNm');if(i)i.value=t.dataset.v;break;}
     case 'wl-nmok':{const i=$('#wlNm');S.wlog.name=cutTxt(i?i.value:'',12).trim()||'업무 일지';save();closePop();wlOpen(wlNameK);break;}
     case 'wl-seen':S.wlog.seen=true;save();closePop();wlOpen(wlNoticeK);break;
-    case 'wl-add':if(!wlEd)break;wlCommitInputs();wlEd.add=t.dataset.s;wlEd.edit=null;wlEd.ren=false;renderWl(true);break;
-    case 'wl-addok':wlAddFromInput();break;
-    case 'wl-line':if(!wlEd)break;wlCommitInputs();wlEd.edit={s:t.dataset.s,id:t.dataset.id};wlEd.add=null;wlEd.ren=false;renderWl(true);break;
-    case 'wl-edok':wlCommitInputs();if(wlEd){wlEd.edit=null;renderWl(false);}break;
-    case 'wl-del':{if(!wlEd||!wlEd.edit)break;const e2=wlEd.edit;wlRemove(wlEd.k,e2.s,e2.id);wlEd.edit=null;save();renderWl(false);break;}
-    case 'wl-ren':if(!wlEd)break;wlCommitInputs();wlEd.ren=true;wlEd.add=null;wlEd.edit=null;renderWl(true);break;
+    case 'wl-ren':if(!wlEd)break;wlCommitInputs();wlEd.ren=true;renderWl(true);break;
     case 'wl-renok':wlCommitInputs();if(wlEd){wlEd.ren=false;renderWl(false);}break;
     case 'wl-set':if(wlEd)wlClose();openWlSet();break;
     case 'wl-close':wlClose();break;
@@ -6716,6 +6731,7 @@ document.addEventListener('click',e=>{
     case 'wg-look':S.widget.look=t.dataset.v==='circle'?'circle':'fill';save();openWidgetPage();break;
     case 'addon-go':closePop();tab='set';render();openAddonPage();break;
     case 'stk-board':closeSheet();openStampPage();break;
+    case 'remind-sound':try{window.AndroidBridge.openSettings('remind_sound');}catch(e){}break;   // 폰의 "기념일 · 알림" 알림 종류 화면
     case 'sb-prev':{let y=sbY,m=sbM-1;if(m<0){m=11;y--;}openStickerBoard(y,m);break;}
     case 'sb-next':{let y=sbY,m=sbM+1;if(m>11){m=0;y++;}openStickerBoard(y,m);break;}
     case 'stamp-tap':stampTap(t.dataset.id,t.dataset.k);break;
@@ -6750,6 +6766,7 @@ document.addEventListener('click',e=>{
     case 'sr-rep':srPull();stDraft.rep=t.dataset.v;renderStampReg();break;
     case 'sr-day':{srPull();const w=+t.dataset.v,d=stDraft.days;stDraft.days=d.includes(w)?d.filter(x=>x!==w):[...d,w];renderStampReg();break;}
     case 'sr-work':srPull();stDraft.workMode=t.dataset.v;renderStampReg();break;
+    case 'sr-wt':{srPull();const v=t.dataset.v,w=stDraft.wtypes;const i=w.indexOf(v);if(i>=0)w.splice(i,1);else w.push(v);renderStampReg();break;}
     case 'sr-col':srPull();stDraft.color=t.dataset.v;renderStampReg();break;
     case 'sr-times':srPull();stDraft.times=+t.dataset.v;if(stDraft.alarm)stFill(stDraft);renderStampReg();break;
     case 'sr-setend':srPull();stDraft.to=fmt(addDays(parse(stDraft.from||stDraft.k),29));renderStampReg();toast('끝 날짜를 눌러 바꿀 수 있어요');break;
@@ -6987,6 +7004,8 @@ document.addEventListener('input',e=>{
   else if(t.id==='aVol'&&draft){draft.vol=Number(t.value);const s=t.parentElement.querySelector('small');if(s)s.textContent=`알람 볼륨 기준 ${draft.vol}%`;}
   else if(t.id==='chName'){chDraft.name=t.value;}
   else if(t.id==='crpZoom'&&crp){crp.z=+t.value;cropDraw();}
+  else if(t.classList&&t.classList.contains('wlta')&&wlEd){wlGrow(t);const n=wlLines(t.value).length,c=$('#wlN_'+t.dataset.s);if(c)c.textContent=n?n+'줄':'';
+    clearTimeout(wlSaveT);const k=wlEd.k;wlSaveT=setTimeout(()=>{if(!wlEd||wlEd.k!==k)return;document.querySelectorAll('.wlta').forEach(x=>wlSetText(k,x.dataset.s,x.value));save();},350);}   // (칸 여러 개를 빨리 고쳐도 모두 저장)
   else if(t.id==='srchQ'){srch.q=t.value;clearTimeout(srchT);srchT=setTimeout(()=>{const r=$('#srchRes');if(r)r.innerHTML=srchResHtml();},150);}
   else if(t.id==='wlsName'||(t.id&&t.id.startsWith('wlsS_'))){if(t.id==='wlsName')S.wlog.name=cutTxt(t.value,12).trim();else{const sc=S.wlog.secs.find(x=>x.id===t.id.slice(5));if(sc)sc.n=cutTxt(t.value,8).trim()||sc.n;}clearTimeout(wlsT);wlsT=setTimeout(()=>save(),400);}
 });
@@ -6996,8 +7015,7 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='memoInput'){e.preventDefault();memoSubmit();}
   else if(e.target.id==='vcmemo'){e.preventDefault();const b=document.querySelector('[data-act="vc-memo-send"]');if(b)b.click();}
   else if(e.target.id==='piLine'){e.preventDefault();piAddLine();}
-  else if(e.target.id==='wlIn'){e.preventDefault();wlAddFromInput();}
-  else if(e.target.id==='wlEdIn'||e.target.id==='wlRen'){e.preventDefault();wlCommitInputs();if(wlEd){wlEd.edit=null;renderWl(false);}}
+  else if(e.target.id==='wlRen'){e.preventDefault();wlCommitInputs();if(wlEd)renderWl(false);}
   else if(e.target.id==='wlNm'){e.preventDefault();const b=document.querySelector('[data-act="wl-nmok"]');if(b)b.click();}
   else if(e.target.id==='srchQ'){e.preventDefault();e.target.blur();}
 });
@@ -7886,7 +7904,8 @@ const josa=(w,a,b)=>{const c=String(w||'').trim().slice(-1).charCodeAt(0);return
 const wlOn=()=>adOn('wlog');
 const wlName=()=>(S.wlog&&S.wlog.name)||'업무 일지';
 const wlSecs=()=>S.wlog.secs.filter(x=>!x.h);
-function wlCounts(k){const d=S.wlog&&S.wlog.days[k];if(!d)return [];return wlSecs().map(sc=>[sc,(d[sc.id]||[]).length]).filter(x=>x[1]);}
+const wlLines=t=>String(t||'').split('\n').filter(x=>x.trim());
+function wlCounts(k){const d=S.wlog&&S.wlog.days[k];if(!d)return [];return wlSecs().map(sc=>[sc,wlLines(d[sc.id]).length]).filter(x=>x[1]);}
 const wlHas=k=>wlOn()&&wlCounts(k).length>0;
 function wlRowHtml(k){const c=wlCounts(k);return `<button class="wlrow" data-act="wl-open" data-k="${k}"><span class="ic">📋</span><span class="tx"><b>${esc(wlName())}</b><small>${c.map(([sc,n])=>`${esc(sc.n)} ${n}`).join(' · ')}</small></span><span class="go">›</span></button>`;}
 let wlEd=null,wlNameK='',wlNoticeK='',wlsT=0;
@@ -7907,47 +7926,36 @@ function wlOpen(k){
       <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0;line-height:1.7">그래도 백업하시려면 설정에서 켜 주세요.</div></div>
       <div class="mi"><button class="btn grow" data-act="wl-seen">확인</button></div>`);return;
   }
-  wlEd={k,add:null,edit:null,ren:false};renderWl(false);
+  wlEd={k,ren:false};renderWl(false);
 }
 function renderWl(focus){
   const e=wlEd;if(!e)return;
   const k=e.k,d=parse(k),day=S.wlog.days[k]||{},sh=persOn(k)?'':shiftLabel(shiftOf(d));
-  const sec=sc=>{const l=day[sc.id]||[];
-    return `<div class="wls"><h4><span class="wk-${sc.id}">${esc(sc.n)}</span>${l.length?`<small>${l.length}</small>`:''}</h4>
-      ${l.map(x=>e.edit&&e.edit.s===sc.id&&e.edit.id===x.id
-        ?`<div class="wlin"><input type="text" id="wlEdIn" maxlength="300" value="${esc(x.t)}" enterkeyhint="done"><button data-act="wl-edok">저장</button><button class="del" data-act="wl-del" aria-label="지우기">🗑</button></div>`
-        :`<button class="wln" data-act="wl-line" data-s="${sc.id}" data-id="${x.id}">${esc(x.t)}</button>`).join('')}
-      ${e.add===sc.id?`<div class="wlin"><input type="text" id="wlIn" maxlength="300" placeholder="${esc(sc.n)} 한 줄 (엔터로 다음 줄)" enterkeyhint="done"><button data-act="wl-addok">추가</button></div>`:`<button class="wladd" data-act="wl-add" data-s="${sc.id}">＋ 쓰기</button>`}
-    </div>`;};
+  const sec=sc=>{const v=day[sc.id]||'',n=wlLines(v).length;
+    return `<div class="wls"><h4><span class="wk-${sc.id}">${esc(sc.n)}</span><small id="wlN_${sc.id}">${n?n+'줄':''}</small></h4>
+      <textarea class="wlta" id="wlT_${sc.id}" data-s="${sc.id}" placeholder="눌러서 쓰기" maxlength="4000" rows="2">${esc(v)}</textarea></div>`;};
   $('#pop').className='open wl-pop';
   $('#pop').innerHTML=`<div class="wlp" role="dialog" aria-label="${esc(wlName())}"><div class="grab"></div>
     <div class="hd">${e.ren?`<input type="text" class="tin" id="wlRen" maxlength="12" value="${esc(wlName())}" enterkeyhint="done"><button class="ib2" data-act="wl-renok" aria-label="이름 저장">✓</button>`:`<button class="ttl" data-act="wl-ren" aria-label="이름 바꾸기">📋 ${esc(wlName())}<i>✎</i></button>`}
       <button class="ib2" data-act="srch-open" data-v="wl" aria-label="일지 찾기">🔍</button><button class="ib2" data-act="wl-set" aria-label="일지 설정">⚙</button><button class="ib2" data-act="wl-close" aria-label="닫기">✕</button></div>
     <div class="sub">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})${sh?` · ${esc(sh)}`:''} · 쓰는 대로 저장돼요</div>
     <div class="bd">${wlSecs().map(sec).join('')}</div></div>`;
-  if(focus){const f=$('#wlIn')||$('#wlEdIn')||$('#wlRen');if(f)setTimeout(()=>{f.focus();if(f.id!=='wlIn')f.setSelectionRange(f.value.length,f.value.length);ensureVisible(f);},60);}
+  document.querySelectorAll('.wlta').forEach(wlGrow);
+  if(focus){const f=$('#wlRen');if(f)setTimeout(()=>{f.focus();f.setSelectionRange(f.value.length,f.value.length);},60);}
 }
-function wlPush(k,sid,v){
-  v=cutMulti(String(v||'').trim(),300);if(!v)return false;
-  const d=(S.wlog.days[k]=S.wlog.days[k]||{}),l=(d[sid]=d[sid]||[]);
-  if(l.length>=40){toast('한 칸에 40줄까지예요');return false;}
-  l.push({id:uid(),t:v});return true;
+function wlGrow(t){t.style.height='auto';t.style.height=Math.max(56,t.scrollHeight+2)+'px';}   // 쓰는 만큼 칸이 늘어남
+let wlSaveT=0;
+function wlSetText(k,sid,v){   // 메모장 한 칸 저장 (비면 지움)
+  v=cutMulti(String(v||''),4000).replace(/\s+$/,'');
+  const d=(S.wlog.days[k]=S.wlog.days[k]||{});
+  if(v.trim())d[sid]=v;else delete d[sid];
+  if(!Object.keys(d).length)delete S.wlog.days[k];
 }
-function wlRemove(k,sid,id){
-  const d=S.wlog.days[k];if(!d||!d[sid])return;
-  d[sid]=d[sid].filter(x=>x.id!==id);if(!d[sid].length)delete d[sid];if(!Object.keys(d).length)delete S.wlog.days[k];
-}
-function wlCommitInputs(){   // 쓰던 칸(새 줄 · 고치는 줄 · 이름)을 저장
+function wlCommitInputs(){   // 쓰던 칸 · 이름 저장
   const e=wlEd;if(!e)return;
-  const a=$('#wlIn');if(a&&e.add&&a.value.trim()){wlPush(e.k,e.add,a.value);a.value='';}
-  const b=$('#wlEdIn');if(b&&e.edit){const d=S.wlog.days[e.k],l=d&&d[e.edit.s],x=l&&l.find(y=>y.id===e.edit.id);const v=cutMulti(b.value.trim(),300);if(x){if(v)x.t=v;else wlRemove(e.k,e.edit.s,e.edit.id);}}
+  document.querySelectorAll('.wlta').forEach(t=>wlSetText(e.k,t.dataset.s,t.value));
   const r=$('#wlRen');if(r&&e.ren){const v=cutTxt(r.value,12).trim();if(v)S.wlog.name=v;e.ren=false;}
-  save();
-}
-function wlAddFromInput(){
-  const a=$('#wlIn');if(!a||!wlEd||!wlEd.add)return;
-  if(!a.value.trim()){a.focus();return;}
-  wlPush(wlEd.k,wlEd.add,a.value);save();renderWl(true);   // 엔터 → 다음 줄을 바로 이어 씀
+  clearTimeout(wlSaveT);save();
 }
 function wlClose(){
   wlCommitInputs();wlEd=null;closePop();
@@ -7977,7 +7985,7 @@ function srchRun(q,kind){
   q=String(q||'').trim().toLowerCase();if(!q)return [];
   const out=[],hit=t=>String(t||'').toLowerCase().includes(q);
   if(kind==='wl'){
-    Object.keys(S.wlog.days).forEach(k=>{const d=S.wlog.days[k];wlSecs().forEach(sc=>(d[sc.id]||[]).forEach(x=>{if(hit(x.t))out.push({k,kind:'wl',tag:sc.n,sid:sc.id,t:x.t});}));});
+    Object.keys(S.wlog.days).forEach(k=>{const d=S.wlog.days[k];wlSecs().forEach(sc=>wlLines(d[sc.id]).forEach(t=>{if(hit(t))out.push({k,kind:'wl',tag:sc.n,sid:sc.id,t});}));});
   }else{
     const ks=new Set(Object.keys(S.memos||{}));Object.values((S.fam2&&S.fam2.memos)||{}).forEach(v=>{if(v&&okDate(v.date))ks.add(v.date);});
     ks.forEach(k=>{if(!okDate(k))return;visibleMemos(k).forEach(m=>{if(hit(m.text))out.push({k,kind:'memo',tag:m.shared?'♥ 가족':'🔒 나만',t:m.text});});});

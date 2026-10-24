@@ -265,6 +265,18 @@ class AlarmBridge(private val activity: MainActivity) {
                 if (Build.VERSION.SDK_INT >= 34) Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, pkg) else null
             // 배터리 최적화 목록 화면 (알람 시계 방식 알람에는 이 권한이 필요 없어서, 허용 창을 바로 띄우는 대신 목록 화면을 열어 줌)
             "batt" -> Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+            // 스티커 · 기념일 알림 소리: 그 알림 종류(채널) 화면을 바로 (갤럭시는 카테고리 목록을 숨겨 둬도 이렇게 열면 보임). 채널이 아직 없으면 먼저 만듦
+            "remind_sound" -> {
+                try {
+                    val nm = context.getSystemService(NotificationManager::class.java)
+                    if (nm.getNotificationChannel(Reminders.CHANNEL_ID) == null)
+                        nm.createNotificationChannel(android.app.NotificationChannel(Reminders.CHANNEL_ID, "기념일 · 알림", NotificationManager.IMPORTANCE_DEFAULT))
+                } catch (e: Exception) {
+                }
+                Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                    .putExtra(Settings.EXTRA_CHANNEL_ID, Reminders.CHANNEL_ID)
+            }
             else -> null
         }
         if (intent != null) {
@@ -272,6 +284,10 @@ class AlarmBridge(private val activity: MainActivity) {
             try {
                 context.startActivity(intent)
             } catch (e: Exception) {
+                if (kind == "remind_sound") try {   // 채널 화면이 없는 기기: 앱 알림 화면으로
+                    context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                } catch (e2: Exception) {
+                }
                 // 열 수 있는 화면이 없는 기기면 무시
             }
         }

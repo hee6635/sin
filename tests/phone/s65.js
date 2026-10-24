@@ -43,15 +43,14 @@ const ONLY=process.env.ONLY||'';
     const nt=await p.evaluate(()=>document.querySelector('#pop').textContent.replace(/\s+/g,' '));
     T('처음 한 번 안내: "인수인계는 백업되지 않아요 · 회사 보안 · 설정에서 켜 주세요"',/인수인계는 백업되지 않아요/.test(nt)&&/회사 보안을 위해 폰에만 저장돼요/.test(nt)&&/그래도 백업하시려면 설정에서 켜 주세요/.test(nt),nt);
     await click(p,'[data-act="wl-seen"]');await p.waitForTimeout(300);
-    T('일지 팝업: 제목 "📋 인수인계 ✎" · 칸 4개 · "쓰는 대로 저장돼요"',await p.evaluate(()=>/인수인계/.test(document.querySelector('.wlp .ttl').textContent)&&document.querySelectorAll('.wls').length===4&&/쓰는 대로 저장돼요/.test(document.querySelector('.wlp .sub').textContent)));
-    await click(p,'[data-act="wl-add"][data-s="b"]');await p.waitForTimeout(200);
-    await p.keyboard.type('원료 재고 확인');await p.keyboard.press('Enter');await p.waitForTimeout(150);
-    await p.keyboard.type('순찰 2회');await p.keyboard.press('Enter');await p.waitForTimeout(150);
-    await click(p,'[data-act="wl-add"][data-s="d"]');await p.waitForTimeout(200);
-    await p.keyboard.type('냉각수 압력 낮음');await p.waitForTimeout(100);
+    T('일지 팝업: 제목 "📋 인수인계 ✎" · 칸 4개(메모장) · "쓰는 대로 저장돼요"',await p.evaluate(()=>/인수인계/.test(document.querySelector('.wlp .ttl').textContent)&&document.querySelectorAll('.wls .wlta').length===4&&/쓰는 대로 저장돼요/.test(document.querySelector('.wlp .sub').textContent)));
+    await click(p,'#wlT_b');await p.focus('#wlT_b');
+    await p.keyboard.type('원료 재고 확인');await p.keyboard.press('Enter');await p.keyboard.type('순찰 2회');await p.waitForTimeout(100);
+    await p.focus('#wlT_d');await p.keyboard.type('냉각수 압력 낮음');await p.waitForTimeout(100);
+    T('메모장: 엔터로 줄 바꿈 · 쓰는 만큼 칸이 늘어남 · 줄 수 표시',await p.evaluate(()=>{const t=document.querySelector('#wlT_b');return t.value==='원료 재고 확인\n순찰 2회'&&t.offsetHeight>=56&&document.querySelector('#wlN_b').textContent==='2줄';}));
     await click(p,'[data-act="wl-close"]');await p.waitForTimeout(500);
     let s=await ls(p);
-    T('엔터로 줄 이어 쓰기 · 닫으면 쓰던 줄도 저장(인계 2 · 특이 1)',s.wlog.name==='인수인계'&&s.wlog.days['2026-10-12'].b.length===2&&s.wlog.days['2026-10-12'].d.length===1&&s.wlog.seen===true,JSON.stringify(s.wlog.days));
+    T('닫으면 메모장 글 저장(인계 2줄 · 특이 1줄)',s.wlog.name==='인수인계'&&s.wlog.days['2026-10-12'].b==='원료 재고 확인\n순찰 2회'&&s.wlog.days['2026-10-12'].d==='냉각수 압력 낮음'&&s.wlog.seen===true,JSON.stringify(s.wlog.days));
     const row=await p.evaluate(()=>{const r=document.querySelector('.wlrow'),m=document.querySelector('#sheet .mcard');return r&&{t:r.textContent.replace(/\s+/g,' '),h:r.getBoundingClientRect().height,mh:m.getBoundingClientRect().height,first:r.previousElementSibling&&r.previousElementSibling.textContent.trim()==='메모'};});
     T('날짜 창: 메모 맨 위 일지 줄 "인수인계 · 인계 2 · 특이 1" · 메모 줄의 약 1.3배 높이',!!row&&/인수인계/.test(row.t)&&/인계 2 · 특이 1/.test(row.t)&&row.first&&row.h>=row.mh*1.25&&row.h<=row.mh*1.45,JSON.stringify(row));
     await p.evaluate(()=>document.querySelector('#sheet [data-act="close"]').click());await p.waitForTimeout(400);
@@ -73,12 +72,9 @@ const ONLY=process.env.ONLY||'';
     await p.evaluate(()=>document.querySelector('#sheet [data-act="close"]').click());await p.waitForTimeout(300);
     await openDay(p,'2026-10-12');await p.waitForTimeout(500);
     await click(p,'.wlrow');await p.waitForTimeout(300);
-    await p.evaluate(()=>[...document.querySelectorAll('.wln')].find(e=>/순찰/.test(e.textContent)).click());await p.waitForTimeout(200);
-    await p.fill('#wlEdIn','순찰 3회');await p.keyboard.press('Enter');await p.waitForTimeout(200);
-    await p.evaluate(()=>[...document.querySelectorAll('.wln')].find(e=>/냉각수/.test(e.textContent)).click());await p.waitForTimeout(200);
-    await click(p,'[data-act="wl-del"]');await p.waitForTimeout(200);
+    await p.fill('#wlT_b','원료 재고 확인\n순찰 3회');await p.fill('#wlT_d','');await p.waitForTimeout(500);
     s=await ls(p);
-    T('줄 고치기(순찰 3회) · 지우기(특이 칸 비면 없어짐)',s.wlog.days['2026-10-12'].b[1].t==='순찰 3회'&&!s.wlog.days['2026-10-12'].d,JSON.stringify(s.wlog.days['2026-10-12']));
+    T('고치기(순찰 3회) · 칸을 비우면 그 칸은 지워짐(자동 저장)',s.wlog.days['2026-10-12'].b==='원료 재고 확인\n순찰 3회'&&!s.wlog.days['2026-10-12'].d,JSON.stringify(s.wlog.days['2026-10-12']));
     await p.evaluate(()=>{const p=document.getElementById('pop');p.dispatchEvent(new MouseEvent('click',{bubbles:true}));});await p.waitForTimeout(300);
     T('바깥(어두운 곳)을 누르면 닫힘',await p.evaluate(()=>!document.querySelector('#pop').classList.contains('open')));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
@@ -86,7 +82,7 @@ const ONLY=process.env.ONLY||'';
   // ── 3. 설정 · 백업 · 찾기 · 저장 데이터
   if(want('set')){
     const wlog={name:'인수인계',secs:[{id:'a',n:'인수',h:false},{id:'b',n:'인계',h:false},{id:'c',n:'지시',h:false},{id:'d',n:'특이',h:false}],backup:false,seen:true,
-      days:{'2026-10-12':{b:[{id:'x1',t:'순찰 2회 완료'}],d:[{id:'x2',t:'2호기 압력'}]},'2026-08-01':{a:[{id:'x3',t:'인수 순찰 메모'}]},'bad':{a:[{t:'x'}]},'2026-10-13':{z:[{t:'?'}],a:[{id:'y',t:'  '}]}}};
+      days:{'2026-10-12':{b:'순찰 2회 완료\n점검표 제출',d:[{id:'x2',t:'2호기 압력'},{id:'x5',t:'3호기 소음'}]},'2026-08-01':{a:[{id:'x3',t:'인수 순찰 메모'}]},'bad':{a:'x'},'2026-10-13':{z:'?',a:'   '}}};
     const p=await boot(b,{...st0,addons:{...base.addons,wlog:true},wlog},{touch:true});
     // 백업 파일: 기본은 일지 없음
     await p.evaluate(()=>{window.AndroidBridge.shareFile=(n,j)=>{window.__bk=JSON.parse(j);};});
@@ -118,7 +114,7 @@ const ONLY=process.env.ONLY||'';
     s=await ls(p);T('칸을 모두 숨길 수는 없음(하나는 남음)',s.wlog.secs.filter(x=>!x.h).length===1,JSON.stringify(s.wlog.secs));
     await act(p,'backup-export');await p.waitForTimeout(200);
     T('백업에 넣기를 켜면 백업 파일에 일지가 들어감',await p.evaluate(()=>!!window.__bk.wlog&&!!window.__bk.wlog.days['2026-10-12']));
-    T('저장 데이터: 이상한 날짜 · 모르는 칸 · 빈 줄은 버림(normalize)',!s.wlog.days.bad&&!s.wlog.days['2026-10-13'],JSON.stringify(Object.keys(s.wlog.days)));
+    T('저장 데이터: 이상한 날짜 · 모르는 칸 · 빈 글은 버림 · v0.93 줄 목록은 메모장 글로 옮김',!s.wlog.days.bad&&!s.wlog.days['2026-10-13']&&s.wlog.days['2026-10-12'].d==='2호기 압력\n3호기 소음'&&s.wlog.days['2026-08-01'].a==='인수 순찰 메모',JSON.stringify(s.wlog.days));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   // ── 4. 옛 저장 데이터(wlog 없음)로 켜짐 · 부가 기능 켜기

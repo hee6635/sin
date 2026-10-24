@@ -378,6 +378,7 @@ class WidgetDayActivity : Activity() {
             content.orientation = LinearLayout.VERTICAL
 
             val far = day.optInt("far", 0)   // 0 = 자세히(앞 6일 ~ 뒤 14일) · 1 = 먼 앞날 · 2 = 지난 날
+            if (pj == null) wlRowView(day, pal)?.let { content.addView(it) }   // 업무 일지 줄(표시만 · 내 달력일 때만) → 누르면 앱 일지 팝업
             if (pj != null) {
                 // 가족 달력: 그 사람이 공유한 스티커 · 가족 메모(♥)만 — 보기만 (체크는 못 함)
                 val ps = pj.optJSONObject("k")?.optJSONArray(key)
@@ -538,6 +539,42 @@ class WidgetDayActivity : Activity() {
         if (!readOnly) row.setOnClickListener { toggleSticker(s.optString("id")) }
         val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         lp.bottomMargin = dp(6)
+        row.layoutParams = lp
+        return row
+    }
+
+    /** 업무 일지가 있는 날: "📋 이름 / 인계 2 · 특이 1 ›" 줄 (글 내용은 안 보냄 · 회사 보안) → 누르면 앱이 그 날짜 + 일지 팝업으로 */
+    private fun wlRowView(day: JSONObject, pal: Pal): View? {
+        val w = day.optJSONObject("wlr") ?: return null
+        val name = w.optString("n", "")
+        if (name.isEmpty()) return null
+        val dark = pal.bg != 0xFFFFFFFF.toInt()
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.HORIZONTAL
+        row.gravity = Gravity.CENTER_VERTICAL
+        row.setPadding(dp(12), dp(12), dp(14), dp(12))
+        row.background = rounded(if (dark) 0xFF2C2A48.toInt() else 0xFFEFECFB.toInt(), 16)
+        val ic = tv("📋", 18f, pal.fg, false)
+        val ilp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        ilp.rightMargin = dp(10)
+        row.addView(ic, ilp)
+        val col = LinearLayout(this)
+        col.orientation = LinearLayout.VERTICAL
+        col.addView(tv(name, 16f, if (dark) 0xFFCFC6FA.toInt() else 0xFF4A3F9A.toInt(), true))
+        val c = w.optString("c", "")
+        if (c.isNotEmpty()) col.addView(tv(c, 12.5f, if (dark) 0xFFA99FE0.toInt() else 0xFF7A70B8.toInt(), true))
+        row.addView(col, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        row.addView(tv("›", 20f, if (dark) 0xFFA99FE0.toInt() else 0xFF8A7FD0.toInt(), true))
+        val key = day.optString("k", "")
+        row.setOnClickListener {
+            val go = Intent(this, MainActivity::class.java)
+            go.putExtra("openDate", "$key#wl")
+            go.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            startActivity(go)
+            finish()
+        }
+        val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        lp.bottomMargin = dp(10)
         row.layoutParams = lp
         return row
     }
