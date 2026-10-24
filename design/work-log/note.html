@@ -1,0 +1,52 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>업무 일지 메모장 시안</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans KR","Noto Sans CJK KR",system-ui,sans-serif;background:#dfe3e8;display:flex;gap:24px;padding:24px;color:#1f2430;align-items:flex-start}
+.cap{font-size:15px;font-weight:800;margin:0 0 10px 4px;color:#3a3f48}
+.ph{width:340px;height:700px;border-radius:28px;background:#fff;overflow:hidden;position:relative;box-shadow:0 12px 30px rgba(0,0,0,.13);display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:6px;padding:16px 14px 2px}
+.top b{flex:1;font-size:18px;font-weight:800}.top b i{font-style:normal;font-size:13px;color:#9aa0aa;margin-left:5px}
+.top span{width:34px;text-align:center;color:#8a909a;font-size:16px}
+.sub{padding:0 16px 8px;font-size:12px;color:#8a909a}
+.tabs{display:flex;gap:6px;padding:4px 14px 10px}
+.tabs span{font-size:13px;font-weight:800;padding:6px 12px;border-radius:14px;background:#f2f3f5;color:#6a707a}
+.tabs span em{font-style:normal;font-size:11px;margin-left:3px;opacity:.75}
+.tabs .on.a{background:#d6e6f8;color:#2f5f8f}.tabs .on.b{background:#d7eedd;color:#2f6b43}
+.paper{flex:1;margin:0 14px 14px;border-radius:16px;background:#fffdf6;box-shadow:inset 0 0 0 1px #efe8d4;position:relative;overflow:hidden;
+  background-image:repeating-linear-gradient(#fffdf6 0 29px,#ece3c9 29px 30px);background-position:0 14px;padding:14px 16px 0 16px}
+.paper p{font-size:15px;line-height:30px;color:#2a2f3a;white-space:pre-wrap}
+.paper .cur{display:inline-block;width:1.5px;height:18px;background:#6f64c0;vertical-align:-3px}
+.paper .ph2{color:#b7b2a2}
+.kb{height:210px;background:#d4d7dd;flex:none;display:flex;align-items:center;justify-content:center;color:#8a8f99;font-size:13px}
+.sec{margin:0 14px 10px;border-radius:16px;background:#f7f8fa;padding:10px 12px}
+.sec h4{font-size:12px;font-weight:800;display:inline-block;padding:3px 9px;border-radius:9px;margin-bottom:4px}
+.k1{background:#d6e6f8;color:#2f5f8f}.k2{background:#d7eedd;color:#2f6b43}.k3{background:#f8dde2;color:#9a3a4c}.k4{background:#fbefc6;color:#86630e}
+.sec .pp{border-radius:10px;background:#fffdf6;box-shadow:inset 0 0 0 1px #efe8d4;background-image:repeating-linear-gradient(#fffdf6 0 25px,#ece3c9 25px 26px);background-position:0 8px;padding:8px 10px 6px;font-size:14px;line-height:26px;white-space:pre-wrap;min-height:52px;color:#2a2f3a}
+.sec .pp.e{color:#b7b2a2}
+.note{font-size:12.5px;color:#4a505a;margin:8px 4px 0;max-width:340px;line-height:1.55}
+</style></head><body>
+
+<div><div class="cap">A. 칸마다 메모장 (한 화면에 네 칸)</div><div class="ph">
+  <div class="top"><b>📋 인수인계<i>✎</i></b><span>🔍</span><span>⚙</span><span>✕</span></div>
+  <div class="sub">10월 23일 (금) · 야간 · 쓰는 대로 저장돼요</div>
+  <div style="overflow:hidden">
+  <div class="sec"><h4 class="k1">인수</h4><div class="pp">주간조 3번 라인 점검 끝남
+필터 교체 완료</div></div>
+  <div class="sec"><h4 class="k2">인계</h4><div class="pp">원료 B 재고 40% → 아침에 발주 확인
+야간 순찰 2회 완료, 이상 없음
+3호기 소음 조금 있음<span class="cur"></span></div></div>
+  <div class="sec"><h4 class="k3">지시</h4><div class="pp e">눌러서 쓰기</div></div>
+  <div class="sec"><h4 class="k4">특이</h4><div class="pp">2호기 냉각수 압력 낮음</div></div>
+  </div>
+</div><p class="note">칸마다 줄 노트. 아무 데나 눌러 바로 쓰고, 엔터로 줄 바꿈 · 쓰는 만큼 칸이 늘어나요. 한눈에 네 칸이 다 보임.</p></div>
+
+<div><div class="cap">B. 탭 + 큰 메모장 (한 칸씩 크게)</div><div class="ph">
+  <div class="top"><b>📋 인수인계<i>✎</i></b><span>🔍</span><span>⚙</span><span>✕</span></div>
+  <div class="sub">10월 23일 (금) · 야간 · 쓰는 대로 저장돼요</div>
+  <div class="tabs"><span>인수<em>2</em></span><span class="on b">인계<em>3</em></span><span>지시</span><span>특이<em>1</em></span></div>
+  <div class="paper"><p>원료 B 재고 40% → 아침에 발주 확인
+야간 순찰 2회 완료, 이상 없음
+3호기 소음 조금 있음<span class="cur"></span></p></div>
+  <div class="kb">키보드</div>
+</div><p class="note">진짜 메모장처럼 한 칸을 화면 가득. 위 탭으로 칸을 바꿈(숫자 = 줄 수). 길게 쓰기 좋지만 네 칸을 한눈에는 못 봄.</p></div>
+</body></html>
