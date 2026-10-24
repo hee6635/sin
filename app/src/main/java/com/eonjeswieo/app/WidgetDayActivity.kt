@@ -269,12 +269,20 @@ class WidgetDayActivity : Activity() {
         val card = LinearLayout(this)
         card.orientation = LinearLayout.VERTICAL
         card.background = rounded(pal.bg, 22)
-        card.setPadding(dp(18), dp(16), dp(18), dp(12))
+        card.setPadding(0, 0, 0, dp(12))
         card.isClickable = true
+        card.clipToOutline = true
+        val dark = pal.bg != 0xFFFFFFFF.toInt()
 
         if (day == null) {
-            card.addView(tv("앱을 열어 주세요", 16f, pal.sub))
+            val t = tv("앱을 열어 주세요", 16f, pal.sub)
+            t.setPadding(dp(18), dp(16), dp(18), 0)
+            card.addView(t)
         } else {
+            // 위쪽(날짜 · 근무 · 명절)은 그날 근무의 파스텔 색 바탕 — 앱 알람 카드와 같은 느낌 (휴무 · 색 없는 날은 흰 바탕)
+            val topBox = LinearLayout(this)
+            topBox.orientation = LinearLayout.VERTICAL
+            topBox.setPadding(dp(18), dp(14), dp(18), dp(12))
             val dow = arrayOf("일", "월", "화", "수", "목", "금", "토")
             val w = day.optInt("w", 0).coerceIn(0, 6)
             val hol = day.optString("hol", "")
@@ -288,6 +296,21 @@ class WidgetDayActivity : Activity() {
             val title = tv(day.optInt("m").toString() + "월 " + day.optInt("d") + "일 (" + dow[w] + ")", if (resources.configuration.screenWidthDp < 360) 17f else 20f, dateColor, true)
             title.maxLines = 1
             head.addView(title)
+            // 오늘 · 어제 · 내일 알약
+            val rel = try {
+                val f = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.KOREA)
+                val t0 = f.parse(f.format(java.util.Date()))!!.time
+                val d0 = f.parse(key)!!.time
+                when (Math.round((d0 - t0) / 86_400_000.0)) { 0L -> "오늘"; -1L -> "어제"; 1L -> "내일"; else -> "" }
+            } catch (e: Exception) { "" }
+            if (rel.isNotEmpty()) {
+                val chipT = tv(rel, 12.5f, if (rel == "오늘") Color.WHITE else pal.fg, true)
+                chipT.setPadding(dp(9), dp(2), dp(9), dp(3))
+                chipT.background = rounded(if (rel == "오늘") pal.accent else (if (dark) 0x33FFFFFF else 0xB3FFFFFF.toInt()), 12)
+                val cl = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                cl.leftMargin = dp(6)
+                head.addView(chipT, cl)
+            }
             head.addView(arrow("›", "다음 날", at >= 0 && at < keys.size - 1, pal, 1))
             head.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
             var wk = day.optString("t", "")
@@ -313,18 +336,43 @@ class WidgetDayActivity : Activity() {
                 if (wbg.isNotEmpty()) badge.background = rounded(parse(wbg, pal.chip), 40)
                 head.addView(badge, LinearLayout.LayoutParams(dp(40), dp(40)))
             }
-            card.addView(head)
-            if (pj != null) card.addView(tv("● " + pj.optString("n", "가족") + " 달력 · 보기만 해요", 13f, parse(pj.optString("c", ""), pal.sub), true))
-            if (hol.isNotEmpty()) card.addView(tv(hol, 13f, 0xFFD6334A.toInt()))
+            topBox.addView(head)
+            // 근무 시간을 정해 뒀으면 "주간 06:00~18:00"
+            val wt = if (pj != null) "" else day.optString("wt", "")
+            if (wt.isNotEmpty()) {
+                val wl = tv(day.optString("wn", wk) + "  " + wt, 14f, pal.fg, true)
+                wl.alpha = 0.8f
+                wl.setPadding(dp(4), dp(2), 0, 0)
+                topBox.addView(wl)
+            }
+            if (pj != null) topBox.addView(tv("● " + pj.optString("n", "가족") + " 달력 · 보기만 해요", 13f, parse(pj.optString("c", ""), pal.sub), true))
+            if (hol.isNotEmpty()) {   // 명절: 달력처럼 연분홍 띠 + 장미빛 굵은 이름
+                val hb = tv(hol, 15f, if (dark) 0xFFE49AAA.toInt() else 0xFFC8627A.toInt(), true)
+                hb.setPadding(dp(10), dp(4), dp(10), dp(5))
+                hb.background = rounded(if (dark) 0xFF3A2429.toInt() else 0xFFFCEBEE.toInt(), 10)
+                val hl = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                hl.topMargin = dp(6)
+                topBox.addView(hb, hl)
+            }
             val chn = if (pj != null) "" else day.optString("ch", "")
-            if (chn.isNotEmpty()) card.addView(tv("회사 휴무 · " + chn, 13f, pal.link))
+            if (chn.isNotEmpty()) topBox.addView(tv("회사 휴무 · " + chn, 13f, pal.link))
             val an = if (pj != null) null else day.optJSONArray("an")
             if (an != null) {
                 for (i in 0 until an.length()) {
                     val t = an.optString(i, "")
-                    if (t.isNotEmpty()) card.addView(tv(t, 13f, pal.sub))
+                    if (t.isNotEmpty()) topBox.addView(tv(t, 13f, pal.sub))
                 }
             }
+            if (wbg.isNotEmpty()) {   // 근무 색 바탕(연하게) · 위 모서리만 둥글게
+                val bgc = parse(wbg, pal.chip)
+                val mixT = if (dark) 0.30f else 0.32f
+                val tint = Color.rgb(Math.round(Color.red(bgc) * mixT + Color.red(pal.bg) * (1 - mixT)), Math.round(Color.green(bgc) * mixT + Color.green(pal.bg) * (1 - mixT)), Math.round(Color.blue(bgc) * mixT + Color.blue(pal.bg) * (1 - mixT)))
+                val g = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(tint, pal.bg))
+                val r = dp(22).toFloat()
+                g.cornerRadii = floatArrayOf(r, r, r, r, 0f, 0f, 0f, 0f)
+                topBox.background = g
+            }
+            card.addView(topBox)
 
             val content = LinearLayout(this)
             content.orientation = LinearLayout.VERTICAL
@@ -348,9 +396,7 @@ class WidgetDayActivity : Activity() {
                         if (t.isNotEmpty()) content.addView(memoRow(JSONObject().put("r", "t").put("t", t).put("f", 1).put("o", 1), pal))
                     }
                 }
-                if ((ps == null || ps.length() == 0) && (fm == null || fm.length() == 0)) {
-                    content.addView(tv("이 날은 보여 줄 스티커도 가족 메모도 없어요", 14f, pal.sub))
-                }
+
             } else if (far != 0) {
                 // 먼 날: 달력 칸에 싣는 것만 (스티커 두 개 · 메모 세 줄) — 보기만, 더 자세한 건 앱에서
                 val stk = day.optJSONArray("stk")
@@ -369,7 +415,7 @@ class WidgetDayActivity : Activity() {
                         if (t.isNotEmpty()) content.addView(memoRow(JSONObject().put("r", "t").put("t", t), pal))
                     }
                 }
-                content.addView(tv((if (far == 2) "지난 날이라 " else "2주보다 먼 날이라 ") + "스티커 · 메모는 앱에서 자세히 볼 수 있어요", 14f, pal.sub))
+
             } else {
                 // 스티커
                 val sa = day.optJSONArray("sa")
@@ -389,9 +435,7 @@ class WidgetDayActivity : Activity() {
                         content.addView(memoRow(m, pal))
                     }
                 }
-                if ((sa == null || sa.length() == 0) && (mi == null || mi.length() == 0)) {
-                    content.addView(tv("이 날은 스티커도 메모도 없어요", 14f, pal.sub))
-                }
+
             }
             val maxH = (resources.displayMetrics.heightPixels * 0.6f).toInt()
             val scroll = object : ScrollView(this) {
@@ -399,19 +443,22 @@ class WidgetDayActivity : Activity() {
                     super.onMeasure(widthSpec, View.MeasureSpec.makeMeasureSpec(maxH, View.MeasureSpec.AT_MOST))
                 }
             }
+            content.setPadding(dp(18), 0, dp(18), 0)
             scroll.addView(content)
-            card.addView(scroll, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+            if (content.childCount > 0) card.addView(scroll, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         }
 
         // 아래 버튼: 앱에서 열기 / 닫기
         val bar = LinearLayout(this)
         bar.orientation = LinearLayout.HORIZONTAL
-        bar.gravity = Gravity.END
+        bar.gravity = Gravity.END or Gravity.CENTER_VERTICAL
+        bar.setPadding(dp(18), dp(8), dp(18), 0)
         val close = tv("닫기", 15f, pal.sub, true)
         close.setPadding(dp(14), dp(12), dp(14), dp(8))
         close.setOnClickListener { finish() }
-        val open = tv("앱에서 열기", 15f, pal.accent, true)
-        open.setPadding(dp(14), dp(12), dp(6), dp(8))
+        val open = tv("앱에서 열기", 15f, if (pal.bg != 0xFFFFFFFF.toInt()) 0xFFD2DAF6.toInt() else 0xFF2E4D8F.toInt(), true)
+        open.setPadding(dp(16), dp(9), dp(16), dp(10))
+        open.background = rounded(if (pal.bg != 0xFFFFFFFF.toInt()) 0xFF3A4262.toInt() else 0xFFDDE7F8.toInt(), 20)   // 둥근 파스텔 버튼
         open.setOnClickListener {
             val go = Intent(this, MainActivity::class.java)
             go.putExtra("openDate", key)

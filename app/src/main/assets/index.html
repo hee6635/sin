@@ -220,7 +220,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .cell{position:relative;display:flex;flex-direction:column;align-items:center;border-bottom:1.5px solid var(--line);border-right:1px solid var(--line);cursor:pointer;min-height:0;overflow:hidden;container-type:size;--b:calc(max(30px,min(76cqw,44px,calc(100cqh - 68px)))*.68);}
 .cell:nth-child(7n){border-right:0}
 .cell.out{background:var(--out-bg)}
-.cell.out>*{opacity:.4}
+.cell.out>*{opacity:.25}   /* 앞뒤 달: 위젯과 같은 25% */
 .dn{width:100%;height:max(20px,calc(var(--stz0,var(--stz)) + 6px));flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 5px;font-size:13px;line-height:20px;position:relative;z-index:2;}
 .dn.sun .num{color:var(--sun)}.dn.sat .num{color:var(--sat)}
 .dn.hol{background:linear-gradient(var(--hol-bg),var(--hol-bg)) center/100% calc(100% - 5px) no-repeat}
@@ -1309,7 +1309,7 @@ html[data-cal="fill"] .cell.today .dn{padding-left:5px;padding-top:0}   /* 오�
 html[data-cal="fill"]{--cbm:26%}html[data-cal="fill"][data-theme="dark"]{--cbm:44%}
 @media (prefers-color-scheme:dark){html[data-cal="fill"]:not([data-theme="light"]){--cbm:44%}}
 html[data-cal="fill"] .cell[style*="--cb"]{background:color-mix(in srgb,var(--cb) var(--cbm),var(--bg))}
-html[data-cal="fill"] .cell.out{background:color-mix(in srgb,var(--cb,transparent) 12%,var(--bg))}
+html[data-cal="fill"] .cell.out{background:color-mix(in srgb,#8a919a 4%,var(--bg))}html[data-cal="fill"] .cell.out[style*="--cb"]{background:color-mix(in srgb,var(--cb) 12%,color-mix(in srgb,#8a919a 4%,var(--bg)))}   /* 앞뒤 달: 아주 연한 회색 바탕(휴무 칸도) → 31일 휴무 · 1일 휴무가 둘 다 흰색이라 헷갈리던 것 */
 html[data-cal="fill"] .band{display:none}
 html[data-cal="fill"] .bwrap .badge.c{background:transparent;color:color-mix(in srgb,var(--tb) 40%,var(--fg));font-size:calc(var(--b)*.5);font-weight:600}
 html[data-cal="fill"] .cell.rq-ask .badge{box-shadow:inset 0 0 0 2.5px #f08a00}
@@ -1933,7 +1933,7 @@ function widgetJson(){
     });
     const rq0=rqRing((S.requests||[]).filter(r=>r.date===k&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r)).slice(3),   // 요청 링 (한 달 위젯 · 칸 채우기 모양): ask · hold · ok · no — 달력과 같은 기준(답한 요청은 3일 뒤 사라짐)
       nfm=vm.filter(x=>x.shared&&x.text.trim()).length,   // 메모 줄 맨 앞 nfm 개가 가족 메모(♥) — 위젯이 연보라 칸으로 그림
-      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{})};
+      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
     if(i<-6||i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({...base,far:i<-6?2:1,stk:stampsOn(k).slice(0,4).map(x=>{const o=mapStk(x);delete o.id;delete o.b;return o;}),ms:ml.slice(0,3).map(x=>String(x||'').slice(0,40)),
       ...(fm.length?{fm}:{}),...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 먼 날(지난 날 · 2주 뒤부터): 큰 창에는 스티커 · 메모를 안 싣고 앱에서 보게 함
     const sa=stampsOn(k).slice(0,12).map(mapStk);

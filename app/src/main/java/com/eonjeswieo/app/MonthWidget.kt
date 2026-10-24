@@ -931,6 +931,13 @@ object MonthRenderer {
             lp.strokeWidth = Math.max(1f, 0.7f * u)
             cv.drawLine(x0 + 3f * u, y0, x0 + cw - 3f * u, y0, lp)
         }
+        if (fill && !f.inMonth) {   // 앞뒤 달: 아주 연한 회색 바탕(휴무 칸도 · 앱 달력과 같음) — 흐리게 하기 전에 그려서 또렷하게
+            val gap = 1.2f * u
+            val gp = Paint(Paint.ANTI_ALIAS_FLAG)
+            val gc = if (night) 0xFF2A2F36.toInt() else 0xFFF4F5F6.toInt()
+            gp.color = (gc and 0x00FFFFFF) or ((alphaF * 255).toInt() shl 24)
+            cv.drawRoundRect(RectF(x0 + gap, y0 + gap, x0 + cw - gap, y0 + rowH - gap), 7f * u, 7f * u, gp)
+        }
         val layer = if (f.inMonth) -1 else cv.saveLayerAlpha(RectF(x0, y0, x0 + cw, y0 + rowH), 64)   // 이번 달이 아닌 날은 더 흐리게 (25%)
         val d = f.day
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
