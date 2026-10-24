@@ -139,7 +139,7 @@ class AlarmActivity : Activity() {
             d.setStroke(dp(2), accent)
             if (k == 0) d.setColor(if (night) 0x14FFFFFF else 0x40FFFFFF)
             v.background = d
-            v.alpha = when (k) { 0 -> 0.6f; 1 -> 0.3f; else -> 0.14f }
+            v.alpha = when (k) { 0 -> 0.7f; 1 -> 0.42f; else -> 0.24f }
             val l = android.widget.FrameLayout.LayoutParams(boxSize - 2 * inset, boxSize - 2 * inset, Gravity.CENTER)
             box.addView(v, l)
             rings.add(v)
@@ -171,18 +171,18 @@ class AlarmActivity : Activity() {
         root.addView(box, boxLp)
         root.clipChildren = false
         if (animOn) {
-            // 숨 쉬는 원: 약 2초에 한 번 천천히 커졌다 작아짐 (은은하게)
+            // 숨 쉬는 원: 1.2초마다 커졌다 작아짐 (바깥 원일수록 크게 퍼지며 옅어짐 — 울리는 중이라는 게 보이게)
             val va = android.animation.ValueAnimator.ofFloat(0f, 1f)
-            va.duration = 2000L
+            va.duration = 1200L
             va.repeatMode = android.animation.ValueAnimator.REVERSE
             va.repeatCount = android.animation.ValueAnimator.INFINITE
             va.interpolator = android.view.animation.AccelerateDecelerateInterpolator()
             va.addUpdateListener { a ->
                 val f = a.animatedValue as Float
                 for ((k, v) in rings.withIndex()) {
-                    val sc = 1f + f * (0.03f + 0.025f * k)
+                    val sc = 1f + f * (0.06f + 0.06f * k)   // 안쪽 6% · 가운데 12% · 바깥 18%
                     v.scaleX = sc; v.scaleY = sc
-                    v.alpha = (when (k) { 0 -> 0.6f; 1 -> 0.3f; else -> 0.14f }) * (1f - 0.35f * f * (k / 2f))
+                    v.alpha = (when (k) { 0 -> 0.7f; 1 -> 0.42f; else -> 0.24f }) * (1f - 0.55f * f * (k / 2f)) + (if (k == 0) 0.2f * f else 0f)
                 }
             }
             va.start()
