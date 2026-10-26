@@ -99,6 +99,9 @@ private fun effects(data: JSONObject, dir: File) {
         // 오늘 빛: 같은 달 · 오늘 칸
         val base = layer(0, 0, false)
         val box = MonthRenderer.lastToday
+        val baseColor = MonthRenderer.todayColor   // (폰: Layer.color) — 오늘 칸을 그린 그림의 오늘 색
+        layer(1, 1, true)   // 폰처럼 맨 윗줄을 나중에 그림 → todayColor 가 기본색으로 돌아감
+        if (MonthRenderer.todayShift) println("오늘 빛 색: 칸 그림 #" + Integer.toHexString(baseColor and 0xFFFFFF) + " · 맨 윗줄 뒤 todayColor #" + Integer.toHexString(MonthRenderer.todayColor and 0xFFFFFF) + " → 빛은 칸 그림 색으로")
         if (box == null) { fails++; println("  ✗ 오늘 칸 자리를 못 받음") }
         else {
             val ts = floatArrayOf(0.06f, 0.18f, 0.30f, 0.42f, 0.54f, 0.66f, 0.78f, 0.90f)
@@ -106,7 +109,7 @@ private fun effects(data: JSONObject, dir: File) {
                 val f = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
                 val cv = Canvas(f)
                 cv.drawBitmap(base, 0f, 0f, null)
-                MonthRenderer.drawGlow(cv, box, u, t)
+                MonthRenderer.drawGlow(cv, box, u, t, baseColor)
                 save(f, "glow${i + 1}.png")
             }
             println("효과 프레임 저장: 슬라이드 ${es.size}장 · 빛 ${ts.size}장 (top=${"%.0f".format(top)} rr=${"%.0f".format(rr)} 오늘칸=${box})")

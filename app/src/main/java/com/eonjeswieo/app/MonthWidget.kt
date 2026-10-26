@@ -362,7 +362,7 @@ object MonthRenderer {
     }
 
     /** 그림 한 장 + 그때의 자리 정보 (오늘 칸 · 칸들이 시작하는 높이 · 바탕 모서리 · dp 배율) */
-    internal class Layer(val bmp: Bitmap, val today: RectF?, val top: Float, val rr: Float, val u: Float)
+    internal class Layer(val bmp: Bitmap, val today: RectF?, val top: Float, val rr: Float, val u: Float, val color: Int = 0xFF5A7FD6.toInt())   // color: 그 그림을 그릴 때의 오늘 색 (빛도 이 색)
 
     /** part: 0 = 전부 · 1 = 바깥 틀(바탕 · 맨 윗줄 · 요일 줄) · 2 = 날짜 칸들만 / moving: 제목을 강조색으로 */
     internal fun layer(ctx: Context, mgr: AppWidgetManager, id: Int, data: JSONObject?, offset: Int, part: Int, moving: Boolean): Layer {
@@ -385,7 +385,7 @@ object MonthRenderer {
                 val statTxt = " · 가려진 것: 메모 " + statMemoHid + "개 · 스티커 " + statStkHid + "개"
                 WidgetStore.note(ctx, "한 달 위젯 #" + id, "그림 "+ size[0] + "x" + size[1] + "px · 밀도 " + WidgetRenderer.dens + " · 최소폭 " + minW.toInt() + "dp · 최대폭 " + maxW.toInt() + "dp → " + (if (pw < 440f) "커버" else "안쪽") + " 값" + statTxt)
             }
-            Layer(b, lastToday, lastTop, lastRr, WidgetRenderer.dens)
+            Layer(b, lastToday, lastTop, lastRr, WidgetRenderer.dens, todayColor)
         }
     }
 
@@ -513,7 +513,7 @@ object MonthRenderer {
                 out.eraseColor(0)
                 val cv = Canvas(out)
                 cv.scale(gw.toFloat() / base.width, gh.toFloat() / base.height)
-                drawGlow(cv, box, nw.u, t)
+                drawGlow(cv, box, nw.u, t, nw.color)   // (달을 넘기면 맨 윗줄을 마지막에 그려서 todayColor 가 기본색으로 돌아가 있음 → 오늘 칸을 그린 그림의 색으로)
             }
             if (alive()) send(ctx, mgr, id, data, to, base)   // 마무리: 정상 그림 + 누르는 자리
         } else if (!sliding && alive()) send(ctx, mgr, id, data, to, base)
@@ -599,11 +599,11 @@ object MonthRenderer {
      * 오늘 칸 테두리를 따라 지나가는 은은한 빛 (t: 0 → 1). 꼬리를 끄는 빛 한 줄이 윗변 왼쪽에서 시계 방향으로 한 바퀴 돌고 사라지는 동안
      * 테두리 전체가 살짝 빛났다 옅어짐. 너무 강하지 않게 (가장 진할 때도 반쯤 투명)
      */
-    internal fun drawGlow(cv: Canvas, cell: RectF, u: Float, t: Float) {
+    internal fun drawGlow(cv: Canvas, cell: RectF, u: Float, t: Float, color: Int = todayColor) {
         val gap = 1.2f * u
         val r = 7f * u
         val box = RectF(cell.left + gap, cell.top + gap, cell.right - gap, cell.bottom - gap)
-        val rgb = todayColor and 0x00FFFFFF
+        val rgb = color and 0x00FFFFFF
         // 테두리 전체: 빠르게 켜졌다가 서서히 사라짐
         val env = if (t < 0.15f) t / 0.15f else Math.pow((1f - (t - 0.15f) / 0.85f).toDouble(), 1.6).toFloat()
         if (env > 0.01f) {
