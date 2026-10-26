@@ -1,7 +1,7 @@
 'use strict';
 // 언제쉬어 푸시 알림 — 가족 메모 · 근무 요청 · 근무 변경 · 가족 참여가 생기면 가족 폰에 알림
 // 알림 문구에는 메모/메시지 내용을 넣지 않습니다 (이름 · 날짜 · 종류만).
-const { onDocumentCreated, onDocumentUpdated, onDocumentDeleted } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated, onDocumentUpdated, onDocumentDeleted, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const N = require('./lib/notify');
 
@@ -23,19 +23,19 @@ async function members(hid) {
 }
 
 // 기기 등록(devices/{uid}): { token, on, hid, quiet } — on 이 false 이거나 다른 가족방이면 보내지 않음, 자는 시간(quiet)이면 소리 없는 통로(family_quiet)로
-async function tokensFor(uids, hid) {
+async function tokensFor(uids, hid, type) {
   const out = [];
   await Promise.all([...new Set(uids)].map(async u => {
     const s = await db.collection('devices').doc(u).get();
     const v = s.exists ? s.data() : null;
-    if (v && v.token && v.on !== false && v.hid === hid) out.push({ uid: u, token: v.token, quiet: N.inQuiet(v.quiet, Date.now()) });
+    if (v && v.token && v.on !== false && v.hid === hid && !(Array.isArray(v.mute) && v.mute.includes(type))) out.push({ uid: u, token: v.token, quiet: N.inQuiet(v.quiet, Date.now()) });
   }));
   return out;
 }
 
 async function send(msgs, hid) {
   for (const m of msgs) {
-    const toks = await tokensFor(m.to, hid);
+    const toks = await tokensFor(m.to, hid, m.data.type);   // mute: 그 종류 알림을 끈 기기 (예: 포스트잇)
     if (process.env.PUSH_TEST_LOG) {   // 시험용: 보내지 않고 기록
       await db.collection('__pushlog').add({ to: m.to, sentTo: toks.map(t => t.uid), quietTo: toks.filter(t => t.quiet).map(t => t.uid), title: m.title, body: m.body, data: m.data });
       continue;
@@ -86,5 +86,37 @@ exports.onHouseholdDeleted = onDocumentDeleted(opt(H), async ev => {
 });
 exports.onMemberCreated = onDocumentCreated(opt(`${H}/members/{uid}`), async ev => {
   const m = ev.data && ev.data.data(); if (!m) return;
-  await send(N.onMemberJoined(m, ev.params.uid, ev.params.hid, ev.params.hid), ev.params.hid);
+  const { uids } = await members(ev.params.hid);
+  await send(N.onMemberJoined(m, ev.params.uid, uids, ev.params.hid), ev.params.hid);
+});
+// 가족 포스트잇: 새로 붙임 · 줄 추가 · 다 끝남
+exports.onBoardWritten = onDocumentWritten(opt(`${H}/board/{id}`), async ev => {
+  const b = ev.data.before.exists ? ev.data.before.data() : null, a = ev.data.after.exists ? ev.data.after.data() : null;
+  if (!a) return;
+  const { uids, names } = await members(ev.params.hid);
+  await send(N.onBoardWritten(b, a, uids, u => names[u], ev.params.hid, Date.now()), ev.params.hid);
+});
+// 내보내기 제안(다수결)
+exports.onKickCreated = onDocumentCreated(opt(`${H}/kicks/{uid}`), async ev => {
+  const k = ev.data && ev.data.data(); if (!k) return;
+  const { uids, names } = await members(ev.params.hid);
+  await send(N.onKickCreated(k, ev.params.uid, uids, u => names[u], ev.params.hid), ev.params.hid);
+});
+// 가족방에서 사람이 빠지면(나가기 · 내보내기): 남은 메모 · 요청 · 근무표 · 옮긴 옛 메모 · 내보내기 표를 정리 (남이 쓴 메모는 앱이 못 읽어서 서버가 지움)
+// 다른 사람이 내보냈으면 그 사람 폰에 한 번 알림
+exports.onMemberDeleted = onDocumentDeleted(opt(`${H}/members/{uid}`), async ev => {
+  const { hid, uid } = ev.params, hh = db.collection('households').doc(hid);
+  const hs = await hh.get();
+  if (hs.exists) await send(N.onMemberRemoved(uid, hs.data(), hid), hid);
+  if (!hs.exists) return;   // 가족방이 통째로 지워지는 중이면 onHouseholdDeleted 가 정리
+  const again = await hh.collection('members').doc(uid).get();
+  if (again.exists) return;   // 그 사이 다시 들어왔으면 그대로
+  const refs = [];
+  const add = async q => { (await q.get()).forEach(d => refs.push(d.ref)); };
+  await add(hh.collection('memos').where('by', '==', uid));
+  await add(hh.collection('requests').where('from', '==', uid));
+  await add(hh.collection('requests').where('to', '==', uid));
+  refs.push(hh.collection('schedules').doc(uid), hh.collection('kicks').doc(uid));
+  for (const id of [uid, uid + '_2', uid + '_3']) refs.push(hh.collection('archive').doc(id));
+  for (let i = 0; i < refs.length; i += 400) { const b = db.batch(); refs.slice(i, i + 400).forEach(r => b.delete(r)); await b.commit(); }
 });

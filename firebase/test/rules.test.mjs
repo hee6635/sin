@@ -356,25 +356,12 @@ await t('근무 요청 보내기: 횟수 +1 과 같은 묶음일 때만', async 
   await assertFails(setDoc(doc(db('g1'), 'households', H, 'requests', 'r2'), rq()));                 // 횟수 안 올림
   await assertFails(sendReq('g1', 'r3', rq(), 5));                                                    // 횟수 엉뚱하게
 });
-await t('보기만(read) 가족은 서버에서도 메모 · 요청을 못 보냄 (쓰기 권한 가족 · 호스트는 그대로)', async () => {
+await t('v0.96 보기만 권한은 없어짐: perm 이 read 여도 메모 · 요청을 보낼 수 있음', async () => {
   await fresh3();
   await env.withSecurityRulesDisabled(async (c) => setDoc(doc(c.firestore(), 'households', H, 'members', 'g3'), { role: 'guest', name: '할머니', perm: 'read', joinedAt: Timestamp.now(), inviteCode: CODE }));
-  await assertFails(sendReq('g3', 'rx', rq({ from: 'g3', fromName: '할머니' })));
-  await assertFails(sendMemo('g3', 'mx', memo({ by: 'g3', byName: '할머니', to: ['g3', H] })));
-  await assertSucceeds(sendReq('g1', 'ry', rq()));
-  await assertSucceeds(sendMemo('g1', 'my', memo(), 1));
+  await assertSucceeds(sendReq('g3', 'rx', rq({ from: 'g3', fromName: '할머니' })));
+  await assertSucceeds(sendMemo('g3', 'mx', memo({ by: 'g3', byName: '할머니', to: ['g3', H] }), 1));
   await assertSucceeds(sendMemo(H, 'mh', memo({ by: H, byName: '아빠', to: [H, 'g1'] })));
-  await assertSucceeds(sendReq(H, 'rh', rq({ from: H, fromName: '아빠', to: 'g1', toName: '엄마' }), 1));
-});
-await t('호스트가 권한을 보기만으로 바꾸면 그때부터 못 보냄 (이미 보낸 내 메모 지우기는 됨)', async () => {
-  await fresh3();
-  await assertSucceeds(sendMemo('g1', 'm1', memo()));
-  await assertSucceeds(updateDoc(doc(db(H), 'households', H, 'members', 'g1'), { perm: 'read' }));
-  await assertFails(sendMemo('g1', 'm2', memo(), 1));
-  await assertFails(sendReq('g1', 'r2', rq(), 1));
-  await assertSucceeds(deleteDoc(doc(db('g1'), 'households', H, 'memos', 'm1')));
-  await assertSucceeds(updateDoc(doc(db(H), 'households', H, 'members', 'g1'), { perm: 'write' }));
-  await assertSucceeds(sendMemo('g1', 'm3', memo(), 1));
 });
 await t('근무 요청: 남 이름으로 · 나에게 · 가족 아닌 사람에게 · 이상한 값은 막힘', async () => {
   await fresh3();
@@ -710,11 +697,143 @@ await t('줄 60개 · 제목 30자 넘으면 막힘 · 모르는 칸 막힘', as
   await assertFails(setDoc(doc(db(H), 'households', H, 'board', H + '_q2'), pi(H, { title: 'x'.repeat(31) })));
   await assertFails(setDoc(doc(db(H), 'households', H, 'board', H + '_q3'), pi(H, { evil: 1 })));
 });
-await t('보기만 권한(read) 가족은 고치기 막힘 · 읽기는 됨', async () => {
+await t('v0.96 perm 이 read 인 가족도 포스트잇 줄 체크 됨 (보기만 권한 없어짐)', async () => {
   await seedFamily(1); await seedPi();
   await env.withSecurityRulesDisabled(async (c) => setDoc(doc(c.firestore(), 'households', H, 'members', 'g2'), { role: 'guest', name: '딸', perm: 'read', joinedAt: Timestamp.now(), inviteCode: CODE }));
   await assertSucceeds(getDoc(doc(db('g2'), 'households', H, 'board', PID)));
-  await assertFails(updateDoc(doc(db('g2'), 'households', H, 'board', PID), { 'lines.a1.d': true, ua: serverTimestamp(), ub: 'g2' }));
+  await assertSucceeds(updateDoc(doc(db('g2'), 'households', H, 'board', PID), { 'lines.a1.d': true, ua: serverTimestamp(), ub: 'g2' }));
+});
+
+// ───────── v0.96 방장 없음 · 다수결 내보내기 · 옛 메모 옮기기 ─────────
+await G('v0.96 방장 없음');
+const ago = ms => Timestamp.fromMillis(Date.now() - ms);
+const seedM = (uid, o = {}) => env.withSecurityRulesDisabled(async (c) =>
+  setDoc(doc(c.firestore(), 'households', H, 'members', uid), { role: 'guest', name: uid, perm: 'write', joinedAt: Timestamp.now(), inviteCode: CODE, ...o }));
+const fam4 = async (o = {}) => { await env.clearFirestore(); await seedFamily(3); await seedM('g1', o.g1); await seedM('g2', o.g2); await seedM('g3', o.g3); };
+const HH = d => doc(d, 'households', H);
+const MEMx = (d, u) => doc(d, 'households', H, 'members', u);
+const KICK = (d, u) => doc(d, 'households', H, 'kicks', u);
+const removeB = (me, target, extra) => { const d = db(me), b = writeBatch(d);
+  b.delete(MEMx(d, target)); b.update(HH(d), { guestCount: increment(-1), lastOut: target, outBy: me }); if (extra) extra(b, d); return b.commit(); };
+await t('가족 누구나 초대 코드 만들기 (그 방 사람만)', async () => {
+  await fam4();
+  await assertSucceeds(setDoc(doc(db('g1'), 'invites', 'GGGG2222'), inv({ ownerUid: 'g1', hostName: '엄마' })));
+  await assertFails(setDoc(doc(db('zz'), 'invites', 'GGGG3333'), inv({ ownerUid: 'zz' })));
+  await assertFails(setDoc(doc(db('g1'), 'invites', 'GGGG4444'), inv({ ownerUid: H })));
+});
+await t('참여할 때 invitedBy 는 코드 만든 사람만', async () => {
+  await env.clearFirestore(); await seedFamily(0); await seedInvite(CODE, { ownerUid: 'g9' });
+  await assertFails(join(db('n1'), 'n1', { m: { invitedBy: H } }));
+  await assertSucceeds(join(db('n1'), 'n1', { m: { invitedBy: 'g9' } }));
+});
+await t('처음 만든 사람(옛 방장)도 나갈 수 있음 · 남은 사람은 그대로', async () => {
+  await fam4();
+  await assertSucceeds(removeB(H, H));
+  let h; await env.withSecurityRulesDisabled(async (c) => { h = (await getDoc(doc(c.firestore(), 'households', H))).data(); });
+  if (h.guestCount !== 2) throw new Error('guestCount ' + h.guestCount);
+  await assertSucceeds(setDoc(doc(db('g1'), 'invites', 'GGGG5555'), inv({ ownerUid: 'g1' })));   // 남은 사람이 계속 초대
+});
+await t('마지막 한 명이 나가면 가족방도 같이 없앰 · 남은 사람이 있으면 못 없앰', async () => {
+  await env.clearFirestore(); await seedFamily(1); await seedM('g1');
+  { const d = db('g1'), b = writeBatch(d); b.delete(MEMx(d, 'g1')); b.delete(HH(d)); await assertFails(b.commit()); }
+  await assertSucceeds(removeB(H, H));
+  { const d = db('g1'), b = writeBatch(d); b.delete(MEMx(d, 'g1')); b.delete(HH(d)); await assertSucceeds(b.commit()); }
+});
+await t('다른 사람 빼기: 이유 없으면 막힘 · lastOut 이 다르면 막힘', async () => {
+  await fam4();
+  await assertFails(removeB('g1', 'g2'));
+  await assertFails((() => { const d = db('g1'), b = writeBatch(d); b.delete(MEMx(d, 'g2')); b.update(HH(d), { guestCount: increment(-1), lastOut: 'g3', outBy: 'g1' }); return b.commit(); })());
+});
+await t('30일 넘게 안 온 사람은 누구나 뺄 수 있음 (seenAt 없으면 들어온 날 기준)', async () => {
+  await fam4({ g2: { seenAt: ago(31 * day) }, g3: { joinedAt: ago(40 * day) } });
+  await assertSucceeds(removeB('g1', 'g2'));
+  await assertSucceeds(removeB('g1', 'g3'));
+  await fam4({ g2: { seenAt: ago(5 * day), joinedAt: ago(90 * day) } });
+  await assertFails(removeB('g1', 'g2'));
+});
+await t('잘못 초대: 초대한 사람이 24시간 안에만 혼자 되돌림', async () => {
+  await fam4({ g2: { invitedBy: 'g1' }, g3: { invitedBy: 'g1', joinedAt: ago(25 * 3600000) } });
+  await assertFails(removeB('g3', 'g2'));                                                  // (옛 방장 H 는 옛 앱 호환으로 지금도 뺄 수 있음)
+  await assertSucceeds(removeB('g1', 'g2'));
+  await assertFails(removeB('g1', 'g3'));
+});
+await t('seenAt: 내 것만 · 서버 시각으로만', async () => {
+  await fam4();
+  await assertSucceeds(updateDoc(MEMx(db('g1'), 'g1'), { seenAt: serverTimestamp() }));
+  await assertFails(updateDoc(MEMx(db('g1'), 'g2'), { seenAt: serverTimestamp() }));
+  await assertFails(updateDoc(MEMx(db('g1'), 'g1'), { seenAt: ago(1) }));
+});
+await G('v0.96 다수결 내보내기');
+const kick = (o = {}) => ({ by: 'g1', votes: ['g1'], inact: [], at: serverTimestamp(), ...o });
+await t('4명: 내보낼 사람 빼고 3명 중 2명이 찬성해야 뺄 수 있음', async () => {
+  await fam4();
+  await assertSucceeds(setDoc(KICK(db('g1'), 'g3'), kick()));
+  await assertFails(removeB('g1', 'g3', (b, d) => b.delete(KICK(d, 'g3'))));          // 1표
+  await assertFails(updateDoc(KICK(db('g1'), 'g3'), { votes: ['g1', 'g1'] }));          // 두 번 찬성
+  await assertFails(updateDoc(KICK(db('g3'), 'g3'), { votes: ['g1', 'g3'] }));          // 본인은 못 함
+  await assertSucceeds(updateDoc(KICK(db('g2'), 'g3'), { votes: ['g1', 'g2'] }));
+  await assertSucceeds(removeB('g2', 'g3', (b, d) => b.delete(KICK(d, 'g3'))));
+});
+await t('내보낼 사람은 표를 못 봄 · 다른 가족은 봄', async () => {
+  await fam4();
+  await assertSucceeds(setDoc(KICK(db('g1'), 'g3'), kick()));
+  await assertFails(getDoc(KICK(db('g3'), 'g3')));
+  await assertSucceeds(getDoc(KICK(db(H), 'g3')));
+});
+await t('2명: 한 명이 제안하면 바로 뺄 수 있음 (표 만들고 → 빼기)', async () => {
+  await env.clearFirestore(); await seedFamily(1); await seedM('g1');
+  await assertSucceeds(setDoc(KICK(db(H), 'g1'), kick({ by: H, votes: [H] })));
+  await assertSucceeds(removeB(H, 'g1', (b, d) => b.delete(KICK(d, 'g1'))));
+});
+await t('30일 넘게 안 온 사람은 과반 계산에서 빠짐 · 안 온 게 아니면 표에 못 적음', async () => {
+  await fam4({ g2: { seenAt: ago(40 * day) } });
+  await assertFails(setDoc(KICK(db('g1'), 'g3'), kick({ inact: [H] })));
+  await assertSucceeds(setDoc(KICK(db('g1'), 'g3'), kick({ inact: ['g2'] })));
+  await assertFails(removeB('g1', 'g3', (b, d) => b.delete(KICK(d, 'g3'))));            // 남은 2명(아빠 · g1) 중 1표 → 과반 아님
+  await assertSucceeds(updateDoc(KICK(db(H), 'g3'), { votes: ['g1', H] }));
+  await assertSucceeds(removeB(H, 'g3', (b, d) => b.delete(KICK(d, 'g3'))));
+});
+await t('7일 지난 표는 못 씀 · 남의 이름으로 제안 막힘', async () => {
+  await fam4();
+  await env.withSecurityRulesDisabled(async (c) => setDoc(doc(c.firestore(), 'households', H, 'kicks', 'g3'), { by: 'g1', votes: ['g1', 'g2'], inact: [], at: ago(8 * day) }));
+  await assertFails(removeB('g2', 'g3'));
+  await assertFails(updateDoc(KICK(db(H), 'g3'), { votes: ['g1', 'g2', H] }));
+  await assertSucceeds(deleteDoc(KICK(db(H), 'g3')));
+  await assertFails(setDoc(KICK(db('g1'), 'g2'), kick({ by: H, votes: [H] })));
+});
+await G('v0.96 옛 메모 옮기기');
+const mmo = (o = {}) => ({ by: 'g1', byName: '엄마', date: '2026-12-01', text: '옛 메모', to: ['g1', H], createdAt: serverTimestamp(), updatedAt: serverTimestamp(), moved: true, ...o });
+const moveMemo = (uid, id, data, n) => { const d = db(uid), b = writeBatch(d);
+  b.set(doc(d, 'households', H, 'memos', id), data); b.update(MEMx(d, uid), { moved: n }); return b.commit(); };
+await t('들어오고 10분 안: 옛 메모는 무료 횟수 대신 moved +1 로', async () => {
+  await fam4();
+  await assertSucceeds(moveMemo('g1', 'v1', mmo(), 1));
+  await assertSucceeds(moveMemo('g1', 'v2', mmo(), 2));
+  await assertFails(moveMemo('g1', 'v3', mmo(), 4));                                     // 건너뛰기
+  await assertFails(moveMemo('g1', 'v4', mmo({ moved: false }), 3));                     // moved 표시 없이
+  await assertFails(setDoc(doc(db('g1'), 'households', H, 'memos', 'v5'), mmo()));       // 횟수 안 올림
+});
+await t('10분 지나면 moved 로는 못 올림 · 200건까지', async () => {
+  await fam4({ g1: { joinedAt: ago(11 * 60000) }, g2: { moved: 200 } });
+  await assertFails(moveMemo('g1', 'v1', mmo(), 1));
+  await assertFails(moveMemo('g2', 'v2', mmo({ by: 'g2', to: ['g2', H] }), 201));
+});
+const arc = (o = {}) => ({ by: 'g1', byName: '엄마', items: [{ d: '2026-01-02', t: '옛날 메모' }], part: 1, at: serverTimestamp(), ...o });
+await t('옛 메모 묶음(archive): 10분 안 · 내 번호 문서만 · 가족은 읽기만', async () => {
+  await fam4({ g2: { joinedAt: ago(20 * 60000) } });
+  await assertSucceeds(setDoc(doc(db('g1'), 'households', H, 'archive', 'g1'), arc()));
+  await assertSucceeds(setDoc(doc(db('g1'), 'households', H, 'archive', 'g1_2'), arc({ part: 2 })));
+  await assertFails(setDoc(doc(db('g1'), 'households', H, 'archive', 'g2'), arc()));
+  await assertFails(setDoc(doc(db('g1'), 'households', H, 'archive', 'g1_4'), arc({ part: 3 })));
+  await assertFails(setDoc(doc(db('g2'), 'households', H, 'archive', 'g2'), arc({ by: 'g2' })));   // 10분 지남
+  await assertSucceeds(getDocs(collection(db(H), 'households', H, 'archive')));
+  await assertFails(getDocs(collection(db('zz'), 'households', H, 'archive')));
+  await assertFails(updateDoc(doc(db('g2'), 'households', H, 'archive', 'g1'), { byName: 'x' }));
+});
+await t('기기 등록: 알림 종류 끄기(mute) 목록', async () => {
+  const dv = (o = {}) => ({ token: 't'.repeat(30), on: true, hid: H, updatedAt: serverTimestamp(), ...o });
+  await assertSucceeds(setDoc(doc(db('g1'), 'devices', 'g1'), dv({ mute: ['board'] })));
+  await assertFails(setDoc(doc(db('g1'), 'devices', 'g1'), dv({ mute: 'board' })));
 });
 
 await env.cleanup();

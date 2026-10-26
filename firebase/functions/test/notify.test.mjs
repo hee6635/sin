@@ -52,9 +52,42 @@ ok('메모 고침: rev 오를 때만', () => {
   assert.deepEqual(N.onMemoUpdated(memo, { ...memo, text: 'x' }, ['u1', 'u2'], 'h'), []);
   assert.match(N.onMemoUpdated(memo, { ...memo, rev: 1 }, ['u1', 'u2'], 'h')[0].body, /고쳤어요/);
 });
-ok('가족 참여: 방장에게', () => {
-  assert.deepEqual(N.onMemberJoined({ role: 'guest', name: '딸' }, 'u3', 'u1', 'u1')[0].to, ['u1']);
-  assert.deepEqual(N.onMemberJoined({ role: 'host', name: '아빠' }, 'u1', 'u1', 'u1'), []);
+ok('가족 참여: 들어온 사람 빼고 모두에게 (방장 없음)', () => {
+  assert.deepEqual(N.onMemberJoined({ role: 'guest', name: '딸' }, 'u3', ['u1', 'u2', 'u3'], 'h')[0].to, ['u1', 'u2']);
+  assert.deepEqual(N.onMemberJoined({ role: 'host', name: '아빠' }, 'u1', ['u1'], 'h'), []);
+  assert.deepEqual(N.onMemberJoined({ role: 'guest', name: '딸' }, 'u3', ['u3'], 'h'), []);
+});
+ok('옮겨 온 옛 메모(moved): 알림 없음', () => {
+  assert.deepEqual(N.onMemoCreated({ ...memo, moved: true }, ['u1', 'u2'], 'h'), []);
+});
+ok('가족 포스트잇: 새로 붙임 · 줄 추가 · 다 끝남 · 체크만은 조용히', () => {
+  const now = 1e12, nameOf = u => ({ u1: '아빠', u2: '엄마', u3: '딸' })[u];
+  const base = { by: 'u1', byName: '아빠', ub: 'u1', mk: '2026-10', type: 'list', title: '장보기', text: '비밀내용', t: now - 1000, lines: { a: { x: '우유', d: false }, b: { x: '빵', d: false } } };
+  let r = N.onBoardWritten(null, base, ['u1', 'u2', 'u3'], nameOf, 'h', now);
+  assert.deepEqual(r[0].to, ['u2', 'u3']); assert.match(r[0].body, /아빠님이 포스트잇을 붙였어요 · 장보기/);
+  assert.ok(!JSON.stringify(r).includes('비밀내용') && !JSON.stringify(r).includes('우유'));
+  assert.equal(r[0].data.type, 'board'); assert.equal(r[0].data.mk, '2026-10');
+  assert.deepEqual(N.onBoardWritten(null, { ...base, t: now - 7 * 3600000 }, ['u1', 'u2'], nameOf, 'h', now), [], '옛 포스트잇');
+  const add = { ...base, ub: 'u2', lines: { ...base.lines, c: { x: '계란', d: false } } };
+  r = N.onBoardWritten(base, add, ['u1', 'u2', 'u3'], nameOf, 'h', now);
+  assert.deepEqual(r[0].to, ['u1', 'u3']); assert.match(r[0].body, /엄마님이 "장보기"에 1줄을 더했어요/);
+  const chk = { ...base, ub: 'u2', lines: { a: { x: '우유', d: true }, b: { x: '빵', d: false } } };
+  assert.deepEqual(N.onBoardWritten(base, chk, ['u1', 'u2'], nameOf, 'h', now), [], '체크만');
+  const done = { ...chk, ub: 'u3', lines: { a: { x: '우유', d: true }, b: { x: '빵', d: true } } };
+  r = N.onBoardWritten(chk, done, ['u1', 'u2', 'u3'], nameOf, 'h', now);
+  assert.deepEqual(r[0].to, ['u1', 'u2']); assert.equal(r[0].body, '"장보기" 다 끝났어요');
+  assert.deepEqual(N.onBoardWritten(done, { ...done, ub: 'u1' }, ['u1', 'u2'], nameOf, 'h', now), [], '이미 다 끝난 것');
+  assert.deepEqual(N.onBoardWritten(base, { ...base, torn: true, ub: 'u2' }, ['u1', 'u2'], nameOf, 'h', now), [], '떼기');
+  assert.deepEqual(N.onBoardWritten(base, null, ['u1', 'u2'], nameOf, 'h', now), [], '지움');
+});
+ok('내보내기: 제안은 내보낼 사람 빼고 · 내보내진 사람은 남이 내보냈을 때만', () => {
+  const nameOf = u => ({ u1: '아빠', u2: '엄마', u3: '딸' })[u];
+  const r = N.onKickCreated({ by: 'u1', votes: ['u1'] }, 'u3', ['u1', 'u2', 'u3'], nameOf, 'h');
+  assert.deepEqual(r[0].to, ['u2']); assert.match(r[0].body, /아빠님이 딸님 내보내기를 제안했어요/);
+  assert.deepEqual(N.onKickCreated({ by: 'u1' }, 'u2', ['u1', 'u2'], nameOf, 'h'), []);
+  assert.deepEqual(N.onMemberRemoved('u3', { lastOut: 'u3', outBy: 'u1' }, 'h')[0].to, ['u3']);
+  assert.deepEqual(N.onMemberRemoved('u3', { lastOut: 'u3', outBy: 'u3' }, 'h'), [], '스스로 나감');
+  assert.deepEqual(N.onMemberRemoved('u3', { guestCount: 1 }, 'h'), [], '옛 앱');
 });
 ok('자는 시간(quiet): 구간 안이면 true · 밖이면 false · 이상한 값은 false', () => {
   const q = [1000, 2000, 5000, 6000];

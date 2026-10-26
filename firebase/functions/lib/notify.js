@@ -67,6 +67,7 @@ function onRequestUpdated(b, a, hid) {
 // 받는 사람(m.to)이 있으면 그 사람만, 없으면(옛 메모) 가족 모두
 const only = (m, uids) => (Array.isArray(m && m.to) ? uids.filter(u => m.to.includes(u)) : uids);
 function onMemoCreated(m, memberUids, hid) {
+  if (m && m.moved === true) return [];   // 다시 들어온 가족방으로 옮겨 온 옛 메모: 알리지 않음
   const to = only(m, memberUids).filter(u => u !== m.by);
   if (!to.length) return [];
   return [{ to, title: '가족 메모', body: `${nm(m.byName)}님이 ${md(m.date)}에 메모를 남겼어요`, data: { type: 'memo', date: m.date || '', hid } }];
@@ -90,9 +91,46 @@ function onScheduleChanged(uid, before, after, memberUids, nameOf, todayKey, hid
   return [{ to, title: '근무 변경', body: text, data: { type: 'sch', date: ch[0].k, hid, uid } }];
 }
 
-function onMemberJoined(m, uid, hostUid, hid) {
-  if (!m || m.role !== 'guest' || uid === hostUid) return [];
-  return [{ to: [hostUid], title: '가족 참여', body: `${nm(m.name)}님이 가족에 참여했어요`, data: { type: 'join', date: '', hid } }];
+// 가족 참여: 들어온 사람 빼고 가족방 사람 모두에게 (방장이 없어져서 누구나 초대할 수 있음)
+function onMemberJoined(m, uid, memberUids, hid) {
+  if (!m || m.role !== 'guest') return [];
+  const to = (memberUids || []).filter(u => u !== uid);
+  if (!to.length) return [];
+  return [{ to, title: '가족 참여', body: `${nm(m.name)}님이 가족에 참여했어요`, data: { type: 'join', date: '', hid } }];
+}
+
+// ───── 가족 포스트잇: 새로 붙임 · 줄 추가 · 할 일이 다 끝남 → 알림 / 체크만 한 건 알림 없음(앱 안의 작은 점만)
+// 포스트잇 제목만 넣음(예: 장보기) · 내용 · 줄 글은 넣지 않음
+const lineIds = d => Object.keys((d && d.lines) || {});
+const allDone = d => { const l = lineIds(d); return l.length > 0 && l.every(k => d.lines[k] && d.lines[k].d === true); };
+const piTitle = d => String((d && d.title) || (d && d.type === 'list' ? '할 일' : '포스트잇')).trim().slice(0, 12) || '포스트잇';
+function onBoardWritten(b, a, memberUids, nameOf, hid, nowMs) {
+  if (!a || a.torn) return [];
+  const who = a.ub || a.by;
+  const to = (memberUids || []).filter(u => u !== who);
+  if (!to.length) return [];
+  const data = { type: 'board', date: a.date || '', mk: a.mk || '', hid };
+  if (!b) {
+    if (+a.t && nowMs - +a.t > 6 * 3600000) return [];   // 가족방에 들어오면서 올라간 옛 포스트잇: 알리지 않음
+    return [{ to, title: '가족 포스트잇', body: `${nm(a.byName || nameOf(a.by))}님이 포스트잇을 붙였어요 · ${piTitle(a)}`, data }];
+  }
+  if (b.torn) return [];
+  if (a.type === 'list' && allDone(a) && !allDone(b)) return [{ to, title: '가족 포스트잇', body: `"${piTitle(a)}" 다 끝났어요`, data }];
+  const added = lineIds(a).filter(k => !(b.lines || {})[k]).length;
+  if (added > 0) return [{ to, title: '가족 포스트잇', body: `${nm(nameOf(who))}님이 "${piTitle(a)}"에 ${added}줄을 더했어요`, data }];
+  return [];
+}
+
+// ───── 내보내기(다수결): 제안이 생기면 내보낼 사람 · 제안한 사람 빼고 모두에게 / 내보내진 사람은 나간 뒤에만
+function onKickCreated(k, target, memberUids, nameOf, hid) {
+  if (!k) return [];
+  const to = (memberUids || []).filter(u => u !== target && u !== k.by);
+  if (!to.length) return [];
+  return [{ to, title: '가족방', body: `${nm(nameOf(k.by))}님이 ${nm(nameOf(target))}님 내보내기를 제안했어요`, data: { type: 'kick', date: '', hid } }];
+}
+function onMemberRemoved(uid, house, hid) {
+  if (!house || house.lastOut !== uid || !house.outBy || house.outBy === uid) return [];
+  return [{ to: [uid], title: '가족방', body: '가족방에서 내보내졌어요', data: { type: 'out', date: '', hid } }];
 }
 
 // 받는 사람이 지금 "자는 시간"인지: quiet = [시작ms, 끝ms, 시작ms, 끝ms …] (앱이 앞으로 2주치를 올려 둠)
@@ -105,4 +143,4 @@ function inQuiet(quiet, nowMs) {
   return false;
 }
 
-module.exports = { inQuiet, iga, md, shiftOn, schedDiff, onRequestCreated, onRequestUpdated, onMemoCreated, onMemoUpdated, onScheduleChanged, onMemberJoined };
+module.exports = { inQuiet, iga, md, shiftOn, schedDiff, onRequestCreated, onRequestUpdated, onMemoCreated, onMemoUpdated, onScheduleChanged, onMemberJoined, onBoardWritten, onKickCreated, onMemberRemoved };

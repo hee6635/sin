@@ -8,10 +8,31 @@ service cloud.firestore {
       return /databases/$(database)/documents/households/$(hid)/members/$(uid);
     }
     function isMember(hid) { return signedIn() && exists(memberPath(hid, request.auth.uid)); }
-    function isOwner(hid) { return signedIn() && request.auth.uid == hid; }   // 가족방 번호(hid) = 호스트의 uid
+    function isOwner(hid) { return signedIn() && request.auth.uid == hid; }   // 가족방을 처음 만든 사람(옛 앱의 "방장") — 옛 앱이 쓰던 권한만 남겨 둠
     function validName(n) { return n is string && n.size() >= 1 && n.size() <= 12; }
-    // 메모 · 근무 요청을 보낼 수 있는 사람 = 가족방 구성원 중 권한이 '메모 · 요청 보내기'(write)인 사람 ('보기만'(read)은 앱뿐 아니라 서버에서도 막음)
-    function canWrite(hid) { return isMember(hid) && get(memberPath(hid, request.auth.uid)).data.perm == 'write'; }
+    // v0.96 방장 없음: 가족방 사람이면 누구나 메모 · 요청 · 포스트잇 (보기만 권한은 없앰)
+    function canWrite(hid) { return isMember(hid); }
+    function hhPath(hid) { return /databases/$(database)/documents/households/$(hid); }
+    function gcNow(hid) { return get(hhPath(hid)).data.guestCount; }
+    function gcAfter(hid) { return getAfter(hhPath(hid)).data.guestCount; }
+    // 30일 넘게 앱을 안 연 사람 (seenAt 이 없으면 들어온 때 기준)
+    function staleM(m) { return m.get('seenAt', m.joinedAt) < request.time - duration.value(30, 'd'); }
+    function staleU(hid, u) { return exists(memberPath(hid, u)) && staleM(get(memberPath(hid, u)).data); }
+    // 내보내기 표에 적은 "30일 넘게 안 온 사람"(최대 3명)이 맞는지 — 이 사람들은 과반 계산에서 뺌
+    function inactOk(hid, k, target) {
+      return k.inact is list && k.inact.size() <= 3 && !(target in k.inact) && !k.votes.hasAny(k.inact)
+        && k.inact.toSet().size() == k.inact.size()
+        && (k.inact.size() < 1 || staleU(hid, k.inact[0]))
+        && (k.inact.size() < 2 || staleU(hid, k.inact[1]))
+        && (k.inact.size() < 3 || staleU(hid, k.inact[2]));
+    }
+    function kickPath(hid, u) { return /databases/$(database)/documents/households/$(hid)/kicks/$(u); }
+    // 다수결: 내보낼 사람을 뺀 나머지(= guestCount 명) 중 오래 안 온 사람을 빼고, 그 절반이 넘게 찬성 · 7일 안
+    function kickPassed(hid, u) {
+      let k = get(kickPath(hid, u)).data;
+      return request.time < k.at + duration.value(7, 'd') && inactOk(hid, k, u)
+        && k.votes.size() * 2 > gcNow(hid) - k.inact.size();
+    }
 
     // ───────── 연결 시험: 자기 문서(ping/내 uid)만 ─────────
     match /ping/{uid} {
@@ -29,15 +50,16 @@ service cloud.firestore {
       allow read: if isMember(hid);
 
       // 만들기: 호스트 본인만, 같은 묶음(batch)에서 호스트 구성원 문서도 같이 생김
-      allow create: if isOwner(hid)
+      // (v0.96: 내 번호 방이 이미 있으면(내가 나간 방 · 가족이 남아 있음) "내uid_글자" 번호로 새 방)
+      allow create: if signedIn() && (hid == request.auth.uid || hid.matches(request.auth.uid + '_[A-Za-z0-9]{4,12}'))
         && request.resource.data.keys().hasOnly(['ownerUid', 'createdAt', 'guestCount'])
-        && request.resource.data.ownerUid == hid
+        && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.createdAt == request.time
         && request.resource.data.guestCount == 0
-        && existsAfter(memberPath(hid, hid));
+        && existsAfter(memberPath(hid, request.auth.uid));
 
       // hostSeen = 방장 앱이 하루에 한 번 남기는 "나 여기 있어요"(서버 시각, 방장만). 가족 폰이 방장 연결이 오래 끊겼는지 보는 데 씀
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestCount', 'hostSeen'])
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestCount', 'hostSeen', 'lastOut', 'outBy'])
         && request.resource.data.guestCount >= 0 && request.resource.data.guestCount <= 4
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['hostSeen'])
             || (isOwner(hid) && request.resource.data.hostSeen == request.time))
@@ -56,9 +78,17 @@ service cloud.firestore {
               && exists(memberPath(hid, request.auth.uid))
               && !existsAfter(memberPath(hid, request.auth.uid))
               && get(memberPath(hid, request.auth.uid)).data.role == 'guest')
+          // v0.96 한 명이 빠짐(나가기 · 내보내기 · 오래 안 온 사람 정리 · 잘못 초대 되돌리기): 누가(outBy=나) 누구를(lastOut) — 빠지는 조건은 구성원 문서 지우기 규칙이 봄
+          || (isMember(hid)
+              && request.resource.data.guestCount == resource.data.guestCount - 1
+              && request.resource.data.outBy == request.auth.uid
+              && request.resource.data.lastOut is string
+              && exists(memberPath(hid, request.resource.data.lastOut))
+              && !existsAfter(memberPath(hid, request.resource.data.lastOut)))
         );
 
-      allow delete: if isOwner(hid);
+      // 없애기: 옛 앱의 방장 · 마지막 남은 사람이 나갈 때(같은 묶음에서 내 구성원 문서도 지움)
+      allow delete: if isOwner(hid) || (isMember(hid) && resource.data.guestCount == 0);
 
       // ───── 구성원: households/{hid}/members/{uid} ─────
       match /members/{uid} {
@@ -67,17 +97,22 @@ service cloud.firestore {
         allow list: if isMember(hid);
 
         // 호스트 본인 문서: 가족방과 같이 만들 때
-        allow create: if signedIn() && request.auth.uid == uid && uid == hid
+        allow create: if signedIn() && request.auth.uid == uid
           && request.resource.data.keys().hasOnly(['role', 'name', 'perm', 'joinedAt'])
           && request.resource.data.role == 'host'
           && request.resource.data.perm == 'write'
           && validName(request.resource.data.name)
           && request.resource.data.joinedAt == request.time
-          && existsAfter(/databases/$(database)/documents/households/$(hid));
+          && !exists(hhPath(hid))
+          && existsAfter(hhPath(hid))
+          && getAfter(hhPath(hid)).data.ownerUid == uid;
 
         // 가족 참여: 쓸 수 있는 초대 코드가 있고, 같은 묶음에서 코드가 '사용됨'이 되고, 자리가 남아 있을 때
-        allow create: if signedIn() && request.auth.uid == uid && uid != hid
-          && request.resource.data.keys().hasOnly(['role', 'name', 'perm', 'joinedAt', 'inviteCode', 'mode'])
+        // (v0.96: 처음 만든 사람이 나갔다가 다시 들어오는 것도 됨 · invitedBy = 초대 코드를 만든 사람 → 24시간 안에는 그 사람이 혼자 되돌릴 수 있음)
+        allow create: if signedIn() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['role', 'name', 'perm', 'joinedAt', 'inviteCode', 'mode', 'invitedBy'])
+          && (!('invitedBy' in request.resource.data)
+              || request.resource.data.invitedBy == get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.ownerUid)
           && request.resource.data.get('mode', 'own') in ['own', 'view']
           && request.resource.data.role == 'guest'
           && validName(request.resource.data.name)
@@ -105,6 +140,18 @@ service cloud.firestore {
                 && request.resource.data.get('mode', 'own') == resource.data.get('mode', 'own'))
           );
 
+        // v0.96 하루 한 번 "나 여기 있어요"(30일 넘게 안 온 사람 정리 · 다수결 계산용)
+        allow update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenAt'])
+          && request.resource.data.seenAt == request.time;
+
+        // v0.96 다시 들어온 가족방으로 옛 메모 옮기기: 무료 횟수(sent) 대신 moved +1 · 들어오고 10분 안 · 200건까지
+        allow update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['moved'])
+          && request.resource.data.moved == resource.data.get('moved', 0) + 1
+          && request.resource.data.moved <= 200
+          && request.time < resource.data.joinedAt + duration.value(10, 'm');
+
         // 가족 메시지(근무 요청 · 가족 메모)를 보낼 때마다 내 횟수(sent) +1. 처음 10건 무료 (+ bonus: 광고 보상, 아직 아무도 못 씀)
         allow update: if signedIn() && request.auth.uid == uid
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sent'])
@@ -114,10 +161,20 @@ service cloud.firestore {
         // 나가기(가족 본인) · 내보내기(호스트): 같은 묶음에서 가족 수가 하나 줄어야 함.
         // 호스트 문서는 가족방을 없앨 때만 지울 수 있음 (그때는 가족 수를 맞출 필요 없음)
         allow delete: if signedIn() && (
-          (request.auth.uid == uid && resource.data.role == 'guest'
+          // 나가기: 누구나 (v0.96 처음 만든 사람도) — 남는 사람이 있으면 가족 수 -1
+          (request.auth.uid == uid
             && existsAfter(/databases/$(database)/documents/households/$(hid))
             && getAfter(/databases/$(database)/documents/households/$(hid)).data.guestCount
                == get(/databases/$(database)/documents/households/$(hid)).data.guestCount - 1)
+          // 마지막 한 명이 나가기: 같은 묶음에서 가족방도 없앰
+          || (request.auth.uid == uid && !existsAfter(hhPath(hid)) && gcNow(hid) == 0)
+          // v0.96 다른 사람 빼기(가족 수 -1 · lastOut 에 그 사람): 30일 넘게 안 옴 · 내가 초대하고 24시간 안 · 다수결 통과
+          || (isMember(hid) && request.auth.uid != uid
+            && existsAfter(hhPath(hid)) && gcAfter(hid) == gcNow(hid) - 1
+            && getAfter(hhPath(hid)).data.get('lastOut', '') == uid
+            && (staleM(resource.data)
+                || (resource.data.get('invitedBy', '') == request.auth.uid && request.time < resource.data.joinedAt + duration.value(24, 'h'))
+                || (exists(kickPath(hid, uid)) && kickPassed(hid, uid))))
           || (isOwner(hid) && resource.data.role == 'guest'
             && (!existsAfter(/databases/$(database)/documents/households/$(hid))
                 || getAfter(/databases/$(database)/documents/households/$(hid)).data.guestCount
@@ -148,7 +205,7 @@ service cloud.firestore {
         && request.resource.data.get('sdefs', []) is list && request.resource.data.get('sdefs', []).size() <= 60
         && request.resource.data.get('sv', 2) == 2
         && request.resource.data.updatedAt == request.time;
-      allow delete: if signedIn() && (request.auth.uid == uid || isOwner(hid));
+      allow delete: if signedIn() && (request.auth.uid == uid || isOwner(hid) || (isMember(hid) && !exists(memberPath(hid, uid))));
     }
 
     // ───────── 근무 요청: households/{hid}/requests/{id} ─────────
@@ -206,7 +263,7 @@ service cloud.firestore {
       allow read: if isMember(hid)
         && (resource.data.by == request.auth.uid || request.auth.uid in resource.data.get('to', []));
       allow create: if signedIn() && canWrite(hid)
-        && request.resource.data.keys().hasOnly(['by', 'byName', 'date', 'text', 'createdAt', 'updatedAt', 'time', 'al', 'to'])
+        && request.resource.data.keys().hasOnly(['by', 'byName', 'date', 'text', 'createdAt', 'updatedAt', 'time', 'al', 'to', 'moved'])
         && request.resource.data.to is list && request.resource.data.to.size() >= 1 && request.resource.data.to.size() <= 12
         && request.auth.uid in request.resource.data.to
         && request.resource.data.by == request.auth.uid
@@ -215,7 +272,13 @@ service cloud.firestore {
         && request.resource.data.date is string && request.resource.data.date.size() == 10
         && request.resource.data.text is string && request.resource.data.text.size() >= 1 && request.resource.data.text.size() <= 200
         && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time
-        && getAfter(memberPath(hid, request.auth.uid)).data.get('sent', 0) == get(memberPath(hid, request.auth.uid)).data.get('sent', 0) + 1;
+        && (
+          (!('moved' in request.resource.data)
+            && getAfter(memberPath(hid, request.auth.uid)).data.get('sent', 0) == get(memberPath(hid, request.auth.uid)).data.get('sent', 0) + 1)
+          // v0.96 옮겨 온 옛 메모: 무료 횟수 대신 moved +1 (알림 없음)
+          || (request.resource.data.get('moved', false) == true
+            && getAfter(memberPath(hid, request.auth.uid)).data.get('moved', 0) == get(memberPath(hid, request.auth.uid)).data.get('moved', 0) + 1)
+        );
       allow update: if signedIn() && resource.data.by == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date', 'text', 'updatedAt', 'rev', 'time', 'al', 'to'])
         && request.resource.data.get('to', []) is list && request.resource.data.get('to', []).size() <= 12
@@ -256,7 +319,44 @@ service cloud.firestore {
         && request.resource.data.mk == resource.data.mk
         && (resource.data.by == request.auth.uid
             || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lines', 'torn', 'tornAt', 'reacts', 'ua', 'ub']));
-      allow delete: if signedIn() && isMember(hid) && (resource.data.by == request.auth.uid || isOwner(hid));
+      allow delete: if signedIn() && isMember(hid) && (resource.data.by == request.auth.uid || isOwner(hid) || !exists(memberPath(hid, resource.data.by)));
+    }
+
+    // ───────── v0.96 내보내기 다수결: households/{hid}/kicks/{내보낼 사람 uid} ─────────
+    // 내보낼 사람은 못 봄(빠진 뒤에 알림). 제안한 사람이 첫 표 · 다른 사람은 한 표씩 더함 · 7일 지나면 끝
+    match /households/{hid}/kicks/{t} {
+      allow read: if isMember(hid) && request.auth.uid != t;
+      allow create: if isMember(hid) && request.auth.uid != t && exists(memberPath(hid, t))
+        && request.resource.data.keys().hasOnly(['by', 'votes', 'inact', 'at'])
+        && request.resource.data.by == request.auth.uid
+        && request.resource.data.votes == [request.auth.uid]
+        && request.resource.data.at == request.time
+        && inactOk(hid, request.resource.data, t);
+      allow update: if isMember(hid) && request.auth.uid != t
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes'])
+        && request.time < resource.data.at + duration.value(7, 'd')
+        && !(request.auth.uid in resource.data.votes) && !(request.auth.uid in resource.data.inact)
+        && request.resource.data.votes == resource.data.votes.concat([request.auth.uid]);
+      // 지우기: 제안한 사람 · 7일 지남 · 그 사람이 이미 빠졌거나 같은 묶음에서 빠짐
+      allow delete: if isMember(hid) && request.auth.uid != t
+        && (resource.data.by == request.auth.uid || request.time >= resource.data.at + duration.value(7, 'd')
+            || !existsAfter(memberPath(hid, t)));
+    }
+
+    // ───────── v0.96 옛 가족 메모 묶음: households/{hid}/archive/{내uid}(넘치면 _2 · _3) ─────────
+    // 가족방에 다시 들어올 때 지난 날짜 가족 메모를 한 문서에 묶어 올림(무료 횟수 안 씀) · 가족은 한 번 읽어서 보기만
+    match /households/{hid}/archive/{id} {
+      allow read: if isMember(hid);
+      allow create, update: if isMember(hid)
+        && (id == request.auth.uid || id == request.auth.uid + '_2' || id == request.auth.uid + '_3')
+        && request.resource.data.keys().hasOnly(['by', 'byName', 'items', 'part', 'at'])
+        && request.resource.data.by == request.auth.uid
+        && validName(request.resource.data.byName)
+        && request.resource.data.items is list && request.resource.data.items.size() <= 1500
+        && request.resource.data.part in [1, 2, 3]
+        && request.resource.data.at == request.time
+        && request.time < get(memberPath(hid, request.auth.uid)).data.joinedAt + duration.value(10, 'm');
+      allow delete: if signedIn() && (id.split('_')[0] == request.auth.uid || !exists(memberPath(hid, id.split('_')[0])));
     }
 
     // ───────── 초대 코드: invites/{8자리 코드} ─────────
@@ -268,7 +368,8 @@ service cloud.firestore {
       allow create: if signedIn() && code.matches('[A-HJKMNP-Z2-9]{8}')
         && request.resource.data.keys().hasOnly(['hid', 'ownerUid', 'perm', 'name', 'hostName', 'patternName', 'createdAt', 'expireAt', 'usedBy'])
         && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.hid == request.auth.uid
+        // v0.96 방장 없음: 가족방 사람 누구나 그 방으로 초대
+        && request.resource.data.hid is string && isMember(request.resource.data.hid)
         && request.resource.data.perm in ['write', 'read']
         && (request.resource.data.name == '' || validName(request.resource.data.name))
         && request.resource.data.hostName is string && request.resource.data.hostName.size() <= 12
@@ -276,8 +377,7 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.expireAt > request.time
         && request.resource.data.expireAt <= request.time + duration.value(8, 'd')
-        && request.resource.data.usedBy == null
-        && exists(/databases/$(database)/documents/households/$(request.auth.uid));
+        && request.resource.data.usedBy == null;
 
       // 가족이 참여하면서 '사용됨'으로 바꾸기: 한 번만, 만료 전, 같은 묶음에서 내 구성원 문서가 생길 때
       allow update: if signedIn()
@@ -297,7 +397,8 @@ service cloud.firestore {
     match /devices/{uid} {
       allow read, delete: if signedIn() && request.auth.uid == uid;
       allow create, update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['token', 'on', 'hid', 'quiet', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['token', 'on', 'hid', 'quiet', 'mute', 'updatedAt'])
+        && (!('mute' in request.resource.data) || (request.resource.data.mute is list && request.resource.data.mute.size() <= 8))
         && request.resource.data.token is string && request.resource.data.token.size() >= 20 && request.resource.data.token.size() <= 400
         && request.resource.data.on is bool
         && (!('quiet' in request.resource.data) || (request.resource.data.quiet is list && request.resource.data.quiet.size() <= 60))
