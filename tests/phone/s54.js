@@ -11,7 +11,7 @@ const {mkT,base}=require('./lib.js');
   {
     const p=await boot(b,{...base},{touch:true});
     T('기본: 배경 표시 없음 · 예전 색 그대로(#ffffff)',await p.evaluate(()=>!document.documentElement.hasAttribute('data-bg'))&&await bgVar(p)==='#ffffff',await bgVar(p));
-    await toSet(p);
+    await toSet(p);await p.evaluate(()=>document.querySelector('[data-act="more-look"]').click());await p.waitForTimeout(300);
     T('설정 › 화면에 "배경" 줄(기본 · 종이)이 있음',await p.evaluate(()=>!!document.querySelector('[data-act="bgmode"][data-v="paper"]')&&!!document.querySelector('[data-act="bgmode"][data-v=""]')));
     await p.evaluate(()=>document.querySelector('[data-act="bgmode"][data-v="paper"]').click());await p.waitForTimeout(300);
     T('종이를 고르면 바로 바뀜 · 배경 #fbf8f1',await p.evaluate(()=>document.documentElement.getAttribute('data-bg'))==='paper'&&await bgVar(p)==='#fbf8f1',await bgVar(p));
@@ -46,7 +46,7 @@ const {mkT,base}=require('./lib.js');
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
     // 설정에서 끄기 (메모 창이 안 열린 새 화면에서)
     const pq=await boot(b,{...base,onboarded:true},{touch:true,preInit:pre});
-    await toSet(pq);
+    await toSet(pq);await pq.evaluate(()=>document.querySelector('[data-act="more-info"]').click());await pq.waitForTimeout(300);
     T('설정에 "사용 통계 보내기" 스위치가 켜져 있음',await pq.evaluate(()=>{const e=document.getElementById('statsOn');return !!e&&e.checked;}));
     await pq.evaluate(()=>{const e=document.getElementById('statsOn');e.checked=false;e.dispatchEvent(new Event('change',{bubbles:true}));});await pq.waitForTimeout(200);
     T('끄면 앱에 꺼짐을 알리고 저장',(await pq.evaluate(()=>window.__en)).slice(-1)[0]===false&&await stored(pq,'"stats":false'),JSON.stringify(await pq.evaluate(()=>window.__en)));
@@ -59,7 +59,7 @@ const {mkT,base}=require('./lib.js');
     T('꺼 둔 채로 다시 켜도 app_start 를 안 보냄 · 꺼짐 유지',(await p2.evaluate(()=>window.__ev)).length===0&&(await p2.evaluate(()=>window.__en))[0]===false);
     await p2.close();
     const p3=await boot(b,{...base},{touch:true});
-    await toSet(p3);T('옛 저장 데이터(통계 값 없음) → 켜짐으로 읽음',await p3.evaluate(()=>{const e=document.getElementById('statsOn');return !!e&&e.checked;}),'');await p3.close();
+    await toSet(p3);await p3.evaluate(()=>document.querySelector('[data-act="more-info"]').click());await p3.waitForTimeout(300);T('옛 저장 데이터(통계 값 없음) → 켜짐으로 읽음',await p3.evaluate(()=>{const e=document.getElementById('statsOn');return !!e&&e.checked;}),'');await p3.close();
   }
 
   // ── 새 소식 팝업: 소식이 적힌 버전만

@@ -13,6 +13,9 @@ async function boot(b,state,opts={}){
     if(d)localStorage.setItem('eonjeswieo:v1',JSON.stringify(d));},[state,T]);
   await p.route('**/firebase/config.js',r=>r.fulfill({body:'',contentType:'text/javascript'}));
   await p.goto('file:///home/user/sin/app/src/main/assets/index.html');await p.waitForTimeout(900);
+  // v0.97: 설정 안쪽 페이지(화면 · 알림 · 도움)가 아래 탭을 덮음 → 탭을 누르기 전에 열린 페이지를 닫음 (폰의 뒤로가기와 같음)
+  const _click=p.click.bind(p);
+  p.click=async(sel,o)=>{if(/#nav \[data-tab/.test(sel))await p.evaluate(()=>{const x=document.querySelector('#page.open [data-act="page-close"]');if(x)x.click();});return _click(sel,o);};
   p.errs=errs;return p;
 }
 function mkT(){let ok=0,bad=0;const T_=(n,c,x='')=>{if(c){ok++;console.log('✓',n);}else{bad++;console.log('✗ FAIL',n,x);}};T_.sum=()=>console.log(`\n${ok} 통과 ${bad} 실패`);return T_;}

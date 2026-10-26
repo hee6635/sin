@@ -4,13 +4,13 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  let p=await boot(b,{...base,fontScale:130,requests:[{id:'r1',date:'2026-10-20',by:'guest',want:'휴',st:'pending',t:1,msg:'부탁'}],syncSettings:{...(base.syncSettings||{}),isGuestMode:false}},{touch:true});
  const S=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')));
  // 글자 크기 두 가지
- await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);
+ await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);await p.click('[data-act="more-look"]');await p.waitForTimeout(300);
  const fs=await p.$$eval('[data-act="font"]',a=>a.map(x=>[x.textContent,x.dataset.v,x.classList.contains('on')]));
  console.log(JSON.stringify(fs));
  T('글자 크기: 보통 / 크게 두 가지',fs.length===2&&fs[0][0]==='보통'&&fs[1][0]==='크게');
  T('옛 130 은 "크게"(120)로',fs[1][2]&&fs[1][1]==='120');
  await p.click('[data-act="font"][data-v="100"]');await p.waitForTimeout(200);
- T('보통으로 바꾸면 100 저장',(await S()).fontScale===100);
+ T('보통으로 바꾸면 100 저장',(await S()).fontScale===100);await p.click('#page [data-act="page-close"]');await p.waitForTimeout(300);
  // 개인 캘린더로 쓰기
  T('설정에는 "개인 캘린더로 쓰기" 줄이 없음',await p.evaluate(()=>!document.querySelector('[data-act="personal-on"]')));
  await p.click('[data-act="more-pattern"]');await p.waitForTimeout(350);

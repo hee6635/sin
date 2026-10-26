@@ -561,11 +561,12 @@ object WidgetRenderer {
         if (fill) {   // 칸 채우기: 일하는 날은 근무 색을 연하게 칸 전체에 · 쉬는 날은 비움 (한 달 위젯과 같음)
             val gap = 1.2f * dens
             if (t.isNotEmpty() && bg.isNotEmpty()) {
-                val tint = MonthRenderer.mixRgb(parseColor(bg, pal.pill), pal.bg, if (night) 0.30f else 0.24f)
+                val tint = MonthRenderer.mixRgb(parseColor(bg, pal.pill), pal.bg, if (MonthRenderer.vivid) (if (night) 0.62f else 0.58f) else if (night) 0.30f else 0.24f)
                 val tp = Paint(Paint.ANTI_ALIAS_FLAG)
                 tp.color = (tint and 0x00FFFFFF) or ((alphaF * 255).toInt() shl 24)
                 cv.drawRoundRect(RectF(x0 + gap, y0 + gap, x0 + cw - gap, y0 + ch - gap), 7f * dens, 7f * dens, tp)
             }
+            MonthRenderer.vividBorder(cv, x0, y0, cw, ch, dens, night)
             if (isToday) {   // 오늘: 오른쪽 가장자리 띠 (앱 달력 · 한 달 위젯과 같은 모양 · 색)
                 if (MonthRenderer.todayShift) MonthRenderer.todayColor = MonthRenderer.shiftToday(t.isNotEmpty() && bg.isNotEmpty(), parseColor(bg, 0), t.isNotEmpty() && bg.isEmpty(), night)
                 MonthRenderer.drawTodayBand(cv, x0, y0, cw, ch, dens)
@@ -599,17 +600,17 @@ object WidgetRenderer {
             cpaint.textAlign = Paint.Align.CENTER
             cpaint.textSize = rad * 1.0f
             if (fill) {   // 칸 채우기: 동그라미 없이 글자만 (일하는 날 = 근무 색을 진하게 · 쉬는 날 = 장미색)
-                cpaint.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-                cpaint.textSize = rad * (if (bg.isNotEmpty()) 1.12f else 1.24f)
-                cpaint.color = if (bg.isNotEmpty()) MonthRenderer.inkOf(parseColor(bg, pal.pill), night) else (if (night) 0xFFF28B9B.toInt() else 0xFFD9677B.toInt())
+                cpaint.typeface = if (MonthRenderer.vivid) Typeface.DEFAULT_BOLD else Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                cpaint.textSize = rad * 1.12f   // "휴"도 근무 글자와 같은 크기
+                cpaint.color = if (bg.isNotEmpty()) MonthRenderer.vividInk(MonthRenderer.inkOf(parseColor(bg, pal.pill), night), night) else MonthRenderer.restInk(true, night)
                 while (cpaint.measureText(t) > row.circleD * 1.1f && cpaint.textSize > rad * 0.6f) cpaint.textSize = cpaint.textSize * 0.92f
             } else if (bg.isNotEmpty()) {
                 val cp = Paint(Paint.ANTI_ALIAS_FLAG)
-                cp.color = parseColor(bg, pal.pill)
+                cp.color = if (MonthRenderer.vivid) MonthRenderer.deepen(parseColor(bg, pal.pill)) else parseColor(bg, pal.pill)
                 cv.drawCircle(cx, cyc, rad, cp)
-                cpaint.color = parseColor(d.optString("fg", ""), pal.fg)
+                cpaint.color = if (MonthRenderer.vivid) 0xFFFFFFFF.toInt() else parseColor(d.optString("fg", ""), pal.fg)
             } else {
-                cpaint.color = 0xFFE5484D.toInt()   // 휴무: 색 없이 붉은 글자
+                cpaint.color = if (MonthRenderer.vivid) MonthRenderer.restInk(false, pal === DARK) else 0xFFE5484D.toInt()   // 휴무: 색 없이 붉은 글자
             }
             cv.drawText(t, cx, cyc + rad * 0.36f, cpaint)
             if (d.optBoolean("ov", false)) {   // 근무를 바꾼 날: 왼쪽에 붉은 점

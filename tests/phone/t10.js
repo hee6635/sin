@@ -14,9 +14,9 @@ await p.close();
 // ===== 예전 데이터(showBand 없음) 는 띠 켜짐 그대로
 p=await boot(b,{...base});
 S=await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')));
-T_('예전 데이터: 띠 켜짐 그대로(noband 아님)',!(await p.evaluate(()=>document.body.classList.contains('noband'))));
+T_('v0.97 근무 띠 없앰: 예전 데이터도 띠 숨김',await p.evaluate(()=>document.body.classList.contains('noband')));
 // ===== 화면 모드
-await p.click('#nav [data-tab="set"]');await p.waitForTimeout(300);
+await p.click('#nav [data-tab="set"]');await p.waitForTimeout(300);await p.click('[data-act="more-look"]');await p.waitForTimeout(300);
 const chips=await p.$$eval('[data-act="thememode"]',a=>a.map(x=>x.textContent+(x.classList.contains('on')?'*':'')));
 T_('설정 › 앱: 화면 모드 라이트/다크/시스템(시스템 선택됨)',chips.join('|')==='라이트|다크|시스템*',chips.join('|'));
 await p.click('[data-act="thememode"][data-v="dark"]');await p.waitForTimeout(300);
@@ -28,7 +28,7 @@ T_('라이트: data-theme=light',(await p.evaluate(()=>document.documentElement.
 await p.click('[data-act="thememode"][data-v="system"]');await p.waitForTimeout(300);
 T_('시스템: data-theme 제거 · 저장됨',!(await p.evaluate(()=>document.documentElement.getAttribute('data-theme')))&&(await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).theme))==='system');
 // 띠 설정 켜기
-T_('근무 띠 스위치 켜짐 상태(예전 사용자)',await p.$eval('#showBand',e=>e.checked));
+T_('근무 띠 설정 줄 없음',!(await p.$('#showBand')));await p.click('#page [data-act="page-close"]');await p.waitForTimeout(300);
 // ===== 부가기능 문구 · 월 포스트잇
 await p.click('[data-act="more-addons"]');await p.waitForTimeout(300);
 const addtxt=await p.$eval('#page',e=>e.innerText);

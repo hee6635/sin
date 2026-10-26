@@ -12,7 +12,7 @@ const ONLY=process.env.ONLY||'';
     await p.evaluate(()=>{window.__wg=[];window.AndroidBridge.setWidgetData=j=>window.__wg.push(j);window.__refresh();});await p.waitForTimeout(1100);
     const wc=await p.evaluate(()=>JSON.parse(window.__wg[window.__wg.length-1]).today.color);
     T('위젯에도 "shift" 로 보냄 (위젯이 그날 칸 색으로 계산)',wc==='shift',wc);
-    await p.evaluate(()=>document.querySelector('[data-tab="set"]').click());await p.waitForTimeout(400);
+    await p.evaluate(()=>document.querySelector('[data-tab="set"]').click());await p.waitForTimeout(400);await p.evaluate(()=>{const b=document.querySelector('[data-act="more-look"]');if(b)b.click();});await p.waitForTimeout(300);
     const sw=await p.evaluate(()=>{const e=document.querySelector('[data-act="todaycolor"][data-v="shift"]');return e?{on:e.classList.contains('on'),first:e===e.parentElement.firstElementChild}:null;});
     T('설정: 오늘 띠 색 줄 맨 앞에 "근무 색" (골라져 있음)',!!sw&&sw.on&&sw.first,JSON.stringify(sw));
     await p.evaluate(()=>document.querySelector('[data-act="todaycolor"]:not([data-v="shift"])').click());await p.waitForTimeout(200);

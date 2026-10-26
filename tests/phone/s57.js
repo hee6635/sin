@@ -12,8 +12,8 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   // ── 달력 모양 선택
   {
     const p=await boot(b,{...base,memos,requests:reqs},{touch:true});
-    T('기본: 동그라미 (data-cal 없음)',await p.evaluate(()=>!document.documentElement.hasAttribute('data-cal')));
-        await toSet(p);
+    T('예전 데이터 기본: 동그라미 (data-cal 없음)',await p.evaluate(()=>!document.documentElement.hasAttribute('data-cal')));
+        await toSet(p);await p.evaluate(()=>document.querySelector('[data-act="more-look"]').click());await p.waitForTimeout(300);
     T('설정 › 화면에 "달력 모양" 줄 (동그라미 · 칸 채우기)',await p.evaluate(()=>!!document.querySelector('[data-act="callook"][data-v="fill"]')&&!!document.querySelector('[data-act="callook"][data-v="circle"]')));
     await p.evaluate(()=>document.querySelector('[data-act="callook"][data-v="fill"]').click());await p.waitForTimeout(400);
     T('칸 채우기를 고르면 저장 · data-cal=fill',await p.evaluate(()=>document.documentElement.getAttribute('data-cal')==='fill'&&JSON.parse(localStorage.getItem('eonjeswieo:v1')).calLook==='fill'));
@@ -44,7 +44,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const raw=await p.evaluate(()=>{window.__cp=[];window.AndroidBridge.copyText=t=>window.__cp.push(t);window.AndroidBridge.widgetDebug=()=>'한 달 위젯 #7: 최소폭 300dp → 커버 값';window.__wg=[];window.AndroidBridge.setWidgetData=j=>window.__wg.push(JSON.parse(j));return 1;});
     await toSet(p);
     T('설정에는 "모양 조정" 줄이 안 보임(숨은 화면)',await p.evaluate(()=>!/모양 조정/.test(document.querySelector('#view').textContent)));
-    for(let i=0;i<7;i++)await p.evaluate(()=>document.querySelector('[data-act="about-tap"]').click());await p.waitForTimeout(500);
+    await p.evaluate(()=>document.querySelector('[data-act="more-info"]').click());await p.waitForTimeout(300);for(let i=0;i<7;i++)await p.evaluate(()=>document.querySelector('[data-act="about-tap"]').click());await p.waitForTimeout(500);
     T('앱 정보를 7번 누르면 개발자 메뉴에 "모양 조정" 버튼',await p.evaluate(()=>!!document.querySelector('[data-act="tune-open"]')));
     await p.evaluate(()=>document.querySelector('[data-act="tune-open"]').click());await p.waitForTimeout(500);
     T('모양 조정 화면: 앱 달력 미리보기(일주일 줄만 · 7칸) + 슬라이더 46개(앱 안쪽 · 앱 커버 × 12 · 위젯 커버 · 위젯 안쪽 × 11)',await p.evaluate(()=>document.querySelectorAll('#tnPrev .grid .cell').length===7&&document.querySelectorAll('.tn-r').length===46),String(await p.evaluate(()=>document.querySelectorAll('.tn-r').length)));
@@ -101,7 +101,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const cnt=()=>p.evaluate(()=>document.querySelectorAll('.track .panel:nth-child(2) .cell[data-k="2026-10-16"] .pill-wrap>*').length);
     const before=await cnt();
     await toSet(p);
-    for(let i=0;i<7;i++)await p.evaluate(()=>document.querySelector('[data-act="about-tap"]').click());await p.waitForTimeout(400);
+    await p.evaluate(()=>document.querySelector('[data-act="more-info"]').click());await p.waitForTimeout(300);for(let i=0;i<7;i++)await p.evaluate(()=>document.querySelector('[data-act="about-tap"]').click());await p.waitForTimeout(400);
     await p.evaluate(()=>document.querySelector('[data-act="tune-open"]').click());await p.waitForTimeout(500);
     await p.evaluate(()=>document.querySelector('[data-act="page-close"]').click());await p.waitForTimeout(300);
     await p.evaluate(()=>document.querySelector('[data-act="page-close"]')&&document.querySelector('[data-act="page-close"]').click());

@@ -47,7 +47,7 @@ const T0=+new Date('2026-10-12T10:00:00');
   p=await boot(b,s,{preInit:grab});
   await p.evaluate(()=>{window.__logErr('시험 오류 하나','x.js:7');});
   await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);
-  await p.evaluate(()=>document.querySelector('[data-act="more-mail"]').click());await p.waitForTimeout(250);
+  await p.evaluate(()=>document.querySelector('[data-act="more-info"]').click());await p.waitForTimeout(300);await p.evaluate(()=>document.querySelector('[data-act="more-mail"]').click());await p.waitForTimeout(250);
   const mail=await p.evaluate(()=>window.__mail);
   T('문의하기: 받는 사람이 운영용 주소',mail&&mail[0]==='eonjeswieo.app@gmail.com',JSON.stringify(mail&&mail[0]));
   T('문의 메일 본문에 최근 오류가 붙음',mail&&/최근 오류/.test(mail[2])&&/시험 오류 하나/.test(mail[2]),String(mail&&mail[2]).slice(0,120));

@@ -4,7 +4,7 @@ const O='/tmp/claude-0/-home-user-sin/78e2bc2a-7f65-5612-9a8c-557939742276/scrat
  // 옛 데이터: personal:true → 전체 개인
  let p=await boot(b,{...base,personal:true},{touch:true,w:384});
  await p.click('#nav [data-tab="set"]');await p.waitForTimeout(300);
- T('옛 personal:true → 전부 개인 캘린더(설정이 "내 기록")',await p.evaluate(()=>document.body.innerText.includes('내 기록')&&!!document.querySelector('[data-act="personal-off"]')));
+ T('옛 personal:true → 전부 개인 캘린더(설정에 "근무표 쓰기")',await p.evaluate(()=>!!document.querySelector('[data-act="personal-off"]')));
  T('오류 없음',p.errs.length===0,p.errs.join('|'));
  // 근무표 쓰기: 오늘(10/12)부터 → 이전은 개인, 이후 근무
  await p.evaluate(()=>document.querySelector('[data-act="personal-off"]').click());await p.waitForTimeout(300);

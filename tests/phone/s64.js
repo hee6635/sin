@@ -57,8 +57,8 @@ const ONLY=process.env.ONLY||'';
   // ── 3. 강조색: 고른 버튼은 파스텔 바탕 + 진한 글자 (진한 파랑 바탕에 흰 글자 아님)
   if(want('acc')){
     const p=await boot(b,{...base},{touch:true});
-    await p.evaluate(()=>document.querySelector('#nav [data-tab="set"]').click());await p.waitForTimeout(400);
-    const r=await p.evaluate(()=>{const e=document.querySelector('.chips button.on');const cs=getComputedStyle(e);return {bg:cs.backgroundColor,fg:cs.color};});
+    await p.evaluate(()=>document.querySelector('#nav [data-tab="set"]').click());await p.waitForTimeout(400);await p.evaluate(()=>{const b=document.querySelector('[data-act="more-look"]');if(b)b.click();});await p.waitForTimeout(300);
+    const r=await p.evaluate(()=>{const e=document.querySelector('#page .chips button.on');const cs=getComputedStyle(e);return {bg:cs.backgroundColor,fg:cs.color};});
     T('설정 "보통" 같은 고른 버튼: 연한 바탕(밝기 높음) · 흰 글자 아님',(()=>{const m=r.bg.match(/\d+/g).map(Number);return m[0]+m[1]+m[2]>600&&r.fg!=='rgb(255, 255, 255)';})(),JSON.stringify(r));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }

@@ -31,7 +31,9 @@ async function boot(browser,state,opts={}){
     if(o.preInit)try{(new Function('window',o.preInit))(window);}catch(e){}
   },[state,T0,opts]);
   await p.route('**/firebase/config.js',r=>r.fulfill({body:'',contentType:'text/javascript'}));
-  p.errs=errs;p.ctx=ctx;
+  const _click=p.click.bind(p);   // v0.97: 설정 안쪽 페이지가 아래 탭을 덮음 → 탭을 누르기 전에 닫음 (뒤로가기)
+  p.click=async(sel,o)=>{if(/#nav \[data-tab/.test(sel))await p.evaluate(()=>{const x=document.querySelector('#page.open [data-act="page-close"]');if(x)x.click();});return _click(sel,o);};
+    p.errs=errs;p.ctx=ctx;
   await p.goto(opts.url||APP);
   await p.waitForTimeout(opts.wait||600);
   return p;

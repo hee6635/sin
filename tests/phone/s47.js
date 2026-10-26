@@ -51,8 +51,8 @@ const {mkT}=require('./lib.js');
   await p.click('#nav [data-tab="set"]');await p.waitForTimeout(700);
   const setSmall=await p.evaluate(()=>[...document.querySelectorAll('#view [data-act],#view label.sw')].filter(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&(r.width<40||r.height<40)&&!e.classList.contains('tapx')&&!e.classList.contains('tapz')&&!e.classList.contains('tapb')&&e.tagName!=='INPUT';}).map(e=>(e.dataset.act||e.className)+':'+Math.round(e.getBoundingClientRect().width)+'x'+Math.round(e.getBoundingClientRect().height)).slice(0,10));
   T('설정의 작은 버튼(모양 고르기 칩 · 스위치)도 누르는 자리를 넓혔음',setSmall.length===0,JSON.stringify(setSmall));
-  const sw=await p.$$eval('#view label.sw > input',is=>is.map(i=>({r:i.getAttribute('role'),l:i.getAttribute('aria-label')})));
-  T('스위치마다 이름(같은 줄 제목) · switch 역할',sw.length>0&&sw.every(x=>x.r==='switch'&&x.l),JSON.stringify(sw.slice(0,3)));
+  await p.evaluate(()=>document.querySelector('[data-act="more-info"]').click());await p.waitForTimeout(300);const sw=await p.$$eval('#page label.sw > input',is=>is.map(i=>({r:i.getAttribute('role'),l:i.getAttribute('aria-label')})));
+  T('스위치마다 이름(같은 줄 제목) · switch 역할',sw.length>0&&sw.every(x=>x.r==='switch'&&x.l),JSON.stringify(sw.slice(0,3)));await p.evaluate(()=>{const x=document.querySelector('#page [data-act="page-close"]');if(x)x.click();});await p.waitForTimeout(300);
   await p.click('#nav [data-tab="alarm"]');await p.waitForTimeout(700);
   T('알람 탭 "+" 버튼 이름',await p.$eval('#top [data-act="aadd"]',e=>e.getAttribute('aria-label')==='알람 추가'));
   // 오류 없음 · 보기 모양이 안 바뀜(같은 크기)

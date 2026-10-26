@@ -83,7 +83,7 @@ const ONLY=process.env.ONLY||'';
     T('동그라미 · 요청 링 있는 칸: 슬라이더를 오른쪽 끝까지 밀어도 점은 링 바깥(동그라미에서 6px 넘게)',g>=6,String(g));
     // 모양 조정 화면: 앱 달력에만 슬라이더 · 값 복사에 들어감
     await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);
-    for(let i=0;i<7;i++)await p.evaluate(()=>document.querySelector('[data-act="about-tap"]')&&document.querySelector('[data-act="about-tap"]').click());await p.waitForTimeout(300);
+    await p.evaluate(()=>{const b=document.querySelector('[data-act="more-look"]');if(b)b.click();});await p.waitForTimeout(300);await p.waitForTimeout(300);
     await p.evaluate(()=>document.querySelector('[data-act="tune-open"]')&&document.querySelector('[data-act="tune-open"]').click());await p.waitForTimeout(500);
     const sl=await p.evaluate(()=>['appCover','appInner','cover','inner'].map(g=>!!document.querySelector(`.tn-r[data-g="${g}"][data-k="dotX"]`)));
     T('모양 조정: "빨간 점 좌우" 는 앱 달력 커버 · 안쪽에만 (위젯엔 없음)',JSON.stringify(sl)==='[true,true,false,false]',JSON.stringify(sl));

@@ -5,7 +5,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   const t=+new Date('2026-10-12T10:00:00');
   const m=(id,text,sh)=>({id,text,shared:!!sh,by:'host',t});
   const toSet=async p=>{await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);};
-  const openTune=async p=>{await toSet(p);for(let i=0;i<7;i++)await p.evaluate(()=>document.querySelector('[data-act="about-tap"]').click());await p.waitForTimeout(400);await p.evaluate(()=>document.querySelector('[data-act="tune-open"]').click());await p.waitForTimeout(500);};
+  const openTune=async p=>{await toSet(p);await p.evaluate(()=>document.querySelector('[data-act="more-info"]').click());await p.waitForTimeout(300);for(let i=0;i<7;i++)await p.evaluate(()=>document.querySelector('[data-act="about-tap"]').click());await p.waitForTimeout(400);await p.evaluate(()=>document.querySelector('[data-act="tune-open"]').click());await p.waitForTimeout(500);};
   const setR=(p,g,k,v)=>p.evaluate(([g,k,v])=>{const e=document.querySelector(`.tn-r[data-g="${g}"][data-k="${k}"]`);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));},[g,k,v]);
   const saved=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')));
 

@@ -20,7 +20,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  // 2) 근무타입 순서 + 주 시작 + 개인
  p=await boot(b,base,{touch:true});
  await p.evaluate(()=>{document.querySelector('#nav [data-tab="set"]').click();});await p.waitForTimeout(200);
- await p.evaluate(()=>document.querySelector('[data-act="weekstart"][data-v="1"]').click());await p.waitForTimeout(200);
+ await p.evaluate(()=>{document.querySelector('[data-act="more-look"]').click();document.querySelector('[data-act="weekstart"][data-v="1"]').click();document.querySelector('#page [data-act="page-close"]').click();});await p.waitForTimeout(200);
  T('월요일 시작',await p.evaluate(()=>document.querySelector('.dow span')===null?true:true));
  await p.evaluate(()=>document.querySelector('#nav [data-tab="cal"]').click());await p.waitForTimeout(200);
  T('월요일 첫 칸',await p.evaluate(()=>document.querySelector('.dow span').textContent==='월'));
