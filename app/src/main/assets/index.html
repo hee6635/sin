@@ -5259,19 +5259,19 @@ function openLookPage(){
       <div class="hint" style="padding:2px 16px 10px">또렷하게: 근무 · 휴무 색과 글자를 진하게 (눈이 피곤하거나 잘 안 보일 때) · 위젯도 같이 바뀌어요</div>
     </div>
     <div class="pg-cap">자세히</div>
-    <div class="pg-sec" style="margin-top:0"><div class="mi2" data-act="tune-open"><span class="e">${lineIcon('🎚')}</span><span class="t2">모양 세부 조정<i>스티커 · 메모 크기와 위치 · 오늘 표시 모양 (앱 · 위젯)</i></span><small>›</small></div></div>
+    <div class="pg-sec mlist" style="margin-top:0"><div class="mi2" data-act="tune-open"><span class="e">${lineIcon('🎚')}</span><span class="t2">모양 세부 조정<i>스티커 · 메모 크기와 위치 · 오늘 표시 모양 (앱 · 위젯)</i></span><small>›</small></div></div>
   </div>`,'look');
 }
 // 설정 › 알림: 흩어져 있던 알림 설정을 한 곳에
 function openNotifPage(){
-  const fam=pushRow(),snd=hasBridge('openSettings');
+  const fam=pushRow().replace('style="margin-top:16px"','style="margin-top:0"'),snd=hasBridge('openSettings');
   openPage(`${pageHead('알림')}<div class="pg-b">
     ${S.link?`<div class="pg-cap">가족</div>${fam||'<div class="hint" style="padding:6px 16px">이 폰에선 가족 알림을 받을 수 없어요</div>'}`:''}
-    <div class="pg-cap">스티커 · 기념일</div>
+    <div class="mlist"><div class="pg-cap">스티커 · 기념일</div>
     <div class="pg-sec" style="margin-top:0">${snd?`<div class="mi2" data-act="remind-sound"><span class="e">${lineIcon('🔔')}</span><span class="t2">알림 소리 바꾸기<i>폰 설정 화면으로</i></span><small>›</small></div>`:''}<div class="mi2" data-act="stk-board"><span class="e">${lineIcon('💊')}</span><span class="t2">스티커 알림 시간<i>스티커마다 따로</i></span><small>›</small></div></div>
     <div class="pg-cap">알람</div>
     <div class="pg-sec" style="margin-top:0"><div class="mi2" data-act="notif-alarm"><span class="e">${lineIcon('⏰')}</span><span class="t2">알람은 알람 탭에서<i>근무별 알람 · 소리 · 미루기</i></span><small>›</small></div></div>
-  </div>`,'notif');
+  </div></div>`,'notif');
 }
 // 설정 › 도움 · 정보
 function openInfoPage(){

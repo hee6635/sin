@@ -52,10 +52,15 @@ class WidgetDayActivity : Activity() {
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
 
+    /** 배경 "또렷하게"(앱 설정 › 화면 › 배경) — 위젯 데이터의 bg */
+    private fun vivid(): Boolean = data?.optString("bg", "") == "vivid"
+
     private fun palette(): Pal {
         val night = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         val theme = data?.optString("theme", "system") ?: "system"
         val dark = theme == "dark" || (theme != "light" && night)
+        if (vivid()) return if (dark) Pal(0xFF000000.toInt(), 0xFFFFFFFF.toInt(), 0xFFB4BAC2.toInt(), 0xFF2A2F36.toInt(), 0xFF1E3A31.toInt(), 0xFF8FB0FF.toInt(), 0xFF3DDC97.toInt())   // 또렷하게: 더 검은 바탕 · 흰 글자
+            else Pal(0xFFFFFFFF.toInt(), 0xFF0F1215.toInt(), 0xFF4E555E.toInt(), 0xFFE6E9ED.toInt(), 0xFFE3F5EF.toInt(), 0xFF1F5FD0.toInt(), 0xFF2A8C6F.toInt())   // 또렷하게: 진한 글자
         return if (dark) Pal(0xFF23282E.toInt(), 0xFFF2F4F7.toInt(), 0xFF9AA3AD.toInt(), 0xFF39414A.toInt(), 0xFF1E3A31.toInt(), 0xFF7BA2FF.toInt(), 0xFF3DDC97.toInt())
         else Pal(0xFFFFFFFF.toInt(), 0xFF1F2328.toInt(), 0xFF8A919A.toInt(), 0xFFF1F3F5.toInt(), 0xFFE3F5EF.toInt(), 0xFF2F6FDE.toInt(), 0xFF2A8C6F.toInt())
     }
@@ -338,9 +343,10 @@ class WidgetDayActivity : Activity() {
                 }
             }
             if (wk.isNotEmpty()) {
-                val badge = tv(wk, 16f, if (wbg.isEmpty()) 0xFFE5484D.toInt() else parse(wfg, pal.fg), true)
+                val viv = vivid()
+                val badge = tv(wk, 16f, if (wbg.isEmpty()) (if (viv) (if (dark) 0xFFFF7088.toInt() else 0xFFC8102E.toInt()) else 0xFFE5484D.toInt()) else if (viv) Color.WHITE else parse(wfg, pal.fg), true)
                 badge.gravity = Gravity.CENTER
-                if (wbg.isNotEmpty()) badge.background = rounded(parse(wbg, pal.chip), 40)
+                if (wbg.isNotEmpty()) badge.background = rounded(if (viv) MonthRenderer.deepen(parse(wbg, pal.chip)) else parse(wbg, pal.chip), 40)   // 또렷하게: 진한 동그라미 + 흰 글자
                 head.addView(badge, LinearLayout.LayoutParams(dp(40), dp(40)))
             }
             topBox.addView(head)
@@ -372,7 +378,7 @@ class WidgetDayActivity : Activity() {
             }
             if (wbg.isNotEmpty()) {   // 근무 색 바탕(연하게) · 위 모서리만 둥글게
                 val bgc = parse(wbg, pal.chip)
-                val mixT = if (dark) 0.30f else 0.32f
+                val mixT = if (vivid()) (if (dark) 0.62f else 0.58f) else if (dark) 0.30f else 0.32f   // 또렷하게: 근무 색을 진하게
                 val tint = Color.rgb(Math.round(Color.red(bgc) * mixT + Color.red(pal.bg) * (1 - mixT)), Math.round(Color.green(bgc) * mixT + Color.green(pal.bg) * (1 - mixT)), Math.round(Color.blue(bgc) * mixT + Color.blue(pal.bg) * (1 - mixT)))
                 val g = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(tint, pal.bg))
                 val r = dp(22).toFloat()
