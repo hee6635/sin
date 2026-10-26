@@ -1,0 +1,80 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>설정 정리 시안</title>
+<style>
+:root{--accent:#5a7fd6;--soft:#e8eefb;--ink:#2f4f9e;--fg:#1f2328;--muted:#8a9099;--line:#eef0f3;--bg:#fff;--card:#f6f7f9}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#e9ebef;color:var(--fg)}
+.wrap{display:flex;gap:28px;padding:24px;align-items:flex-start}
+.col h2{font-size:15px;margin:0 0 10px;color:#555}
+.ph{width:360px;background:var(--bg);border-radius:28px;padding:18px 0 12px;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+.t{font-size:26px;font-weight:800;padding:0 18px 10px}
+.srch{margin:0 16px 14px;background:var(--card);border-radius:14px;padding:12px 14px;color:var(--muted);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 6px}
+.tile{background:var(--card);border-radius:16px;padding:14px 8px 12px;text-align:center}
+.tile i{display:block;font-style:normal;font-size:24px;margin-bottom:6px}
+.tile b{display:block;font-size:13.5px}
+.tile small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.tile.dot{position:relative}.tile.dot:after{content:"";position:absolute;top:10px;right:14px;width:8px;height:8px;border-radius:50%;background:#e5484d}
+.cap{font-size:13px;color:var(--muted);padding:16px 20px 6px}
+.row{display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--line);font-size:15.5px}
+.row .ic{width:24px;text-align:center}
+.row .tx{flex:1}.row .tx small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.row .v{color:var(--muted);font-size:13px}
+.row .go{color:#b8bdc6}
+.chips{display:flex;gap:6px}.chips span{padding:6px 12px;border-radius:999px;background:var(--card);font-size:13px;color:#666}
+.chips span.on{background:var(--soft);color:var(--ink);font-weight:700;box-shadow:inset 0 0 0 1.5px #b9c9ef}
+.hd{display:flex;align-items:center;gap:8px;padding:0 16px 8px;font-size:19px;font-weight:800}
+.note{font-size:12.5px;color:#777;line-height:1.6;max-width:360px;margin-top:10px}
+.mark{background:#fff7d6;border-radius:6px;padding:0 4px}
+.sw{width:42px;height:24px;border-radius:12px;background:var(--accent);position:relative}.sw:after{content:"";position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+.dots{display:flex;gap:5px}.dots i{width:18px;height:18px;border-radius:50%;display:block}
+</style></head><body><div class="wrap">
+
+<div class="col"><h2>① 설정 첫 화면 (바뀐 모양)</h2><div class="ph">
+  <div class="t">설정</div>
+  <div class="srch">🔍 메모 · 일지 찾기</div>
+  <div class="grid">
+    <div class="tile"><i>🔁</i><b>근무 패턴</b><small>4조2교대 B조</small></div>
+    <div class="tile dot"><i>👪</i><b>가족 연결</b><small>3명</small></div>
+    <div class="tile"><i>🔔</i><b>알림</b><small>가족 · 스티커</small></div>
+    <div class="tile"><i>😊</i><b>스티커</b><small>9개</small></div>
+    <div class="tile"><i>📱</i><b>위젯</b><small>칸 채우기</small></div>
+    <div class="tile"><i>☁️</i><b>백업</b><small>어제</small></div>
+  </div>
+  <div class="cap">더 보기</div>
+  <div class="row"><span class="ic">🎨</span><span class="tx">화면<small>칸 채우기 · 시스템 · 글자 보통</small></span><span class="go">›</span></div>
+  <div class="row"><span class="ic">🧩</span><span class="tx">부가 기능<small>휴무일 · 동료 · 통계 · 일지 …</small></span><span class="v">7개 켜짐</span><span class="go">›</span></div>
+  <div class="row"><span class="ic">🖼</span><span class="tx">달력 이미지로 공유</span><span class="go">›</span></div>
+  <div class="row"><span class="ic">ℹ️</span><span class="tx">도움 · 정보<small>문의 · 개인정보 · 데이터 지우기</small></span><span class="go">›</span></div>
+</div>
+<div class="note">· 자주 쓰는 6개는 <b>타일</b>로 한눈에 (값 요약 · 가족 소식은 빨간 점)<br>· <span class="mark">가족 연결 · 알림 · 위젯</span>을 맨 위로 꺼냄 (지금은 가족 목록 · 스티커 · 개발자 화면 안에 숨어 있음)<br>· 한 번 정하면 안 바꾸는 화면 설정 7줄 → "화면" 한 줄 (요약 글로 지금 값이 보임)<br>· 정보 5줄 → "도움 · 정보" 한 줄<br>· 부가 기능을 켠 항목(휴무일 · 동료 · 통계 …)은 부가 기능 안으로 · 근무 패턴 안에서도 바로 감</div></div>
+
+<div class="col"><h2>② "화면" 누르면</h2><div class="ph">
+  <div class="hd">‹ 화면</div>
+  <div class="cap">달력</div>
+  <div class="row"><span class="tx">달력 모양</span><span class="chips"><span>동그라미</span><span class="on">칸 채우기</span></span></div>
+  <div class="row" style="flex-wrap:wrap"><span class="tx">오늘 표시 색</span><span class="dots"><i style="background:conic-gradient(#5b8fc4 0 33%,#c27c5c 0 66%,#d0607a 0)"></i><i style="background:#5a7fd6;box-shadow:0 0 0 2px #fff,0 0 0 3.5px #1f2328"></i><i style="background:#1fa971"></i><i style="background:#e5484d"></i><i style="background:#8e6bd8"></i></span></div>
+  <div class="row"><span class="tx">주 시작 요일</span><span class="chips"><span class="on">일</span><span>월</span></span></div>
+  <div class="row"><span class="tx">근무 띠 표시</span><span class="sw"></span></div>
+  <div class="cap">보기</div>
+  <div class="row"><span class="tx">화면 모드</span><span class="chips"><span>라이트</span><span>다크</span><span class="on">시스템</span></span></div>
+  <div class="row"><span class="tx">글자 크기</span><span class="chips"><span class="on">보통</span><span>크게</span></span></div>
+  <div class="row"><span class="tx">배경</span><span class="chips"><span class="on">기본</span><span>종이</span></span></div>
+  <div class="cap">자세히</div>
+  <div class="row"><span class="tx">모양 세부 조정<small>스티커 · 메모 크기와 위치 (앱 · 위젯)</small></span><span class="go">›</span></div>
+</div>
+<div class="note">· 같은 종류끼리 묶음(달력 / 보기 / 자세히)<br>· "오늘 띠 색"이 두 줄로 꺾이던 것도 해결 (줄 넓게)<br>· 모양 세부 조정(슬라이더)은 원하는 사람만 맨 아래에서</div></div>
+
+<div class="col"><h2>③ "알림" 누르면 (흩어진 것 모음)</h2><div class="ph">
+  <div class="hd">‹ 알림</div>
+  <div class="cap">가족</div>
+  <div class="row"><span class="tx">가족 알림 받기<small>이름 · 날짜(포스트잇은 제목)만</small></span><span class="sw"></span></div>
+  <div class="row"><span class="tx">포스트잇 알림</span><span class="sw"></span></div>
+  <div class="row"><span class="tx">자는 시간엔 소리 없이</span><span class="sw"></span></div>
+  <div class="cap">스티커 · 기념일</div>
+  <div class="row"><span class="tx">🔔 알림 소리 바꾸기<small>폰 설정 화면으로</small></span><span class="go">›</span></div>
+  <div class="cap">알람</div>
+  <div class="row"><span class="tx">알람은 알람 탭에서<small>근무별 알람 · 소리 · 미루기</small></span><span class="go">›</span></div>
+</div>
+<div class="note">· 지금은 가족 알림 = 가족 연결 안, 알림 소리 = 스티커 안 → 한 곳에서<br>· 가족방이 없으면 "가족" 칸은 안 보임</div></div>
+
+</div></body></html>
