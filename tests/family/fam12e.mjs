@@ -102,22 +102,19 @@ check('★ 새 로그인 번호로 들어옴 (이전 번호와 다름)', momUid2
 check('서버에 새 엄마 구성원 자리가 생김', await wait(A, async () => await exists(`households/${hostUid}/members/${momUid2}`), 20000));
 await A.waitForTimeout(500);
 
-// ───── 3) 아빠(호스트)가 모두 지우기 → 가족방 통째로 정리
+// ───── 3) 아빠(처음 만든 사람)가 모두 지우기 → v0.96 방장 없음: 아빠만 나가고 가족방은 남은 가족으로 그대로
 await H.evaluate(() => window.__onBack && window.__onBack());
-check('호스트 지우기 전: 구성원 3명 · 쓸 수 있는 초대 코드가 남아 있음', (await ids(`households/${hostUid}/members`)).length === 3 && (await ids('invites')).length >= 1);
+check('지우기 전: 구성원 3명', (await ids(`households/${hostUid}/members`)).length === 3);
 await wipe(H);
-check('아빠: 확인창에 "가족방도 없어지고 가족은 나가져요" 안내', H.dlg[0].includes('가족방도 없어지고') && H.dlg[0].includes('인터넷'), H.dlg[0]);
+check('아빠: 확인창에 "가족방에서도 나가요" 안내', H.dlg[0].includes('가족방에서도 나가요') && H.dlg[0].includes('인터넷'), H.dlg[0]);
 check('아빠: 지운 뒤 처음 화면 · 가족 연결 풀림', await wiped(H), JSON.stringify(H.dlg));
 check('아빠: 확인창은 딱 2번', H.dlg.length === 2, JSON.stringify(H.dlg));
-check('서버: 가족방 · 구성원 · 남은 초대 코드가 모두 지워짐', !(await exists(`households/${hostUid}`)) && (await ids(`households/${hostUid}/members`)).length === 0 && (await ids('invites')).filter(x => x).length === 0, JSON.stringify(await ids('invites')));
+check('서버: 아빠만 빠지고 가족방은 그대로 (엄마 · 할머니)', await exists(`households/${hostUid}`) && (await ids(`households/${hostUid}/members`)).length === 2 && !(await exists(`households/${hostUid}/members/${hostUid}`)));
 check('서버: 아빠 알림 주소 · 쪽지가 지워짐', !(await exists(`devices/${hostUid}`)) && !(await exists(`users/${hostUid}`)));
 check('★ 서버: 아빠의 로그인 계정이 지워짐', !(await accts()).includes(hostUid), JSON.stringify(await accts()));
-// 서버에서 내 칸이 없어지면 처음 한 번은 연결을 그대로 두고(linkMissAt), 5분 넘게 계속 못 찾을 때 끊김으로 처리함 → 시험에서는 5분이 지난 것처럼 되돌려 다시 켬
-const dissolveStrike = async P => { await wait(P, async () => { const x = await S(P); return x.linkMissAt > 0 || !x.link; }, 30000); if ((await S(P)).link) { await P.evaluate(() => { const s = JSON.parse(localStorage.getItem('eonjeswieo:v1')); s.linkMissAt = Date.now() - 10 * 60e3; localStorage.setItem('eonjeswieo:v1', JSON.stringify(s)); }); await P.reload(); await P.waitForTimeout(2500); } };
-await dissolveStrike(B); await dissolveStrike(A);
-check('할머니 폰: 가족방이 없어져 가족 연결이 풀림', await wait(B, async () => !(await S(B)).link, 30000));
-check('엄마 폰(새로 들어온): 가족방이 없어져 가족 연결이 풀림', await wait(A, async () => !(await S(A)).link, 30000));
-check('서버: 가족방 안 남은 메모 · 요청도 없음 (함수가 정리)', (await ids(`households/${hostUid}/memos`)).length === 0 && (await ids(`households/${hostUid}/requests`)).length === 0);
+await B.waitForTimeout(3000);
+check('할머니 · 엄마 폰: 가족 연결 그대로', !!(await S(B)).link && !!(await S(A)).link);
+check('할머니 폰: 가족 목록에서 아빠가 빠짐', await wait(B, async () => (await S(B)).fam2.members.length === 2, 20000));
 await H.screenshot({ path: SC + 'h_after_wipe.png' });
 check('화면 오류 없음', errs.length === 0, errs.join(' // ').slice(0, 600));
 

@@ -5999,7 +5999,7 @@ async function wipeServer(){
   const {F,db,uid}=await famReady(),L=S.link;
   // 서버에 닿는지 · 내 자리가 아직 있는지를 서버에서 직접 확인 (오프라인이면 여기서 멈춰서, 쓰기가 대기열에 쌓이지 않음)
   const mine=await withTimeout(F.getDocFromServer(L?famMember(F,db,L.hid,uid):F.doc(db,'ping',uid)),15000);
-  if(L&&mine.exists())await withTimeout(L.role==='host'?famDissolve(L.hid):famRemoveMember(L.hid,uid),45000);
+  if(L&&mine.exists())await withTimeout(famRemoveMember(L.hid,uid),45000);   // v0.96 방장 없음: 나가기와 같음 (마지막 사람이면 방도 없어짐)
   famDevKey='';famUserKey='';
   await withTimeout(Promise.all(['devices','users','ping'].map(c=>F.deleteDoc(F.doc(db,c,uid)))),20000);   // 알림 주소 · 가족방 번호 쪽지 · 연결 시험 쪽지
   await wipeUser();
@@ -6052,7 +6052,7 @@ async function wipeAll(){
   if(wipeBusy)return;
   const L=S.link,drive=!!(S.drive&&S.drive.last);
   if(!confirm('근무표·메모·알람·설정을 모두 지울까요?\n\n지우면 되돌릴 수 없어요.'
-    +(L?(L.role==='host'?'\n\n내가 만든 가족방도 없어지고, 가족은 가족방에서 나가져요.':'\n\n가족방에서도 나가요.')+'\n서버에 있는 내 정보와 로그인 계정까지 지워서 인터넷이 필요해요.':'')
+    +(L?'\n\n가족방에서도 나가요 (나 혼자였으면 가족방도 없어져요).'+'\n서버에 있는 내 정보와 로그인 계정까지 지워서 인터넷이 필요해요.':'')
     +(drive?'\n\n구글 드라이브에 만들어 둔 백업 파일은 안 지워져요 (구글 드라이브 설정 › 앱 관리에서 지울 수 있어요).':'')))return;
   if(!confirm('정말 모두 지울까요?'))return;
   wipeBusy=true;wipeBox(true);famStop();clearTimeout(famT);   // 지우는 동안 가족 쪽 일은 모두 멈춤

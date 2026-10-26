@@ -68,16 +68,16 @@ const A = await phone('mom', base('2026-10-06', 2));
 const momUid = await join(A, codeMom, '엄마', 'own');
 check('준비: 가족방에 아빠 · 엄마', await wait(H, async () => (await S(H)).fam2.members.length === 2, 20000));
 
-// 1) 방장 접속 표시
-check('방장 앱이 hostSeen(접속 표시)을 서버에 남김', await wait(H, async () => !!(await restRead(`households/${hostUid}`)).fields?.hostSeen, 20000), JSON.stringify(await restRead(`households/${hostUid}`)).slice(0, 200));
+// 1) 접속 표시 (v0.96: 모두 구성원 문서 seenAt · 처음 만든 사람은 옛 앱 가족을 위해 hostSeen 도)
+check('처음 만든 사람 앱이 hostSeen(옛 앱용) · seenAt 을 서버에 남김', await wait(H, async () => !!(await restRead(`households/${hostUid}`)).fields?.hostSeen && !!(await restRead(`households/${hostUid}/members/${hostUid}`)).fields?.seenAt, 20000), JSON.stringify(await restRead(`households/${hostUid}`)).slice(0, 200));
 await A.click('#nav [data-tab="set"]'); await A.click('[data-act="link-open"]'); await A.waitForTimeout(1500);
 const t1 = await A.evaluate(() => document.querySelector('#page').textContent.replace(/\s+/g, ' '));
-check('가족(엄마) 폰: "방장 마지막 접속: 오늘"', t1.includes('방장 마지막 접속: 오늘'), t1.slice(0, 300));
-await PATCH(`households/${hostUid}`, { hostSeen: { timestampValue: new Date(Date.now() - 6.5 * 864e5).toISOString() } });
+check('가족(엄마) 폰: 오늘 들어온 가족은 "안 들어옴" 표시 없음', t1.includes('아빠') && !t1.includes('안 들어옴'), t1.slice(0, 300));
+await PATCH(`households/${hostUid}/members/${hostUid}`, { seenAt: { timestampValue: new Date(Date.now() - 8.5 * 864e5).toISOString() } });
 await A.evaluate(() => window.__onBack && window.__onBack()); await A.click('[data-act="link-open"]'); await A.waitForTimeout(1500);
 const t2 = await A.evaluate(() => document.querySelector('#page').textContent.replace(/\s+/g, ' '));
-check('방장 접속이 6일 전이면 가족 폰에 경고(6일째 접속하지 않았어요)', t2.includes('6일째') && t2.includes('접속하지 않았어요'), t2.slice(0, 400));
-check('가족 폰에 "새 초대 코드로 옮기기" 줄이 있음', t2.includes('새 초대 코드로 옮기기'));
+check('8일 전에 들어온 가족은 목록에 "8일째 안 들어옴"', t2.includes('8일째 안 들어옴'), t2.slice(0, 400));
+check('가족 폰에 "새 초대 코드로 옮겨요" 줄이 있음', t2.includes('새 초대 코드로 옮겨요'));
 
 // 2) 방장 칸이 서버에서 사라짐 → 처음에는 연결을 지우지 않음
 await DEL(`households/${hostUid}/members/${hostUid}`);
@@ -91,7 +91,7 @@ const h2 = await S(H);
 check('★ 5분 넘게 못 찾으면 끊김으로 처리하고 "무엇이 끊겼는지"를 남김', !h2.link && !!h2.linkLost && h2.linkLost.role === 'host' && h2.linkLost.hid === hostUid, JSON.stringify({ link: h2.link, lost: h2.linkLost }));
 await openLink(H);
 const lt = await H.evaluate(() => document.querySelector('#page').textContent.replace(/\s+/g, ' '));
-check('방장 폰 가족 연결 화면에 "가족방 연결이 끊어졌어요" 안내 + 새 가족방 버튼', lt.includes('가족방 연결이 끊어졌어요') && !!(await H.$('#page .lost-card [data-act="link-invite"]')), lt.slice(0, 300));
+check('끊긴 폰 가족 연결 화면에 "가족방 연결이 끊어졌어요" 안내 + 새 코드로 참여 · 새 가족방 버튼', lt.includes('가족방 연결이 끊어졌어요') && !!(await H.$('#page .lost-card [data-act="link-join"]')) && !!(await H.$('#page .lost-card [data-act="link-invite"]')), lt.slice(0, 300));
 await H.click('#page [data-act="lost-dismiss"]'); await H.waitForTimeout(300);
 check('안내 닫기를 누르면 사라짐', !(await H.$('#page .lost-card')) && !(await S(H)).linkLost);
 
