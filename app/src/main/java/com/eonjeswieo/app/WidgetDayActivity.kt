@@ -385,7 +385,8 @@ class WidgetDayActivity : Activity() {
             content.orientation = LinearLayout.VERTICAL
 
             val far = day.optInt("far", 0)   // 0 = 자세히(앞 6일 ~ 뒤 14일) · 1 = 먼 앞날 · 2 = 지난 날
-            if (pj == null) wlRowView(day, pal)?.let { content.addView(it) }   // 업무 일지 줄(표시만 · 내 달력일 때만) → 누르면 앱 일지 팝업
+            wlBox = null
+            if (pj == null) wlRowView(day, pal)?.let { wlBox = it; content.addView(it) }   // 업무 일지 줄(표시만 · 내 달력일 때만) → 누르면 앱 일지 팝업
             if (pj != null) {
                 // 가족 달력: 그 사람이 공유한 스티커 · 가족 메모(♥)만 — 보기만 (체크는 못 함)
                 val ps = pj.optJSONObject("k")?.optJSONArray(key)
@@ -444,6 +445,12 @@ class WidgetDayActivity : Activity() {
                     }
                 }
 
+            }
+            // 업무 일지를 펼쳤으면 일지만 (스티커 · 메모 · 할 일 칸은 숨김 · 접으면 다시 보임)
+            wlOthers.clear()
+            if (wlBox != null && content.indexOfChild(wlBox) >= 0) {
+                for (ci in 0 until content.childCount) { val ch = content.getChildAt(ci); if (ch !== wlBox) wlOthers.add(ch) }
+                wlApplyOthers()
             }
             val maxH = (resources.displayMetrics.heightPixels * 0.6f).toInt()
             val scroll = object : ScrollView(this) {
@@ -552,6 +559,11 @@ class WidgetDayActivity : Activity() {
 
     /** 업무 일지가 있는 날: "📋 이름 / 인계 2 · 특이 1" 줄. 누르면 이 창 안에서 칸별 글이 펼쳐짐(보기만 · ‹ › 로 넘겨도 펼친 채) ·
      *  "✏️ 앱에서 고치기"만 앱으로. 먼 날(글을 안 보낸 날)은 눌러서 앱으로 */
+    private var wlBox: View? = null
+    private var wlCanView = false
+    private val wlOthers = ArrayList<View>()
+    private fun wlApplyOthers() { val hide = wlOpen && wlCanView; for (v in wlOthers) v.visibility = if (hide) View.GONE else View.VISIBLE }
+
     private fun wlRowView(day: JSONObject, pal: Pal): View? {
         val w = day.optJSONObject("wlr") ?: return null
         val name = w.optString("n", "")
@@ -613,12 +625,15 @@ class WidgetDayActivity : Activity() {
             detail.addView(edit)
             detail.visibility = if (wlOpen) View.VISIBLE else View.GONE
             box.addView(detail)
+            wlCanView = true
             row.setOnClickListener {
                 wlOpen = !wlOpen
                 detail.visibility = if (wlOpen) View.VISIBLE else View.GONE
                 arrowV.text = if (wlOpen) "▴" else "▾"
+                wlApplyOthers()
             }
         } else {
+            wlCanView = false
             row.setOnClickListener { openApp() }
         }
         val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)

@@ -431,9 +431,16 @@ object WidgetRenderer {
         return "⏰ 다음 알람 " + day + ap + " " + h12 + ":" + String.format("%02d", c.get(Calendar.MINUTE))
     }
 
+    @Volatile private var fill = true
+    @Volatile private var alphaF = 1f
+
     private fun draw(ctx: Context, cv: Canvas, w: Float, h: Float, count: Int) {
         val data = WidgetStore.load(ctx)
-        val pal = palette(ctx, data)
+        drawWith(cv, data, palette(ctx, data), w, h, count, if (count == 2) nextAlarmText(ctx) else "")
+    }
+
+    /** 그리기 본체 (Context 없이 — 컴퓨터 그림 확인에서도 씀) */
+    internal fun drawWith(cv: Canvas, data: JSONObject?, pal: Pal, w: Float, h: Float, count: Int, alarm: String) {
         val alpha = ((data?.optInt("alpha", 100) ?: 100).coerceIn(0, 100) * 255 / 100)
         val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         bgPaint.color = (pal.bg and 0x00FFFFFF) or (alpha shl 24)
@@ -441,6 +448,9 @@ object WidgetRenderer {
         cv.drawRoundRect(RectF(0f, 0f, w, h), r, r, bgPaint)
 
         val icons = data?.optJSONObject("ic")
+        fill = data?.optString("look", "fill") != "circle"   // 칸 채우기(기본) · 동그라미 — 한 달 위젯 · 앱 달력과 같은 설정
+        alphaF = 0.55f + 0.45f * ((data?.optInt("alpha", 100) ?: 100).coerceIn(0, 100) / 100f)
+        MonthRenderer.readToday(data)
         val memoMax = (data?.optInt("lines", 3) ?: 3).coerceIn(1, 2)   // 위젯 칸에는 메모를 최대 2개까지만 (그래야 근무 동그라미 · 스티커 자리가 넉넉함)
         val today = Calendar.getInstance()
         val tom = Calendar.getInstance()
@@ -465,7 +475,6 @@ object WidgetRenderer {
         } else if (count == 1) {
             drawRow(cv, listOf(d0), booleanArrayOf(false), 0f, 0f, iw, ih, pal, icons, memoMax, false)   // 1칸은 오늘 하루뿐이라 "오늘" 초록 칸 표시는 안 함
         } else {
-            val alarm = nextAlarmText(ctx)
             val bottom = if (alarm.isEmpty()) 0f else Math.max(ih * 0.13f, 14f * dens)
             val ch = ih - bottom
             drawRow(cv, listOf(d0, findDay(data, dateKey(tom))), booleanArrayOf(true, false), 0f, 0f, iw, ch, pal, icons, memoMax, false)
@@ -530,7 +539,7 @@ object WidgetRenderer {
     private fun drawRow(cv: Canvas, days: List<JSONObject?>, today: BooleanArray, x0: Float, y0: Float, w: Float, ch: Float, pal: Pal, icons: JSONObject?, memoMax: Int, compact: Boolean) {
         val cw = w / days.size
         val row = WidgetLayout.solve(days.map { dayIn(it, compact) }, cw, ch, dens, compact, memoMax)
-        if (days.size > 1) {   // 날짜 사이 연한 세로선 (위아래 4dp 안쪽에서 · 오늘 초록 칸은 그 위에 그려짐)
+        if (days.size > 1 && !fill) {   // 날짜 사이 연한 세로선 (칸 채우기는 칸 사이 틈으로 구분) (위아래 4dp 안쪽에서 · 오늘 초록 칸은 그 위에 그려짐)
             val lp = Paint(Paint.ANTI_ALIAS_FLAG)
             lp.color = pal.divider
             lp.strokeWidth = 1f * dens
@@ -538,15 +547,33 @@ object WidgetRenderer {
             for (i in 1 until days.size) cv.drawLine(x0 + cw * i, y0 + inset, x0 + cw * i, y0 + ch - inset, lp)
         }
         for (i in days.indices) drawCell(cv, days[i], x0 + cw * i, y0, cw, ch, pal, icons, today[i], row, compact)
+        val ti = today.indexOf(true)   // 오늘 칸 그림자(앱 오늘 모양 a · d) — 옆 칸 위에 그려야 보여서 맨 마지막에
+        if (fill && ti >= 0 && days[ti] != null && (MonthRenderer.todayLook == "a" || MonthRenderer.todayLook == "d"))
+            MonthRenderer.drawTodayShadow(cv, RectF(x0 + cw * ti, y0, x0 + cw * (ti + 1), y0 + ch), dens, pal === DARK)
     }
 
     /** 한 날짜를 칸 하나(x0,y0,cw,ch)에 그린다: 앱 달력 칸과 같은 짜임 (날짜 + 스티커 → 근무 동그라미 → 메모). 자리는 WidgetLayout 이 정함 */
     private fun drawCell(cv: Canvas, d: JSONObject?, x0: Float, y0: Float, cw: Float, ch: Float, pal: Pal, icons: JSONObject?, isToday: Boolean, row: WidgetLayout.Row, compact: Boolean) {
         if (d == null) return
-        if (isToday) {   // 달력의 오늘 칸처럼: 연한 초록 바탕 + 초록 테두리
+        val night = pal === DARK
+        val t = d.optString("t", "")
+        val bg = d.optString("bg", "")
+        if (fill) {   // 칸 채우기: 일하는 날은 근무 색을 연하게 칸 전체에 · 쉬는 날은 비움 (한 달 위젯과 같음)
+            val gap = 1.2f * dens
+            if (t.isNotEmpty() && bg.isNotEmpty()) {
+                val tint = MonthRenderer.mixRgb(parseColor(bg, pal.pill), pal.bg, if (night) 0.30f else 0.24f)
+                val tp = Paint(Paint.ANTI_ALIAS_FLAG)
+                tp.color = (tint and 0x00FFFFFF) or ((alphaF * 255).toInt() shl 24)
+                cv.drawRoundRect(RectF(x0 + gap, y0 + gap, x0 + cw - gap, y0 + ch - gap), 7f * dens, 7f * dens, tp)
+            }
+            if (isToday) {   // 오늘: 오른쪽 가장자리 띠 (앱 달력 · 한 달 위젯과 같은 모양 · 색)
+                if (MonthRenderer.todayShift) MonthRenderer.todayColor = MonthRenderer.shiftToday(t.isNotEmpty() && bg.isNotEmpty(), parseColor(bg, 0), t.isNotEmpty() && bg.isEmpty(), night)
+                MonthRenderer.drawTodayBand(cv, x0, y0, cw, ch, dens)
+            }
+        }
+        if (isToday && !fill) {   // 달력의 오늘 칸처럼: 연한 초록 바탕 + 초록 테두리
             val inset = 2f * dens
             val box = RectF(x0 + inset, y0 + inset, x0 + cw - inset, y0 + ch - inset)
-            val night = pal === DARK
             val f = Paint(Paint.ANTI_ALIAS_FLAG)
             f.color = if (night) 0xFF1E3A31.toInt() else 0xFFE3F5EF.toInt()
             cv.drawRoundRect(box, 8f * dens, 8f * dens, f)
@@ -563,17 +590,20 @@ object WidgetRenderer {
         val dateColor = if (hol.isNotEmpty() || dow == 0) pal.sun else if (dow == 6) pal.sat else pal.fg
 
         // 근무 동그라미: 위(날짜·스티커)와 아래(메모) 사이 한가운데 — 스티커 줄 아래쪽과 조금 겹칠 수 있어서 스티커보다 먼저 그림 (스티커가 위에 보이게)
-        val t = d.optString("t", "")
         if (t.isNotEmpty() && row.circleD > 0f) {
             val rad = row.circleD / 2f
             val cpaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
             val cx = x0 + cw / 2
             val cyc = y0 + row.circleCy
-            val bg = d.optString("bg", "")
             cpaint.typeface = Typeface.DEFAULT_BOLD
             cpaint.textAlign = Paint.Align.CENTER
             cpaint.textSize = rad * 1.0f
-            if (bg.isNotEmpty()) {
+            if (fill) {   // 칸 채우기: 동그라미 없이 글자만 (일하는 날 = 근무 색을 진하게 · 쉬는 날 = 장미색)
+                cpaint.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                cpaint.textSize = rad * (if (bg.isNotEmpty()) 1.12f else 1.24f)
+                cpaint.color = if (bg.isNotEmpty()) MonthRenderer.inkOf(parseColor(bg, pal.pill), night) else (if (night) 0xFFF28B9B.toInt() else 0xFFD9677B.toInt())
+                while (cpaint.measureText(t) > row.circleD * 1.1f && cpaint.textSize > rad * 0.6f) cpaint.textSize = cpaint.textSize * 0.92f
+            } else if (bg.isNotEmpty()) {
                 val cp = Paint(Paint.ANTI_ALIAS_FLAG)
                 cp.color = parseColor(bg, pal.pill)
                 cv.drawCircle(cx, cyc, rad, cp)

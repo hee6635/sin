@@ -662,19 +662,42 @@ object MonthRenderer {
     @Volatile internal var lastTop = 0f
     @Volatile internal var lastRr = 0f
     @Volatile internal var todayLook = "b"
-    @Volatile internal var todayColor = 0xFF2F6BF0.toInt()
+    @Volatile internal var todayColor = 0xFF5A7FD6.toInt()   // (앱 강조색과 같게 — v0.92 파스텔 강조색)
+    @Volatile internal var todayShift = false   // "근무 색": 오늘 표시 색을 그날 근무 색(한 단계 진하게)으로
+
+    /** 근무 색을 한 단계 진하게 (칸 바탕은 연한 같은 색이라 띠가 묻히지 않게) — 앱 tdcShift 와 같은 계산 */
+    internal fun deepen(c: Int, night: Boolean = false): Int {   // night: 어두운 위젯은 칸 색이 어두워서 반대로 밝게
+        val r = ((c shr 16) and 255) / 255f; val g = ((c shr 8) and 255) / 255f; val b = (c and 255) / 255f
+        val mx = Math.max(r, Math.max(g, b)); val mn = Math.min(r, Math.min(g, b)); val d = mx - mn
+        var h = if (d == 0f) 0f else if (mx == r) ((g - b) / d) % 6f else if (mx == g) (b - r) / d + 2f else (r - g) / d + 4f
+        h *= 60f; if (h < 0f) h += 360f
+        val sat = Math.min(1f, (if (mx == 0f) 0f else d / mx) * (if (night) 1.1f else 1.35f) + (if (night) 0.05f else 0.08f))
+        val v = if (night) Math.min(1f, mx * 1.3f + 0.18f) else mx * 0.74f
+        val cc = v * sat; val x = cc * (1f - Math.abs((h / 60f) % 2f - 1f)); val m = v - cc
+        val (r1, g1, b1) = when { h < 60f -> Triple(cc, x, 0f); h < 120f -> Triple(x, cc, 0f); h < 180f -> Triple(0f, cc, x); h < 240f -> Triple(0f, x, cc); h < 300f -> Triple(x, 0f, cc); else -> Triple(cc, 0f, x) }
+        fun ch(f: Float) = Math.round((f + m) * 255f).coerceIn(0, 255)
+        return (0xFF shl 24) or (ch(r1) shl 16) or (ch(g1) shl 8) or ch(b1)
+    }
+
+    /** 오늘 띠 모양 · 색 읽기 (한 달 위젯 · 작은 위젯 같이 씀) */
+    internal fun readToday(data: JSONObject?) {
+        val t = data?.optJSONObject("today")
+        val lk = t?.optString("look", "b") ?: "b"
+        todayLook = if (lk == "a" || lk == "c" || lk == "d") lk else "b"
+        val col = t?.optString("color", "") ?: ""
+        todayShift = col == "shift"
+        todayColor = try { if (col.matches(Regex("#[0-9a-fA-F]{6}"))) android.graphics.Color.parseColor(col) else 0xFF5A7FD6.toInt() } catch (e: Exception) { 0xFF5A7FD6.toInt() }
+    }
+
+    /** "근무 색"일 때 오늘 색: 색 있는 근무 = 한 단계 진하게 · 쉬는 날 = 장미 · 색 없음 = 기본 파랑 */
+    internal fun shiftToday(hasColor: Boolean, bg: Int, rest: Boolean, night: Boolean): Int =
+        if (hasColor) deepen(bg, night) else if (rest) 0xFFD0607A.toInt() else 0xFF5A7FD6.toInt()
 
     internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal, profileWDp: Float = -1f, part: Int = 0, moving: Boolean = false) {   // part: 0 = 전부 · 1 = 바깥 틀(바탕 · 맨 윗줄 · 요일 줄)만 · 2 = 날짜 칸들만 (월 넘김 · 오늘 효과가 따로 그려 겹침)
         lastToday = null
         statMemoHid = 0
         statStkHid = 0
-        run {
-            val t = data?.optJSONObject("today")
-            val lk = t?.optString("look", "b") ?: "b"
-            todayLook = if (lk == "a" || lk == "c" || lk == "d") lk else "b"
-            val col = t?.optString("color", "") ?: ""
-            todayColor = try { if (col.matches(Regex("#[0-9a-fA-F]{6}"))) android.graphics.Color.parseColor(col) else 0xFF2F6BF0.toInt() } catch (e: Exception) { 0xFF2F6BF0.toInt() }
-        }
+        readToday(data)
         val u = WidgetRenderer.dens
         val alpha = ((data?.optInt("alpha", 100) ?: 100).coerceIn(0, 100) * 255 / 100)
         val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -720,6 +743,11 @@ object MonthRenderer {
         val top = headH + WEEKDAY_DP * u
         val rowH = (h - top - BOTTOM_DP * u) / grid.rows
         val cells = infos(data, grid, person, pal)
+        if (todayShift) {   // 오늘 칸의 근무 색으로 (자정이 지나도 위젯이 다시 그릴 때 그날 근무로 바뀜)
+            val tk = java.time.LocalDate.now().toString()
+            val tf = cells.firstOrNull { it.key == tk }
+            if (tf != null) todayColor = shiftToday(tf.circle, tf.bg, tf.rest, pal === WidgetRenderer.DARK)
+        }
         val hasCircle = cells.any { it.circle }
         val rowMemos = IntArray(grid.rows) { r ->
             var m = 0
@@ -731,14 +759,19 @@ object MonthRenderer {
         val icons = data?.optJSONObject("ic")
         val fill = data?.optString("look", "fill") != "circle"   // 칸 채우기(기본) · 동그라미(예전 모양) — 앱 설정 › 홈 화면 위젯
         val alphaF = 0.55f + 0.45f * ((data?.optInt("alpha", 100) ?: 100).coerceIn(0, 100) / 100f)   // 칸 색은 위젯 바탕이 투명해져도 너무 옅어지지 않게
+        var tdBox: RectF? = null
         for (i in cells.indices) {
             val f = cells[i]
             val r = i / 7
             val c = i % 7
             val isToday = f.inMonth && f.key == todayKey
             if (isToday) lastToday = RectF(side + cw * c, top + rowH * r, side + cw * (c + 1), top + rowH * (r + 1))
+            if (isToday) tdBox = RectF(side + cw * c, top + rowH * r, side + cw * (c + 1), top + rowH * (r + 1))
             drawCell(cv, f, side + cw * c, top + rowH * r, cw, rowH, r, plan, pal, icons, person != null, isToday, u, fill, alphaF, tn)
         }
+        // 오늘 칸 그림자(앱 오늘 모양 a · d 와 같음: 0 5px 8px -4px) — 아래 칸 위에 그려야 보여서 맨 마지막에
+        val tb = tdBox
+        if (fill && tb != null && (todayLook == "a" || todayLook == "d")) drawTodayShadow(cv, tb, u, pal === WidgetRenderer.DARK)
     }
 
     /** 맨 윗줄: [이름 칩] ‹ 2026년 10월 › — 화살표는 칩이 있든 없든 제목 바로 옆에 굵고 진하게 (예전에 칩이 없을 때 위젯 맨 끝에 뒀더니 폰에서 안 보였음). 위치는 WidgetLayout.monthArrows */
@@ -836,7 +869,7 @@ object MonthRenderer {
 
     /** 글자가 maxW 를 넘으면 maxW 안에 들어올 때까지 줄임 */
     /** a 를 t 만큼, b 를 (1-t) 만큼 섞은 불투명 색 */
-    private fun mixRgb(a: Int, b: Int, t: Float): Int {
+    internal fun mixRgb(a: Int, b: Int, t: Float): Int {
         val r = (((a shr 16) and 255) * t + ((b shr 16) and 255) * (1f - t)).toInt()
         val g = (((a shr 8) and 255) * t + ((b shr 8) and 255) * (1f - t)).toInt()
         val bl = ((a and 255) * t + (b and 255) * (1f - t)).toInt()
@@ -844,7 +877,7 @@ object MonthRenderer {
     }
 
     /** 근무 색(칸 바탕색)에서 글자색: 같은 색 계열을 진하게 (밝은 위젯) · 밝게 (어두운 위젯) */
-    private fun inkOf(c: Int, night: Boolean): Int {
+    internal fun inkOf(c: Int, night: Boolean): Int {
         val r = ((c shr 16) and 255) / 255f
         val g = ((c shr 8) and 255) / 255f
         val b = (c and 255) / 255f
@@ -886,8 +919,26 @@ object MonthRenderer {
         }
     }
 
+    /** 오늘 칸이 살짝 떠 보이는 그림자 (CSS box-shadow 0 5px 8px -4px 를 몇 겹의 옅은 둥근 사각형으로 흉내) · 칸 아래쪽 바깥에만 */
+    internal fun drawTodayShadow(cv: Canvas, cell: RectF, u: Float, night: Boolean) {
+        val gap = 1.2f * u
+        val box = RectF(cell.left + gap, cell.top + gap, cell.right - gap, cell.bottom - gap)
+        val total = if (night) 0.22f else 0.28f   // 어두운 화면에선 조금 옅게
+        val n = 8
+        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        cv.save()
+        cv.clipRect(box.left - 10f * u, box.bottom, box.right + 10f * u, box.bottom + 12f * u)
+        for (i in 0 until n) {
+            val e = 8f * u * (i + 0.5f) / n - 4f * u   // 퍼짐 -4 에서 흐림 8 까지
+            val sr = RectF(box.left - e, box.top - e + 5f * u, box.right + e, box.bottom + e + 5f * u)
+            p.color = (((total / n) * 255).toInt().coerceAtLeast(1) shl 24)
+            cv.drawRoundRect(sr, 7f * u + Math.max(0f, e), 7f * u + Math.max(0f, e), p)
+        }
+        cv.restore()
+    }
+
     /** 오늘 띠: 칸의 둥근 오른쪽 선을 따라 휘는 띠(끝이 가늘어짐). 모양 a~d · 색은 앱 달력과 같은 설정(`today`) */
-    private fun drawTodayBand(cv: Canvas, x0: Float, y0: Float, cw: Float, rowH: Float, u: Float, tn: Tune, night: Boolean) {
+    internal fun drawTodayBand(cv: Canvas, x0: Float, y0: Float, cw: Float, rowH: Float, u: Float) {
         val look = todayLook
         val w = (if (look == "a") 3f else if (look == "c") 6f else 4f) * u
         val pct = if (look == "a") 0.42f else if (look == "c") 0.80f else 0.55f
@@ -965,7 +1016,7 @@ object MonthRenderer {
             cv.drawPath(path, hp)
         }
 
-        if (fill && isToday) drawTodayBand(cv, x0, y0, cw, rowH, u, tn, night)   // 오늘: 오른쪽 가장자리 띠(앱 달력과 같음 · 가장 아래층)
+        if (fill && isToday) drawTodayBand(cv, x0, y0, cw, rowH, u)   // 오늘: 오른쪽 가장자리 띠(앱 달력과 같음 · 가장 아래층)
 
         // 근무: 일하는 날은 동그라미 · 쉬는 날은 글자만 (줄 안에서 높이가 같음 · 모든 동그라미가 같은 크기)
         if (f.shift.isNotEmpty() && plan.circleD > 0f && (f.circle || f.rest)) {

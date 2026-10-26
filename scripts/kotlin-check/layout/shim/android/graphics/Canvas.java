@@ -45,6 +45,7 @@ public class Canvas {
     public void rotate(float deg) { g.rotate(Math.toRadians(deg)); }
     public void rotate(float deg, float px, float py) { g.rotate(Math.toRadians(deg), px, py); }
     public boolean clipPath(Path p) { g.clip(p.shape()); return true; }
+    public boolean clipRect(float l, float t, float r, float b) { g.clip(new java.awt.geom.Rectangle2D.Float(l, t, r - l, b - t)); return true; }
 
     private void paint(Shape s, Paint p) {
         int c = p.getColor();

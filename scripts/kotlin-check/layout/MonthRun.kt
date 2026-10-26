@@ -118,6 +118,17 @@ private fun effects(data: JSONObject, dir: File) {
     }
 }
 
+private fun small(data: JSONObject, name: String, wDp: Int, hDp: Int, count: Int, dark: Boolean, file: File) {
+    val u = 2.75f
+    try {
+        WidgetRenderer.dens = u
+        val b = Bitmap.createBitmap((wDp * u).toInt(), (hDp * u).toInt(), Bitmap.Config.ARGB_8888)
+        WidgetRenderer.drawWith(Canvas(b), data, if (dark) WidgetRenderer.DARK else WidgetRenderer.LIGHT, b.width.toFloat(), b.height.toFloat(), count, if (count == 2) "⏰ 내일 05:30" else "")
+        ImageIO.write(b.javaClass.getField("img").get(b) as BufferedImage, "png", file)
+        println("  작은 위젯 $name")
+    } catch (e: Throwable) { fails++; println("  ✗ 작은 위젯 $name: $e"); e.printStackTrace(System.out) }
+}
+
 fun main(args: Array<String>) {
     gridCheck()
     val data = JSONObject(File(args[0]).readText())
@@ -144,6 +155,11 @@ fun main(args: Array<String>) {
     render(data, "내 달력 · 큰 위젯 · 6주 달(2달 전)", 545, 561, -2, -1, false, File(out, "r36_big_6weeks.png"))
     render(data, "내 달력 · 아주 큰 위젯(700x640)", 700, 640, 0, -1, false, File(out, "r37_huge.png"))
     if (ppl.isNotEmpty()) render(data, "가족 달력 · 큰 위젯 + 칩", 545, 561, 0, 0, false, File(out, "r38_big_fam.png"))
+    // 작은 위젯(1칸 · 2칸 · 7일): 칸 채우기 모양도 확인 (v0.96)
+    small(data, "1칸", 110, 110, 1, false, File(out, "s1_one.png"))
+    small(data, "2칸", 250, 110, 2, false, File(out, "s2_two.png"))
+    small(data, "7일", 340, 140, 7, false, File(out, "s7_week.png"))
+    small(data, "7일 · 어둡게", 340, 140, 7, true, File(out, "s7_week_dark.png"))
     // 월 넘김 · 오늘 효과의 중간 프레임: 폰이 쓰는 것과 같은 함수(composeSlide · drawGlow)로 겹쳐서 그림
     effects(data, File(out, "fx"))
     println(if (fails == 0) "진짜 그리기 코드: 오류 없이 모두 그려짐" else "진짜 그리기 코드: 실패 ${fails}개")
