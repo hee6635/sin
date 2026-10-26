@@ -127,7 +127,7 @@ for (const [nm, a] of [['딸', '2026-10-03'], ['아들', '2026-10-04'], ['할머
 check('가족방에 5명', await wait(H, async () => (await S(H)).fam2.members.length === 5, 30000), String((await S(H)).fam2.members.length));
 await toCal(H); await openLink(H); await H.waitForTimeout(1500);
 const lt = await H.evaluate(() => document.querySelector('#page').textContent.replace(/\s+/g, ' '));
-check('방장 화면: 가족 4/4명 · 가족 자리가 가득 찼어요 · 초대 버튼 없음', lt.includes('4/4명') && lt.includes('가족 자리가 가득 찼어요') && !(await H.$('#page [data-act="link-invite"]')), lt.slice(0, 300));
+check('가족 화면: 5/5명 · 가족 자리가 가득 찼어요 · 초대 버튼 없음', lt.includes('5/5명') && lt.includes('가족 자리가 가득 찼어요') && !(await H.$('#page [data-act="link-invite"]')), lt.slice(0, 300));
 check('에러 없음', errs.length === 0, errs.slice(0, 2).join(' // '));
 log(`\n${okN}개 통과, ${ngN}개 실패`);
 await b.close(); process.exit(ngN ? 1 : 0);

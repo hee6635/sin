@@ -1520,7 +1520,7 @@ function famCleanMember(m,id){
 function famCleanMemo(v,t){
   if(!isObj(v)||!okDate(v.date)||!okId(v.by))return null;
   return {by:v.by,byName:cutTxt(v.byName,12)||'가족',date:v.date,text:cutMulti(v.text,200),to:Array.isArray(v.to)?v.to.filter(okId).slice(0,12):null,
-    rev:Math.max(0,Math.min(1e6,Math.round(+v.rev)||0)),time:/^\d\d:\d\d$/.test(v.time||'')?v.time:'',al:(v.al==='0'||v.al==='10')?v.al:'',t:+t||+v.t||Date.now()};
+    rev:Math.max(0,Math.min(1e6,Math.round(+v.rev)||0)),time:/^\d\d:\d\d$/.test(v.time||'')?v.time:'',al:(v.al==='0'||v.al==='10')?v.al:'',t:+t||+v.t||Date.now(),...(v.moved===true?{moved:true}:{})};
 }
 function famCleanReq(v,t,u){
   if(!isObj(v)||!okDate(v.date))return null;
@@ -1554,7 +1554,13 @@ function famCleanFam2(f){   // 폰에 저장해 둔 가족 복사본 (옛 버전
   ['reqIn','reqOut'].forEach(k=>{if(isObj(f[k]))Object.keys(f[k]).forEach(id=>{const c=okId(id)?famCleanReq(f[k][id]):null;if(c)out[k][id]=c;});});
   if(isObj(f.reqCc))Object.keys(f.reqCc).forEach(id=>{const c=okId(id)?famCleanCc(f.reqCc[id]):null;if(c)out.reqCc[id]=c;});
   if(isObj(f.memoRev))Object.keys(f.memoRev).forEach(id=>{if(okId(id))out.memoRev[id]=Math.max(0,Math.round(+f.memoRev[id])||0);});
-  if(isObj(f.me))out.me={sent:Math.max(0,Math.round(+f.me.sent)||0),bonus:Math.max(0,Math.round(+f.me.bonus)||0)};
+  if(isObj(f.me))out.me={sent:Math.max(0,Math.round(+f.me.sent)||0),bonus:Math.max(0,Math.round(+f.me.bonus)||0),joinedAt:Math.max(0,+f.me.joinedAt||0),joinLocal:Math.max(0,+f.me.joinLocal||0),moved:Math.max(0,Math.round(+f.me.moved)||0)};
+  // v0.96 옛 가족 메모 옮기기: 묶음으로 올린 내 메모 id · 가족이 올린 묶음(보기만)
+  if(Array.isArray(f.archIds))out.archIds=f.archIds.filter(x=>typeof x==='string'&&x.length<=60).slice(0,4500);
+  if(f.archDone)out.archDone=1;
+  if(typeof f.archKey==='string')out.archKey=f.archKey.slice(0,700);
+  out.arch={};if(isObj(f.arch))Object.keys(f.arch).slice(0,15).forEach(id=>{const a=f.arch[id];if(!isObj(a)||!okId(a.by)||!Array.isArray(a.items))return;
+    out.arch[id]={by:a.by,byName:cutTxt(a.byName,12)||'가족',items:a.items.filter(x=>isObj(x)&&okDate(x.d)&&typeof x.t==='string'&&x.t.trim()).slice(0,1500).map(x=>({d:x.d,t:cutMulti(x.t,200),...(/^\d\d:\d\d$/.test(x.tm||'')?{tm:x.tm}:{})}))};});
   if(Array.isArray(f.seenMemo))out.seenMemo=f.seenMemo.filter(okId).slice(-300);
   if(+f.syncAt>0)out.syncAt=+f.syncAt;
   out.board={};if(isObj(f.board))Object.keys(f.board).slice(0,600).forEach(id=>{const c=okId(id)?famCleanBoardDoc(f.board[id]):null;if(c)out.board[id]=c;});   // 가족 포스트잇 복사본
@@ -1828,7 +1834,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'?'fill':'circle';s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.todayColor=(o&&o.todayColor==='shift')?'shift':/^#[0-9a-f]{6}$/i.test((o&&o.todayColor)||'')?o.todayColor.toLowerCase():'';   // 'shift' = 그날 근무 색s.linkLost=(o&&isObj(o.linkLost)&&typeof o.linkLost.hid==='string')?{hid:cutTxt(o.linkLost.hid,128),role:o.linkLost.role==='host'?'host':'guest',name:cutTxt(o.linkLost.name,12),at:+o.linkLost.at||0}:null;s.linkMissAt=+(o&&o.linkMissAt)||0;s.hostSeenAt=+(o&&o.hostSeenAt)||0;s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.pushBoard=!(o&&o.pushBoard===false);s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'?'fill':'circle';s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.todayColor=(o&&o.todayColor==='shift')?'shift':/^#[0-9a-f]{6}$/i.test((o&&o.todayColor)||'')?o.todayColor.toLowerCase():'';/* 'shift' = 그날 근무 색 */s.linkLost=(o&&isObj(o.linkLost)&&typeof o.linkLost.hid==='string')?{hid:cutTxt(o.linkLost.hid,128),role:o.linkLost.role==='host'?'host':'guest',name:cutTxt(o.linkLost.name,12),at:+o.linkLost.at||0}:null;s.linkMissAt=+(o&&o.linkMissAt)||0;s.hostSeenAt=+(o&&o.hostSeenAt)||0;s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='paper')?'paper':'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,stkAsked:s.link.stkAsked?1:0,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#5b8fc7'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#5b8fc7'})[k];});if(!(o&&o.memoMig88)&&s.memoColors.my==='#6b7280')s.memoColors.my='#5b8fc7';s.memoMig88=true;   // v0.88: 내 메모 기본색 회색 → 연한 파랑 (옛 기본값 그대로인 사람만 · 한 번만 — 그 뒤에 회색을 고르면 그대로)
   s.drive=Object.assign(defaults().drive,isObj(o.drive)?o.drive:{});
@@ -2271,7 +2277,7 @@ function pushEvent(to,kind,k,text){
   if(S.link&&to===role()&&BAN_KINDS.includes(kind)&&!(kind==='memo'&&S.syncSettings.receiveFamilyMemo===false))showBanner(S.events[0]);
 }
 /* 앱을 보고 있을 때 가족 소식이 오면 화면 위에서 잠깐 내려왔다가 올라가요 (꺼져 있을 땐 폰 알림). 누르면 그 날짜 · 위로 쓸면 닫기 · 여러 개면 차례로 */
-const BAN_KINDS=['req','cc','reply','apply','memo','sch','join','board'];
+const BAN_KINDS=['req','cc','reply','apply','memo','sch','join','board','kick'];
 let banQ=[],banBusy=false,banY=null,banSwiped=false,banT=0;
 function showBanner(e){
   if(!e||document.visibilityState!=='visible')return;
@@ -5357,6 +5363,7 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
+  'v0.96':`· <b>가족방에 방장이 없어졌어요</b>: 누구나 초대 · 나가기 · 가족을 빼려면 과반 찬성 (30일 넘게 안 온 사람 · 내가 초대한 지 하루 안 된 사람은 바로)\n· <b>가족 포스트잇 알림</b>: 새로 붙이거나 줄을 더하거나 할 일이 다 끝나면 (설정에서 끌 수 있어요)\n· <b>가족방에 다시 들어올 때</b> 옛 가족 메모가 무료 횟수 없이 옮겨져요\n· <b>오늘 표시 "근무 색"</b> · 모든 달력에 오늘 빛 · 작은 위젯도 칸 채우기`,
   'v0.83':`· <b>알람 시간</b>: 위아래로 돌려서 1분 단위로 골라요\n· <b>오늘 칸 빛</b>: 앱을 켤 때 · 다른 달에서 이번 달로 돌아올 때 오늘 칸에 빛이 한 바퀴 (위젯도 ‹ › 로 돌아오면)\n· <b>메모</b>: 어디서든 3줄 · "+1" 이 작아지고 · 잘린 메모 끝에 작은 "…"\n· 접고 펼 때 스티커가 커진 채 남던 문제 고침 · 1/2 배지가 잘리지 않게`,
   'v0.82':`· <b>1/2 배지</b>: 커버 화면에서 너무 컸던 걸 스티커 크기에 맞춰 작게 · <b>위젯 "오늘"</b>: 이동과 빛이 훨씬 부드럽게 · <b>메모 위치</b>: 이제 1.0보다 더 아래로 (최대 3.0)`,
   'v0.81':`· <b>위젯</b>: 맨 윗줄이 높아지고 ‹ › 버튼이 보여요 · 달을 넘기면 새 달이 미끄러져 들어와요 · 이번 달이 아니면 \"오늘로\" 버튼 · 메모 3줄 · 명절 글자가 숫자 옆에 · 앞뒤 달은 더 흐리게\n· <b>알람</b>: 시간을 1분 단위로 · 끄기 화면이 파스텔 톤으로\n· <b>달력</b>: 회사 휴무일이 명절처럼 · 오늘 띠 색 고르기(설정 › 달력 모양)\n· <b>가족방</b>: 연결이 끊겨도 바로 지우지 않고 안내해요 · 방장이 오래 안 들어오면 가족 폰에 알려요`,
@@ -6465,7 +6472,7 @@ document.addEventListener('click',e=>{
     case 'link-invite':openInvitePop();break;
     case 'link-join':openJoinPop();break;
     case 'lost-dismiss':S.linkLost=null;save();if(pageMode==='link')renderLinkPage();break;
-    case 'link-move':if(confirm('이 가족방에서 나가고, 방장에게 받은 새 초대 코드로 다시 들어갈까요?\n(먼저 방장에게 새 코드를 받아 두세요)'))famDo(async()=>{await famRemoveMember(S.link.hid,FBX.uid);S.link=null;famClear();S.linkLost=null;save();setTimeout(()=>openJoinPop(),200);},'가족방에서 나왔어요');break;
+    case 'link-move':if(confirm('이 가족방에서 나가고, 새 초대 코드로 다른 가족방에 들어갈까요?\n(먼저 새 코드를 받아 두세요)'))famDo(async()=>{await famRemoveMember(S.link.hid,FBX.uid);S.link=null;famClear();S.linkLost=null;save();setTimeout(()=>openJoinPop(),200);},'가족방에서 나왔어요');break;
     case 'inv-perm':invPull();invDraft.perm=t.dataset.v;renderInvitePop();break;
     case 'inv-make':invMake();break;
     case 'inv-share':famShare(t.dataset.c);break;
@@ -6477,10 +6484,11 @@ document.addEventListener('click',e=>{
     case 'mem-menu':openMemberMenu(t.dataset.u);break;
     case 'mem-rename':openRename(t.dataset.u);break;
     case 'mem-save':memSave();break;
-    case 'mem-perm':{const m=famUi.members.find(x=>x.uid===t.dataset.u);if(m){closePop();famDo(()=>famEdit(S.link.hid,m.uid,{perm:m.perm==='read'?'write':'read'}),'권한을 바꿨어요');}break;}
-    case 'mem-kick':{const m=famUi.members.find(x=>x.uid===t.dataset.u);if(m&&confirm(`${m.name}님을 가족방에서 내보낼까요?`)){closePop();famDo(()=>famRemoveMember(S.link.hid,m.uid),'내보냈어요');}break;}
-    case 'link-leave':if(confirm('이 가족방에서 나갈까요?\n(다시 들어오려면 새 초대 코드가 필요해요)'))famDo(async()=>{await famRemoveMember(S.link.hid,FBX.uid);S.link=null;famClear();save();},'가족방에서 나왔어요');break;
-    case 'link-dissolve':if(confirm('방장이 나가면 가족방이 없어져요.\n가족은 모두 연결이 끊기고 초대 코드도 사라져요.\n(내 근무표 · 메모는 이 폰에 그대로예요)\n\n가족방을 없앨까요?')&&confirm('정말 없앨까요?'))famDo(async()=>{await famDissolve(S.link.hid);S.link=null;famClear();save();},'가족방을 없앴어요');break;
+    case 'mem-out':{const m=famUi.members.find(x=>x.uid===t.dataset.u);if(m&&confirm(`${m.name}님을 가족방에서 뺄까요?`)){closePop();famDo(()=>famRemoveOther(m.uid),`${m.name}님을 뺐어요`);}break;}
+    case 'kick-new':{const m=famUi.members.find(x=>x.uid===t.dataset.u);if(m&&confirm(`${m.name}님 내보내기를 가족에게 제안할까요?\n가족 과반이 찬성하면 빠져요 (7일 안). ${m.name}님에게는 빠진 뒤에만 알려요.`)){closePop();famDo(async()=>{const r=await famKickStart(m.uid);toast(r==='out'?`${m.name}님을 뺐어요`:'가족에게 제안했어요');});}break;}
+    case 'kick-vote':{const m=famUi.members.find(x=>x.uid===t.dataset.u);if(m&&confirm(`${m.name}님 내보내기에 찬성할까요?`)){closePop();famDo(async()=>{const r=await famKickVote(m.uid);toast(r==='out'?`${m.name}님을 뺐어요`:'찬성했어요');});}break;}
+    case 'kick-cancel':closePop();famDo(()=>famKickCancel(t.dataset.u),'제안을 취소했어요');break;
+    case 'link-leave':if(confirm(famUi.members.length<=1?'나 혼자라 나가면 가족방이 없어져요.\n(내 근무표 · 메모는 이 폰에 그대로예요)\n\n나갈까요?':'이 가족방에서 나갈까요?\n(다시 들어오려면 가족에게 새 초대 코드를 받아요)'))famDo(async()=>{await famRemoveMember(S.link.hid,FBX.uid);S.link=null;famClear();save();},'가족방에서 나왔어요');break;
     case 'feed-tab':feedTab=t.dataset.v;openFeed();break;
     case 'feed-allread':markSeen(()=>true);render();openFeed();break;
     case 'feed-open':{
@@ -6491,7 +6499,8 @@ document.addEventListener('click',e=>{
         if(/^\d{4}-\d{2}-\d{2}$/.test(ev.k||'')){const d=parse(ev.k);tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(ev.k);}
         else openFeed();
       }else if(ev.kind==='sch'){closeSheet();const d=parse(ev.k);if(ev.u)vcUid=ev.u;vcY=d.getFullYear();vcM=d.getMonth();vcSel.on=false;vcSel.dates=new Set();if(famView()){tab='cal';render();}else renderFamCalPage();
-      }else if(ev.kind==='board'){const [y,m]=String(ev.k).split('-').map(Number);tab='cal';if(y)setCur(y,m-1);render();openBoard();}
+      }else if(ev.kind==='board'){const [y,m]=String(ev.k).split('-').map(Number);tab='cal';if(y){setCur(y,m-1);if(famView()){vcY=y;vcM=m-1;}}render();openBoard();}
+      else if(ev.kind==='kick'){closeSheet();openLinkPage();}
       else openFeed();
       break;}
 
@@ -6997,6 +7006,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='statsOn'){S.stats=t.checked;save();applyStats();
   }else if(t.id==='showBand'){S.showBand=t.checked;save();applyBand();
   }else if(t.id==='famPushQuiet'){S.pushQuiet=t.checked;save();famRegDevice().catch(()=>{});toast(t.checked?'자는 시간엔 소리 없이 알려요':'자는 시간에도 소리로 알려요');
+  }else if(t.id==='famPushBoard'){S.pushBoard=t.checked;save();famRegDevice().catch(()=>{});toast(t.checked?'포스트잇 알림을 받아요':'포스트잇 알림을 끌게요 (아이콘의 작은 점은 그대로)');
   }else if(t.id==='famPushOn'){S.pushOn=t.checked;save();famRegDevice().catch(()=>{});toast(t.checked?'가족 알림을 받아요':'가족 알림을 끌게요');
   }else if(t.id&&t.id.startsWith('wlsH_')){const sc=S.wlog.secs.find(x=>x.id===t.id.slice(5));if(sc){if(t.checked&&S.wlog.secs.filter(x=>!x.h).length<=1){t.checked=false;toast('칸이 하나는 있어야 해요');}else{sc.h=t.checked;save();}}
   }else if(t.id==='wlsBk'){S.wlog.backup=t.checked;save();toast(t.checked?'일지도 백업에 들어가요':'일지는 백업에서 빠져요 (폰에만)');
@@ -7300,16 +7310,18 @@ async function famMyInvites(){
     out.push({code:d.id,name:v.name,perm:v.perm,exp});});
   return out.sort((a,b)=>a.exp-b.exp);
 }
-// 가족방이 없으면 만들기 (호스트 구성원 문서와 한 묶음)
+// 가족방이 없으면 만들기 (처음 만든 사람 구성원 문서와 한 묶음). 내 번호 방이 이미 있으면(내가 나간 방에 가족이 남아 있음) 새 번호로
 async function famEnsureHouse(hostName){
   const {F,db,uid}=await famReady();
   const me=await F.getDoc(famMember(F,db,uid,uid));
   if(me.exists()){const d=me.data();S.link={hid:uid,role:'host',name:d.name,perm:'write',mode:'own',uid,hash:''};save();famBoot();return;}
-  const b=F.writeBatch(db);
-  b.set(F.doc(db,'households',uid),{ownerUid:uid,createdAt:F.serverTimestamp(),guestCount:0});
-  b.set(famMember(F,db,uid,uid),{role:'host',name:hostName,perm:'write',joinedAt:F.serverTimestamp()});
-  await b.commit();
-  S.link={hid:uid,role:'host',name:hostName,perm:'write',mode:'own',uid,hash:''};save();famBoot();
+  const mk=async hid=>{const b=F.writeBatch(db);
+    b.set(F.doc(db,'households',hid),{ownerUid:uid,createdAt:F.serverTimestamp(),guestCount:0});
+    b.set(famMember(F,db,hid,uid),{role:'host',name:hostName,perm:'write',joinedAt:F.serverTimestamp()});
+    await b.commit();return hid;};
+  let hid;
+  try{hid=await mk(uid);}catch(e){if(!String((e&&e.code)||e).includes('permission'))throw e;hid=await mk(uid+'_'+famNewCode());}
+  S.link={hid,role:'host',name:hostName,perm:'write',mode:'own',uid,hash:''};save();famBoot();
   if(googleOn()&&!S.gAcct)gAskAfter=true;   // 가족방을 새로 만들었으면 코드 창 다음에 바로 구글 연결 안내
 }
 let gAskAfter=false;
@@ -7324,7 +7336,7 @@ async function famCreateInvite(perm,name){
   for(let i=0;i<5;i++){
     const code=famNewCode(),exp=Date.now()+FAM_DAYS*864e5;
     try{
-      await F.setDoc(F.doc(db,'invites',code),{hid:uid,ownerUid:uid,perm,name:name||'',hostName:S.link.name,patternName:(S.patternName||'').slice(0,20),createdAt:F.serverTimestamp(),expireAt:F.Timestamp.fromMillis(exp),usedBy:null});
+      await F.setDoc(F.doc(db,'invites',code),{hid:S.link.hid,ownerUid:uid,perm,name:name||'',hostName:S.link.name,patternName:(S.patternName||'').slice(0,20),createdAt:F.serverTimestamp(),expireAt:F.Timestamp.fromMillis(exp),usedBy:null});
       return {code,exp};
     }catch(e){if(i===4)throw e;}   // 코드가 겹쳤으면 다시
   }
@@ -7334,53 +7346,88 @@ async function famLookup(code){
   const snap=await F.getDoc(F.doc(db,'invites',code));
   if(!snap.exists())return {err:'없는 코드예요. 다시 확인해 주세요'};
   const d=snap.data();
-  if(d.hid===uid)return {err:'내가 만든 코드예요. 가족 폰에서 넣어 주세요'};
+  if(d.ownerUid===uid||d.hid===uid)return {err:'내가 만든 코드예요. 가족 폰에서 넣어 주세요'};
+  if(S.link&&d.hid===S.link.hid)return {err:'이미 이 가족방에 있어요'};
   if(d.usedBy)return {err:'이미 사용된 코드예요. 새 코드를 요청해 주세요'};
   if(d.expireAt.toMillis()<Date.now())return {err:'기간이 지난 코드예요. 새 코드를 요청해 주세요'};
-  return {ok:true,hid:d.hid,perm:d.perm,name:d.name,hostName:d.hostName,patternName:d.patternName};
+  return {ok:true,hid:d.hid,perm:d.perm,name:d.name,hostName:d.hostName,patternName:d.patternName,ownerUid:okId(d.ownerUid)?d.ownerUid:''};
 }
 async function famJoin(code,info,name,mode){
   track('family_join');
   mode=mode==='view'?'view':'own';
   const {F,db,uid}=await famReady();
   const b=F.writeBatch(db);
-  b.set(famMember(F,db,info.hid,uid),{role:'guest',name,perm:info.perm,joinedAt:F.serverTimestamp(),inviteCode:code,mode});
+  b.set(famMember(F,db,info.hid,uid),{role:'guest',name,perm:info.perm,joinedAt:F.serverTimestamp(),inviteCode:code,mode,...(info.ownerUid?{invitedBy:info.ownerUid}:{})});   // invitedBy: 초대한 사람이 24시간 안에 되돌릴 수 있게
   b.update(F.doc(db,'invites',code),{usedBy:uid,usedAt:F.serverTimestamp()});
   b.update(F.doc(db,'households',info.hid),{guestCount:F.increment(1)});
   await b.commit();
-  S.link={hid:info.hid,role:'guest',name,perm:info.perm,mode,uid,hash:''};save();famBoot();
+  S.link={hid:info.hid,role:'guest',name,perm:info.perm,mode,uid,hash:''};
+  S.fam2.me={...(S.fam2.me||{}),joinedAt:Date.now(),joinLocal:Date.now(),moved:0};S.fam2.archDone=0;S.fam2.archIds=[];   // 들어오고 10분 안: 옛 메모는 무료 횟수 없이 옮김 (서버 시각이 오면 바뀜)
+  save();famBoot();
 }
-async function famRemoveMember(hid,uid){   // 나가기(본인) · 내보내기(호스트)
+async function famRemoveMember(hid,uid){   // 나가기(본인) — 마지막 한 명이면 가족방도 같이 없앰
   const {F,db}=await famReady();
   const b=F.writeBatch(db);
+  const hs=await F.getDoc(F.doc(db,'households',hid));const gc=hs.exists()?(+hs.data().guestCount||0):0;
   const mm=await F.getDocs(F.query(F.collection(db,'households',hid,'memos'),F.where('by','==',uid)));
   const q1=await F.getDocs(F.query(F.collection(db,'households',hid,'requests'),F.where('from','==',uid)));
   const q2=await F.getDocs(F.query(F.collection(db,'households',hid,'requests'),F.where('to','==',uid)));
   [...mm.docs,...q1.docs,...q2.docs].slice(0,400).forEach(d=>b.delete(d.ref));   // 쓴 가족 메모 · 주고받은 요청도 같이 지움
   b.delete(famMember(F,db,hid,uid));
   b.delete(F.doc(db,'households',hid,'schedules',uid));   // 올려 둔 내 근무표도 같이 지움
-  b.update(F.doc(db,'households',hid),{guestCount:F.increment(-1)});
+  if(gc<=0)b.delete(F.doc(db,'households',hid));   // 나 혼자 남았으면 방도 없앰 (안에 남은 것은 서버가 정리)
+  else b.update(F.doc(db,'households',hid),{guestCount:F.increment(-1),lastOut:uid,outBy:uid});
   await b.commit();
   if(uid===S.link?.uid){famDevKey='';famUserKey='';await F.deleteDoc(F.doc(db,'devices',uid)).catch(()=>{});await F.deleteDoc(F.doc(db,'users',uid)).catch(()=>{});}   // 나간 가족방 알림은 더 안 오게
 }
-async function famDissolve(hid){   // 가족방 없애기: 코드 · 구성원 · 가족방을 한 묶음으로
-  const {F,db,uid}=await famReady();
+// v0.96 다른 가족 빼기 (30일 넘게 안 옴 · 내가 초대하고 24시간 안 · 다수결 통과) — 그 사람의 메모 · 요청은 서버가 정리
+async function famRemoveOther(uid){
+  const {F,db}=await famReady();const hid=S.link.hid,me=S.link.uid;
   const b=F.writeBatch(db);
-  const inv=await F.getDocs(F.query(F.collection(db,'invites'),F.where('ownerUid','==',uid)));
-  inv.docs.forEach(d=>b.delete(d.ref));
-  const mem=await F.getDocs(F.collection(db,'households',hid,'members'));
-  mem.docs.filter(d=>d.id!==uid).forEach(d=>b.delete(d.ref));
-  const sc=await F.getDocs(F.collection(db,'households',hid,'schedules'));
-  sc.docs.forEach(d=>b.delete(d.ref));
-  const mmA=await F.getDocs(F.query(F.collection(db,'households',hid,'memos'),F.where('to','array-contains',uid)));   // 내가 볼 수 있는 메모만 (나머지는 서버가 가족방이 지워질 때 같이 지움)
-  const mmB=await F.getDocs(F.query(F.collection(db,'households',hid,'memos'),F.where('by','==',uid)));
-  const mm={docs:famMemoDocs(mmA.docs,mmB.docs)};
-  const rq=await F.getDocs(F.collection(db,'households',hid,'requests'));
-  [...mm.docs,...rq.docs].slice(0,350).forEach(d=>b.delete(d.ref));
   b.delete(famMember(F,db,hid,uid));
-  b.delete(F.doc(db,'households',hid));
+  b.update(F.doc(db,'households',hid),{guestCount:F.increment(-1),lastOut:uid,outBy:me});
+  if(famKicks[uid])b.delete(F.doc(db,'households',hid,'kicks',uid));
   await b.commit();
-  famDevKey='';famUserKey='';await F.deleteDoc(F.doc(db,'devices',uid)).catch(()=>{});await F.deleteDoc(F.doc(db,'users',uid)).catch(()=>{});
+  delete famKicks[uid];
+}
+const famMs=v=>v&&typeof v.toMillis==='function'?v.toMillis():(+v||0);
+const famStale=m=>!!m&&Date.now()-(famMs(m.seenAt)||famMs(m.joinedAt)||Date.now())>30*864e5;   // 30일 넘게 앱을 안 연 사람
+let famKicks={},famKickSubs={};
+const famKickLive=u=>{const k=famKicks[u];return k&&Date.now()<k.at+7*864e5?k:null;};
+// 과반: 내보낼 사람을 뺀 나머지 중 오래 안 온 사람을 빼고, 그 절반보다 많이
+const famKickNeed=(target,inact)=>Math.floor((famUi.members.filter(m=>m.uid!==target).length-inact.length)/2)+1;
+function famKickInact(target){const me=S.link.uid;return famUi.members.filter(m=>m.uid!==target&&m.uid!==me&&famStale(m)).slice(0,3).map(m=>m.uid);}
+async function famKickStart(uid){
+  const {F,db}=await famReady();const me=S.link.uid,ref=F.doc(db,'households',S.link.hid,'kicks',uid);
+  if(famKicks[uid]&&!famKickLive(uid))await F.deleteDoc(ref).catch(()=>{});   // 7일 지난 표는 지우고 새로
+  const inact=famKickInact(uid);
+  await F.setDoc(ref,{by:me,votes:[me],inact,at:F.serverTimestamp()});
+  famKicks[uid]={by:me,votes:[me],inact,at:Date.now()};
+  if(1>=famKickNeed(uid,inact)){await famRemoveOther(uid);return 'out';}   // 둘뿐이면 바로
+  return 'vote';
+}
+async function famKickVote(uid){
+  const k=famKickLive(uid);if(!k)throw new Error('내보내기 제안이 끝났어요');
+  const {F,db}=await famReady();const me=S.link.uid,votes=[...k.votes,me];
+  await F.updateDoc(F.doc(db,'households',S.link.hid,'kicks',uid),{votes});
+  k.votes=votes;
+  if(votes.length>=famKickNeed(uid,k.inact||[])){await famRemoveOther(uid);return 'out';}
+  return 'vote';
+}
+async function famKickCancel(uid){const {F,db}=await famReady();await F.deleteDoc(F.doc(db,'households',S.link.hid,'kicks',uid));delete famKicks[uid];}
+// 다른 가족마다 내보내기 표를 지켜봄 (내 것은 못 봄 → 빠진 뒤에 알게 됨)
+function famKickWatch(F,db){
+  if(!S.link)return;const me=S.link.uid,hid=S.link.hid,want=new Set((S.fam2.members||[]).map(m=>m.uid).filter(u=>u!==me));
+  Object.keys(famKickSubs).forEach(u=>{if(!want.has(u)){try{famKickSubs[u]();}catch(e){}delete famKickSubs[u];delete famKicks[u];}});
+  want.forEach(u=>{if(famKickSubs[u])return;
+    famKickSubs[u]=F.onSnapshot(F.doc(db,'households',hid,'kicks',u),d=>{
+      const had=famKicks[u];
+      if(!d.exists()){delete famKicks[u];}
+      else{const v=d.data({serverTimestamps:'estimate'})||{};famKicks[u]={by:okId(v.by)?v.by:'',votes:Array.isArray(v.votes)?v.votes.filter(okId):[],inact:Array.isArray(v.inact)?v.inact.filter(okId):[],at:famMs(v.at)||Date.now()};
+        const k=famKicks[u];
+        if(!had&&k.by!==me&&!k.votes.includes(me)&&famKickLive(u)){pushEvent(role(),'kick','',`🗳 ${famNameOf(k.by)}님이 ${famNameOf(u)}님 내보내기를 제안했어요 · 가족 연결에서 찬성할 수 있어요`);famSaveLocal();}}
+      if(pageMode==='link')renderLinkPage();else famRefreshUi();
+    },()=>{});});
 }
 async function famEdit(hid,uid,patch){
   const {F,db}=await famReady();
@@ -7466,7 +7513,7 @@ function famPushFail(e){
   if(Date.now()-famPushWarnAt<300000)return;famPushWarnAt=Date.now();
   toast(c.includes('permission-denied')?'내 근무표를 가족에게 올리지 못했어요 (권한 없음) · 설정 › 문의하기로 알려 주세요':'내 근무표를 가족에게 올리지 못했어요 · '+fbErrText(e));
 }
-function famStop(){famUnsub.forEach(f=>{try{f();}catch(e){}});famUnsub=[];}
+function famStop(){famUnsub.forEach(f=>{try{f();}catch(e){}});famUnsub=[];Object.values(famKickSubs).forEach(f=>{try{f();}catch(e){}});famKickSubs={};famKicks={};}
 function famClear(){famStop();clearTimeout(famT);if(S){try{piSrvToLocal();}catch(e){}S.fam2={scheds:{},members:[],memos:{},reqIn:{},reqOut:{},me:{sent:0,bonus:0},seenMemo:[],memoRev:{},reqCc:{},init:false};S.requests=(S.requests||[]).filter(r=>!r.srv);}}
 function famSaveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function famRefreshUi(){
@@ -7550,7 +7597,14 @@ async function famListen(){
   famUnsub.push(F.onSnapshot(F.collection(db,'households',hid,'board'),snap=>famOnBoard(snap),()=>{}));   // 가족 포스트잇
   famUnsub.push(F.onSnapshot(F.collection(db,'households',hid,'members'),snap=>{
     S.fam2.members=snap.docs.map(d=>famCleanMember(d.data(),d.id)).filter(Boolean);
-    const me=snap.docs.find(d=>d.id===S.link.uid);if(me){const v=me.data();S.fam2.me={sent:+v.sent||0,bonus:+v.bonus||0};}
+    const me=snap.docs.find(d=>d.id===S.link.uid);if(me){const v=me.data({serverTimestamps:'estimate'});S.fam2.me={sent:+v.sent||0,bonus:+v.bonus||0,joinedAt:famMs(v.joinedAt)||(S.fam2.me&&S.fam2.me.joinedAt)||0,joinLocal:(S.fam2.me&&+S.fam2.me.joinLocal)||0,moved:+v.moved||0};}
+    famKickWatch(F,db);famLoadArch().catch(()=>{});
+    // 방금 들어온 가족이 있으면 옛 메모 묶음이 조금 뒤에 올라옴 → 40초 · 11분 뒤에 한 번씩 더 읽음
+    if(snap.docs.some(d=>d.id!==S.link.uid&&Date.now()-famMs((d.data({serverTimestamps:'estimate'})||{}).joinedAt)<11*60e3)){
+      clearTimeout(famArchT);clearTimeout(famArchT2);
+      famArchT=setTimeout(()=>{if(S.fam2){S.fam2.archKey='';famLoadArch().catch(()=>{});}},40e3);
+      famArchT2=setTimeout(()=>{if(S.fam2){S.fam2.archKey='';famLoadArch().catch(()=>{});}},11*60e3);
+    }
     famMirrorReqs();famSaveLocal();famRefreshUi();
   },()=>{   // 가족방에서 나가졌거나 가족방이 없어짐 → 서버에 다시 물어봐서 정리
     famSync().then(r=>{if(!S.link&&r.had){famClear();toast('가족방에서 나왔어요');render();}}).catch(()=>{});
@@ -7641,10 +7695,11 @@ async function famRegDevice(){
   const t0=new Date(),now=Date.now();
   const quiet=[];
   if(S.pushQuiet!==false)sleepWins(new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()),15).forEach(w=>{if(w[1]>now&&quiet.length<60)quiet.push(w[0],w[1]);});
-  const key=tk+'|'+S.link.hid+'|'+on+'|'+quiet.join(',');
+  const mute=S.pushBoard===false?['board']:[];   // 끈 알림 종류 (포스트잇)
+  const key=tk+'|'+S.link.hid+'|'+on+'|'+quiet.join(',')+'|'+mute.join(',');
   if(famDevKey===key)return;
   const {F,db}=await famReady();if(!S.link)return;
-  await F.setDoc(F.doc(db,'devices',S.link.uid),{token:tk,on,hid:S.link.hid,quiet,updatedAt:F.serverTimestamp()});
+  await F.setDoc(F.doc(db,'devices',S.link.uid),{token:tk,on,hid:S.link.hid,quiet,mute,updatedAt:F.serverTimestamp()});
   famDevKey=key;
 }
 window.__onFcm=()=>{famRegDevice().catch(()=>{});};
@@ -7652,21 +7707,25 @@ window.__onFcm=()=>{famRegDevice().catch(()=>{});};
 window.__onPush=o=>{
   if(!o||typeof o!=='object')return;
   try{if(pageMode)closePage();closeSheet();closePop();}catch(e){}
-  if(/^\d{4}-\d{2}-\d{2}$/.test(o.date||'')){const d=parse(o.date);tab='cal';setCur(d.getFullYear(),d.getMonth());render();if(o.type==='stk')openStampDay(o.date);else openDay(o.date);}
+  const bmk=o.type==='board'?(/^\d{4}-\d\d$/.test(o.mk||'')?o.mk:/^\d{4}-\d\d/.test(o.date||'')?String(o.date).slice(0,7):''):'';
+  if(bmk){const [y,m]=bmk.split('-').map(Number);tab='cal';setCur(y,m-1);if(famView()){vcY=y;vcM=m-1;}render();openBoard();}   // 포스트잇 알림 → 그 달 포스트잇
+  else if(o.type==='kick'||o.type==='out'){tab='fam';render();openLinkPage();}   // 내보내기 제안 · 내보내짐 → 가족 연결
+  else if(/^\d{4}-\d{2}-\d{2}$/.test(o.date||'')){const d=parse(o.date);tab='cal';setCur(d.getFullYear(),d.getMonth());render();if(o.type==='stk')openStampDay(o.date);else openDay(o.date);}
   else{tab='fam';render();}
   famBoot();famPoll(true);
 };
 function pushRow(){
   if(!S.link||!pushBridge())return '';
   const off=typeof window.AndroidBridge.notifEnabled==='function'&&!window.AndroidBridge.notifEnabled();
-  return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">가족 알림 받기<small>내용은 빼고 이름 · 날짜만 알려줘요</small></div><label class="sw"><input type="checkbox" id="famPushOn" ${S.pushOn!==false?'checked':''}><i></i></label></div>${S.pushOn!==false?`<div class="prow"><div class="pl2">자는 시간엔 소리 없이<small>자는 시간 알림은 소리 없이 쌓여요</small></div><label class="sw"><input type="checkbox" id="famPushQuiet" ${S.pushQuiet!==false?'checked':''}><i></i></label></div>`:''}${off?'<div class="hint" style="padding:6px 16px 10px;color:#e5484d">폰 설정에서 이 앱의 알림이 꺼져 있어요. 폰 설정 › 앱 › 언제쉬어 › 알림을 켜 주세요.</div>':''}</div>`;
+  return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">가족 알림 받기<small>내용은 빼고 이름 · 날짜(포스트잇은 제목)만 알려줘요</small></div><label class="sw"><input type="checkbox" id="famPushOn" ${S.pushOn!==false?'checked':''}><i></i></label></div>${S.pushOn!==false?`<div class="prow"><div class="pl2">포스트잇 알림<small>가족이 새로 붙이거나 · 줄을 더하거나 · 할 일이 다 끝나면</small></div><label class="sw"><input type="checkbox" id="famPushBoard" ${S.pushBoard!==false?'checked':''}><i></i></label></div>`:''}${S.pushOn!==false?`<div class="prow"><div class="pl2">자는 시간엔 소리 없이<small>자는 시간 알림은 소리 없이 쌓여요</small></div><label class="sw"><input type="checkbox" id="famPushQuiet" ${S.pushQuiet!==false?'checked':''}><i></i></label></div>`:''}${off?'<div class="hint" style="padding:6px 16px 10px;color:#e5484d">폰 설정에서 이 앱의 알림이 꺼져 있어요. 폰 설정 › 앱 › 언제쉬어 › 알림을 켜 주세요.</div>':''}</div>`;
 }
-// 방장 앱이 하루에 한 번 "나 여기 있어요"(hostSeen)를 남김 → 가족 폰이 방장 연결이 오래 끊겼는지 알 수 있음 (서버 규칙 배포 전에는 조용히 실패)
+// 하루에 한 번 "나 여기 있어요": 내 구성원 문서 seenAt (30일 넘게 안 온 사람 정리 · 다수결 계산) · 처음 만든 사람은 옛 앱 가족을 위해 hostSeen 도
 async function famHostSeen(){
-  if(!S.link||S.link.role!=='host')return;
+  if(!S.link)return;
   if(Date.now()-(S.hostSeenAt||0)<20*36e5)return;
   const {F,db}=await famReady();
-  await F.updateDoc(F.doc(db,'households',S.link.hid),{hostSeen:F.serverTimestamp()});
+  await F.updateDoc(famMember(F,db,S.link.hid,S.link.uid),{seenAt:F.serverTimestamp()});
+  if(S.link.role==='host')await F.updateDoc(F.doc(db,'households',S.link.hid),{hostSeen:F.serverTimestamp()}).catch(()=>{});
   S.hostSeenAt=Date.now();save();
 }
 async function famBoot(){
@@ -7919,23 +7978,61 @@ var famBusyMemo={};
 const famMemoErr=e=>{const c=String((e&&e.code)||(e&&e.message)||e);return c.includes('permission-denied')?'가족 메모를 올리지 못했어요. 무료 횟수를 다 썼거나 가족방 연결이 풀렸을 수 있어요':'가족 메모를 올리지 못했어요. '+fbErrText(e);};
 const famMemoWarned={};
 function famMemoWarn(id,msg){if(famMemoWarned[id])return;famMemoWarned[id]=1;toast(msg);}   // 메모 하나당 한 번만 알려요
+let famArchBusy=false,famArchLoading=false,famArchT=0,famArchT2=0;
+// 가족이 올린 옛 메모 묶음: 가족 구성이 바뀔 때만 한 번 읽음 (보기만 · 내 것은 빼고)
+async function famLoadArch(){
+  if(!S.link||famArchLoading)return;
+  const me=S.link.uid,key=S.link.hid+'|'+(S.fam2.members||[]).map(m=>m.uid).sort().join(',');
+  if(S.fam2.archKey===key)return;
+  famArchLoading=true;
+  try{
+    const {F,db}=await famReady();
+    const sn=await F.getDocs(F.collection(db,'households',S.link.hid,'archive'));
+    const out={};
+    sn.docs.forEach(d=>{const v=d.data()||{};if(!okId(v.by)||v.by===me||!Array.isArray(v.items))return;
+      out[d.id]={by:v.by,byName:cutTxt(v.byName,12)||'가족',items:v.items.filter(x=>isObj(x)&&okDate(x.d)&&typeof x.t==='string'&&x.t.trim()).slice(0,1500).map(x=>({d:x.d,t:cutMulti(x.t,200),...(/^\d\d:\d\d$/.test(x.tm||'')?{tm:x.tm}:{})}))};});
+    S.fam2.arch=out;S.fam2.archKey=key;famSaveLocal();famRefreshUi();
+  }catch(e){}finally{famArchLoading=false;}
+}
 async function famSyncMemos(){
   if(!S.link||!fbCfg()||!S.link.uid)return;
   const uid=S.link.uid,hid=S.link.hid,want={},others=famOthers().map(x=>x.uid);
   const toOf=m=>{const l=Array.isArray(m.to)&&m.to.length?m.to.filter(u=>others.includes(u)):others;return [...new Set([uid,...(l.length?l:others)])].sort();};
-  Object.keys(S.memos||{}).forEach(k=>(S.memos[k]||[]).forEach(m=>{if(m.shared&&m.by===role()&&String(m.text||'').trim())want[uid+'_'+m.id]={date:k,text:String(m.text).slice(0,200),nt:!!m.notify,mid:m.id,tm:/^\d\d:\d\d$/.test(m.time||'')?m.time:'',al:/^\d\d:\d\d$/.test(m.time||'')&&(m.al==='0'||m.al==='10')?m.al:'',to:toOf(m)};}));
+  Object.keys(S.memos||{}).forEach(k=>(S.memos[k]||[]).forEach(m=>{if(m.shared&&m.by===role()&&String(m.text||'').trim())want[uid+'_'+m.id]={date:k,text:String(m.text).slice(0,200),nt:!!m.notify,mid:m.id,t:+m.t||0,tm:/^\d\d:\d\d$/.test(m.time||'')?m.time:'',al:/^\d\d:\d\d$/.test(m.time||'')&&(m.al==='0'||m.al==='10')?m.al:'',to:toOf(m)};}));
   const have={};Object.entries(S.fam2.memos||{}).forEach(([id,v])=>{if(v.by===uid)have[id]=v;});
   const {F,db}=await famReady();
-  let remain=famRemain();
+  // v0.96 가족방에 들어오고 10분 안: 들어오기 전에 쓴 메모 옮기기 — 지난 날짜(가족 모두에게 보낸 것)는 한 문서로 묶고, 오늘 · 앞으로는 하나씩(무료 횟수 대신 moved)
+  const me2=S.fam2.me||{},jt=+me2.joinedAt||0,jl=+me2.joinLocal||0,moving=jt>0&&jl>0&&Date.now()<jl+9*60e3;   // jl: 이 폰 시계로 들어온 때 (메모 쓴 시각과 같은 시계로 비교)
+  const arch=new Set(S.fam2.archIds||[]);
+  Object.keys(want).forEach(id=>{if(arch.has(want[id].mid))delete want[id];});   // 묶음으로 옮긴 옛 메모는 하나씩 올리지 않음 (폰에서 고쳐도 폰에만)
+  if(moving&&!S.fam2.archDone){
+    if(famArchBusy)return;   // 묶음을 올리는 중: 끝난 뒤에 이어서 (그 사이 같은 메모를 하나씩 올리지 않게)
+    const tk=fmt(new Date()),all=[uid,...others].sort().join();
+    const past=Object.keys(want).filter(id=>!have[id]&&want[id].t<jl&&want[id].date<tk&&want[id].to.join()===all);   // 들어오기 전에 쓴 것만
+    famArchBusy=true;
+    try{
+      if(past.length){
+        const items=past.map(id=>({d:want[id].date,t:want[id].text,...(want[id].tm?{tm:want[id].tm}:{})})).sort((a,b)=>a.d<b.d?-1:1);
+        const parts=[items.slice(0,1500),items.slice(1500,3000),items.slice(3000,4500)].filter(x=>x.length);
+        const b=F.writeBatch(db);
+        parts.forEach((it,i)=>b.set(F.doc(db,'households',hid,'archive',i?uid+'_'+(i+1):uid),{by:uid,byName:S.link.name,items:it,part:i+1,at:F.serverTimestamp()}));
+        await b.commit();
+        S.fam2.archIds=past.slice(0,4500).map(id=>want[id].mid);past.forEach(id=>delete want[id]);
+      }
+      S.fam2.archDone=1;famSaveLocal();
+    }catch(e){}finally{famArchBusy=false;}
+  }
+  let remain=famRemain(),movedN=+me2.moved||0;
   for(const id of Object.keys(want)){
     if(famBusyMemo[id])continue;
     const w=want[id],h=have[id],ref=F.doc(db,'households',hid,'memos',id);
     if(!h){
-      if(remain<=0){famMemoWarn(id,'무료 횟수를 다 써서 가족 메모를 올리지 못했어요');continue;}remain--;
+      const mv=moving&&movedN<200&&w.t<jl;   // 들어오기 전에 쓴 메모만 옮김: 무료 횟수를 안 씀 · 알림도 안 감 (들어온 뒤 새로 쓴 건 평소처럼)
+      if(!mv&&remain<=0){famMemoWarn(id,'무료 횟수를 다 써서 가족 메모를 올리지 못했어요');continue;}if(mv)movedN++;else remain--;
       famBusyMemo[id]=1;
       const b=F.writeBatch(db);
-      b.set(ref,{by:uid,byName:S.link.name,date:w.date,text:w.text,to:w.to,createdAt:F.serverTimestamp(),updatedAt:F.serverTimestamp(),...(w.tm?{time:w.tm,...(w.al!==''?{al:w.al}:{})}:{})});
-      b.update(famMember(F,db,hid,uid),{sent:F.increment(1)});
+      b.set(ref,{by:uid,byName:S.link.name,date:w.date,text:w.text,to:w.to,createdAt:F.serverTimestamp(),updatedAt:F.serverTimestamp(),...(w.tm?{time:w.tm,...(w.al!==''?{al:w.al}:{})}:{}),...(mv?{moved:true}:{})});
+      b.update(famMember(F,db,hid,uid),mv?{moved:F.increment(1)}:{sent:F.increment(1)});
       b.commit().catch(e=>famMemoWarn(id,famMemoErr(e))).finally(()=>{delete famBusyMemo[id];});
     }else if(h.text!==w.text||h.date!==w.date||(h.time||'')!==w.tm||(h.al||'')!==w.al||JSON.stringify([...(h.to||[])].sort())!==JSON.stringify(w.to)){
       famBusyMemo[id]=1;
@@ -8057,6 +8154,7 @@ function srchRun(q,kind){
     Object.keys(S.wlog.days).forEach(k=>{const d=S.wlog.days[k];wlSecs().forEach(sc=>wlLines(d[sc.id]).forEach(t=>{if(hit(t))out.push({k,kind:'wl',tag:sc.n,sid:sc.id,t});}));});
   }else{
     const ks=new Set(Object.keys(S.memos||{}));Object.values((S.fam2&&S.fam2.memos)||{}).forEach(v=>{if(v&&okDate(v.date))ks.add(v.date);});
+    Object.values((S.fam2&&S.fam2.arch)||{}).forEach(a=>a.items.forEach(x=>ks.add(x.d)));
     ks.forEach(k=>{if(!okDate(k))return;visibleMemos(k).forEach(m=>{if(hit(m.text))out.push({k,kind:'memo',tag:m.shared?'♥ 가족':'🔒 나만',t:m.text});});});
     const mks=new Set(Object.keys(S.board||{}));piSrvList().forEach(x=>mks.add(x.mk));
     mks.forEach(mk=>{if(!/^\d{4}-\d\d$/.test(mk))return;boardList(mk).filter(n=>n.shared||n.by===role()).forEach(n=>{
@@ -8205,6 +8303,13 @@ function famOnBoard(snap){
   if(!snap.metadata.fromCache){
     const seen=+S.fam2.boardSeen||0;let mx=seen,dot=false;
     Object.values(m).forEach(v=>{if(v.ua>seen&&v.ub&&v.ub!==me)dot=true;if(v.ua>mx)mx=v.ua;});
+    // v0.96 가족이 새로 붙임 · 줄 추가 · 할 일이 다 끝남 → 앱 안 알림(띠) · 체크만 한 건 점만 (폰 알림은 서버가)
+    if(S.fam2.boardInit&&S.pushBoard!==false)Object.keys(m).forEach(id=>{const v=m[id],o=old[id];if(!v.ub||v.ub===me||v.torn||(o&&o.ua>=v.ua))return;
+      const tt=(v.title||(v.type==='list'?'할 일':'포스트잇')).slice(0,12),who=famNameOf(v.ub);
+      const ids=Object.keys(v.lines),done=ids.length>0&&ids.every(k=>v.lines[k].d),oDone=o&&Object.keys(o.lines).length>0&&Object.keys(o.lines).every(k=>o.lines[k].d);
+      if(!o){if(!(+v.t)||Date.now()-v.t<6*36e5)pushEvent(role(),'board',v.mk,`📝 ${who}님이 포스트잇을 붙였어요 · ${tt}`);}
+      else if(v.type==='list'&&done&&!oDone)pushEvent(role(),'board',v.mk,`✅ "${tt}" 다 끝났어요`);
+      else{const add=ids.filter(k=>!o.lines[k]).length;if(add)pushEvent(role(),'board',v.mk,`📝 ${who}님이 "${tt}"에 ${add}줄을 더했어요`);}});
     if(!S.fam2.boardInit){S.fam2.boardInit=1;S.fam2.boardSeen=mx;dot=false;}
     if(dot&&pageMode!=='board')S.fam2.boardDot=1;
     if(pageMode==='board')S.fam2.boardSeen=mx;
@@ -8228,6 +8333,7 @@ function famOnMemos(snap){
     if(S.fam2.init){
       Object.keys(m).forEach(id=>{
         if(m[id].by===L.uid||S.syncSettings.receiveFamilyMemo===false)return;
+        if(m[id].moved)return;   // 옮겨 온 옛 메모는 알리지 않음
         if(!seen.has(id))pushEvent('host','memo',m[id].date,`♥ ${m[id].byName}님이 ${md(m[id].date)}에 메모를 남겼어요: "${firstLine(m[id].text).slice(0,24)}"`);
         else if(m[id].rev>(rv[id]||0))pushEvent('host','memo',m[id].date,`✏️ ${m[id].byName}님이 ${md(m[id].date)} 메모를 고쳤어요: "${firstLine(m[id].text).slice(0,24)}"`);
       });
@@ -8241,8 +8347,10 @@ function famOnMemos(snap){
 // 서버에서 온 남의 가족 메모 (그 날짜): 지금 메모 목록에 같이 보여줌
 function famRemoteMemos(k){
   const L=S.link;if(!L||!S.fam2)return [];
-  return Object.entries(S.fam2.memos||{}).filter(([id,v])=>v.date===k&&v.by!==L.uid)
+  const out=Object.entries(S.fam2.memos||{}).filter(([id,v])=>v.date===k&&v.by!==L.uid)
     .map(([id,v])=>({id:'s:'+id,sid:id,text:v.text,shared:true,by:'u:'+v.by,t:v.t,srv:true,time:v.time||'',al:v.al||''}));
+  Object.entries(S.fam2.arch||{}).forEach(([aid,a])=>{if(a.by===L.uid)return;a.items.forEach((x,i)=>{if(x.d===k)out.push({id:'a:'+aid+':'+i,text:x.t,shared:true,by:'u:'+a.by,t:0,srv:true,arch:true,time:x.tm||'',al:''});});});   // 옮겨 온 옛 메모 (보기만)
+  return out;
 }
 // ---- 근무 요청: 받은 것 · 보낸 것
 function famMirrorList(f){   // 서버에서 받은 요청(받은 것 · 보낸 것)을 요청 목록 모양으로
@@ -8377,9 +8485,7 @@ async function famRefresh(){
     const r=await famSync();
     if(r.had&&!r.link)toast('가족방에서 나온 상태예요 (내보내졌거나 없어졌어요)');
     famUi.members=S.link?await famMembers(S.link.hid):[];
-    famUi.invites=S.link&&S.link.role==='host'?await famMyInvites():[];
-    famUi.hostSeen=0;
-    if(S.link&&S.link.role==='guest'){try{const {F,db}=await famReady();const hs=await F.getDoc(F.doc(db,'households',S.link.hid));const t=hs.exists()&&hs.data().hostSeen;famUi.hostSeen=t&&t.toMillis?t.toMillis():0;}catch(e){}}
+    famUi.invites=S.link?await famMyInvites():[];   // v0.96 누구나 초대
     famUi.st='ok';
   }catch(e){famUi.st='err';famUi.err=famErr(e);}
   if(pageMode==='link')renderLinkPage();
@@ -8392,16 +8498,9 @@ function lostCard(){
   const ago=x.at?Math.max(0,Math.round((Date.now()-x.at)/864e5)):0,when=ago>0?`${ago}일 전`:'방금';
   const host=x.role==='host';
   return `<div class="pg-sec lost-card" style="margin-top:12px;padding:16px"><b style="font-size:15px">⚠ 가족방 연결이 끊어졌어요</b>
-    <div class="hint" style="padding:6px 0 10px;line-height:1.7">${host?'내가 방장이던':'내가 참여하던'} 가족방과 서버의 연결이 ${when} 끊어졌어요. 내 근무표 · 메모는 이 폰에 그대로 있어요.<br>${host?'앱 로그인 정보가 바뀌면 이렇게 돼요. 같은 방으로 못 돌아갈 수 있어서, <b>새 가족방을 만들고 가족이 새 코드로 옮기는</b> 게 가장 확실해요.':'방장이 가족방을 없앴거나 내보냈을 수 있어요. 방장에게 새 초대 코드를 받아서 다시 참여해요.'}</div>
-    ${host?`<button class="btn" style="width:100%" data-act="link-invite">새 가족방 만들고 초대하기</button>`:`<button class="btn" style="width:100%" data-act="link-join">새 초대 코드로 참여하기</button>`}
+    <div class="hint" style="padding:6px 0 10px;line-height:1.7">${host?'내가 방장이던':'내가 참여하던'} 가족방과 서버의 연결이 ${when} 끊어졌어요. 내 근무표 · 메모는 이 폰에 그대로 있어요.<br>${host?'앱 로그인 정보가 바뀌면 이렇게 돼요. 가족방에 남은 가족에게 <b>새 초대 코드</b>를 받아 다시 들어가면 돼요 (가족이 없으면 새 가족방을 만들어요).':'가족이 내보냈거나 가족방이 없어졌을 수 있어요. 가족에게 새 초대 코드를 받아서 다시 참여해요.'}</div>
+    <button class="btn" style="width:100%" data-act="link-join">새 초대 코드로 참여하기</button>${host?`<button class="btn ghost" style="width:100%;margin-top:8px" data-act="link-invite">새 가족방 만들고 초대하기</button>`:''}
     <button class="btn ghost" style="width:100%;margin-top:8px" data-act="lost-dismiss">이 안내 닫기</button></div>`;
-}
-// 방장 폰이 오랫동안 서버에 접속하지 않았을 때 가족 폰에 보여주는 안내 (방장 앱이 하루에 한 번 `hostSeen` 을 남김)
-function hostStaleNote(){
-  const t=famUi.hostSeen;if(!t)return '';
-  const days=Math.floor((Date.now()-t)/864e5);
-  if(days<3)return `<div class="hint" style="padding:6px 16px">방장 마지막 접속: ${days<1?'오늘':days+'일 전'}</div>`;
-  return `<div class="hint" style="padding:8px 16px;color:var(--danger)">⚠ 방장 폰이 ${days}일째 가족방에 접속하지 않았어요. 방장 앱의 연결이 끊어졌을 수 있어요. 방장에게 확인해 보세요 (끊겼다면 방장이 새 가족방을 만들고, 여기서 "새 초대 코드로 옮기기"를 해요).</div>`;
 }
 function renderLinkPage(){
   const L=S.link,u=famUi,host=L&&L.role==='host';
@@ -8416,41 +8515,34 @@ function renderLinkPage(){
       <button class="btn ghost" style="width:100%;margin-top:8px" data-act="link-join">초대 코드가 있어요</button>
       ${googleOn()?'<button class="btn ghost" style="width:100%;margin-top:8px" data-act="g-restore">전에 쓰던 폰의 가족방 불러오기 (구글 로그인)</button>':''}
     </div>`;
-  else if(host)body=`<div class="pg-cap">내 가족방 · 가족 ${guests.length}/${FAM_MAX}명</div>
-    <div class="pg-sec" style="margin-top:0">${u.members.map((m,i)=>`<div class="prow ${m.role==='host'?'':'tap'}" ${m.role==='host'?'':`data-act="mem-menu" data-u="${esc(m.uid)}"`}>${lav(m.name,i)}<div class="pl2">${esc(m.name)}<small>${m.role==='host'?'근무자 (나)':famModeTxt(m)}</small></div>${m.role==='host'?'':'<span class="muted">›</span>'}</div>`).join('')}
-      ${guests.length<FAM_MAX?`<div class="prow" data-act="link-invite" style="color:var(--accent);font-weight:700;justify-content:center">＋ 가족 초대하기</div>`:'<div class="prow"><div class="pl2 muted" style="text-align:center">가족 자리가 가득 찼어요</div></div>'}
-    </div>
-    ${u.invites.length?`<div class="pg-cap">보낸 초대 코드 (쓰면 사라져요)</div><div class="pg-sec" style="margin-top:0">${u.invites.map(v=>`<div class="prow"><div class="pl2"><b class="mono">${famFmt(v.code)}</b><small>${esc(v.name||'호칭 미정')} · ${daysLeft(v.exp)}일 남음</small></div><button class="btn ghost sm" data-act="inv-share" data-c="${v.code}">보내기</button><button class="xbtn" data-act="inv-del" data-c="${v.code}" aria-label="코드 지우기">✕</button></div>`).join('')}</div>`:''}
-    ${S.myset?`<div class="pg-sec" style="margin-top:16px">${stkRow()}</div>`:''}
-    ${pushRow()}
-    ${googleRow()}
-    <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기</div><span class="muted">${esc(L.name)} ›</span></div>
-      <div class="prow danger-row" data-act="link-dissolve">가족방 없애기 (방장이 나가는 것)</div></div>
-    <div class="hint" style="padding:8px 16px 0">방장은 그냥 나갈 수 없어요. 나가려면 가족방을 없애야 하고, 그러면 가족 모두 연결이 끊겨요. 방장을 다른 가족에게 넘기는 기능은 아직 없어요.</div>`;
   else{
-    const hostM=u.members.find(m=>m.role==='host');
-    body=`<div class="pg-cap">참여 중인 가족방</div>
-    <div class="pg-sec" style="margin-top:0">${u.members.map((m,i)=>`<div class="prow">${lav(m.name,i)}<div class="pl2">${esc(m.name)}${m.uid===FBX.uid?' (나)':''}<small>${m.role==='host'?'근무자':famModeTxt(m)}</small></div></div>`).join('')}</div>
-    <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기</div><span class="muted">${esc(L.name)} ›</span></div>
-      <div class="prow tap" data-act="link-move"><div class="pl2">방장이 새 가족방을 만들었어요<small>새 초대 코드로 옮기기</small></div><span class="muted">›</span></div>
-      <div class="prow danger-row" data-act="link-leave">${hostM?esc(hostM.name)+'님의 ':''}가족방에서 나가기</div></div>
-    ${hostStaleNote()}
-    <div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">내 근무표를 가족에게 보여요<small>끄면 가족 근무표만 보고, 달력 탭이 가족 달력으로 바뀌어요</small></div><label class="sw"><input type="checkbox" id="famOwn" ${L.mode==='view'?'':'checked'}><i></i></label></div>${!S.myset&&L.mode!=='view'?'<div class="prow tap" data-act="mk-sched" style="color:var(--accent);font-weight:700"><div class="pl2">내 근무표 만들기<small>만들기 전에는 가족에게 내 근무표가 안 보여요</small></div><span class="muted">›</span></div>':''}${S.myset&&L.mode!=='view'?stkRow():''}</div>
+    const me=L.uid,full=u.members.length>=FAM_MAX+1,alone=u.members.length<=1;
+    const sub=m=>{const d=Math.floor((Date.now()-(famMs(m.seenAt)||famMs(m.joinedAt)||Date.now()))/864e5),k=m.uid!==me&&famKickLive(m.uid);
+      return `${m.role==='host'&&!famView()?'근무자':famModeTxt(m)}${d>=30?' · <b style="color:var(--danger)">30일 넘게 안 들어옴</b>':d>=7?` · ${d}일째 안 들어옴`:''}${k?` · 🗳 내보내기 찬성 ${k.votes.length}/${famKickNeed(m.uid,k.inact||[])}`:''}`;};
+    body=`<div class="pg-cap">우리 가족방 · ${u.members.length}/${FAM_MAX+1}명</div>
+    <div class="pg-sec" style="margin-top:0">${u.members.map((m,i)=>`<div class="prow ${m.uid===me?'':'tap'}" ${m.uid===me?'':`data-act="mem-menu" data-u="${esc(m.uid)}"`}>${lav(m.name,i)}<div class="pl2">${esc(m.name)}${m.uid===me?' (나)':''}<small>${sub(m)}</small></div>${m.uid===me?'':'<span class="muted">›</span>'}</div>`).join('')}
+      ${full?'<div class="prow"><div class="pl2 muted" style="text-align:center">가족 자리가 가득 찼어요</div></div>':`<div class="prow" data-act="link-invite" style="color:var(--accent);font-weight:700;justify-content:center">＋ 가족 초대하기</div>`}
+    </div>
+    ${u.invites.length?`<div class="pg-cap">내가 보낸 초대 코드 (쓰면 사라져요)</div><div class="pg-sec" style="margin-top:0">${u.invites.map(v=>`<div class="prow"><div class="pl2"><b class="mono">${famFmt(v.code)}</b><small>${esc(v.name||'호칭 미정')} · ${daysLeft(v.exp)}일 남음</small></div><button class="btn ghost sm" data-act="inv-share" data-c="${v.code}">보내기</button><button class="xbtn" data-act="inv-del" data-c="${v.code}" aria-label="코드 지우기">✕</button></div>`).join('')}</div>`:''}
+    ${host?(S.myset?`<div class="pg-sec" style="margin-top:16px">${stkRow()}</div>`:''):`<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">내 근무표를 가족에게 보여요<small>끄면 가족 근무표만 보고, 달력 탭이 가족 달력으로 바뀌어요</small></div><label class="sw"><input type="checkbox" id="famOwn" ${L.mode==='view'?'':'checked'}><i></i></label></div>${!S.myset&&L.mode!=='view'?'<div class="prow tap" data-act="mk-sched" style="color:var(--accent);font-weight:700"><div class="pl2">내 근무표 만들기<small>만들기 전에는 가족에게 내 근무표가 안 보여요</small></div><span class="muted">›</span></div>':''}${S.myset&&L.mode!=='view'?stkRow():''}</div>`}
     ${pushRow()}
     ${googleRow()}
-    <div class="hint" style="padding:10px 16px">가족의 근무표는 가족 탭 · 달력에서, 가족 메모(♥)와 근무 요청은 날짜를 눌러 주고받아요. 처음 10건은 무료예요.</div>`;
+    <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기</div><span class="muted">${esc(L.name)} ›</span></div>
+      <div class="prow tap" data-act="link-move"><div class="pl2">다른 가족방으로 옮기기<small>새 초대 코드로 옮겨요</small></div><span class="muted">›</span></div>
+      <div class="prow danger-row" data-act="link-leave">${alone?'가족방에서 나가기 (나 혼자라 방이 없어져요)':'가족방에서 나가기'}</div></div>
+    <div class="hint" style="padding:10px 16px;line-height:1.7">가족방엔 방장이 없어요. 누구나 초대하고 나갈 수 있고, 마지막 사람이 나가면 방이 없어져요. 가족을 빼려면 가족 과반이 찬성해야 해요 (30일 넘게 안 들어온 사람 · 내가 초대한 지 하루가 안 된 사람은 바로 뺄 수 있어요).<br>가족 메모(♥)와 근무 요청은 날짜를 눌러 주고받아요 · 처음 10건은 무료예요.</div>`;
   }
   openPage(`${pageHead('가족 연결')}<div class="pg-b">${body}</div>`,'link');
 }
 /* ----- 초대 코드 만들기 (호스트) ----- */
 let invDraft={perm:'write',name:'',host:''};
 function openInvitePop(){
-  const need=!(S.link&&S.link.role==='host');
+  const need=!S.link;
   invDraft={perm:invDraft.perm||'write',name:'',host:need?'':S.link.name};
   renderInvitePop();
 }
 function renderInvitePop(){
-  const need=!(S.link&&S.link.role==='host');
+  const need=!S.link;
   openPop(`<div class="mh">가족 초대<b>초대 코드 만들기</b></div>
     ${need?`<div class="mi" style="display:block"><div class="icn-lb">가족에게 보일 내 이름</div><input type="text" id="invHost" maxlength="12" placeholder="예: 아빠" value="${esc(invDraft.host)}" style="width:100%;margin-top:6px"></div>`:''}
     <div class="mi" style="display:block"><div class="icn-lb">초대할 가족 호칭 <small>(없어도 돼요 · 참여할 때 정할 수 있어요)</small></div><input type="text" id="invName" maxlength="12" placeholder="예: 아내" value="${esc(invDraft.name)}" style="width:100%;margin-top:6px"></div>
@@ -8458,14 +8550,13 @@ function renderInvitePop(){
 }
 function invPull(){const a=$('#invHost'),b=$('#invName');if(a)invDraft.host=a.value.trim();if(b)invDraft.name=b.value.trim();}
 async function invMake(){
-  invPull();const need=!(S.link&&S.link.role==='host');
+  invPull();const need=!S.link;
   if(need&&!invDraft.host){toast('가족에게 보일 내 이름을 써 주세요 (예: 아빠)');return;}
-  if(S.link&&S.link.role==='guest'){toast('이미 다른 가족방에 참여 중이에요');return;}
   const btn=document.querySelector('#pop [data-act="inv-make"]');if(btn){btn.disabled=true;btn.textContent='만드는 중…';}
   try{
     if(need)await famEnsureHouse(invDraft.host);
     const members=await famMembers(S.link.hid);
-    if(members.filter(m=>m.role==='guest').length>=FAM_MAX){closePop();toast('가족 자리가 가득 찼어요');famRefresh();return;}
+    if(members.length>=FAM_MAX+1){closePop();toast('가족 자리가 가득 찼어요');famRefresh();return;}
     const r=await famCreateInvite(invDraft.perm,invDraft.name);
     showCodePop(r.code);
     if(pageMode==='link')famRefresh();else if(!pageMode)openLinkPage();
@@ -8525,11 +8616,18 @@ async function joinGo(){
   }catch(e){const er=$('#joinErr');if(er)er.textContent='참여하지 못했어요. '+famErr(e);if(btn){btn.disabled=false;btn.textContent='참여하기';}}
 }
 /* ----- 가족 관리 ----- */
+// v0.96 가족 빼기: 30일 넘게 안 옴 · 내가 초대하고 하루 안 → 바로 / 그 밖엔 다수결(과반 · 7일)
 function openMemberMenu(uid){
-  const m=famUi.members.find(x=>x.uid===uid);if(!m)return;
-  openPop(`<div class="mh">${famModeTxt(m)}<b>${esc(m.name)}</b></div>
-    <button class="mi" data-act="mem-rename" data-u="${esc(uid)}">✏️ 호칭 고치기</button>
-    <button class="mi" data-act="mem-kick" data-u="${esc(uid)}" style="color:var(--danger)">내보내기</button>
+  const m=famUi.members.find(x=>x.uid===uid);if(!m||!S.link)return;
+  const me=S.link.uid,k=famKickLive(uid),u=esc(uid);
+  let rows='';const stale=famStale(m),undo=m.invitedBy===me&&Date.now()-famMs(m.joinedAt)<864e5;
+  if(stale)rows+=`<button class="mi" data-act="mem-out" data-u="${u}" style="color:var(--danger)">바로 빼기<small style="display:block;color:var(--muted);font-weight:400">30일 넘게 앱을 안 열었어요</small></button>`;
+  else if(undo)rows+=`<button class="mi" data-act="mem-out" data-u="${u}" style="color:var(--danger)">초대 되돌리기 (바로 빼기)<small style="display:block;color:var(--muted);font-weight:400">내가 초대한 지 하루가 안 됐어요</small></button>`;
+  if(k){const need=famKickNeed(uid,k.inact||[]);
+    rows+=k.votes.includes(me)?`<div class="mi" style="display:block"><b>🗳 내보내기 찬성 ${k.votes.length}/${need}</b><div class="hint" style="padding:4px 0 0;margin:0">${famNameOf(k.by)}님이 제안했어요 · 7일 안에 ${need}명이 찬성하면 빠져요</div></div>${k.by===me?`<button class="mi" data-act="kick-cancel" data-u="${u}">제안 취소</button>`:''}`
+      :`<div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0">${famNameOf(k.by)}님이 내보내기를 제안했어요 · 찬성 ${k.votes.length}/${need}</div></div><button class="mi" data-act="kick-vote" data-u="${u}" style="color:var(--danger)">🗳 찬성하기</button>`;}
+  else if(!stale&&!undo)rows=`<button class="mi" data-act="kick-new" data-u="${u}" style="color:var(--danger)">내보내기 제안<small style="display:block;color:var(--muted);font-weight:400">가족 과반이 찬성하면 빠져요 (${famKickNeed(uid,famKickInact(uid))}명)</small></button>`;
+  openPop(`<div class="mh">${famModeTxt(m)}<b>${esc(m.name)}</b></div>${rows}
     <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);
 }
 let renameFor=null;
