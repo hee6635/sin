@@ -425,9 +425,10 @@ class WidgetDayActivity : Activity() {
                 }
                 if (ms != null && ms.length() > 0) {
                     content.addView(sectionTitle("메모", pal))
+                    val dn = WidgetRenderer.doneLines(day)
                     for (i in 0 until ms.length()) {
                         val t = ms.optString(i, "")
-                        if (t.isNotEmpty()) content.addView(memoRow(JSONObject().put("r", "t").put("t", t), pal))
+                        if (t.isNotEmpty()) content.addView(memoRow(JSONObject().put("r", "t").put("t", t).put("d", i in dn), pal))
                     }
                 }
 
@@ -652,11 +653,12 @@ class WidgetDayActivity : Activity() {
         val kind = m.optString("r", "t")
         val done = m.optBoolean("d", false)
         val checkable = kind == "m" || kind == "l"
+        val doneShow = done   // 체크 못 하는 줄(가족 할 일 · 먼 날)도 완료면 표시
         val row = LinearLayout(this)
         row.orientation = LinearLayout.HORIZONTAL
         row.gravity = Gravity.CENTER_VERTICAL
         row.setPadding(dp(12), dp(10), dp(12), dp(10))
-        row.background = rounded(if (checkable && done) pal.done else pal.chip, 14)
+        row.background = rounded(if (doneShow) pal.done else pal.chip, 14)
         val cc = m.optString("c", "")
         if (cc.isNotEmpty()) {   // 메모 색: 왼쪽 띠
             val bar = View(this)
@@ -664,6 +666,12 @@ class WidgetDayActivity : Activity() {
             val blp = LinearLayout.LayoutParams(dp(5), dp(34))
             blp.rightMargin = dp(10)
             row.addView(bar, blp)
+        }
+        if (!checkable && doneShow) {   // 보기만: 작은 ✓
+            val box = tv("✓", 18f, pal.accent, true)
+            val blp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            blp.rightMargin = dp(10)
+            row.addView(box, blp)
         }
         if (checkable) {
             val box = tv(if (done) "☑" else "☐", 22f, if (done) pal.accent else pal.sub, true)
@@ -674,8 +682,8 @@ class WidgetDayActivity : Activity() {
         val col = LinearLayout(this)
         col.orientation = LinearLayout.VERTICAL
         val fromFamily = m.optInt("o", 0) == 1
-        val t = tv(rich(m.optString("t", ""), pal.fg, pal.link) { u -> openUrl(u, fromFamily) }, 16f, if (checkable && done) pal.sub else pal.fg)
-        if (checkable && done) t.paintFlags = t.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+        val t = tv(rich(m.optString("t", ""), pal.fg, pal.link) { u -> openUrl(u, fromFamily) }, 16f, if (doneShow) pal.sub else pal.fg)
+        if (doneShow) t.paintFlags = t.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
         col.addView(t)
         val sub = (if (m.optInt("f", 0) == 1) "♥ 가족 메모" else "") +
             (if (m.optString("tm", "").isNotEmpty()) (if (m.optInt("f", 0) == 1) " · " else "") + "🕐 " + m.optString("tm", "") else "")

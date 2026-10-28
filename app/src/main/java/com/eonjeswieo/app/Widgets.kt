@@ -665,6 +665,7 @@ object WidgetRenderer {
         val more = memos.size - shown   // 칸에 다 못 보이는 메모 수 (있으면 마지막 줄 끝에 "+n" 칩)
         val memoTop = y0 + row.memoTop(shown)
         val wlOff = if (d.optInt("wl", 0) == 1 && memos.isNotEmpty()) 1 else 0   // 업무 일지 줄(맨 위 · 표시만)
+        val dn = doneLines(d)
         for (i0 in 0 until shown) {
             val i = i0   // 업무 일지는 칸이 작아도 늘 맨 위 (사용자)
             val py = memoTop + i0 * (row.pillH + row.pillGap)
@@ -677,7 +678,9 @@ object WidgetRenderer {
             paint.color = pal.fg
             paint.textSize = Math.min(row.pillH * 0.72f, cw * 0.2f)   // (7일 · 1칸 · 2칸 모두 같은 비율)
             val chipW = if (more > 0 && i0 == shown - 1) WidgetLayout.moreBadge(row.pillH)[0] else 0f
-            drawRich(cv, memos[i], x0 + pad * 1.4f, py + row.pillH * 0.72f, cw - pad * 2.6f - (if (chipW > 0f) chipW + row.pillH * 0.15f else 0f), paint, pal.fg, pal.link)
+            paint.isStrikeThruText = i in dn   // 완료한 할 일: 줄 긋고 흐리게
+            drawRich(cv, memos[i], x0 + pad * 1.4f, py + row.pillH * 0.72f, cw - pad * 2.6f - (if (chipW > 0f) chipW + row.pillH * 0.15f else 0f), paint, if (i in dn) doneInk(pal.fg) else pal.fg, pal.link)
+            paint.isStrikeThruText = false
             if (chipW > 0f) drawMoreChip(cv, more, x0 + cw - pad - row.pillH * 0.12f, py, row.pillH, pal, paint.textSize)
         }
     }
@@ -696,6 +699,15 @@ object WidgetRenderer {
     }
 
     /** 메모 한 줄: \u0001 주소 \u0003 글자 \u0002 (앱의 "링크")는 글자만 파랗게 + 밑줄, 폭을 넘으면 끝에 작은 점 세 개(한 글자 폭 안쪽 — 글꼴의 "…"은 한 글자만큼 넓어서) */
+    /** 완료한 할 일 줄 번호 (위젯 데이터 msd) → 줄 긋고 흐리게 (앱 달력과 같음) */
+    internal fun doneLines(d: JSONObject?): Set<Int> {
+        val a = d?.optJSONArray("msd") ?: return emptySet()
+        val out = HashSet<Int>()
+        for (i in 0 until a.length()) out.add(a.optInt(i, -1))
+        return out
+    }
+    internal fun doneInk(c: Int): Int = (c and 0x00FFFFFF) or 0xA6000000.toInt()
+
     internal fun drawRich(cv: Canvas, text: String, x: Float, y: Float, maxW: Float, paint: TextPaint, fg: Int, link: Int) {
         val parts = ArrayList<Pair<String, Boolean>>()
         var cur = StringBuilder()

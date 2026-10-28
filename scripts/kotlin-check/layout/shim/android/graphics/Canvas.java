@@ -78,6 +78,7 @@ public class Canvas {
         float x0 = p.align == Paint.Align.CENTER ? x - w / 2f : p.align == Paint.Align.RIGHT ? x - w : x;
         g.drawString(text, x0, y);
         if (p.typeface == Typeface.MEDIUM) g.drawString(text, x0 + p.textSize * 0.045f, y);
+        if (p.strike) { g.setStroke(new BasicStroke(Math.max(1f, p.textSize / 14f))); g.draw(new Line2D.Float(x0, y - p.textSize * 0.32f, x0 + w, y - p.textSize * 0.32f)); }
         if (p.underline) { g.setStroke(new BasicStroke(Math.max(1f, p.textSize / 14f))); g.draw(new Line2D.Float(x0, y + p.textSize * 0.12f, x0 + w, y + p.textSize * 0.12f)); }
     }
     public void drawBitmap(Bitmap b, float left, float top, Paint p) {

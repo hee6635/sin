@@ -43,5 +43,14 @@ const ONLY=process.env.ONLY||'';
     T('칸 채우기: "휴" 글자 = 근무 글자 크기',r.work>0&&Math.abs(r.work-r.rest)<0.6,JSON.stringify(r));
     await p.close();
   }
+  if(want('done')){   // v0.99 위젯: 완료한 할 일 줄 번호(msd)
+    const memos={'2026-10-14':[{id:'a',text:'회의',shared:false,todo:true,done:true,by:'host',t:1},{id:'b',text:'택배',shared:false,todo:true,by:'host',t:1}]};
+    const p=await boot(b,{...base,memos});
+    await p.evaluate(()=>{window.__wg=[];window.AndroidBridge.setWidgetData=j=>window.__wg.push(j);window.__refresh();});await p.waitForTimeout(1100);
+    const d=await p.evaluate(()=>JSON.parse(window.__wg[window.__wg.length-1]).days.find(x=>x.k==='2026-10-14'));
+    T('위젯 데이터: 완료한 할 일 줄 번호 msd=[0] · 안 끝난 줄은 없음',JSON.stringify(d.msd)==='[0]'&&d.ms[0]==='회의',JSON.stringify({ms:d.ms,msd:d.msd}));
+    T('날짜 팝업용 mi 에도 완료(d)',d.mi.find(x=>x.t==='회의').d===true&&d.mi.find(x=>x.t==='택배').d===false);
+    await p.close();
+  }
   T.sum();await b.close();
 })();
