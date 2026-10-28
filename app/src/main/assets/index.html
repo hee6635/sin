@@ -2546,7 +2546,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(stzDirty
 window.__fold=()=>stzCheck(false);   // 안드로이드: 접고 펼 때(화면 설정이 바뀔 때) 조금 뒤에 불러 줌   // 접고 펼 때(커버↔안쪽) 앱 달력 값(스티커·주야)도 그 화면 값으로 먼저 바꿈
 function render(){
   persSync();expireOnceAlarms();
-  if(S.todayColor==='shift'){const tc=tdcShift();if(tc)document.documentElement.style.setProperty('--tdc',tc);else document.documentElement.style.removeProperty('--tdc');}   // (자정이 지나면 그날 근무 색으로)
+  applyTdc();   // (자정이 지나면 그날 근무 색으로 · 보이는 달력 따라)
   const top=$('#top'),v=$('#view');
   const navTab=tab==='colleague'?'set':tab;
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===navTab));
@@ -2623,6 +2623,11 @@ function capPills(pl,mx){
   out[mx-1]=s.slice(0,i+1).replace('class="pl ','class="pl withmore ')+`<span class="pt">${s.slice(i+1,-6)}</span><i class="mc" role="img" aria-label="메모 ${n}개 더 있음"><b>${n>9?'9+':'+'+n}</b></i></div>`;
   return out;
 }
+// v0.99.2 명절 이름: 숫자 + 이름(한 글자) + 스티커 2개가 한 줄에 들어갈 만큼 칸이 넓으면 옆, 아니면 숫자 아래(.hnb) — 스티커가 작아지지 않게 (S23 성탄절)
+function holBeside(){
+  const z=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stz'))||14,cw=innerWidth/7-2;
+  return 20+12+2*z+8<=cw;
+}
 function calPanel(y,m){
   const first=new Date(y,m,1),lead=leadOf(first);
   const rows=6;   // 항상 6주 (다음 달 첫 주까지 보여줌)
@@ -2651,7 +2656,7 @@ function calPanel(y,m){
     const holTag=S.holRest&&hol&&isRest(sh)&&ov==null?holTagName(k,hol):'';
     // 공휴일 이름: 자리가 되면 전부(개천절) → 모자라면 두 글자(개천) → 한 글자(개). 스티커가 있으면 숫자 옆(.h1), 없으면 오른쪽(.hn). 줄이기는 fitDn. 회사 휴무일은 지금처럼
     const hFull=hol?shortHol(hol):'',hTwo=hol?holTwo(hol):'';
-    const below=!!hol&&!holTag&&st0.length>=2&&innerWidth<600;   // 커버 화면 · 스티커 2개 이상: 이름은 숫자 아래(.hnb) → 그날도 날짜 줄은 다른 날과 같은 모양
+    const below=!!hol&&!holTag&&st0.length>=2&&!holBeside();   // 커버 화면 · 스티커 2개 이상: 이름은 숫자 아래(.hnb) → 그날도 날짜 줄은 다른 날과 같은 모양
     const hone=hol&&!holTag&&st0.length&&!below?(hFull.length>hTwo.length?hFull:hTwo):'',honeO=hone?holOne(hol):'';
     const showHn=!!hnHtml&&!holTag&&(hol?!st0.length:(!narrow||!st0.length||st0.length<2));
     const stRow=st0.slice(0,2),stMore=st0.slice(2);
@@ -3842,7 +3847,7 @@ function openPage(html,mode){
   p.innerHTML=html;p.classList.add('open');
   if(same){const b=p.querySelector('.pg-b');if(b)b.scrollTop=sc;}
 }
-function closePage(){manPaint=null;Object.keys(glowPrev).forEach(k=>{if(/^(fc|mc):/.test(k))delete glowPrev[k];});if(pageMode==='tune'){if(tuneDirty()&&!confirm('저장하지 않은 값이 있어요.\n저장하지 않고 나갈까요?'))return;tuneDraft=null;applyTune();$('#page').innerHTML='';}if(pageMode==='alarm')try{if(hasBridge('stopPreview'))window.AndroidBridge.stopPreview();}catch(e){}$('#page').classList.remove('open');pageMode=null;draft=null;render();}
+function closePage(){manPaint=null;Object.keys(glowPrev).forEach(k=>{if(/^(fc|mc):/.test(k))delete glowPrev[k];});if(pageMode==='tune'){if(tuneDirty()&&!confirm('저장하지 않은 값이 있어요.\n저장하지 않고 나갈까요?'))return;tuneDraft=null;applyTune();$('#page').innerHTML='';}if(pageMode==='alarm')try{if(hasBridge('stopPreview'))window.AndroidBridge.stopPreview();}catch(e){}$('#page').classList.remove('open');pageMode=null;applyTdc();draft=null;render();}
 function pageHead(title,right){return `<div class="pg-h"><button class="bk" data-act="page-close" aria-label="뒤로">‹</button><b>${title}</b>${right||'<span style="min-width:56px"></span>'}</div>`;}
 function openPop(html){$('#pop').innerHTML=`<div class="menu">${html}</div>`;$('#pop').classList.add('open');}
 function closePop(){document.querySelectorAll('.cell.selTop').forEach(c=>c.classList.remove('selTop'));$('#pop').className='';$('#pop').innerHTML='';tpk=null;icn=null;crp=null;}
@@ -4294,10 +4299,10 @@ function manGrid(m){
   let cells='';
   for(let i=0;i<rows*7;i++){
     const d=addDays(start,i),k=fmt(d),hol=holName(k),dow=d.getDay();
-    const sk=manStk(m,k),hone=hol&&sk.length?holOne(hol):'',row=sk.slice(0,2),more=sk.slice(2),note=m.notes&&m.notes[k];
+    const sk=manStk(m,k),below=!!hol&&sk.length>=2&&!holBeside(),hone=hol&&sk.length&&!below?holOne(hol):'',row=sk.slice(0,2),more=sk.slice(2),note=m.notes&&m.notes[k];
     let band='';
     if(m.kind==='shift'){const sh=famShift(m,d),c=tColors(typeOf(sh)),ps=famShift(m,addDays(d,-1)),ns=famShift(m,addDays(d,1));band=c&&!isRest(sh)&&(ps===sh||ns===sh)?`<i class="band ${ps===sh?'jl':''} ${ns===sh?'jr':''}" style="--tb:${c.bg}"></i>`:'';}
-    cells+=`<div class="cell ${d.getMonth()===mo?'':'out'} ${k===tk?'today':''} ${more.length?'m3':''}" data-act="man-day" data-k="${k}"><div class="dn ${hol?'hol':''} ${hol||dow===0?'sun':dow===6?'sat':''} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1">${esc(hone)}</span>`:''}${row.length?`<span class="stp">${row.map(x=>manIc(x,hone?12:13)).join('')}</span>`:''}${!sk.length&&hol&&shortHol(hol)?`<span class="hn ${shortHol(hol).length>3?'sm':''}">${esc(shortHol(hol))}</span>`:''}</div>${more.length?`<div class="s2">${more.map(x=>manIc(x,12)).join('')}</div>`:''}<div class="bwrap">${band}${memberCell(m,d,true)}</div>${note?`<div class="pill-wrap"><div class="pl">${esc(note)}</div></div>`:''}</div>`;
+    cells+=`<div class="cell ${d.getMonth()===mo?'':'out'} ${k===tk?'today':''} ${more.length?'m3':''}" data-act="man-day" data-k="${k}"><div class="dn ${hol?'hol':''} ${hol||dow===0?'sun':dow===6?'sat':''} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1">${esc(hone)}</span>`:''}${row.length?`<span class="stp">${row.map(x=>manIc(x,hone?12:13)).join('')}</span>`:''}${!sk.length&&hol&&shortHol(hol)?`<span class="hn ${shortHol(hol).length>3?'sm':''}">${esc(shortHol(hol))}</span>`:''}</div>${below?`<i class="hnb" data-o="${esc(holOne(hol))}">${esc(holTwo(hol))}</i>`:''}${more.length?`<div class="s2">${more.map(x=>manIc(x,12)).join('')}</div>`:''}<div class="bwrap">${band}${memberCell(m,d,true)}</div>${note?`<div class="pill-wrap"><div class="pl">${esc(note)}</div></div>`:''}</div>`;
   }
   return `<div class="calwrap"><div class="dow">${dowHead()}</div><div class="grid" style="grid-template-rows:repeat(${rows},1fr)">${cells}</div></div>`;
 }
@@ -4310,7 +4315,7 @@ function renderManCalPage(){
     <div class="vcnav"><button class="ib" data-act="vc-prev">‹</button><b>${vcY}.${pad(vcM+1)}</b><button class="ib" data-act="vc-next">›</button></div>
     <div class="vcbox"><div id="vcsl" class="vcsl ${manPaint?'sel':''}">${manGrid(m)}</div></div>
     ${manPaint?manBar(m):'<div class="hint" style="padding:8px 16px">메모 · 스티커는 이 폰에만 저장돼요</div>'}</div>`,'mancal');
-  fitDn($('#page'));vcEnter();glowCheck();
+  applyTdc();fitDn($('#page'));vcEnter();glowCheck();
 }
 function openManDay(k){
   const m=manMember();if(!m)return;
@@ -5362,11 +5367,18 @@ function deepenHex(h,dark){   // dark: 어두운 화면에선 칸 색이 어두�
   const [r1,g1,b1]=H<60?[c,x,0]:H<120?[x,c,0]:H<180?[0,c,x]:H<240?[0,x,c]:H<300?[x,0,c]:[c,0,x];
   return '#'+[r1,g1,b1].map(f=>Math.round((f+m)*255).toString(16).padStart(2,'0')).join('');
 }
+// v0.99.2 "근무 색"은 지금 화면에 보이는 달력(내 달력 · 내 달력 보기 · 가족 달력 · 직접 추가한 가족 달력)의 그날 근무를 따라감
 function tdcShift(){
-  const d=new Date(),k=fmt(d);if(persOn(k))return '';
-  const sh=shiftOf(d),c=tColors(typeOf(sh));
+  const d=new Date(),k=fmt(d);let c=null,rest=false;
+  if(pageMode==='mancal'){const m=manMember();if(!m)return '';if(m.kind==='shift'){const sh=famShift(m,d);c=tColors(typeOf(sh));rest=isRest(sh);}else rest=memberOff(m,d);}
+  else if(pageMode==='famcal'||(famView()&&famPeers().length)){const p=vcEnsure();if(!p||!p.sch)return '';const sh=schShift(p.sch,d);c=tColors(schType(p.sch,sh));rest=schRest(p.sch,sh);}
+  else{if(persOn(k))return '';const sh=shiftOf(d);c=tColors(typeOf(sh));rest=isRest(sh);}
   if(c&&c.bg){const de=document.documentElement,dk=de.dataset.theme==='dark'||(de.dataset.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);return deepenHex(cssHex(c.bg),dk)||'';}
-  return isRest(sh)?'#d0607a':'';
+  return rest?'#d0607a':'';
+}
+function applyTdc(){   // 근무 색일 때만: 지금 보이는 달력에 맞춰 오늘 색 다시 계산
+  if(S.todayColor!=='shift')return;const tc=tdcShift(),de=document.documentElement;
+  if(tc)de.style.setProperty('--tdc',tc);else de.style.removeProperty('--tdc');
 }
 function todayColorRow(){   // 오늘 띠 색: 근무 색 + 동그라미 6개 + 직접 고르기
   const cur=S.todayColor||'';
@@ -7887,9 +7899,9 @@ function vcGrid(p){
     const ov=sch.overrides&&sch.overrides[k]&&sch.overrides[k]!==NONE_K;
     const pls=vcPills(k,mxl);
     const ring=rqRing(S.requests.filter(r=>r.srv&&r.dir==='out'&&r.peer===p.uid&&r.date===k).map(r=>r.st==='applied'?{...r,st:'accepted'}:r));
-    const st0=schStk(sch,k),hone=hol&&st0.length?holOne(hol):'',stRow=st0.slice(0,2),stMore=st0.slice(2);
+    const st0=schStk(sch,k),below=!!hol&&st0.length>=2&&!holBeside(),hone=hol&&st0.length&&!below?holOne(hol):'',stRow=st0.slice(0,2),stMore=st0.slice(2);
     const cb=c&&!schRest(sch,sh)?` style="--cb:${c.bg}"`:'';
-    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${stMore.length?'m3':''} ${ring} ${vsCls(p,k)}" data-act="vc-day" data-k="${k}"${cb}><div class="dn ${hol?'hol':''} ${hol||dow===0?'sun':dow===6?'sat':''} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIconD(x.d,x.n,hone?12:13)).join('')}</span>`:''}${!st0.length&&hol&&shortHol(hol)?`<span class="hn ${shortHol(hol).length>3?'sm':''}">${esc(shortHol(hol))}</span>`:''}</div>${stMore.length?`<div class="s2">${stMore.map(x=>stampIconD(x.d,x.n,12)).join('')}</div>`:''}<div class="bwrap">${band}${sh===''?'':schBadge(sch,sh,'',ov?'<i class="dot"></i>':'')}</div>${pls}</div>`;
+    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${stMore.length?'m3':''} ${ring} ${vsCls(p,k)}" data-act="vc-day" data-k="${k}"${cb}><div class="dn ${hol?'hol':''} ${hol||dow===0?'sun':dow===6?'sat':''} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIconD(x.d,x.n,hone?12:13)).join('')}</span>`:''}${!st0.length&&hol&&shortHol(hol)?`<span class="hn ${shortHol(hol).length>3?'sm':''}">${esc(shortHol(hol))}</span>`:''}</div>${below?`<i class="hnb" data-o="${esc(holOne(hol))}">${esc(holTwo(hol))}</i>`:''}${stMore.length?`<div class="s2">${stMore.map(x=>stampIconD(x.d,x.n,12)).join('')}</div>`:''}<div class="bwrap">${band}${sh===''?'':schBadge(sch,sh,'',ov?'<i class="dot"></i>':'')}</div>${pls}</div>`;
   }
   return `<div class="calwrap"><div class="dow">${dowHead()}</div><div class="grid" style="grid-template-rows:repeat(${rows},1fr)">${cells}</div></div>`;
 }
@@ -7934,14 +7946,14 @@ function renderViewTab(){   // 달력 탭 (가족 것만 볼래요)
   const pmk=`${vcY}-${pad(vcM+1)}`,todoN=boardLeft(pmk);   // 가족 것만 보는 폰에도 포스트잇 (그 폰에선 가족 포스트잇만)
   top.innerHTML=`<div class="hl"><button class="hb pi-btn" data-act="open-board-vc" aria-label="월 포스트잇"><span class="pi-ic"></span>${todoN?`<span class="bdg pur">${todoN>9?'9+':todoN}</span>`:''}${S.link&&S.fam2&&S.fam2.boardDot?'<i class="pi-dot" aria-label="가족이 포스트잇을 고쳤어요"></i>':''}</button></div><div class="cal-mid"><div class="ym"><button class="ib" data-act="vc-prev">‹</button><h1>${vcY}.${pad(vcM+1)}</h1><button class="ib" data-act="vc-next">›</button></div><div class="sub"><b>${esc(p.name)} 달력</b> · 보기만</div></div><div class="hr">${isCur?'':'<button class="today-btn" data-act="vc-today">오늘</button>'}</div>`;
   v.innerHTML=`${vcTools()}<div id="vcsl" class="vcsl ${vcSel.on?'sel':''}">${vcGrid(p)}</div>${vcSelBar(p)}`;
-  fitDn(v);vcEnter();glowCheck();
+  applyTdc();fitDn(v);vcEnter();glowCheck();
 }
 function renderFamCalPage(){   // 가족 탭에서 이름을 누르면 (내 달력이 따로 있는 사람)
   const p=vcEnsure();if(!p){closePage();return;}
   openPage(`${pageHead(esc(p.name)+' 달력')}<div class="pg-b" style="display:flex;flex-direction:column;padding:0">
     <div class="vcnav"><button class="ib" data-act="vc-prev">‹</button><b>${vcY}.${pad(vcM+1)}</b><button class="ib" data-act="vc-next">›</button></div>
     ${vcTools()}<div class="vcbox"><div id="vcsl" class="vcsl ${vcSel.on?'sel':''}">${vcGrid(p)}</div></div>${vcSelBar(p)}</div>`,'famcal');
-  fitDn($('#page'));vcEnter();glowCheck();
+  applyTdc();fitDn($('#page'));vcEnter();glowCheck();
 }
 var rqD={k:'',u:'',want:''};
 function openVcDay(k){   // 가족 달력에서 날짜를 누르면: 그 사람의 근무 + 요청 보내기

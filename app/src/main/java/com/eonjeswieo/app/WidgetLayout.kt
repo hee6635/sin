@@ -296,7 +296,8 @@ object WidgetLayout {
             return n
         }
         // 커버 크기(below2): 스티커 2개 이상인 명절은 이름을 숫자 아래로(두 글자) → 첫 줄은 숫자 + 스티커
-        if (below2 && hasHol && !plan.narrow && total >= 2) {
+        // v0.99.2: 칸이 넓어 이름(한 글자)을 옆에 둬도 스티커 2개가 첫 줄에 들어가면 옆 · 아니면 아래 (앱 달력과 같은 규칙)
+        if (below2 && hasHol && !plan.narrow && total >= 2 && fit1(1) < Math.min(total, 2)) {
             val r1 = fit1(0)
             return MonthTop(r1, if (plan.row2Ok) Math.min(total - r1, cap2) else 0, false, 2)
         }

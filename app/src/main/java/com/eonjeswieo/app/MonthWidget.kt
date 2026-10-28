@@ -1114,8 +1114,13 @@ object MonthRenderer {
         // 숫자 아래로 내린 이름이 주야 글자와 안 겹칠 때만 내림 (위젯 칸은 낮아서 자리가 없으면 지금처럼 숫자 옆)
         val nameBottom = plan.dateBase + plan.holSize * 1.15f + plan.holSize * 0.25f
         val inkTop = plan.circleCy[r] + tn.inkY * rowH * 0.1f - Math.min(plan.circleD / 2f * tn.ink, plan.circleD / 2f * 1.25f)
-        val roomBelow = plan.circleD <= 0f || nameBottom <= inkTop - 1f * u
-        val top = WidgetLayout.monthTop(plan, cw, u, numW, f.stk.size, holW2, holW1, holW3, tn.cover && roomBelow)
+        val vertBelow = plan.circleD <= 0f || nameBottom <= inkTop - 1f * u
+        // v0.99.2 가로로도 봄: 이름은 칸 왼쪽 · 주/야는 가운데 → 위아래로 겹쳐도 가로로 안 닿으면 아래로 내림 (S23 성탄절: 옆에 붙으면 스티커가 밀림)
+        val inkHalf = if (fill) plan.circleD * 0.32f * tn.ink else Math.min(plan.circleD / 2f * tn.ink, plan.circleD / 2f * 1.25f)   // 칸 채우기는 동그라미 없이 글자만 (글자 폭 ≈ 동그라미의 0.6)
+        val horiz1 = pad + holW1 + 2f * u <= cw / 2f - inkHalf
+        val horiz2 = pad + holW2 + 2f * u <= cw / 2f - inkHalf
+        val roomBelow = vertBelow || horiz1
+        val top = WidgetLayout.monthTop(plan, cw, u, numW, f.stk.size, holW2, holW1, holW3, roomBelow)
         statStkHid += Math.max(0, f.stk.size - top.row1 - top.row2)
         for (k in 0 until top.row1) {   // 스티커 첫 줄: 숫자 옆 (오른쪽 끝)
             val sx = x0 + cw - pad - (top.row1 - k) * plan.stkSize - (top.row1 - k - 1) * plan.stkGap - (top.row1 - k - 1) * tn.stkGX * plan.stkSize * 0.25f + tn.stkX * cw * 0.12f
@@ -1137,6 +1142,7 @@ object MonthRenderer {
             if (top.holBeside) cv.drawText(if (top.holChars == 3) h3 else if (top.holChars == 2) h2 else h1, x0 + pad + numW + 2.5f * u, y0 + plan.dateBase, paint)
             else {   // 숫자 아래: 커버 크기에서 스티커 2개 이상(두 글자 · 아래 줄 스티커와 부딪히면 한 글자) · 아주 좁은 칸(한 글자)
                 var lab = if (top.holChars >= 2) h2 else h1
+                if (lab == h2 && !vertBelow && !horiz2) lab = h1   // 주/야 글자 옆이라 두 글자 자리가 없으면 한 글자
                 if (lab == h2 && top.row2 > 0) {
                     val s2x = x0 + cw - pad - top.row2 * plan.stkSize - (top.row2 - 1) * plan.stkGap + tn.stkX * cw * 0.12f
                     if (x0 + pad + holW2 > s2x - 1f * u) lab = h1
