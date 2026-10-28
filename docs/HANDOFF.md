@@ -29,3 +29,11 @@
 - 설정 첫 화면 = 타일(`.stiles`) + 줄 몇 개 · 안쪽 페이지 `openLookPage`(look) · `openNotifPage`(notif) · `openInfoPage`(info). 화면 값 바꾸는 손잡이는 `lookRefresh()` 로 페이지 다시 그림.
 - 배경 `S.bg` = '' | 'paper' | 'vivid' → `html[data-bg]`. 위젯 데이터 `bg:'vivid'` → `MonthRenderer.vivid`(`vividInk` · `restInk` · `vividBorder`).
 - 시험 도구(lib.js · x_common.js)의 `p.click('#nav [data-tab=…]')` 은 열린 페이지를 먼저 닫음.
+
+## 새 대화 시작점 (v0.99.2 · 2026-10-28)
+- 브랜치 `claude/continue-app-development-o1v8wg` 에만 올림 · 앱 코드는 사용자가 "만들어" 할 때만 (올리면 APK 빌드) · docs/design 만 바뀌면 빌드 안 돎(paths-ignore)
+- 최근 빌드: v0.96(방장 없음 · 다수결 · 옛 메모 묶음 · 포스트잇 알림) → v0.97(설정 타일 정리 · 또렷하게 · 새 설치 칸 채우기 · 근무 띠 없앰) → v0.98(알림 페이지 줄 · 위젯 날짜 창 또렷하게) → v0.99(위젯 할 일 완료 표시) → v0.99.1(가족 메모 todo/done 서버 · 규칙 배포 필요) → v0.99.2(오늘 근무 색은 보이는 달력 · 명절 이름 넓으면 옆/아니면 아래)
+- 서버 배포: Cloud Shell `cd sin && git pull && cd firebase && npx firebase-tools deploy --only firestore:rules,functions --project eonjeswieo-d85e2` (함수까지면 먼저 `npm --prefix functions install`) · hosting 은 `--only hosting`(삭제 안내 문구 바뀐 것 아직 미배포일 수 있음)
+- 남은 일(TODO.md 참고): 깨진 가족 E2E 5개(fam6e · 8e · 9e · 10e · 13e — 시험 날짜가 달 경계를 넘는 시험 쪽 문제, v0.95 에서도 실패) · 오류 보고(Crashlytics) · 알람 실기기 확인 · 응원 버튼/내 상태 정리 여부 · 오늘 표시 모양 4→2 · 가족 무료 10건 정책 · 업무 일지 사진 링크(나중) · 날씨(나중)
+- 시험: `bash tests/run-phone.sh`(s70 까지) · `TESTS=s42 TMO=600` · `cd firebase && npm test`(규칙 119) · `cd firebase/functions && npm test`(19) · 가족 `TMO=600 bash tests/family/run1.sh fam16e` · `scripts/kotlin-check/check.sh`(BASE=1) · 위젯 그림 `scripts/kotlin-check/layout/run-month-real.sh <위젯json>`(작은 위젯 s1/s2/s7 포함)
+- 주의: `pkill -f` 쓰면 셸까지 죽음 · normalize 안에서는 아래쪽 const 쓰면 TDZ · 한 줄 normalize 에 `//` 주석 넣으면 뒤가 다 주석 됨(v0.96 에서 한 번 걸림)
