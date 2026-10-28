@@ -836,6 +836,17 @@ await t('기기 등록: 알림 종류 끄기(mute) 목록', async () => {
   await assertFails(setDoc(doc(db('g1'), 'devices', 'g1'), dv({ mute: 'board' })));
 });
 
+await G('v0.99.1 가족 메모 할 일 · 완료');
+await t('쓴 사람: 할 일 · 완료를 올리고 바꿈 · 가족은 못 바꿈 · 이상한 값 막힘', async () => {
+  await fresh3();
+  await assertSucceeds(sendMemo('g1', 'td1', memo({ todo: true, done: false })));
+  await assertSucceeds(updateDoc(doc(db('g1'), 'households', H, 'memos', 'td1'), { done: true, updatedAt: serverTimestamp() }));
+  await assertSucceeds(getDoc(doc(db('g2'), 'households', H, 'memos', 'td1')));
+  await assertFails(updateDoc(doc(db('g2'), 'households', H, 'memos', 'td1'), { done: false, updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(db('g1'), 'households', H, 'memos', 'td1'), { done: 'yes', updatedAt: serverTimestamp() }));
+  await assertFails(sendMemo('g1', 'td2', memo({ todo: 1 }), 1));
+});
+
 await env.cleanup();
 console.log(`\n${pass}개 통과, ${fail}개 실패`);
 process.exit(fail ? 1 : 0);

@@ -67,8 +67,8 @@ const tapMember = async (P, uid) => { await P.click(`#page [data-act="mem-menu"]
 // 엄마 폰: 가족방에 들어오기 전에 쓴 ♥ 가족 메모 (지난 날짜 둘 · 앞으로 하나)
 const momMemo = (id, text) => ({ id, text, shared: true, by: 'host', t: 1 });
 const dk = n => { const d = new Date(T + n * 864e5); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };   // 서버 시각(오늘) 기준 날짜
-const P1 = dk(-1), P2 = dk(-36), F1 = dk(8);
-const A = await phone('mom', base('2026-10-06', 2, { memos: { [P1]: [momMemo('p1', '지난 메모 하나')], [P2]: [momMemo('p2', '지난 메모 둘')], [F1]: [momMemo('f1', '앞으로 메모')] } }));
+const P1 = dk(-1), P2 = dk(-36), F1 = dk(0);   // F1 = 오늘 (하나씩 올라가는 메모 · 할 일)
+const A = await phone('mom', base('2026-10-06', 2, { memos: { [P1]: [momMemo('p1', '지난 메모 하나')], [P2]: [momMemo('p2', '지난 메모 둘')], [F1]: [{ ...momMemo('f1', '앞으로 메모'), todo: true }] } }));
 const momUid = await join(A, codeMom, '엄마', 'own');
 check('준비: 가족방에 아빠 · 엄마', await wait(H, async () => (await S(H)).fam2.members.length === 2, 20000));
 check('엄마 구성원 문서: invitedBy = 코드 만든 아빠', (await memberF(momUid))?.invitedBy?.stringValue === hostUid, JSON.stringify(await memberF(momUid)).slice(0, 300));
@@ -86,6 +86,14 @@ await H.waitForTimeout(3000);
 check('옮긴 메모는 가족 메모 알림이 안 감', !(await pushes()).some(x => x.title === '가족 메모'), JSON.stringify(await pushes()));
 check('엄마 폰: 묶음으로 옮긴 메모 기억 (다음 동기화에 다시 안 올림)', (await S(A)).fam2.archIds?.length === 2);
 check('하나씩 올렸다가 지운 메모 없음 (moved 는 앞으로 메모 1건뿐)', +(await memberF(momUid))?.moved?.integerValue === 1);
+
+// 1-2) v0.99.1 할 일 · 완료: 쓴 사람이 체크하면 가족 폰에도 (보기만)
+check('할 일 표시가 서버에 (todo:true · done:false)', await wait(A, async () => { const f = (await restRead(`households/${hostUid}/memos/${momUid}_f1`)).fields; return f?.todo?.booleanValue === true && f?.done?.booleanValue === false; }, 20000));
+await A.evaluate(k => { const p = document.getElementById('page'); if (p.classList.contains('open')) { const x = p.querySelector('[data-act="page-close"]'); x && x.click(); } document.querySelector('#nav [data-tab="cal"]').click(); document.querySelector(`#track .panel:nth-child(2) .cell[data-k="${k}"]`).click(); }, F1); await A.waitForTimeout(600);
+await A.evaluate(() => document.querySelector('#sheet .mchk[data-mid="f1"]').click()); await A.waitForTimeout(300);
+check('엄마가 완료 체크 → 서버 done:true', await wait(A, async () => (await restRead(`households/${hostUid}/memos/${momUid}_f1`)).fields?.done?.booleanValue === true, 20000));
+check('아빠 폰: 엄마 할 일이 완료로 보임 (보기만)', await wait(H, async () => (await S(H)).fam2.memos[`${momUid}_f1`]?.done === true, 20000), JSON.stringify((await S(H)).fam2.memos[`${momUid}_f1`]));
+await A.evaluate(() => { const c = document.querySelector('#sheet [data-act="close"]'); c && c.click(); }); await A.waitForTimeout(300);
 
 // 2) 방장이 아닌 엄마도 초대 → 딸 참여
 await openLink(A);
