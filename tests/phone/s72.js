@@ -68,8 +68,14 @@ const chg=(p,id,v)=>p.evaluate(([id,v])=>{const e=document.getElementById(id);e.
     await p.click('#page [data-act="st-list"][data-l="de"]');await p.waitForTimeout(150);
     T('숫자 누르면 날짜 목록 (10월 4일 일)',await p.evaluate(()=>/10월 4일 \(일\)/.test(document.querySelector('#pop').textContent)));
     await p.evaluate(()=>document.querySelector('#pop [data-act="pop-close"]').click());
+    T('올해 누적 (1월 ~ 10월): 대근 · 연차 · 시간',/2026년 누적 \(1월 ~ 10월\)/.test(txt)&&/근무 \d+(\.\d)?시간 · 연장/.test(txt));
+    T('이번 달이면 "이번 달" 버튼 없음',await p.evaluate(()=>!document.querySelector('#page [data-act="st-today"]')));
     await p.click('#page [data-act="st-prev"]');await p.waitForTimeout(150);
     T('‹ 달 넘기기 → 9월',await p.evaluate(()=>/2026년 9월/.test(document.querySelector('#page .stnav').textContent)));
+    T('다른 달이면 "이번 달" 버튼 → 10월로',await p.evaluate(()=>!!document.querySelector('#page [data-act="st-today"]')));
+    await p.click('#page [data-act="st-today"]');await p.waitForTimeout(150);
+    T('이번 달로 돌아옴',await p.evaluate(()=>/2026년 10월/.test(document.querySelector('#page .stnav').textContent)));
+    await p.click('#page [data-act="st-prev"]');await p.waitForTimeout(150);
     await chg(p,'payClose','20');await p.waitForTimeout(150);
     T('급여 마감일 20일 → 기간 8/21 ~ 9/20',await p.evaluate(()=>__wx.S.salary.close===20&&/8\/21 ~ 9\/20/.test(document.querySelector('#page').textContent)));
     await p.evaluate(()=>__wx.openSlipPage('2026-09'));await p.waitForTimeout(150);

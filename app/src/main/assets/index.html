@@ -1482,7 +1482,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .tchip.otc .otb{background:var(--surface);font-size:18px}.tchip.otc.on .otb{background:#fbeedd}.tchip.otc.on small{color:#b0661a;font-weight:800}
 .obtm{margin-top:16px}.obtm-h{width:100%;text-align:left;padding:12px 14px;border-radius:14px;background:var(--surface);font-size:15px;font-weight:800;color:var(--fg)}.obtm-h span{color:var(--muted);font-weight:600}.obtm-h small{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin-top:2px}
 .obtm .alrow{display:flex;align-items:center;gap:10px;padding:8px 4px}.obtm .alrow small{color:var(--muted);font-size:12px;margin-left:auto}
-.stnav{display:flex;align-items:center;justify-content:center;gap:18px;padding:12px 16px 2px}.stnav b{font-size:17px}
+.stnav{display:flex;align-items:center;justify-content:center;gap:18px;padding:12px 16px 2px}.stnav b{font-size:17px}.stnav{position:relative}.stnav .sttoday{position:absolute;right:16px;font-size:13px}
 .sttot{border-top:1px solid var(--line)}.sttot .stw{font-size:18px;color:var(--accent)}
 .otsum{margin-top:6px;padding:10px 12px;border-radius:12px;background:var(--surface);font-size:14px}
 .ptm-t{display:flex;align-items:center;gap:4px;flex:none}.ptm-t em{font-style:normal;color:var(--muted)}.ptm-t small{font-size:11px;color:var(--muted)}
@@ -6154,7 +6154,7 @@ function openStatsPage(){
   openPage(`
     ${pageHead('근무 통계 · 수당')}
     <div class="pg-b">
-      <div class="stnav"><button class="ib" data-act="st-prev" aria-label="지난달">‹</button><b>${y}년 ${m+1}월</b><button class="ib" data-act="st-next" aria-label="다음 달">›</button></div>
+      <div class="stnav"><button class="ib" data-act="st-prev" aria-label="지난달">‹</button><b>${y}년 ${m+1}월</b><button class="ib" data-act="st-next" aria-label="다음 달">›</button>${y!==new Date().getFullYear()||m!==new Date().getMonth()?'<button class="lnk sttoday" data-act="st-today">이번 달</button>':''}</div>
       <div class="hint" style="text-align:center;padding:0 16px 8px">${md2(c.from)} ~ ${md2(c.to)}${P.close?` (매달 ${P.close}일 마감)`:''}</div>
       <div class="pg-sec" style="margin:0 0 10px">
         ${line('🗓 근무',`${c.days}일 · 야간 ${c.nightShifts}번`)}
@@ -6162,6 +6162,13 @@ function openStatsPage(){
       </div>
       <div class="stat-box" style="margin:0 16px">${num(c.dw.length,'평일 대근','var(--stat-dae)','dw')}${dv}${num(c.de.length,'주말 대근','var(--stat-dae)','de')}${dv}${num(c.dh.length,'명절·공휴일 대근','var(--sun)','dh')}</div>
       <div class="stat-box" style="margin:10px 16px 0">${num(lvUsed,P.leaveYear?`연차 · 남은 ${Math.max(0,P.leaveYear-yUsed)}일`:'연차/휴가','var(--stat-vac)','vac')}${dv}${num(c.edu.length,'교육','var(--stat-edu)','edu')}${dv}${num(c.req.length,'⏱ 연장','#b0661a','req')}${dv}${num(c.holWork.length,'휴일 출근','var(--sun)','hol')}</div>
+      ${(()=>{   // 올해 누적 (1월 ~ 보고 있는 달, 급여 마감일 기준) — 횟수 · 시간만 (금액은 이번 달만)
+        const A={dw:0,de:0,dh:0,vac:0,edu:0,req:0,hol:0,work:0,ot:0,night:0};
+        for(let i=0;i<=m;i++){const x=statsCalc(y,i);A.dw+=x.dw.length;A.de+=x.de.length;A.dh+=x.dh.length;A.vac+=x.vac.length;A.edu+=x.edu.length;A.req+=x.req.length;A.hol+=x.holWork.length;A.work+=x.work;A.ot+=x.ot;A.night+=x.night;}
+        return `<div class="pg-cap">${y}년 누적 (1월 ~ ${m+1}월)</div>
+        <div class="stat-box" style="margin:0 16px">${num(A.dw,'평일 대근','var(--stat-dae)')}${dv}${num(A.de,'주말 대근','var(--stat-dae)')}${dv}${num(A.dh,'명절·공휴일 대근','var(--sun)')}</div>
+        <div class="stat-box" style="margin:10px 16px 0">${num(A.vac,'연차/휴가','var(--stat-vac)')}${dv}${num(A.edu,'교육','var(--stat-edu)')}${dv}${num(A.req,'⏱ 연장','#b0661a')}${dv}${num(A.hol,'휴일 출근','var(--sun)')}</div>
+        <div class="hint" style="padding:6px 16px 0;text-align:center">근무 ${H(A.work)}시간 · 연장 ${H(A.ot)}시간 · 야간 ${H(A.night)}시간</div>`;})()}
       ${show?`<div class="pg-cap">이번 달 예상 월급 <span style="font-weight:600">(세전 · 대략)</span></div>
       <div class="pg-sec" style="margin-top:0">
         ${P.fixed?line('고정금',won(P.fixed)):''}
@@ -7476,6 +7483,7 @@ document.addEventListener('click',e=>{
     case 'more-stats':stYM=null;openStatsPage();break;
     case 'st-prev':case 'st-next':{const d=new Date(stYM[0],stYM[1]+(a==='st-next'?1:-1),1);stYM=[d.getFullYear(),d.getMonth()];openStatsPage();break;}
     case 'st-list':stList(t.dataset.l);break;
+    case 'st-today':{const n=new Date();stYM=[n.getFullYear(),n.getMonth()];openStatsPage();break;}
     case 'st-go':{const k=t.dataset.k,d=parse(k);closePop();closePage();tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
     case 'st-pay-help':{const e=$('#payFixed');if(e)e.focus();break;}
     case 'slip-open':slipYM='';pageBack=openStatsPage;openSlipPage();break;
