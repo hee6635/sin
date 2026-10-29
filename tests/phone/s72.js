@@ -64,6 +64,7 @@ const chg=(p,id,v)=>p.evaluate(([id,v])=>{const e=document.getElementById(id);e.
     const exp=Math.round(2242566+5600*75+5000*63+111009-2242566/31).toLocaleString('ko-KR');
     T('예상 월급(세전 · 대략) = 고정 + 연장 + 야간 + 연차수당(1일 덜) − 무급',txt.includes('예상 월급')&&txt.includes(exp+'원'),exp+' | '+txt.slice(0,400));
     T('실제(명세서)와 차이',/실제 \(명세서\)/.test(txt)&&/차이/.test(txt));
+    T('대근 칸: 큰 숫자 3 + 평일 1 · 주말 1 · 명절 · 공휴일 1',await p.evaluate(()=>{const e=document.querySelector('#page .stdae');return !!e&&e.querySelector('.stdae-n .num').textContent==='3'&&/평일 1/.test(e.textContent)&&/주말 1/.test(e.textContent)&&/명절 · 공휴일 1/.test(e.textContent);}));
     T('연차 남은 날 (15 − 올해 쓴 날)',/연차 · 남은 14일/.test(txt),txt.match(/연차[^\n]*/)+'');
     await p.click('#page [data-act="st-list"][data-l="de"]');await p.waitForTimeout(150);
     T('숫자 누르면 날짜 목록 (10월 4일 일)',await p.evaluate(()=>/10월 4일 \(일\)/.test(document.querySelector('#pop').textContent)));

@@ -1483,6 +1483,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .obtm{margin-top:16px}.obtm-h{width:100%;text-align:left;padding:12px 14px;border-radius:14px;background:var(--surface);font-size:15px;font-weight:800;color:var(--fg)}.obtm-h span{color:var(--muted);font-weight:600}.obtm-h small{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin-top:2px}
 .obtm .alrow{display:flex;align-items:center;gap:10px;padding:8px 4px}.obtm .alrow small{color:var(--muted);font-size:12px;margin-left:auto}
 .stnav{display:flex;align-items:center;justify-content:center;gap:18px;padding:12px 16px 2px}.stnav b{font-size:17px}.stnav{position:relative}.stnav .sttoday{position:absolute;right:16px;font-size:13px}
+.stat-box.stdae{flex-direction:column;align-items:center;gap:6px}.stdae-n{display:flex;align-items:baseline;gap:8px;cursor:pointer}.stdae-n .lbl{order:-1;font-size:15px;font-weight:800;color:var(--fg);margin:0}.stdae-n .num{font-size:30px;font-weight:800;line-height:1.1}.stdae-sub{display:flex;gap:6px;align-items:center;font-size:13.5px;color:var(--muted)}.stdae-sub button{color:var(--fg);font-size:13.5px}.stdae-sub b{color:var(--stat-dae)}
 .sttot{border-top:1px solid var(--line)}.sttot .stw{font-size:18px;color:var(--accent)}
 .otsum{margin-top:6px;padding:10px 12px;border-radius:12px;background:var(--surface);font-size:14px}
 .ptm-t{display:flex;align-items:center;gap:4px;flex:none}.ptm-t em{font-style:normal;color:var(--muted)}.ptm-t small{font-size:11px;color:var(--muted)}
@@ -6160,13 +6161,13 @@ function openStatsPage(){
         ${line('🗓 근무',`${c.days}일 · 야간 ${c.nightShifts}번`)}
         ${line('🕐 근무 시간',`${H(c.work)}시간`,`연장 ${H(c.ot)}시간 · 야간 ${H(c.night)}시간${c.reqH?` · ⏱ 연장 신청 ${H(c.reqH)}시간`:''}`)}
       </div>
-      <div class="stat-box" style="margin:0 16px">${num(c.dw.length,'평일 대근','var(--stat-dae)','dw')}${dv}${num(c.de.length,'주말 대근','var(--stat-dae)','de')}${dv}${num(c.dh.length,'명절·공휴일 대근','var(--sun)','dh')}</div>
+      ${daeBox(daeN,c.dw.length,c.de.length,c.dh.length,true)}
       <div class="stat-box" style="margin:10px 16px 0">${num(lvUsed,P.leaveYear?`연차 · 남은 ${Math.max(0,P.leaveYear-yUsed)}일`:'연차/휴가','var(--stat-vac)','vac')}${dv}${num(c.edu.length,'교육','var(--stat-edu)','edu')}${dv}${num(c.req.length,'⏱ 연장','#b0661a','req')}${dv}${num(c.holWork.length,'휴일 출근','var(--sun)','hol')}</div>
       ${(()=>{   // 올해 누적 (1월 ~ 보고 있는 달, 급여 마감일 기준) — 횟수 · 시간만 (금액은 이번 달만)
         const A={dw:0,de:0,dh:0,vac:0,edu:0,req:0,hol:0,work:0,ot:0,night:0};
         for(let i=0;i<=m;i++){const x=statsCalc(y,i);A.dw+=x.dw.length;A.de+=x.de.length;A.dh+=x.dh.length;A.vac+=x.vac.length;A.edu+=x.edu.length;A.req+=x.req.length;A.hol+=x.holWork.length;A.work+=x.work;A.ot+=x.ot;A.night+=x.night;}
         return `<div class="pg-cap">${y}년 누적 (1월 ~ ${m+1}월)</div>
-        <div class="stat-box" style="margin:0 16px">${num(A.dw,'평일 대근','var(--stat-dae)')}${dv}${num(A.de,'주말 대근','var(--stat-dae)')}${dv}${num(A.dh,'명절·공휴일 대근','var(--sun)')}</div>
+        ${daeBox(A.dw+A.de+A.dh,A.dw,A.de,A.dh,false)}
         <div class="stat-box" style="margin:10px 16px 0">${num(A.vac,'연차/휴가','var(--stat-vac)')}${dv}${num(A.edu,'교육','var(--stat-edu)')}${dv}${num(A.req,'⏱ 연장','#b0661a')}${dv}${num(A.hol,'휴일 출근','var(--sun)')}</div>
         <div class="hint" style="padding:6px 16px 0;text-align:center">근무 ${H(A.work)}시간 · 연장 ${H(A.ot)}시간 · 야간 ${H(A.night)}시간</div>`;})()}
       ${show?`<div class="pg-cap">이번 달 예상 월급 <span style="font-weight:600">(세전 · 대략)</span></div>
@@ -6194,6 +6195,12 @@ function openStatsPage(){
       <div class="hint" style="padding:8px 16px 16px">무급 휴가는 근무 종류 편집에서 "무급"을 켜면 그 날만큼 빼요. 연차는 빼지 않아요.</div>
     </div>`,'stats');
 }
+// 대근 칸: 큰 숫자 = 전체 · 아래 줄 = 평일 · 주말 · 명절 (이번 달은 누르면 날짜 목록)
+function daeBox(n,w,e,h,tap){
+  const a=l=>tap?` data-act="st-list" data-l="${l}"`:'';
+  return `<div class="stat-box stdae" style="margin:0 16px"><div class="stdae-n"${a('dae')}><div class="num" style="color:var(--stat-dae)">${n}</div><p class="lbl">대근</p></div>
+    <div class="stdae-sub"><button${a('dw')}>평일 <b>${w}</b></button><span>·</span><button${a('de')}>주말 <b>${e}</b></button><span>·</span><button${a('dh')}>명절 · 공휴일 <b>${h}</b></button></div></div>`;
+}
 // 명세서로 맞추기: 그 달(마감 기준) 연장 · 야간 · 연차수당 금액 → 1시간 금액을 거꾸로
 let slipYM='';
 function openSlipPage(){
@@ -6219,7 +6226,7 @@ function openSlipPage(){
 function slipSet(f,v){S.salary.slips=S.salary.slips||{};const x=(S.salary.slips[slipYM]=S.salary.slips[slipYM]||{ot:0,nt:0,lv:0,lvd:0,tot:0});x[f]=Math.max(0,Math.round(+v||0));if(f==='lvd')x.lvd=Math.min(31,x.lvd);if(!x.ot&&!x.nt&&!x.lv&&!x.tot)delete S.salary.slips[slipYM];save();}
 function stList(l){
   const c=stLast;if(!c)return;
-  const L={dw:['평일 대근',c.dw],de:['주말 대근',c.de],dh:['명절·공휴일 대근',c.dh],vac:['연차/휴가',c.vac],edu:['교육',c.edu],req:['⏱ 연장',c.req],hol:['휴일 출근',c.holWork]}[l];if(!L)return;
+  const L={dae:['대근',[...c.dw,...c.de,...c.dh].sort()],dw:['평일 대근',c.dw],de:['주말 대근',c.de],dh:['명절·공휴일 대근',c.dh],vac:['연차/휴가',c.vac],edu:['교육',c.edu],req:['⏱ 연장',c.req],hol:['휴일 출근',c.holWork]}[l];if(!L)return;
   const row=k=>{const d=parse(k),h=l==='req'?dayHours(d):null;return `<button class="mi" data-act="st-go" data-k="${k}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})<small style="margin-left:auto;color:var(--muted)">${esc(shiftLabel(shiftOf(d)))}${h&&h.req?` · +${Math.round(h.req*10)/10}시간`:''}${holName(k)?' · '+esc(holName(k)):''}</small></button>`;};
   openPop(`<div class="mh">${L[0]}<b>${L[1].length}일</b></div><div class="wxlist">${L[1].map(row).join('')||'<div class="mi" style="color:var(--muted)">없어요</div>'}</div><button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);
 }
