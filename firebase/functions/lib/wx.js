@@ -18,6 +18,23 @@ function region(c) {
 }
 
 const p2 = n => String(n).padStart(2, '0');
+// 기상청 격자(nx, ny) → 위도 · 경도 (LCC 역변환) — 가장 가까운 관측소를 고를 때만 씀
+function gridLL(nx, ny) {
+  const RE = 6371.00877, G = 5.0, D = Math.PI / 180, s1 = 30 * D, s2 = 60 * D, ol = 126 * D, oa = 38 * D, XO = 43, YO = 136, re = RE / G;
+  const sn = Math.log(Math.cos(s1) / Math.cos(s2)) / Math.log(Math.tan(Math.PI * 0.25 + s2 * 0.5) / Math.tan(Math.PI * 0.25 + s1 * 0.5));
+  const sf = Math.pow(Math.tan(Math.PI * 0.25 + s1 * 0.5), sn) * Math.cos(s1) / sn, ro = re * sf / Math.pow(Math.tan(Math.PI * 0.25 + oa * 0.5), sn);
+  const xn = nx - XO, yn = ro - ny + YO, ra = Math.sign(sn) * Math.sqrt(xn * xn + yn * yn);
+  const lat = 2 * Math.atan(Math.pow(re * sf / ra, 1 / sn)) - Math.PI * 0.5;
+  const th = Math.abs(xn) <= 0 ? 0 : Math.abs(yn) <= 0 ? Math.PI * 0.5 * Math.sign(xn) : Math.atan2(xn, yn);
+  return [lat / D, (th / sn + ol) / D];
+}
+let ASOS = null;
+// 가까운 종관 관측소 (가까운 순 3곳)
+function nearAsos(r) {
+  if (!ASOS) ASOS = require('./wxAsos.json');
+  const [la, lo] = gridLL(r.nx, r.ny), c = Math.cos(la * Math.PI / 180);
+  return ASOS.map(x => [x, (x[2] - la) ** 2 + ((x[3] - lo) * c) ** 2]).sort((a, b) => a[1] - b[1]).slice(0, 3).map(x => x[0]);
+}
 const kstParts = ms => { const d = new Date(ms + 9 * 3600000); return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes()]; };
 const ymd = ms => { const [y, m, d] = kstParts(ms); return `${y}${p2(m)}${p2(d)}`; };
 const HOUR = 3600000;
@@ -182,6 +199,62 @@ async function fetchAirRt(deps, sido, now) {
   return Object.assign(v, { b: rtBase(now) });
 }
 
+// 미세먼지 가까운 측정소 (에어코리아 측정소정보): 동 이름 → TM 좌표 → 가까운 측정소 3곳 (지역마다 한 번 찾아 저장)
+async function fetchStations(deps, r) {
+  let umd = r.dn, sggTail = r.n.split(' ').filter(x => x !== r.dn).pop();
+  if (!umd) {   // 시·군·구만 골랐으면: 그 시·군·구 대표 칸과 가장 가까운 동
+    const l = dongsOf(r.c) || []; const d = l.slice().sort((a, b) => ((a[2] - r.nx) ** 2 + (a[3] - r.ny) ** 2) - ((b[2] - r.nx) ** 2 + (b[3] - r.ny) ** 2))[0];
+    if (!d) throw new Error('동 없음'); umd = d[1];
+  }
+  const t = items(await getJson(deps, '/B552584/MsrstnInfoInqireSvc/getTMStdrCrdnt', { returnType: 'json', numOfRows: 50, pageNo: 1, umdName: umd }));
+  const hit = t.find(x => String(x.sggName || '').includes(sggTail) || sggTail.includes(String(x.sggName || '').split(' ').pop())) || (t.length === 1 ? t[0] : null);
+  if (!hit || num(hit.tmX) == null) throw new Error('TM 좌표 없음');
+  const n = items(await getJson(deps, '/B552584/MsrstnInfoInqireSvc/getNearbyMsrstnList', { returnType: 'json', tmX: hit.tmX, tmY: hit.tmY, ver: '1.1' }));
+  const st = n.map(x => String(x.stationName || '')).filter(Boolean).slice(0, 3);
+  if (!st.length) throw new Error('측정소 없음');
+  return st;
+}
+async function fetchStationRt(deps, st, now) {
+  const l = items(await getJson(deps, '/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty', { returnType: 'json', numOfRows: 3, pageNo: 1, stationName: st, dataTerm: 'DAILY', ver: '1.0' }));
+  const x = l.find(v => num(v.pm10Value) != null || num(v.pm25Value) != null);
+  if (!x) throw new Error('측정값 없음');
+  return { t: String(x.dataTime || ''), p10: num(x.pm10Value) != null ? Math.round(num(x.pm10Value)) : null, p25: num(x.pm25Value) != null ? Math.round(num(x.pm25Value)) : null, st, b: rtBase(now) };
+}
+async function stationAir(deps, r) {
+  const sl = await cached(deps, `st_${r.c}`, 'v1', () => fetchStations(deps, r));
+  if (!sl.v) return null;
+  for (const st of sl.v) {   // 가장 가까운 측정소가 점검 중이면 다음 곳
+    const q = await cached(deps, `qs_${st}`, rtBase(deps.now), () => fetchStationRt(deps, st, deps.now));
+    if (q.v) return q.v;
+  }
+  return null;
+}
+
+// 지난 날짜 실제 관측 (기상청 ASOS 일자료): 그 달 하루마다 [최저, 최고, 강수 mm, 적설 cm] · 지난달까지는 한 번 받으면 안 바뀜
+async function fetchPast(deps, stn, ym, endDay) {
+  const l = items(await getJson(deps, '/1360000/AsosDalyInfoService/getWthrDataList', { pageNo: 1, numOfRows: 31, dataType: 'JSON', dataCd: 'ASOS', dateCd: 'DAY', startDt: `${ym}01`, endDt: endDay, stnIds: stn }));
+  const d = {};
+  for (const x of l) {
+    const k = String(x.tm || '').replace(/-/g, ''); if (!/^\d{8}$/.test(k)) continue;
+    const mn = num(x.minTa), mx = num(x.maxTa);
+    if (mn == null && mx == null) continue;
+    d[k] = [mn == null ? null : Math.round(mn), mx == null ? null : Math.round(mx), num(x.sumRn) || 0, num(x.ddMes) || 0];
+  }
+  if (!Object.keys(d).length) throw new Error('관측 없음');
+  return d;
+}
+async function pastData(deps, code, ym) {
+  const r = region(code); if (!r || !/^\d{6}$/.test(ym)) return null;
+  const yd = ymd(deps.now - 24 * HOUR);   // 관측 자료는 어제까지
+  if (`${ym}01` > yd) return { r: r.c, ym, st: '', d: {} };
+  const last = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(4, 6), 0)).getUTCDate(), end = `${ym}${p2(last)}` < yd ? `${ym}${p2(last)}` : yd;
+  for (const s of nearAsos(r)) {
+    const v = await cached(deps, `p_${s[0]}_${ym}`, end === yd && end.slice(0, 6) === ym ? yd : 'final', () => fetchPast(deps, s[0], ym, end));
+    if (v.v) return { r: r.c, ym, st: s[1], d: v.v };
+  }
+  return { r: r.c, ym, st: '', d: {}, e: 'past' };
+}
+
 /* 저장해 둔 값이 이번 발표 것이면 그대로, 아니면 새로 받고 · 받다 실패하면 저장해 둔 옛 값(이틀 안)
  * 같은 열쇠를 실패한 지 2분 안에는 다시 부르지 않음 (기상청이 멈췄을 때 매번 기다리지 않게) */
 const failAt = new Map();
@@ -215,7 +288,8 @@ async function regionData(deps, code) {
     cached(deps, 'af', airBase(now), () => fetchAirFc(deps, now)),
     cached(deps, `q_${rtSido(r)}`, rtBase(now), () => fetchAirRt(deps, rtSido(r), now))
   ]);
-  const out = { v: 1, r: r.c, n: r.n, s: s.v, m: m.v, a: null, q: rt.v || null };
+  const near = await stationAir(deps, r).catch(() => null);   // 가까운 측정소 값이 있으면 그것 (없으면 시·도 평균)
+  const out = { v: 1, r: r.c, n: r.n, s: s.v, m: m.v, a: null, q: near || rt.v || null };
   if (af.v && af.v.d) {   // 전국 예보에서 이 지역 몫만
     const names = aqNames(r), d = {};
     for (const [day, regs] of Object.entries(af.v.d)) { const nm = names.find(x => regs[x]); if (nm) d[day] = regs[nm]; }
@@ -237,6 +311,10 @@ async function handle(deps, q) {
     const l = BY.has(String(q.dongs)) ? dongsOf(String(q.dongs)) : null;
     return l ? { status: 200, body: { list: l.map(x => [x[0], x[1]]) }, cache: 86400 } : { status: 400, body: { error: 'region' } };
   }
+  if (q.past) {   // 지난 날짜 관측: ?past=지역&ym=YYYYMM
+    const v = await pastData(deps, String(q.past), String(q.ym || ''));
+    return v ? { status: 200, body: v, cache: 3600 } : { status: 400, body: { error: 'region' } };
+  }
   if (q.r) {
     const codes = String(q.r).split(',').slice(0, 6).filter(c => region(c));
     if (!codes.length) return { status: 400, body: { error: 'region' } };
@@ -248,14 +326,14 @@ async function handle(deps, q) {
     const w = q.w ? region(q.w) : null;
     const [hd, wd] = await Promise.all([regionData(deps, h.c), w && w.c !== h.c ? regionData(deps, w.c) : null]);
     if (q.d && /^\d{8}$/.test(q.d)) {
-      const c = WX.dayCard(hd, q.d, { now: deps.now });
+      const c = WX.dayCard(hd, q.d, { now: deps.now, hq: `${h.s} ${h.n}` });
       return { status: 200, body: c ? Object.assign(c, { day: undefined }) : { none: 1 } };
     }
     if (!okStamp(q.s) || !okStamp(q.e)) return { status: 400, body: { error: 'time' } };
-    const c = WX.commute(hd, wd || (w ? hd : null), { s: stampMs(q.s), e: stampMs(q.e), hn: `집 · ${h.dn || h.n}`, wn: `${w ? "직장" : "집"} · ${(w || h).dn || (w || h).n}`, now: deps.now });
+    const c = WX.commute(hd, wd || (w ? hd : null), { s: stampMs(q.s), e: stampMs(q.e), hn: `집 · ${h.dn || h.n}`, wn: `${w ? "직장" : "집"} · ${(w || h).dn || (w || h).n}`, hq: `${h.s} ${h.n}`, wq: `${(w || h).s} ${(w || h).n}`, now: deps.now });
     return { status: 200, body: c || { none: 1 } };
   }
   return { status: 400, body: { error: 'query' } };
 }
 
-module.exports = { _resetFail: () => failAt.clear(), handle, regionData, region, shortBase, midBase, airBase, rtBase, parseShort, parseMid, parseAirFc, parseAirRt, pcpMm, stampMs, keyParam };
+module.exports = { _resetFail: () => failAt.clear(), gridLL, nearAsos, pastData, handle, regionData, region, shortBase, midBase, airBase, rtBase, parseShort, parseMid, parseAirFc, parseAirRt, pcpMm, stampMs, keyParam };

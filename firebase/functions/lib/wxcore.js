@@ -99,7 +99,7 @@
     if (a.q) return [
       a.q.p10 != null ? `미세먼지 ${a.q.p10}㎍/㎥ (${L8[lv8(a.q.p10, T10)]})` : '',
       a.q.p25 != null ? `초미세먼지 ${a.q.p25}㎍/㎥ (${L8[lv8(a.q.p25, T25)]})` : '',
-      ['지금', a.q.w ? `${a.q.w} 평균` : '', a.f ? `오늘 예보 ${N4[Math.max(a.f[0] || 0, a.f[1] || 0)]}` : ''].filter(Boolean).join(' · ')
+      ['지금', a.q.st ? `${a.q.st} 측정소` : a.q.w ? `${a.q.w} 평균` : '', a.f ? `오늘 예보 ${N4[Math.max(a.f[0] || 0, a.f[1] || 0)]}` : ''].filter(Boolean).join(' · ')
     ].filter(Boolean).join('\n');
     return `미세먼지 ${N4[a.f[0]] || '-'} · 초미세먼지 ${N4[a.f[1]] || '-'}\n예보 · 수치(㎍/㎥)는 오늘만 나와요`;
   }
@@ -154,12 +154,13 @@
       else if ([vs, ve].filter(Boolean).every(v => v.sky <= 1)) { i = '☀️'; h = '출퇴근길 맑아요'; hs = '맑아요'; }
       else { i = (ve || vs).sky >= 4 ? '☁️' : '⛅'; h = '무난한 날씨예요'; hs = '무난해요'; }
     }
-    const row = (l, ms, pl, v) => v ? { l: `${l} ${hm(ms)}`, p: pl || '', i: icon(v), tp: v.tp, d: desc(v), pop: v.pop, pcp: v.pcp, ws: v.ws, reh: v.reh, tag: wet(v) ? (snowy(v) ? '조심' : '우산') : '' } : { l: `${l} ${hm(ms)}`, p: pl || '', i: '', tp: null, d: '예보 없음' };
+    // q: 그 줄을 누르면 열 날씨 페이지 검색어 (출근 = 집, 퇴근 = 직장)
+    const row = (l, ms, pl, v, sq) => Object.assign(v ? { l: `${l} ${hm(ms)}`, p: pl || '', i: icon(v), tp: v.tp, d: desc(v), pop: v.pop, pcp: v.pcp, ws: v.ws, reh: v.reh, tag: wet(v) ? (snowy(v) ? '조심' : '우산') : '' } : { l: `${l} ${hm(ms)}`, p: pl || '', i: '', tp: null, d: '예보 없음' }, sq ? { q: sq } : {});
     return {
       i, h, hs,
       t: [vs ? `출근 ${vs.tp}°` : '', ve ? `퇴근 ${ve.tp}°` : ''].filter(Boolean).join(' · '),
       a: airLine(a), an: airNums(a), ag: a ? a.g : 0,
-      r: [row('출근', o.s, o.hn, vs), row('퇴근', o.e, o.wn, ve)],
+      r: [row('출근', o.s, o.hn, vs, o.hq), row('퇴근', o.e, o.wn, ve, o.wq || o.hq)],
       ...((oc => oc ? { o: oc.o, ox: oc.ox, ol: '출퇴근길' } : {})(outfit([vs, ve]))),
       src: srcLine(home, work)
     };
@@ -175,7 +176,7 @@
     else if (d.lo <= 0) { h = '추운 날이에요'; hs = '추워요'; }
     else if (d.hi - d.lo >= 10) { h = '일교차가 커요'; hs = '일교차 커요'; }
     else { h = d.i === '☀️' ? '맑은 날이에요' : '무난한 날씨예요'; hs = d.i === '☀️' ? '맑아요' : '무난해요'; }
-    const half = (l, x) => x ? { l, p: '', i: x.i, tp: null, d: x.d, pop: x.pop, tag: x.wet ? (x.snow ? '조심' : '우산') : '' } : null;
+    const half = (l, x) => x ? Object.assign({ l, p: '', i: x.i, tp: null, d: x.d, pop: x.pop, tag: x.wet ? (x.snow ? '조심' : '우산') : '' }, o && o.hq ? { q: o.hq } : {}) : null;
     // 쉬는 날 옷차림: 최저 · 최고 기온 + 비/눈 (바람은 하루 평균이 없어서 기온으로만)
     const oc = d.lo != null && d.hi != null ? outfit([{ tp: d.lo, pty: d.snow ? 3 : 0, pop: d.wet ? 60 : 0 }, { tp: d.hi, pty: 0, pop: 0 }]) : null;
     return { i, h, hs, t: d.lo != null && d.hi != null ? `${d.lo}° ~ ${d.hi}°` : '', a: airLine(a), an: airNums(a), ag: a ? a.g : 0, r: [half('오전', d.am), half('오후', d.pm)].filter(Boolean), ...(oc ? { o: oc.o, ox: oc.ox, ol: '오늘 하루' } : {}), day: d, src: srcLine(home, null, d.src) };
@@ -200,5 +201,14 @@
     const bad = a && a.g >= 3;
     return { i: wet(v) ? (snowy(v) ? '❄️' : '☔') : bad ? '😷' : icon(v), t: `${useE ? '퇴근' : '출근'} ${v.tp}°${wet(v) ? (snowy(v) ? ' 눈' : ' 비') : bad ? ' 마스크' : ''}`, wet: wet(v), bad: !!bad };
   }
-  return { keyD, keyH, hm, kst, at, day, air, airLine, airNums, commute, dayCard, brief, wfIcon, icon, desc, G10, G25, feel, outfit };
+  const naver = q => `https://m.search.naver.com/search.naver?query=${encodeURIComponent(String(q || '').trim() + ' 날씨')}`;
+  // 지난 날짜 관측 한 줄: "☔ 6°~12° · 비 8mm" / "❄️ … · 눈 3cm" / "🌡 6°~12°"
+  function pastLine(p) {
+    if (!p) return null;
+    const [mn, mx, rn, sn] = p, t = mn != null && mx != null ? `${mn}°~${mx}°` : mn != null ? `최저 ${mn}°` : `최고 ${mx}°`;
+    if (sn > 0) return { i: '❄️', t: `${t} · 눈 ${sn}cm` };
+    if (rn >= 0.5) return { i: '☔', t: `${t} · 비 ${rn >= 1 ? Math.round(rn) : rn}mm` };
+    return { i: '🌡', t };
+  }
+  return { naver, pastLine, keyD, keyH, hm, kst, at, day, air, airLine, airNums, commute, dayCard, brief, wfIcon, icon, desc, G10, G25, feel, outfit };
 });

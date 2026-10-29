@@ -123,14 +123,23 @@ object Reminders {
             intent.putExtra("type", "wx").putExtra("date", o.optString("date", ""))
             val open = PendingIntent.getActivity(ctx, o.optString("id").hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val short = if (w != null) listOf(w.optString("t"), w.optString("a")).filter { it.isNotBlank() }.joinToString(" · ") else o.optString("text", "")
-            val n = Notification.Builder(ctx, CHANNEL_WX)
+            val nb = Notification.Builder(ctx, CHANNEL_WX)
                 .setSmallIcon(R.drawable.ic_stat_notify)
                 .setContentTitle(title)
                 .setContentText(short)
                 .setStyle(Notification.BigTextStyle().bigText(lines.joinToString("\n")))
                 .setAutoCancel(true)
                 .setContentIntent(open)
-                .build()
+            // 버튼: [출근지 날씨] [퇴근지 날씨] (쉬는 날은 [우리 동네 날씨]) → 그 지역 네이버 날씨
+            val rows = w?.optJSONArray("r")
+            val qs = ArrayList<String>()
+            if (rows != null) for (k in 0 until rows.length()) rows.optJSONObject(k)?.optString("q")?.takeIf { it.isNotBlank() }?.let { qs.add(it) }
+            val labels = if (qs.distinct().size >= 2) listOf("출근지 날씨", "퇴근지 날씨") else listOf("우리 동네 날씨")
+            qs.distinct().take(labels.size).forEachIndexed { i, q ->
+                val pi = PendingIntent.getActivity(ctx, (o.optString("id") + i).hashCode(), Intent(Intent.ACTION_VIEW, android.net.Uri.parse(Weather.webUrl(q))).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                nb.addAction(Notification.Action.Builder(null, labels[i], pi).build())
+            }
+            val n = nb.build()
             nm.notify("wx".hashCode(), n)   // 날씨 알림은 하나만 (새 것이 옛 것을 바꿈)
         } catch (e: Exception) {
         }

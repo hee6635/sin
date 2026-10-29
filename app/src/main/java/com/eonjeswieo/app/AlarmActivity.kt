@@ -416,6 +416,11 @@ class AlarmActivity : Activity() {
                 tag.background = tb
                 row.addView(tag)
             }
+            val q = r.optString("q")
+            if (q.isNotBlank()) {   // 줄을 누르면 그 지역 네이버 날씨 (잠금 화면이면 먼저 잠금 해제)
+                row.addView(tv("›", 18f, sub).also { it.setPadding(dp(6), 0, 0, 0) })
+                row.setOnClickListener { openWeb(Weather.webUrl(q)) }
+            }
             card.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         }
         // 옷차림 (출퇴근길 · 체감온도 · 비 · 바람 · 기온차)
@@ -462,6 +467,24 @@ class AlarmActivity : Activity() {
         frame.setOnClickListener { finish() }
         setContentView(frame)
         handler.postDelayed(closeCard, CARD_MS)
+    }
+
+    /** 날씨 페이지 열기: 잠금 화면 위라면 잠금 해제를 먼저 묻고, 풀리면 브라우저로 (자동 닫힘은 멈춤) */
+    private fun openWeb(url: String) {
+        handler.removeCallbacks(closeCard)
+        val go = {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            } catch (e: Exception) {
+            }
+            finish()
+        }
+        val km = getSystemService(android.app.KeyguardManager::class.java)
+        if (Build.VERSION.SDK_INT >= 26 && km != null && km.isKeyguardLocked) {
+            km.requestDismissKeyguard(this, object : android.app.KeyguardManager.KeyguardDismissCallback() {
+                override fun onDismissSucceeded() { go() }
+            })
+        } else go()
     }
 
     override fun onDestroy() {

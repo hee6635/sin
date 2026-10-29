@@ -213,5 +213,46 @@ await ok('출퇴근 문구 · 쉬는 날 문구에 옷차림 줄', async () => {
   assert.equal(c.o, '👕 코트 · 히트텍'); assert.match(c.ox, /우산/);
   const y = (await W.handle(d, { h: '41111', d: '20261031' })).body; assert.ok(y.o && y.o.startsWith('👕'));
 });
+await ok('미세먼지 가까운 측정소: 동 → TM → 측정소 → 지금 값 (점검이면 다음 측정소) · 못 찾으면 시·도 평균', async () => {
+  W._resetFail();
+  const body = url => {
+    if (/getTMStdrCrdnt/.test(url)) return wrap([{ sidoName: '경기도', sggName: '수원시 장안구', umdName: '연무동', tmX: '201000.1', tmY: '421000.2' }, { sidoName: '경상남도', sggName: '고성군', umdName: '연무동', tmX: '1', tmY: '2' }]);
+    if (/getNearbyMsrstnList/.test(url)) { assert.match(url, /tmX=201000\.1/); return wrap([{ stationName: '연무동', tm: 0.4 }, { stationName: '광교동', tm: 2.1 }]); }
+    if (/getMsrstnAcctoRltmMesureDnsty/.test(url)) return /stationName=%EC%97%B0%EB%AC%B4/.test(url) ? wrap([{ dataTime: '2026-10-30 05:00', pm10Value: '-', pm25Value: '-' }]) : wrap([{ dataTime: '2026-10-30 05:00', pm10Value: '55', pm25Value: '28' }]);
+    return null;
+  };
+  const D = req('../lib/wxDongs.json'), yd = D['41111'].find(x => x[1] === '연무동')[0];
+  const r = await W.regionData(deps({ body }), yd);
+  assert.deepEqual([r.q.st, r.q.p10, r.q.p25], ['광교동', 55, 28]);   // 연무동 측정소가 점검 중(-) → 다음 측정소
+  const c = C.commute(r, null, { s: KST(2026, 10, 30, 7), e: KST(2026, 10, 30, 19), now: NOW });
+  assert.match(c.an, /지금 · 광교동 측정소/);
+  W._resetFail();
+  const r2 = await W.regionData(deps(), '41111'); assert.equal(r2.q.w, '경기'); assert.ok(!r2.q.st);   // 측정소 서비스가 안 되면 시·도 평균
+});
+await ok('지난 날짜 관측 (ASOS): 가까운 관측소 · 어제까지 · 관측 없으면 다음 관측소 · 한 줄 문구', async () => {
+  W._resetFail();
+  const asked = [];
+  const body = url => {
+    if (!/getWthrDataList/.test(url)) return null;
+    const st = url.match(/stnIds=(\d+)/)[1]; asked.push(st);
+    if (st === '119') return wrap([]);   // 수원 관측소 자료 없음 → 다음
+    assert.match(url, /startDt=20261001/); assert.match(url, /endDt=20261029/);   // 오늘(10/30) 전날까지
+    return wrap([{ tm: '2026-10-28', minTa: '6.2', maxTa: '12.4', sumRn: '8.5', ddMes: '' }, { tm: '2026-10-29', minTa: '3', maxTa: '15', sumRn: '', ddMes: '' }]);
+  };
+  const v = await W.pastData(deps({ body }), '41111', '202610');
+  assert.equal(asked[0], '119'); assert.equal(v.st, '서울'); assert.deepEqual(v.d['20261028'], [6, 12, 8.5, 0]);
+  assert.deepEqual(C.pastLine(v.d['20261028']), { i: '☔', t: '6°~12° · 비 9mm' });
+  assert.deepEqual(C.pastLine(v.d['20261029']), { i: '🌡', t: '3°~15°' });
+  assert.deepEqual(C.pastLine([-3, 1, 2, 3]), { i: '❄️', t: '-3°~1° · 눈 3cm' });
+  const f = await W.pastData(deps(), '41111', '202612'); assert.deepEqual(f.d, {});   // 앞으로의 달 = 빈 값
+  const h = await W.handle(deps({ body }), { past: '41111', ym: '202610' }); assert.equal(h.status, 200); assert.equal(h.cache, 3600);
+});
+await ok('날씨 페이지 검색어: 출근 줄 = 집 · 퇴근 줄 = 직장 · 네이버 주소', async () => {
+  W._resetFail();
+  const c = (await W.handle(deps(), { h: '41111', w: '41597', s: '202610300700', e: '202610301900' })).body;
+  assert.equal(c.r[0].q, '경기 수원시 장안구'); assert.equal(c.r[1].q, '경기 화성시 동탄구');
+  assert.equal(C.naver('경기 수원시 장안구'), 'https://m.search.naver.com/search.naver?query=' + encodeURIComponent('경기 수원시 장안구 날씨'));
+  const y = (await W.handle(deps(), { h: '41111', d: '20261031' })).body; assert.ok(y.r.every(x => x.q === '경기 수원시 장안구'));
+});
 await ok('시각 글자(YYYYMMDDHHmm) → ms (한국 시간)', () => assert.equal(W.stampMs('202610300700'), KST(2026, 10, 30, 7)));
 console.log(`\n${n} 통과`);

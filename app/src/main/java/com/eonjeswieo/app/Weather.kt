@@ -51,6 +51,10 @@ object Weather {
         return parts.joinToString(" · ")
     }
 
+    /** 그 줄을 누르면 열 네이버 날씨 (출근 줄 = 집 · 퇴근 줄 = 직장 지역) */
+    fun webUrl(q: String): String =
+        "https://m.search.naver.com/search.naver?query=" + java.net.URLEncoder.encode(q.trim() + " 날씨", "UTF-8")
+
     fun temp(r: JSONObject): String = if (r.has("tp") && !r.isNull("tp")) "${r.optInt("tp")}°" else ""
 
     private fun fmtNum(v: Double): String = if (v == Math.floor(v)) v.toInt().toString() else String.format("%.1f", v)

@@ -191,7 +191,7 @@ service cloud.firestore {
       allow read: if isMember(hid);
       allow create, update: if signedIn() && request.auth.uid == uid && isMember(hid)
         && get(memberPath(hid, uid)).data.get('mode', 'own') == 'own'
-        && request.resource.data.keys().hasOnly(['v', 'patternName', 'teamName', 'pattern', 'anchor', 'types', 'overrides', 'holRest', 'stk', 'sdefs', 'sv', 'wx', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['v', 'patternName', 'teamName', 'pattern', 'anchor', 'types', 'overrides', 'holRest', 'stk', 'sdefs', 'sv', 'wx', 'tm', 'ot', 'updatedAt'])
         && request.resource.data.v == 1
         && request.resource.data.patternName is string && request.resource.data.patternName.size() <= 20
         && request.resource.data.teamName is string && request.resource.data.teamName.size() <= 10
@@ -209,6 +209,9 @@ service cloud.firestore {
             && request.resource.data.wx.keys().hasOnly(['w', 'tm'])
             && request.resource.data.wx.w is string && request.resource.data.wx.w.matches('[0-9]{5}([0-9]{5})?')
             && request.resource.data.wx.get('tm', {}) is map && request.resource.data.wx.get('tm', {}).size() <= 24))
+        // 근무 종류별 출퇴근 시각 · ⏱ 연장으로 바꾼 날짜별 실제 시각 (가족 탭 "몇 시 끝" · 가족 날씨)
+        && request.resource.data.get('tm', {}) is map && request.resource.data.get('tm', {}).size() <= 24
+        && request.resource.data.get('ot', {}) is map && request.resource.data.get('ot', {}).size() <= 70
         && request.resource.data.updatedAt == request.time;
       allow delete: if signedIn() && (request.auth.uid == uid || isOwner(hid) || (isMember(hid) && !exists(memberPath(hid, uid))));
     }
