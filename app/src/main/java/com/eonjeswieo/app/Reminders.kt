@@ -22,6 +22,7 @@ object Reminders {
     private const val KEY = "json"
     private const val REQ = 5151
     const val CHANNEL_ID = "eonjeswieo_remind"
+    const val CHANNEL_WX = "eonjeswieo_wx"   // ☔ 날씨만 알람: 소리 · 진동 없는 조용한 알림
 
     fun saveList(ctx: Context, json: String) {
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY, json).apply()
@@ -93,6 +94,47 @@ object Reminders {
         }
     }
 
+    /**
+     * ☔ 날씨만 알람: 그 시각에 새 예보로 문구를 만들어 조용히 알림 (못 받으면 앱이 미리 만든 문구 · 그것도 없으면 앱이 넣어 둔 제목/글).
+     * 네트워크를 쓰므로 ReminderReceiver 가 따로 스레드에서 부름.
+     */
+    private fun postWeather(ctx: Context, nm: NotificationManager, o: JSONObject) {
+        try {
+            val ch = NotificationChannel(CHANNEL_WX, "출퇴근 날씨", NotificationManager.IMPORTANCE_DEFAULT)
+            ch.setSound(null, null)
+            ch.enableVibration(false)
+            ch.description = "날씨만 알람 (소리 없이)"
+            nm.createNotificationChannel(ch)
+            val w = Weather.get(o.optString("wxq"), o.optString("wxp"), 7000)
+            val title = if (w != null) "${w.optString("i")} ${w.optString("h")}".trim() else o.optString("title", "☔ 오늘 출퇴근 날씨")
+            val lines = ArrayList<String>()
+            if (w != null) {
+                w.optString("t").takeIf { it.isNotBlank() }?.let { lines.add(it) }
+                val rows = w.optJSONArray("r")
+                if (rows != null) for (k in 0 until rows.length()) {
+                    val r = rows.optJSONObject(k) ?: continue
+                    lines.add("${r.optString("l")} ${r.optString("i")} ${Weather.temp(r)} ${Weather.rowText(r)}".replace(Regex("\\s+"), " ").trim())
+                }
+                w.optString("a").takeIf { it.isNotBlank() }?.let { lines.add(it) }
+                w.optString("an").takeIf { it.isNotBlank() }?.let { lines.add(it) }
+            } else o.optString("text").takeIf { it.isNotBlank() }?.let { lines.add(it) }
+            val intent = Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            intent.putExtra("type", "wx").putExtra("date", o.optString("date", ""))
+            val open = PendingIntent.getActivity(ctx, o.optString("id").hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val short = if (w != null) listOf(w.optString("t"), w.optString("a")).filter { it.isNotBlank() }.joinToString(" · ") else o.optString("text", "")
+            val n = Notification.Builder(ctx, CHANNEL_WX)
+                .setSmallIcon(R.drawable.ic_stat_notify)
+                .setContentTitle(title)
+                .setContentText(short)
+                .setStyle(Notification.BigTextStyle().bigText(lines.joinToString("\n")))
+                .setAutoCancel(true)
+                .setContentIntent(open)
+                .build()
+            nm.notify("wx".hashCode(), n)   // 날씨 알림은 하나만 (새 것이 옛 것을 바꿈)
+        } catch (e: Exception) {
+        }
+    }
+
     /** 시각이 된 알림들을 띄우고 목록에서 지운 뒤 다음 것을 예약 */
     fun fireDue(ctx: Context) {
         val now = System.currentTimeMillis()
@@ -102,6 +144,7 @@ object Reminders {
             val nm = ctx.getSystemService(NotificationManager::class.java)
             nm.createNotificationChannel(NotificationChannel(CHANNEL_ID, "기념일 · 알림", NotificationManager.IMPORTANCE_DEFAULT))
             due.forEach { o ->
+                if (o.optString("type") == "wx") { postWeather(ctx, nm, o); return@forEach }
                 // 스티커 알림(type = stk)은 눌렀을 때 그 날짜의 스티커 창이 열리도록 종류 · 날짜를 실어 보냄
                 val intent = Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 val type = o.optString("type", "")
@@ -127,6 +170,15 @@ object Reminders {
 
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        Reminders.fireDue(context)
+        // 날씨만 알람은 인터넷으로 새 예보를 받으므로 따로 스레드에서 (리시버는 goAsync 로 조금 더 살려 둠)
+        val pr = goAsync()
+        Thread {
+            try {
+                Reminders.fireDue(context.applicationContext)
+            } catch (e: Exception) {
+            } finally {
+                pr.finish()
+            }
+        }.start()
     }
 }

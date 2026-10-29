@@ -11,6 +11,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.webkit.JavascriptInterface
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import org.json.JSONObject
 
 /** 웹 화면(자바스크립트)에서 window.AndroidBridge 로 부르는 함수들 */
@@ -55,6 +56,34 @@ class AlarmBridge(private val activity: MainActivity) {
     fun setStatsEnabled(on: Boolean) {
         try {
             FirebaseAnalytics.getInstance(context).setAnalyticsCollectionEnabled(on)
+        } catch (e: Throwable) {
+        }
+        try {
+            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(on)   // 오류 보고도 같은 스위치
+        } catch (e: Throwable) {
+        }
+        statsOn = on
+    }
+
+    @Volatile private var statsOn = true
+    private var errCount = 0
+
+    /**
+     * 화면(웹) 쪽 오류 → 오류 보고(Crashlytics)에 "앱이 멈추지 않은 오류"로 남김. 오류 글자 · 파일 줄 번호만 (메모 · 근무 내용 없음).
+     * 같은 실행 안에서 20번까지만 (같은 오류가 반복돼도 폭주하지 않게). 설정에서 사용 통계 · 오류 보고를 끄면 안 보냄.
+     */
+    @JavascriptInterface
+    fun reportError(msg: String?, src: String?) {
+        if (!statsOn || errCount >= 20) return
+        errCount++
+        try {
+            val m = (msg ?: "").take(160)
+            val e = WebError(m)
+            val s = (src ?: "").take(60)
+            val file = s.substringBefore(':').ifBlank { "index.html" }
+            val line = s.substringAfter(':', "0").toIntOrNull() ?: 0
+            e.stackTrace = arrayOf(StackTraceElement("web", m.take(60).replace(Regex("[^A-Za-z0-9_]+"), "_").ifBlank { "error" }, file, line))
+            FirebaseCrashlytics.getInstance().recordException(e)
         } catch (e: Throwable) {
         }
     }
@@ -293,3 +322,6 @@ class AlarmBridge(private val activity: MainActivity) {
         }
     }
 }
+
+/** 화면(웹) 쪽 오류를 오류 보고에 실어 보내는 그릇 */
+class WebError(message: String) : Exception(message)

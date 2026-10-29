@@ -120,3 +120,27 @@ exports.onMemberDeleted = onDocumentDeleted(opt(`${H}/members/{uid}`), async ev 
   for (const id of [uid, uid + '_2', uid + '_3']) refs.push(hh.collection('archive').doc(id));
   for (let i = 0; i < refs.length; i += 400) { const b = db.batch(); refs.slice(i, i + 400).forEach(r => b.delete(r)); await b.commit(); }
 });
+
+// ───────── 출퇴근 날씨 (기상청 단기 · 중기예보 + 에어코리아 미세먼지) ─────────
+// 키: Cloud Shell 에서 한 번  npx firebase-tools functions:secrets:set DATA_KEY  (공공데이터포털 일반 인증키)
+// 앱은 지역 번호(시 · 군 · 구)만 보냄 — 위치(GPS) · 사람 정보 없음. 받아 온 예보는 wxCache 에 지역별로 저장 (앱에서는 못 읽음, 서버만)
+const { onRequest } = require('firebase-functions/v2/https');
+const { defineSecret } = require('firebase-functions/params');
+const WXS = require('./lib/wx');
+const DATA_KEY = defineSecret('DATA_KEY');
+const wxMem = new Map();   // 같은 함수 인스턴스 안에서는 저장소를 다시 안 읽음
+exports.wx = onRequest({ region: REGION, secrets: [DATA_KEY], cors: true, invoker: 'public', maxInstances: 5, memory: '256MiB', timeoutSeconds: 30 }, async (req, res) => {
+  if (req.method !== 'GET') { res.status(405).send(''); return; }
+  const cache = {
+    async get(id) { const m = wxMem.get(id); if (m) return m; const s = await db.collection('wxCache').doc(id).get(); return s.exists ? s.data() : null; },
+    async set(id, v) { wxMem.set(id, v); await db.collection('wxCache').doc(id).set(v); }
+  };
+  try {
+    const out = await WXS.handle({ key: DATA_KEY.value(), fetch, now: Date.now(), cache, log: (id, m) => console.warn('wx', id, m) }, req.query || {});
+    res.set('Cache-Control', 'public, max-age=300');
+    res.status(out.status).json(out.body);
+  } catch (e) {
+    console.error('wx', e);
+    res.status(500).json({ error: 'server' });
+  }
+});

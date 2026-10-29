@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")   // 오류 보고 (설정 › 사용 통계 · 오류 보고 스위치를 따름)
 }
 
 android {
@@ -12,8 +13,8 @@ android {
         applicationId = "com.eonjeswieo.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 111
-        versionName = "0.99.2"
+        versionCode = 112
+        versionName = "0.100"
     }
 
     signingConfigs {
@@ -73,6 +74,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.firebase:firebase-analytics")   // 사용 통계(횟수만 · 설정에서 끌 수 있음)
+    implementation("com.google.firebase:firebase-crashlytics")   // 오류 보고 (앱이 멈춘 오류 + 화면 오류, 같은 스위치)
     // 구글 로그인(폰을 바꿔도 가족방 찾기): 안드로이드 로그인 창 → 구글 신분증(ID token)
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")

@@ -280,6 +280,16 @@ await t('구성원은 자기 근무표를 올리고 고칠 수 있음 (호스트
   await assertSucceeds(setDoc(SD('g1'), sch()));
   await assertSucceeds(setDoc(SD('g1'), sch({ overrides: {} })));
 });
+await t('출퇴근 날씨(wx): 직장 지역 5자리 + 근무별 시각만 · 모양이 틀리면 막힘 · wxCache 는 앱에서 못 읽음', async () => {
+  await freshS();
+  await assertSucceeds(setDoc(SD(H), sch({ wx: { w: '41597', tm: { '주': ['07:00', '19:00'] } } })));
+  await assertSucceeds(setDoc(SD(H), sch({ wx: { w: '11110' } })));
+  await assertFails(setDoc(SD(H), sch({ wx: { w: '4159' } })));
+  await assertFails(setDoc(SD(H), sch({ wx: { w: '41597', gps: [37.5, 127] } })));
+  await assertFails(setDoc(SD(H), sch({ wx: 'x' })));
+  await assertFails(getDoc(doc(db(H), 'wxCache', 's_60_127')));
+  await assertFails(setDoc(doc(db(H), 'wxCache', 's_60_127'), { b: '1' }));
+});
 await t('구성원은 서로의 근무표를 읽을 수 있음', async () => {
   await freshS(); await setDoc(SD(H), sch());
   await assertSucceeds(getDoc(SD(H)));

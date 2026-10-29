@@ -45,6 +45,10 @@ class AlarmService : Service() {
             i.putExtra(AlarmActivity.EXTRA_SHIFT, if (r.col.isNotEmpty()) r.shiftName else "")
             i.putExtra(AlarmActivity.EXTRA_SN_MAX, r.snMax)
             i.putExtra(AlarmActivity.EXTRA_SN_COUNT, r.snCount)
+            if (r.wx == 1) {
+                i.putExtra(AlarmActivity.EXTRA_WXQ, r.wxq)
+                i.putExtra(AlarmActivity.EXTRA_WXP, r.wxp)
+            }
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             return i
         }

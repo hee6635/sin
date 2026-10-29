@@ -28,13 +28,26 @@ class AlarmActivity : Activity() {
         const val EXTRA_SHIFT = "shiftName" // 이름 옆 작은 근무 표시 (근무 색 알람만)
         const val EXTRA_SN_MAX = "snMax"   // 다시 울림 최대 횟수 (-1 = 제한 없음)
         const val EXTRA_SN_COUNT = "snCount" // 지금까지 다시 울린 횟수
+        const val EXTRA_WXQ = "wxq"        // 출퇴근 날씨: 새로 물어볼 주소 (없으면 날씨 카드 없음)
+        const val EXTRA_WXP = "wxp"        // 출퇴근 날씨: 인터넷이 안 될 때 쓸 예비 문구
+        private const val CARD_MS = 10_000L
     }
 
     private val stopped = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            finish()
+            if (!showingCard) finish()   // 끄기 → 날씨 카드를 보여 주는 중이면 닫지 않음
         }
     }
+
+    // 출퇴근 날씨 카드 (끄기를 누른 뒤 같은 화면이 조용히 바뀜 · 누르거나 10초 뒤 닫힘 · 미루기면 안 뜸)
+    private var wxq = ""
+    private var wxp = ""
+    @Volatile private var fresh: org.json.JSONObject? = null
+    private var showingCard = false
+    private var cardFromFallback = false
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val closeCard = Runnable { finish() }
+    private var pal = IntArray(4)   // 배경 위 · 아래 · 글자 · 작은 글자
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
     private var breathe: android.animation.ValueAnimator? = null
@@ -62,6 +75,18 @@ class AlarmActivity : Activity() {
         val shiftName = intent.getStringExtra(EXTRA_SHIFT) ?: ""
         val snMax = intent.getIntExtra(EXTRA_SN_MAX, 3)
         val snCount = intent.getIntExtra(EXTRA_SN_COUNT, 0)
+        wxq = intent.getStringExtra(EXTRA_WXQ) ?: ""
+        wxp = intent.getStringExtra(EXTRA_WXP) ?: ""
+        if (wxq.isNotBlank()) {
+            // 울리는 동안 새 예보를 미리 받아 둠 (끄기를 누를 때쯤이면 보통 도착)
+            Thread {
+                val w = Weather.fetch(wxq, 8000)
+                if (w != null) {
+                    fresh = w
+                    runOnUiThread { if (showingCard && cardFromFallback && !isFinishing) showCard() }
+                }
+            }.start()
+        }
 
         // 파스텔 끄기 화면: 근무 색으로 배경(주간 하늘 아침 · 야간 살구 노을 …), 근무와 상관없는 알람은 라벤더 · 밤(폰 다크 모드)은 남색
         val night = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -83,6 +108,7 @@ class AlarmActivity : Activity() {
         val snoozeInk = if (night) 0xFFD2DAF6.toInt() else if (shiftCol != 0) darker(shiftCol, 0.35f) else 0xFF3B4A78.toInt()
         val stopBg = if (night) 0xFFE58D9E.toInt() else 0xFFF3A3B1.toInt()
         val stopInk = if (night) 0xFF3A1822.toInt() else 0xFF5A2030.toInt()
+        pal = intArrayOf(bg0, bg1, ink, sub)
         // 애니메이션 끄기(접근성) 설정이면 숨 쉬는 원도 멈춤
         val animOn = try { android.provider.Settings.Global.getFloat(contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f } catch (e: Exception) { true }
 
@@ -306,13 +332,128 @@ class AlarmActivity : Activity() {
     }
 
     private fun sendToService(action: String) {
+        val card = action == AlarmService.ACTION_STOP && (wxq.isNotBlank() || wxp.isNotBlank()) && (fresh != null || Weather.parse(wxp) != null)
+        if (card) showingCard = true
         val i = Intent(this, AlarmService::class.java)
         i.action = action
         startService(i)
-        finish()
+        if (card) showCard() else finish()
+    }
+
+    /** 끄기 뒤 날씨 카드: 큰 아이콘 · 한 줄 문구 · 출근/퇴근 두 줄(수치) · 미세먼지 · 닫기 */
+    private fun showCard() {
+        val w = fresh ?: Weather.parse(wxp)
+        if (w == null) { finish(); return }
+        cardFromFallback = fresh == null
+        try { breathe?.cancel() } catch (e: Exception) { }
+        handler.removeCallbacks(closeCard)
+        val (bg0, bg1, ink, sub) = pal.toList()
+        val night = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        val cardBg = if (night) 0x26FFFFFF else 0xE6FFFFFF.toInt()
+        val line = if (night) 0x33FFFFFF else 0x1A1F3346
+        val rainBg = if (night) 0xFF22345A.toInt() else 0xFFE4ECFB.toInt()
+        val rainInk = if (night) 0xFFA9C2FF.toInt() else 0xFF2C58B8.toInt()
+
+        val frame = android.widget.FrameLayout(this)
+        frame.background = android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(bg0, bg1))
+        val scroll = android.widget.ScrollView(this)
+        val root = LinearLayout(this)
+        root.orientation = LinearLayout.VERTICAL
+        root.gravity = Gravity.CENTER_HORIZONTAL
+        root.setPadding(dp(22), dp(56), dp(22), dp(28))
+        scroll.addView(root)
+        frame.addView(scroll, android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        fun tv(t: String, sp: Float, col: Int, bold: Boolean = false, center: Boolean = false): TextView {
+            val v = TextView(this); v.text = t; v.textSize = sp; v.setTextColor(col)
+            if (bold) v.typeface = Typeface.DEFAULT_BOLD
+            if (center) v.gravity = Gravity.CENTER
+            return v
+        }
+        val cal = java.util.Calendar.getInstance()
+        val dow = arrayOf("일", "월", "화", "수", "목", "금", "토")[cal.get(java.util.Calendar.DAY_OF_WEEK) - 1]
+        root.addView(tv("${cal.get(java.util.Calendar.MONTH) + 1}월 ${cal.get(java.util.Calendar.DAY_OF_MONTH)}일 (${dow}) · 알람 껐어요", 14f, sub, center = true),
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+
+        val card = LinearLayout(this)
+        card.orientation = LinearLayout.VERTICAL
+        card.setPadding(dp(20), dp(22), dp(20), dp(16))
+        val cb = android.graphics.drawable.GradientDrawable(); cb.cornerRadius = dp(26).toFloat(); cb.setColor(cardBg)
+        card.background = cb
+        val clp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        clp.topMargin = dp(18)
+        root.addView(card, clp)
+        card.addView(tv(w.optString("i"), 46f, ink, center = true), LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        val head = tv(w.optString("h"), 22f, ink, bold = true, center = true)
+        head.setPadding(0, dp(8), 0, 0)
+        card.addView(head, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        w.optString("t").takeIf { it.isNotBlank() }?.let {
+            val t = tv(it, 17f, sub, bold = true, center = true); t.setPadding(0, dp(4), 0, dp(6))
+            card.addView(t, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        }
+        val rows = w.optJSONArray("r")
+        if (rows != null) for (k in 0 until rows.length()) {
+            val r = rows.optJSONObject(k) ?: continue
+            val sep = android.view.View(this); sep.setBackgroundColor(line)
+            card.addView(sep, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Math.max(1, dp(1) / 2 + 1)))
+            val row = LinearLayout(this)
+            row.orientation = LinearLayout.HORIZONTAL
+            row.gravity = Gravity.CENTER_VERTICAL
+            row.setPadding(dp(2), dp(12), dp(2), dp(12))
+            val left = LinearLayout(this); left.orientation = LinearLayout.VERTICAL
+            left.addView(tv(r.optString("l"), 15f, ink, bold = true))
+            r.optString("p").takeIf { it.isNotBlank() }?.let { left.addView(tv(it, 12f, sub)) }
+            row.addView(left, LinearLayout.LayoutParams(dp(112), ViewGroup.LayoutParams.WRAP_CONTENT))
+            row.addView(tv(r.optString("i"), 26f, ink, center = true), LinearLayout.LayoutParams(dp(40), ViewGroup.LayoutParams.WRAP_CONTENT))
+            val right = LinearLayout(this); right.orientation = LinearLayout.VERTICAL
+            right.setPadding(dp(6), 0, 0, 0)
+            Weather.temp(r).takeIf { it.isNotBlank() }?.let { right.addView(tv(it, 22f, ink, bold = true)) }
+            right.addView(tv(Weather.rowText(r), 12.5f, sub))
+            row.addView(right, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            r.optString("tag").takeIf { it.isNotBlank() }?.let {
+                val tag = tv(it, 12f, rainInk, bold = true)
+                tag.setPadding(dp(9), dp(4), dp(9), dp(4))
+                val tb = android.graphics.drawable.GradientDrawable(); tb.cornerRadius = dp(10).toFloat(); tb.setColor(rainBg)
+                tag.background = tb
+                row.addView(tag)
+            }
+            card.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        }
+        val air = w.optString("a"); val an = w.optString("an")
+        if (air.isNotBlank() || an.isNotBlank()) {
+            val box = LinearLayout(this); box.orientation = LinearLayout.VERTICAL
+            box.setPadding(dp(12), dp(10), dp(12), dp(10))
+            val ab = android.graphics.drawable.GradientDrawable(); ab.cornerRadius = dp(12).toFloat(); ab.setColor(line)
+            box.background = ab
+            box.addView(tv(if (air.isNotBlank()) air else "미세먼지", 14f, ink, bold = true))
+            if (an.isNotBlank()) box.addView(tv(an, 12f, sub))
+            val blp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT); blp.topMargin = dp(8)
+            card.addView(box, blp)
+        }
+        val btn = TextView(this)
+        btn.text = "닫기"
+        btn.textSize = 17f
+        btn.typeface = Typeface.DEFAULT_BOLD
+        btn.gravity = Gravity.CENTER
+        btn.setTextColor(if (night) 0xFF1D2335.toInt() else Color.WHITE)
+        val bb = android.graphics.drawable.GradientDrawable(); bb.cornerRadius = dp(26).toFloat(); bb.setColor(ink)
+        btn.background = bb
+        btn.setOnClickListener { finish() }
+        val blp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(52)); blp.topMargin = dp(20)
+        root.addView(btn, blp)
+        root.addView(tv("10초 뒤 저절로 닫혀요", 12f, sub, center = true).also { it.setPadding(0, dp(10), 0, 0) },
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        w.optString("src").takeIf { it.isNotBlank() }?.let {
+            root.addView(tv(it + if (cardFromFallback) " · 미리 받아 둔 예보" else "", 11f, sub, center = true).also { v -> v.alpha = 0.8f; v.setPadding(0, dp(18), 0, 0) },
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        }
+        card.setOnClickListener { finish() }
+        frame.setOnClickListener { finish() }
+        setContentView(frame)
+        handler.postDelayed(closeCard, CARD_MS)
     }
 
     override fun onDestroy() {
+        handler.removeCallbacks(closeCard)
         try { breathe?.cancel() } catch (e: Exception) { }
         try {
             unregisterReceiver(stopped)
