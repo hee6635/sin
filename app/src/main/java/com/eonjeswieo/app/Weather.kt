@@ -44,7 +44,7 @@ object Weather {
     fun rowText(r: JSONObject): String {
         val parts = ArrayList<String>()
         r.optString("d").takeIf { it.isNotBlank() }?.let { parts.add(it) }
-        if (r.has("pop") && !r.isNull("pop")) parts.add("비 ${r.optInt("pop")}%")
+        if (r.has("pop") && !r.isNull("pop")) parts.add("강수 ${r.optInt("pop")}%")
         val pcp = r.optDouble("pcp", 0.0)
         if (pcp > 0) parts.add(if (pcp < 1) "1mm 미만" else "${fmtNum(pcp)}mm")
         if (r.has("ws") && !r.isNull("ws")) parts.add("바람 ${fmtNum(r.optDouble("ws"))}m/s")

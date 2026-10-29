@@ -1479,7 +1479,9 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .wxr .wic{font-size:28px;width:36px;text-align:center;flex:none}
 .wxr .wv{flex:1;font-size:12.5px;color:var(--muted);line-height:1.5}.wxr .wv b{font-size:22px;color:var(--fg);margin-right:5px}
 .wxr .wtag{flex:none;font-size:12px;font-weight:800;padding:4px 9px;border-radius:10px;background:#e4ecfb;color:#2c58b8}
-.wxp .wair{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--surface);font-size:13.5px;font-weight:800}.wxp .wair small{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px}
+.wxp .wair{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--surface);font-size:13.5px;font-weight:800}.wxp .wair small{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px;white-space:pre-line;line-height:1.55}
+.wxp .wair:not(.wcl) small{font-size:13px;color:var(--fg);opacity:.8}
+.wxp .wcl span{font-size:11.5px;font-weight:700;color:var(--muted);margin-left:4px}
 .wxp .wsrc{margin:10px 0 2px;font-size:11.5px;color:var(--muted);text-align:center}
 .wxg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px}.wxg button{padding:10px 4px;border-radius:10px;background:var(--surface);font-size:14px;font-weight:700;color:var(--fg)}
 .wxg button.on{background:var(--accent);color:#fff}
@@ -1587,28 +1589,68 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
     return o;
   }
 
-  // 미세먼지: 그날 예보 등급(미세 · 초미세 중 나쁜 쪽) · 오늘이면 지금 측정값도
+  // 미세먼지 8단계 (미세먼지 앱처럼 · 지금 측정값 ㎍/㎥ 기준): 최고 · 좋음 · 양호 · 보통 · 나쁨 · 상당히 나쁨 · 매우 나쁨 · 최악
+  const L8 = ['최고', '좋음', '양호', '보통', '나쁨', '상당히 나쁨', '매우 나쁨', '최악'];
+  const E8 = ['😆', '🙂', '🙂', '😐', '😷', '😷', '😫', '☠️'];
+  const M8 = ['마스크 필요 없어요 · 환기하기 좋아요', '마스크 필요 없어요', '마스크 없어도 괜찮아요', '민감하면 마스크 챙겨요', 'KF80 마스크 챙겨요', 'KF94 마스크 써요', 'KF94 마스크 꼭 · 밖에 오래 있지 마세요', 'KF94 마스크 꼭 · 바깥 활동은 줄여요'];
+  const T10 = [15, 30, 40, 50, 75, 100, 150], T25 = [8, 15, 20, 25, 37, 50, 75];
+  const lv8 = (v, T) => v == null ? -1 : (T.findIndex(t => v <= t) + 1 || T.length + 1) - 1;
+  const g4of8 = l => l <= 2 ? 1 : l === 3 ? 2 : l <= 5 ? 3 : 4;
+  // 예보는 4단계 (좋음 · 보통 · 나쁨 · 매우 나쁨)
+  const E4 = ['', '🙂', '😐', '😷', '😫'], N4 = ['', '좋음', '보통', '나쁨', '매우 나쁨'], M4 = ['', '마스크 필요 없어요', '민감하면 마스크 챙겨요', 'KF80 마스크 챙겨요', 'KF94 마스크 꼭'];
+  // 미세먼지: 그날 예보 등급(미세 · 초미세 중 나쁜 쪽) · 오늘이면 지금 측정값(8단계)
   function air(raw, dk, now) {
     if (!raw) return null;
     const f = raw.a && raw.a.d && raw.a.d[dk];
-    const q = raw.q && now != null && dk === keyD(now) && raw.q.p10 != null ? raw.q : null;
-    if (!f && !q) return null;
-    const g = f ? Math.max(f[0] || 0, f[1] || 0) : Math.max(G10(q.p10), G25(q.p25));
+    const q = raw.q && now != null && dk === keyD(now) && (raw.q.p10 != null || raw.q.p25 != null) ? raw.q : null;
+    const lv = q ? Math.max(lv8(q.p10, T10), lv8(q.p25, T25)) : -1;
+    const gf = f ? Math.max(f[0] || 0, f[1] || 0) : 0, gq = lv >= 0 ? g4of8(lv) : 0;
+    const g = Math.max(gf, gq);
     if (!g) return null;
-    return { g, f: f || null, q };
+    return { g, f: f || null, q, lv };
   }
+  // 한 줄: "😷 미세먼지 나쁨 · KF80 마스크 챙겨요" (오늘은 지금 값 8단계, 다른 날은 예보 4단계 · 예보가 더 나쁘면 예보)
   function airLine(a) {
     if (!a) return '';
-    if (a.g >= 4) return '😷 미세먼지 매우 나쁨 · 마스크 꼭 챙겨요';
-    if (a.g >= 3) return '😷 미세먼지 나쁨 · 마스크 챙겨요';
-    if (a.g === 1) return '🌿 공기 맑아요 · 미세먼지 좋음';
-    return '미세먼지 보통';
+    if (a.lv >= 0 && g4of8(a.lv) >= a.g) return `${E8[a.lv]} 미세먼지 ${L8[a.lv]} · ${M8[a.lv]}`;
+    return `${E4[a.g]} 미세먼지 ${N4[a.g]} · ${M4[a.g]}`;
   }
-  // 큰 팝업용 수치: "미세 42 보통 · 초미세 18 보통 (지금 · 경기 평균)" / 예보만 있으면 "미세 보통 · 초미세 좋음 (예보)"
+  // 큰 팝업용 수치 (줄 나눔): "미세먼지 62㎍/㎥ (나쁨)\n초미세먼지 31㎍/㎥ (나쁨)\n지금 · 경기 평균 · 오늘 예보 나쁨" / 다른 날은 예보 등급만
   function airNums(a) {
     if (!a) return '';
-    if (a.q) return `미세 ${a.q.p10 != null ? a.q.p10 + '㎍/㎥ ' : ''}${GN[G10(a.q.p10)]} · 초미세 ${a.q.p25 != null ? a.q.p25 + '㎍/㎥ ' : ''}${GN[G25(a.q.p25)]} (지금${a.q.w ? ' · ' + a.q.w + ' 평균' : ''})`;
-    return `미세 ${GN[a.f[0]] || '-'} · 초미세 ${GN[a.f[1]] || '-'} (예보)`;
+    if (a.q) return [
+      a.q.p10 != null ? `미세먼지 ${a.q.p10}㎍/㎥ (${L8[lv8(a.q.p10, T10)]})` : '',
+      a.q.p25 != null ? `초미세먼지 ${a.q.p25}㎍/㎥ (${L8[lv8(a.q.p25, T25)]})` : '',
+      ['지금', a.q.w ? `${a.q.w} 평균` : '', a.f ? `오늘 예보 ${N4[Math.max(a.f[0] || 0, a.f[1] || 0)]}` : ''].filter(Boolean).join(' · ')
+    ].filter(Boolean).join('\n');
+    return `미세먼지 ${N4[a.f[0]] || '-'} · 초미세먼지 ${N4[a.f[1]] || '-'}\n예보 · 수치(㎍/㎥)는 오늘만 나와요`;
+  }
+  const airHead = a => airLine(a).replace(/^\S+\s/, '');   // 이모지 뺀 문구
+
+  // 체감온도: 기온 10° 이하 · 바람 3m/s 이상이면 기상청 겨울 체감온도 식, 아니면 기온 그대로
+  function feel(tp, ws) {
+    if (tp == null) return null;
+    const v = (ws || 0) * 3.6;
+    if (tp > 10 || v < 10.8) return tp;   // 약한 바람(3m/s 아래)은 기온 그대로 (산들바람에 패딩 권하지 않게)
+    return Math.round(13.12 + 0.6215 * tp - 11.37 * Math.pow(v, 0.16) + 0.3965 * Math.pow(v, 0.16) * tp);
+  }
+  // 옷차림 (출퇴근길 · 더 추운 쪽 체감온도 기준) + 챙길 것 (비 · 눈 · 바람 · 기온차 · 더위)
+  const CLOTH = [[28, '반팔 · 민소매 · 반바지'], [23, '반팔 · 얇은 셔츠'], [20, '얇은 긴팔 · 가디건'], [17, '얇은 니트 · 맨투맨'], [12, '자켓 · 가디건'], [9, '트렌치코트 · 야상'], [5, '코트 · 히트텍'], [-4, '패딩 · 목도리'], [-99, '두꺼운 패딩 · 목도리 · 장갑']];
+  function outfit(vs) {
+    vs = vs.filter(v => v && v.tp != null);
+    if (!vs.length) return null;
+    const fs = vs.map(v => feel(v.tp, v.ws)), f = Math.min(...fs), tps = vs.map(v => v.tp);
+    const w = CLOTH.find(c => f >= c[0])[1];
+    const x = [];
+    const rain = vs.some(v => v.pty === 1 || v.pty === 4 || (v.pty === 0 && v.pop >= 60)), snow = vs.some(v => v.pty === 2 || v.pty === 3);
+    const windy = vs.some(v => (v.ws || 0) >= 7), heavy = vs.some(v => (v.pcp || 0) >= 3);
+    if (snow) x.push('❄️ 미끄럽지 않은 신발');
+    if (rain) x.push(windy ? '☔ 우산이 뒤집힐 수 있어요 · 우비나 방수 겉옷' : heavy ? '☔ 큰 우산 · 젖어도 되는 신발' : '☂️ 우산');
+    else if (windy) x.push('💨 바람 막는 겉옷');
+    if (Math.max(...tps) - Math.min(...tps) >= 8) x.push('🧥 겹쳐 입기 (벗기 쉬운 겉옷)');
+    if (Math.max(...tps) >= 30) x.push('💧 물 · 통풍 잘되는 옷');
+    if (f <= 0 && !/장갑/.test(w)) x.push('🧤 장갑');
+    return { w, f, x, o: `👕 ${w}`, ox: [`체감 ${f}°${fs.length > 1 && Math.max(...fs) !== f ? `~${Math.max(...fs)}°` : ''}`, ...x].join(' · ') };
   }
 
   /* 출퇴근 날씨 (알람 카드 · 날씨만 알림 · 날짜 창 · 가족 팝업이 모두 이 모양을 씀)
@@ -1625,7 +1667,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
       const which = ws && we ? '출퇴근' : ws ? '출근' : '퇴근';
       i = sn ? '❄️' : '☔'; h = `${which}길 ${sn ? '눈' : '비'} 와요 · ${sn ? '미끄럼 조심해요' : '우산 챙겨요'}`; hs = `${which}길 ${sn ? '눈' : '비'} · ${sn ? '조심' : '우산'}`;
     } else if (a && a.g >= 3) {
-      i = '😷'; h = a.g >= 4 ? '미세먼지 매우 나쁨 · 마스크 꼭 챙겨요' : '미세먼지 나쁨 · 마스크 챙겨요'; hs = '미세먼지 나쁨 · 마스크';
+      i = a.g >= 4 ? '😫' : '😷'; h = airHead(a); hs = a.g >= 4 ? '미세먼지 매우 나쁨 · KF94' : '미세먼지 나쁨 · 마스크';
     } else {
       const ts = [vs, ve].filter(Boolean).map(v => v.tp), lo = Math.min(...ts), hi = Math.max(...ts);
       if (vs && ve && Math.abs(vs.tp - ve.tp) >= 10) { i = '🧥'; h = '기온차가 커요, 외투 챙겨요'; hs = '기온차 커요 · 외투'; }
@@ -1640,6 +1682,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
       t: [vs ? `출근 ${vs.tp}°` : '', ve ? `퇴근 ${ve.tp}°` : ''].filter(Boolean).join(' · '),
       a: airLine(a), an: airNums(a), ag: a ? a.g : 0,
       r: [row('출근', o.s, o.hn, vs), row('퇴근', o.e, o.wn, ve)],
+      ...((oc => oc ? { o: oc.o, ox: oc.ox, ol: '출퇴근길' } : {})(outfit([vs, ve]))),
       src: srcLine(home, work)
     };
   }
@@ -1649,13 +1692,15 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
     const a = air(home, dk, o && o.now);
     let i = d.i, h, hs;
     if (d.wet) { h = `${d.am && d.am.wet && !(d.pm && d.pm.wet) ? '오전에' : d.pm && d.pm.wet && !(d.am && d.am.wet) ? '오후에' : ''} ${d.snow ? '눈' : '비'} 소식 있어요`.trim(); hs = d.snow ? '눈 소식' : '비 소식'; }
-    else if (a && a.g >= 3) { i = '😷'; h = '미세먼지 나쁨 · 마스크 챙겨요'; hs = '미세먼지 나쁨'; }
+    else if (a && a.g >= 3) { i = a.g >= 4 ? '😫' : '😷'; h = airHead(a); hs = '미세먼지 나쁨'; }
     else if (d.hi >= 30) { h = '더운 날이에요'; hs = '더워요'; }
     else if (d.lo <= 0) { h = '추운 날이에요'; hs = '추워요'; }
     else if (d.hi - d.lo >= 10) { h = '일교차가 커요'; hs = '일교차 커요'; }
     else { h = d.i === '☀️' ? '맑은 날이에요' : '무난한 날씨예요'; hs = d.i === '☀️' ? '맑아요' : '무난해요'; }
     const half = (l, x) => x ? { l, p: '', i: x.i, tp: null, d: x.d, pop: x.pop, tag: x.wet ? (x.snow ? '조심' : '우산') : '' } : null;
-    return { i, h, hs, t: d.lo != null && d.hi != null ? `${d.lo}° ~ ${d.hi}°` : '', a: airLine(a), an: airNums(a), ag: a ? a.g : 0, r: [half('오전', d.am), half('오후', d.pm)].filter(Boolean), day: d, src: srcLine(home, null, d.src) };
+    // 쉬는 날 옷차림: 최저 · 최고 기온 + 비/눈 (바람은 하루 평균이 없어서 기온으로만)
+    const oc = d.lo != null && d.hi != null ? outfit([{ tp: d.lo, pty: d.snow ? 3 : 0, pop: d.wet ? 60 : 0 }, { tp: d.hi, pty: 0, pop: 0 }]) : null;
+    return { i, h, hs, t: d.lo != null && d.hi != null ? `${d.lo}° ~ ${d.hi}°` : '', a: airLine(a), an: airNums(a), ag: a ? a.g : 0, r: [half('오전', d.am), half('오후', d.pm)].filter(Boolean), ...(oc ? { o: oc.o, ox: oc.ox, ol: '오늘 하루' } : {}), day: d, src: srcLine(home, null, d.src) };
   }
   function srcLine(h, w, only) {
     const x = h && h.s && h.s.b, m = h && h.m && h.m.b;
@@ -1677,7 +1722,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
     const bad = a && a.g >= 3;
     return { i: wet(v) ? (snowy(v) ? '❄️' : '☔') : bad ? '😷' : icon(v), t: `${useE ? '퇴근' : '출근'} ${v.tp}°${wet(v) ? (snowy(v) ? ' 눈' : ' 비') : bad ? ' 마스크' : ''}`, wet: wet(v), bad: !!bad };
   }
-  return { keyD, keyH, hm, kst, at, day, air, airLine, airNums, commute, dayCard, brief, wfIcon, icon, desc, G10, G25 };
+  return { keyD, keyH, hm, kst, at, day, air, airLine, airNums, commute, dayCard, brief, wfIcon, icon, desc, G10, G25, feel, outfit };
 });
 </script>
 <script>
@@ -5699,10 +5744,11 @@ function wxDayHtml(k){
 function wxPopHtml(title,sub,c,extra){
   const big=`<div class="wbig ${c.r.some(x=>x.tag)?'wet':c.ag>=3?'bad':''}">${c.i} ${esc(c.h)}${c.t?`<small>${esc(c.t)}</small>`:''}</div>`;
   const rows=c.r.map(x=>{
-    const parts=[];if(x.d)parts.push(x.d);if(x.pop!=null)parts.push(`비 ${x.pop}%`);if(x.pcp)parts.push(`${x.pcp<1?'1mm 미만':x.pcp+'mm'}`);if(x.ws!=null)parts.push(`바람 ${x.ws}m/s`);if(x.reh!=null)parts.push(`습도 ${x.reh}%`);
+    const parts=[];if(x.d)parts.push(x.d);if(x.pop!=null)parts.push(`강수 ${x.pop}%`);if(x.pcp)parts.push(`${x.pcp<1?'1mm 미만':x.pcp+'mm'}`);if(x.ws!=null)parts.push(`바람 ${x.ws}m/s`);if(x.reh!=null)parts.push(`습도 ${x.reh}%`);
     return `<div class="wxr"><div class="wl"><b>${esc(x.l)}</b>${esc(x.p||'')}</div><div class="wic">${x.i||''}</div><div class="wv">${x.tp!=null?`<b>${x.tp}°</b>`:''}${esc(parts.join(' · '))}</div>${x.tag?`<span class="wtag">${esc(x.tag)}</span>`:''}</div>`;}).join('');
   const air=c.a||c.an?`<div class="wair">${esc(c.a||'미세먼지')}${c.an?`<small>${esc(c.an)}</small>`:''}</div>`:'';
-  return `<div class="wxp"><div class="wh"><div><b>${esc(title)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div><button class="ib" data-act="pop-close" aria-label="닫기">✕</button></div>${big}${rows}${air}${extra||''}<div class="wsrc">${esc(c.src||'')}</div></div>`;
+  const cloth=c.o?`<div class="wair wcl">${esc(c.o)} <span>${esc(c.ol||'')}</span>${c.ox?`<small>${esc(c.ox)}</small>`:''}</div>`:'';
+  return `<div class="wxp"><div class="wh"><div><b>${esc(title)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div><button class="ib" data-act="pop-close" aria-label="닫기">✕</button></div>${big}${rows}${cloth}${air}${extra||''}<div class="wsrc">${esc(c.src||'')}</div></div>`;
 }
 function wxOpenDay(k){
   const d=parse(k),c=wxMine(d);if(!c)return;
@@ -5861,6 +5907,7 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
+  'v0.102':`· <b>☔ 출퇴근 날씨</b>에 <b>👕 옷차림</b>: 출퇴근길 체감온도(바람) · 비 · 눈 · 기온차를 보고 옷과 챙길 것(우산 · 방수 신발 · 겹쳐 입기 …)을 알려줘요\n· <b>미세먼지 8단계</b>(최고 ~ 최악) + 마스크 안내(필요 없어요 · KF80 · KF94 꼭)`,
   'v0.101':`· <b>☔ 출퇴근 날씨</b>: 집 · 직장을 <b>동까지</b> 고를 수 있어요 (설정 › 부가 기능 › 출퇴근 날씨 › 집/직장). 넓은 시 · 군(산골 · 바닷가)에서 더 정확해요`,
   'v0.100':`· <b>☔ 출퇴근 날씨</b> (설정 › 부가 기능 · 켜야 보여요): 출근 땐 집, 퇴근 땐 직장 날씨와 미세먼지를 알람 끈 뒤 · 날짜 창 · 가족 탭에 보여줘요. 알람마다 "날씨만" 알림도 돼요\n· <b>오류 보고</b>: 앱에 문제가 생기면 오류 내용만 전달돼서 더 빨리 고칠 수 있어요 (설정 › 사용 통계 · 오류 보고에서 끌 수 있어요)`,
   'v0.96':`· <b>가족방에 방장이 없어졌어요</b>: 누구나 초대 · 나가기 · 가족을 빼려면 과반 찬성 (30일 넘게 안 온 사람 · 내가 초대한 지 하루 안 된 사람은 바로)\n· <b>가족 포스트잇 알림</b>: 새로 붙이거나 줄을 더하거나 할 일이 다 끝나면 (설정에서 끌 수 있어요)\n· <b>가족방에 다시 들어올 때</b> 옛 가족 메모가 무료 횟수 없이 옮겨져요\n· <b>오늘 표시 "근무 색"</b> · 모든 달력에 오늘 빛 · 작은 위젯도 칸 채우기`,

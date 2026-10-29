@@ -189,7 +189,7 @@ async function cached(deps, id, b, get) {
   const old = await deps.cache.get(id).catch(() => null);
   if (old && old.b === b && old.d) return { v: JSON.parse(old.d) };
   const fa = failAt.get(id + b);
-  if (!(fa && deps.now - fa < 120000)) {
+  if (!(fa && deps.now >= fa && deps.now - fa < 120000)) {
     try {
       const v = await get();
       await deps.cache.set(id, { b, d: JSON.stringify(v), at: deps.now }).catch(() => {});
@@ -258,4 +258,4 @@ async function handle(deps, q) {
   return { status: 400, body: { error: 'query' } };
 }
 
-module.exports = { handle, regionData, region, shortBase, midBase, airBase, rtBase, parseShort, parseMid, parseAirFc, parseAirRt, pcpMm, stampMs, keyParam };
+module.exports = { _resetFail: () => failAt.clear(), handle, regionData, region, shortBase, midBase, airBase, rtBase, parseShort, parseMid, parseAirFc, parseAirRt, pcpMm, stampMs, keyParam };

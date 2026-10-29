@@ -119,6 +119,7 @@ await ok('기상청이 실패하면 저장해 둔 옛 값 + 이유(e) · 키 오
   assert.equal(r.e.s, 'KEY 등록 안 됨');
   const d2 = deps(); d2.fetch = d.fetch; const r2 = await W.regionData(d2, '11110');
   assert.equal(r2.s, null); assert.equal(r2.e.s, 'KEY 등록 안 됨');
+  W._resetFail();   // 다음 시험에 '최근 실패' 기록이 안 남게
 });
 await ok('요청: ?r= 지역 · 모르는 지역은 400 · 여러 지역', async () => {
   const d = deps();
@@ -133,18 +134,19 @@ await ok('출퇴근 문구: 퇴근길 비 → 우산 · 수치 · 미세먼지 �
   assert.equal(c.i, '☔'); assert.equal(c.h, '퇴근길 비 와요 · 우산 챙겨요'); assert.equal(c.t, '출근 6° · 퇴근 12°');
   assert.equal(c.r[0].l, '출근 07:00'); assert.equal(c.r[0].p, '집 · 수원시 장안구'); assert.equal(c.r[0].d, '흐림');
   assert.equal(c.r[1].p, '직장 · 화성시 동탄구'); assert.equal(c.r[1].pop, 70); assert.equal(c.r[1].pcp, 3); assert.equal(c.r[1].tag, '우산');
-  assert.equal(c.a, '😷 미세먼지 나쁨 · 마스크 챙겨요');
-  assert.match(c.an, /미세 80㎍\/㎥ 보통 · 초미세 40㎍\/㎥ 나쁨 \(지금 · 경기 평균\)/);
+  assert.equal(c.a, '😷 미세먼지 상당히 나쁨 · KF94 마스크 써요');   // 지금 값 8단계
+  assert.equal(c.an, '미세먼지 80㎍/㎥ (상당히 나쁨)\n초미세먼지 40㎍/㎥ (상당히 나쁨)\n지금 · 경기 평균 · 오늘 예보 나쁨');
 });
 await ok('출퇴근 문구 규칙: 미세먼지 나쁨 · 기온차 · 추움 · 더움 · 맑음', () => {
   const mk = (s, e, air) => ({ s: { b: '202610300500', h: { '2026103007': s, '2026103019': e } }, a: air ? { d: { '20261030': air } } : null });
   const o = { s: KST(2026, 10, 30, 7), e: KST(2026, 10, 30, 19), now: NOW };
-  assert.equal(C.commute(mk([5, 0, 0, 1], [8, 0, 0, 1], [3, 1]), null, o).h, '미세먼지 나쁨 · 마스크 챙겨요');
+  assert.equal(C.commute(mk([5, 0, 0, 1], [8, 0, 0, 1], [3, 1]), null, o).h, '미세먼지 나쁨 · KF80 마스크 챙겨요');
+  assert.equal(C.commute(mk([5, 0, 0, 1], [8, 0, 0, 1], [4, 2]), null, o).i, '😫');
   assert.equal(C.commute(mk([2, 0, 0, 1], [14, 0, 0, 3]), null, o).h, '기온차가 커요, 외투 챙겨요');
   assert.equal(C.commute(mk([-3, 0, 0, 1], [1, 0, 0, 1]), null, o).h, '많이 추워요 · 따뜻하게 입어요');
   assert.equal(C.commute(mk([26, 0, 0, 1], [33, 0, 0, 1]), null, o).h, '오늘 더워요 · 물 챙겨요');
   assert.equal(C.commute(mk([12, 0, 0, 1], [15, 0, 0, 1], [1, 1]), null, o).h, '출퇴근길 맑아요');
-  assert.equal(C.commute(mk([12, 0, 0, 1], [15, 0, 0, 1], [1, 1]), null, o).a, '🌿 공기 맑아요 · 미세먼지 좋음');
+  assert.equal(C.commute(mk([12, 0, 0, 1], [15, 0, 0, 1], [1, 1]), null, o).a, '🙂 미세먼지 좋음 · 마스크 필요 없어요');
   assert.equal(C.commute(mk([12, 30, 3, 4], [-1, 80, 3, 4]), null, o).h, '출퇴근길 눈 와요 · 미끄럼 조심해요');
   assert.equal(C.commute({ s: { h: {} } }, null, o), null);
 });
@@ -180,6 +182,36 @@ await ok('동(10자리): 격자는 그 동 · 구역은 시·군·구 · 이름 
   const yd = D['41111'].find(x => x[1] === '연무동');
   const a = await W.handle(deps(), { r: yd[0] }); assert.equal(a.status, 200); assert.equal(a.body.r, yd[0]); assert.equal(a.body.n, '수원시 장안구 연무동');
   const c = await W.handle(deps(), { h: yd[0], w: '41597', s: '202610300700', e: '202610301900' }); assert.equal(c.body.r[0].p, '집 · 연무동'); assert.equal(c.body.r[1].p, '직장 · 화성시 동탄구');
+});
+await ok('옷차림: 체감온도(바람) · 비 · 눈 · 바람 · 기온차 · 더위', () => {
+  const v = (tp, ws = 1, pty = 0, pop = 0, pcp = 0) => ({ tp, ws, pty, pop, pcp, sky: 1 });
+  assert.equal(C.feel(15, 9), 15); assert.equal(C.feel(5, 1), 5); assert.ok(C.feel(-3, 8) <= -9);   // 10° 넘으면 기온 그대로 · 바람 세면 더 춥게
+  const a = C.outfit([v(6, 2), v(12, 2, 1, 70, 3)]); assert.equal(a.o, '👕 코트 · 히트텍'); assert.match(a.ox, /체감 6°~12°/);   // 약한 바람(2m/s)은 기온 그대로 assert.match(a.ox, /큰 우산 · 젖어도 되는 신발/);
+  assert.equal(C.outfit([v(-3, 8), v(1, 3)]).o, '👕 두꺼운 패딩 · 목도리 · 장갑');
+  assert.match(C.outfit([v(10, 8, 1, 80)]).ox, /우산이 뒤집힐 수 있어요/);
+  assert.match(C.outfit([v(15, 9)]).ox, /바람 막는 겉옷/);
+  assert.match(C.outfit([v(2, 1, 3, 90)]).ox, /미끄럽지 않은 신발/);
+  assert.match(C.outfit([v(3), v(13)]).ox, /겹쳐 입기/);
+  assert.equal(C.outfit([v(26), v(32)]).o, '👕 반팔 · 얇은 셔츠'); assert.match(C.outfit([v(26), v(32)]).ox, /물 · 통풍/);
+  assert.equal(C.outfit([v(29)]).o, '👕 반팔 · 민소매 · 반바지'); assert.equal(C.outfit([v(18)]).o, '👕 얇은 니트 · 맨투맨');
+  assert.equal(C.outfit([null]), null);
+});
+await ok('미세먼지 8단계 (지금 값) · 마스크 안내 · 예보는 4단계', () => {
+  const now = NOW, dk = C.keyD(now), L = (p10, p25) => C.airLine(C.air({ q: { p10, p25 } }, dk, now));
+  assert.equal(L(10, 5), '😆 미세먼지 최고 · 마스크 필요 없어요 · 환기하기 좋아요');
+  assert.equal(L(36, 13), '🙂 미세먼지 양호 · 마스크 없어도 괜찮아요');
+  assert.equal(L(42, 18), '😐 미세먼지 보통 · 민감하면 마스크 챙겨요');
+  assert.equal(L(60, 30), '😷 미세먼지 나쁨 · KF80 마스크 챙겨요');
+  assert.equal(L(120, 10), '😫 미세먼지 매우 나쁨 · KF94 마스크 꼭 · 밖에 오래 있지 마세요');   // 둘 중 나쁜 쪽
+  assert.equal(L(200, 90), '☠️ 미세먼지 최악 · KF94 마스크 꼭 · 바깥 활동은 줄여요');
+  assert.equal(C.airLine(C.air({ a: { d: { [dk]: [4, 1] } } }, dk, null)), '😫 미세먼지 매우 나쁨 · KF94 마스크 꼭');
+  assert.equal(C.airLine(C.air({ a: { d: { [dk]: [3, 1] } }, q: { p10: 20, p25: 5 } }, dk, now)), '😷 미세먼지 나쁨 · KF80 마스크 챙겨요');   // 지금은 좋아도 예보가 나쁘면 예보
+});
+await ok('출퇴근 문구 · 쉬는 날 문구에 옷차림 줄', async () => {
+  const d = deps();
+  const c = (await W.handle(d, { h: '41111', w: '41597', s: '202610300700', e: '202610301900' })).body;
+  assert.equal(c.o, '👕 코트 · 히트텍'); assert.match(c.ox, /우산/);
+  const y = (await W.handle(d, { h: '41111', d: '20261031' })).body; assert.ok(y.o && y.o.startsWith('👕'));
 });
 await ok('시각 글자(YYYYMMDDHHmm) → ms (한국 시간)', () => assert.equal(W.stampMs('202610300700'), KST(2026, 10, 30, 7)));
 console.log(`\n${n} 통과`);

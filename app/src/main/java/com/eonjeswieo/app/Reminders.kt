@@ -115,6 +115,7 @@ object Reminders {
                     val r = rows.optJSONObject(k) ?: continue
                     lines.add("${r.optString("l")} ${r.optString("i")} ${Weather.temp(r)} ${Weather.rowText(r)}".replace(Regex("\\s+"), " ").trim())
                 }
+                w.optString("o").takeIf { it.isNotBlank() }?.let { lines.add(it + (w.optString("ox").takeIf { x -> x.isNotBlank() }?.let { x -> " · $x" } ?: "")) }
                 w.optString("a").takeIf { it.isNotBlank() }?.let { lines.add(it) }
                 w.optString("an").takeIf { it.isNotBlank() }?.let { lines.add(it) }
             } else o.optString("text").takeIf { it.isNotBlank() }?.let { lines.add(it) }

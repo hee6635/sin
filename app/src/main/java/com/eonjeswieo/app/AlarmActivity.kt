@@ -418,6 +418,18 @@ class AlarmActivity : Activity() {
             }
             card.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         }
+        // 옷차림 (출퇴근길 · 체감온도 · 비 · 바람 · 기온차)
+        val cl = w.optString("o"); val clx = w.optString("ox")
+        if (cl.isNotBlank()) {
+            val box = LinearLayout(this); box.orientation = LinearLayout.VERTICAL
+            box.setPadding(dp(12), dp(10), dp(12), dp(10))
+            val cbx = android.graphics.drawable.GradientDrawable(); cbx.cornerRadius = dp(12).toFloat(); cbx.setColor(line)
+            box.background = cbx
+            box.addView(tv(cl + (w.optString("ol").takeIf { it.isNotBlank() }?.let { "  ($it)" } ?: ""), 14f, ink, bold = true))
+            if (clx.isNotBlank()) box.addView(tv(clx, 12f, sub))
+            val olp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT); olp.topMargin = dp(8)
+            card.addView(box, olp)
+        }
         val air = w.optString("a"); val an = w.optString("an")
         if (air.isNotBlank() || an.isNotBlank()) {
             val box = LinearLayout(this); box.orientation = LinearLayout.VERTICAL
