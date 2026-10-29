@@ -137,7 +137,7 @@ exports.wx = onRequest({ region: REGION, secrets: [DATA_KEY], cors: true, invoke
   };
   try {
     const out = await WXS.handle({ key: DATA_KEY.value(), fetch, now: Date.now(), cache, log: (id, m) => console.warn('wx', id, m) }, req.query || {});
-    res.set('Cache-Control', 'public, max-age=300');
+    res.set('Cache-Control', `public, max-age=${out.cache || 300}`);
     res.status(out.status).json(out.body);
   } catch (e) {
     console.error('wx', e);

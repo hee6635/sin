@@ -2,7 +2,7 @@
 """날씨 지역표 만들기: 시·군·구(행정동 경계 자료) → 기상청 단기예보 격자 · 중기예보 구역 · 에어코리아 예보 구역
   python3 scripts/wx/make-regions.py <HangJeongDong_verYYYYMMDD.geojson>
   자료: https://github.com/vuski/admdongkor (행정동 경계, 통계청 · 행안부 기준)
-  결과: firebase/functions/lib/wxRegions.json (서버) — 앱(index.html)의 WX_REG 은 같은 내용을 줄여서 넣음 (시험이 같은지 확인)
+  결과: firebase/functions/lib/wxRegions.json (서버) · wxDongs.json (동: 시·군·구 → [[동 번호 10자리, 동 이름, 격자 x, y]], 고를 때 서버가 나눠 줌) — 앱(index.html)의 WX_REG 은 같은 내용을 줄여서 넣음 (시험이 같은지 확인)
   대표 위치 = 그 시·군·구 안 행정동 중심들의 평균 (사람 사는 곳 쪽으로 쏠리게)"""
 import json, math, sys, os
 
@@ -50,10 +50,12 @@ def feat_centroid(g):
 
 def main(src):
   fs = json.load(open(src, encoding='utf-8'))['features']
-  by = {}
+  by = {}; dongs = {}
   for f in fs:
-    p = f['properties']; k = p['sgg']
-    by.setdefault(k, {'sido': SIDO[p['sidonm']], 'sgg': p['sggnm'], 'pts': []})['pts'].append(feat_centroid(f['geometry']))
+    p = f['properties']; k = p['sgg']; c = feat_centroid(f['geometry'])
+    by.setdefault(k, {'sido': SIDO[p['sidonm']], 'sgg': p['sggnm'], 'pts': []})['pts'].append(c)
+    nx, ny = grid(c[1], c[0])
+    dongs.setdefault(k, []).append([p['adm_cd2'], p['adm_nm'].split(' ')[-1], nx, ny])
   rows = []
   for code, v in sorted(by.items()):
     lon = sum(x for x,_ in v['pts'])/len(v['pts']); lat = sum(y for _,y in v['pts'])/len(v['pts'])
@@ -86,5 +88,9 @@ def main(src):
   with open(dst, 'w', encoding='utf-8') as f:
     f.write('[\n' + ',\n'.join(json.dumps(x, ensure_ascii=False, separators=(',', ':')) for x in out) + '\n]\n')
   print(len(out), 'rows →', os.path.normpath(dst))
+  dd = os.path.join(os.path.dirname(__file__), '../../firebase/functions/lib/wxDongs.json')
+  with open(dd, 'w', encoding='utf-8') as f:
+    f.write('{\n' + ',\n'.join(json.dumps(k, ensure_ascii=False) + ':' + json.dumps(sorted(v, key=lambda x: x[1]), ensure_ascii=False, separators=(',', ':')) for k, v in sorted(dongs.items())) + '\n}\n')
+  print(sum(len(v) for v in dongs.values()), 'dongs →', os.path.normpath(dd))
 
 main(sys.argv[1])

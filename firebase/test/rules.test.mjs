@@ -284,6 +284,8 @@ await t('출퇴근 날씨(wx): 직장 지역 5자리 + 근무별 시각만 · �
   await freshS();
   await assertSucceeds(setDoc(SD(H), sch({ wx: { w: '41597', tm: { '주': ['07:00', '19:00'] } } })));
   await assertSucceeds(setDoc(SD(H), sch({ wx: { w: '11110' } })));
+  await assertSucceeds(setDoc(SD(H), sch({ wx: { w: '4111160000' } })));   // 동까지
+  await assertFails(setDoc(SD(H), sch({ wx: { w: '411116000' } })));
   await assertFails(setDoc(SD(H), sch({ wx: { w: '4159' } })));
   await assertFails(setDoc(SD(H), sch({ wx: { w: '41597', gps: [37.5, 127] } })));
   await assertFails(setDoc(SD(H), sch({ wx: 'x' })));

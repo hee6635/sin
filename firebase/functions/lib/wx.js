@@ -6,7 +6,16 @@
 const REG = require('./wxRegions.json');
 const WX = require('./wxcore');
 const BY = new Map(REG.map(r => [r[0], { c: r[0], s: r[1], n: r[2], nx: r[3], ny: r[4], land: r[5], ta: r[6], aq: r[7] }]));
-const region = c => BY.get(String(c || '')) || null;
+let DONGS = null;   // 동 목록은 처음 쓸 때만 읽음 (3,500여 곳)
+const dongsOf = sgg => { if (!DONGS) DONGS = require('./wxDongs.json'); return DONGS[sgg] || null; };
+// 지역 번호: 시·군·구 5자리 또는 동 10자리 (동이면 격자만 그 동 것 · 중기 · 미세먼지 구역은 시·군·구 것)
+function region(c) {
+  c = String(c || '');
+  if (/^\d{5}$/.test(c)) return BY.get(c) || null;
+  if (!/^\d{10}$/.test(c)) return null;
+  const p = BY.get(c.slice(0, 5)), d = p && (dongsOf(p.c) || []).find(x => x[0] === c);
+  return d ? Object.assign({}, p, { c, n: `${p.n} ${d[1]}`, dn: d[1], nx: d[2], ny: d[3] }) : null;
+}
 
 const p2 = n => String(n).padStart(2, '0');
 const kstParts = ms => { const d = new Date(ms + 9 * 3600000); return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes()]; };
@@ -224,6 +233,10 @@ const stampMs = s => Date.UTC(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8)
  *            ?h=집&w=직장&s=YYYYMMDDHHmm&e=YYYYMMDDHHmm → 출퇴근 문구 (알람 · 날씨만 알림)
  *            ?h=집&d=YYYYMMDD → 하루 요약 문구 (쉬는 날 날씨만 알림) */
 async function handle(deps, q) {
+  if (q.dongs) {   // 동 고르기 목록 (앱이 시·군·구를 고른 뒤 부름)
+    const l = BY.has(String(q.dongs)) ? dongsOf(String(q.dongs)) : null;
+    return l ? { status: 200, body: { list: l.map(x => [x[0], x[1]]) }, cache: 86400 } : { status: 400, body: { error: 'region' } };
+  }
   if (q.r) {
     const codes = String(q.r).split(',').slice(0, 6).filter(c => region(c));
     if (!codes.length) return { status: 400, body: { error: 'region' } };
@@ -239,7 +252,7 @@ async function handle(deps, q) {
       return { status: 200, body: c ? Object.assign(c, { day: undefined }) : { none: 1 } };
     }
     if (!okStamp(q.s) || !okStamp(q.e)) return { status: 400, body: { error: 'time' } };
-    const c = WX.commute(hd, wd || (w ? hd : null), { s: stampMs(q.s), e: stampMs(q.e), hn: `집 · ${h.n}`, wn: `${w ? '직장' : '집'} · ${(w || h).n}`, now: deps.now });
+    const c = WX.commute(hd, wd || (w ? hd : null), { s: stampMs(q.s), e: stampMs(q.e), hn: `집 · ${h.dn || h.n}`, wn: `${w ? "직장" : "집"} · ${(w || h).dn || (w || h).n}`, now: deps.now });
     return { status: 200, body: c || { none: 1 } };
   }
   return { status: 400, body: { error: 'query' } };

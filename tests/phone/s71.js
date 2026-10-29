@@ -14,7 +14,10 @@ function raw(code){
     a:{b:'2026101205',d:{'20261012':[1,1],'20261014':[2,2]}},q:{t:'2026-10-12 09:00',p10:42,p25:18,w:'경기'}};
 }
 let hits=0;
-const routes=[['https://asia-northeast3-demo-wx.cloudfunctions.net/wx**',r=>{hits++;const u=new URL(r.request().url()),codes=(u.searchParams.get('r')||'').split(',');
+const DONGS=require('../../firebase/functions/lib/wxDongs.json');
+const routes=[['https://asia-northeast3-demo-wx.cloudfunctions.net/wx**',r=>{const u=new URL(r.request().url());
+  if(u.searchParams.has('dongs')){const l=DONGS[u.searchParams.get('dongs')]||[];return r.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({list:l.map(x=>[x[0],x[1]])})});}
+  hits++;const codes=(u.searchParams.get('r')||'').split(',');
   r.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(codes.length>1?{list:codes.map(raw)}:raw(codes[0]))});}]];
 const cfg="window.FIREBASE_CONFIG={projectId:'demo-wx',apiKey:'x',authDomain:'x',appId:'x'};";
 const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
@@ -37,14 +40,17 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
     T('시 · 도 고르기 (16곳 · 광주는 전남광주)',await p.evaluate(()=>document.querySelectorAll('#pop [data-act="wx-sido"]').length>=16));
     await p.click('#pop [data-act="wx-sido"][data-v="경기"]');await p.waitForTimeout(150);
     T('경기 → 시 · 군 · 구 목록 (수원시 장안구 · 화성시 동탄구)',await p.evaluate(()=>!!document.querySelector('#pop [data-act="wx-sgg"][data-v="41111"]')&&/화성시 동탄구/.test(document.querySelector('#pop').textContent)));
-    await p.click('#pop [data-act="wx-sgg"][data-v="41111"]');await p.waitForTimeout(150);
+    await p.click('#pop [data-act="wx-sgg"][data-v="41111"]');await p.waitForTimeout(300);
+    T('시·군·구 다음 동 고르기 (선택 · "전체" 줄 + 동 목록)',await p.evaluate(()=>!!document.querySelector('#pop [data-act="wx-dong"][data-v="41111"]')&&!!document.querySelector('#pop [data-act="wx-dong"][data-n="연무동"]')));
+    await p.click('#pop [data-act="wx-dong"][data-n="연무동"]');await p.waitForTimeout(150);
     await p.click('[data-act="wx-pick-work"]');await p.waitForTimeout(150);
     await p.click('#pop [data-act="wx-sido"][data-v="경기"]');await p.waitForTimeout(150);
-    await p.click('#pop [data-act="wx-sgg"][data-v="41597"]');await p.waitForTimeout(150);
-    T('고른 지역이 화면에 보임',await p.evaluate(()=>/경기 수원시 장안구/.test(document.querySelector('#page').textContent)&&/경기 화성시 동탄구/.test(document.querySelector('#page').textContent)));
+    await p.click('#pop [data-act="wx-sgg"][data-v="41597"]');await p.waitForTimeout(300);
+    await p.click('#pop [data-act="wx-dong"][data-v="41597"]');await p.waitForTimeout(150);   // 직장은 동 안 고름
+    T('고른 지역이 화면에 보임 (집 = 동까지)',await p.evaluate(()=>/경기 수원시 장안구 연무동/.test(document.querySelector('#page').textContent)&&/경기 화성시 동탄구/.test(document.querySelector('#page').textContent)));
     await p.click('[data-act="wx-ok"]');await p.waitForTimeout(900);
-    T('저장: 켜짐 · 집 41111 · 직장 41597',await p.evaluate(()=>{const S=__wx.S,g=__wx.page;return S.addons.wx===true&&S.wx.home==='41111'&&S.wx.work==='41597'&&!g.pageMode&&g.pageBack===null;}));
-    T('서버에서 두 지역 받아 옴 (저장소에도)',hits>=1&&await p.evaluate(()=>{const c=JSON.parse(localStorage.getItem('eonjeswieo:wx')||'{}');return !!(c['41111']&&c['41597']);}),hits);
+    T('저장: 켜짐 · 집 연무동(10자리) · 직장 41597',await p.evaluate(()=>{const S=__wx.S,g=__wx.page;return S.addons.wx===true&&S.wx.home==='4111160000'&&S.wx.nm['4111160000']==='연무동'&&S.wx.work==='41597'&&!g.pageMode&&g.pageBack===null;}));
+    T('서버에서 두 지역 받아 옴 (저장소에도)',hits>=1&&await p.evaluate(()=>{const c=JSON.parse(localStorage.getItem('eonjeswieo:wx')||'{}');return !!(c['4111160000']&&c['41597']);}),hits);
     // 날짜 창 한 줄 (간단하게)
     await p.evaluate(()=>__wx.openDay('2026-10-14'));await p.waitForTimeout(300);
     const l1=await p.evaluate(()=>{const e=document.getElementById('wxDay');return e?{t:e.textContent,c:e.className}:null;});
@@ -52,7 +58,7 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
     await p.click('#wxDay');await p.waitForTimeout(200);
     const pop=await p.evaluate(()=>document.querySelector('#pop.open')?document.querySelector('#pop').innerText:'');
     T('큰 팝업: 수치 (12° · 비 70% · 3mm · 바람 2.1m/s · 습도)',/12°/.test(pop)&&/비 70%/.test(pop)&&/3mm/.test(pop)&&/바람 2\.1m\/s/.test(pop)&&/습도 60%/.test(pop),pop);
-    T('큰 팝업: 집 · 직장 이름 · 출근/퇴근 시각',/출근 07:00/.test(pop)&&/퇴근 19:00/.test(pop)&&/집 · 수원시 장안구/.test(pop)&&/직장 · 화성시 동탄구/.test(pop),pop);
+    T('큰 팝업: 집 · 직장 이름 · 출근/퇴근 시각',/출근 07:00/.test(pop)&&/퇴근 19:00/.test(pop)&&/집 · 연무동/.test(pop)&&/직장 · 화성시 동탄구/.test(pop),pop);
     T('큰 팝업: 미세먼지 등급 (예보)',/미세먼지 보통/.test(pop)&&/미세 보통 · 초미세 보통 \(예보\)/.test(pop),pop);
     await p.evaluate(()=>{__wx.closePop();__wx.openDay('2026-10-12');});await p.waitForTimeout(300);
     const l2=await p.evaluate(()=>document.getElementById('wxDay').textContent);
@@ -73,7 +79,7 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
     await p.click('#page [data-act="asave"]');await p.waitForTimeout(400);
     const al=await p.evaluate(()=>(window.__al||[]).find(x=>x.id.endsWith('_2026-10-14')));
     let wp=null;try{wp=JSON.parse(al.wxp);}catch(e){}
-    T('폰에 넘긴 알람: 끈 뒤 날씨 주소(집 · 직장 · 출퇴근 시각) + 예비 문구',!!al&&al.wx===1&&/cloudfunctions\.net\/wx\?h=41111&w=41597&s=202610140700&e=202610141900/.test(al.wxq)&&!!wp&&wp.h==='퇴근길 비 와요 · 우산 챙겨요',JSON.stringify(al&&{q:al.wxq,h:wp&&wp.h}));
+    T('폰에 넘긴 알람: 끈 뒤 날씨 주소(집 · 직장 · 출퇴근 시각) + 예비 문구',!!al&&al.wx===1&&/cloudfunctions\.net\/wx\?h=4111160000&w=41597&s=202610140700&e=202610141900/.test(al.wxq)&&!!wp&&wp.h==='퇴근길 비 와요 · 우산 챙겨요',JSON.stringify(al&&{q:al.wxq,h:wp&&wp.h}));
     await p.evaluate(()=>__wx.newAlarm({shift:'주',time:'06:30'}));await p.waitForTimeout(150);
     await p.click('#page [data-act="dwx"][data-v="only"]');await p.waitForTimeout(150);
     T('날씨만: 소리 · 다시 울림 줄 숨김',await p.evaluate(()=>!document.querySelector('#page [data-act="dsnd-open"]')));
@@ -123,7 +129,10 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
     const p=await boot(b,{...base,addons:{...base.addons,wx:true},wx:{home:'<x>',work:12345,fw:{a:'41111',b:'x'}}},opt({}));
     T('깨진 wx 값 정리',await p.evaluate(()=>__wx.S.wx.home===''&&__wx.S.wx.work===''&&JSON.stringify(__wx.S.wx.fw)==='{"a":"41111"}'));
     T('집이 없으면 켜져 있어도 아무것도 안 보임',await p.evaluate(()=>!__wx.wxOn()));
-    T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
+    await p.close();
+    const p3=await boot(b,{...base,addons:{...base.addons,wx:true},wx:{home:'4111160000',work:'51720390001',fw:{},nm:{'4111160000':'연무<동>','abc':'x'}}},opt({}));
+    T('동 번호(10자리)는 남고 이상한 번호 · 동 이름은 정리',await p3.evaluate(()=>{const w=__wx.S.wx;return w.home==='4111160000'&&w.work===''&&JSON.stringify(w.nm)==='{"4111160000":"연무동"}'&&__wx.wxOn();}));
+    T('오류 없음 (동)',p3.errs.length===0,p3.errs.join('|'));await p3.close();
     hits=0;
     const q=await boot(b,{...base,addons:{...base.addons,wx:true},wx:{home:'41111',work:'',fw:{}}},opt({csp:true}));await q.waitForTimeout(2900);
     T('보안 잠금(CSP) 켠 채로도 서버에서 받아 옴',hits>=1&&await q.evaluate(()=>!!__wx.wxRaw('41111')),hits);

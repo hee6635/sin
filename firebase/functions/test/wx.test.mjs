@@ -167,5 +167,19 @@ await ok('가족 카드 한 칸: 출퇴근 앞뒤 2시간 안에만', () => {
   assert.deepEqual(C.brief(raw, null, o(KST(2026, 10, 30, 6))).t, '출근 6°');
   const e = C.brief(raw, null, o(KST(2026, 10, 30, 18, 10))); assert.equal(e.t, '퇴근 12° 비'); assert.equal(e.i, '☔');
 });
+await ok('동(10자리): 격자는 그 동 · 구역은 시·군·구 · 이름 · 동 목록', async () => {
+  const D = req('../lib/wxDongs.json');
+  assert.ok(Object.values(D).reduce((n, l) => n + l.length, 0) > 3000);
+  for (const [sgg, l] of Object.entries(D)) { assert.ok(W.region(sgg), sgg); for (const x of l) { assert.match(x[0], /^\d{10}$/); assert.equal(x[0].slice(0, 5), sgg); assert.ok(x[2] >= 1 && x[2] <= 149 && x[3] >= 1 && x[3] <= 253, x.join()); } }
+  const hc = D['51720'].find(x => x[1] === '내면'), r = W.region(hc[0]);   // 홍천군 내면 (산골) — 군 대표 칸과 다름
+  assert.equal(r.n, '홍천군 내면'); assert.equal(r.dn, '내면'); assert.deepEqual([r.nx, r.ny], [hc[2], hc[3]]); assert.equal(r.land, '11D10000');
+  assert.notDeepEqual([r.nx, r.ny], [W.region('51720').nx, W.region('51720').ny]);
+  assert.equal(W.region('5172099999'), null); assert.equal(W.region('9999912345'), null); assert.equal(W.region('41111x'), null);
+  const l = await W.handle(deps(), { dongs: '41111' }); assert.equal(l.status, 200); assert.ok(l.body.list.some(x => x[1] === '연무동')); assert.equal(l.cache, 86400);
+  assert.equal((await W.handle(deps(), { dongs: '99999' })).status, 400);
+  const yd = D['41111'].find(x => x[1] === '연무동');
+  const a = await W.handle(deps(), { r: yd[0] }); assert.equal(a.status, 200); assert.equal(a.body.r, yd[0]); assert.equal(a.body.n, '수원시 장안구 연무동');
+  const c = await W.handle(deps(), { h: yd[0], w: '41597', s: '202610300700', e: '202610301900' }); assert.equal(c.body.r[0].p, '집 · 연무동'); assert.equal(c.body.r[1].p, '직장 · 화성시 동탄구');
+});
 await ok('시각 글자(YYYYMMDDHHmm) → ms (한국 시간)', () => assert.equal(W.stampMs('202610300700'), KST(2026, 10, 30, 7)));
 console.log(`\n${n} 통과`);
