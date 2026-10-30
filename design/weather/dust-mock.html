@@ -1,0 +1,95 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0;background:#e9e7e2;font-family:'Noto Sans CJK KR','Noto Sans KR',sans-serif;display:flex;gap:28px;padding:28px;align-items:flex-start}
+.ph{width:360px;height:740px;border-radius:28px;overflow:hidden;position:relative;box-shadow:0 6px 24px #0003;background:#f6f5f2}
+.cap{position:absolute;top:-24px;left:0;font-size:13px;color:#555}
+.wrap{position:relative;margin-top:24px}
+.dim{position:absolute;inset:0;background:#0006}
+.pop{position:absolute;left:14px;right:14px;top:70px;background:#fff;border-radius:20px;padding:18px 16px}
+.pop h3{margin:0 0 2px;font-size:18px}.sub{color:#888;font-size:12px;margin-bottom:14px}
+.cards{display:flex;gap:10px}
+.cd{flex:1;border-radius:14px;background:#f3f6fb;padding:12px;text-align:center}
+.cd .t{font-size:12px;color:#666}.cd .ic{font-size:34px;line-height:1.2}.cd .tp{font-size:26px;font-weight:700}
+.cd .d{font-size:11px;color:#777;margin-top:2px}.cd .o{font-size:11.5px;margin-top:6px;color:#333}
+.dust{margin-top:12px;display:flex;align-items:center;gap:10px;border-radius:14px;padding:8px 12px;background:#e9f3fd}
+.dust img{width:46px}.dust b{font-size:15px}.dust .m{font-size:12px;color:#555}.dust .ar{margin-left:auto;color:#999;font-size:20px}
+.hr{display:flex;gap:6px;margin-top:12px;overflow:hidden}
+.hc{flex:0 0 auto;width:44px;text-align:center;font-size:11px;color:#666;border-radius:10px;padding:4px 0;background:#f6f6f6}
+.hc.on{background:#fff3d6;color:#a06a00;font-weight:600}.hc div{font-size:16px}
+.btn{margin-top:14px;text-align:center;color:#3a7bd5;font-size:13px}
+.big{height:100%;color:#fff;text-align:center;position:relative}
+.big .top{padding-top:30px;font-size:22px;font-weight:700}.big .loc{font-size:13px;opacity:.85}
+.big img.f{width:200px;margin-top:22px;filter:drop-shadow(0 6px 10px #0002)}
+.big .lv{font-size:44px;font-weight:800;margin-top:6px}.big .msg{font-size:15px;margin-top:4px;opacity:.95}
+.big .cai{font-size:12px;opacity:.8;margin-top:8px}
+.bot{position:absolute;left:0;right:0;bottom:0;padding:14px 8px 20px;background:#0000001a;display:flex;align-items:flex-start}
+.bc{flex:1;font-size:11px;line-height:1.35}.bc img{width:40px;margin:6px 0 2px}.bc .v{font-size:11.5px;font-weight:600}
+.sep{width:1px;align-self:stretch;background:#fff8;margin:6px 4px}
+.x{position:absolute;right:16px;top:16px;font-size:22px;opacity:.85}
+.legend{width:300px;font-size:13px;color:#333;background:#fff;border-radius:16px;padding:16px;box-shadow:0 6px 24px #0002;margin-top:24px}
+.legend div{display:flex;align-items:center;gap:8px;margin:3px 0}.legend img{width:34px}
+.legend .sw{width:14px;height:14px;border-radius:4px}
+</style></head><body>
+
+<div class="wrap"><div class="cap">① 평소 날씨 팝업 (간단)</div><div class="ph">
+ <div class="dim"></div>
+ <div class="pop">
+  <h3>10월 31일 (금) · 주간</h3><div class="sub">포항 효곡동 → 남구 대송면</div>
+  <div class="cards">
+   <div class="cd"><div class="t">출근 07:00</div><div class="ic">⛅</div><div class="tp">9°</div><div class="d">체감 7° · 강수 10%</div><div class="o">🧥 얇은 패딩</div></div>
+   <div class="cd"><div class="t">퇴근 19:00</div><div class="ic">🌧️</div><div class="tp">13°</div><div class="d">강수 70% · 바람 4m/s</div><div class="o">☂️ 우산 챙기세요</div></div>
+  </div>
+  <div class="dust"><img src="faces/1_joeum.png"><div><b>미세먼지 좋음</b><div class="m">마스크 필요 없어요</div></div><div class="ar">›</div></div>
+  <div class="hr">
+   <div class="hc on">06시<div>⛅</div>8°</div><div class="hc on">07시<div>⛅</div>9°</div><div class="hc">09시<div>☀️</div>12°</div><div class="hc">12시<div>☁️</div>15°</div><div class="hc">15시<div>🌦️</div>15°</div><div class="hc on">18시<div>🌧️</div>13°</div><div class="hc on">19시<div>🌧️</div>13°</div>
+  </div>
+  <div class="btn">네이버 날씨에서 자세히 보기</div>
+ </div>
+</div></div>
+
+<div class="wrap"><div class="cap">② 미세먼지 칸을 누르면 (나쁨 예)</div><div class="ph">
+ <div class="big" style="background:#ef8a2c">
+  <div class="x">✕</div>
+  <div class="top">포항 효곡동</div><div class="loc">대잠동 측정소 · 10월 31일 07:00</div>
+  <img class="f" src="faces/4_nappeum.png">
+  <div class="lv">나쁨</div><div class="msg">출퇴근길엔 마스크 꼭 쓰세요</div>
+  <div class="cai">통합대기지수 112 · 오존 보통</div>
+  <div class="bot">
+   <div class="bc">지금<br>미세먼지<br><img src="faces/4_nappeum.png"><div class="v">62㎍/㎥</div></div>
+   <div class="bc">지금<br>초미세먼지<br><img src="faces/5_sangdang.png"><div class="v">41㎍/㎥</div></div>
+   <div class="sep"></div>
+   <div class="bc">오늘<br>예보<br><img src="faces/4_nappeum.png"><div class="v">나쁨</div></div>
+   <div class="bc">내일<br>예보<br><img src="faces/3_botong.png"><div class="v">보통</div></div>
+   <div class="bc">모레<br>예보<br><img src="faces/1_joeum.png"><div class="v">좋음</div></div>
+  </div>
+ </div>
+</div></div>
+
+<div class="wrap"><div class="cap">③ 깨끗한 날 (좋음 예)</div><div class="ph">
+ <div class="big" style="background:#4b9ee6">
+  <div class="x">✕</div>
+  <div class="top">포항 효곡동</div><div class="loc">대잠동 측정소 · 10월 31일 07:00</div>
+  <img class="f" src="faces/1_joeum.png">
+  <div class="lv">좋음</div><div class="msg">창문 열고 환기하기 좋아요</div>
+  <div class="cai">통합대기지수 38 · 오존 좋음</div>
+  <div class="bot">
+   <div class="bc">지금<br>미세먼지<br><img src="faces/1_joeum.png"><div class="v">24㎍/㎥</div></div>
+   <div class="bc">지금<br>초미세먼지<br><img src="faces/2_yangho.png"><div class="v">12㎍/㎥</div></div>
+   <div class="sep"></div>
+   <div class="bc">오늘<br>예보<br><img src="faces/1_joeum.png"><div class="v">좋음</div></div>
+   <div class="bc">내일<br>예보<br><img src="faces/3_botong.png"><div class="v">보통</div></div>
+   <div class="bc">모레<br>예보<br><img src="faces/3_botong.png"><div class="v">보통</div></div>
+  </div>
+ </div>
+</div></div>
+
+<div class="legend"><b>8단계 얼굴 · 배경색</b>
+ <div><img src="faces/0_choego.png"><span class="sw" style="background:#2f7fd8"></span>최고</div>
+ <div><img src="faces/1_joeum.png"><span class="sw" style="background:#4b9ee6"></span>좋음</div>
+ <div><img src="faces/2_yangho.png"><span class="sw" style="background:#2fb39b"></span>양호</div>
+ <div><img src="faces/3_botong.png"><span class="sw" style="background:#5cb85c"></span>보통</div>
+ <div><img src="faces/4_nappeum.png"><span class="sw" style="background:#ef8a2c"></span>나쁨</div>
+ <div><img src="faces/5_sangdang.png"><span class="sw" style="background:#e8662a"></span>상당히 나쁨</div>
+ <div><img src="faces/6_maeu.png"><span class="sw" style="background:#d9403a"></span>매우 나쁨</div>
+ <div><img src="faces/7_choeak.png"><span class="sw" style="background:#5e4a9c"></span>최악</div>
+</div>
+</body></html>
