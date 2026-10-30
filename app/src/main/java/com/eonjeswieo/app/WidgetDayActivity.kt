@@ -579,7 +579,7 @@ class WidgetDayActivity : Activity() {
     private val wxImgs = HashMap<String, android.graphics.Bitmap?>()
     private val jua: Typeface by lazy { try { Typeface.createFromAsset(assets, "fonts/jua.ttf") } catch (e: Exception) { Typeface.DEFAULT_BOLD } }
     private fun wxImg(id: String, size: Int): ImageView? {
-        if (!Regex("^(sky|wear|faces)/[a-z0-9_]+$").matches(id)) return null
+        if (!Regex("^(sky|wear|faces|alert)/[a-z0-9_]+$").matches(id)) return null
         val bm = wxImgs.getOrPut(id) { try { assets.open("wx/$id.webp").use { android.graphics.BitmapFactory.decodeStream(it) } } catch (e: Exception) { null } } ?: return null
         val v = ImageView(this); v.setImageBitmap(bm); v.scaleType = ImageView.ScaleType.FIT_CENTER
         v.layoutParams = LinearLayout.LayoutParams(dp(size), dp(size))

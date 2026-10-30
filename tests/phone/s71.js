@@ -54,7 +54,7 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
     // 날짜 창 한 줄 (간단하게)
     await p.evaluate(()=>__wx.openDay('2026-10-14'));await p.waitForTimeout(300);
     const l1=await p.evaluate(()=>{const e=document.getElementById('wxDay');return e?{t:e.textContent,c:e.className}:null;});
-    T('근무 날(주간) 한 줄: 퇴근길 비 · 우산 + 출근 6° · 퇴근 12°',!!l1&&/퇴근길 비 · 우산/.test(l1.t)&&/출근 6° · 퇴근 12°/.test(l1.t)&&/wet/.test(l1.c),JSON.stringify(l1));
+    T('근무 날(주간) 날씨 카드: 퇴근길에 비 와요 · 출근 6° → 퇴근 12° (비 = 파랑)',!!l1&&/퇴근길에 비 와요/.test(l1.t)&&/출근\s*6°/.test(l1.t)&&/퇴근\s*12°/.test(l1.t)&&/wet/.test(l1.c)&&/wxcard/.test(l1.c),JSON.stringify(l1));
     await p.click('#wxDay');await p.waitForTimeout(200);
     const pop=await p.evaluate(()=>document.querySelector('#pop.open')?document.querySelector('#pop').innerText:'');
     T('큰 팝업: 한 줄 결론 (퇴근길에 비 와요 · 우산 챙기세요 · 오후 5시부터)',/퇴근길에 비 와요/.test(pop)&&/우산 챙기세요 · 오후 5시부터/.test(pop),pop);
@@ -64,7 +64,7 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
     T('큰 팝업: 미세먼지 (예보 보통 · 얼굴 · 누르면 큰 화면)',/미세먼지 보통/.test(pop)&&await p.evaluate(()=>!!document.querySelector('#pop .wxrw.dz[data-act="wx-dust"] img[src="wx/faces/3.webp"]')),pop);
     await p.evaluate(()=>{__wx.closePop();__wx.openDay('2026-10-12');});await p.waitForTimeout(300);
     const l2=await p.evaluate(()=>document.getElementById('wxDay').textContent);
-    T('쉬는 날(오늘): 하루 요약 "맑아요 · 10° ~ 10°"',/맑아요/.test(l2)&&/10° ~ 10°/.test(l2),l2);
+    T('쉬는 날(오늘): 날씨 카드 "맑은 날이에요" · 오전 · 오후 10°',/맑은 날이에요/.test(l2)&&/오전\s*10°/.test(l2)&&/오후\s*10°/.test(l2),l2);
     await p.click('#wxDay');await p.waitForTimeout(200);
     const pop2=await p.evaluate(()=>document.querySelector('#pop').innerText);
     T('오늘 팝업: 미세먼지 지금 값 8단계 (보통) + 마스크 안내',/미세먼지 보통/.test(pop2)&&/민감하면 마스크/.test(pop2),pop2);

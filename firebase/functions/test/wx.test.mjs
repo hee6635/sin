@@ -313,5 +313,76 @@ await ok('측정소: 동 이름으로 못 찾으면 전국 측정소 목록(위�
   W._resetFail();
   const r2 = await W.regionData(deps(), hg); assert.equal(r2.q.w, '경북'); assert.ok(r2.qe);   // 둘 다 안 되면 시·도 평균 + 까닭
 });
+await ok('기상특보: 통보문(t6) 읽기 · 지역 고르기 (시·도 + 괄호 안 시·군 · 광역시 · 평지/산지)', () => {
+  const t6 = 'o 강풍주의보 : 경상북도(포항, 경주, 영덕, 울진평지), 부산, 울릉도.독도, 동해남부앞바다\r\no 건조경보 : 경상북도(경주), 강원도(강릉시평지)\r\no 호우경보 : 경기도(수원, 화성)\r\no 폭풍해일주의보 : 경상북도(포항)';
+  const l = W.parseAlerts(t6); assert.equal(l.length, 4);
+  assert.deepEqual(W.alertsFor(l, W.region('4711158000')), [['강풍', '주의보'], ['폭풍해일', '주의보']]);
+  assert.deepEqual(W.alertsFor(l, W.region('47130')), [['건조', '경보'], ['강풍', '주의보']]);   // 경주: 경보 먼저
+  assert.deepEqual(W.alertsFor(l, W.region('41597')), [['호우', '경보']]);
+  assert.deepEqual(W.alertsFor(l, W.region('26110')), [['강풍', '주의보']]);   // 부산(괄호 없음 = 전체)
+  assert.deepEqual(W.alertsFor(l, W.region('11110')), []);
+});
+await ok('특보 · 자외선이 지역 자료에 붙고 결론 · 챙길 것에 쓰임 (오늘만)', async () => {
+  W._resetFail();
+  const body = url => {
+    if (/getPwnStatus/.test(url)) return wrap([{ tmFc: '202610300500', t6: 'o 대설주의보 : 경기도(수원)\r\no 한파경보 : 경기도(수원, 화성)' }]);
+    if (/getUVIdxV4/.test(url)) { assert.match(url, /areaNo=4111100000/); assert.match(url, /time=2026102918/); return wrap([{ code: 'A07_2', areaNo: '4111100000', date: '2026102918', h0: '0', h12: '1', h15: '5', h18: '9', h21: '4' }]); }
+    return null;
+  };
+  const r = await W.regionData(deps({ body }), '41111');
+  assert.deepEqual(r.w.l, [['한파', '경보'], ['대설', '주의보']]);
+  assert.equal(r.u.h['2026103012'], 9);   // 18시 발표 + 18시간 = 30일 12시
+  const c = C.commute(r, null, { s: KST(2026, 10, 30, 7), e: KST(2026, 10, 30, 19), now: NOW });
+  assert.deepEqual([c.k.t, c.k.i, c.k.al], ['한파경보', 'alert/cold', 2]); assert.match(c.k.s, /대설주의보도/);
+  assert.deepEqual(c.uv, [9, '매우 높음']);
+  assert.deepEqual(C.bring([{ tp: 20, pty: 0, pop: 0, sky: 1, ws: 1 }], 0, false, 9), [{ i: 'wear/sunscreen', n: '선크림 (자외선 매우 높음)' }]);   // 맑지 않아도 자외선이 높으면
+  assert.deepEqual(C.bring([{ tp: 27, pty: 0, pop: 0, sky: 1, ws: 1 }], 0, true, 2), []);   // 맑아도 자외선이 낮으면 안 챙김
+  const t = C.commute(r, null, { s: KST(2026, 10, 31, 7), e: KST(2026, 10, 31, 19), now: NOW });   // 내일: 특보는 안 씀
+  assert.ok(!t.k.al);
+});
+await ok('지난 시간 남기기: 새 예보에 없는 오늘 앞 시간을 옛 예보에서 붙임', async () => {
+  W._resetFail();
+  const d = deps();
+  await W.regionData(d, '41111');   // 5:50 발표분 (00시부터 있음)
+  const key = [...d.store.keys()].find(k => k.startsWith('s_'));
+  const old = JSON.parse(d.store.get(key).d); assert.ok(old.h['2026103001']);
+  // 3시간 뒤: 새 예보는 08시부터만
+  const later = KST(2026, 10, 30, 8, 30);
+  const d2 = deps({ d: { now: later, store: d.store, cache: d.cache }, body: url => { if (/getVilageFcst/.test(url)) { const page = +url.match(/pageNo=(\d+)/)[1]; return null; } return null; } });
+  d2.store = d.store; d2.cache = d.cache;
+  const r = await W.regionData(d2, '41111');
+  assert.ok(r.s.h['2026103001'] && r.s.h['2026103007'], '오늘 01시 · 07시가 남아 있음');
+});
+await ok('시간별 줄: 24시간 · 2시간 간격 · 집 → 직장 → 집 · 지금 칸이 왼쪽에서 두 번째 · 야간은 다음날까지', () => {
+  const sh = {}; for (let d = 30; d <= 31; d++) for (let h = 0; h < 24; h++) sh[`202610${d}${String(h).padStart(2, '0')}`] = [d * 100 + h, 0, 0, 1, 0, 1, 50];
+  const home = { s: { h: sh } }, work = { s: { h: Object.fromEntries(Object.entries(sh).map(([k, v]) => [k, [-v[0], 0, 0, 1, 0, 1, 50]])) } };
+  const now = KST(2026, 10, 30, 4, 10);
+  const x = C.hours(home, work, { dk: '20261030', s: KST(2026, 10, 30, 7), e: KST(2026, 10, 30, 19), now });
+  assert.equal(x.at.length, 12); assert.equal(x.at[2].now, true); assert.equal(x.i0, 1);
+  assert.deepEqual(x.at.slice(2, 6).map(c => c.w), [false, true, true, true]);   // 04 집, 06(출근 1시간 전부터) · 08 · 10 직장
+  assert.equal(x.at[2].tp, 3004); assert.equal(x.at[3].tp, -3006);
+  assert.equal(x.at[9].w, true); assert.equal(x.at[10].w, false);   // 18시 직장 · 20시 집
+  assert.equal(x.at[3].on, true); assert.equal(x.at[9].on, true); assert.equal(x.at[1].past, true);
+  const n = C.hours(home, work, { dk: '20261030', s: KST(2026, 10, 30, 19), e: KST(2026, 10, 31, 7), now: KST(2026, 10, 29, 12) });   // 야간 · 내일 볼 때
+  assert.equal(n.at.length, 17); assert.equal(n.at[12].nd, true); assert.equal(n.at[12].w, true); assert.equal(n.at[16].w, false);
+  assert.equal(n.at[n.i0 + 1].l, '16시');   // 출근 2시간 전(17시)이 든 칸이 왼쪽에서 두 번째
+  const r = C.hours(home, null, { dk: '20261030', now: KST(2026, 10, 29, 12) }); assert.equal(r.seg, false); assert.equal(r.at[r.i0 + 1].l, '06시');
+});
+await ok('지난 출근 칸: 흐리게(past) · 결론 · 챙길 것은 남은 퇴근 기준', () => {
+  const sh = {}; for (let h = 0; h < 24; h++) sh[`20261030${String(h).padStart(2, '0')}`] = h < 9 ? [5, 80, 1, 4, 3, 2, 60] : [14, 0, 0, 1, 0, 2, 50];
+  const raw = { s: { h: sh } };
+  const c = C.commute(raw, null, { s: KST(2026, 10, 30, 7), e: KST(2026, 10, 30, 19), now: KST(2026, 10, 30, 18), hn: '집 · 효곡동', wn: '집 · 효곡동' });
+  assert.equal(c.c[0].past, true); assert.equal(c.c[0].hot, false); assert.equal(c.c[0].tp, 5); assert.equal(c.c[1].past, false);
+  assert.ok(!/비/.test(c.k.t), c.k.t); assert.ok(!c.b.some(x => /우산/.test(x.n)));
+  assert.equal(c.c[0].p, ''); assert.equal(c.c[1].p, '');   // 같은 동네 → 칸마다 이름 안 붙임
+});
+await ok('퇴근 1시간 뒤(집에 옴)면 미세먼지 · 결론은 집 동네만', () => {
+  const sh = { s: { h: { '2026103007': [12, 0, 0, 1, 0, 1, 50], '2026103019': [14, 0, 0, 1, 0, 1, 50], '2026103021': [13, 0, 0, 1, 0, 1, 50] } } };
+  const home = Object.assign({ q: { p10: 20, p25: 6, st: '효곡동' } }, sh), work = Object.assign({ q: { p10: 90, p25: 40, st: '제철동' } }, sh);
+  const o = { s: KST(2026, 10, 30, 7), e: KST(2026, 10, 30, 19), hn: '집 · 효곡동', wn: '직장 · 제철동' };
+  assert.equal(C.commute(home, work, { ...o, now: KST(2026, 10, 30, 19, 30) }).k.t, '미세먼지 상당히 나쁨');   // 퇴근 30분 뒤 = 아직 퇴근길
+  const c = C.commute(home, work, { ...o, now: KST(2026, 10, 30, 21) });
+  assert.ok(!/미세먼지/.test(c.k.t), c.k.t); assert.deepEqual(c.dz.map(x => x.p), ['출근']);
+});
 await ok('시각 글자(YYYYMMDDHHmm) → ms (한국 시간)', () => assert.equal(W.stampMs('202610300700'), KST(2026, 10, 30, 7)));
 console.log(`\n${n} 통과`);

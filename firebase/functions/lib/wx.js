@@ -168,6 +168,20 @@ async function getJson(deps, path, q) {
     return j;
   } finally { clearTimeout(tm); }
 }
+// 새 예보에는 이미 지난 시간이 없음 → 저장해 둔 옛 예보에서 오늘(한국 시간 0시부터) 지난 시간 칸을 붙여 둠 (지난 출근 칸 · 시간별 줄)
+async function fetchShortKeep(deps, r, b, id) {
+  const v = await fetchShort(deps, r, b);
+  try {
+    const old = await deps.cache.get(id);
+    const o = old && old.d ? JSON.parse(old.d) : null;
+    if (o && o.h) {
+      const first = Object.keys(v.h).sort()[0] || '', today = ymd(deps.now) + '00';
+      for (const [k, x] of Object.entries(o.h)) if (k >= today && k < first && !v.h[k]) v.h[k] = x;
+      if (o.n) for (const [k, x] of Object.entries(o.n)) if (!v.n[k] && k >= ymd(deps.now)) v.n[k] = x;
+    }
+  } catch (e) { }
+  return v;
+}
 async function fetchShort(deps, r, b) {
   const all = [];
   for (let page = 1; page <= 3; page++) {
@@ -262,6 +276,71 @@ async function stationAir(deps, r) {
   return { e: e || '측정값 없음' };
 }
 
+/* 기상특보 (기상청_기상특보 조회서비스 getPwnStatus · 전국 한 번 · 10분마다)
+ * t6 = "o 강풍주의보 : 경상북도(포항, 경주, 울진평지), 부산, 울릉도.독도\r\no 건조경보 : …" → 지역마다 [[종류, '주의보'|'경보'], …] */
+const AK = ['호우', '태풍', '강풍', '대설', '한파', '폭염', '건조', '황사', '풍랑', '폭풍해일'];
+const SIDO_L = { 서울: ['서울'], 부산: ['부산'], 대구: ['대구'], 인천: ['인천'], 광주: ['광주'], 대전: ['대전'], 울산: ['울산'], 세종: ['세종'], 경기: ['경기'], 강원: ['강원'], 충북: ['충청북도', '충북'], 충남: ['충청남도', '충남'], 전북: ['전라북도', '전북'], 전남: ['전라남도', '전남'], 경북: ['경상북도', '경북'], 경남: ['경상남도', '경남'], 제주: ['제주'] };
+const METRO = new Set(['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종']);
+// "경상북도(포항, 경주), 부산" → [['경상북도', ['포항', '경주']], ['부산', []]] (괄호 안 쉼표는 안 나눔)
+function splitRegions(t) {
+  const out = []; let depth = 0, cur = '';
+  for (const ch of String(t || '') + ',') {
+    if (ch === '(') depth++; if (ch === ')') depth--;
+    if (ch === ',' && depth <= 0) { const x = cur.trim(); if (x) { const m = x.match(/^([^(]+)\((.*)\)$/); out.push(m ? [m[1].trim(), m[2].split(',').map(y => y.trim()).filter(Boolean)] : [x, []]); } cur = ''; depth = 0; continue; }
+    cur += ch;
+  }
+  return out;
+}
+function parseAlerts(t6) {
+  const list = [];
+  for (const line of String(t6 || '').split(/\r?\n/)) {
+    const m = line.match(/^\s*o?\s*(호우|태풍|강풍|대설|한파|폭염|건조|황사|풍랑|폭풍해일)\s*(주의보|경보)\s*:\s*(.+)$/);
+    if (m) list.push([m[1], m[2], splitRegions(m[3])]);
+  }
+  return list;
+}
+// 이 지역에 걸린 특보: 시·도 이름이 맞고 (괄호가 없거나 · 광역시 · 괄호 안에 시·군 이름이 있으면)
+function alertsFor(list, r) {
+  const names = SIDO_L[r.s] || [r.s], stem = String(r.n || '').split(' ')[0].replace(/(특별자치시|특별시|광역시|시|군|구)$/, '');
+  const out = [];
+  for (const [k, lv, regs] of list) {
+    const hit = regs.some(([nm, sub]) => {
+      if (!names.some(x => nm.startsWith(x))) return false;
+      if (!sub.length || METRO.has(r.s)) return true;
+      return sub.some(x => stem && (x.startsWith(stem) || stem.startsWith(x.replace(/(평지|산지|북부|남부|동부|서부|내륙|해안)$/, ''))));
+    });
+    if (hit && !out.some(x => x[0] === k && (x[1] === '경보' || lv === '주의보'))) { for (let i = out.length - 1; i >= 0; i--) if (out[i][0] === k) out.splice(i, 1); out.push([k, lv]); }
+  }
+  return out.sort((a, b) => (b[1] === '경보') - (a[1] === '경보') || AK.indexOf(a[0]) - AK.indexOf(b[0]));
+}
+const alertBase = now => { const [y, m, d, h, mi] = kstParts(now); return `${y}${p2(m)}${p2(d)}${p2(h)}${Math.floor(mi / 10)}`; };
+async function fetchAlerts(deps) {
+  const l = items(await getJson(deps, '/1360000/WthrWrnInfoService/getPwnStatus', { pageNo: 1, numOfRows: 10, dataType: 'JSON' }));
+  const x = l[0] || {};
+  return { t: String(x.tmFc || ''), list: parseAlerts(x.t6) };
+}
+
+/* 자외선 (기상청 생활기상지수 조회서비스 4.0 getUVIdxV4 · 지역 번호 10자리 · 06 · 18시 발표, 3시간 간격 h0 … h75)
+ * → {b, h:{'YYYYMMDDHH': 지수}} */
+function uvBase(now) {
+  const t = now - 40 * 60000, [, , , h] = kstParts(t);
+  if (h >= 18) return `${ymd(t)}18`;
+  if (h >= 6) return `${ymd(t)}06`;
+  return `${ymd(t - 24 * HOUR)}18`;
+}
+async function fetchUv(deps, area, b) {
+  const l = items(await getJson(deps, '/1360000/LivingWthrIdxServiceV4/getUVIdxV4', { pageNo: 1, numOfRows: 10, dataType: 'JSON', areaNo: area, time: b }));
+  const x = l[0]; if (!x) throw new Error('자외선 없음');
+  const base = Date.UTC(+b.slice(0, 4), +b.slice(4, 6) - 1, +b.slice(6, 8), +b.slice(8, 10)) - 9 * HOUR, h = {};
+  for (const [k, v] of Object.entries(x)) {
+    const m = k.match(/^h(\d+)$/); const n = num(v); if (!m || n == null) continue;
+    const t = base + (+m[1]) * HOUR, [yy, mm, dd, hh] = kstParts(t);
+    h[`${yy}${p2(mm)}${p2(dd)}${p2(hh)}`] = n;
+  }
+  if (!Object.keys(h).length) throw new Error('자외선 없음');
+  return { b, h };
+}
+
 // 지난 날짜 실제 관측 (기상청 ASOS 일자료): 그 달 하루마다 [최저, 최고, 강수 mm, 적설 cm] · 지난달까지는 한 번 받으면 안 바뀜
 async function fetchPast(deps, stn, ym, endDay) {
   const l = items(await getJson(deps, '/1360000/AsosDalyInfoService/getWthrDataList', { pageNo: 1, numOfRows: 31, dataType: 'JSON', dataCd: 'ASOS', dateCd: 'DAY', startDt: `${ym}01`, endDt: endDay, stnIds: stn }));
@@ -315,13 +394,20 @@ async function regionData(deps, code) {
   const r = region(code); if (!r) return null;
   const now = deps.now;
   const [s, m, af, rt] = await Promise.all([
-    cached(deps, `s_${r.nx}_${r.ny}`, shortBase(now), () => fetchShort(deps, r, shortBase(now))),
+    cached(deps, `s_${r.nx}_${r.ny}`, shortBase(now), () => fetchShortKeep(deps, r, shortBase(now), `s_${r.nx}_${r.ny}`)),
     cached(deps, `m_${r.land}_${r.ta}`, midBase(now), () => fetchMid(deps, r, midBase(now))),
     cached(deps, 'af', airBase(now), () => fetchAirFc(deps, now)),
     cached(deps, `q_${rtSido(r)}`, rtBase(now), () => fetchAirRt(deps, rtSido(r), now))
   ]);
   const near = await stationAir(deps, r).catch(e => ({ e: e.message }));   // 가까운 측정소 값이 있으면 그것 (없으면 시·도 평균)
+  const area = r.c.length === 10 ? r.c : `${r.c}00000`;
+  const [wa, uv] = await Promise.all([
+    cached(deps, 'wa', alertBase(now), () => fetchAlerts(deps)).catch(() => ({ v: null })),
+    cached(deps, `u_${area}`, uvBase(now), () => fetchUv(deps, area, uvBase(now))).catch(() => ({ v: null }))
+  ]);
   const out = { v: 1, r: r.c, n: r.n, s: s.v, m: m.v, a: null, q: near.v || rt.v || null };
+  if (wa.v && Array.isArray(wa.v.list)) { const l = alertsFor(wa.v.list, r); if (l.length) out.w = { t: wa.v.t, l }; }   // 특보 (걸린 것만)
+  if (uv.v && uv.v.h) out.u = uv.v;   // 자외선 지수 (3시간 간격)
   if (af.v && af.v.d) {   // 전국 예보에서 이 지역 몫만
     const names = aqNames(r), d = {};
     for (const [day, regs] of Object.entries(af.v.d)) { const nm = names.find(x => regs[x]); if (nm) d[day] = regs[nm]; }
@@ -369,4 +455,4 @@ async function handle(deps, q) {
   return { status: 400, body: { error: 'query' } };
 }
 
-module.exports = { _resetFail: () => failAt.clear(), gridLL, nearAsos, pastData, handle, regionData, region, shortBase, midBase, airBase, rtBase, parseShort, parseMid, parseAirFc, parseAirRt, pcpMm, stampMs, keyParam };
+module.exports = { parseAlerts, alertsFor, uvBase, _resetFail: () => failAt.clear(), gridLL, nearAsos, pastData, handle, regionData, region, shortBase, midBase, airBase, rtBase, parseShort, parseMid, parseAirFc, parseAirRt, pcpMm, stampMs, keyParam };

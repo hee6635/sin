@@ -368,7 +368,7 @@ class AlarmActivity : Activity() {
     }
     private val imgCache = HashMap<String, android.graphics.Bitmap?>()
     private fun wxImg(id: String, size: Int): android.widget.ImageView? {
-        if (!Regex("^(sky|wear|faces)/[a-z0-9_]+$").matches(id)) return null
+        if (!Regex("^(sky|wear|faces|alert)/[a-z0-9_]+$").matches(id)) return null
         val bm = imgCache.getOrPut(id) {
             try { assets.open("wx/$id.webp").use { android.graphics.BitmapFactory.decodeStream(it) } } catch (e: Exception) { null }
         } ?: return null
@@ -452,6 +452,7 @@ class AlarmActivity : Activity() {
                     wxImg(x.optString("w"), 60)?.let { val lp = LinearLayout.LayoutParams(dp(60), dp(60)); lp.topMargin = dp(4); cd.addView(it, lp) }
                     x.optString("ws").takeIf { it.isNotBlank() }?.let { cd.addView(tv(it, 15.5f, c1, center = true, round = true)) }
                 }
+                if (x.optBoolean("past")) { cd.alpha = 0.45f; cd.addView(tv("지남", 11f, sub, bold = true, center = true), 0) }   // 이미 지난 출근 칸: 흐리게
                 val q = x.optString("q")
                 if (q.isNotBlank()) cd.setOnClickListener { openWeb(Weather.webUrl(q)) }
                 val lp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
@@ -490,7 +491,7 @@ class AlarmActivity : Activity() {
         val zs = ArrayList<org.json.JSONObject>()
         if (dz != null) for (i in 0 until dz.length()) dz.optJSONObject(i)?.let { zs.add(it) }
         zs.sortWith(compareByDescending<org.json.JSONObject> { it.optInt("g") }.thenByDescending { it.optInt("lv") })
-        if (zs.isNotEmpty()) {
+        if (zs.isNotEmpty() && k?.optInt("dz", 0) != 1) {   // 결론이 미세먼지면 아래 칸은 안 그림 (두 번 안 나오게)
             val w0 = zs[0]; val bad = w0.optInt("g") >= 3
             val l = line(if (bad) badBg else boxBg)
             wxImg(w0.optString("f"), 42)?.let { l.addView(it) }
@@ -501,7 +502,7 @@ class AlarmActivity : Activity() {
             col.addView(tv(if (two) "${w0.optString("p")}길(${w0.optString("n")}) ${w0.optString("m")}" else w0.optString("m"), 12.5f, c1, bold = true))
             if (two) col.addView(tv("${zs[1].optString("p")}길(${zs[1].optString("n")})은 ${zs[1].optString("lb")}", 12f, c1).also { it.alpha = 0.75f })
             l.addView(col); root.addView(l)
-        } else w.optString("a").takeIf { it.isNotBlank() }?.let { val l = line(); l.addView(tv(it, 14f, ink, bold = true)); root.addView(l) }
+        } else if (zs.isEmpty()) w.optString("a").takeIf { it.isNotBlank() }?.let { val l = line(); l.addView(tv(it, 14f, ink, bold = true)); root.addView(l) }
 
         // 닫기 + 10초 게이지 (닫기 말고 아무 데나 누르면 멈춤)
         val btn = TextView(this)

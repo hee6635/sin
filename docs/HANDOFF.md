@@ -50,3 +50,11 @@
 - 코틀린: `AlarmActivity.showCard` 새 모양 + 10초 게이지 · 닫기 말고 아무 데나 누르면 자동 닫기 멈춤(`dispatchTouchEvent`). 서버가 옛 모양(k 없음)이면 앱이 넣어 준 예비 문구(wxp) 사용. `WidgetDayActivity.wxRowView`: 앱 자료(12시간 안) → 창 열면 서버에서 새로 받아 바꿈.
 - **서버 다시 배포 필요** (functions): 새 칸(`x` · 측정소 목록 · `qe`)은 배포해야 나옴. 배포 전에도 앱은 동작 (표 · 측정소 이름만 빠짐).
 - 시험: 폰 `s73` (+ s71 · s72 고침) · 서버 `wx.test.mjs` 27개.
+
+## v0.105 (덧붙임 · 2026-10-31) — 시간별 줄 · 특보 · 자외선 · 날짜 창 순서
+- 서버 `wx.js`: 단기예보 새로 받을 때 오늘 지난 시간 칸을 옛 값에서 붙여 둠(`fetchShortKeep`) · 특보 `getPwnStatus`(전국 한 번 · 10분, 캐시 `wa`) → `parseAlerts`/`alertsFor` 로 지역마다 `out.w = {t, l:[[종류, 주의보|경보]]}` · 자외선 `LivingWthrIdxServiceV4/getUVIdxV4`(areaNo = 동 10자리 또는 시·군·구+00000, 06/18시 발표, 캐시 `u_…`) → `out.u = {b, h:{YYYYMMDDHH: 지수}}`.
+  - 특보 지역 맞추기: 시·도 이름 + 괄호 안 시·군 이름 앞부분(평지/산지 떼고) · 광역시는 괄호가 있어도 전체로 봄 · 바다 구역은 안 맞춤. **실제 응답으로는 아직 확인 못 함** (시험은 가짜 t6).
+- `wxcore.js`: `hours(home, work, o)` 시간별 줄(그날 0시부터 · 2시간 · 야간은 다음날 퇴근 뒤까지 · 칸 시작이 출근 1시간 전 ~ 퇴근 1시간 뒤면 직장) · `alertK`(오늘만 · k.al 1 주의보/2 경보 · 그림 `alert/…`) · `uvMax`(낮 9~17시) → 챙길 것 선크림 · 8 이상이면 결론 · 지난 출근 칸 `c[].past` · 결론/챙길 것은 남은 시간 기준 · 퇴근 1시간 뒤엔 미세먼지 결론이 집 동네만 · 미세먼지가 결론이면 `k.dz=1` (앱 · 알람 카드에서 아래 미세먼지 칸 안 그림).
+- 앱: `wxHrHtml`/`wxHrScroll`(지금 칸이 왼쪽 두 번째) · `wxOpenPop` · 날짜 창 = 근무 타입 → 대기 요청(pending 만) → 날씨 카드(`.wxcard`) → 가족 메모 알림 → 메모 · `S.wx.one`(같은 지역으로 보기, `wxWk()` 가 빈 값) · `wxNear`(같은 시·군·구 또는 시·군·구 격자 10km) → `wxAskOne`.
+- 그림: `design/weather/clean/` (테두리 다듬은 원본) → `assets/wx/{faces,wear,sky,alert}` · 특보 10개 + `sky/uv`.
+- 시험: 폰 `s74` · 서버 `wx.test.mjs` 33개.
