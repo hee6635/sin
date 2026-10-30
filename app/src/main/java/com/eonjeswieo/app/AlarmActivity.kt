@@ -83,7 +83,7 @@ class AlarmActivity : Activity() {
                 val w = Weather.fetch(wxq, 8000)
                 if (w != null) {
                     fresh = w
-                    runOnUiThread { if (showingCard && cardFromFallback && !isFinishing) showCard() }
+                    runOnUiThread { if (showingCard && cardFromFallback && !isFinishing && pickCard() === w) showCard() }
                 }
             }.start()
         }
@@ -340,138 +340,225 @@ class AlarmActivity : Activity() {
         if (card) showCard() else finish()
     }
 
-    /** 끄기 뒤 날씨 카드: 큰 아이콘 · 한 줄 문구 · 출근/퇴근 두 줄(수치) · 미세먼지 · 닫기 */
+    /** 끄기 뒤 날씨 카드 (앱 날씨 팝업과 같은 순서 · 같은 그림 · 같은 글씨체):
+     *  한 줄 결론 → 출근/퇴근 칸(날씨 · 옷) → (옷이 같으면 한 번만) → 챙길 것 → 미세먼지 → 닫기 · 10초 게이지
+     *  닫기 말고 아무 데나 누르면 자동 닫기가 멈춤 (칸을 누르면 그 동네 네이버 날씨) */
+    private var autoOff = false
+    private var gauge: android.animation.ValueAnimator? = null
+    private var closeBtn: android.view.View? = null
+    private var stopAutoFn: (() -> Unit)? = null
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        if (showingCard && ev.actionMasked == android.view.MotionEvent.ACTION_DOWN) {
+            val b = closeBtn
+            val r = android.graphics.Rect()
+            val onClose = b != null && b.getGlobalVisibleRect(r) && r.contains(ev.rawX.toInt(), ev.rawY.toInt())
+            if (!onClose) stopAutoFn?.invoke()
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+    private fun pickCard(): org.json.JSONObject? {
+        val p = Weather.parse(wxp)
+        val f = fresh
+        return when {
+            f != null && f.has("k") -> f
+            p != null && p.has("k") -> p   // 서버가 아직 옛 모양이면 앱이 만든 예비 문구(새 모양)
+            else -> f ?: p
+        }
+    }
+    private val imgCache = HashMap<String, android.graphics.Bitmap?>()
+    private fun wxImg(id: String, size: Int): android.widget.ImageView? {
+        if (!Regex("^(sky|wear|faces)/[a-z0-9_]+$").matches(id)) return null
+        val bm = imgCache.getOrPut(id) {
+            try { assets.open("wx/$id.webp").use { android.graphics.BitmapFactory.decodeStream(it) } } catch (e: Exception) { null }
+        } ?: return null
+        val v = android.widget.ImageView(this)
+        v.setImageBitmap(bm)
+        v.scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+        v.layoutParams = LinearLayout.LayoutParams(dp(size), dp(size))
+        return v
+    }
+    private val jua: Typeface by lazy { try { Typeface.createFromAsset(assets, "fonts/jua.ttf") } catch (e: Exception) { Typeface.DEFAULT_BOLD } }
+
     private fun showCard() {
-        val w = fresh ?: Weather.parse(wxp)
+        val w = pickCard()
         if (w == null) { finish(); return }
-        cardFromFallback = fresh == null
+        cardFromFallback = w !== fresh
         try { breathe?.cancel() } catch (e: Exception) { }
         handler.removeCallbacks(closeCard)
+        try { gauge?.cancel() } catch (e: Exception) { }
         val (bg0, bg1, ink, sub) = pal.toList()
         val night = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
-        val cardBg = if (night) 0x26FFFFFF else 0xE6FFFFFF.toInt()
-        val line = if (night) 0x33FFFFFF else 0x1A1F3346
-        val rainBg = if (night) 0xFF22345A.toInt() else 0xFFE4ECFB.toInt()
-        val rainInk = if (night) 0xFFA9C2FF.toInt() else 0xFF2C58B8.toInt()
+        val boxBg = if (night) 0x26FFFFFF else 0xD9FFFFFF.toInt()
+        val boxLine = if (night) 0x33FFFFFF else 0xFFFFFFFF.toInt()
+        val wetBg = if (night) 0xFF22345A.toInt() else 0xFFE4EEFB.toInt()
+        val wetInk = if (night) 0xFFCFE0FF.toInt() else 0xFF22406E.toInt()
+        val badBg = if (night) 0xFF3B2F1C.toInt() else 0xFFFDEEDD.toInt()
+        val badInk = if (night) 0xFFF2C879.toInt() else 0xFF7A4A10.toInt()
 
         val frame = android.widget.FrameLayout(this)
         frame.background = android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(bg0, bg1))
         val scroll = android.widget.ScrollView(this)
+        scroll.isFillViewport = true
         val root = LinearLayout(this)
         root.orientation = LinearLayout.VERTICAL
         root.gravity = Gravity.CENTER_HORIZONTAL
-        root.setPadding(dp(22), dp(56), dp(22), dp(28))
+        root.setPadding(dp(16), dp(40), dp(16), dp(20))
         scroll.addView(root)
         frame.addView(scroll, android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
-        fun tv(t: String, sp: Float, col: Int, bold: Boolean = false, center: Boolean = false): TextView {
+        fun tv(t: String, sp: Float, col: Int, bold: Boolean = false, center: Boolean = false, round: Boolean = false): TextView {
             val v = TextView(this); v.text = t; v.textSize = sp; v.setTextColor(col)
-            if (bold) v.typeface = Typeface.DEFAULT_BOLD
+            if (round) v.typeface = jua else if (bold) v.typeface = Typeface.DEFAULT_BOLD
             if (center) v.gravity = Gravity.CENTER
             return v
         }
+        fun box(bg: Int, line: Int): android.graphics.drawable.GradientDrawable {
+            val d = android.graphics.drawable.GradientDrawable(); d.cornerRadius = dp(18).toFloat(); d.setColor(bg); d.setStroke(Math.max(1, dp(1)), line); return d
+        }
+        val full = { LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
         val cal = java.util.Calendar.getInstance()
         val dow = arrayOf("일", "월", "화", "수", "목", "금", "토")[cal.get(java.util.Calendar.DAY_OF_WEEK) - 1]
-        root.addView(tv("${cal.get(java.util.Calendar.MONTH) + 1}월 ${cal.get(java.util.Calendar.DAY_OF_MONTH)}일 (${dow}) · 알람 껐어요", 14f, sub, center = true),
-            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        root.addView(tv("${cal.get(java.util.Calendar.MONTH) + 1}월 ${cal.get(java.util.Calendar.DAY_OF_MONTH)}일 (${dow}) · 알람 껐어요", 14f, sub, bold = true, center = true), full())
 
-        val card = LinearLayout(this)
-        card.orientation = LinearLayout.VERTICAL
-        card.setPadding(dp(20), dp(22), dp(20), dp(16))
-        val cb = android.graphics.drawable.GradientDrawable(); cb.cornerRadius = dp(26).toFloat(); cb.setColor(cardBg)
-        card.background = cb
-        val clp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        clp.topMargin = dp(18)
-        root.addView(card, clp)
-        card.addView(tv(w.optString("i"), 46f, ink, center = true), LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-        val head = tv(w.optString("h"), 22f, ink, bold = true, center = true)
-        head.setPadding(0, dp(8), 0, 0)
-        card.addView(head, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-        w.optString("t").takeIf { it.isNotBlank() }?.let {
-            val t = tv(it, 17f, sub, bold = true, center = true); t.setPadding(0, dp(4), 0, dp(6))
-            card.addView(t, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-        }
-        val rows = w.optJSONArray("r")
-        if (rows != null) for (k in 0 until rows.length()) {
-            val r = rows.optJSONObject(k) ?: continue
-            val sep = android.view.View(this); sep.setBackgroundColor(line)
-            card.addView(sep, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Math.max(1, dp(1) / 2 + 1)))
-            val row = LinearLayout(this)
-            row.orientation = LinearLayout.HORIZONTAL
-            row.gravity = Gravity.CENTER_VERTICAL
-            row.setPadding(dp(2), dp(12), dp(2), dp(12))
-            val left = LinearLayout(this); left.orientation = LinearLayout.VERTICAL
-            left.addView(tv(r.optString("l"), 15f, ink, bold = true))
-            r.optString("p").takeIf { it.isNotBlank() }?.let { left.addView(tv(it, 12f, sub)) }
-            row.addView(left, LinearLayout.LayoutParams(dp(112), ViewGroup.LayoutParams.WRAP_CONTENT))
-            row.addView(tv(r.optString("i"), 26f, ink, center = true), LinearLayout.LayoutParams(dp(40), ViewGroup.LayoutParams.WRAP_CONTENT))
-            val right = LinearLayout(this); right.orientation = LinearLayout.VERTICAL
-            right.setPadding(dp(6), 0, 0, 0)
-            Weather.temp(r).takeIf { it.isNotBlank() }?.let { right.addView(tv(it, 22f, ink, bold = true)) }
-            right.addView(tv(Weather.rowText(r), 12.5f, sub))
-            row.addView(right, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            r.optString("tag").takeIf { it.isNotBlank() }?.let {
-                val tag = tv(it, 12f, rainInk, bold = true)
-                tag.setPadding(dp(9), dp(4), dp(9), dp(4))
-                val tb = android.graphics.drawable.GradientDrawable(); tb.cornerRadius = dp(10).toFloat(); tb.setColor(rainBg)
-                tag.background = tb
-                row.addView(tag)
+        // 한 줄 결론
+        val k = w.optJSONObject("k")
+        val cs = w.optJSONArray("c")
+        val kt = k?.optString("t")?.takeIf { it.isNotBlank() } ?: w.optString("h")
+        wxImg(k?.optString("i") ?: "", 104)?.let { val lp = LinearLayout.LayoutParams(dp(104), dp(104)); lp.topMargin = dp(8); root.addView(it, lp) }
+        root.addView(tv(kt, 26f, ink, center = true, round = true).also { it.setPadding(0, dp(4), 0, 0) }, full())
+        val ks = k?.optString("s") ?: w.optString("t")
+        if (ks.isNotBlank()) root.addView(tv(ks, 14.5f, sub, bold = true, center = true).also { it.setPadding(0, dp(2), 0, 0) }, full())
+
+        // 출근 · 퇴근 칸
+        val cards = ArrayList<org.json.JSONObject>()
+        if (cs != null) for (i in 0 until cs.length()) cs.optJSONObject(i)?.let { cards.add(it) }
+        val same = cards.size == 2 && cards[0].optString("w").isNotBlank() && cards[0].optString("w") == cards[1].optString("w")
+        if (cards.isNotEmpty()) {
+            val row = LinearLayout(this); row.orientation = LinearLayout.HORIZONTAL
+            for ((i, x) in cards.withIndex()) {
+                val hot = x.optBoolean("hot")
+                val cd = LinearLayout(this); cd.orientation = LinearLayout.VERTICAL; cd.gravity = Gravity.CENTER_HORIZONTAL
+                cd.setPadding(dp(6), dp(8), dp(6), dp(10))
+                cd.background = box(if (hot) wetBg else boxBg, boxLine)
+                val c1 = if (hot) wetInk else ink
+                cd.addView(tv(x.optString("l"), 13f, if (hot) wetInk else sub, bold = true, center = true))
+                x.optString("p").takeIf { it.isNotBlank() }?.let { cd.addView(tv(it, 11.5f, sub, center = true).also { v -> v.maxLines = 1; v.ellipsize = android.text.TextUtils.TruncateAt.END }) }
+                val sr = LinearLayout(this); sr.orientation = LinearLayout.HORIZONTAL; sr.gravity = Gravity.CENTER
+                wxImg(x.optString("sk"), 44)?.let { sr.addView(it) }
+                if (x.has("tp") && !x.isNull("tp")) sr.addView(tv("${x.optInt("tp")}°", 28f, c1, round = true))
+                cd.addView(sr)
+                cd.addView(tv(x.optString("d"), 12.5f, c1, bold = true, center = true))
+                if (!same) {
+                    wxImg(x.optString("w"), 60)?.let { val lp = LinearLayout.LayoutParams(dp(60), dp(60)); lp.topMargin = dp(4); cd.addView(it, lp) }
+                    x.optString("ws").takeIf { it.isNotBlank() }?.let { cd.addView(tv(it, 15.5f, c1, center = true, round = true)) }
+                }
+                val q = x.optString("q")
+                if (q.isNotBlank()) cd.setOnClickListener { openWeb(Weather.webUrl(q)) }
+                val lp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                if (i > 0) lp.leftMargin = dp(8)
+                row.addView(cd, lp)
             }
-            val q = r.optString("q")
-            if (q.isNotBlank()) {   // 줄을 누르면 그 지역 네이버 날씨 (잠금 화면이면 먼저 잠금 해제)
-                row.addView(tv("›", 18f, sub).also { it.setPadding(dp(6), 0, 0, 0) })
-                row.setOnClickListener { openWeb(Weather.webUrl(q)) }
-            }
-            card.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+            val lp = full(); lp.topMargin = dp(14)
+            root.addView(row, lp)
         }
-        // 옷차림 (출퇴근길 · 체감온도 · 비 · 바람 · 기온차)
-        val cl = w.optString("o"); val clx = w.optString("ox")
-        if (cl.isNotBlank()) {
-            val box = LinearLayout(this); box.orientation = LinearLayout.VERTICAL
-            box.setPadding(dp(12), dp(10), dp(12), dp(10))
-            val cbx = android.graphics.drawable.GradientDrawable(); cbx.cornerRadius = dp(12).toFloat(); cbx.setColor(line)
-            box.background = cbx
-            box.addView(tv(cl + (w.optString("ol").takeIf { it.isNotBlank() }?.let { "  ($it)" } ?: ""), 14f, ink, bold = true))
-            if (clx.isNotBlank()) box.addView(tv(clx, 12f, sub))
-            val olp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT); olp.topMargin = dp(8)
-            card.addView(box, olp)
+        fun line(bg: Int = boxBg): LinearLayout {
+            val l = LinearLayout(this); l.orientation = LinearLayout.HORIZONTAL; l.gravity = Gravity.CENTER_VERTICAL
+            l.setPadding(dp(12), dp(6), dp(12), dp(6)); l.background = box(bg, if (bg == boxBg) boxLine else bg)
+            val lp = full(); lp.topMargin = dp(8); l.layoutParams = lp
+            return l
         }
-        val air = w.optString("a"); val an = w.optString("an")
-        if (air.isNotBlank() || an.isNotBlank()) {
-            val box = LinearLayout(this); box.orientation = LinearLayout.VERTICAL
-            box.setPadding(dp(12), dp(10), dp(12), dp(10))
-            val ab = android.graphics.drawable.GradientDrawable(); ab.cornerRadius = dp(12).toFloat(); ab.setColor(line)
-            box.background = ab
-            box.addView(tv(if (air.isNotBlank()) air else "미세먼지", 14f, ink, bold = true))
-            if (an.isNotBlank()) box.addView(tv(an, 12f, sub))
-            val blp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT); blp.topMargin = dp(8)
-            card.addView(box, blp)
+        if (same) {
+            val l = line()
+            wxImg(cards[0].optString("w"), 50)?.let { l.addView(it) }
+            val col = LinearLayout(this); col.orientation = LinearLayout.VERTICAL; col.setPadding(dp(8), 0, 0, 0)
+            col.addView(tv(if (cards[0].optString("l").startsWith("오")) "오늘 하루" else "출근 · 퇴근 모두", 12f, sub))
+            col.addView(tv(cards[0].optString("wt").replace(" · ", " + "), 17f, ink, round = true))
+            l.addView(col); root.addView(l)
         }
+        // 챙길 것
+        val b = w.optJSONArray("b")
+        if (b != null && b.length() > 0) {
+            val l = line()
+            l.addView(tv("챙길 것", 15.5f, ink, round = true).also { it.setPadding(0, 0, dp(6), 0) })
+            val names = ArrayList<String>()
+            for (i in 0 until b.length()) { val x = b.optJSONObject(i) ?: continue; wxImg(x.optString("i"), 32)?.let { l.addView(it) }; names.add(x.optString("n")) }
+            l.addView(tv(names.joinToString(" · "), 13.5f, ink, bold = true).also { it.setPadding(dp(4), 0, 0, 0) })
+            root.addView(l)
+        }
+        // 미세먼지 (출근 · 퇴근 중 나쁜 쪽 · 다르면 한 줄 더)
+        val dz = w.optJSONArray("dz")
+        val zs = ArrayList<org.json.JSONObject>()
+        if (dz != null) for (i in 0 until dz.length()) dz.optJSONObject(i)?.let { zs.add(it) }
+        zs.sortWith(compareByDescending<org.json.JSONObject> { it.optInt("g") }.thenByDescending { it.optInt("lv") })
+        if (zs.isNotEmpty()) {
+            val w0 = zs[0]; val bad = w0.optInt("g") >= 3
+            val l = line(if (bad) badBg else boxBg)
+            wxImg(w0.optString("f"), 42)?.let { l.addView(it) }
+            val col = LinearLayout(this); col.orientation = LinearLayout.VERTICAL; col.setPadding(dp(8), 0, 0, 0)
+            val c1 = if (bad) badInk else ink
+            col.addView(tv("미세먼지 ${w0.optString("lb")}", 16f, c1, round = true))
+            val two = zs.size > 1 && zs[1].optInt("g") != w0.optInt("g")
+            col.addView(tv(if (two) "${w0.optString("p")}길(${w0.optString("n")}) ${w0.optString("m")}" else w0.optString("m"), 12.5f, c1, bold = true))
+            if (two) col.addView(tv("${zs[1].optString("p")}길(${zs[1].optString("n")})은 ${zs[1].optString("lb")}", 12f, c1).also { it.alpha = 0.75f })
+            l.addView(col); root.addView(l)
+        } else w.optString("a").takeIf { it.isNotBlank() }?.let { val l = line(); l.addView(tv(it, 14f, ink, bold = true)); root.addView(l) }
+
+        // 닫기 + 10초 게이지 (닫기 말고 아무 데나 누르면 멈춤)
         val btn = TextView(this)
         btn.text = "닫기"
-        btn.textSize = 17f
-        btn.typeface = Typeface.DEFAULT_BOLD
+        btn.textSize = 18f
+        btn.typeface = jua
         btn.gravity = Gravity.CENTER
         btn.setTextColor(if (night) 0xFF1D2335.toInt() else Color.WHITE)
         val bb = android.graphics.drawable.GradientDrawable(); bb.cornerRadius = dp(26).toFloat(); bb.setColor(ink)
         btn.background = bb
         btn.setOnClickListener { finish() }
-        val blp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(52)); blp.topMargin = dp(20)
+        val blp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(52)); blp.topMargin = dp(18)
         root.addView(btn, blp)
-        root.addView(tv("10초 뒤 저절로 닫혀요", 12f, sub, center = true).also { it.setPadding(0, dp(10), 0, 0) },
-            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        val note = tv(if (autoOff) "자동 닫기 멈춤 · 닫기를 눌러 주세요" else "10초 뒤 닫혀요 · 화면을 누르면 멈춰요", 12f, sub, center = true)
+        note.setPadding(0, dp(10), 0, dp(6))
+        root.addView(note, full())
+        val track = android.widget.FrameLayout(this)
+        val tb = android.graphics.drawable.GradientDrawable(); tb.cornerRadius = dp(3).toFloat(); tb.setColor((sub and 0x00FFFFFF) or 0x33000000)
+        track.background = tb
+        val bar = android.view.View(this)
+        val fb = android.graphics.drawable.GradientDrawable(); fb.cornerRadius = dp(3).toFloat(); fb.setColor(ink)
+        bar.background = fb
+        track.addView(bar, android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        bar.pivotX = 0f
+        root.addView(track, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(6)))
+        if (autoOff) track.visibility = android.view.View.GONE
         w.optString("src").takeIf { it.isNotBlank() }?.let {
-            root.addView(tv(it + if (cardFromFallback) " · 미리 받아 둔 예보" else "", 11f, sub, center = true).also { v -> v.alpha = 0.8f; v.setPadding(0, dp(18), 0, 0) },
-                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+            root.addView(tv(it + if (cardFromFallback) " · 미리 받아 둔 예보" else "", 11f, sub, center = true).also { v -> v.alpha = 0.8f; v.setPadding(0, dp(14), 0, 0) }, full())
         }
-        card.setOnClickListener { finish() }
-        frame.setOnClickListener { finish() }
+        val stopAuto = {
+            if (!autoOff) {
+                autoOff = true
+                handler.removeCallbacks(closeCard)
+                try { gauge?.cancel() } catch (e: Exception) { }
+                track.visibility = android.view.View.GONE
+                note.text = "자동 닫기 멈춤 · 닫기를 눌러 주세요"
+            }
+        }
+        // 화면 어디를 눌러도(스크롤 포함) 멈춤 — 닫기 버튼은 바로 닫힘, 칸은 날씨 페이지로 (dispatchTouchEvent 에서 봄)
+        closeBtn = btn
+        stopAutoFn = stopAuto
         setContentView(frame)
-        handler.postDelayed(closeCard, CARD_MS)
+        if (!autoOff) {
+            handler.postDelayed(closeCard, CARD_MS)
+            val an = android.animation.ValueAnimator.ofFloat(1f, 0f)
+            an.duration = CARD_MS
+            an.interpolator = android.view.animation.LinearInterpolator()
+            an.addUpdateListener { bar.scaleX = it.animatedValue as Float }
+            an.start()
+            gauge = an
+        }
     }
 
     /** 날씨 페이지 열기: 잠금 화면 위라면 잠금 해제를 먼저 묻고, 풀리면 브라우저로 (자동 닫힘은 멈춤) */
     private fun openWeb(url: String) {
         handler.removeCallbacks(closeCard)
+        try { gauge?.cancel() } catch (e: Exception) { }
         val go = {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
@@ -490,6 +577,7 @@ class AlarmActivity : Activity() {
     override fun onDestroy() {
         handler.removeCallbacks(closeCard)
         try { breathe?.cancel() } catch (e: Exception) { }
+        try { gauge?.cancel() } catch (e: Exception) { }
         try {
             unregisterReceiver(stopped)
         } catch (e: Exception) {

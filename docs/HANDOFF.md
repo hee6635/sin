@@ -39,3 +39,14 @@
 - 남은 일(TODO.md 참고): 폰에서 날씨 카드 · 날씨만 알림 확인 · 날씨 ② 자외선 · 깨진 가족 E2E 5개(fam6e · 8e · 9e · 10e · 13e — 시험 쪽 달 경계 문제) · 알람 실기기 확인 · 응원 버튼/내 상태 정리 여부 · 오늘 표시 모양 4→2 · 가족 무료 10건 정책 · 예시 광고/구독 화면 정리(출시 전) · 업무 일지 사진 링크(나중)
 - 시험: `bash tests/run-phone.sh`(s71 까지) · `TESTS=s42 TMO=600` · `cd firebase && npm test`(규칙 120) · `cd firebase/functions && npm test`(알림 19 + 날씨 16) · 가족 `TMO=600 bash tests/family/run1.sh fam16e` · `scripts/kotlin-check/check.sh`(BASE=1) · 위젯 그림 `scripts/kotlin-check/layout/run-month-real.sh <위젯json>`
 - 주의: `pkill -f` 쓰면 셸까지 죽음 · normalize 안에서는 아래쪽 const 쓰면 TDZ · 한 줄 normalize 에 `//` 주석 넣으면 뒤가 다 주석 됨 · **부가 기능을 새로 만들면 normalize 의 addons 목록(['comp',…,'wx'])에도 넣기** (안 넣으면 다시 열 때 꺼짐 — v0.100 에서 시험이 잡음)
+
+## v0.104 (덧붙임 · 2026-10-30) — 날씨 그림 · 둥근 글씨체 · 미세먼지 큰 화면
+- 그림: `app/src/main/assets/wx/{sky,wear,faces}/*.webp` (42개 · 361KB, 원본 PNG 는 `design/weather/`). 이름은 `'sky/rain'` · `'wear/coat'` · `'faces/4'` 처럼 → 앱 `wxImg(id)` · 코틀린 `assets.open("wx/$id.webp")`.
+- 글씨체: `assets/fonts/jua.ttf` (주아 · 자주 쓰는 한글 2,350자로 줄임 1.3MB) — 제목 · 기온 · 한마디에만. 본문은 폰 글씨체. (고운돋움은 용량 때문에 뺌)
+- `wxcore.js` 새 칸: commute/dayCard → `k`(한 줄 결론 {t,s,i}) · `c`(출근/퇴근 칸 {l,p,sk,tp,d,w,ws,wt,hot,q}) · `b`(챙길 것 {i,n} ≤3) · `dz`(미세먼지 출근/퇴근 {p,n,f,lb,m,g,lv}). `dustInfo(raw,now)` = 큰 화면 자료. 옛 칸(i,h,a,an,o,ox,r)은 그대로 (날씨만 알림 글이 씀).
+- 미세먼지: 지금 측정값이 있으면 그것 (예보가 더 나빠도 지금 값) · 출근(집) · 퇴근(직장) 따로 → 나쁜 쪽이 결론.
+- 서버 `wx.js`: 측정소 = 동 이름 TM 좌표(옛 방식) → 안 되면 전국 측정소 목록(`getMsrstnList`, 위도 · 경도, 한 달 저장 `stl`)에서 가까운 3곳. 못 쓰면 응답에 `qe`(까닭). 측정소 값에 `x`(통합대기지수 · 오존 · 이산화질소 · 일산화탄소 · 아황산가스 [값, 등급]). 캐시 열쇠 `st_…` 'v2' · `qs2_…`.
+- 앱: `wxPopHtml(title,sub,c,extra,dz)` 새 모양(.wxp.v2) · 미세먼지 칸 → `wxOpenDust` (`#pop.wxfull`, 뒤로 = 팝업으로). 위젯 자료 `days[].wx`(오늘 · 내일만, `wxWidget`) · `openDate "날짜#wx"` → 날씨 팝업.
+- 코틀린: `AlarmActivity.showCard` 새 모양 + 10초 게이지 · 닫기 말고 아무 데나 누르면 자동 닫기 멈춤(`dispatchTouchEvent`). 서버가 옛 모양(k 없음)이면 앱이 넣어 준 예비 문구(wxp) 사용. `WidgetDayActivity.wxRowView`: 앱 자료(12시간 안) → 창 열면 서버에서 새로 받아 바꿈.
+- **서버 다시 배포 필요** (functions): 새 칸(`x` · 측정소 목록 · `qe`)은 배포해야 나옴. 배포 전에도 앱은 동작 (표 · 측정소 이름만 빠짐).
+- 시험: 폰 `s73` (+ s71 · s72 고침) · 서버 `wx.test.mjs` 27개.

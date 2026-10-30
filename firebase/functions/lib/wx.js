@@ -200,7 +200,7 @@ async function fetchAirRt(deps, sido, now) {
 }
 
 // 미세먼지 가까운 측정소 (에어코리아 측정소정보): 동 이름 → TM 좌표 → 가까운 측정소 3곳 (지역마다 한 번 찾아 저장)
-async function fetchStations(deps, r) {
+async function fetchStationsTm(deps, r) {
   let umd = r.dn, sggTail = r.n.split(' ').filter(x => x !== r.dn).pop();
   if (!umd) {   // 시·군·구만 골랐으면: 그 시·군·구 대표 칸과 가장 가까운 동
     const l = dongsOf(r.c) || []; const d = l.slice().sort((a, b) => ((a[2] - r.nx) ** 2 + (a[3] - r.ny) ** 2) - ((b[2] - r.nx) ** 2 + (b[3] - r.ny) ** 2))[0];
@@ -214,20 +214,52 @@ async function fetchStations(deps, r) {
   if (!st.length) throw new Error('측정소 없음');
   return st;
 }
+// 동 이름으로 못 찾으면: 전국 측정소 목록(위도 · 경도, 한 달에 한 번 받음)에서 그 동네 격자와 가까운 3곳
+async function fetchStationsLl(deps, r) {
+  const ym = ymd(deps.now).slice(0, 6);
+  const all = await cached(deps, 'stl', ym, async () => {
+    const l = items(await getJson(deps, '/B552584/MsrstnInfoInqireSvc/getMsrstnList', { returnType: 'json', numOfRows: 1000, pageNo: 1, ver: '1.1' }));
+    const out = [];
+    for (const x of l) {
+      const a = num(x.dmX), b = num(x.dmY), n = String(x.stationName || '');
+      if (a == null || b == null || !n) continue;
+      out.push(a < 90 ? [n, a, b] : [n, b, a]);   // [이름, 위도, 경도] (칸 이름이 바뀌어 있어도)
+    }
+    if (!out.length) throw new Error('측정소 목록 없음');
+    return out;
+  });
+  if (!all.v) throw new Error(all.e || '측정소 목록 없음');
+  const [la, lo] = gridLL(r.nx, r.ny), c = Math.cos(la * Math.PI / 180);
+  return all.v.map(x => [x[0], (x[1] - la) ** 2 + ((x[2] - lo) * c) ** 2]).sort((a, b) => a[1] - b[1]).slice(0, 3).map(x => x[0]);
+}
+async function fetchStations(deps, r) {
+  try { return await fetchStationsTm(deps, r); } catch (e) {
+    if (deps.log) deps.log(`st_${r.c}`, 'TM: ' + e.message);
+    return fetchStationsLl(deps, r);
+  }
+}
 async function fetchStationRt(deps, st, now) {
   const l = items(await getJson(deps, '/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty', { returnType: 'json', numOfRows: 3, pageNo: 1, stationName: st, dataTerm: 'DAILY', ver: '1.0' }));
   const x = l.find(v => num(v.pm10Value) != null || num(v.pm25Value) != null);
   if (!x) throw new Error('측정값 없음');
-  return { t: String(x.dataTime || ''), p10: num(x.pm10Value) != null ? Math.round(num(x.pm10Value)) : null, p25: num(x.pm25Value) != null ? Math.round(num(x.pm25Value)) : null, st, b: rtBase(now) };
+  // 표에 쓸 것: 통합대기지수 · 오존 · 이산화질소 · 일산화탄소 · 아황산가스 [값, 등급 1~4] (점검 중 '-' 이면 뺌)
+  const gx = {};
+  for (const [k, v, g] of [['k', 'khaiValue', 'khaiGrade'], ['o3', 'o3Value', 'o3Grade'], ['no2', 'no2Value', 'no2Grade'], ['co', 'coValue', 'coGrade'], ['so2', 'so2Value', 'so2Grade']]) {
+    const n = num(x[v]); if (n == null) continue;
+    const gr = Math.round(num(x[g]) || 0); gx[k] = [n, gr >= 1 && gr <= 4 ? gr : 0];
+  }
+  return { t: String(x.dataTime || ''), p10: num(x.pm10Value) != null ? Math.round(num(x.pm10Value)) : null, p25: num(x.pm25Value) != null ? Math.round(num(x.pm25Value)) : null, st, x: gx, b: rtBase(now) };
 }
 async function stationAir(deps, r) {
-  const sl = await cached(deps, `st_${r.c}`, 'v1', () => fetchStations(deps, r));
-  if (!sl.v) return null;
+  const sl = await cached(deps, `st_${r.c}`, 'v2', () => fetchStations(deps, r));
+  if (!sl.v) return { e: sl.e || '측정소 못 찾음' };
+  let e = '';
   for (const st of sl.v) {   // 가장 가까운 측정소가 점검 중이면 다음 곳
-    const q = await cached(deps, `qs_${st}`, rtBase(deps.now), () => fetchStationRt(deps, st, deps.now));
-    if (q.v) return q.v;
+    const q = await cached(deps, `qs2_${st}`, rtBase(deps.now), () => fetchStationRt(deps, st, deps.now));
+    if (q.v) return { v: q.v };
+    e = q.e || e;
   }
-  return null;
+  return { e: e || '측정값 없음' };
 }
 
 // 지난 날짜 실제 관측 (기상청 ASOS 일자료): 그 달 하루마다 [최저, 최고, 강수 mm, 적설 cm] · 지난달까지는 한 번 받으면 안 바뀜
@@ -288,15 +320,16 @@ async function regionData(deps, code) {
     cached(deps, 'af', airBase(now), () => fetchAirFc(deps, now)),
     cached(deps, `q_${rtSido(r)}`, rtBase(now), () => fetchAirRt(deps, rtSido(r), now))
   ]);
-  const near = await stationAir(deps, r).catch(() => null);   // 가까운 측정소 값이 있으면 그것 (없으면 시·도 평균)
-  const out = { v: 1, r: r.c, n: r.n, s: s.v, m: m.v, a: null, q: near || rt.v || null };
+  const near = await stationAir(deps, r).catch(e => ({ e: e.message }));   // 가까운 측정소 값이 있으면 그것 (없으면 시·도 평균)
+  const out = { v: 1, r: r.c, n: r.n, s: s.v, m: m.v, a: null, q: near.v || rt.v || null };
   if (af.v && af.v.d) {   // 전국 예보에서 이 지역 몫만
     const names = aqNames(r), d = {};
     for (const [day, regs] of Object.entries(af.v.d)) { const nm = names.find(x => regs[x]); if (nm) d[day] = regs[nm]; }
     out.a = { b: af.v.b, d };
   }
-  const e = {}; if (s.e) e.s = s.e; if (m.e) e.m = m.e; if (af.e) e.a = af.e; if (rt.e) e.q = rt.e;
+  const e = {}; if (s.e) e.s = s.e; if (m.e) e.m = m.e; if (af.e) e.a = af.e; if (rt.e) e.q = rt.e; 
   if (Object.keys(e).length) out.e = e;
+  if (near.e) out.qe = String(near.e).slice(0, 80);   // 가까운 측정소를 못 쓴 까닭 (시·도 평균일 때 원인 보기 · 주소창에서 ?r= 로 확인)
   return out;
 }
 

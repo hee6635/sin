@@ -392,6 +392,7 @@ class WidgetDayActivity : Activity() {
 
             val far = day.optInt("far", 0)   // 0 = 자세히(앞 6일 ~ 뒤 14일) · 1 = 먼 앞날 · 2 = 지난 날
             wlBox = null
+            if (pj == null) wxRowView(day, pal)?.let { content.addView(it) }   // 날씨 한 줄 (오늘 · 내일 · 날씨를 켠 사람만) → 누르면 앱 날씨 팝업
             if (pj == null) wlRowView(day, pal)?.let { wlBox = it; content.addView(it) }   // 업무 일지 줄(표시만 · 내 달력일 때만) → 누르면 앱 일지 팝업
             if (pj != null) {
                 // 가족 달력: 그 사람이 공유한 스티커 · 가족 메모(♥)만 — 보기만 (체크는 못 함)
@@ -570,6 +571,85 @@ class WidgetDayActivity : Activity() {
     private var wlCanView = false
     private val wlOthers = ArrayList<View>()
     private fun wlApplyOthers() { val hide = wlOpen && wlCanView; for (v in wlOthers) v.visibility = if (hide) View.GONE else View.VISIBLE }
+
+    /* 날씨 한 줄: [날씨 그림 9°] → [날씨 그림 13°] [미세먼지 얼굴] 퇴근길에 비 와요 / 우산 · 마스크  ›
+     * 앱이 넣어 둔 것(12시간 안)을 먼저 보여 주고, 창을 열면 서버에서 새로 받아 바꿈 */
+    private val wxFresh = HashMap<String, JSONObject>()
+    private val wxAsked = HashSet<String>()
+    private val wxImgs = HashMap<String, android.graphics.Bitmap?>()
+    private val jua: Typeface by lazy { try { Typeface.createFromAsset(assets, "fonts/jua.ttf") } catch (e: Exception) { Typeface.DEFAULT_BOLD } }
+    private fun wxImg(id: String, size: Int): ImageView? {
+        if (!Regex("^(sky|wear|faces)/[a-z0-9_]+$").matches(id)) return null
+        val bm = wxImgs.getOrPut(id) { try { assets.open("wx/$id.webp").use { android.graphics.BitmapFactory.decodeStream(it) } } catch (e: Exception) { null } } ?: return null
+        val v = ImageView(this); v.setImageBitmap(bm); v.scaleType = ImageView.ScaleType.FIT_CENTER
+        v.layoutParams = LinearLayout.LayoutParams(dp(size), dp(size))
+        return v
+    }
+    private fun wxRowView(day: JSONObject, pal: Pal): View? {
+        val key = day.optString("k", "")
+        val base = day.optJSONObject("wx") ?: return null
+        val q = base.optString("q", "")
+        if (q.isNotEmpty() && wxAsked.add(key)) Thread {
+            val f = Weather.fetch(q, 6000)
+            if (f != null && f.has("k")) runOnUiThread { if (!isFinishing) { wxFresh[key] = f; if (this.key == key) build(0) } }
+        }.start()
+        val f = wxFresh[key]
+        // 화면에 쓸 모양으로 (새로 받은 것 = 서버 출퇴근 문구 · 앱이 넣어 둔 것 = 줄인 모양)
+        val t: String; val sub: String; val cells = ArrayList<Pair<String, Int?>>(); var face = ""; var wet = false
+        if (f != null) {
+            val k = f.optJSONObject("k")
+            t = k?.optString("t") ?: ""
+            val b = f.optJSONArray("b")
+            val names = ArrayList<String>()
+            if (b != null) for (i in 0 until b.length()) b.optJSONObject(i)?.optString("n")?.let { if (it.isNotEmpty()) names.add(it) }
+            sub = if (names.isNotEmpty()) names.joinToString(" · ") else k?.optString("s") ?: ""
+            val cs = f.optJSONArray("c")
+            if (cs != null) for (i in 0 until Math.min(2, cs.length())) { val x = cs.optJSONObject(i) ?: continue; cells.add(Pair(x.optString("sk"), if (x.has("tp") && !x.isNull("tp")) x.optInt("tp") else null)); if (x.optBoolean("hot")) wet = true }
+            val dz = f.optJSONArray("dz")
+            var g = -1; var lv = -1
+            if (dz != null) for (i in 0 until dz.length()) { val z = dz.optJSONObject(i) ?: continue; if (z.optInt("g") > g || (z.optInt("g") == g && z.optInt("lv") > lv)) { g = z.optInt("g"); lv = z.optInt("lv"); face = z.optString("f") } }
+        } else {
+            if (System.currentTimeMillis() - base.optLong("at", 0) > 12 * 3600_000L) return null   // 너무 오래된 예보는 안 보여 줌
+            t = base.optString("t", ""); sub = base.optString("s", ""); face = base.optString("f", ""); wet = base.optInt("wet", 0) == 1
+            val cs = base.optJSONArray("c")
+            if (cs != null) for (i in 0 until Math.min(2, cs.length())) { val x = cs.optJSONArray(i) ?: continue; cells.add(Pair(x.optString(0, ""), if (x.isNull(1)) null else x.optInt(1))) }
+        }
+        if (t.isEmpty()) return null
+        val dark = pal.bg != 0xFFFFFFFF.toInt()
+        val ink = if (wet) (if (dark) 0xFFCFE0FF.toInt() else 0xFF22406E.toInt()) else pal.fg
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.HORIZONTAL
+        row.gravity = Gravity.CENTER_VERTICAL
+        row.setPadding(dp(10), dp(8), dp(12), dp(8))
+        row.background = rounded(if (wet) (if (dark) 0xFF22345A.toInt() else 0xFFE7EFFB.toInt()) else pal.chip, 16)
+        for ((i, c) in cells.withIndex()) {
+            if (i > 0) row.addView(tv("→", 13f, pal.sub, false).also { it.setPadding(dp(2), 0, dp(2), 0) })
+            wxImg(c.first, 30)?.let { row.addView(it) }
+            c.second?.let { row.addView(TextView(this).also { v -> v.text = "$it°"; v.textSize = 18f; v.setTextColor(ink); v.typeface = jua }) }
+        }
+        wxImg(face, 30)?.let { val lp = LinearLayout.LayoutParams(dp(30), dp(30)); lp.leftMargin = dp(6); row.addView(it, lp) }
+        val col = LinearLayout(this)
+        col.orientation = LinearLayout.VERTICAL
+        col.setPadding(dp(8), 0, 0, 0)
+        col.addView(TextView(this).also { v -> v.text = t; v.textSize = 15f; v.setTextColor(ink); v.typeface = jua; v.maxLines = 1; v.ellipsize = android.text.TextUtils.TruncateAt.END })
+        if (sub.isNotEmpty()) col.addView(tv(sub, 12f, if (wet) ink else pal.sub, true).also { it.maxLines = 1; it.ellipsize = android.text.TextUtils.TruncateAt.END })
+        row.addView(col, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        row.addView(tv("›", 18f, pal.sub, true))
+        row.setOnClickListener {
+            val go = Intent(this, MainActivity::class.java)
+            go.putExtra("openDate", "$key#wx")
+            go.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            startActivity(go)
+            finish()
+        }
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.VERTICAL
+        box.addView(row)
+        val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        lp.bottomMargin = dp(10)
+        box.layoutParams = lp
+        return box
+    }
 
     private fun wlRowView(day: JSONObject, pal: Pal): View? {
         val w = day.optJSONObject("wlr") ?: return null

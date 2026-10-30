@@ -205,7 +205,7 @@ await ok('미세먼지 8단계 (지금 값) · 마스크 안내 · 예보는 4�
   assert.equal(L(120, 10), '😫 미세먼지 매우 나쁨 · KF94 마스크 꼭 · 밖에 오래 있지 마세요');   // 둘 중 나쁜 쪽
   assert.equal(L(200, 90), '☠️ 미세먼지 최악 · KF94 마스크 꼭 · 바깥 활동은 줄여요');
   assert.equal(C.airLine(C.air({ a: { d: { [dk]: [4, 1] } } }, dk, null)), '😫 미세먼지 매우 나쁨 · KF94 마스크 꼭');
-  assert.equal(C.airLine(C.air({ a: { d: { [dk]: [3, 1] } }, q: { p10: 20, p25: 5 } }, dk, now)), '😷 미세먼지 나쁨 · KF80 마스크 챙겨요');   // 지금은 좋아도 예보가 나쁘면 예보
+  assert.equal(C.airLine(C.air({ a: { d: { [dk]: [3, 1] } }, q: { p10: 20, p25: 5 } }, dk, now)), '🙂 미세먼지 좋음 · 마스크 필요 없어요');   // 지금 측정값이 있으면 지금 값 (예보는 따로)
 });
 await ok('출퇴근 문구 · 쉬는 날 문구에 옷차림 줄', async () => {
   const d = deps();
@@ -241,9 +241,9 @@ await ok('지난 날짜 관측 (ASOS): 가까운 관측소 · 어제까지 · �
   };
   const v = await W.pastData(deps({ body }), '41111', '202610');
   assert.equal(asked[0], '119'); assert.equal(v.st, '서울'); assert.deepEqual(v.d['20261028'], [6, 12, 8.5, 0]);
-  assert.deepEqual(C.pastLine(v.d['20261028']), { i: '☔', t: '6°~12° · 비 9mm' });
+  assert.deepEqual(C.pastLine(v.d['20261028']), { i: '☔', sk: 'sky/rain', t: '6°~12° · 비 9mm' });
   assert.deepEqual(C.pastLine(v.d['20261029']), { i: '🌡', t: '3°~15°' });
-  assert.deepEqual(C.pastLine([-3, 1, 2, 3]), { i: '❄️', t: '-3°~1° · 눈 3cm' });
+  assert.deepEqual(C.pastLine([-3, 1, 2, 3]), { i: '❄️', sk: 'sky/snow', t: '-3°~1° · 눈 3cm' });
   const f = await W.pastData(deps(), '41111', '202612'); assert.deepEqual(f.d, {});   // 앞으로의 달 = 빈 값
   const h = await W.handle(deps({ body }), { past: '41111', ym: '202610' }); assert.equal(h.status, 200); assert.equal(h.cache, 3600);
 });
@@ -253,6 +253,65 @@ await ok('날씨 페이지 검색어: 출근 줄 = 집 · 퇴근 줄 = 직장 ·
   assert.equal(c.r[0].q, '경기 수원시 장안구'); assert.equal(c.r[1].q, '경기 화성시 동탄구');
   assert.equal(C.naver('경기 수원시 장안구'), 'https://m.search.naver.com/search.naver?query=' + encodeURIComponent('경기 수원시 장안구 날씨'));
   const y = (await W.handle(deps(), { h: '41111', d: '20261031' })).body; assert.ok(y.r.every(x => x.q === '경기 수원시 장안구'));
+});
+await ok('그림 화면용: 한 줄 결론 · 출근/퇴근 칸(날씨 그림 · 옷) · 챙길 것 · 미세먼지 출근/퇴근 따로', async () => {
+  W._resetFail();
+  const d = deps();
+  const c = (await W.handle(d, { h: '41111', w: '41597', s: '202610300700', e: '202610301900' })).body;
+  assert.deepEqual(c.k, { t: '퇴근길에 비 와요', s: '우산 챙기세요 · 오후 5시부터', i: 'wear/umbrella' });
+  assert.equal(c.c.length, 2); assert.equal(c.c[0].l, '출근 07:00'); assert.equal(c.c[0].sk, 'sky/cloudy'); assert.equal(c.c[1].sk, 'sky/rain');
+  assert.equal(c.c[0].w, 'wear/coat'); assert.equal(c.c[0].ws, '코트'); assert.equal(c.c[1].hot, true); assert.equal(c.c[1].d, '비 70%');
+  assert.deepEqual(c.b.slice(0, 2).map(x => x.n), ['큰 우산', '장화']);   // 3mm 비 = 큰 우산 · 장화
+  assert.ok(c.b.length <= 3);
+  assert.equal(c.dz.length, 2); assert.deepEqual(c.dz.map(x => x.p), ['출근', '퇴근']);
+  assert.ok(c.dz.every(x => /^faces\/[0-7]$/.test(x.f)));
+  // 밤이면 달 · 맑은 낮이면 해
+  assert.equal(C.sky({ pty: 0, pop: 0, sky: 1 }, KST(2026, 10, 30, 22)), 'sky/moon');
+  assert.equal(C.sky({ pty: 0, pop: 0, sky: 1 }, KST(2026, 10, 30, 12)), 'sky/sun');
+  assert.equal(C.sky({ pty: 4, pop: 60, sky: 4 }, KST(2026, 10, 30, 12)), 'sky/shower');
+  assert.equal(C.skyT('흐리고 비/눈'), 'sky/sleet'); assert.equal(C.skyT('구름많음', 70), 'sky/rain');
+  // 쉬는 날도 같은 모양 (오전 · 오후 칸)
+  const y = (await W.handle(d, { h: '41111', d: '20261031' })).body;
+  assert.ok(y.k && y.k.t); assert.deepEqual(y.c.map(x => x.l), ['오전', '오후']); assert.ok(y.c.every(x => x.sk && x.w));
+});
+await ok('미세먼지: 출근·퇴근 동네 중 나쁜 쪽이 결론 · 얼굴 8단계 · 챙길 것에 마스크', () => {
+  const now = KST(2026, 10, 30, 6), dk = '20261030';
+  const sh = { s: { h: { '2026103007': [12, 0, 0, 1, 0, 1, 50], '2026103019': [14, 0, 0, 1, 0, 1, 50] } } };
+  const home = Object.assign({ q: { p10: 20, p25: 6, st: '효곡동' } }, sh), work = Object.assign({ q: { p10: 90, p25: 40, st: '대송면' } }, sh);
+  const c = C.commute(home, work, { s: KST(2026, 10, 30, 7), e: KST(2026, 10, 30, 19), hn: '집 · 효곡동', wn: '직장 · 대송면', now });
+  assert.deepEqual(c.dz.map(x => [x.p, x.n, x.f, x.lb]), [['출근', '효곡동', 'faces/1', '좋음'], ['퇴근', '대송면', 'faces/5', '상당히 나쁨']]);
+  assert.equal(c.k.t, '미세먼지 상당히 나쁨'); assert.match(c.k.s, /^퇴근길\(대송면\) KF94/); assert.equal(c.k.i, 'faces/5');
+  assert.ok(c.b.some(x => x.i === 'wear/mask'));
+  assert.equal(c.ag, 3);
+  // 예보 4단계는 얼굴 1 · 3 · 4 · 6
+  assert.deepEqual([1, 2, 3, 4].map(g => C.dustOf({ g, lv: -1 }).f), ['faces/1', 'faces/3', 'faces/4', 'faces/6']);
+  assert.equal(dk.length, 8);
+});
+await ok('미세먼지 큰 화면 자료: 지금 값 · 항목 표 · 오늘부터 3일 예보', () => {
+  const now = KST(2026, 10, 30, 8);
+  const raw = { q: { p10: 62, p25: 41, st: '대잠동', t: '2026-10-30 07:00', x: { k: [112, 3], o3: [0.031, 2], co: [0.4, 1] } }, a: { d: { '20261029': [1, 1], '20261030': [3, 2], '20261031': [2, 2], '20261101': [1, 1], '20261102': [1, 1] } } };
+  const d = C.dustInfo(raw, now);
+  assert.equal(d.lb, '상당히 나쁨'); assert.equal(d.f, 'faces/5'); assert.equal(d.l10, 4); assert.equal(d.l25, 5);
+  assert.deepEqual(d.x, [['통합대기지수', 112, '', 3], ['오존', 0.031, 'ppm', 2], ['일산화탄소', 0.4, 'ppm', 1]]);
+  assert.deepEqual(d.fc, [['20261030', 3], ['20261031', 2], ['20261101', 1]]);
+  assert.equal(C.dustInfo(null, now), null);
+});
+await ok('측정소: 동 이름으로 못 찾으면 전국 측정소 목록(위도 · 경도)에서 가까운 곳 · 표 항목도 받음', async () => {
+  W._resetFail();
+  const asked = [];
+  const body = url => {
+    if (/getTMStdrCrdnt/.test(url)) return wrap([]);   // 동 이름으로는 못 찾음
+    if (/getMsrstnList/.test(url)) return wrap([{ stationName: '먼곳', dmX: '35.0', dmY: '129.0' }, { stationName: '대잠동', dmX: '36.02', dmY: '129.35' }, { stationName: '장흥동', dmX: '35.99', dmY: '129.40' }]);
+    if (/getMsrstnAcctoRltmMesureDnsty/.test(url)) { asked.push(decodeURIComponent(url.match(/stationName=([^&]+)/)[1])); return wrap([{ dataTime: '2026-10-30 05:00', pm10Value: '33', pm25Value: '12', khaiValue: '58', khaiGrade: '2', o3Value: '0.021', o3Grade: '1', so2Value: '-', so2Grade: '' }]); }
+    return null;
+  };
+  const D = req('../lib/wxDongs.json'), hg = D['47111'].find(x => x[1] === '효곡동')[0];
+  const r = await W.regionData(deps({ body }), hg);
+  assert.equal(r.q.st, '대잠동'); assert.equal(asked[0], '대잠동');
+  assert.deepEqual(r.q.x, { k: [58, 2], o3: [0.021, 1] });
+  assert.ok(!r.qe);
+  W._resetFail();
+  const r2 = await W.regionData(deps(), hg); assert.equal(r2.q.w, '경북'); assert.ok(r2.qe);   // 둘 다 안 되면 시·도 평균 + 까닭
 });
 await ok('시각 글자(YYYYMMDDHHmm) → ms (한국 시간)', () => assert.equal(W.stampMs('202610300700'), KST(2026, 10, 30, 7)));
 console.log(`\n${n} 통과`);
