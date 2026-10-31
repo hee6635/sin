@@ -94,3 +94,4 @@
 - 날씨 팝업: 안쪽 스크롤 칸 `.wxp` 가 touch-action auto 라 폰이 옆 밀기를 가져감(pointercancel) → `.wxp` 에도 pan-y. s75 에 진짜 터치(CDP) 시험 추가.
 - 옆 판 swSide: 창 안쪽 여백(padding)만큼 left/top/width 맞춤 (날짜 창이 16px 더 크게 보였다 줄던 것).
 - 밀어서 넘길 땐 진동 없음 (goDay(k,quiet)).
+- 업무 메모: 옆 판의 .wlta 도 wlGrow 로 높이 미리 맞춤.

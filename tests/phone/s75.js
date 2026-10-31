@@ -41,6 +41,18 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     else T('스티커 창 열기 (시험 준비)',false,t1.slice(0,60));
     T('오류 없음 (스티커)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
+  { // 업무 메모: 옆에 붙어 오는 날짜의 칸 높이가 넘어간 뒤와 같음 (넘어가서 칸이 늘어나는 느낌 없게)
+    const p=await boot(b,{...base,addons:{...base.addons,wlog:true},wlog:{name:'업무 메모',seen:true,days:{'2026-10-14':{a:'인수할 것'},'2026-10-15':{a:'내일 것\n둘째 줄\n셋째\n넷째'}}}},{touch:true});
+    await p.evaluate(()=>__wx.openDay('2026-10-14'));await p.waitForTimeout(300);
+    await p.evaluate(()=>document.querySelector('#sheet [data-act="wl-open"]').click());await p.waitForTimeout(400);
+    const mid=await p.evaluate(()=>{const e=document.querySelector('#pop .wlp');const b=e.getBoundingClientRect();const x=b.left+b.width/2,y=b.top+30,t=document.elementFromPoint(x,y);
+      window.__ev=(ty,xx)=>t.dispatchEvent(new PointerEvent(ty,{bubbles:true,clientX:xx,clientY:y,pointerId:1}));window.__x=x;__ev('pointerdown',x);for(let i=1;i<=6;i++)__ev('pointermove',x-120*i/6);
+      return [...document.querySelectorAll('#pop .swn .wlta')].map(t=>t.offsetHeight).join(',');});
+    await p.evaluate(()=>__ev('pointerup',__x-120));await p.waitForTimeout(800);
+    const after=await p.evaluate(()=>[...document.querySelectorAll('#pop .wlta')].map(t=>t.offsetHeight).join(','));
+    T('업무 메모: 붙어 오는 칸 높이 = 넘어간 뒤 높이',mid===after&&/^1\d\d,/.test(mid),mid+' / '+after);
+    T('오류 없음 (메모 칸 높이)',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
   { // 날씨 팝업도 옆으로 밀면 다음날 · 업무 메모 안 쓰는 칸 위에서 밀어도 넘어감 · 근무타입 편집 창에서 시간 저장
     const h={};for(let d=11;d<=16;d++)for(let x=0;x<24;x++)h[`202610${p2(d)}${p2(x)}`]=[8+x%5,10,0,1,0,2,50];
     const raw={v:1,r:'41111',n:'',s:{b:'202610120500',h,n:{}},m:{b:'',d:{}},a:{b:'',d:{}},q:null};
