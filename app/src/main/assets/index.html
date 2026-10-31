@@ -1530,6 +1530,13 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .wxcard .wb{display:flex;align-items:center;gap:6px;margin-top:8px;padding:5px 10px;border-radius:14px;background:rgba(255,255,255,.55);font-size:13px;font-weight:800}
 .wxcard .wb .wc{display:flex;align-items:center;gap:3px}.wxcard .wb img{width:34px;height:34px;object-fit:contain}.wxcard .wb em{font-style:normal;font-family:Jua,sans-serif;font-weight:400;font-size:21px;color:var(--fg)}.wxcard .wb .ar{opacity:.5}.wxcard .wb img.f{margin-left:auto;width:38px;height:38px}
 .wxl.al2{background:#fde3e3;color:#8a1c1c}.wxl.al1{background:#fff3c9;color:#6e5200}
+.nc.me2 .mtop{display:flex;align-items:center;gap:10px}.nc.me2 .mav{flex:none;display:inline-flex;width:38px;height:38px;border-radius:50%;background:#1d2330;color:#fff;font-style:normal;font-weight:800;align-items:center;justify-content:center;font-size:16px}
+.nc.me2 .mst{flex:1;min-width:0;font-size:14px;font-weight:800}.nc.me2 .mst small{font-size:12.5px;font-weight:700;color:var(--muted)}.nc.me2 .mst .bar{margin-top:5px}
+.nc.me2.big .mst-t{font-size:24px}.nc.me2.big .sm{margin-top:8px;font-size:13.5px}.nc.me2.big .bar{height:8px;margin-top:8px}
+.nc.me2 .wxcard{margin:12px 0 0;background:rgba(255,255,255,.6)}.nc.me2 .wxcard.wet{background:#e7effb}.nc.me2 .wxcard.bad{background:#fdeedd}
+@keyframes swl{from{transform:translateX(36px);opacity:.4}to{transform:none;opacity:1}}@keyframes swr{from{transform:translateX(-36px);opacity:.4}to{transform:none;opacity:1}}
+.sw-l{animation:swl .22s ease-out}.sw-r{animation:swr .22s ease-out}
+@media (prefers-reduced-motion:reduce){.sw-l,.sw-r{animation:none}}
 #pop.wxfull{align-items:stretch;background:rgba(0,0,0,.5)}#pop.wxfull .menu{width:100%;max-width:560px;margin:0;border-radius:0;background:var(--dc,#5cb85c);box-shadow:none;overflow:auto}
 .wxd{min-height:100%;padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(18px + env(safe-area-inset-bottom,0px));color:#fff;text-align:center;box-sizing:border-box}
 .wxd .top{display:flex;align-items:center;gap:8px}.wxd .tabs{flex:1;display:flex;gap:5px;padding:4px;border-radius:13px;background:rgba(0,0,0,.14)}
@@ -3601,31 +3608,21 @@ function dayPlan(d,k){
 }
 // 지금 내 상태 {key,e,t,sub,prog,phone}
 function myStatus(now){
+  // v0.107: 세 가지만 — 근무 중(막대 · 몇 시 끝) / 쉬는 중(다음 근무) / 휴무 (예전 식사 · 쉬는 시간 · 나서기 · 귀가 · 수면 단계는 없앰)
   now=now||Date.now();const d0=new Date(now),day=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate());
-  const hhmm=ms=>{const x=new Date(ms);return `${pad(x.getHours())}:${pad(x.getMinutes())}`;};
-  const mk=(key,sub,extra)=>Object.assign({key,...stLabel(key),sub},extra||{});
+  const mk=(key,e,t,sub,extra)=>Object.assign({key,e,t,sub},extra||{});
   for(const off of [-1,0]){
     const d=addDays(day,off),k=shiftOf(d);if(isRest(k))continue;
-    const p=dayPlan(d,k),nm=shiftLabel(k);
-    if(now>=p.leave&&now<p.start)return mk('commute',`${nm} ${p.t.start} 시작`,{phone:true});
-    if(now>=p.start&&now<p.end){
-      const prog=(now-p.start)/(p.end-p.start),left=`퇴근까지 ${remain(p.end-now)}`;
-      if(p.meal&&now>=p.meal[0]&&now<p.meal[1]){const m=mealOf(p.t),r=mk(m.night?'night':'meal',`${hhmm(p.meal[1])}까지`,{phone:true,prog,src:{k,i:'m'}});if(p.t.meal.icon)r.e=p.t.meal.icon;if(p.t.meal.name)r.t=p.t.meal.name;return r;}
-      const bi=p.breaks.findIndex(b=>now>=b[0]&&now<b[1]),br=p.breaks[bi];if(br){const r=mk('brk',`${hhmm(br[1])}까지`,{phone:true,prog,src:{k,i:bi}});if(br.icon)r.e=br.icon;if(br.name)r.t=br.name;return r;}
-      return mk('work',`${nm} · ${left}`,{phone:false,prog,startT:p.t.start,endT:p.t.end});
-    }
-    if(now>=p.end&&now<p.home)return mk('back',`${hhmm(p.home)} 도착 예정`,{phone:true});
-    if(p.sleep&&now>=p.sleep[0]&&now<p.sleep[1])return mk('sleep',`깨우지 마세요 · ${hhmm(p.sleep[1])}까지`,{phone:false});
-    if(now>=p.home&&now<p.home+3600e3)return mk('home','수고했어요!',{phone:true});
+    const p=dayPlan(d,k);
+    if(now>=p.start&&now<p.end)return mk('work',stLabel('work').e||'💼','근무 중',`${shiftLabel(k)} · ${p.t.end} 끝`,{prog:(now-p.start)/(p.end-p.start),left:`퇴근까지 ${remain(p.end-now)}`,startT:p.t.start,endT:p.t.end});
   }
-  // 쉬는 중: 다음 근무 안내
+  let next='';
   for(let i=0;i<10;i++){
     const d=addDays(day,i),k=shiftOf(d);if(isRest(k))continue;
-    const p=dayPlan(d,k);if(p.leave<=now)continue;
-    const when=i===0?'오늘':i===1?'내일':`${d.getMonth()+1}/${d.getDate()}`;
-    return mk('rest',`${when} ${shiftLabel(k)} · ${p.t.start} 시작`,{phone:true});
+    const p=dayPlan(d,k);if(p.start<=now)continue;
+    next=`${i===0?'오늘':i===1?'내일':`${d.getMonth()+1}/${d.getDate()}`} ${shiftLabel(k)} · ${p.t.start} 시작`;break;
   }
-  return mk('rest','',{phone:true});
+  return isRest(shiftOf(day))?mk('off','🏖','휴무',next):mk('rest','🙂','쉬는 중',next);
 }
 /* 시간 · 날짜 고르기 버튼: 폰 기본 선택창 대신 앱 안의 고르기 창을 띄움 (폰에 따라 기본 창이 안 뜨는 일이 있어서)
  * 값은 같은 id 의 숨은 입력칸에 넣고 'change' 를 보내서, 값을 받는 원래 코드는 그대로 씀 */
@@ -4675,12 +4672,17 @@ function renderFamily(){
   const workerName=isHost?'나':'근무자';
   // 이름 줄: 혼자면 없음, 가족이 있으면 "나" 동그라미만 (나 나 두 번 안 쓰게)
   const meWho=isHost?(fam.length?'<div class="nwho"><i style="background:#1d2330">나</i></div>':''):'<div class="nwho"><i style="background:#1d2330">근</i>근무자</div>';
-  const meCard=`<div class="nc w ${st.key==='sleep'?'sl':''}" ${isHost?'data-act="fam-mytime"':''}>
-      ${meWho}
-      <div class="st">${st.e?ico(st.e)+' ':''}${esc(st.t)}</div>
+  // 내 카드 (v0.107): 상태는 "나" 옆 · 날씨를 켰으면 상태는 작게 + 날씨 카드 크게, 안 켰으면 상태를 크게
+  const myWx=isHost&&wxOn()&&wxRaw(S.wx.home)?(()=>{try{return wxMine(new Date(now),now);}catch(e){return null;}})():null;
+  const av=isHost?'<i class="mav">나</i>':'<i class="mav">근</i>';
+  const stLine=`<span class="mst-t">${st.e?ico(st.e)+' ':''}${esc(st.t)}</span>${st.sub?`<small> · ${esc(st.sub)}</small>`:''}`;
+  const meCard=myWx?`<div class="nc w me2" data-act="fam-mytime">
+      <div class="mtop">${av}<div class="mst">${stLine}${st.prog!==undefined?`<div class="bar"><i style="width:${Math.round(st.prog*100)}%"></i></div>`:''}</div></div>
+      ${wxCardHtml(myWx,wxCls(myWx),'data-act="wx-fam" data-u="me"')}
+    </div>`:`<div class="nc w me2 big" ${isHost?'data-act="fam-mytime"':''}>
+      <div class="mtop">${av}<div class="mst"><span class="mst-t">${st.e?ico(st.e)+' ':''}${esc(st.t)}</span></div></div>
+      <div class="sm">${esc([st.sub,st.left].filter(Boolean).join(' · '))}</div>
       ${st.prog!==undefined?`<div class="bar"><i style="width:${Math.round(st.prog*100)}%"></i></div>`:''}
-      <div class="sm">${esc(st.sub||'')}</div>
-      ${isHost?wxFamChip('me',now):''}
     </div>`;
   const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);return `<div class="nc ${l==='자는 중'?'sl':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-mancal" data-id="${m.id}" data-hold="fam"`}>${m.kind==='sched'?'':`<span class="mced" data-act="fam-edit" data-id="${m.id}" aria-label="고치기">✏️</span>`}<div class="nwho">${famAv(m,i)}${esc(m.name)}</div><div class="st">${e?ico(e)+' ':''}${esc(l)}</div><div class="sm">${esc(sub)}</div>${wxFamChip(m,now)}</div>`;}).join('');
   const cheerBtns='';   // v0.106: 응원 버튼 없앰
@@ -5557,12 +5559,22 @@ function goDay(k){
   if(d.getFullYear()!==cur.y||d.getMonth()!==cur.m){cur={y:d.getFullYear(),m:d.getMonth()};render();}
   buzz(6);openDay(k);
 }
-// 날짜 화면 위쪽(제목 · 3일 띠)을 옆으로 밀면 전날 · 다음날
+// 날짜 창 · 업무 메모 창을 옆으로 밀면 전날 · 다음날 (v0.107: 창 어디서나 — 옆으로 밀어 보는 곳 · 글 쓰는 칸은 빼고)
 let dsw=null;
-document.addEventListener('pointerdown',e=>{const el=e.target.closest&&e.target.closest('.dfh');dsw=el&&sheetMode==='day'?{x:e.clientX,y:e.clientY}:null;});
+const SW_SKIP='.dstrip,.tchips,input,textarea,select,[contenteditable],.wxhs,.stk-row,.noswipe';
+document.addEventListener('pointerdown',e=>{
+  const t=e.target;dsw=null;if(!t.closest||t.closest(SW_SKIP))return;
+  if(sheetMode==='day'&&t.closest('#sheet.open'))dsw={x:e.clientX,y:e.clientY,w:'day'};
+  else if(wlEd&&!wlEd.ren&&t.closest('#pop.wl-pop'))dsw={x:e.clientX,y:e.clientY,w:'wl'};
+});
+document.addEventListener('pointercancel',()=>{dsw=null;});
+function swAnim(el,dir){if(!el)return;el.classList.remove('sw-l','sw-r');void el.offsetWidth;el.classList.add(dir>0?'sw-l':'sw-r');setTimeout(()=>el.classList.remove('sw-l','sw-r'),260);}
 document.addEventListener('pointerup',e=>{
-  if(!dsw||!sheetKey)return;const dx=e.clientX-dsw.x,dy=e.clientY-dsw.y;dsw=null;
-  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){held=true;setTimeout(()=>{held=false;},50);goDay(addK(sheetKey,dx<0?1:-1));}
+  if(!dsw)return;const dx=e.clientX-dsw.x,dy=e.clientY-dsw.y,w=dsw.w;dsw=null;
+  if(!(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.6))return;
+  const dir=dx<0?1:-1;held=true;setTimeout(()=>{held=false;},50);
+  if(w==='day'&&sheetKey){goDay(addK(sheetKey,dir));swAnim($('#sheet'),dir);}
+  else if(w==='wl'&&wlEd){const k=addK(wlEd.k,dir);if(!okDate(k))return;wlCommitInputs();wlEd={k,ren:false};renderWl(false);swAnim($('#pop .wlp'),dir);}
 });
 // 3일 띠: 가운데에 오늘 고른 날 · 옆으로 밀면 따라 움직이고, 멈췄을 때 가운데에 온 날로 이동
 function dstripCenter(){
@@ -6011,7 +6023,7 @@ async function wxFetch(force){
       const j=await r.json(),list=Array.isArray(j.list)?j.list:[j];
       list.forEach(d=>{if(isObj(d)&&wxOk(d.r)&&(d.s||d.m||d.a||d.q)){
         // 새 예보에 없는 오늘 지난 시간은 가진 것에서 붙여 둠 (지난 출근 칸 · 시간별 줄)
-        try{const o=C[d.r]&&C[d.r].d&&C[d.r].d.s&&C[d.r].d.s.h,h=d.s&&d.s.h;if(o&&h){const first=Object.keys(h).sort()[0]||'',today=WX.keyD(now)+'00';Object.keys(o).forEach(k=>{if(k>=today&&k<first&&!h[k])h[k]=o[k];});}}catch(e){}
+        try{const o=C[d.r]&&C[d.r].d&&C[d.r].d.s&&C[d.r].d.s.h,h=d.s&&d.s.h;if(o&&h){const first=Object.keys(h).sort()[0]||'',today=WX.keyD(now-864e5)+'00';Object.keys(o).forEach(k=>{if(k>=today&&k<first&&!h[k])h[k]=o[k];});}}catch(e){}
         C[d.r]={at:now,d};}});
     }
     Object.keys(C).forEach(k=>{if(!codes.includes(k))delete C[k];});
@@ -6055,8 +6067,20 @@ function wxPastHtml(k){
   const ym=k.slice(0,7).replace('-',''),x=wxPast()[S.wx.home+'_'+ym];
   wxPastFetch(ym);
   const v=x&&x.d&&x.d[k.replace(/-/g,'')],l=WX.pastLine(v);
+  if(!l){   // 관측이 아직 안 올라왔으면(보통 다음날 오전): 받아 둔 예보로 대신 (누르면 예보 팝업)
+    const H=wxRaw(S.wx.home),dd=H&&WX.day(H,k.replace(/-/g,''));
+    if(dd&&dd.src==='s'){const h=(n,v)=>v?`${n} ${v.d}`:'';return `<div class="wxl past" id="wxDay" data-k="${k}" data-act="wx-day" data-v="${k}" style="cursor:pointer">${wxImg(dd.sk,'wi')||`<span class="wi">${dd.i}</span>`}<span>${esc([h('오전',dd.am),h('오후',dd.pm)].filter(Boolean).join(' · '))}</span><span class="wt">${dd.lo!=null&&dd.hi!=null?`${dd.lo}°~${dd.hi}° · `:''}예보</span></div>`;}
+  }
   return l?`<div class="wxl past" id="wxDay" data-k="${k}">${l.sk?wxImg(l.sk,'wi'):`<span class="wi">${l.i}</span>`}<span>${esc(l.t)}</span><span class="wt">관측${x.st?' · '+esc(x.st):''}</span></div>`:`<div id="wxDay" data-k="${k}" hidden></div>`;
 }
+// 날씨 카드 (날짜 창 · 가족 탭 내 카드): 결론 + 출근 → 퇴근(또는 오전 → 오후) 그림 · 기온 + 미세먼지 얼굴
+function wxCardHtml(c,cls,attrs){
+  const kk=c.k||{t:c.hs,s:'',i:''},z=(c.dz||[]).slice().sort((x,y)=>y.g-x.g||y.lv-x.lv)[0];
+  const cell=x=>`<span class="wc">${esc(x.l.split(' ')[0])}${wxImg(x.sk)}<em>${x.tp!=null?x.tp+'°':'–'}</em></span>`;
+  return `<div class="wxl wxcard ${cls}" ${attrs}><div class="wa">${wxImg(kk.i,'wi')}<div><b>${esc(kk.t)}</b>${kk.s?`<small>${esc(kk.s)}</small>`:''}</div></div>
+    ${(c.c||[]).length?`<div class="wb">${c.c.map(cell).join('<span class="ar">→</span>')}${z?wxImg(z.f,'f'):''}</div>`:''}</div>`;
+}
+const wxCls=c=>{const kk=c.k||{};return kk.al===2?'al2':kk.al===1?'al1':(c.c||[]).some(x=>x.hot)?'wet':kk.dz?'bad':'';};
 function wxDayHtml(k){
   const empty=`<div id="wxDay" data-k="${k}" hidden></div>`;
   if(wxOn()&&k<fmt(new Date()))return wxPastHtml(k);
@@ -6068,10 +6092,7 @@ function wxDayHtml(k){
   const far=Math.round((parse(k)-parse(fmt(new Date())))/864e5)>3;   // 오늘 ~ 3일 뒤 = 큰 카드 · 4일 뒤부터 = 한 줄
   if(far&&c.day){const x=c.day,h=(l,v)=>v?`${l} ${v.d}${v.pop>=30?` ${v.pop}%`:''}`:'';
     return `<div class="wxl ${cls}" id="wxDay" data-k="${k}" data-act="wx-day" data-v="${k}">${wxImg(x.sk,'wi')||`<span class="wi">${c.i}</span>`}<span>${esc([h('오전',x.am),h('오후',x.pm)].filter(Boolean).join(' · '))}</span><span class="wt">${esc(c.t)}</span></div>`;}
-  const z=(c.dz||[]).slice().sort((x,y)=>y.g-x.g||y.lv-x.lv)[0];
-  const cell=x=>`<span class="wc">${esc(x.l.split(' ')[0])}${wxImg(x.sk)}<em>${x.tp!=null?x.tp+'°':'–'}</em></span>`;
-  return `<div class="wxl wxcard ${cls}" id="wxDay" data-k="${k}" data-act="wx-day" data-v="${k}"><div class="wa">${wxImg(kk.i,'wi')}<div><b>${esc(kk.t)}</b>${kk.s?`<small>${esc(kk.s)}</small>`:''}</div></div>
-    ${(c.c||[]).length?`<div class="wb">${c.c.map(cell).join('<span class="ar">→</span>')}${z?wxImg(z.f,'f'):''}</div>`:''}</div>`;
+  return wxCardHtml(c,cls,`id="wxDay" data-k="${k}" data-act="wx-day" data-v="${k}"`);
 }
 // 날씨 그림 (assets/wx/…webp · 'sky/rain' · 'wear/coat' · 'faces/4')
 const wxImg=(id,cls)=>id&&/^(sky|wear|faces|alert)\/[a-z0-9_]+$/.test(id)?`<img${cls?` class="${cls}"`:''} src="wx/${id}.webp" alt="" draggable="false">`:'';
@@ -6305,7 +6326,7 @@ function wxActs(act,t){
     case 'wx-dong':if(t.dataset.n){S.wx.nm=S.wx.nm||{};S.wx.nm[t.dataset.v]=t.dataset.n;}wxSet(t.dataset.v);return true;
     case 'wx-clear':wxSet('');return true;
     case 'wx-one':if(t.dataset.v==='1')S.wx.one=true;else delete S.wx.one;save();closePop();if(pageMode==='wx')openWxPage();else render();try{pushAlarmsToNative();pushWidgetToNative();}catch(e){}return true;
-    case 'wx-times':timesTab=t.dataset.k;pageBack=openWxPage;openTimesPage();return true;
+    case 'wx-times':openPatTimes(openWxPage);return true;
     case 'wx-ok':
       if(!wxOk(S.wx.home)){toast('집 지역을 먼저 골라 주세요');wxPickSido('home');return true;}
       S.addons.wx=true;save();pageBack=null;closePage();render();toast('☔ 출퇴근 날씨를 켰어요');wxFetch(true);famSoon();return true;
@@ -6343,6 +6364,7 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
+  'v0.107':`· 날짜 창 · 업무 메모 창을 <b>옆으로 밀면</b> 전날 · 다음날로 넘어가요 (창 어디서나)\n· 가족 탭 내 카드: 상태는 "나" 옆에 · 날씨를 켰으면 <b>날씨 카드를 크게</b>, 안 켰으면 근무 중을 크게\n· 내 상태는 근무 중 · 쉬는 중 · 휴무 세 가지만 · 근무 시간은 <b>근무 패턴 화면 한 곳</b>에서 정해요\n· 그림 흰 테두리를 없앴어요\n· 어제 날씨가 비지 않게: 관측이 올라오기 전엔 받아 둔 예보로 보여 줘요`,
   'v0.106':`· <b>😷 미세먼지 시간대별</b>: 날씨 팝업 시간별 줄에 칸마다 얼굴 (지난 시간 · 지금 = 실측, 앞으로 = 예보)\n· 날씨 · 옷 · 특보 그림을 한 세트로 다시 다듬고 미세먼지 얼굴을 더 단순하게 바꿨어요\n· 날짜 창 날씨 카드는 오늘 ~ 3일 뒤만 크게, 그 뒤는 한 줄\n· 한 달 위젯 오른쪽 위 <b>📅 버튼</b> → 앱 달력으로 바로 · 제목이 가운데로\n· "응원 버튼" · "내 상태" 부가 기능을 정리했어요 (근무 시간을 정해 두면 가족 탭에 "근무 중 · 몇 시 끝"이 저절로 보여요)`,
   'v0.105':`· <b>☔ 날씨 팝업</b>: <b>시간별 줄</b>(그날 24시간 · 밀어서 보기 · 지금 칸부터) — 칸마다 내가 있는 곳 날씨 (출근 1시간 전 ~ 퇴근 1시간 뒤 = 직장, 그 밖 = 집)\n· 이미 지난 출근 칸도 그때 날씨를 흐리게 보여 줘요 · 그림을 키우고 테두리를 다듬었어요\n· <b>⚠️ 기상특보</b>(호우 · 대설 · 한파 · 폭염 · 강풍 …)와 <b>자외선</b>(선크림)도 알려 줘요\n· 날짜 창 순서: 근무 타입 → 요청 → <b>날씨 카드</b> → 메모 · 답한 근무 요청은 날짜 창에서 빠져요 (요청함엔 그대로)\n· 직장이 집과 가까우면 "같은 지역으로 볼까요?" (설정에서 바꿀 수 있어요)`,
   'v0.104':`· <b>☔ 출퇴근 날씨</b>가 그림으로 바뀌었어요: 맨 위 <b>한 줄 결론</b> · 출근/퇴근 칸에 <b>날씨 그림 · 옷 그림</b> · <b>챙길 것</b>(우산 · 마스크 · 장갑 …)\n· <b>😷 미세먼지</b>를 얼굴 8단계로 보여 줘요. 누르면 큰 화면 (출근 · 퇴근 동네 탭 · 오존 같은 항목 표 · 3일 예보)\n· 미세먼지는 이제 <b>지금 측정값</b> 기준이에요 · 출근 동네와 퇴근 동네를 따로 봐요\n· 알람 끈 뒤 날씨 카드도 같은 모양 · 아래 <b>10초 게이지</b> · 화면을 누르면 자동으로 안 닫혀요\n· 위젯 날짜 창 맨 위에 <b>오늘 · 내일 날씨 한 줄</b> (누르면 앱 날씨 팝업)`,
@@ -6757,12 +6779,14 @@ function openPatternPage(){
 /* 근무 패턴 화면 맨 아래 "🕐 근무 시간 (선택)": 근무 종류마다 출근 → 퇴근 (식사 · 수면 등 자세히는 근무 시간 화면)
  * 정한 시간은 출퇴근 날씨 · 가족 탭 "몇 시 끝" · 가족 폰 · 근무 통계(연장 · 야간 시간)에 쓰여요 */
 let patTmOpen=false;
+// 근무 시간은 여기 한 곳 (v0.107): 가족 탭 내 카드 · 날씨 설정 시간 줄 → 근무 패턴 화면의 근무 시간 칸을 펼친 채로
+function openPatTimes(back){patTmOpen=true;pageBack=back||null;openPatternPage();requestAnimationFrame(()=>{try{const e=document.querySelector('#page .ptm');if(e)e.scrollIntoView({block:'start'});}catch(err){}});}
 function patTimesHtml(){
   const wt=workTypes();if(!wt.length||!S.myset)return '';
   const set=wt.some(t=>timesCustom(t.k));
   return `<div class="pg-sec ptm"><div class="prow tap" data-act="ptm-tog"><div class="pl2">🕐 근무 시간 <span style="color:var(--muted);font-weight:600">(선택)</span><small>정해 두면 출퇴근 날씨도 알려줘요</small></div><div class="pv">${patTmOpen?'▴':set?'정함 ›':'›'}</div></div>
     ${patTmOpen?wt.map((t,i)=>{const x=timesOf(t.k);return `<div class="prow"><div class="pl2">${badge(t.k,'sm','')} ${esc(t.name)}</div><span class="ptm-t">${tpick('ptS_'+i,x.start)}<em>→</em>${tm2m(x.end)<=tm2m(x.start)?'<small>다음날</small>':''}${tpick('ptE_'+i,x.end)}</span></div>`;}).join('')
-      +`<div class="prow tap" data-act="ptm-more"><div class="pl2" style="color:var(--muted);font-size:13.5px">식사 · 수면 · 나서는 시간 자세히</div><div class="pv">›</div></div><div class="hint" style="padding:6px 16px 12px">몰라도 괜찮아요 · 안 정하면 대략 시간으로 계산해요</div>`:''}</div>`;
+      +`<div class="hint" style="padding:6px 16px 12px">몰라도 괜찮아요 · 안 정하면 대략 시간으로 계산해요</div>`:''}</div>`;
 }
 // 패턴 칸 누르면: 어떤 근무로 할까요?
 function openPatCell(i){
@@ -7434,7 +7458,7 @@ document.addEventListener('click',e=>{
     case 'day':if(paint){if(role()==='host')paintDay(t.dataset.k);break;}if(t.classList.contains('out')){buzz(6);slideTo(monthDirOf(t.dataset.k,cur.y,cur.m));break;}buzz(8);reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(t.dataset.k);break;
     case 'close':closeSheet();break;
     case 'ptm-tog':patTmOpen=!patTmOpen;openPatternPage();break;
-    case 'ptm-more':{const wt=workTypes();timesTab=(wt[0]||{}).k;pageBack=openPatternPage;openTimesPage();break;}
+
     case 'ot-open':otOpen(t.dataset.k);break;
     case 'ot-add':otAdd(+t.dataset.v);break;
     case 'ot-clear':if(otKey){delete S.ot[otKey];save();otAfter();closePop();}break;
@@ -7520,7 +7544,7 @@ document.addEventListener('click',e=>{
     case 'feed-sheet':feedTab='all';openFeed();break;
     case 'fam-refresh':{const b0=$('#famRef');if(b0)b0.classList.add('spin');famBoot();famPoll(true).finally(()=>{const b1=$('#famRef');if(b1)b1.classList.remove('spin');});toast('가족 소식을 새로 받는 중이에요');break;}
     case 'fam-set':openFamSetPage();break;
-    case 'fam-mytime':{const d=new Date();let k=shiftOf(d);if(isRest(k)){for(let i=1;i<10;i++){const k2=shiftOf(addDays(d,i));if(!isRest(k2)){k=k2;break;}}}if(!isRest(k))timesTab=k;openTimesPage();break;}
+    case 'fam-mytime':openPatTimes();break;
     case 'fam-mode':S.famWk=t.dataset.v==='w'?'w':'c';famAnchor='';save();render();break;
     case 'fam-today':famGoToday();break;
     case 'req-go':{const k=t.dataset.k;if(!k)break;const d=parse(k);if(d.getFullYear()*12+d.getMonth()<MIN_M||d.getFullYear()*12+d.getMonth()>MAX_M){toast('달력에서 볼 수 없는 날이에요');break;}tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
@@ -7834,7 +7858,7 @@ document.addEventListener('click',e=>{
     case 'personal-off':openPersPage('off');break;
     case 'pers-ok':{const d=($('#persD')||{}).value||fmt(new Date());persApply(persKind,d);break;}
     case 'more-comp':openCompPage();break;
-    case 'more-times':openTimesPage();break;
+    case 'more-times':openPatTimes();break;
     case 'more-stamps':closeSheet();openStampPage();break;
     case 'join-mode':{const n=$('#joinName');if(n)joinDraft.name=n.value.trim();joinDraft.mode=t.dataset.v==='view'?'view':'own';renderJoinPreview();break;}
     case 'fam-viewcal':{vcSel.on=false;vcSel.dates=new Set();vcUid=t.dataset.u;const n=new Date();vcY=n.getFullYear();vcM=n.getMonth();if(famView()){tab='cal';render();}else renderFamCalPage();break;}

@@ -37,8 +37,8 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  T('새 타입에 noGuess 표시',!!nt&&nt.noGuess===true);
  await p.evaluate(()=>history.length);
  await p.click('#page [data-act="pop-close"]').catch(()=>{});
- const tstart=async k=>{await p.evaluate(()=>{document.getElementById('page').classList.remove('open');});await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(250);await p.evaluate(()=>document.querySelector('[data-act="fam-mytime"]').click());await p.waitForTimeout(300);await p.click(`[data-act="tt-tab"][data-k="${k}"]`);await p.waitForTimeout(300);return p.evaluate(()=>document.getElementById('page').innerText.replace(/\s+/g,' '));};
- const a=await tstart('야2'),c=await tstart('오후');
+ const tstart=async nm=>{await p.evaluate(()=>{document.getElementById('page').classList.remove('open');});await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(250);await p.evaluate(()=>document.querySelector('[data-act="fam-mytime"]').click());await p.waitForTimeout(400);return p.evaluate(nm=>{const r=[...document.querySelectorAll('#page .ptm .prow')].find(e=>e.innerText.includes(nm));return r?r.innerText.replace(/\s+/g,' '):'';},nm);};   // v0.107: 근무 시간은 근무 패턴 화면 한 곳
+ const a=await tstart('야간2'),c=await tstart('야간반');
  console.log(a.slice(0,160),'|',c.slice(0,160));
  T('이미 있던 "야간2"는 그대로 야간처럼(오후 7:00 시작)',/오후 7:00/.test(a));
  T('새로 만든 "오후"(이름 야간반)는 추측 없이 오전 9:00 시작',/오전 9:00/.test(c)&&!/오후 7:00/.test(c));

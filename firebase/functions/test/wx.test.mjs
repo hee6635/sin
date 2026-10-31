@@ -401,5 +401,17 @@ await ok('미세먼지 시간대별: 측정소 24시간 받기 · 시간별 줄 
   assert.equal(at('00시').f, 'faces/2');   // 00시 35 → 양호
   assert.equal(at('08시').fc, true); assert.match(at('08시').f, /^faces\/[1346]$/);   // 앞으로 = 그날 예보
 });
+await ok('지난 관측: 어제 값이 아직 없으면 1시간마다 다시 물음 · 같은 시간엔 안 물음', async () => {
+  W._resetFail();
+  let calls = 0, has = false;
+  const body = url => { if (!/getWthrDataList/.test(url)) return null; calls++; return wrap([{ tm: '2026-10-28', minTa: '6', maxTa: '12', sumRn: '', ddMes: '' }].concat(has ? [{ tm: '2026-10-29', minTa: '3', maxTa: '15', sumRn: '', ddMes: '' }] : [])); };
+  const d = deps({ body });
+  let v = await W.pastData(d, '41111', '202610'); assert.ok(!v.d['20261029']); assert.equal(calls, 1);
+  v = await W.pastData(d, '41111', '202610'); assert.equal(calls, 2);   // 어제 값이 없으니 다시 (시각 붙은 열쇠)
+  v = await W.pastData(d, '41111', '202610'); assert.equal(calls, 2);   // 같은 시간엔 안 물음
+  has = true; d.now += 3600000;
+  v = await W.pastData(d, '41111', '202610'); assert.ok(v.d['20261029']); const c1 = calls;
+  v = await W.pastData(d, '41111', '202610'); assert.equal(calls, c1);   // 받은 뒤엔 그대로
+});
 await ok('시각 글자(YYYYMMDDHHmm) → ms (한국 시간)', () => assert.equal(W.stampMs('202610300700'), KST(2026, 10, 30, 7)));
 console.log(`\n${n} 통과`);

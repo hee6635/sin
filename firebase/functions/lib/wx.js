@@ -175,9 +175,9 @@ async function fetchShortKeep(deps, r, b, id) {
     const old = await deps.cache.get(id);
     const o = old && old.d ? JSON.parse(old.d) : null;
     if (o && o.h) {
-      const first = Object.keys(v.h).sort()[0] || '', today = ymd(deps.now) + '00';
+      const first = Object.keys(v.h).sort()[0] || '', today = ymd(deps.now - 24 * HOUR) + '00';   // 어제 0시부터 (어제 날짜 칸 · 팝업)
       for (const [k, x] of Object.entries(o.h)) if (k >= today && k < first && !v.h[k]) v.h[k] = x;
-      if (o.n) for (const [k, x] of Object.entries(o.n)) if (!v.n[k] && k >= ymd(deps.now)) v.n[k] = x;
+      if (o.n) for (const [k, x] of Object.entries(o.n)) if (!v.n[k] && k >= ymd(deps.now - 24 * HOUR)) v.n[k] = x;
     }
   } catch (e) { }
   return v;
@@ -368,7 +368,11 @@ async function pastData(deps, code, ym) {
   if (`${ym}01` > yd) return { r: r.c, ym, st: '', d: {} };
   const last = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(4, 6), 0)).getUTCDate(), end = `${ym}${p2(last)}` < yd ? `${ym}${p2(last)}` : yd;
   for (const s of nearAsos(r)) {
-    const v = await cached(deps, `p_${s[0]}_${ym}`, end === yd && end.slice(0, 6) === ym ? yd : 'final', () => fetchPast(deps, s[0], ym, end));
+    // 이번 달: 어제 관측이 아직 안 올라왔으면(보통 다음날 오전) 저장 열쇠에 시각을 붙여 1시간마다 다시 물음
+    const cur = end === yd && end.slice(0, 6) === ym, key = `p_${s[0]}_${ym}`;
+    let b = cur ? yd : 'final';
+    if (cur) { const old = await deps.cache.get(key).catch(() => null); if (old && String(old.b).startsWith(yd) && old.d && !JSON.parse(old.d)[yd]) b = yd + '_' + kstParts(deps.now)[3]; else if (old && String(old.b).startsWith(yd + '_')) b = old.b; }
+    const v = await cached(deps, key, b, () => fetchPast(deps, s[0], ym, end));
     if (v.v) return { r: r.c, ym, st: s[1], d: v.v };
   }
   return { r: r.c, ym, st: '', d: {}, e: 'past' };
