@@ -131,3 +131,5 @@
 - wxcore actDz: 활동 동네가 다르면 그 동네 미세먼지 · 같으면 활동 시작 시각(dustAt)이 출근(집) 등급보다 나쁠 때만 dz 에 {p:'🏊활동', pl:'활동 때', act:1}. dz 에 pl(출근길 · 퇴근길 · 활동 때) → 앱 · 알람(Kotlin pl()) 문구.
 - hours(o.acts): 2시간 칸 + 활동 시작 시각 칸 · 활동 시간대 칸은 ac/an (활동 동네 날씨 · 미세먼지) · 앱 wxHrHtml 묶음 'act' (보라 배경).
 - 시험: s77 (27).
+- (v0.115 추가) 옷: wxPopHtml · AlarmActivity 둘 다 칸별 옷 그림 없앰 → 안 지난 칸 중 가장 추운 칸 한 벌 ("오늘 옷 · 출근 7° 기준", 기온차 10° 이상이면 한마디). 날씨 카드 칸 이름 .wcl 한 줄.
+- (v0.115 추가) 가족 스티커 설정 openManStkPage ('manstk', pageBack=renderManCalPage): .mstgrid 길게 끌기(gdg kind 'mslot') · 누르면 openManStkEdit · 빼기 = sdef.retired (m.stk 기록 남김, 판·깔림·자동 제외) · ＋ = 새로 / 내 스티커 가져오기(mslot-import).

@@ -41,7 +41,12 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     await p.evaluate(wd=>__wx.openDay('2026-10-'+wd),wd);await p.waitForTimeout(300);await p.evaluate(()=>document.getElementById('wxDay').click());await p.waitForTimeout(500);
     const hr=await p.evaluate(()=>[...document.querySelectorAll('#pop .wxhr .sg')].map(g=>[g.className.replace('sg','').trim(),g.querySelector('.hl').innerText,[...g.querySelectorAll('.hc')].map(c=>c.innerText.split('\n')[0]).join(',')]));
     T('시간별 줄: 집 → 🏊활동(19시 칸 끼움) → 집',hr.length===3&&hr[0][0]==='home'&&hr[1][0]==='act'&&/🏊활동/.test(hr[1][1])&&hr[1][2]==='19시'&&hr[2][0]==='home',JSON.stringify(hr));
+    const ow=await p.evaluate(()=>({all:[...document.querySelectorAll('#pop .wxrw.all')].map(e=>e.innerText.replace(/\s+/g,' ')),per:document.querySelectorAll('#pop .wxc img.w').length}));
+    T('옷은 하루 한 벌 (칸마다 옷 그림 없음 · "오늘 옷 · … 기준")',ow.all.length===1&&/오늘 옷 · .+ 기준/.test(ow.all[0])&&ow.per===0,JSON.stringify(ow));
     await p.evaluate(()=>__wx.closePop());
+    await p.evaluate(wd=>__wx.openDay('2026-10-'+wd),wd);await p.waitForTimeout(300);
+    T('날짜 창 날씨 칸 이름은 한 줄 (출근 · 퇴근 · 🏊활동)',await p.evaluate(()=>{const l=[...document.querySelectorAll('#sheet .wxcard .wcl')];return l.length===3&&l.every(e=>e.getBoundingClientRect().height<=16)&&l[2].innerText==='🏊활동';}));
+    await p.evaluate(()=>__wx.closeSheet());
     // 편집 화면: 접는 칸 · 시간 넣으면 알림 30분 전
     await p.evaluate(()=>__wx.openStampReg('2026-10-14','s_sw','day'));await p.waitForTimeout(400);
     T('스티커 편집: 활동 칸 (이미 정한 활동은 펼쳐짐 · 19:00 ~ 20:00)',await p.evaluate(()=>!!document.getElementById('srAS')&&/19:00 ~ 20:00/.test(document.querySelector('.actf').innerText)));
@@ -87,6 +92,31 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     const r=await p.evaluate(()=>{const s=__wx.S.stamps.defs[0];for(let i=12;i<=16;i++){const d=new Date(2026,9,i);if(__wx.stampPlanned(s,'2026-10-'+i)&&__wx.wxMyWin(d)){const x=__wx.wxMine(d,Date.now());return {i,dz:x.dz.map(z=>[z.p,z.pl,z.g]),k:x.k};}}return null;});
     T('활동 동네(다른 곳) 미세먼지 칸 추가 (🏊활동 · "활동 때" · 나쁨) · 결론은 비가 먼저',!!r&&r.dz.length===2&&r.dz[1][0]==='🏊활동'&&r.dz[1][1]==='활동 때'&&r.dz[1][2]===3&&r.k.t==='활동 끝날 때 비 와요',JSON.stringify(r));
     T('오류 없음 (미세먼지 3칸)',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
+  { // 유찬 스티커 설정: 내 스티커 설정처럼 (끌어서 순서 · 고치기 · 판에서 빼기는 기록 남김 · 내 스티커 가져오기)
+    const fam=[{id:'f1',name:'유찬',kind:'student',vac:[],color:'#ec4899',sdefs:[{id:'m_a',emoji:'🦷',name:'양치'},{id:'m_b',emoji:'📖',name:'숙제'},{id:'m_c',emoji:'🎒',name:'준비물'}],stk:{'2026-10-13':['m_a']}}];
+    const p=await boot(b,{...base,family:fam},{touch:true});
+    await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);await p.evaluate(()=>document.querySelector('[data-act="fam-mancal"]').click());await p.waitForTimeout(400);
+    await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-14"]').click());await p.waitForTimeout(400);
+    const tap=sel=>p.evaluate(sel=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const o=document.querySelector(sel);o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();},sel);
+    await tap('#sheet [data-act="mstk-page"]');await p.waitForTimeout(400);
+    T('날짜 창 "설정 ›" → 유찬 스티커 설정 (칸 3 + 더하기)',await p.evaluate(()=>document.querySelectorAll('#page .mstgrid [data-act="mslot-open"]').length===3&&!!document.querySelector('#page [data-act="mslot-add"]')));
+    // 길게 끌어 순서 (양치 → 세 번째 자리)
+    await p.evaluate(async()=>{const it=[...document.querySelectorAll('#page .mstgrid [data-act="mslot-open"]')],a=it[0].getBoundingClientRect(),c=it[2].getBoundingClientRect();
+      const ev=(t,x,y)=>it[0].dispatchEvent(new PointerEvent(t,{bubbles:true,pointerId:7,clientX:x,clientY:y}));ev('pointerdown',a.left+5,a.top+5);await new Promise(r=>setTimeout(r,450));ev('pointermove',a.left+8,a.top+5);ev('pointermove',c.left+c.width/2,c.top+c.height/2);ev('pointerup',c.left+c.width/2,c.top+c.height/2);});await p.waitForTimeout(400);
+    T('길게 끌면 순서 바뀜 (숙제 · 준비물 · 양치)',await p.evaluate(()=>__wx.S.family[0].sdefs.map(x=>x.name).join()==='숙제,준비물,양치'),await p.evaluate(()=>__wx.S.family[0].sdefs.map(x=>x.name).join()));
+    // 누르면 고치기 → 판에서 빼기
+    await tap('#page [data-act="mslot-open"][data-id="m_a"]');await p.waitForTimeout(300);
+    await tap('#pop [data-act="mstk-del"]');await p.waitForTimeout(300);
+    T('판에서 빼기: 설정 판에서 사라짐 · 지난 기록(13일)은 그대로',await p.evaluate(()=>!document.querySelector('#page [data-id="m_a"]')&&__wx.S.family[0].stk['2026-10-13'].includes('m_a')&&__wx.S.family[0].sdefs.find(x=>x.id==='m_a').retired===true));
+    // 내 스티커에서 가져오기
+    await tap('#page [data-act="mslot-add"]');await p.waitForTimeout(300);
+    const id=await p.evaluate(()=>{const b=document.querySelector('#pop [data-act="mslot-import"]');return b?b.dataset.id:'';});
+    await tap('#pop [data-act="mslot-import"]');await p.waitForTimeout(300);
+    T('＋ 더하기 → 내 스티커 가져오기',!!id&&await p.evaluate(id=>!!document.querySelector(`#page .mstgrid [data-id="${id}"]`),id));
+    await tap('#page [data-act="page-close"]');await p.waitForTimeout(400);
+    T('뒤로 → 유찬 달력 · 13일 칸엔 뺀 양치 그대로',await p.evaluate(()=>!!document.getElementById('vcsl')&&!!document.querySelector('#vcsl [data-k="2026-10-13"] .stp')));
+    T('오류 없음 (스티커 설정)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   T.sum();await b.close();
 })();

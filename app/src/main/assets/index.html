@@ -1532,7 +1532,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .wxl.wxcard{display:block;margin:12px 0 10px;padding:12px 14px;border-radius:18px}.wxcard .wa{display:flex;align-items:center;gap:10px}.wxcard .wa img{width:48px;height:48px;object-fit:contain;flex:none}
 .wxcard .wa b{display:block;font-family:Jua,sans-serif;font-weight:400;font-size:20px;line-height:1.25}.wxcard .wa small{display:block;font-size:13px;font-weight:700;opacity:.85;margin-top:1px}
 .wxcard .wb{display:flex;align-items:center;gap:6px;margin-top:8px;padding:5px 10px;border-radius:14px;background:rgba(255,255,255,.55);font-size:13px;font-weight:800}
-.wxcard .wb .wc{display:flex;align-items:center;gap:3px}.wxcard .wb img{width:34px;height:34px;object-fit:contain}.wxcard .wb em{font-style:normal;font-family:Jua,sans-serif;font-weight:400;font-size:21px;color:var(--fg)}.wxcard .wb .ar{opacity:.5}.wxcard .wb img.f{margin-left:auto;width:38px;height:38px}
+.wxcard .wb .wc{display:flex;align-items:center;gap:3px;position:relative;padding-top:13px}.wxcard .wb .wcl{position:absolute;left:0;right:0;top:0;font-style:normal;font-size:11px;line-height:13px;white-space:nowrap;text-align:center;opacity:.85}   /* v0.115 칸 이름 한 줄 (세로로 꺾이지 않게) */.wxcard .wb img{width:34px;height:34px;object-fit:contain}.wxcard .wb em{font-style:normal;font-family:Jua,sans-serif;font-weight:400;font-size:21px;color:var(--fg)}.wxcard .wb .ar{opacity:.5}.wxcard .wb img.f{margin-left:auto;width:38px;height:38px}
 .wxl.al2{background:#fde3e3;color:#8a1c1c}.wxl.al1{background:#fff3c9;color:#6e5200}
 .nc.me2 .mtop{display:flex;align-items:center;gap:10px}.nc.me2 .mav{flex:none;display:inline-flex;width:38px;height:38px;border-radius:50%;background:#1d2330;color:#fff;font-style:normal;font-weight:800;align-items:center;justify-content:center;font-size:16px}
 .nc.me2 .mst{flex:1;min-width:0;font-size:14px;font-weight:800}.nc.me2 .mst small{font-size:12.5px;font-weight:700;color:var(--muted)}.nc.me2 .mst .bar{margin-top:5px}
@@ -2483,7 +2483,7 @@ function normalize(o){
   // v0.113 직접 추가한 가족: 가는 곳 이름 · 달력마다 스티커판 (예전에 내 스티커를 빌려 붙인 건 그 모양 그대로 옮김)
   try{(s.family||[]).forEach(m=>{if(!m||m.kind==='sched')return;
     if(m.label!==undefined){const l=cutTxt(m.label,6).trim();if(l)m.label=l;else delete m.label;}
-    if(Array.isArray(m.sdefs)){const okT=v=>typeof v==='string'&&/^\d{1,2}:\d\d$/.test(v),okA=a=>isObj(a)&&okT(a.s)&&okT(a.e)&&Array.isArray(a.days)&&a.days.length;m.sdefs=m.sdefs.filter(x=>x&&typeof x.id==='string'&&x.id).map(x=>Object.assign({id:x.id.slice(0,40),emoji:String(x.emoji||'⭐').slice(0,300),name:cutTxt(x.name,12)},okA(x.act)?{act:{days:x.act.days.filter(w=>Number.isInteger(w)&&w>=0&&w<=6).slice(0,7),s:x.act.s,e:x.act.e,r:typeof x.act.r==='string'?x.act.r.slice(0,12):'',since:okDate(x.act.since)?x.act.since:'',...(Array.isArray(x.act.skip)?{skip:x.act.skip.filter(okDate).slice(-60)}:{})}}:{})).slice(0,300);}
+    if(Array.isArray(m.sdefs)){const okT=v=>typeof v==='string'&&/^\d{1,2}:\d\d$/.test(v),okA=a=>isObj(a)&&okT(a.s)&&okT(a.e)&&Array.isArray(a.days)&&a.days.length;m.sdefs=m.sdefs.filter(x=>x&&typeof x.id==='string'&&x.id).map(x=>Object.assign({id:x.id.slice(0,40),emoji:String(x.emoji||'⭐').slice(0,300),name:cutTxt(x.name,12)},x.retired?{retired:true}:{},okA(x.act)?{act:{days:x.act.days.filter(w=>Number.isInteger(w)&&w>=0&&w<=6).slice(0,7),s:x.act.s,e:x.act.e,r:typeof x.act.r==='string'?x.act.r.slice(0,12):'',since:okDate(x.act.since)?x.act.since:'',...(Array.isArray(x.act.skip)?{skip:x.act.skip.filter(okDate).slice(-60)}:{})}}:{})).slice(0,300);}
     else if(m.sdefs!==undefined)delete m.sdefs;
     if(m.actDone!==undefined&&!isObj(m.actDone))delete m.actDone;
     if(!m.sdefs&&m.stk&&typeof m.stk==='object'&&Object.keys(m.stk).length)m.sdefs=manSdefsInit(m,(s.stamps&&Array.isArray(s.stamps.defs))?s.stamps.defs:[]);
@@ -4204,7 +4204,7 @@ const actClash=(a,k)=>actClashWin(a,parse(k),d=>wxMyWin(d));
 // 가족: 교대 = 그 근무 시간 · 학생 / 회사 = 등교~하교 / 출근~퇴근 (쉬는 날 빼고)
 function famWinOf(m){return d=>{if(m.kind==='shift'||m.kind==='sched')return wxMemWin(m,d);if(m.kind==='free'||memberOff(m,d))return null;return wxSpan(d,m.start||(m.kind==='student'?'08:30':'09:00'),m.end||(m.kind==='student'?'15:00':'18:00'));};}
 // 가족 스티커가 그날 깔리는지 (활동 요일 · 겹침 빼기 · 이 날 빼기)
-function manPlanned(m,x,k){const a=x&&x.act;if(!a||!a.s||!a.e||!(a.days||[]).length)return false;if((a.skip||[]).includes(k))return false;const d=parse(k);if(!a.days.includes(d.getDay()))return false;return !actClashWin(a,d,famWinOf(m));}
+function manPlanned(m,x,k){const a=x&&x.act;if(!a||x.retired||!a.s||!a.e||!(a.days||[]).length)return false;if((a.skip||[]).includes(k))return false;const d=parse(k);if(!a.days.includes(d.getDay()))return false;return !actClashWin(a,d,famWinOf(m));}
 // 끝 시간이 지나면 자동 완료 (한 번만 · 그 뒤에 풀면 그대로 둠). 활동을 정한 날(since)부터 · 최근 35일만
 function actAuto(){
   try{
@@ -4982,7 +4982,7 @@ function manChipIco(m,v){
 }
 function manDayHtml(k){
   const m=manMember();if(!m)return '';
-  const d=parse(k),hol=holName(k),on=(m.stk&&m.stk[k])||[],note=(m.notes&&m.notes[k])||'',cur=(m.ov&&m.ov[k])||manBase(m,d),defs=manSdefs(m);
+  const d=parse(k),hol=holName(k),on=(m.stk&&m.stk[k])||[],note=(m.notes&&m.notes[k])||'',cur=(m.ov&&m.ov[k])||manBase(m,d),defs=manSdefs(m).filter(x=>!x.retired||on.includes(x.id));
   const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}" data-act="man-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${manBadge(m,x,'','sm')}</button>`;}).join('');
   return `<div class="dtop"><button data-act="close">‹ ${esc(m.name)} 달력</button></div>
     <div class="dfh"><button class="ib" data-act="man-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
@@ -4992,7 +4992,7 @@ function manDayHtml(k){
     <div class="tchips" style="margin-top:12px">${manChoices(m).map(c=>`<button class="tchip ${cur===c[0]?'on':''}" data-act="man-ov" data-k="${k}" data-v="${esc(c[0])}">${manChipIco(m,c[0])}<small>${esc(c[2])}</small></button>`).join('')}</div>
     <div class="lbl" style="margin-top:14px">스티커</div>
     <div class="sgrid sg5 mstk">${defs.map(x=>{const pl=!on.includes(x.id)&&manPlanned(m,x,k);return `<button class="${on.includes(x.id)?'on':pl?'todo':''}" data-act="man-stk" data-k="${k}" data-id="${esc(x.id)}" data-hold="mstk" data-hid="${esc(x.id)}"><span class="si">${ico(x.emoji)}</span><small>${x.act&&(pl||on.includes(x.id))?esc(x.act.s):esc(x.name||'')}</small></button>`;}).join('')}<button class="emp" data-act="man-stk-add" data-k="${k}"><span class="si">＋</span><small>만들기</small></button></div>
-    <div class="hint" style="padding:4px 0 0;margin:0">누르면 붙이기 · 길게 누르면 고치기</div>
+    <div class="hint" style="padding:4px 0 0;margin:0;display:flex;align-items:center">누르면 붙이기 · 길게 누르면 고치기<button class="lnk" data-act="mstk-page" style="margin-left:auto;font-size:13px">설정 ›</button></div>
     <div class="lbl" style="margin-top:14px">메모</div>
     <div class="vcmemo-bar"><input type="text" id="manNote" maxlength="40" value="${esc(note)}" placeholder="이 폰에만 저장돼요" enterkeyhint="done"><button class="send" data-act="man-note" data-k="${k}" aria-label="저장">${ICON.send}</button></div>`;
 }
@@ -5007,7 +5007,26 @@ function manGo(k,quiet){
   if(d.getFullYear()!==vcY||d.getMonth()!==vcM){vcY=d.getFullYear();vcM=d.getMonth();renderManCalPage();}
   if(!quiet)buzz(6);openManDay(k);
 }
-function manStkRefresh(){renderManCalPage();if(manDayK&&sheetMode==='mandy'&&$('#sheet').classList.contains('open'))openManDay(manDayK);}
+function manStkRefresh(){if(pageMode==='manstk'){openManStkPage();return;}renderManCalPage();if(manDayK&&sheetMode==='mandy'&&$('#sheet').classList.contains('open'))openManDay(manDayK);}
+// 가족 스티커 설정 (내 스티커 설정과 같은 모양): 길게 끌어 순서 · 누르면 고치기 · ＋ 더하기(새로 · 내 스티커에서) · 빼도 지난 기록은 남음
+function openManStkPage(){
+  const m=manMember();if(!m)return;closeSheet();
+  const defs=manSdefs(m).filter(x=>!x.retired);
+  const btn=x=>`<button data-act="mslot-open" data-id="${esc(x.id)}"><span class="si">${ico(x.emoji)}</span><small>${esc(x.name||'')}</small>${x.act?'<i class="stbell">🎒</i>':''}</button>`;
+  pageBack=renderManCalPage;
+  openPage(`${pageHead(esc(m.name)+' 스티커')}<div class="pg-b">
+    <div class="hint" style="padding:10px 16px 6px">길게 눌러 끌면 순서가 바뀌어요 · 누르면 고치기 · 빼도 지난 날 기록은 남아요</div>
+    <div class="pg-sec sgrid sg5 stgrid mstgrid" style="margin-top:0;padding:10px">${defs.map(btn).join('')}<button class="emp" data-act="mslot-add"><span class="si">＋</span><small>더하기</small></button></div>
+  </div>`,'manstk');
+}
+function openManStkAdd(){
+  const m=manMember();if(!m)return;const have=new Set(manSdefs(m).filter(x=>!x.retired).map(x=>x.id));
+  const mine=S.stamps.defs.filter(x=>!x.retired&&!x.one&&!x.empty&&(x.emoji||x.kind==='pill')&&!have.has(x.id));
+  openPop(`<div class="mh">${esc(m.name)} 스티커<b>더하기</b></div>
+    <button class="mi" data-act="man-stk-add" data-k="" style="font-weight:700">✨ 새로 만들기</button>
+    ${mine.length?`<div class="mi" style="display:block"><div class="pl2" style="margin-bottom:8px">내 스티커에서 가져오기</div><div class="sgrid sg5">${mine.map(x=>`<button data-act="mslot-import" data-id="${esc(x.id)}"><span class="si">${x.kind==='pill'?'💊':ico(x.emoji)}</span><small>${esc(x.name||'')}</small></button>`).join('')}</div></div>`:''}
+    <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);
+}
 let msDraft=null;
 function openManStkEdit(id){
   const m=manMember();if(!m)return;const x=manSdefs(m).find(y=>y.id===id);if(!x)return;
@@ -5018,7 +5037,7 @@ function renderManStkEdit(){
   openPop(`<div class="mh">${esc(m.name)} 스티커<b>${esc(d.name||'스티커')}</b></div>
     <div class="mi icn-top"><span class="icn-cur">${ico(d.emoji)}</span><input type="text" id="mstkName" value="${esc(d.name)}" maxlength="12" placeholder="이름"></div>
     <div style="padding:0 12px">${actFoldHtml(d.act,d.actOpen,'ms',(d.act&&d.act.days)||[])}</div>
-    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="mstk-swap" data-id="${esc(d.id)}">다른 스티커로</button><button class="btn ghost grow danger" data-act="mstk-del" data-id="${esc(d.id)}">지우기</button></div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="mstk-swap" data-id="${esc(d.id)}">다른 스티커로</button><button class="btn ghost grow danger" data-act="mstk-del" data-id="${esc(d.id)}">판에서 빼기</button></div>
     <div class="mi"><button class="btn grow" data-act="mstk-ok" data-id="${esc(d.id)}">확인</button></div>`);
 }
 function mstkPull(){const n=$('#mstkName');if(n&&msDraft)msDraft.name=n.value.trim().slice(0,12);}
@@ -6384,7 +6403,7 @@ function wxPastHtml(k){
 // 날씨 카드 (날짜 창 · 가족 탭 내 카드): 결론 + 출근 → 퇴근(또는 오전 → 오후) 그림 · 기온 + 미세먼지 얼굴
 function wxCardHtml(c,cls,attrs){
   const kk=c.k||{t:c.hs,s:'',i:''},z=(c.dz||[]).slice().sort((x,y)=>y.g-x.g||y.lv-x.lv)[0];
-  const cell=x=>`<span class="wc">${esc(x.l.split(' ')[0])}${wxImg(x.sk)}<em>${x.tp!=null?x.tp+'°':'–'}</em></span>`;
+  const cell=x=>`<span class="wc"><i class="wcl">${esc(x.l.split(' ')[0])}</i>${wxImg(x.sk)}<em>${x.tp!=null?x.tp+'°':'–'}</em></span>`;
   return `<div class="wxl wxcard ${cls}" ${attrs}><div class="wa">${wxImg(kk.i,'wi')}<div><b>${esc(kk.t)}</b>${kk.s?`<small>${esc(kk.s)}</small>`:''}</div></div>
     ${(c.c||[]).length?`<div class="wb">${c.c.map(cell).join('<span class="ar">→</span>')}${z?wxImg(z.f,'f'):''}</div>`:''}</div>`;
 }
@@ -6411,8 +6430,11 @@ function wxPopHtml(title,sub,c,extra,dz,hr){
   const k=c.k||{t:c.h,s:'',i:''},cs=c.c||[];
   const wet=cs.some(x=>x.hot),bad=!!k.dz&&(c.dz||[]).some(x=>x.g>=3),cold=/^wear\/(scarf|mittens)/.test(k.i||'');
   const same=cs.length===2&&cs[0].w&&cs[0].w===cs[1].w;
-  const card=x=>`<div class="wxc${x.hot?' hot':''}${x.past?' past':''}"${x.q?` data-act="wx-web" data-q="${esc(x.q)}"`:''}><div class="l">${esc(x.l)}${x.past?' <span class="tag">지남</span>':''}</div>${x.p?`<div class="p">${esc(x.p)}</div>`:''}<div class="s">${wxImg(x.sk)}${x.tp!=null?`<b>${x.tp}°</b>`:''}</div><div class="d">${esc(x.d||'')}</div>${!same&&x.w?`${wxImg(x.w,'w')}<div class="y">${esc(x.ws)}</div>`:''}</div>`;
-  const all=same?`<div class="wxrw all">${wxImg(cs[0].w)}<div><small>${cs[0].l.startsWith('오')?'오늘 하루':'출근 · 퇴근 모두'}</small><b>${esc(cs[0].wt.replace(/ · /g,' + '))}</b></div></div>`:'';
+  const card=x=>`<div class="wxc${x.hot?' hot':''}${x.past?' past':''}"${x.q?` data-act="wx-web" data-q="${esc(x.q)}"`:''}><div class="l">${esc(x.l)}${x.past?' <span class="tag">지남</span>':''}</div>${x.p?`<div class="p">${esc(x.p)}</div>`:''}<div class="s">${wxImg(x.sk)}${x.tp!=null?`<b>${x.tp}°</b>`:''}</div><div class="d">${esc(x.d||'')}</div>${''}</div>`;
+  // 옷은 하루 한 벌: 아직 안 지난 칸 중 가장 추운 때 기준 (칸마다 따로 보여 주면 외투 여러 벌처럼 보임)
+  const wpool=(cs.some(x=>x.w&&!x.past)?cs.filter(x=>x.w&&!x.past):cs.filter(x=>x.w)).filter(x=>x.tp!=null),wcold=wpool.slice().sort((a,b)=>a.tp-b.tp)[0];
+  const wgap=wpool.length>1?Math.max(...wpool.map(x=>x.tp))-Math.min(...wpool.map(x=>x.tp)):0;
+  const all=wcold?`<div class="wxrw all">${wxImg(wcold.w)}<div><small>오늘 옷 · ${esc(wcold.l.split(' ')[0])} ${wcold.tp}° 기준</small><b>${esc(wcold.wt.replace(/ · /g,' + '))}</b>${wgap>=10?'<small>낮엔 따뜻해요 · 벗기 쉬운 걸로</small>':''}</div></div>`:'';
   const b=(c.b||[]).length?`<div class="wxrw"><span class="k">챙길 것</span>${c.b.map(x=>wxImg(x.i)).join('')}<span class="n">${esc(c.b.map(x=>x.n).join(' · '))}</span></div>`:'';
   const z=(c.dz||[]).slice().sort((x,y)=>y.g-x.g||y.lv-x.lv),w0=z[0],w1=z[1],two=w0&&w1&&w1.g!==w0.g;
   let air='';
@@ -6685,7 +6707,7 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
-  'v0.115':`· 날씨에서 학원 · 취미 · 동아리는 <b>스티커 그림 + 활동</b>으로 보여요 (출근 · 퇴근 · 🏊활동)\n· <b>미세먼지</b>도 활동 칸이 생겨요: 활동 동네가 다르거나, 그 시간에 더 나쁠 때만\n· <b>시간별 줄</b>에 활동 시간대가 따로 묶여 보여요 (시작 시각 칸도 넣어요)`,
+  'v0.115':`· 날씨에서 학원 · 취미 · 동아리는 <b>스티커 그림 + 활동</b>으로 보여요 (출근 · 퇴근 · 🏊활동)\n· <b>미세먼지</b>도 활동 칸이 생겨요: 활동 동네가 다르거나, 그 시간에 더 나쁠 때만\n· <b>시간별 줄</b>에 활동 시간대가 따로 묶여 보여요 (시작 시각 칸도 넣어요)\n· 옷 추천은 <b>하루 한 벌</b>만 (가장 추운 때 기준) · 날씨 칸 이름이 한 줄로\n· 가족 달력 스티커 <b>설정</b>: 날짜 창 "설정 ›" → 끌어서 순서 · 고치기 · 판에서 빼기(지난 기록은 남아요) · 내 스티커 가져오기`,
   'v0.114':`· 스티커에 <b>🎒 학원 · 취미 · 동아리</b> 칸이 생겼어요 (스티커 고치기 맨 아래 · 접혀 있어요)\n· 활동 시간을 넣으면 <b>끝나면 자동으로 완료</b> · 근무 시간과 겹치는 날은 빠져요 · 알림은 30분 전으로 미리 채워 줘요\n· 날씨: 활동 있는 날은 <b>출근 · 퇴근 · 활동</b> 3칸 (그날 순서대로) · 갈 때 · 끝날 때 비 오면 알려줘요\n· 가족 달력 스티커도 요일 · 시간을 넣을 수 있어요 → 가족 탭에 "피아노 중 · 17:30 끝"`,
   'v0.113':`· <b>가족 달력</b>(직접 추가한 가족)이 내 달력처럼 보여요: 화면 모드(동그라미 · 칸 채우기) 그대로 · 날짜 창도 옆으로 밀기\n· 가족마다 <b>스티커판</b>이 따로 있어요 (처음엔 내 판 복사 · 개수 제한 없음 · 길게 누르면 고치기)\n· '학교' 대신 <b>유치원 · 학원</b>처럼 이름을 바꿀 수 있어요 (가족 ✏️)\n· 가족 탭: 내 카드가 한 줄로 넓어졌어요 · 위쪽을 누르면 오늘 달력, 날씨를 누르면 날씨\n· 또렷하게 + 동그라미: 근무 글자가 검은색 (어두운 화면은 흰색)\n· 한 달 위젯의 달력 버튼 그림을 크게`,
   'v0.112':`· 옆으로 밀기가 덜 씹혀요: 짧게 <b>툭 튕겨도</b> 넘어가고, 넘어가는 중에 또 밀어도 받아요`,
@@ -6976,16 +6998,16 @@ function typeListHtml(){
 // 근무타입 칩 · 패턴 칸을 꾹 눌러 끌어서 순서 바꾸기 (S.types · S.pattern 순서가 그대로 저장됨 · 바로 반영)
 let gdg=null;
 document.addEventListener('pointerdown',e=>{
-  const el=e.target.closest&&e.target.closest('#tlist .tl,#pgrid .pc,.stgrid [data-act="slot-open"]');if(!el||(e.button&&e.button>0))return;
-  const kind=el.classList.contains('tl')?'type':el.classList.contains('pc')?'pat':'slot',grid=kind==='slot'?el.closest('.stgrid'):null,idx=grid?[...grid.querySelectorAll('[data-act="slot-open"]')].indexOf(el):+el.dataset.i;
-  gdg={id:e.pointerId,kind,grid,from:idx,over:idx,el,x0:e.clientX,y0:e.clientY,on:false};
+  const el=e.target.closest&&e.target.closest('#tlist .tl,#pgrid .pc,.stgrid [data-act="slot-open"],.mstgrid [data-act="mslot-open"]');if(!el||(e.button&&e.button>0))return;
+  const ms=el.dataset.act==='mslot-open',kind=ms?'mslot':el.classList.contains('tl')?'type':el.classList.contains('pc')?'pat':'slot',grid=kind==='slot'||ms?el.closest('.stgrid'):null,sel=ms?'[data-act="mslot-open"]':'[data-act="slot-open"]',idx=grid?[...grid.querySelectorAll(sel)].indexOf(el):+el.dataset.i;
+  gdg={id:e.pointerId,kind,grid,sel,from:idx,over:idx,el,x0:e.clientX,y0:e.clientY,on:false};
   gdg.t=setTimeout(()=>{if(gdg&&!gdg.on){gdg.on=true;gdg.el.classList.add('drag');buzz(10);}},380);
 },true);
 document.addEventListener('pointermove',e=>{
   const g=gdg;if(!g||e.pointerId!==g.id)return;
   if(!g.on){if(Math.hypot(e.clientX-g.x0,e.clientY-g.y0)>10){clearTimeout(g.t);gdg=null;}return;}
   g.el.style.transform=`translate(${e.clientX-g.x0}px,${e.clientY-g.y0}px)`;
-  const items=g.kind==='slot'?[...g.grid.querySelectorAll('[data-act="slot-open"]')]:[...document.querySelectorAll(g.kind==='type'?'#tlist .tl':'#pgrid .pc')];let o=g.over;
+  const items=g.grid?[...g.grid.querySelectorAll(g.sel)]:[...document.querySelectorAll(g.kind==='type'?'#tlist .tl':'#pgrid .pc')];let o=g.over;
   items.forEach((r,i)=>{const b=r.getBoundingClientRect();if(r!==g.el&&e.clientX>=b.left&&e.clientX<=b.right&&e.clientY>=b.top&&e.clientY<=b.bottom)o=i;});
   if(o!==g.over){g.over=o;items.forEach((r,i)=>r.classList.toggle('over',i===o&&i!==g.from));buzz(5);}
 },true);
@@ -6997,6 +7019,7 @@ document.addEventListener('touchmove',e=>{if(gdg&&gdg.on&&e.cancelable)e.prevent
   if(!g.on)return;
   held=true;setTimeout(()=>{held=false;},60);
   if(ev==='pointerup'&&g.over!==g.from){
+    if(g.kind==='mslot'){const m=manMember();if(m){const ids=[...g.grid.querySelectorAll(g.sel)].map(b=>b.dataset.id);ids.splice(g.over,0,ids.splice(g.from,1)[0]);const L=manSdefs(m),rest=L.filter(x=>!ids.includes(x.id));m.sdefs=ids.map(id=>L.find(x=>x.id===id)).filter(Boolean).concat(rest);save();}openManStkPage();return;}
     if(g.kind==='slot'){   // 같은 묶음(내 스티커 · ＋로 붙인 스티커) 안에서 순서만 바꿈 → 달력에서 보이는 우선순위
       const ids=[...g.grid.querySelectorAll('[data-act="slot-open"]')].map(b=>b.dataset.id);
       ids.splice(g.over,0,ids.splice(g.from,1)[0]);
@@ -7005,7 +7028,7 @@ document.addEventListener('touchmove',e=>{if(gdg&&gdg.on&&e.cancelable)e.prevent
       save();render();openStampPage();return;
     }
     const a=g.kind==='type'?S.types:S.pattern;a.splice(g.over,0,a.splice(g.from,1)[0]);save();render();}
-  if(g.kind==='slot')openStampPage();else openPatternPage();
+  if(g.kind==='mslot')openManStkPage();else if(g.kind==='slot')openStampPage();else openPatternPage();
 },true));
 /* ---- 1번째 칸 시작 날 바꾸기 = 큰일: 자동 백업 + 바꾸기 전 패턴을 "그 날 이전 구간"으로 간직 ---- */
 let patSnap=null,ancNew=null;
@@ -7898,10 +7921,15 @@ document.addEventListener('click',e=>{
     case 'man-pk':if(manPaint){manPaint.v=t.dataset.v;renderManCalPage();}break;
     case 'man-day':if(manPaint)break;if(t.classList.contains('out')){buzz(6);vcMove(monthDirOf(t.dataset.k,vcY,vcM));break;}openManDay(t.dataset.k);break;
     case 'man-go':manGo(t.dataset.k);break;
+    case 'mstk-page':openManStkPage();break;
+    case 'mslot-open':openManStkEdit(t.dataset.id);break;
+    case 'mslot-add':openManStkAdd();break;
+    case 'mslot-import':{const m=manMember();if(!m)break;const d=S.stamps.defs.find(x=>x.id===t.dataset.id);if(!d)break;const L=manSdefs(m),old=L.find(x=>x.id===d.id);
+      if(old){delete old.retired;L.splice(L.indexOf(old),1);L.push(old);}else L.push({id:d.id,emoji:d.kind==='pill'?'💊':String(d.emoji||'⭐'),name:cutTxt(d.name,12)});save();closePop();manStkRefresh();break;}
     case 'man-stk-add':{const k=t.dataset.k;openStampBig({title:'스티커 만들기',onPick:(e,n)=>{const m=manMember();if(!m)return;const f=stDefFrom(e,n);manSdefs(m).push({id:'m_'+uid(),emoji:f.kind==='pill'?'💊':f.emoji,name:f.name});save();closePop();manStkRefresh();}});break;}
     case 'mstk-ok':mstkSave();save();closePop();actAuto();manStkRefresh();break;
     case 'mstk-swap':{const id=t.dataset.id;mstkPullName(id);openStampBig({title:'다른 스티커로',onPick:(e,n)=>{const m=manMember();if(!m)return;const x=manSdefs(m).find(y=>y.id===id);if(!x)return;const f=stDefFrom(e,n);x.emoji=f.kind==='pill'?'💊':f.emoji;if(msDraft&&msDraft.id===id)msDraft.emoji=x.emoji;save();if(msDraft)renderManStkEdit();else{closePop();manStkRefresh();}}});break;}
-    case 'mstk-del':{msDraft=null;const m=manMember(),id=t.dataset.id;if(!m)break;m.sdefs=manSdefs(m).filter(y=>y.id!==id);if(m.stk)Object.keys(m.stk).forEach(k=>{m.stk[k]=m.stk[k].filter(x=>x!==id);if(!m.stk[k].length)delete m.stk[k];});save();closePop();manStkRefresh();toast('스티커를 지웠어요');break;}
+    case 'mstk-del':{msDraft=null;const m=manMember(),id=t.dataset.id;if(!m)break;const x=manSdefs(m).find(y=>y.id===id);if(x)x.retired=true;save();closePop();manStkRefresh();toast('판에서 뺐어요 · 지난 날 기록은 남아요');break;}
     case 'man-stk':{const m=manMember();if(!m)break;const k=t.dataset.k,id=t.dataset.id;m.stk=m.stk||{};const a=m.stk[k]||[];const x=(m.sdefs||[]).find(y=>y.id===id),A=x&&x.act;
       if(A&&A.days&&A.days.includes(parse(k).getDay())){if(a.includes(id))A.skip=[...(A.skip||[]).filter(z=>z!==k),k].slice(-60);else A.skip=(A.skip||[]).filter(z=>z!==k);m.actDone=m.actDone||{};if(!(m.actDone[k]||[]).includes(id))(m.actDone[k]=m.actDone[k]||[]).push(id);}   // 활동: 완료 → 다시 누르면 이 날 빼기(안 깔림)
       m.stk[k]=a.includes(id)?a.filter(x=>x!==id):[...a,id];if(!m.stk[k].length)delete m.stk[k];save();renderManCalPage();openManDay(k);break;}

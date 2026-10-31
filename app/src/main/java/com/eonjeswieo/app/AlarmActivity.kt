@@ -432,7 +432,6 @@ class AlarmActivity : Activity() {
         // 출근 · 퇴근 칸
         val cards = ArrayList<org.json.JSONObject>()
         if (cs != null) for (i in 0 until cs.length()) cs.optJSONObject(i)?.let { cards.add(it) }
-        val same = cards.size == 2 && cards[0].optString("w").isNotBlank() && cards[0].optString("w") == cards[1].optString("w")
         if (cards.isNotEmpty()) {
             val row = LinearLayout(this); row.orientation = LinearLayout.HORIZONTAL
             for ((i, x) in cards.withIndex()) {
@@ -448,10 +447,6 @@ class AlarmActivity : Activity() {
                 if (x.has("tp") && !x.isNull("tp")) sr.addView(tv("${x.optInt("tp")}°", 28f, c1, round = true))
                 cd.addView(sr)
                 cd.addView(tv(x.optString("d"), 12.5f, c1, bold = true, center = true))
-                if (!same) {
-                    wxImg(x.optString("w"), 60)?.let { val lp = LinearLayout.LayoutParams(dp(60), dp(60)); lp.topMargin = dp(4); cd.addView(it, lp) }
-                    x.optString("ws").takeIf { it.isNotBlank() }?.let { cd.addView(tv(it, 15.5f, c1, center = true, round = true)) }
-                }
                 if (x.optBoolean("past")) { cd.alpha = 0.45f; cd.addView(tv("지남", 11f, sub, bold = true, center = true), 0) }   // 이미 지난 출근 칸: 흐리게
                 val q = x.optString("q")
                 if (q.isNotBlank()) cd.setOnClickListener { openWeb(Weather.webUrl(q)) }
@@ -468,12 +463,18 @@ class AlarmActivity : Activity() {
             val lp = full(); lp.topMargin = dp(8); l.layoutParams = lp
             return l
         }
-        if (same) {
+        // 옷은 하루 한 벌: 안 지난 칸 중 가장 추운 때 기준 (칸마다 보여 주면 외투 여러 벌처럼 보임)
+        run {
+            val live = cards.filter { it.optString("w").isNotBlank() && !it.isNull("tp") && it.has("tp") }
+            val pool = live.filter { !it.optBoolean("past") }.ifEmpty { live }
+            val cold = pool.minByOrNull { it.optInt("tp") } ?: return@run
+            val gap = if (pool.size > 1) pool.maxOf { it.optInt("tp") } - pool.minOf { it.optInt("tp") } else 0
             val l = line()
-            wxImg(cards[0].optString("w"), 50)?.let { l.addView(it) }
+            wxImg(cold.optString("w"), 50)?.let { l.addView(it) }
             val col = LinearLayout(this); col.orientation = LinearLayout.VERTICAL; col.setPadding(dp(8), 0, 0, 0)
-            col.addView(tv(if (cards[0].optString("l").startsWith("오")) "오늘 하루" else "출근 · 퇴근 모두", 12f, sub))
-            col.addView(tv(cards[0].optString("wt").replace(" · ", " + "), 17f, ink, round = true))
+            col.addView(tv("오늘 옷 · ${cold.optString("l").substringBefore(" ")} ${cold.optInt("tp")}° 기준", 12f, sub))
+            col.addView(tv(cold.optString("wt").replace(" · ", " + "), 17f, ink, round = true))
+            if (gap >= 10) col.addView(tv("낮엔 따뜻해요 · 벗기 쉬운 걸로", 12f, sub))
             l.addView(col); root.addView(l)
         }
         // 챙길 것

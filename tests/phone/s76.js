@@ -38,7 +38,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     T('이름 바꾸기 저장',await p.evaluate(id=>__wx.S.family[0].sdefs.find(x=>x.id===id).name==='피아노',nid));
     await p.evaluate(id=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const e=document.querySelector(`#sheet .mstk [data-id="${id}"]`);e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:10,clientY:10}));},nid);await p.waitForTimeout(700);
     await p.evaluate(()=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const o=document.querySelector('#pop [data-act="mstk-del"]');o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();});await p.waitForTimeout(300);
-    T('지우기 → 판에서 빠짐',await p.evaluate(id=>!__wx.S.family[0].sdefs.some(x=>x.id===id),nid));
+    T('빼기 → 판에서 빠짐 (기록 위해 숨김 · v0.115)',await p.evaluate(id=>__wx.S.family[0].sdefs.find(x=>x.id===id).retired===true&&!document.querySelector(`#sheet .mstk [data-id="${id}"]`),nid));
     // 옆으로 밀면 다음날
     await p.evaluate(()=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const b=document.getElementById('sheet').getBoundingClientRect();const x=b.left+b.width/2,y=b.top+60,t=document.elementFromPoint(x,y);const ev=(ty,xx)=>t.dispatchEvent(new PointerEvent(ty,{bubbles:true,clientX:xx,clientY:y,pointerId:3}));ev('pointerdown',x);for(let i=1;i<=6;i++)ev('pointermove',x-130*i/6);ev('pointerup',x-130);});await p.waitForTimeout(800);
     T('날짜 창 옆으로 밀면 다음날 (15일)',await p.evaluate(()=>/10월 15일/.test(document.querySelector('#sheet .dft').innerText)),await p.evaluate(()=>document.querySelector('#sheet .dft').innerText));
