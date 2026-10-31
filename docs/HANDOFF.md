@@ -95,3 +95,8 @@
 - 옆 판 swSide: 창 안쪽 여백(padding)만큼 left/top/width 맞춤 (날짜 창이 16px 더 크게 보였다 줄던 것).
 - 밀어서 넘길 땐 진동 없음 (goDay(k,quiet)).
 - 업무 메모: 옆 판의 .wlta 도 wlGrow 로 높이 미리 맞춤.
+
+## v0.111 (2026-10-31) — 연달아 밀면 엉뚱한 달로 튀던 것
+- 원인: swWrap/swUnwrap 이 날짜 띠(.dstrip)를 옮기면 scrollLeft 가 0(한 달 전)으로 돌아감 → 다음에 띠를 건드리거나 scroll 이 나면 dstripCenter 의 scroll 처리가 그 날로 goDay(진동).
+- 고침: 옮기기 전후 .dstrip/.tchips/.wxhs scrollLeft 지킴(swKeepX) · 미는 중과 직후 600ms 는 띠 scroll 무시(swQuiet) · 옆 판 안 id 제거(같은 id 두 개 방지).
+- 시험: s75 "연달아 5번" · "날짜 띠 가운데".

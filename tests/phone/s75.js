@@ -41,6 +41,17 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     else T('스티커 창 열기 (시험 준비)',false,t1.slice(0,60));
     T('오류 없음 (스티커)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
+  { // 여러 번 연달아 밀어도 하루씩만 (날짜 띠가 옮겨지며 처음으로 돌아가 엉뚱한 달로 튀던 것 · v0.110)
+    const p=await boot(b,{...base},{touch:true});
+    await p.evaluate(()=>__wx.openDay('2026-10-14'));await p.waitForTimeout(400);
+    const key=()=>p.evaluate(()=>{const b=document.querySelector('#sheet .dft b');return b?b.textContent:'';});
+    const seen=[];
+    for(let i=0;i<5;i++){await swipe(p,'#sheet .dfh',-130);await p.waitForTimeout(250);seen.push(await key());}
+    await swipe(p,'#sheet .dfh',-30);await p.waitForTimeout(600);seen.push(await key());   // 덜 밀고 제자리 → 그대로
+    T('연달아 5번 밀면 15 → 16 → 17 → 18 → 19일 (덜 밀면 그대로)',seen.join(',')==='10월 15일 (목),10월 16일 (금),10월 17일 (토),10월 18일 (일),10월 19일 (월),10월 19일 (월)',seen.join(','));
+    T('날짜 띠: 고른 날이 가운데',await p.evaluate(()=>{const el=document.getElementById('dstrip'),on=el.querySelector('.dsi.on');return Math.abs(on.offsetLeft+on.offsetWidth/2-el.clientWidth/2-el.scrollLeft)<4;}));
+    T('오류 없음 (연달아 밀기)',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
   { // 업무 메모: 옆에 붙어 오는 날짜의 칸 높이가 넘어간 뒤와 같음 (넘어가서 칸이 늘어나는 느낌 없게)
     const p=await boot(b,{...base,addons:{...base.addons,wlog:true},wlog:{name:'업무 메모',seen:true,days:{'2026-10-14':{a:'인수할 것'},'2026-10-15':{a:'내일 것\n둘째 줄\n셋째\n넷째'}}}},{touch:true});
     await p.evaluate(()=>__wx.openDay('2026-10-14'));await p.waitForTimeout(300);
