@@ -15,11 +15,8 @@ const chg=(p,id,v)=>p.evaluate(([id,v])=>{const e=document.getElementById(id);e.
   { // 1) 근무 패턴 화면 맨 아래 "근무 시간 (선택)"
     const p=await boot(b,{...base});
     await p.evaluate(()=>__wx.openPatternPage());await p.waitForTimeout(200);
-    T('근무 패턴 맨 아래: 🕐 근무 시간 (선택) + 설명 (접힘)',await p.evaluate(()=>{const e=document.querySelector('#page .ptm');return !!e&&/근무 시간/.test(e.textContent)&&/출퇴근 날씨도 알려줘요/.test(e.textContent)&&!document.getElementById('ptS_0');}));
-    await p.click('#page [data-act="ptm-tog"]');await p.waitForTimeout(150);
-    T('펼치면 근무 종류마다 출근 → 퇴근 (휴 빠짐)',await p.evaluate(()=>!!document.getElementById('ptS_0')&&!!document.getElementById('ptE_1')&&/몰라도 괜찮아요/.test(document.querySelector('#page .ptm').textContent)));
-    await chg(p,'ptS_0','08:00');await p.waitForTimeout(150);
-    T('바꾸면 저장 (주간 08:00 → 19:00)',await p.evaluate(()=>__wx.S.shiftTimes['주'].start==='08:00'&&/정함|▴/.test(document.querySelector('#page .ptm').textContent)));
+    T('근무 패턴: 근무타입 아래 시간 줄 (따로 시간 칸 없음)',await p.evaluate(()=>!document.querySelector('#page .ptm')&&document.querySelectorAll('#page .tltimes .prow').length>=2));
+    await p.evaluate(()=>{__wx.S.shiftTimes={...(__wx.S.shiftTimes||{}),'주':{start:'08:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}};});
     T('가족에게 보낼 근무 시간 (주 08:00~19:00 · 야 19:00~07:00)',await p.evaluate(()=>{const x=__wx.famTimesPayload();return x.tm['주'][0]==='08:00'&&x.tm['야'][0]==='19:00'&&!x.ot;}));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
