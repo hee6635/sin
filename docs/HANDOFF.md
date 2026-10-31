@@ -115,3 +115,13 @@
 - 또렷하게+동그라미: 밝은 화면 검은 글자(saturate 1.4) · 어두운 화면 흰 글자.
 - 위젯 한 달: 달력 버튼 그림 s 0.62→1.2 · 선 2.2.
 - 시험: s76 (25) · s35 · s31 · s75 고침. s20 은 /tmp/ph.b64 (사진 base64) 가 있어야 돎.
+
+## v0.114 (2026-10-31) — 스티커 활동 (학원 · 취미 · 동아리)
+- 내 스티커 def.act={s,e,r,since} (mark 만) · 가족 스티커 sdef.act={days,s,e,r,since,skip}. 편집: actFoldHtml(접는 칸) — 내 것 sr-*, 가족 것 ms-* (가족은 msDraft 초안 → mstkSave).
+- 근무 겹침: stampPlanned 끝에 actClash (그날 + 어젯밤 야간 wxMyWin) · 가족은 manPlanned + famWinOf (교대 = 근무, 학생/회사 = 등교~하교).
+- 자동 완료 actAuto() (render 마다): 끝 시간 지난 깔린 날 → log / m.stk 에 넣고 actDone[k] 에 기록 (한 번만 · 풀면 그대로). since 부터 최근 35일.
+- 가족: 완료된 활동을 다시 누르면 act.skip 에 그 날 (안 깔림 · 자동도 안 함).
+- 날씨: wxcore actCards/actK · commute(o.acts) = 출근 · 퇴근 + 다가올 활동 1개를 시간 순으로 3칸 · dayCard(o.acts) = 활동 칸만. 결론: 특보 → (출퇴근 비 아니면) 활동 갈 때/끝날 때 비 → … · 앱 myActs(d) → wxMine. 가족 카드 famActWx (비 · 눈일 때만).
+- 위치: actPickRegion → wxPickSido('a:') · 집과 가까우면 같게 할지 물어봄 · wxCodes 에 actRegions.
+- 서버 wxcore 도 같이 바뀜(o.acts 없으면 예전과 같음) → 배포 안 해도 됨.
+- 시험: s77 (24).

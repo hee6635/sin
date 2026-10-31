@@ -250,6 +250,20 @@
    * home/work: 지역 자료(없으면 null) · o = {s:출근ms, e:퇴근ms, hn:'집 · 영통구', wn:'직장 · 동탄', now}
    * 돌려주는 것 {i 아이콘, h 한 줄 문구, hs 짧은 문구, t "출근 6° · 퇴근 12°", a 미세먼지 줄, an 미세먼지 수치, r:[줄 2개]} — 둘 다 예보가 없으면 null
    * 그림 화면용: k {t 결론, s 한마디, i 그림} · c:[출근 · 퇴근 칸 {l, p, sk, tp, d, w, ws, wt, hot, q}] · b:[챙길 것 {i, n}] · dz:[미세먼지 {p, n, f, lb, m, g}] */
+  // 학원 · 운동 같은 활동 칸 (앱 스티커 활동): 끝나는 시각 날씨 · 갈 때(시작)나 올 때(끝) 비 · 눈이면 결론으로
+  // acts: [{ n: 이름, s, e: ms, raw: 그 지역 예보(없으면 집), p: 지역 이름, q: 검색어 }]
+  function actCards(home, acts, now) {
+    return (acts || []).filter(a => a && a.e > a.s).map(a => {
+      const R = a.raw || home, v = at(R, a.e), v0 = at(R, a.s), past = now != null && now >= a.e, gone = now != null && now >= a.s;
+      const x = Object.assign({ l: `${a.n} ${hm(a.e)}`, p: a.p || '', sk: sky(v, a.e), tp: v ? v.tp : null, d: !v ? '예보 없음' : wet(v) ? `${snowy(v) ? '눈' : '비'} ${v.pop}%` : `체감 ${feel(v.tp, v.ws)}°`, hot: wet(v) && !past, past, act: 1 }, wearOf(v) || {}, a.q ? { q: a.q } : {});
+      const w1 = !past && wet(v), w0 = !gone && wet(v0);
+      return { x, ms: a.e, v: past ? null : v, w: w1 || w0 ? { n: a.n, when: w0 ? '갈 때' : '끝날 때', sn: snowy(w0 ? v0 : v) } : null };
+    });
+  }
+  function actK(ac) {
+    const z = (ac || []).find(y => y.w); if (!z) return null;
+    return z.w.sn ? { t: `${z.w.n} ${z.w.when} 눈 와요`, s: '미끄럼 조심해요', i: 'sky/snow' } : { t: `${z.w.n} ${z.w.when} 비 와요`, s: '우산 챙기세요', i: 'wear/umbrella' };
+  }
   function commute(home, work, o) {
     const W = work || home;
     const vs = at(home, o.s), ve = at(W, o.e);
@@ -283,18 +297,25 @@
       const x = { l: `${l} ${hm(ms)}`, p: same ? '' : place(pl), sk: sky(v, ms), tp: v ? v.tp : null, d: !v ? '예보 없음' : wet(v) ? `${snowy(v) ? '눈' : '비'} ${v.pop}%` : `체감 ${feel(v.tp, v.ws)}°`, hot: wet(v) && !(o.now != null && o.now >= ms), past: o.now != null && o.now >= ms };
       return Object.assign(x, wearOf(v) || {}, sq ? { q: sq } : {});
     };
-    const c = [card('출근', o.s, vs, o.hn, o.hq), card('퇴근', o.e, ve, o.wn, o.wq || o.hq)];
+    let c = [card('출근', o.s, vs, o.hn, o.hq), card('퇴근', o.e, ve, o.wn, o.wq || o.hq)];
+    // 활동이 있는 날: 그날 순서대로 3칸 (출근 · 퇴근 + 다가올 활동 하나)
+    const ac = actCards(home, o.acts, o.now), acK = actK(ac);
+    if (ac.length) {
+      const pick = ac.filter(z => !z.x.past).concat(ac.filter(z => z.x.past))[0];
+      c = [[o.s, c[0]], [o.e, c[1]], [pick.ms, pick.x]].sort((p, q) => p[0] - q[0]).map(z => z[1]);
+    }
     const dz = [];
     const dh = dustOf(ah), dw = dustOf(aw);
     if (dh) dz.push(Object.assign({ p: '출근', n: place(o.hn) }, dh));
     if (dw) dz.push(Object.assign({ p: '퇴근', n: place(o.wn) }, dw));
     const worst = dz.slice().sort((x, y) => y.g - x.g || y.lv - x.lv)[0];
-    const vD = [vsD, veD].filter(Boolean), sunny = vD.length > 0 && vD.every(v => v.sky <= 1 && !wet(v));
+    const vD = [vsD, veD].filter(Boolean).concat(ac.map(z => z.v).filter(Boolean)), sunny = vD.length > 0 && vD.every(v => v.sky <= 1 && !wet(v));
     const uv = uvMax([home, work], ps && !both ? o.now : o.s, o.e);
     const ak = alertK([home, work], [keyD(o.s), keyD(o.e)], o.now);
     // 한 줄 결론 (그림 + 큰 글씨 + 한마디): 특보 → 비 · 눈 → 미세먼지 → 자외선 → 기온
     let k;
     if (ak) k = ak;
+    else if (acK && !(ws || we)) k = acK;
     else if (ws || we) {
       const which = ws && we ? '출퇴근' : ws ? '출근' : '퇴근', fr = !ws && we ? wetFrom(W, o.s, o.e) : null;
       k = sn ? { t: `${which}길에 눈 와요`, s: '미끄럼 조심해요', i: 'sky/snow' } : { t: `${which}길에 비 와요`, s: `우산 챙기세요${fr ? ' · ' + fromH(fr) : ''}`, i: 'wear/umbrella' };
@@ -307,7 +328,7 @@
       if (vs && ve && Math.abs(vs.tp - ve.tp) >= 10) k = { t: '기온차가 커요', s: '벗기 쉬운 겉옷 챙기세요', i: 'wear/cardigan' };
       else if (cold.tp <= 0) k = { t: `${cw}길 ${cold.tp < 0 ? '영하 ' + (-cold.tp) : 0}°`, s: '따뜻하게 입으세요', i: 'wear/scarf_red' };
       else if (Math.max(...vv.map(v => v.tp)) >= 30) k = { t: '오늘 더워요', s: '물 챙기세요', i: 'wear/bottle' };
-      else k = { t: sunny ? (ps && !both ? '퇴근길 맑아요' : '출퇴근길 맑아요') : '무난한 날씨예요', s: '', i: (c[1].sk || c[0].sk) };
+      else k = { t: sunny ? (ps && !both ? '퇴근길 맑아요' : '출퇴근길 맑아요') : '무난한 날씨예요', s: '', i: (c.filter(x => !x.past).map(x => x.sk).find(Boolean) || c[1].sk || c[0].sk) };
       if (!k.s) { const wv = c.find(x => x.ws); if (wv) k.s = `${wv.ws} 입으세요`; }
     }
     return {
@@ -337,10 +358,11 @@
     // 그림 화면용: 오전 = 최저 · 오후 = 최고 기온 칸
     const hv = (x, tp) => x ? { tp, pty: x.snow ? 3 : x.wet ? 1 : 0, pop: x.pop || 0 } : null;
     const cd = (l, x, tp) => x ? Object.assign({ l, p: '', sk: x.sk || '', tp: tp != null ? tp : null, d: x.wet ? `${x.snow ? '눈' : '비'} ${x.pop}%` : x.d, hot: !!x.wet }, wearOf(hv(x, tp)) || {}, o && o.hq ? { q: o.hq } : {}) : null;
-    const c = [cd('오전', d.am, d.lo), cd('오후', d.pm, d.hi)].filter(Boolean);
+    const ac = actCards(home, o && o.acts, o && o.now), acK = actK(ac);
+    const c = ac.length ? ac.slice().sort((p, q) => p.ms - q.ms).slice(0, 3).map(z => z.x) : [cd('오전', d.am, d.lo), cd('오후', d.pm, d.hi)].filter(Boolean);   // 쉬는 날 활동이 있으면 활동만
     const dd = dustOf(a), dz = dd ? [Object.assign({ p: '', n: '' }, dd)] : [];
     const d0 = Date.UTC(+dk.slice(0, 4), +dk.slice(4, 6) - 1, +dk.slice(6, 8)) - 9 * H, uv = uvMax([home], d0 + 9 * H, d0 + 17 * H), ak = alertK([home], [dk], o && o.now);
-    const k = ak ? ak : d.wet ? { t: h, s: d.snow ? '미끄럼 조심해요' : '우산 챙기세요', i: d.snow ? 'sky/snow' : 'wear/umbrella' }
+    const k = ak ? ak : acK ? acK : d.wet ? { t: h, s: d.snow ? '미끄럼 조심해요' : '우산 챙기세요', i: d.snow ? 'sky/snow' : 'wear/umbrella' }
       : dd && dd.g >= 3 ? { t: `미세먼지 ${dd.lb}`, s: dd.m, i: dd.f, dz: 1 }
       : uv != null && uv >= 8 ? { t: `자외선 ${UVN(uv)}`, s: '선크림 · 모자 챙기세요', i: 'sky/uv' }
       : { t: h, s: c.length && c[0].ws ? `${c[0].ws} 입으세요` : '', i: d.hi >= 30 ? 'wear/bottle' : d.lo <= 0 ? 'wear/scarf_red' : d.sk || '' };

@@ -1172,6 +1172,8 @@ textarea{resize:none;min-height:84px}
 .sgrid button.on{background:color-mix(in srgb,var(--accent) 16%,var(--surface));box-shadow:inset 0 0 0 2px var(--accent)}
 .stgrid button{position:relative}.stgrid button .stbell{position:absolute;top:3px;right:5px;font-size:11px;font-style:normal;line-height:1}
 .sgrid button.emp{background:none;box-shadow:inset 0 0 0 1.5px var(--line)}
+.sgrid button.todo{background:none;box-shadow:inset 0 0 0 1.8px var(--accent);border:0;outline:1.5px dashed color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:-4px}.sgrid button.todo small{color:var(--accent);font-weight:700}   /* v0.114 깔린 활동 (아직 안 함) */
+.actf .actf-h{background:none;text-align:left}.actf .sdays{display:flex;gap:4px;flex-wrap:wrap}.actf .sdays button{width:30px;height:30px;border-radius:50%;background:var(--surface);font-size:12.5px;font-weight:700}.actf .sdays button.on{background:var(--accent);color:#fff}
 .emptybox{display:block;width:22px;height:22px;border:1.8px dashed var(--muted);border-radius:6px;opacity:.7}
 .lnk{color:var(--accent) !important;text-decoration:underline;font-weight:600}
 a.lnk{cursor:pointer;-webkit-tap-highlight-color:transparent}a.lnk:active{opacity:.6}
@@ -1837,6 +1839,20 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
    * home/work: 지역 자료(없으면 null) · o = {s:출근ms, e:퇴근ms, hn:'집 · 영통구', wn:'직장 · 동탄', now}
    * 돌려주는 것 {i 아이콘, h 한 줄 문구, hs 짧은 문구, t "출근 6° · 퇴근 12°", a 미세먼지 줄, an 미세먼지 수치, r:[줄 2개]} — 둘 다 예보가 없으면 null
    * 그림 화면용: k {t 결론, s 한마디, i 그림} · c:[출근 · 퇴근 칸 {l, p, sk, tp, d, w, ws, wt, hot, q}] · b:[챙길 것 {i, n}] · dz:[미세먼지 {p, n, f, lb, m, g}] */
+  // 학원 · 운동 같은 활동 칸 (앱 스티커 활동): 끝나는 시각 날씨 · 갈 때(시작)나 올 때(끝) 비 · 눈이면 결론으로
+  // acts: [{ n: 이름, s, e: ms, raw: 그 지역 예보(없으면 집), p: 지역 이름, q: 검색어 }]
+  function actCards(home, acts, now) {
+    return (acts || []).filter(a => a && a.e > a.s).map(a => {
+      const R = a.raw || home, v = at(R, a.e), v0 = at(R, a.s), past = now != null && now >= a.e, gone = now != null && now >= a.s;
+      const x = Object.assign({ l: `${a.n} ${hm(a.e)}`, p: a.p || '', sk: sky(v, a.e), tp: v ? v.tp : null, d: !v ? '예보 없음' : wet(v) ? `${snowy(v) ? '눈' : '비'} ${v.pop}%` : `체감 ${feel(v.tp, v.ws)}°`, hot: wet(v) && !past, past, act: 1 }, wearOf(v) || {}, a.q ? { q: a.q } : {});
+      const w1 = !past && wet(v), w0 = !gone && wet(v0);
+      return { x, ms: a.e, v: past ? null : v, w: w1 || w0 ? { n: a.n, when: w0 ? '갈 때' : '끝날 때', sn: snowy(w0 ? v0 : v) } : null };
+    });
+  }
+  function actK(ac) {
+    const z = (ac || []).find(y => y.w); if (!z) return null;
+    return z.w.sn ? { t: `${z.w.n} ${z.w.when} 눈 와요`, s: '미끄럼 조심해요', i: 'sky/snow' } : { t: `${z.w.n} ${z.w.when} 비 와요`, s: '우산 챙기세요', i: 'wear/umbrella' };
+  }
   function commute(home, work, o) {
     const W = work || home;
     const vs = at(home, o.s), ve = at(W, o.e);
@@ -1870,18 +1886,25 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
       const x = { l: `${l} ${hm(ms)}`, p: same ? '' : place(pl), sk: sky(v, ms), tp: v ? v.tp : null, d: !v ? '예보 없음' : wet(v) ? `${snowy(v) ? '눈' : '비'} ${v.pop}%` : `체감 ${feel(v.tp, v.ws)}°`, hot: wet(v) && !(o.now != null && o.now >= ms), past: o.now != null && o.now >= ms };
       return Object.assign(x, wearOf(v) || {}, sq ? { q: sq } : {});
     };
-    const c = [card('출근', o.s, vs, o.hn, o.hq), card('퇴근', o.e, ve, o.wn, o.wq || o.hq)];
+    let c = [card('출근', o.s, vs, o.hn, o.hq), card('퇴근', o.e, ve, o.wn, o.wq || o.hq)];
+    // 활동이 있는 날: 그날 순서대로 3칸 (출근 · 퇴근 + 다가올 활동 하나)
+    const ac = actCards(home, o.acts, o.now), acK = actK(ac);
+    if (ac.length) {
+      const pick = ac.filter(z => !z.x.past).concat(ac.filter(z => z.x.past))[0];
+      c = [[o.s, c[0]], [o.e, c[1]], [pick.ms, pick.x]].sort((p, q) => p[0] - q[0]).map(z => z[1]);
+    }
     const dz = [];
     const dh = dustOf(ah), dw = dustOf(aw);
     if (dh) dz.push(Object.assign({ p: '출근', n: place(o.hn) }, dh));
     if (dw) dz.push(Object.assign({ p: '퇴근', n: place(o.wn) }, dw));
     const worst = dz.slice().sort((x, y) => y.g - x.g || y.lv - x.lv)[0];
-    const vD = [vsD, veD].filter(Boolean), sunny = vD.length > 0 && vD.every(v => v.sky <= 1 && !wet(v));
+    const vD = [vsD, veD].filter(Boolean).concat(ac.map(z => z.v).filter(Boolean)), sunny = vD.length > 0 && vD.every(v => v.sky <= 1 && !wet(v));
     const uv = uvMax([home, work], ps && !both ? o.now : o.s, o.e);
     const ak = alertK([home, work], [keyD(o.s), keyD(o.e)], o.now);
     // 한 줄 결론 (그림 + 큰 글씨 + 한마디): 특보 → 비 · 눈 → 미세먼지 → 자외선 → 기온
     let k;
     if (ak) k = ak;
+    else if (acK && !(ws || we)) k = acK;
     else if (ws || we) {
       const which = ws && we ? '출퇴근' : ws ? '출근' : '퇴근', fr = !ws && we ? wetFrom(W, o.s, o.e) : null;
       k = sn ? { t: `${which}길에 눈 와요`, s: '미끄럼 조심해요', i: 'sky/snow' } : { t: `${which}길에 비 와요`, s: `우산 챙기세요${fr ? ' · ' + fromH(fr) : ''}`, i: 'wear/umbrella' };
@@ -1894,7 +1917,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
       if (vs && ve && Math.abs(vs.tp - ve.tp) >= 10) k = { t: '기온차가 커요', s: '벗기 쉬운 겉옷 챙기세요', i: 'wear/cardigan' };
       else if (cold.tp <= 0) k = { t: `${cw}길 ${cold.tp < 0 ? '영하 ' + (-cold.tp) : 0}°`, s: '따뜻하게 입으세요', i: 'wear/scarf_red' };
       else if (Math.max(...vv.map(v => v.tp)) >= 30) k = { t: '오늘 더워요', s: '물 챙기세요', i: 'wear/bottle' };
-      else k = { t: sunny ? (ps && !both ? '퇴근길 맑아요' : '출퇴근길 맑아요') : '무난한 날씨예요', s: '', i: (c[1].sk || c[0].sk) };
+      else k = { t: sunny ? (ps && !both ? '퇴근길 맑아요' : '출퇴근길 맑아요') : '무난한 날씨예요', s: '', i: (c.filter(x => !x.past).map(x => x.sk).find(Boolean) || c[1].sk || c[0].sk) };
       if (!k.s) { const wv = c.find(x => x.ws); if (wv) k.s = `${wv.ws} 입으세요`; }
     }
     return {
@@ -1924,10 +1947,11 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
     // 그림 화면용: 오전 = 최저 · 오후 = 최고 기온 칸
     const hv = (x, tp) => x ? { tp, pty: x.snow ? 3 : x.wet ? 1 : 0, pop: x.pop || 0 } : null;
     const cd = (l, x, tp) => x ? Object.assign({ l, p: '', sk: x.sk || '', tp: tp != null ? tp : null, d: x.wet ? `${x.snow ? '눈' : '비'} ${x.pop}%` : x.d, hot: !!x.wet }, wearOf(hv(x, tp)) || {}, o && o.hq ? { q: o.hq } : {}) : null;
-    const c = [cd('오전', d.am, d.lo), cd('오후', d.pm, d.hi)].filter(Boolean);
+    const ac = actCards(home, o && o.acts, o && o.now), acK = actK(ac);
+    const c = ac.length ? ac.slice().sort((p, q) => p.ms - q.ms).slice(0, 3).map(z => z.x) : [cd('오전', d.am, d.lo), cd('오후', d.pm, d.hi)].filter(Boolean);   // 쉬는 날 활동이 있으면 활동만
     const dd = dustOf(a), dz = dd ? [Object.assign({ p: '', n: '' }, dd)] : [];
     const d0 = Date.UTC(+dk.slice(0, 4), +dk.slice(4, 6) - 1, +dk.slice(6, 8)) - 9 * H, uv = uvMax([home], d0 + 9 * H, d0 + 17 * H), ak = alertK([home], [dk], o && o.now);
-    const k = ak ? ak : d.wet ? { t: h, s: d.snow ? '미끄럼 조심해요' : '우산 챙기세요', i: d.snow ? 'sky/snow' : 'wear/umbrella' }
+    const k = ak ? ak : acK ? acK : d.wet ? { t: h, s: d.snow ? '미끄럼 조심해요' : '우산 챙기세요', i: d.snow ? 'sky/snow' : 'wear/umbrella' }
       : dd && dd.g >= 3 ? { t: `미세먼지 ${dd.lb}`, s: dd.m, i: dd.f, dz: 1 }
       : uv != null && uv >= 8 ? { t: `자외선 ${UVN(uv)}`, s: '선크림 · 모자 챙기세요', i: 'sky/uv' }
       : { t: h, s: c.length && c[0].ws ? `${c[0].ws} 입으세요` : '', i: d.hi >= 30 ? 'wear/bottle' : d.lo <= 0 ? 'wear/scarf_red' : d.sk || '' };
@@ -2443,10 +2467,12 @@ function normalize(o){
   // v0.113 직접 추가한 가족: 가는 곳 이름 · 달력마다 스티커판 (예전에 내 스티커를 빌려 붙인 건 그 모양 그대로 옮김)
   try{(s.family||[]).forEach(m=>{if(!m||m.kind==='sched')return;
     if(m.label!==undefined){const l=cutTxt(m.label,6).trim();if(l)m.label=l;else delete m.label;}
-    if(Array.isArray(m.sdefs))m.sdefs=m.sdefs.filter(x=>x&&typeof x.id==='string'&&x.id).map(x=>({id:x.id.slice(0,40),emoji:String(x.emoji||'⭐').slice(0,300),name:cutTxt(x.name,12)})).slice(0,300);
+    if(Array.isArray(m.sdefs)){const okT=v=>typeof v==='string'&&/^\d{1,2}:\d\d$/.test(v),okA=a=>isObj(a)&&okT(a.s)&&okT(a.e)&&Array.isArray(a.days)&&a.days.length;m.sdefs=m.sdefs.filter(x=>x&&typeof x.id==='string'&&x.id).map(x=>Object.assign({id:x.id.slice(0,40),emoji:String(x.emoji||'⭐').slice(0,300),name:cutTxt(x.name,12)},okA(x.act)?{act:{days:x.act.days.filter(w=>Number.isInteger(w)&&w>=0&&w<=6).slice(0,7),s:x.act.s,e:x.act.e,r:typeof x.act.r==='string'?x.act.r.slice(0,12):'',since:okDate(x.act.since)?x.act.since:'',...(Array.isArray(x.act.skip)?{skip:x.act.skip.filter(okDate).slice(-60)}:{})}}:{})).slice(0,300);}
     else if(m.sdefs!==undefined)delete m.sdefs;
+    if(m.actDone!==undefined&&!isObj(m.actDone))delete m.actDone;
     if(!m.sdefs&&m.stk&&typeof m.stk==='object'&&Object.keys(m.stk).length)m.sdefs=manSdefsInit(m,(s.stamps&&Array.isArray(s.stamps.defs))?s.stamps.defs:[]);
   });}catch(e){}
+  try{const okT=v=>typeof v==='string'&&/^\d{1,2}:\d\d$/.test(v);(s.stamps.defs||[]).forEach(x=>{if(x&&x.act!==undefined&&!(isObj(x.act)&&okT(x.act.s)&&okT(x.act.e)))delete x.act;else if(x&&x.act){x.act={s:x.act.s,e:x.act.e,r:typeof x.act.r==='string'?x.act.r.slice(0,12):'',since:okDate(x.act.since)?x.act.since:''};}});if(s.stamps.actDone!==undefined&&!isObj(s.stamps.actDone))delete s.stamps.actDone;}catch(e){}   // v0.114 스티커 활동
   if(o&&o.onboarded===undefined&&o.pattern)s.onboarded=true;   // 예전 사용자는 처음 설정 건너뜀
   return s;
 }
@@ -3049,7 +3075,7 @@ function stzCheck(force){
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(stzDirty||innerWidth!==stzFitW))setTimeout(()=>stzCheck(false),60);});
 window.__fold=()=>stzCheck(false);   // 안드로이드: 접고 펼 때(화면 설정이 바뀔 때) 조금 뒤에 불러 줌   // 접고 펼 때(커버↔안쪽) 앱 달력 값(스티커·주야)도 그 화면 값으로 먼저 바꿈
 function render(){
-  persSync();expireOnceAlarms();
+  persSync();expireOnceAlarms();actAuto();
   applyTdc();   // (자정이 지나면 그날 근무 색으로 · 보이는 달력 따라)
   const top=$('#top'),v=$('#view');
   const navTab=tab==='colleague'?'set':tab;
@@ -3919,6 +3945,7 @@ function stampPlanned(s,k){
   else if(s.rep==='work'){if(!persOn(k)){const sh=shiftOf(d);if(Array.isArray(s.wtypes)&&s.wtypes.length)on=s.wtypes.includes(sh);else{const r=isRest(sh);on=s.workMode==='work'?!r:r;}}}   // 근무 맞춤: 고른 근무타입(wtypes) · 옛 값은 휴무 날만/근무 날만
   if(on&&s.noHol&&(holName(k)||compHol(k)))on=false;
   if(on&&s.noWknd&&(d.getDay()===0||d.getDay()===6))on=false;
+  if(on&&s.act&&actClash(s.act,k))on=false;   // v0.114 활동 시간이 근무와 겹치는 날은 빠짐
   return on;
 }
 const pillActive=(s,k)=>s.kind==='pill'&&stampPlanned(s,k);
@@ -3947,7 +3974,7 @@ function stampDayHtml(k){
     b+=n?`<button class="un" data-act="sd-undo" ${id}>${N>1&&n<N?'한 번 취소':'완료 취소'}</button>`:`<button data-act="sd-skip" ${id}>${s.one&&(s.dates||[]).includes(k)?'지우기':'건너뛰기'}</button>`;
     if(['daily','dow','work','month'].includes(s.rep)&&(!s.to||s.to>=k))b+=`<button class="gh" data-act="sd-end" ${id}>그만하기</button>`;   // 반복 스티커: 이날부터 끝내기
     const st=N>1?`${n}/${N}${pill?' 먹음':''}`:pill?(n?'먹음':'아직'):n?'완료':'아직';
-    return `<div class="mi sdr"${s.retired?'':` data-hold="stk" ${id}`}><span class="sic">${pill?pillSvg(N,n,26,V.col,V.shape):`<span class="${n?'':'plan'}">${ico(s.emoji)}</span>`}</span><div class="nm">${esc(s.name)}<small>${esc(stampRule(s))}${stAts(s).length?` · 🔔 ${stAts(s).map(fmtTm12).join(' · ')}`:''} · ${st}</small></div></div><div class="mi sdbt">${b}</div>`;
+    return `<div class="mi sdr"${s.retired?'':` data-hold="stk" ${id}`}><span class="sic">${pill?pillSvg(N,n,26,V.col,V.shape):`<span class="${n?'':'plan'}">${ico(s.emoji)}</span>`}</span><div class="nm">${esc(s.name)}<small>${s.act?`🎒 ${s.act.s} ~ ${s.act.e} · `:''}${esc(stampRule(s))}${stAts(s).length?` · 🔔 ${stAts(s).map(fmtTm12).join(' · ')}`:''} · ${st}</small></div></div><div class="mi sdbt">${b}</div>`;
   };
   const full=list.length>=stampMax();
   return (`<div class="mh">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]}) · ${esc(shiftLabel(sh))}<b>스티커</b></div>
@@ -4057,7 +4084,8 @@ function stDraftOf(s,k,edit,back){
   const d={k,back:back||'',edit:!!edit,id:s?s.id:'__new',kind,name:s?s.name:'',emoji:(s&&s.emoji)||'🏃',color:(s&&s.color)||STK_COL[0],times,
     alarm:!!(s&&s.ats&&s.ats.length),ats:s&&s.ats?s.ats.slice():[],shape:(s&&s.shape)||'caps',fam:s?stFam(s):true,
     rep:edit?(s.rep||'none'):'once',days:s&&s.days&&s.days.length?s.days.slice():[parse(k).getDay()],workMode:(s&&s.workMode)||'rest',wtypes:wtypesOf(s),
-    from:(edit&&s.from)||k,to:(edit&&s.to)||'',noHol:!!(edit&&s.noHol),noWknd:!!(edit&&s.noWknd),noNight:!!(edit&&s.noNight)};
+    from:(edit&&s.from)||k,to:(edit&&s.to)||'',noHol:!!(edit&&s.noHol),noWknd:!!(edit&&s.noWknd),noNight:!!(edit&&s.noNight),
+    act:s&&s.act?Object.assign({},s.act):null,actOpen:!!(s&&s.act)};
   if(d.alarm)stFill(d);
   return d;
 }
@@ -4110,6 +4138,7 @@ function renderStampReg(){
       <div class="prow"><div class="pl2">📅 기간</div>${tpick('srFrom',d.from,'','date')}<span class="tsep">~</span>${d.to?`${tpick('srTo',d.to,'','date')}<button class="xbtn" data-act="sr-noend" aria-label="끝 없음으로">✕</button>`:'<button class="tbtn" data-act="sr-setend">끝 없음 ›</button>'}</div>
       ${sw('srHol',d.noHol,'🎌 공휴일엔 빼기')}${['daily','work','month'].includes(d.rep)?sw('srWknd',d.noWknd,'📅 토 · 일 빼기'):''}</div>`:''}
     ${stFamShow()?`<div class="pg-cap">가족</div><div class="pg-sec" style="margin-top:0">${sw('srFam',d.fam,`👪 가족에게 보이기<small>${d.fam?'가족 달력에 보여요':'나만 봐요'}</small>`)}</div>`:''}
+    ${d.kind==='pill'?'':actFoldHtml(d.act,d.actOpen,'sr')}
     <div class="pg-cap">알림</div>
     <div class="pg-sec" style="margin-top:0">${sw('srAlarm',d.alarm,`⏰ 시각 알림<small>${d.alarm?'아래 시각에 울려요':'끔 · 달력에서만 봐요'}</small>`)}
       ${d.alarm?d.ats.map((t,i)=>`<div class="prow"><div class="pl2">${d.times>1?`${i+1}번째`:'시각'}</div>${tpick('srAt'+i,t)}</div>`).join('')+`<div class="hint" style="margin:0;padding:8px 16px">${stAlarmHint(d)}</div>`:''}</div>
@@ -4138,6 +4167,58 @@ function stKeepPast(old,s,k){
     else if(!was&&now)(s.skip=s.skip||[]).push(x);
   }
 }
+/* ---- v0.114 학원 · 취미 · 동아리 (스티커 활동): 활동 시간 · 위치 → 날씨 · 근무 겹치면 빠짐 · 끝나면 자동 완료 ---- */
+// 접는 칸 (내 스티커 편집 = sr · 가족 스티커 편집 = ms). days: 가족 스티커는 요일도 여기서
+function actFoldHtml(a,open,pre,days){
+  a=a||{};const has=!!(a.s&&a.e);
+  const head=`<button class="prow tap actf-h" data-act="${pre}-actf" style="width:100%"><div class="pl2">🎒 학원 · 취미 · 동아리<small>${has?`${a.s} ~ ${a.e}${a.r?' · '+esc(wxName(a.r)):''}`:'활동 시간 · 위치 (선택)'}</small></div><div class="pv">${open?'접기 ⌃':'펼치기 ›'}</div></button>`;
+  if(!open)return `<div class="pg-sec actf" style="margin-top:12px">${head}</div>`;
+  return `<div class="pg-sec actf" style="margin-top:12px">${head}
+    ${days?`<div class="prow"><div class="pl2">요일</div><div class="sdays">${[1,2,3,4,5,6,0].map(w=>`<button class="${days.includes(w)?'on':''}" data-act="${pre}-aday" data-v="${w}">${DOW[w]}</button>`).join('')}</div></div>`:''}
+    <div class="prow"><div class="pl2">활동 시간</div>${tpick(pre+'AS',a.s||'16:00')}<span class="tsep">~</span>${tpick(pre+'AE',a.e||(a.s?m2tm(tm2m(a.s)+60):'17:00'))}</div>
+    ${wxOn()?`<div class="prow tap" data-act="${pre}-actr"><div class="pl2">위치<small>날씨를 볼 곳</small></div><div class="pv">${a.r?'📍 '+esc(wxName(a.r)):'🏠 집과 같음'} ›</div></div>`:''}
+    <div class="hint" style="margin:0;padding:8px 16px">${has?'끝 시간이 지나면 자동으로 완료 (안 간 날은 눌러서 풀기) · 근무 시간과 겹치는 날은 빠져요'+(wxOn()?' · 갈 때 · 올 때 비 · 눈이면 알려줘요':''):'시간을 정하면 끝날 때 자동으로 완료돼요'}</div>
+    ${has?`<div style="padding:0 16px 12px"><button class="btn ghost sm" data-act="${pre}-actoff">활동 시간 지우기</button></div>`:''}</div>`;
+}
+// 활동 시각 (그날 ms) · 끝이 시작보다 이르면 다음날
+function actSpan(a,d){if(!a||!a.s||!a.e)return null;const b=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(),s=b+tm2m(a.s)*6e4;let e=b+tm2m(a.e)*6e4;if(e<=s)e+=864e5;return {s,e};}
+// 근무(또는 학교) 시간과 겹치는지: 그날 근무 + 어젯밤부터 이어지는 야간
+function actClashWin(a,d,winOf){const x=actSpan(a,d);if(!x)return false;for(const dd of [d,addDays(d,-1)]){const w=winOf(dd);if(w&&x.s<w.e&&x.e>w.s)return true;}return false;}
+const actClash=(a,k)=>actClashWin(a,parse(k),d=>wxMyWin(d));
+// 가족: 교대 = 그 근무 시간 · 학생 / 회사 = 등교~하교 / 출근~퇴근 (쉬는 날 빼고)
+function famWinOf(m){return d=>{if(m.kind==='shift'||m.kind==='sched')return wxMemWin(m,d);if(m.kind==='free'||memberOff(m,d))return null;return wxSpan(d,m.start||(m.kind==='student'?'08:30':'09:00'),m.end||(m.kind==='student'?'15:00':'18:00'));};}
+// 가족 스티커가 그날 깔리는지 (활동 요일 · 겹침 빼기 · 이 날 빼기)
+function manPlanned(m,x,k){const a=x&&x.act;if(!a||!a.s||!a.e||!(a.days||[]).length)return false;if((a.skip||[]).includes(k))return false;const d=parse(k);if(!a.days.includes(d.getDay()))return false;return !actClashWin(a,d,famWinOf(m));}
+// 끝 시간이 지나면 자동 완료 (한 번만 · 그 뒤에 풀면 그대로 둠). 활동을 정한 날(since)부터 · 최근 35일만
+function actAuto(){
+  try{
+    const now=Date.now(),today=new Date(),tk=fmt(today);let ch=false;
+    const days=since=>{const out=[];for(let i=35;i>=0;i--){const k=fmt(addDays(today,-i));if(k>=(since||tk))out.push(k);}return out;};
+    const st=S.stamps,ad=st.actDone=isObj(st.actDone)?st.actDone:{};
+    (st.defs||[]).forEach(s=>{if(!s.act||s.retired||s.kind!=='mark')return;days(s.act.since).forEach(k=>{
+      if((ad[k]||[]).includes(s.id)||!stampPlanned(s,k))return;const x=actSpan(s.act,parse(k));if(!x||now<x.e)return;
+      (ad[k]=ad[k]||[]).push(s.id);const lg=st.log[k]=st.log[k]||{};if(!lg[s.id])lg[s.id]=stN(s);ch=true;});});
+    (S.family||[]).forEach(m=>{if(m.kind==='sched'||!Array.isArray(m.sdefs))return;const md=m.actDone=isObj(m.actDone)?m.actDone:{};
+      m.sdefs.forEach(x=>{if(!x.act)return;days(x.act.since).forEach(k=>{
+        if((md[k]||[]).includes(x.id)||!manPlanned(m,x,k))return;const sp=actSpan(x.act,parse(k));if(!sp||now<sp.e)return;
+        (md[k]=md[k]||[]).push(x.id);m.stk=m.stk||{};const a=m.stk[k]||[];if(!a.includes(x.id))m.stk[k]=[...a,x.id];ch=true;});});
+      Object.keys(md).forEach(k=>{if(k<fmt(addDays(today,-40)))delete md[k];});});
+    Object.keys(ad).forEach(k=>{if(k<fmt(addDays(today,-40)))delete ad[k];});
+    if(ch)save();
+  }catch(e){}
+}
+// 활동 위치 고르기: 날씨 지역 고르기를 그대로 씀 (wxPickFor = 'a:') · 집과 가까우면 같게 할지 물어봄
+let actPickCb=null;
+function actPickRegion(cb){actPickCb=cb;wxPickSido('a:');}
+function actRegionDone(code){
+  const cb=actPickCb;actPickCb=null;if(!cb)return;
+  if(code&&wxOk(S.wx.home)&&wxNear(S.wx.home,code)&&code!==S.wx.home){
+    actPickCb=cb;openPop(`<div class="mh">📍 활동 위치<b>집과 가까워요. 같은 지역으로 볼까요?</b></div>
+      <div class="hint" style="padding:10px 16px 2px">같게 보면 집 날씨로 알려 줘요 (거의 같아요).</div>
+      <button class="mi" data-act="act-near" data-v="" style="justify-content:center;font-weight:800;color:var(--accent)">집과 같게</button>
+      <button class="mi" data-act="act-near" data-v="${code}" style="justify-content:center">따로 볼래요</button>`);return;}
+  closePop();cb(code);
+}
 function stampRegSave(){
   srPull();const d=stDraft;if(!d)return;
   let s=S.stamps.defs.find(x=>x.id===d.id);
@@ -4154,6 +4235,7 @@ function stampRegSave(){
   s.times=d.times;
   if(stFamShow())s.fam=!!d.fam;   // 실제 가족이 있어 칸이 보였을 때만 바꿈 (아니면 기본 규칙 그대로)
   if(s.kind==='pill')s.color=d.color||s.color||STK_COL[0];else s.emoji=d.emoji||s.emoji||'🏃';
+  if(d.act&&d.act.s&&d.act.e&&s.kind==='mark')s.act={s:d.act.s,e:d.act.e,r:wxOk(d.act.r)?d.act.r:'',since:(s.act&&s.act.since)||fmt(new Date())};else delete s.act;
   if(d.alarm){stFill(d);s.ats=d.ats.slice(0,d.times);s.ats.forEach((t,i)=>{(S.stamps.lastAt=S.stamps.lastAt||[])[i]=t;});}else s.ats=[];   // 마지막에 정한 시각은 다음 새 스티커의 처음 값
   const k=d.k;
   if(d.rep==='once'){
@@ -4653,6 +4735,12 @@ function togetherOn(d){
   if(S.famDayToo!==false&&tm2m(timesOf(k).start)>=15*60)return 'day';
   return '';
 }
+// 가족(직접 추가)의 지금 활동 · 오늘 다음 활동
+function famActs(m,d){const k=fmt(d);return (m.sdefs||[]).filter(x=>x.act&&(manPlanned(m,x,k)||((m.stk||{})[k]||[]).includes(x.id)&&(x.act.days||[]).includes(d.getDay()))).map(x=>({x,sp:actSpan(x.act,d)})).filter(z=>z.sp).sort((a,b)=>a.sp.s-b.sp.s);}
+function famActNow(m,now){
+  if(m.kind==='sched')return null;const d=new Date(now),list=famActs(m,d),cur=list.find(z=>now>=z.sp.s&&now<z.sp.e);if(!cur)return null;
+  const nx=list.find(z=>z.sp.s>=cur.sp.e);return [icoTxt(cur.x.emoji,'🎒'),`${cur.x.name||'활동'} 중`,`${cur.x.act.e} 끝${nx?` · ${nx.x.act.s} ${nx.x.name||''}`:''}`];
+}
 function memberStatus(m,now){
   const d=new Date(now),h=d.getHours()*60+d.getMinutes(),k=fmt(d);
   if(m.kind==='sched'){const sh=schShift(m.sch,d),nm=schType(m.sch,sh).name;
@@ -4668,6 +4756,7 @@ function memberStatus(m,now){
     const inW=e>s?(h>=s&&h<e):(h>=s||h<e);
     return inW?[stLabel('work').e,'근무 중',`${shiftLabel(sh)} · ${t.end} 끝`]:['🙂','쉬는 중',`${shiftLabel(sh)} ${t.start} 시작`];
   }
+  {const ac=famActNow(m,now);if(ac)return ac;}   // v0.114 학원 · 취미 시간이면 "🎹 피아노 중 · 17:30 끝"
   if(h>=23*60||h<6*60)return ['😴','자는 중',''];
   if(m.kind==='free')return ['🏠','집',''];
   if(memberOff(m,d)){
@@ -4700,7 +4789,7 @@ function renderFamily(){
       <div class="sm">${esc([st.sub,st.left].filter(Boolean).join(' · '))}</div>
       ${st.prog!==undefined?`<div class="bar"><i style="width:${Math.round(st.prog*100)}%"></i></div>`:''}
     </div>`;
-  const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);return `<div class="nc ${l==='자는 중'?'sl':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-mancal" data-id="${m.id}" data-hold="fam"`}>${m.kind==='sched'?'':`<span class="mced" data-act="fam-edit" data-id="${m.id}" aria-label="고치기">✏️</span>`}<div class="nwho">${famAv(m,i)}${esc(m.name)}</div><div class="st">${e?ico(e)+' ':''}${esc(l)}</div><div class="sm">${esc(sub)}</div>${wxFamChip(m,now)}</div>`;}).join('');
+  const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);return `<div class="nc ${l==='자는 중'?'sl':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-mancal" data-id="${m.id}" data-hold="fam"`}>${m.kind==='sched'?'':`<span class="mced" data-act="fam-edit" data-id="${m.id}" aria-label="고치기">✏️</span>`}<div class="nwho">${famAv(m,i)}${esc(m.name)}</div><div class="st">${e?ico(e)+' ':''}${esc(l)}</div><div class="sm">${esc(sub)}</div>${wxFamChip(m,now)}${famActWx(m,now)}</div>`;}).join('');
   const cheerBtns='';   // v0.106: 응원 버튼 없앰
   // 이번 주 시간표
   // 가족 시간표: 오늘 가운데(앞뒤 30일) 또는 주 단위(앞뒤 4주) · 옆으로 쓸어서 넘김 · 오늘 열은 위에서 아래까지 하나의 네모 박스
@@ -4817,8 +4906,8 @@ function openFamEdit(){
 /* ---- 직접 추가한 가족 달력 (근무 · 공휴일 + 나만 보는 메모 · 스티커, 이 폰에만 저장: m.notes[날짜]=글, m.stk[날짜]=[스티커 id]) ---- */
 var manId='';
 const manMember=()=>(S.family||[]).find(x=>x.id===manId);
-const manIc=(x,px)=>`<span class="se" style="font-size:${px-2}px">${ico(x.emoji)}</span>`;
-const manStk=(m,k)=>((m.stk&&m.stk[k])||[]).map(id=>(m.sdefs||[]).find(x=>x.id===id)||S.stamps.defs.find(x=>x.id===id&&!x.retired)).filter(Boolean);
+const manIc=(x,px)=>`<span class="se" style="font-size:${px-2}px${x.todo?';opacity:.38':''}">${ico(x.emoji)}</span>`;
+const manStk=(m,k,todo)=>{const done=((m.stk&&m.stk[k])||[]).map(id=>(m.sdefs||[]).find(x=>x.id===id)||S.stamps.defs.find(x=>x.id===id&&!x.retired)).filter(Boolean);if(!todo)return done;return done.concat((m.sdefs||[]).filter(x=>x.act&&!done.includes(x)&&manPlanned(m,x,k)).map(x=>Object.assign({},x,{todo:1})));};
 function manLabel(m,d){return m.kind==='shift'?shiftLabel(famShift(m,d)):memberOff(m,d)?(m.kind==='free'?'일정 없음':'쉬는 날'):m.kind==='free'?'일정 있음':famLbl(m);}
 const famLbl=m=>String((m&&m.label)||'').trim()||(m&&m.kind==='student'?'학교':m&&m.kind==='free'?'일정':'회사');   // 가는 곳 이름 (v0.113: 바꿀 수 있음)
 const famLblCol=m=>m.kind==='student'?['#a3d4b5','#16301f']:['#b9c2ce','#1f2731'];   // 내 근무 색(--day)과 같은 진하기 → 칸 채우기에서도 보임
@@ -4849,7 +4938,7 @@ function manGrid(m){
   let cells='';
   for(let i=0;i<rows*7;i++){
     const d=addDays(start,i),k=fmt(d),hol=holName(k),dow=d.getDay();
-    const sk=manStk(m,k),below=!!hol&&sk.length>=2&&!holBeside(),hone=hol&&sk.length&&!below?holOne(hol):'',row=sk.slice(0,2),more=sk.slice(2),note=m.notes&&m.notes[k];
+    const sk=manStk(m,k,true),below=!!hol&&sk.length>=2&&!holBeside(),hone=hol&&sk.length&&!below?holOne(hol):'',row=sk.slice(0,2),more=sk.slice(2),note=m.notes&&m.notes[k];
     let band='';
     if(m.kind==='shift'){const sh=famShift(m,d),c=tColors(typeOf(sh)),ps=famShift(m,addDays(d,-1)),ns=famShift(m,addDays(d,1));band=c&&!isRest(sh)&&(ps===sh||ns===sh)?`<i class="band ${ps===sh?'jl':''} ${ns===sh?'jr':''}" style="--tb:${c.bg}"></i>`:'';}
     const cbg=manCellBg(m,d);
@@ -4886,7 +4975,7 @@ function manDayHtml(k){
     <div class="dstrip" id="dstrip">${strip}</div>
     <div class="tchips" style="margin-top:12px">${manChoices(m).map(c=>`<button class="tchip ${cur===c[0]?'on':''}" data-act="man-ov" data-k="${k}" data-v="${esc(c[0])}">${manChipIco(m,c[0])}<small>${esc(c[2])}</small></button>`).join('')}</div>
     <div class="lbl" style="margin-top:14px">스티커</div>
-    <div class="sgrid sg5 mstk">${defs.map(x=>`<button class="${on.includes(x.id)?'on':''}" data-act="man-stk" data-k="${k}" data-id="${esc(x.id)}" data-hold="mstk" data-hid="${esc(x.id)}"><span class="si">${ico(x.emoji)}</span><small>${esc(x.name||'')}</small></button>`).join('')}<button class="emp" data-act="man-stk-add" data-k="${k}"><span class="si">＋</span><small>만들기</small></button></div>
+    <div class="sgrid sg5 mstk">${defs.map(x=>{const pl=!on.includes(x.id)&&manPlanned(m,x,k);return `<button class="${on.includes(x.id)?'on':pl?'todo':''}" data-act="man-stk" data-k="${k}" data-id="${esc(x.id)}" data-hold="mstk" data-hid="${esc(x.id)}"><span class="si">${ico(x.emoji)}</span><small>${x.act&&(pl||on.includes(x.id))?esc(x.act.s):esc(x.name||'')}</small></button>`;}).join('')}<button class="emp" data-act="man-stk-add" data-k="${k}"><span class="si">＋</span><small>만들기</small></button></div>
     <div class="hint" style="padding:4px 0 0;margin:0">누르면 붙이기 · 길게 누르면 고치기</div>
     <div class="lbl" style="margin-top:14px">메모</div>
     <div class="vcmemo-bar"><input type="text" id="manNote" maxlength="40" value="${esc(note)}" placeholder="이 폰에만 저장돼요" enterkeyhint="done"><button class="send" data-act="man-note" data-k="${k}" aria-label="저장">${ICON.send}</button></div>`;
@@ -4903,14 +4992,30 @@ function manGo(k,quiet){
   if(!quiet)buzz(6);openManDay(k);
 }
 function manStkRefresh(){renderManCalPage();if(manDayK&&sheetMode==='mandy'&&$('#sheet').classList.contains('open'))openManDay(manDayK);}
+let msDraft=null;
 function openManStkEdit(id){
   const m=manMember();if(!m)return;const x=manSdefs(m).find(y=>y.id===id);if(!x)return;
-  openPop(`<div class="mh">${esc(m.name)} 스티커<b>${esc(x.name||'스티커')}</b></div>
-    <div class="mi icn-top"><span class="icn-cur">${ico(x.emoji)}</span><input type="text" id="mstkName" value="${esc(x.name||'')}" maxlength="12" placeholder="이름"></div>
-    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="mstk-swap" data-id="${esc(id)}">다른 스티커로</button><button class="btn ghost grow danger" data-act="mstk-del" data-id="${esc(id)}">지우기</button></div>
-    <div class="mi"><button class="btn grow" data-act="mstk-ok" data-id="${esc(id)}">확인</button></div>`);
+  msDraft={id,name:x.name||'',emoji:x.emoji,act:x.act?JSON.parse(JSON.stringify(x.act)):null,actOpen:!!x.act};renderManStkEdit();
 }
-function mstkPullName(id){const m=manMember(),n=$('#mstkName');if(!m||!n)return;const x=manSdefs(m).find(y=>y.id===id);if(x){const v=n.value.trim().slice(0,12);if(v)x.name=v;}}
+function renderManStkEdit(){
+  const m=manMember(),d=msDraft;if(!m||!d)return;
+  openPop(`<div class="mh">${esc(m.name)} 스티커<b>${esc(d.name||'스티커')}</b></div>
+    <div class="mi icn-top"><span class="icn-cur">${ico(d.emoji)}</span><input type="text" id="mstkName" value="${esc(d.name)}" maxlength="12" placeholder="이름"></div>
+    <div style="padding:0 12px">${actFoldHtml(d.act,d.actOpen,'ms',(d.act&&d.act.days)||[])}</div>
+    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="mstk-swap" data-id="${esc(d.id)}">다른 스티커로</button><button class="btn ghost grow danger" data-act="mstk-del" data-id="${esc(d.id)}">지우기</button></div>
+    <div class="mi"><button class="btn grow" data-act="mstk-ok" data-id="${esc(d.id)}">확인</button></div>`);
+}
+function mstkPull(){const n=$('#mstkName');if(n&&msDraft)msDraft.name=n.value.trim().slice(0,12);}
+// 확인: 이름 · 활동(요일 + 시간이 있어야 저장)
+function mstkSave(){
+  const m=manMember(),d=msDraft;if(!m||!d)return;mstkPull();
+  const x=manSdefs(m).find(y=>y.id===d.id);if(!x)return;
+  if(d.name)x.name=d.name;
+  const a=d.act;if(a&&a.s&&a.e&&(a.days||[]).length)x.act={days:a.days.slice().sort(),s:a.s,e:a.e,r:wxOk(a.r)?a.r:'',since:(x.act&&x.act.since)||fmt(new Date()),...(x.act&&x.act.skip?{skip:x.act.skip}:{})};
+  else delete x.act;
+  msDraft=null;
+}
+function mstkPullName(id){mstkPull();}
 function famPull(){
   const m=famDraft;if(!m)return;
   const v=id=>{const e=$('#'+id);return e?e.value:null;};
@@ -6191,7 +6296,8 @@ function wxMemWin(m,d){
 const wxMemKey=m=>m.uid||m.id;
 function wxMemWork(m){const fw=(S.wx&&S.wx.fw)||{};const sh=m.kind==='sched'&&m.sch&&m.sch.wx&&m.sch.wx.w;return wxOk(sh)?sh:wxOk(fw[wxMemKey(m)])?fw[wxMemKey(m)]:'';}
 function wxFam(){return (S.family||[]).concat(famPeers()).filter(m=>m.kind==='shift'||m.kind==='sched');}
-function wxCodes(){if(!wxOn())return [];const s=new Set([S.wx.home]);if(wxOk(S.wx.work))s.add(S.wx.work);wxFam().forEach(m=>{const w=wxMemWork(m);if(w)s.add(w);});return [...s];}
+function actRegions(){const r=[];try{(S.stamps.defs||[]).forEach(s=>{if(s.act&&wxOk(s.act.r)&&!s.retired)r.push(s.act.r);});(S.family||[]).forEach(m=>(m.sdefs||[]).forEach(x=>{if(x.act&&wxOk(x.act.r))r.push(x.act.r);}));}catch(e){}return [...new Set(r)];}
+function wxCodes(){if(!wxOn())return [];const s=new Set([S.wx.home,...actRegions()]);if(wxOk(S.wx.work))s.add(S.wx.work);wxFam().forEach(m=>{const w=wxMemWork(m);if(w)s.add(w);});return [...s];}
 async function wxFetch(force){
   if(!wxOn()||!WX_URL||wxBusy)return;
   const codes=wxCodes(),now=Date.now(),C=wxCache();
@@ -6224,11 +6330,14 @@ function wxChanged(){
 // 출퇴근 문구 (내 것): 근무 날이면 출퇴근, 아니면 하루 요약
 // 내 직장 지역 (집과 가까워서 "같은 지역으로 보기"를 켰으면 없는 것처럼 = 전부 집 날씨 · 가족에게 보내는 직장은 그대로)
 const wxWk=()=>S.wx&&S.wx.one?'':(S.wx&&S.wx.work)||'';
+// 그날 내 활동 (스티커 활동 · 깔린 날만) → 날씨 칸
+function actWx(a,sp,name){const r=wxOk(a.r)?a.r:'';return {n:String(name||'활동').slice(0,6),s:sp.s,e:sp.e,raw:r?wxRaw(r):null,p:r?wxName(r):'',q:wxFull(r||S.wx.home)};}
+function myActs(d){const k=fmt(d);try{return (S.stamps.defs||[]).filter(s=>s.act&&s.kind==='mark'&&!s.retired&&stampPlanned(s,k)).map(s=>{const sp=actSpan(s.act,d);return sp?actWx(s.act,sp,s.name):null;}).filter(Boolean);}catch(e){return [];}}
 function wxMine(d,now){
-  const H=wxRaw(S.wx.home),W=wxRaw(wxWk())||null,w=wxMyWin(d);
+  const H=wxRaw(S.wx.home),W=wxRaw(wxWk())||null,w=wxMyWin(d),acts=myActs(d);
   const hq=wxFull(S.wx.home),wq=wxOk(wxWk())?wxFull(wxWk()):hq;
-  if(w){const c=WX.commute(H,W,{s:w.s,e:w.e,hn:`집 · ${wxName(S.wx.home)}`,wn:W?`직장 · ${wxName(wxWk())}`:`집 · ${wxName(S.wx.home)}`,hq,wq,now:now||Date.now()});if(c)return c;}   // 시간 예보가 없는 먼 근무 날은 하루 요약
-  return WX.dayCard(H,WX.keyD(new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime()),{now:now||Date.now(),hq});
+  if(w){const c=WX.commute(H,W,{s:w.s,e:w.e,hn:`집 · ${wxName(S.wx.home)}`,wn:W?`직장 · ${wxName(wxWk())}`:`집 · ${wxName(S.wx.home)}`,hq,wq,now:now||Date.now(),acts});if(c)return c;}   // 시간 예보가 없는 먼 근무 날은 하루 요약
+  return WX.dayCard(H,WX.keyD(new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime()),{now:now||Date.now(),hq,acts});
 }
 // 날짜 창 맨 위 한 줄 (간단하게): 근무 날 3일 안 = "☔ 퇴근길 비 · 우산 | 출근 6° · 퇴근 12°" · 그 밖 = "☀️ 오전 맑음 · ☔ 오후 비 60% | 4°~15°"
 const WXP_KEY='eonjeswieo:wxp';let wxPC=null;const wxPBusy={};
@@ -6370,6 +6479,14 @@ function wxDayPopHtml(k){
 function wxOpenDay(k){const h=wxDayPopHtml(k);if(!h)return;wxPopK=k;wxOpenPop(h);const m=$('#pop .menu');if(m)m.classList.add('wxdpop');}
 const wxHm=ms=>{const x=new Date(ms);return `${pad(x.getHours())}:${pad(x.getMinutes())}`;};
 // 가족 카드: 출근 · 퇴근 앞뒤 2시간이면 "☔ 퇴근 12° 비" · 그 밖엔 그날 아이콘만 (누르면 자세히)
+function famActWx(m,now){
+  try{if(!wxOn()||m.kind==='sched')return '';const H=wxRaw(S.wx.home);if(!H)return '';const d=new Date(now);
+    const list=famActs(m,d).filter(z=>now<z.sp.e);if(!list.length)return '';
+    const ac=list.map(z=>actWx(z.x.act,z.sp,z.x.name)),c=WX.dayCard(H,WX.keyD(now),{now,acts:ac});
+    const k=c&&c.k;if(!k||!/(비|눈) 와요$/.test(k.t))return '';
+    return `<span class="wxb wet">${wxImg(k.i)||'☔'} ${esc(k.t.replace(/ 와요$/,''))} · ${/눈/.test(k.t)?'조심':'우산'}</span>`;
+  }catch(e){return '';}
+}
 function wxFamChip(who,now){
   if(!wxOn())return '';
   const d=new Date(now),win=who==='me'?wxMyWin(d):wxMemWin(who,d);if(!win)return '';
@@ -6447,7 +6564,8 @@ let wxPickFor='home';
 function wxPickSido(f){
   wxPickFor=f;const cur=f==='home'?S.wx.home:f==='work'?S.wx.work:(S.wx.fw||{})[f.slice(2)];
   const sidos=[...new Set(WX_REG.map(r=>r[1]))],cs=(wxReg(cur)||[])[1];
-  openPop(`<div class="mh">${f==='home'?'🏠 집':f==='work'?'🏭 직장':'🏭 가족 직장'}<b>시 · 도를 골라요</b></div><div class="wxg">${sidos.map(s=>`<button class="${s===cs?'on':''}" data-act="wx-sido" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+  openPop(`<div class="mh">${f==='home'?'🏠 집':f==='work'?'🏭 직장':f==='a:'?'📍 활동 위치':'🏭 가족 직장'}<b>시 · 도를 골라요</b></div><div class="wxg">${sidos.map(s=>`<button class="${s===cs?'on':''}" data-act="wx-sido" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+    ${f==='a:'?`<button class="mi" data-act="wx-clear" style="justify-content:center;font-weight:700">🏠 집과 같게</button>`:''}
     ${f==='work'&&S.wx.work||f.startsWith('f:')&&cur?`<button class="mi" data-act="wx-clear" style="justify-content:center;color:var(--muted)">직장 지역 비우기</button>`:''}
     <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);
 }
@@ -6488,9 +6606,10 @@ function wxAskOne(){
 }
 function wxSet(code){
   if(!S.wx)S.wx={home:'',work:'',fw:{}};
+  if(wxPickFor==='a:'){save();actRegionDone(code);wxFetch(true);return;}
   if(wxPickFor==='home')S.wx.home=code;else if(wxPickFor==='work')S.wx.work=code;
   else{S.wx.fw=S.wx.fw||{};const id=wxPickFor.slice(2);if(code)S.wx.fw[id]=code;else delete S.wx.fw[id];}
-  {const used=new Set([S.wx.home,S.wx.work,...Object.values(S.wx.fw||{})]),nm=S.wx.nm||{};Object.keys(nm).forEach(k=>{if(!used.has(k))delete nm[k];});S.wx.nm=nm;}
+  {const used=new Set([S.wx.home,S.wx.work,...Object.values(S.wx.fw||{}),...actRegions()]),nm=S.wx.nm||{};Object.keys(nm).forEach(k=>{if(!used.has(k))delete nm[k];});S.wx.nm=nm;}
   if(wxPickFor==='work'){if(code&&wxNear(S.wx.home,code)){save();wxFetch(true);wxAskOne();return;}delete S.wx.one;}
   save();closePop();
   if(wxPickFor.startsWith('f:'))render();else openWxPage();
@@ -6523,7 +6642,7 @@ function wxActs(act,t){
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>wxFetch(false),1500);});
 // 시험용 창구 (tests/phone/s71.js) — 날씨 기능 함수만
-window.__wx={get S(){return S;},get page(){return {pageMode,pageBack};},openDay,closeSheet,closePop,closePage,openAddonPage,render,save,pushAlarmsToNative,pushRemindersToNative,famCleanSched,famPayload,
+window.__wx={shiftOf,wxMyWin,openStampReg,actAuto,stampPlanned,myActs,manPlanned,famActNow,wxMine,get S(){return S;},get page(){return {pageMode,pageBack};},openDay,closeSheet,closePop,closePage,openAddonPage,render,save,pushAlarmsToNative,pushRemindersToNative,famCleanSched,famPayload,
   newAlarm:o=>{draft=Object.assign(newAlarm(),o||{});alSnd=false;openAlarmPage();},wxOn,wxRaw,wxFam,wxMemWin,wxMemWork,wxMemKey,wxOpenFam,wxChipIcon,
   openPatternPage,openStatsPage,openSlipPage:ym=>{slipYM=ym;openSlipPage();},statsCalc,payRates,dayHours,famTimesPayload,memberStatus,otOpen,get stYM(){return stYM;},set stYM(v){stYM=v;}};
 
@@ -6549,6 +6668,7 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
+  'v0.114':`· 스티커에 <b>🎒 학원 · 취미 · 동아리</b> 칸이 생겼어요 (스티커 고치기 맨 아래 · 접혀 있어요)\n· 활동 시간을 넣으면 <b>끝나면 자동으로 완료</b> · 근무 시간과 겹치는 날은 빠져요 · 알림은 30분 전으로 미리 채워 줘요\n· 날씨: 활동 있는 날은 <b>출근 · 퇴근 · 활동</b> 3칸 (그날 순서대로) · 갈 때 · 끝날 때 비 오면 알려줘요\n· 가족 달력 스티커도 요일 · 시간을 넣을 수 있어요 → 가족 탭에 "피아노 중 · 17:30 끝"`,
   'v0.113':`· <b>가족 달력</b>(직접 추가한 가족)이 내 달력처럼 보여요: 화면 모드(동그라미 · 칸 채우기) 그대로 · 날짜 창도 옆으로 밀기\n· 가족마다 <b>스티커판</b>이 따로 있어요 (처음엔 내 판 복사 · 개수 제한 없음 · 길게 누르면 고치기)\n· '학교' 대신 <b>유치원 · 학원</b>처럼 이름을 바꿀 수 있어요 (가족 ✏️)\n· 가족 탭: 내 카드가 한 줄로 넓어졌어요 · 위쪽을 누르면 오늘 달력, 날씨를 누르면 날씨\n· 또렷하게 + 동그라미: 근무 글자가 검은색 (어두운 화면은 흰색)\n· 한 달 위젯의 달력 버튼 그림을 크게`,
   'v0.112':`· 옆으로 밀기가 덜 씹혀요: 짧게 <b>툭 튕겨도</b> 넘어가고, 넘어가는 중에 또 밀어도 받아요`,
   'v0.111':`· 날짜 창을 여러 번 밀다 보면 엉뚱한 달로 튀던 것 고침`,
@@ -7761,10 +7881,12 @@ document.addEventListener('click',e=>{
     case 'man-day':if(manPaint)break;if(t.classList.contains('out')){buzz(6);vcMove(monthDirOf(t.dataset.k,vcY,vcM));break;}openManDay(t.dataset.k);break;
     case 'man-go':manGo(t.dataset.k);break;
     case 'man-stk-add':{const k=t.dataset.k;openStampBig({title:'스티커 만들기',onPick:(e,n)=>{const m=manMember();if(!m)return;const f=stDefFrom(e,n);manSdefs(m).push({id:'m_'+uid(),emoji:f.kind==='pill'?'💊':f.emoji,name:f.name});save();closePop();manStkRefresh();}});break;}
-    case 'mstk-ok':mstkPullName(t.dataset.id);save();closePop();manStkRefresh();break;
-    case 'mstk-swap':{const id=t.dataset.id;mstkPullName(id);openStampBig({title:'다른 스티커로',onPick:(e,n)=>{const m=manMember();if(!m)return;const x=manSdefs(m).find(y=>y.id===id);if(!x)return;const f=stDefFrom(e,n);x.emoji=f.kind==='pill'?'💊':f.emoji;save();closePop();manStkRefresh();}});break;}
-    case 'mstk-del':{const m=manMember(),id=t.dataset.id;if(!m)break;m.sdefs=manSdefs(m).filter(y=>y.id!==id);if(m.stk)Object.keys(m.stk).forEach(k=>{m.stk[k]=m.stk[k].filter(x=>x!==id);if(!m.stk[k].length)delete m.stk[k];});save();closePop();manStkRefresh();toast('스티커를 지웠어요');break;}
-    case 'man-stk':{const m=manMember();if(!m)break;const k=t.dataset.k,id=t.dataset.id;m.stk=m.stk||{};const a=m.stk[k]||[];m.stk[k]=a.includes(id)?a.filter(x=>x!==id):[...a,id];if(!m.stk[k].length)delete m.stk[k];save();renderManCalPage();openManDay(k);break;}
+    case 'mstk-ok':mstkSave();save();closePop();actAuto();manStkRefresh();break;
+    case 'mstk-swap':{const id=t.dataset.id;mstkPullName(id);openStampBig({title:'다른 스티커로',onPick:(e,n)=>{const m=manMember();if(!m)return;const x=manSdefs(m).find(y=>y.id===id);if(!x)return;const f=stDefFrom(e,n);x.emoji=f.kind==='pill'?'💊':f.emoji;if(msDraft&&msDraft.id===id)msDraft.emoji=x.emoji;save();if(msDraft)renderManStkEdit();else{closePop();manStkRefresh();}}});break;}
+    case 'mstk-del':{msDraft=null;const m=manMember(),id=t.dataset.id;if(!m)break;m.sdefs=manSdefs(m).filter(y=>y.id!==id);if(m.stk)Object.keys(m.stk).forEach(k=>{m.stk[k]=m.stk[k].filter(x=>x!==id);if(!m.stk[k].length)delete m.stk[k];});save();closePop();manStkRefresh();toast('스티커를 지웠어요');break;}
+    case 'man-stk':{const m=manMember();if(!m)break;const k=t.dataset.k,id=t.dataset.id;m.stk=m.stk||{};const a=m.stk[k]||[];const x=(m.sdefs||[]).find(y=>y.id===id),A=x&&x.act;
+      if(A&&A.days&&A.days.includes(parse(k).getDay())){if(a.includes(id))A.skip=[...(A.skip||[]).filter(z=>z!==k),k].slice(-60);else A.skip=(A.skip||[]).filter(z=>z!==k);m.actDone=m.actDone||{};if(!(m.actDone[k]||[]).includes(id))(m.actDone[k]=m.actDone[k]||[]).push(id);}   // 활동: 완료 → 다시 누르면 이 날 빼기(안 깔림)
+      m.stk[k]=a.includes(id)?a.filter(x=>x!==id):[...a,id];if(!m.stk[k].length)delete m.stk[k];save();renderManCalPage();openManDay(k);break;}
     case 'man-note':{const m=manMember();if(!m)break;const k=t.dataset.k,v=($('#manNote')||{value:''}).value.trim().slice(0,40);m.notes=m.notes||{};if(v)m.notes[k]=v;else delete m.notes[k];save();closeSheet();renderManCalPage();break;}
     case 'man-edit':{const m=manMember();if(!m)break;famDraft=JSON.parse(JSON.stringify(m));openFamEdit();break;}
     case 'fam-edit':{const m=S.family.find(x=>x.id===t.dataset.id);if(!m)break;famDraft=JSON.parse(JSON.stringify(m));openFamEdit();break;}
@@ -8171,6 +8293,14 @@ document.addEventListener('click',e=>{
     case 'sr-times':srPull();stDraft.times=+t.dataset.v;if(stDraft.alarm)stFill(stDraft);renderStampReg();break;
     case 'sr-setend':srPull();stDraft.to=fmt(addDays(parse(stDraft.from||stDraft.k),29));renderStampReg();toast('끝 날짜를 눌러 바꿀 수 있어요');break;
     case 'sr-noend':srPull();stDraft.to='';renderStampReg();break;
+    case 'sr-actf':srPull();stDraft.actOpen=!stDraft.actOpen;if(stDraft.actOpen&&!stDraft.act)stDraft.act={s:'',e:'',r:''};renderStampReg();break;
+    case 'sr-actoff':srPull();stDraft.act=null;stDraft.actOpen=false;renderStampReg();break;
+    case 'sr-actr':{srPull();const d=stDraft;actPickRegion(code=>{if(stDraft!==d)return;d.act=Object.assign({s:'',e:''},d.act||{},{r:code||''});renderStampReg();});break;}
+    case 'act-near':closePop();{const cb=actPickCb;actPickCb=null;if(cb)cb(t.dataset.v||'');}break;
+    case 'ms-actf':mstkPull();msDraft.actOpen=!msDraft.actOpen;renderManStkEdit();break;
+    case 'ms-aday':{mstkPull();const a=msDraft.act=Object.assign({s:'',e:'',days:[]},msDraft.act||{}),w=+t.dataset.v;a.days=a.days.includes(w)?a.days.filter(x=>x!==w):[...a.days,w];renderManStkEdit();break;}
+    case 'ms-actoff':mstkPull();msDraft.act=null;msDraft.actOpen=false;renderManStkEdit();break;
+    case 'ms-actr':{mstkPull();const d=msDraft;actPickRegion(code=>{if(msDraft!==d)return;d.act=Object.assign({s:'',e:'',days:[]},d.act||{},{r:code||''});renderManStkEdit();});break;}
     case 'sr-save':afterCompose('#srName',stampRegSave);break;
     case 'sh-undo':{if(hidSnap){S.stamps=JSON.parse(hidSnap);hidSnap=null;save();render();if(pageMode==='stamps')openStampPage();}closePop();toast('등록을 취소했어요');break;}
     case 'more-status':openStatusPage();break;
@@ -8347,6 +8477,13 @@ document.addEventListener('change',e=>{
     else if(id==='tt_sf'&&v)ttSet('sleep',{from:v});else if(id==='tt_st'&&v)ttSet('sleep',{to:v});else if(id==='tt_son')ttSet('sleep',{on:t.checked});
     else if(/^tt_b[ft]\d+$/.test(id)&&v){const i=+id.slice(5),b=cur0.breaks.map(x=>Object.assign({},x));if(b[i]){b[i][id[4]==='f'?'from':'to']=v;ttSet('breaks',b);}}
   }else if(t.id==='famDayToo'){S.famDayToo=t.checked;save();render();
+  }else if((t.id==='srAS'||t.id==='srAE')&&stDraft&&t.value){srPull();const a=stDraft.act=Object.assign({s:'16:00',e:'17:00'},stDraft.act||{});
+    if(t.id==='srAS'){const len=a.s&&a.e?((tm2m(a.e)-tm2m(a.s))+1440)%1440||60:60;a.s=t.value;a.e=m2tm(tm2m(t.value)+len);}else a.e=t.value;
+    if(!stDraft.alarm){stDraft.alarm=true;stDraft.times=1;stDraft.ats=[m2tm(tm2m(a.s)-30)];}   // 활동 시간을 넣으면 "시작 30분 전" 알림을 미리 채움 (끌 수 있음)
+    renderStampReg();
+  }else if((t.id==='msAS'||t.id==='msAE')&&msDraft&&t.value){mstkPull();const a=msDraft.act=Object.assign({s:'16:00',e:'17:00',days:[]},msDraft.act||{});
+    if(t.id==='msAS'){const len=a.s&&a.e?((tm2m(a.e)-tm2m(a.s))+1440)%1440||60:60;a.s=t.value;a.e=m2tm(tm2m(t.value)+len);}else a.e=t.value;
+    renderManStkEdit();
   }else if(t.id==='srFrom'&&stDraft){stDraft.from=t.value;
   }else if(t.id==='srTo'&&stDraft){stDraft.to=t.value;renderStampReg();
   }else if(t.id==='mdTodo'&&mdDraft){mdPull();mdDraft.todo=t.checked;renderMemoDetail();
