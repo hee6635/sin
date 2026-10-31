@@ -1,0 +1,132 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans KR",sans-serif;background:#e9ebef;padding:24px;display:flex;gap:22px;align-items:flex-start;width:1700px}
+.ph{width:390px;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.12);position:relative}
+.cap{font-size:15px;font-weight:800;color:#2c3150;margin:0 0 8px 4px}
+.col{display:flex;flex-direction:column}
+.hd{display:flex;align-items:center;padding:16px 16px 8px;font-weight:800;font-size:18px}
+.hd .t{flex:1;text-align:center}.hd i{font-style:normal;color:#777;font-size:18px;width:28px}
+.nav{text-align:center;font-weight:800;font-size:19px;padding:4px 0 8px}.nav span{color:#999;margin:0 22px;font-weight:400}
+.dw{display:grid;grid-template-columns:repeat(7,1fr);font-size:12px;text-align:center;color:#666;padding:0 4px 4px}
+.dw b:first-child{color:#d0304a}.dw b:last-child{color:#2f63c4}
+.g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 4px 8px}
+.c{height:84px;border:1px solid #e3e6ea;border-radius:8px;position:relative;padding:3px 4px;font-size:12px;font-weight:700}
+.c.o{opacity:.35}.c .n.r{color:#d0304a}.c .n.b{color:#2f63c4}
+.c .bd{position:absolute;left:50%;top:24px;transform:translateX(-50%);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.s{background:#cfe8d6;color:#1f5a33}.rest{color:#c8102e;background:none}
+.c .ac{position:absolute;left:3px;right:3px;bottom:16px;font-size:9.5px;font-weight:700;background:#efe9fb;color:#5b4a9a;border-radius:3px;padding:0 3px;white-space:nowrap;overflow:hidden}
+.c .mm{position:absolute;left:3px;right:3px;bottom:3px;font-size:9.5px;font-weight:600;color:#555;border-left:2px solid #b9a7ef;padding-left:3px;white-space:nowrap;overflow:hidden}
+.c .st{position:absolute;right:3px;top:2px;font-size:11px}
+.c.td{outline:2px solid #2a9d7a}
+.sheet{border-top:1px solid #eee;padding:16px}
+.dh{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px}.dh .ar{color:#aaa;font-size:20px}.dh .x{margin-left:auto;color:#777}
+.strip{display:flex;gap:6px;margin:10px -16px;padding:8px 12px;background:#f4f5f7;font-size:12px;overflow:hidden}
+.strip div{flex:none;width:44px;text-align:center;border-radius:10px;padding:4px 0;color:#555}.strip div.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);font-weight:800;color:#111}
+.lbl{font-size:13px;color:#666;font-weight:700;margin:12px 0 6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border-radius:20px;background:#f1f2f4;padding:7px 12px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px}
+.chip.on{background:#e6f4ea;outline:2px solid #2a9d7a}
+.mini{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.acrow{display:flex;align-items:center;gap:8px;background:#f6f3fd;border-radius:12px;padding:10px 12px;font-size:14px;font-weight:700;color:#4a3d86;margin-top:6px}.acrow small{margin-left:auto;color:#7a70a8;font-weight:600}
+.stk{display:flex;gap:6px;flex-wrap:wrap}.stk span{width:40px;height:40px;border-radius:50%;background:#f1f2f4;display:flex;align-items:center;justify-content:center;font-size:20px}.stk span.on{background:#fff2c8;outline:2px solid #e8b400}
+.memo{border:2px solid #d8cdf5;border-radius:12px;padding:11px;color:#999;font-size:14px;background:#f6f7f9}
+.new{position:absolute;background:#ff5a6a;color:#fff;font-size:10px;font-weight:800;border-radius:8px;padding:1px 6px}
+.ed{padding:14px 16px}.row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;font-weight:600}
+.row .k{width:92px;color:#666}.inp{border:1px solid #d6d9de;border-radius:10px;padding:7px 10px;font-weight:700;flex:1}
+.tb{border:1px solid #d6d9de;border-radius:10px;padding:7px 10px;font-weight:800}
+.wd{display:flex;gap:4px}.wd span{width:26px;height:26px;border-radius:50%;background:#f1f2f4;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}.wd span.on{background:#7c66d9;color:#fff}
+.box{background:#f6f3fd;border-radius:14px;padding:10px 12px;margin-top:8px}
+.add{color:#5b4ac0;font-weight:800;font-size:14px;padding:10px 0}
+.hint{font-size:12px;color:#888;margin-top:4px}
+.fam{padding:16px;background:#fff}.cards{display:flex;flex-direction:column;gap:8px}
+.me{background:linear-gradient(135deg,#e3ddf9,#dae6f8);border-radius:18px;padding:12px}
+.me .tp{display:flex;align-items:center;gap:10px;font-weight:800}.av{width:36px;height:36px;border-radius:50%;background:#1d2330;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+.wx{background:rgba(255,255,255,.65);border-radius:14px;padding:10px;margin-top:10px;display:flex;align-items:center;gap:10px;font-weight:800}
+.fc{display:flex;gap:8px}.mc{width:150px;background:#f3f4f6;border-radius:16px;padding:10px 11px;font-weight:700;font-size:13px}
+.mc .nm{display:flex;align-items:center;gap:6px;color:#555}.mc .pp{width:26px;height:26px;border-radius:50%;background:#f6c89f}
+.mc .big{font-size:16px;font-weight:800;margin-top:6px;color:#222}.mc small{display:block;color:#7a70a8;font-weight:700;margin-top:2px}
+.tapz{position:absolute;border:2px dashed #ff5a6a;border-radius:12px}
+.tapl{position:absolute;font-size:11px;font-weight:800;color:#ff5a6a;background:#fff;padding:0 4px;border-radius:6px}
+</style></head><body>
+
+<div class="col"><div class="cap">① 유찬 달력 — 앱 달력과 같은 모양 (화면 모드 따라감)</div>
+<div class="ph">
+ <div class="hd"><i>‹</i><span class="t">유찬 달력</span><i>🖌</i><i>✏️</i></div>
+ <div class="nav"><span>‹</span>2026.11<span>›</span></div>
+ <div class="dw"><b>일</b><b>월</b><b>화</b><b>수</b><b>목</b><b>금</b><b>토</b></div>
+ <div class="g" id="g"></div>
+ <div style="font-size:11.5px;color:#888;padding:0 12px 14px">· 동그라미 / 칸 채우기 · 또렷하게 → 설정 화면 모드 그대로<br>· 보라 줄 = 학원 (평소 일정에서 요일·시간으로 한 번만 넣으면 매주 자동)</div>
+</div></div>
+
+<div class="col"><div class="cap">② 날짜 누르면 — 내 날짜 창처럼 (옆으로 밀면 다음날)</div>
+<div class="ph">
+ <div class="sheet" style="border:0">
+  <div class="dh"><span class="ar">‹</span>11월 4일 (수)<span class="ar">›</span><span class="x">✕</span></div>
+  <div class="strip"><div>2<br>월</div><div>3<br>화</div><div class="on">4<br>수</div><div>5<br>목</div><div>6<br>금</div><div>7<br>토</div><div>8<br>일</div></div>
+  <div class="chips"><span class="chip on"><span class="mini s">학</span>학교 08:30~15:00</span><span class="chip"><span class="mini rest">휴</span>쉬는 날</span></div>
+  <div class="lbl">학원</div>
+  <div class="acrow">🎹 피아노<small>16:00 ~ 17:30</small></div>
+  <div class="acrow">📘 영어<small>18:00 ~ 19:00</small></div>
+  <div class="hint">이 날만 빼기: 길게 누르기</div>
+  <div class="lbl">스티커</div>
+  <div class="stk"><span>👟</span><span class="on">💪</span><span>💧</span><span>📖</span><span>🚴</span><span>🏀</span><span>🦷</span><span>💊</span></div>
+  <div class="hint">💊 약 스티커도 쓸 수 있어요</div>
+  <div class="lbl">메모</div>
+  <div class="memo">준비물: 리코더</div>
+ </div>
+</div></div>
+
+<div class="col"><div class="cap">③ ✏️ 편집 — 글자 바꾸기 · 학원 넣기</div>
+<div class="ph"><div class="ed">
+ <div class="hd" style="padding:0 0 8px"><i>‹</i><span class="t">유찬</span><i></i></div>
+ <div class="row"><span class="k">이름</span><span class="inp">유찬</span></div>
+ <div class="row"><span class="k">가는 곳 이름</span><span class="inp">학교</span><span class="mini s">학</span></div>
+ <div class="hint" style="margin:-4px 0 4px 100px">유치원 · 어린이집 · 회사 … 달력엔 첫 글자</div>
+ <div class="row"><span class="k">등교 ~ 하교</span><span class="tb">08:30</span>~<span class="tb">15:00</span></div>
+ <div class="row"><span class="k">요일</span><div class="wd"><span>일</span><span class="on">월</span><span class="on">화</span><span class="on">수</span><span class="on">목</span><span class="on">금</span><span>토</span></div></div>
+ <div class="lbl" style="margin-top:14px">학원 · 방과 후 <span style="font-weight:600;color:#999">(선택)</span></div>
+ <div class="box">
+  <div style="display:flex;gap:8px;align-items:center;font-weight:800">🎹 <span class="inp" style="flex:1">피아노</span></div>
+  <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><div class="wd"><span>일</span><span class="on">월</span><span>화</span><span class="on">수</span><span>목</span><span class="on">금</span><span>토</span></div></div>
+  <div style="display:flex;gap:6px;align-items:center;margin-top:8px"><span class="tb">16:00</span>~<span class="tb">17:30</span><span style="margin-left:auto;color:#c33;font-size:13px">빼기</span></div>
+ </div>
+ <div class="box">
+  <div style="display:flex;gap:8px;align-items:center;font-weight:800">📘 <span class="inp" style="flex:1">영어</span></div>
+  <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><div class="wd"><span>일</span><span>월</span><span class="on">화</span><span>수</span><span class="on">목</span><span>금</span><span>토</span></div></div>
+  <div style="display:flex;gap:6px;align-items:center;margin-top:8px"><span class="tb">18:00</span>~<span class="tb">19:00</span><span style="margin-left:auto;color:#c33;font-size:13px">빼기</span></div>
+ </div>
+ <div class="add">＋ 학원 추가</div>
+ <div class="hint">안 넣으면 지금과 똑같아요 · 나(근무자)도 근무 패턴에서 똑같이 넣을 수 있게</div>
+</div></div></div>
+
+<div class="col"><div class="cap">④ 가족 탭 — 내 카드 한 줄 · 학원 시간엔 "학원 중"</div>
+<div class="ph"><div class="fam">
+ <div style="font-size:13px;color:#666;font-weight:800;margin-bottom:8px">지금</div>
+ <div class="cards" style="position:relative">
+  <div class="me">
+   <div class="tp"><span class="av">나</span><div>🙂 쉬는 중 <span style="color:#666;font-weight:700;font-size:13px">· 내일 주간 07:00 시작</span></div></div>
+   <div class="wx"><span style="font-size:34px">🌙</span><div>출퇴근길 맑아요<div style="font-size:13px;color:#555">코트 입으세요</div></div><div style="margin-left:auto;font-size:13px;color:#555;text-align:right">출근 8°<br>퇴근 12°</div></div>
+  </div>
+  <div class="tapz" style="left:4px;top:4px;width:340px;height:48px"></div><div class="tapl" style="left:250px;top:-6px">누르면 달력(오늘)</div>
+  <div class="tapz" style="left:16px;top:66px;width:326px;height:72px"></div><div class="tapl" style="left:250px;top:132px">누르면 날씨</div>
+  <div class="fc">
+   <div class="mc"><div class="nm"><span class="pp"></span>유찬</div><div class="big">🎹 피아노 중</div><small>17:30 끝 · 18:00 영어</small></div>
+   <div class="mc"><div class="nm"><span class="pp" style="background:#b9d3f0"></span>엄마</div><div class="big">💼 회사</div><small style="color:#888">18:00 퇴근</small></div>
+  </div>
+ </div>
+ <div style="font-size:13px;color:#666;font-weight:800;margin:16px 0 8px">가족 시간표</div>
+ <div style="background:#f3f4f6;border-radius:14px;padding:10px;font-size:12px;font-weight:700;display:grid;grid-template-columns:52px repeat(5,1fr);gap:6px;align-items:center;text-align:center">
+  <span></span><span>월 2</span><span>화 3</span><span>수 4</span><span>목 5</span><span>금 6</span>
+  <span style="text-align:left">나</span><span class="mini" style="background:#c9d9ec;margin:auto">주</span><span class="mini" style="background:#c9d9ec;margin:auto">주</span><span class="mini rest" style="margin:auto">휴</span><span class="mini" style="background:#ecd3c7;margin:auto">야</span><span class="mini" style="background:#ecd3c7;margin:auto">야</span>
+  <span style="text-align:left">유찬</span><span class="mini s" style="margin:auto">학</span><span class="mini s" style="margin:auto">학</span><span class="mini s" style="margin:auto">학</span><span class="mini s" style="margin:auto">학</span><span class="mini s" style="margin:auto">학</span>
+  <span></span><span style="color:#5b4a9a;font-size:10px">🎹</span><span style="color:#5b4a9a;font-size:10px">📘</span><span style="color:#5b4a9a;font-size:10px">🎹</span><span style="color:#5b4a9a;font-size:10px">📘</span><span style="color:#5b4a9a;font-size:10px">🎹</span>
+ </div>
+</div></div></div>
+
+<script>
+const g=document.getElementById('g');const start=-0;let h='';
+const memo={4:'준비물 리코더',12:'현장체험',19:'치과 4시'},stk={4:'💪',11:'🦷',18:'💊'};
+for(let i=0;i<35;i++){const d=i+1-0;const day=i%7;const o=d>30;const n=o?d-30:d;
+ const rest=day===0||day===6;const ac=!rest&&!o?({1:'🎹 피아노',3:'🎹 피아노',5:'🎹 피아노',2:'📘 영어',4:'📘 영어'})[day]:'';
+ h+=`<div class="c ${o?'o':''} ${n===4&&!o?'td':''}"><span class="n ${day===0?'r':day===6?'b':''}">${n}</span>${stk[n]&&!o?`<span class="st">${stk[n]}</span>`:''}<span class="bd ${rest?'rest':'s'}">${rest?'휴':'학'}</span>${ac?`<span class="ac">${ac}</span>`:''}${memo[n]&&!o?`<span class="mm">${memo[n]}</span>`:''}</div>`;}
+g.innerHTML=h;
+</script></body></html>
