@@ -1,0 +1,98 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans KR",sans-serif;background:#e9ebef;padding:24px;display:flex;gap:22px;align-items:flex-start;width:1760px}
+.ph{width:390px;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.12);position:relative}
+.cap{font-size:15px;font-weight:800;color:#2c3150;margin:0 0 8px 4px;width:390px}
+.col{display:flex;flex-direction:column}.p{padding:16px}
+.hd{display:flex;align-items:center;font-weight:800;font-size:18px;margin-bottom:10px}.hd .t{flex:1;text-align:center}.hd i{font-style:normal;color:#777;width:24px}
+.prow{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;font-weight:600}
+.k{width:62px;color:#666;flex:none;font-weight:700}
+.inp{border:1px solid #d6d9de;border-radius:10px;padding:7px 10px;font-weight:700;flex:1}
+.tb{border:1px solid #d6d9de;border-radius:10px;padding:6px 9px;font-weight:800}
+.hseg{display:flex;background:#f1f2f4;border-radius:10px;padding:3px;gap:2px;flex:1}.hseg span{flex:1;text-align:center;padding:6px 0;border-radius:8px;font-size:12px;font-weight:700;color:#666}.hseg span.on{background:#fff;color:#222;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.wd{display:flex;gap:4px}.wd span{width:26px;height:26px;border-radius:50%;background:#f1f2f4;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}.wd span.on{background:#0f766e;color:#fff}
+.who{display:flex;gap:6px}.who span{border-radius:18px;background:#f1f2f4;padding:6px 12px;font-weight:800;font-size:13px;display:flex;align-items:center;gap:5px}.who span.on{background:#e6f4ea;outline:2px solid #2a9d7a}
+.dot{width:16px;height:16px;border-radius:50%;display:inline-block}
+.new{outline:2px dashed #ff5a6a;outline-offset:2px;border-radius:10px;position:relative}
+.nb{position:absolute;right:-4px;top:-10px;background:#ff5a6a;color:#fff;font-size:10px;font-weight:800;border-radius:8px;padding:1px 6px}
+.hint{font-size:12px;color:#888;margin-top:4px;line-height:1.5}
+.sw{width:40px;height:22px;border-radius:12px;background:#2a9d7a;position:relative;margin-left:auto}.sw:after{content:"";position:absolute;right:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff}
+.sw.off{background:#ccd}.sw.off:after{left:2px;right:auto}
+.big{display:flex;align-items:center;gap:10px}.big .e{width:52px;height:52px;border-radius:50%;background:#e7f6f2;display:flex;align-items:center;justify-content:center;font-size:28px}
+.g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.c{height:66px;border:1px solid #e3e6ea;border-radius:8px;position:relative;padding:3px 4px;font-size:11.5px;font-weight:700}
+.c .bd{position:absolute;left:50%;top:18px;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.s{background:#cfe8d6;color:#1f5a33}.hu{color:#c8102e}.ju{background:#c9d9ec}.ya{background:#ecd3c7}
+.c .st{position:absolute;right:2px;top:1px;font-size:11px}
+.n.r{color:#d0304a}.n.b{color:#2f63c4}
+.dh{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px}.dh .ar{color:#aaa}
+.stk{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.stk div{display:flex;flex-direction:column;align-items:center;font-size:10.5px;font-weight:700;color:#666;gap:2px}.stk span{width:44px;height:44px;border-radius:50%;background:#f1f2f4;display:flex;align-items:center;justify-content:center;font-size:21px}
+.stk .todo span{outline:2px dashed #0f766e;background:#fff}
+.wx{background:#e4ecfb;color:#2c58b8;border-radius:12px;padding:10px 12px;font-weight:800;font-size:14px;margin-top:10px}.wx small{display:block;font-weight:600;font-size:12px;color:#4a6bb0;margin-top:2px}
+.lbl{font-size:13px;color:#666;font-weight:700;margin:14px 0 4px}
+.me{background:linear-gradient(135deg,#e3ddf9,#dae6f8);border-radius:18px;padding:12px}
+.av{width:34px;height:34px;border-radius:50%;background:#1d2330;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
+.wc{background:rgba(255,255,255,.7);border-radius:14px;padding:10px;margin-top:10px}
+.tl{display:flex;gap:6px;margin-top:8px}.tl div{flex:1;background:#fff;border-radius:10px;padding:6px 4px;text-align:center;font-size:11.5px;font-weight:800}.tl div small{display:block;font-weight:600;color:#666;font-size:10.5px}.tl .bad{background:#e4ecfb;color:#2c58b8}
+.mc{width:170px;background:#f3f4f6;border-radius:16px;padding:10px 11px;font-weight:700;font-size:13px}.mc .bg{font-size:15px;font-weight:800;margin-top:6px}.mc small{display:block;color:#0f766e;font-weight:700;margin-top:2px}.mc .w{margin-top:6px;background:#e4ecfb;color:#2c58b8;border-radius:8px;padding:3px 6px;font-size:12px;font-weight:800}
+</style></head><body>
+
+<div class="col"><div class="cap">① 스티커 편집 — 지금 화면에 두 줄만 (빨간 점선)</div>
+<div class="ph"><div class="p">
+ <div class="hd"><i>‹</i><span class="t">스티커</span><i></i></div>
+ <div class="big"><span class="e">🏊</span><span class="inp">수영</span></div>
+ <div class="prow"><span class="k">반복</span><div class="hseg"><span>반복 없음</span><span class="on">요일</span><span>매일</span><span>근무 맞춤</span><span>매달</span></div></div>
+ <div class="prow"><span class="k"></span><div class="wd"><span>일</span><span class="on">월</span><span>화</span><span class="on">수</span><span>목</span><span class="on">금</span><span>토</span></div></div>
+ <div class="prow"><span class="k">빼기</span><span style="font-size:13px">공휴일 · <b>야간 날</b></span><span class="sw" style="margin-left:auto"></span></div>
+ <div class="prow"><span class="k">기간</span><span style="color:#888">끝 없음 ›</span></div>
+ <div class="prow new" style="margin-top:8px;padding:10px 6px"><span class="nb">새로</span><span class="k">누구</span><div class="who"><span class="on"><i class="dot" style="background:#1d2330"></i>나</span><span><i class="dot" style="background:#f6c89f"></i>유찬</span></div></div>
+ <div class="prow new" style="margin-top:12px;padding:10px 6px"><span class="nb">새로</span><span class="k">시간</span><span class="tb">19:00</span>~<span class="tb">20:00</span><span style="font-size:12px;color:#888;margin-left:4px">(선택)</span></div>
+ <div class="hint" style="padding-left:4px">시간을 넣으면 그 시간 날씨가 나쁠 때 알려줘요 ☔</div>
+ <div class="prow"><span class="k">가족</span><span style="font-size:13px">가족에게 보이기</span><span class="sw off"></span></div>
+ <div class="prow" style="border:0"><span class="k">알림</span><span class="tb">18:30</span><span style="font-size:12px;color:#888">🔔</span></div>
+</div></div></div>
+
+<div class="col"><div class="cap">② 누구 = 유찬 → 유찬 달력에 매주 자동</div>
+<div class="ph"><div class="p">
+ <div class="hd"><i>‹</i><span class="t">유찬 달력</span><i>✏️</i></div>
+ <div class="g" id="g"></div>
+ <div class="hint" style="margin-top:8px">🎹 피아노 (월수금 16:00~17:30) · 📘 영어 (화목) — 스티커 하나 만들면 끝<br>달력 칸은 화면 모드(동그라미/칸 채우기)를 따라가요</div>
+ <div style="border-top:1px solid #eee;margin:12px -16px 0;padding:12px 16px 0">
+  <div class="dh"><span class="ar">‹</span>11월 4일 (수)<span class="ar">›</span></div>
+  <div class="stk"><div class="todo"><span>🎹</span>16:00</div><div><span>💪</span></div><div><span>💊</span></div><div><span>🦷</span></div><div><span>📖</span></div></div>
+  <div class="wx">☔ 피아노 끝날 때(17:30) 비 · 우산 챙기기</div>
+ </div>
+</div></div></div>
+
+<div class="col"><div class="cap">③ 내 날짜 창 — 스티커 줄 그대로 · 날씨 나쁠 때만 한 줄</div>
+<div class="ph"><div class="p">
+ <div class="dh"><span class="ar">‹</span>11월 6일 (금)<span class="ar">›</span></div>
+ <div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;border-radius:20px;background:#e8eef7;outline:2px solid #5b8fc4;padding:6px 12px;font-weight:800;font-size:14px"><span class="bd" style="width:22px;height:22px;border-radius:50%;background:#c9d9ec;display:inline-flex;align-items:center;justify-content:center;font-size:11px">주</span>주간 07:00~18:00</div>
+ <div class="lbl">스티커</div>
+ <div class="stk"><div class="todo"><span>🏊</span>19:00</div><div><span>👟</span></div><div><span>💧</span></div><div><span>📖</span></div><div><span>💊</span></div></div>
+ <div class="wx">☔ 수영 끝날 때(20시) 비 · 우산 챙기세요<small>출근 맑음 → 퇴근 흐림 → 20시 비 3mm</small></div>
+ <div class="hint" style="margin-top:10px">· 점선 = 오늘 할 스티커 (지금도 있는 모양)<br>· 시간 넣은 스티커만 아래 숫자 · 맑으면 날씨 줄 없음</div>
+ <div class="lbl">메모</div>
+ <div style="border:2px solid #d8cdf5;border-radius:12px;padding:11px;color:#999;font-size:14px;background:#f6f7f9">메모 쓰기</div>
+</div></div></div>
+
+<div class="col"><div class="cap">④ 가족 탭 — 출근 → 퇴근 → 수영 · 유찬 피아노 날씨</div>
+<div class="ph"><div class="p">
+ <div style="font-size:13px;color:#666;font-weight:800;margin-bottom:8px">지금</div>
+ <div class="me">
+  <div style="display:flex;align-items:center;gap:10px;font-weight:800"><span class="av">나</span>💼 근무 중 <span style="color:#666;font-weight:700;font-size:13px">· 18:00 끝 · 🏊 19:00</span></div>
+  <div class="wc"><div style="font-weight:800">☔ 수영 끝날 때 비 와요 <span style="font-size:13px;color:#555;font-weight:700">· 우산</span></div>
+   <div class="tl"><div>출근 07<small>☀️ 6°</small></div><div>퇴근 18<small>☁️ 11°</small></div><div class="bad">🏊 20시<small>☔ 9°</small></div></div></div>
+ </div>
+ <div style="display:flex;gap:8px;margin-top:8px">
+  <div class="mc"><div style="display:flex;align-items:center;gap:6px;color:#555"><span style="width:24px;height:24px;border-radius:50%;background:#f6c89f"></span>유찬</div><div class="bg">🎹 피아노 중</div><small>17:30 끝</small><div class="w">☔ 끝날 때 비 · 우산</div></div>
+  <div class="mc"><div style="display:flex;align-items:center;gap:6px;color:#555"><span style="width:24px;height:24px;border-radius:50%;background:#b9d3f0"></span>엄마</div><div class="bg">💼 회사</div><small style="color:#888">18:00 퇴근</small></div>
+ </div>
+ <div class="hint" style="margin-top:12px">· 지역은 집 날씨로 (학원 · 운동은 대부분 집 근처)<br>· 시간 안 넣은 스티커는 지금과 똑같아요</div>
+</div></div></div>
+
+<script>
+let h='';for(let i=0;i<28;i++){const d=i+1,day=i%7,rest=day===0||day===6;let st='';if(!rest&&[1,3,5].includes(day))st='🎹';if(!rest&&[2,4].includes(day))st='📘';
+ h+=`<div class="c"><span class="n ${day===0?'r':day===6?'b':''}">${d}</span>${st?`<span class="st">${st}</span>`:''}<span class="bd ${rest?'hu':'s'}">${rest?'휴':'학'}</span></div>`;}
+document.getElementById('g').innerHTML=h;
+</script></body></html>
