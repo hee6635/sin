@@ -2,8 +2,8 @@ const {chromium,boot,mkT,base}=require('./lib.js');
 (async()=>{const b=await chromium.launch();const T=mkT();
  const p=await boot(b,{...base,addons:{...(base.addons||{}),status:true}},{touch:true,w:384});
  const S=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')));
- await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);
- await p.evaluate(()=>document.querySelector('[data-act="more-times"]').click());await p.waitForTimeout(400);
+ await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(250);
+ await p.evaluate(()=>document.querySelector('[data-act="fam-mytime"]').click());await p.waitForTimeout(400);   // v0.106: 설정의 "근무 시간 · 상태" 줄은 없앰 → 가족 탭 내 카드에서
  const rows=await p.evaluate(()=>[...document.querySelectorAll('#page [data-act="row-edit"]')].map(e=>e.dataset.k).join());
  T('나서기 · 근무 시작 · 근무 끝 · 집 도착 · 수면 줄이 모두 바꿀 수 있음',rows.split(',').sort().join()==='commute,end,home,sleep,work',rows);
  // 근무 끝 줄 이름 · 아이콘 바꾸기

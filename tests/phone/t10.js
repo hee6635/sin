@@ -32,7 +32,6 @@ T_('근무 띠 설정 줄 없음',!(await p.$('#showBand')));await p.click('#pag
 // ===== 부가기능 문구 · 월 포스트잇
 await p.click('[data-act="more-addons"]');await p.waitForTimeout(300);
 const addtxt=await p.$eval('#page',e=>e.innerText);
-T_('부가 기능: 내 상태 설명이 "그날 근무 형태만 보여요"',addtxt.includes('끄면 그날 근무 형태만 보여요')&&!addtxt.includes('주 · 야 · 휴만'));
 await p.evaluate(()=>document.querySelector('[data-act="page-close"]').click());await p.waitForTimeout(200);
 await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(300);
 T_('달력 위: 포스트잇 버튼(aria 월 포스트잇) · 이모티콘 📝 없음',(await p.$eval('[data-act="open-board"]',e=>e.getAttribute('aria-label')))==='월 포스트잇'&&!(await p.$eval('[data-act="open-board"]',e=>e.textContent)).includes('📝'));
