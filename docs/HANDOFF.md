@@ -100,3 +100,8 @@
 - 원인: swWrap/swUnwrap 이 날짜 띠(.dstrip)를 옮기면 scrollLeft 가 0(한 달 전)으로 돌아감 → 다음에 띠를 건드리거나 scroll 이 나면 dstripCenter 의 scroll 처리가 그 날로 goDay(진동).
 - 고침: 옮기기 전후 .dstrip/.tchips/.wxhs scrollLeft 지킴(swKeepX) · 미는 중과 직후 600ms 는 띠 scroll 무시(swQuiet) · 옆 판 안 id 제거(같은 id 두 개 방지).
 - 시험: s75 "연달아 5번" · "날짜 띠 가운데".
+
+## v0.112 (2026-10-31) — 밀기 씹힘 줄이기
+- 짧게 튕기기: 24px 이상 + 마지막 120ms 빠르기 0.3px/ms 넘으면 넘김 (dsw.pts 로 잼). 천천히 50px 미만은 그대로 제자리.
+- 넘어가는/제자리 돌아가는 0.3초 사이에 또 누르면 앞 마무리를 바로 끝내고(swFlush) 새 화면 기준으로 받음.
+- 시험: s75 진짜 터치(CDP) 빠르게 4번 · 짧게 튕기기 · 천천히 조금(slow 도우미).

@@ -5,6 +5,11 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   const T=mkT();const b=await chromium.launch();
   const swipe=async(p,sel,dx)=>{const r=await p.evaluate(s=>{const e=document.querySelector(s);if(!e)return null;const b=e.getBoundingClientRect();return {x:b.left+b.width/2,y:b.top+Math.min(b.height/2,30)};},sel);if(!r)return false;
     await p.evaluate(([x,y,dx])=>{const t=document.elementFromPoint(x,y);const ev=(ty,xx)=>t.dispatchEvent(new PointerEvent(ty,{bubbles:true,clientX:xx,clientY:y,pointerId:1}));ev('pointerdown',x);for(let i=1;i<=6;i++)ev('pointermove',x+dx*i/6);const sc=document.querySelector('#sheet.open .swc:not(.swn),#pop .swc:not(.swn)');window.__swT=sc?sc.style.transform:'';window.__swN=!!document.querySelector('.swc.swn');ev('pointerup',x+dx);},[r.x,r.y,dx]);await p.waitForTimeout(700);return true;};
+  const slow=async(p,sel,dx)=>{const r=await p.evaluate(s=>{const e=document.querySelector(s);const b=e.getBoundingClientRect();return {x:b.left+b.width/2,y:b.top+Math.min(b.height/2,30)};},sel);   // 천천히 조금 (0.3초 넘게)
+    await p.evaluate(([x,y])=>{window.__st=document.elementFromPoint(x,y);window.__sv=(ty,xx)=>__st.dispatchEvent(new PointerEvent(ty,{bubbles:true,clientX:xx,clientY:y,pointerId:1}));__sv('pointerdown',x);},[r.x,r.y]);
+    for(let i=1;i<=6;i++){await p.evaluate(([x,v])=>__sv('pointermove',x+v),[r.x,dx*i/6]);await p.waitForTimeout(60);}
+    await p.evaluate(()=>{const sc=document.querySelector('#sheet.open .swc:not(.swn),#pop .swc:not(.swn)');window.__swT=sc?sc.style.transform:'';window.__swN=!!document.querySelector('.swc.swn');});
+    await p.evaluate(([x,v])=>__sv('pointerup',x+v),[r.x,dx]);await p.waitForTimeout(700);};
   { const p=await boot(b,{...base,addons:{...base.addons,wlog:true},wlog:{name:'업무 메모',seen:true,days:{}}},{touch:true});
     await p.evaluate(()=>__wx.openDay('2026-10-14'));await p.waitForTimeout(300);
     const key=()=>p.evaluate(()=>{const b=document.querySelector('#sheet .dft b');return b?b.textContent:'';});
@@ -15,7 +20,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     T('오른쪽으로 밀면 전날',/10월 14일/.test(await key()),await key());
     await swipe(p,'#sheet .tchips',-140);
     T('근무타입 칩 줄에서 민 건 날짜 안 바뀜',/10월 14일/.test(await key()),await key());
-    await swipe(p,'#sheet .dfh',-30);
+    await slow(p,'#sheet .dfh',-30);
     T('조금만 밀면 제자리 (날짜 그대로)',/10월 14일/.test(await key()),await key());
     T('미는 동안 손가락을 따라 움직임 (translateX)',/translateX\(-30px\)/.test(await p.evaluate(()=>window.__swT||'')),await p.evaluate(()=>window.__swT||''));
     T('스프링 끝나면 원래 모양 (판 풀림)',await p.evaluate(()=>!document.querySelector('#sheet .swc')&&document.querySelector('#sheet').style.transform===''));
@@ -47,8 +52,27 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     const key=()=>p.evaluate(()=>{const b=document.querySelector('#sheet .dft b');return b?b.textContent:'';});
     const seen=[];
     for(let i=0;i<5;i++){await swipe(p,'#sheet .dfh',-130);await p.waitForTimeout(250);seen.push(await key());}
-    await swipe(p,'#sheet .dfh',-30);await p.waitForTimeout(600);seen.push(await key());   // 덜 밀고 제자리 → 그대로
+    await slow(p,'#sheet .dfh',-30);await p.waitForTimeout(600);seen.push(await key());   // 덜 밀고 제자리 → 그대로
     T('연달아 5번 밀면 15 → 16 → 17 → 18 → 19일 (덜 밀면 그대로)',seen.join(',')==='10월 15일 (목),10월 16일 (금),10월 17일 (토),10월 18일 (일),10월 19일 (월),10월 19일 (월)',seen.join(','));
+    { // 넘어가는 중(0.3초 안)에 또 밀어도 씹히지 않음 · 진짜 터치로 (화면이 바뀌며 손가락 아래 칸이 사라져도)
+      const cdp=await p.context().newCDPSession(p);const r=await p.evaluate(()=>{const b=document.getElementById('sheet').getBoundingClientRect();return [b.left+b.width/2,b.top+90];});
+      for(let i=0;i<4;i++){
+        await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:r[0],y:r[1]}]});
+        for(let j=1;j<=8;j++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:r[0]-17*j,y:r[1]}]});await p.waitForTimeout(25);}
+        await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForTimeout(60);
+      }
+    }
+    await p.waitForTimeout(800);
+    T('빠르게 4번 (0.1초 간격) → 23일 (씹힘 없음)',/10월 23일/.test(await key()),await key());
+    { // 짧게 빠르게 튕기기 (42px · 0.1초) → 넘김
+      const cdp=await p.context().newCDPSession(p);const r=await p.evaluate(()=>{const b=document.getElementById('sheet').getBoundingClientRect();return [b.left+b.width/2,b.top+90];});
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:r[0],y:r[1]}]});
+      for(let j=1;j<=3;j++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:r[0]-14*j,y:r[1]}]});
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForTimeout(800);
+      T('짧게 빠르게 튕겨도 넘김 → 24일',/10월 24일/.test(await key()),await key());
+      await slow(p,'#sheet .dfh',-30);await p.waitForTimeout(600);   // 천천히 조금 = 그대로
+      T('천천히 조금 밀면 그대로 (24일)',/10월 24일/.test(await key()),await key());
+    }
     T('날짜 띠: 고른 날이 가운데',await p.evaluate(()=>{const el=document.getElementById('dstrip'),on=el.querySelector('.dsi.on');return Math.abs(on.offsetLeft+on.offsetWidth/2-el.clientWidth/2-el.scrollLeft)<4;}));
     T('오류 없음 (연달아 밀기)',p.errs.length===0,p.errs.join('|'));await p.close();
   }

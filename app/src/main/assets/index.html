@@ -5645,7 +5645,13 @@ function swUnwrap(st){
   keep();
   el.style.position=st.prevPos||'';el.style.overflowX=st.prevOx||'';
 }
-document.addEventListener('pointerdown',e=>{const t=swTarget(e.target);dsw=t&&t.el?{...t,x:e.clientX,y:e.clientY,on:false,dead:false}:null;});
+let swPend=null;   // 넘어가는/제자리로 돌아가는 중인 마무리 (그 사이 또 밀면 바로 끝내고 새로 받음)
+function swFlush(){const f=swPend;swPend=null;if(f){clearTimeout(f.tm);f.run();}}
+function swLater(run,ms){const f={run};f.tm=setTimeout(()=>{if(swPend===f)swPend=null;run();},ms);swPend=f;}
+document.addEventListener('pointerdown',e=>{
+  let tg=e.target;
+  if(swPend){swFlush();if(!tg.isConnected)tg=document.elementFromPoint(e.clientX,e.clientY)||tg;}   // 앞 넘김을 바로 끝냄 → 새 화면 기준으로 받음
+  const t=swTarget(tg);dsw=t&&t.el?{...t,x:e.clientX,y:e.clientY,t0:performance.now(),on:false,dead:false}:null;});
 document.addEventListener('pointermove',e=>{
   if(!dsw||dsw.dead)return;const dx=e.clientX-dsw.x,dy=e.clientY-dsw.y;
   if(!dsw.on){
@@ -5653,6 +5659,7 @@ document.addEventListener('pointermove',e=>{
     if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)){dsw.on=true;if(!swReduce())swWrap(dsw);}
     else return;
   }
+  (dsw.pts||(dsw.pts=[])).push([e.clientX,performance.now()]);if(dsw.pts.length>8)dsw.pts.shift();   // 마지막 움직임 (빠르기 재기)
   if(swReduce())return;
   swSide(dsw,dx<0?1:-1);swMove(dsw,dx);
 });
@@ -5660,18 +5667,20 @@ const swEnd=e=>{
   if(!dsw)return;const st=dsw;dsw=null;if(!st.on)return;
   const dx=(e&&e.clientX!=null?e.clientX:st.x)-st.x;
   held=true;setTimeout(()=>{held=false;},60);
-  const go=Math.abs(dx)>=50&&!(e&&e.type==='pointercancel'),dir=dx<0?1:-1;
+  const now=performance.now(),ps=(st.pts||[]).filter(q=>now-q[1]<=120),q0=ps[0]||[st.x,st.t0],v=Math.abs((st.x+dx)-q0[0])/Math.max(now-q0[1],16);
+  const flick=Math.abs(dx)>=24&&v>0.3&&Math.sign((st.x+dx)-q0[0])===Math.sign(dx);   // 짧아도 마지막에 빠르게 튕기면 넘김
+  const go=(Math.abs(dx)>=50||flick)&&!(e&&e.type==='pointercancel'),dir=dx<0?1:-1;
   if(swReduce()||!st.cur){if(go)swGo(st.w,dir);return;}
   const SPRING='transform .34s cubic-bezier(.22,1.18,.36,1)';
   if(!go||!st.nb){   // 덜 밀었거나 끝 → 스프링으로 제자리
     st.cur.style.transition=SPRING;st.cur.style.transform='';
     if(st.nb){st.nb.style.transition=SPRING;st.nb.style.transform=`translateX(${st.dir*st.W}px)`;}
-    setTimeout(()=>swUnwrap(st),360);return;
+    swLater(()=>swUnwrap(st),360);return;
   }
   // 넘김: 지금 판은 밀던 쪽으로 빠지고, 옆 날짜 판이 스프링으로 자리 → 다 오면 진짜 그 날짜로 다시 그림(같은 모양이라 티 안 남)
   st.cur.style.transition=SPRING;st.cur.style.transform=`translateX(${-st.dir*st.W}px)`;
   st.nb.style.transition=SPRING;st.nb.style.transform='translateX(0)';
-  setTimeout(()=>{const top=st.el.scrollTop;swUnwrap(st);if(swGo(st.w,st.dir)&&st.w==='day'){const sh=$('#sheet');if(sh)sh.scrollTop=0;}},300);
+  swLater(()=>{swUnwrap(st);if(swGo(st.w,st.dir)&&st.w==='day'){const sh=$('#sheet');if(sh)sh.scrollTop=0;}},300);
 };
 document.addEventListener('pointerup',swEnd);
 document.addEventListener('pointercancel',swEnd);
@@ -6472,6 +6481,7 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
+  'v0.112':`· 옆으로 밀기가 덜 씹혀요: 짧게 <b>툭 튕겨도</b> 넘어가고, 넘어가는 중에 또 밀어도 받아요`,
   'v0.111':`· 날짜 창을 여러 번 밀다 보면 엉뚱한 달로 튀던 것 고침`,
   'v0.110':`· <b>날씨 창</b>도 옆으로 밀면 넘어가요\n· 옆 날짜가 같은 크기로 붙어서 와요 (넘어간 뒤 크기 바뀌는 느낌 없앰 · 업무 메모 칸 높이도)\n· 밀어서 넘길 땐 진동 없음`,
   'v0.109':`· 옆으로 밀면 <b>옆 날짜가 붙어서</b> 같이 따라와요 (날짜 창 · 업무 메모 · 스티커 · <b>날씨 창</b>)\n· 업무 메모 창도 잘 넘어가요\n· 근무 시간은 <b>근무 패턴 → 근무타입(주 · 야)</b> 눌러서 정해요 · 목록에 시간과 <b>총 근무시간</b>이 보여요\n· ⏱ 연장 +시간 버튼은 <b>누를 때마다 더해져요</b> (+4 두 번 = +8시간)`,
