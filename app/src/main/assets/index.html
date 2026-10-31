@@ -1537,7 +1537,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 #sheet,#pop .wlp,#pop .wlp .bd,#pop .wlp textarea,#pop .menu.sdpop,#pop .menu.wxdpop{touch-action:pan-y}#sheet .dstrip,#sheet .tchips,#pop .wxhs{touch-action:pan-x pan-y}
 .swc{will-change:transform}.swn{background:var(--bg)}
 .tltimes{margin-top:10px;border-top:1px solid var(--line)}.tltimes .pl2{display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:700}.tltimes .prow{padding:10px 6px}.tltimes .tlt{font-size:15px;font-weight:800;color:var(--fg);white-space:nowrap}.tltimes .tlt.rest{color:var(--muted);font-weight:700}.tltimes .tlt.unset{color:var(--accent)}
-.tdtm{display:flex;align-items:center;gap:8px;margin-top:6px}.tdtm .tbtn{flex:1;font-size:17px;font-weight:800;padding:12px 0;justify-content:center;text-align:center}.tdtm em{font-style:normal;color:var(--muted);font-weight:800}.tdtm small{color:var(--muted);font-size:12px;font-weight:700}
+.tdtm{display:flex;align-items:center;gap:8px;margin-top:6px}.tdtm .tbtn{flex:1;font-size:17px;font-weight:800;padding:12px 0;justify-content:center;text-align:center}.tdtm em{font-style:normal;color:var(--muted);font-weight:800}.tdtm small{color:var(--muted);font-size:12px;font-weight:700}.tdtot{text-align:center;margin-top:6px;color:var(--muted);font-size:13px;font-weight:700}.tdtot b{color:var(--text,inherit);font-size:15px}
 #pop.wxfull{align-items:stretch;background:rgba(0,0,0,.5)}#pop.wxfull .menu{width:100%;max-width:560px;margin:0;border-radius:0;background:var(--dc,#5cb85c);box-shadow:none;overflow:auto}
 .wxd{min-height:100%;padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(18px + env(safe-area-inset-bottom,0px));color:#fff;text-align:center;box-sizing:border-box}
 .wxd .top{display:flex;align-items:center;gap:8px}.wxd .tabs{flex:1;display:flex;gap:5px;padding:4px;border-radius:13px;background:rgba(0,0,0,.14)}
@@ -5543,8 +5543,8 @@ function otOpen(k){
     </div>
     <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="ot-clear">없음 (원래대로)</button><button class="btn grow" data-act="pop-close">확인</button></div>`);
 }
-// +n시간: 퇴근을 원래(또는 지금 적은) 퇴근에서 n시간 뒤로
-function otAdd(n){if(!otKey)return;const d=parse(otKey),t=timesOf(shiftOf(d)),o=(S.ot[otKey]||[t.start,t.end]).slice();o[1]=m2tm(tm2m(t.end)+n*60);otSet(o);}
+// +n시간: 지금 적힌 퇴근에서 n시간 더 (누를 때마다 쌓임 · +4 두 번 = +8)
+function otAdd(n){if(!otKey)return;const d=parse(otKey),t=timesOf(shiftOf(d)),o=(S.ot[otKey]||[t.start,t.end]).slice();o[1]=m2tm(tm2m(o[1])+n*60);otSet(o);}
 function otSet(o){
   const d=parse(otKey),t=timesOf(shiftOf(d));
   if(o[0]===t.start&&o[1]===t.end)delete S.ot[otKey];else S.ot[otKey]=o;
@@ -5735,7 +5735,7 @@ function openTypeEdit(){
       <button class="${t.rest?'on':''}" data-act="type-kind" data-v="1">쉬는 날</button>
     </div>
 ${!t.rest?(()=>{const d=timesOf(t.orig||t.k),s0=t.ts||d.start,e0=t.te||d.end;return `<div class="lbl">🕐 근무 시간 <span style="font-weight:600;color:var(--muted)">(출근 → 퇴근 · 날씨 · 가족 탭에 쓰여요)</span></div>
-      <div class="tdtm">${tpick('tdS',s0,'big')}<em>→</em>${tm2m(e0)<=tm2m(s0)?'<small>다음날</small>':''}${tpick('tdE',e0,'big')}</div>`;})():''}
+      <div class="tdtm">${tpick('tdS',s0,'big')}<em>→</em>${tm2m(e0)<=tm2m(s0)?'<small>다음날</small>':''}${tpick('tdE',e0,'big')}</div><div class="tdtot">총 <b>${totH(s0,e0)}</b> 근무</div>`;})():''}
     <div class="lbl">색</div>
     <div class="pal">
       <button class="sw0 ${!t.color?'on':''}" data-act="type-color" data-c="" title="색 없음(빨간 글자)">${esc(t.k&&t.k!==NONE_K?t.k:'휴')}</button>
@@ -6464,7 +6464,7 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
-  'v0.109':`· 옆으로 밀면 <b>옆 날짜가 붙어서</b> 같이 따라와요 (날짜 창 · 업무 메모 · 스티커 · <b>날씨 창</b>)\n· 업무 메모 창도 잘 넘어가요\n· 근무 시간은 <b>근무 패턴 → 근무타입(주 · 야)</b> 눌러서 정해요 · 목록에 시간이 다 보여요`,
+  'v0.109':`· 옆으로 밀면 <b>옆 날짜가 붙어서</b> 같이 따라와요 (날짜 창 · 업무 메모 · 스티커 · <b>날씨 창</b>)\n· 업무 메모 창도 잘 넘어가요\n· 근무 시간은 <b>근무 패턴 → 근무타입(주 · 야)</b> 눌러서 정해요 · 목록에 시간과 <b>총 근무시간</b>이 보여요\n· ⏱ 연장 +시간 버튼은 <b>누를 때마다 더해져요</b> (+4 두 번 = +8시간)`,
   'v0.108':`· 옆으로 밀기가 <b>손가락을 따라</b> 움직이고 놓으면 스프링처럼 넘어가요 (날짜 창 · 업무 메모 창 · <b>스티커 창</b>)\n· 살짝 비스듬히 밀어도 잘 넘어가요 · 조금만 밀면 제자리로`,
   'v0.107':`· 날짜 창 · 업무 메모 창을 <b>옆으로 밀면</b> 전날 · 다음날로 넘어가요 (창 어디서나)\n· 가족 탭 내 카드: 상태는 "나" 옆에 · 날씨를 켰으면 <b>날씨 카드를 크게</b>, 안 켰으면 근무 중을 크게\n· 내 상태는 근무 중 · 쉬는 중 · 휴무 세 가지만 · 근무 시간은 <b>근무 패턴 화면 한 곳</b>에서 정해요\n· 그림 흰 테두리를 없앴어요\n· 어제 날씨가 비지 않게: 관측이 올라오기 전엔 받아 둔 예보로 보여 줘요`,
   'v0.106':`· <b>😷 미세먼지 시간대별</b>: 날씨 팝업 시간별 줄에 칸마다 얼굴 (지난 시간 · 지금 = 실측, 앞으로 = 예보)\n· 날씨 · 옷 · 특보 그림을 한 세트로 다시 다듬고 미세먼지 얼굴을 더 단순하게 바꿨어요\n· 날짜 창 날씨 카드는 오늘 ~ 3일 뒤만 크게, 그 뒤는 한 줄\n· 한 달 위젯 오른쪽 위 <b>📅 버튼</b> → 앱 달력으로 바로 · 제목이 가운데로\n· "응원 버튼" · "내 상태" 부가 기능을 정리했어요 (근무 시간을 정해 두면 가족 탭에 "근무 중 · 몇 시 끝"이 저절로 보여요)`,
@@ -6730,10 +6730,12 @@ const patPos=d=>{const n=S.pattern.length;return((dayNum(d)-dayNum(parse(S.ancho
 const teamPos=(g,d)=>{const n=S.pattern.length,o=S.teamOffsets;return((patPos(d)+(o[g]||0)-(o[S.myTeam]||0))%n+n)%n;};
 const quickN=()=>S.quickN===4||S.quickN===8?S.quickN:(new Set(S.pattern||[]).size>=5?8:4);
 // 근무타입 목록에 보일 시간 (v0.109): 정했으면 "07:00 → 19:00" · 안 정했으면 "시간 정하기" · 쉬는 타입 "쉬는 날"
+// 출근 → 퇴근 총 시간 (퇴근이 더 이르면 다음날로 셈)
+function totH(a,b){let m=tm2m(b)-tm2m(a);if(m<=0)m+=1440;return fmtH(m/60);}
 function typeTimeTxt(x){
   if(x.rest||x.k===NONE_K)return '쉬는 날';
   if(!timesCustom(x.k))return '시간 정하기 ›';
-  const t=timesOf(x.k);return `${t.start} → ${tm2m(t.end)<=tm2m(t.start)?'다음날 ':''}${t.end}`;
+  const t=timesOf(x.k);return `${t.start} → ${tm2m(t.end)<=tm2m(t.start)?'다음날 ':''}${t.end} · ${totH(t.start,t.end)}`;
 }
 function typeListHtml(){
   return `<div class="pg-cap pcap">근무타입 <span>꾹 눌러 끌면 순서가 바뀌어요</span></div>

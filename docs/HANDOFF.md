@@ -87,4 +87,5 @@
 - 스와이프: 내용을 `.swc` 로 감싸고 옆 날짜 판 `.swc.swn` 을 ±100% 에 붙여 같이 이동 (날짜 창 · 업무 메모 · 스티커 · 날씨 팝업 wxOpenDay). 50px 넘으면 넘김, 아니면 스프링 복귀. 빌더(dayHtml · stampDayHtml · wlInner · wxDayPopHtml)는 상태를 안 바꿈.
 - 업무 메모: `.wlp .bd`/textarea 에 pan-y, 포커스 안 된 textarea 위에서도 밀기 가능.
 - 근무 시간: openTypeEdit 에 시간 칸(tdS/tdE) → saveType 이 S.shiftTimes 저장(이름 바꾸면 옮김). 근무 패턴 화면의 따로 있던 시간 칸 제거, 근무타입 목록 아래 `.tltimes` 줄에 시간 표시. openPatTimes 는 오늘/다음 근무타입 편집 창을 엶.
-- 테스트: s75 (23개).
+- 근무타입 시간에 총 근무시간(totH) 표시 · 연장 +n시간은 지금 퇴근에서 더함(쌓임).
+- 테스트: s75 (24개) · s72 (46개).

@@ -30,6 +30,9 @@ const chg=(p,id,v)=>p.evaluate(([id,v])=>{const e=document.getElementById(id);e.
     T('연장 창: 원래 07:00 → 19:00 · 실제 출근/퇴근 칸',await p.evaluate(()=>/07:00 → 19:00/.test(document.querySelector('#pop').textContent)&&!!document.getElementById('otS')&&!!document.getElementById('otE')));
     await p.click('#pop [data-act="ot-add"][data-v="4"]');await p.waitForTimeout(200);
     T('+4시간 → 실제 07:00 ~ 23:00 저장 · 연장 4시간 · 그중 야간 1시간',await p.evaluate(()=>JSON.stringify(__wx.S.ot['2026-10-14'])==='["07:00","23:00"]'&&/연장 4시간/.test(document.querySelector('#pop').textContent)&&/야간 1시간/.test(document.querySelector('#pop').textContent)));
+    await p.click('#pop [data-act="ot-add"][data-v="2"]');await p.waitForTimeout(200);
+    T('+시간은 쌓임 (+4 다음 +2 → 퇴근 01:00 · 연장 6시간)',await p.evaluate(()=>JSON.stringify(__wx.S.ot['2026-10-14'])==='["07:00","01:00"]'&&/연장 6시간/.test(document.querySelector('#pop').textContent)),await p.evaluate(()=>JSON.stringify(__wx.S.ot['2026-10-14'])));
+    await p.evaluate(()=>{const s=document.getElementById('otE');s.value='23:00';s.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(200);
     const h=await p.evaluate(()=>__wx.dayHours(new Date(2026,9,14)));
     T('그날 시간: 일 15 · 연장 7 · 야간 1 · 신청 4',h.work===15&&h.ot===7&&h.night===1&&h.req===4&&h.reqN===1,JSON.stringify(h));
     await p.click('#pop [data-act="pop-close"]');await p.waitForTimeout(200);

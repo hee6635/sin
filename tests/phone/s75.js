@@ -59,8 +59,9 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     await p.evaluate(()=>document.querySelector('.tltimes [data-s="야"]').click());await p.waitForTimeout(300);
     await p.evaluate(()=>{const s=document.getElementById('tdS');s.value='18:30';s.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(200);
     await p.evaluate(()=>{const s=document.getElementById('tdE');s.value='06:30';s.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(200);
+    T('편집 창: 총 12시간 근무',await p.evaluate(()=>/총 12시간 근무/.test(document.querySelector('.tdtot').innerText)));
     await p.click('[data-act="type-save"]');await p.waitForTimeout(300);
-    T('편집 창에서 시간 저장 → 목록에 18:30 → 다음날 06:30',await p.evaluate(()=>{const t=window.__wx.S.shiftTimes['야'];return t&&t.start==='18:30'&&t.end==='06:30'&&/18:30 → 다음날 06:30/.test(document.querySelector('.tltimes').innerText);}));
+    T('편집 창에서 시간 저장 → 목록에 18:30 → 다음날 06:30',await p.evaluate(()=>{const t=window.__wx.S.shiftTimes['야'];return t&&t.start==='18:30'&&t.end==='06:30'&&/18:30 → 다음날 06:30 · 12시간/.test(document.querySelector('.tltimes').innerText);}));
     T('오류 없음 (날씨 · 메모 · 시간)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 근무 시간: 가족 탭 내 카드 → 근무 패턴 화면 근무 시간 칸 펼침 · 날씨 없으면 상태 크게
