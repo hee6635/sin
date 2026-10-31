@@ -1,0 +1,131 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans KR",sans-serif;background:#e9ebef;padding:24px;display:flex;gap:20px;align-items:flex-start;width:2200px}
+.ph{width:390px;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.12);position:relative}
+.cap{font-size:15px;font-weight:800;color:#2c3150;margin:0 0 8px 4px;width:390px}
+.col{display:flex;flex-direction:column}.p{padding:16px}
+.hd{display:flex;align-items:center;font-weight:800;font-size:18px;margin-bottom:10px}.hd .t{flex:1;text-align:center}.hd i{font-style:normal;color:#777;width:26px}
+.hint{font-size:12px;color:#888;margin-top:4px;line-height:1.5}
+.lbl{font-size:13px;color:#666;font-weight:700;margin:14px 0 6px}
+.me{background:linear-gradient(135deg,#e3ddf9,#dae6f8);border-radius:18px;padding:12px;position:relative}
+.av{width:36px;height:36px;border-radius:50%;background:#1d2330;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
+.wc{background:rgba(255,255,255,.7);border-radius:14px;padding:12px;margin-top:10px;display:flex;gap:12px;align-items:center}
+.tl{display:flex;gap:6px;margin-top:10px}.tl div{flex:1;background:rgba(255,255,255,.85);border-radius:10px;padding:6px 4px;text-align:center;font-size:12px;font-weight:800}.tl small{display:block;font-weight:600;color:#666;font-size:11px}
+.fc{display:flex;gap:8px;margin-top:8px}.mc{width:150px;background:#f3f4f6;border-radius:16px;padding:10px 11px;font-weight:700;font-size:13px;align-self:flex-start}.mc .bg{font-size:16px;font-weight:800;margin-top:6px}
+.tapz{position:absolute;border:2px dashed #ff5a6a;border-radius:12px}.tapl{position:absolute;font-size:11px;font-weight:800;color:#ff5a6a;background:#fff;padding:0 5px;border-radius:6px}
+.g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.dw{display:grid;grid-template-columns:repeat(7,1fr);font-size:12px;text-align:center;color:#666;margin-bottom:4px}.dw b:first-child{color:#d0304a}.dw b:last-child{color:#2f63c4}
+.c{height:80px;border:1px solid #e3e6ea;border-radius:8px;position:relative;padding:3px 4px;font-size:12px;font-weight:700}
+.c .bd{position:absolute;left:50%;top:22px;transform:translateX(-50%);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800}
+.s{background:#cfe8d6;color:#1f5a33}.hu{color:#c8102e}
+.c .st{position:absolute;right:2px;top:1px;font-size:11px;letter-spacing:-2px}
+.c .mm{position:absolute;left:3px;right:3px;bottom:3px;font-size:9.5px;font-weight:600;color:#555;border-left:2px solid #b9a7ef;padding-left:3px;white-space:nowrap;overflow:hidden}
+.c.td{outline:2px solid #2a9d7a}.n.r{color:#d0304a}.n.b{color:#2f63c4}
+.dh{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px}.dh .ar{color:#aaa}.dh .x{margin-left:auto;color:#777}
+.strip{display:flex;gap:6px;margin:10px -16px;padding:8px 12px;background:#f4f5f7;font-size:12px;overflow:hidden}.strip div{flex:none;width:44px;text-align:center;border-radius:10px;padding:4px 0;color:#555}.strip div.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);font-weight:800;color:#111}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:20px;background:#f1f2f4;padding:7px 12px;font-weight:700;font-size:14px}.chip.on{background:#e6f4ea;outline:2px solid #2a9d7a}
+.mini{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.board div{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:#555}
+.board span{width:52px;height:52px;border-radius:50%;background:#f1f2f4;display:flex;align-items:center;justify-content:center;font-size:24px;position:relative}
+.board .done span{background:#e6f4ea;outline:2px solid #2a9d7a}.board .done span:after{content:"✓";position:absolute;right:-2px;bottom:-2px;background:#2a9d7a;color:#fff;font-size:10px;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.board .todo span{background:#fff;outline:2px dashed #0f766e}.board .emp span{background:#fff;outline:1.5px dashed #c9ccd2;color:#aaa;font-size:20px}
+.memo{border:2px solid #d8cdf5;border-radius:12px;padding:11px;color:#999;font-size:14px;background:#f6f7f9}
+.prow{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;font-weight:600}.k{width:62px;color:#666;flex:none;font-weight:700}
+.inp{border:1px solid #d6d9de;border-radius:10px;padding:7px 10px;font-weight:700;flex:1}.tb{border:1px solid #d6d9de;border-radius:10px;padding:6px 9px;font-weight:800}
+.hseg{display:flex;background:#f1f2f4;border-radius:10px;padding:3px;gap:2px;flex:1}.hseg span{flex:1;text-align:center;padding:6px 0;border-radius:8px;font-size:12px;font-weight:700;color:#666}.hseg span.on{background:#fff;color:#222;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.wd{display:flex;gap:4px}.wd span{width:26px;height:26px;border-radius:50%;background:#f1f2f4;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}.wd span.on{background:#0f766e;color:#fff}
+.sw{width:40px;height:22px;border-radius:12px;background:#ccd;position:relative;margin-left:auto}.sw:after{content:"";position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff}
+.fold{border:1.5px solid #e1dcf3;border-radius:14px;margin-top:12px;overflow:hidden}.fold .fh{display:flex;align-items:center;gap:8px;padding:12px;font-weight:800;font-size:14px;background:#f8f6fe}.fold .fh small{margin-left:auto;color:#888;font-weight:600}
+.fold .fb{padding:4px 12px 10px}
+.sel{border:1px solid #d6d9de;border-radius:10px;padding:7px 10px;font-weight:700;flex:1;display:flex;justify-content:space-between}
+.big{display:flex;align-items:center;gap:10px}.big .e{width:52px;height:52px;border-radius:50%;background:#e7f6f2;display:flex;align-items:center;justify-content:center;font-size:28px}
+.sub{font-size:12px;font-weight:800;color:#5b4ac0;margin:14px 0 4px}
+</style></head><body>
+
+<div class="col"><div class="cap">① 가족 탭 (1차) — 내 카드 한 줄 · 누르는 곳 둘</div>
+<div class="ph"><div class="p">
+ <div class="hd" style="justify-content:space-between"><span style="font-size:24px">우리 가족</span><span style="font-size:18px;color:#555">↻ 🔔 ⚙️</span></div>
+ <div class="lbl">지금</div>
+ <div style="position:relative">
+ <div class="me">
+  <div style="display:flex;align-items:center;gap:10px;font-weight:800"><span class="av">나</span><div>🙂 쉬는 중 <span style="color:#666;font-weight:700;font-size:13px">· 내일 주간 07:00 시작</span></div></div>
+  <div class="wc"><span style="font-size:44px">🌙</span><div style="font-weight:800;font-size:17px">출퇴근길 맑아요<div style="font-size:13px;color:#555;font-weight:700">코트 입으세요</div></div></div>
+  <div class="tl"><div>출근 07<small>☀️ 8°</small></div><div>퇴근 18<small>☀️ 14°</small></div></div>
+ </div>
+ <div class="tapz" style="left:4px;top:4px;right:4px;height:52px"></div><div class="tapl" style="right:12px;top:-8px">누르면 달력 (오늘)</div>
+ <div class="tapz" style="left:8px;top:62px;right:8px;height:150px"></div><div class="tapl" style="right:12px;top:205px">누르면 날씨</div>
+ </div>
+ <div class="fc">
+  <div class="mc"><div style="display:flex;align-items:center;gap:6px;color:#555"><span style="width:26px;height:26px;border-radius:50%;background:#f6c89f"></span>유찬 ✏️</div><div class="bg">🏠 쉬는 날</div></div>
+ </div>
+ <div class="hint">가족 카드는 아래 줄 · 내용만큼만 높이 (빈 공간 없음)</div>
+ <div class="lbl">가족 시간표</div>
+ <div style="background:#f3f4f6;border-radius:14px;height:110px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:13px">(지금과 같음)</div>
+</div></div></div>
+
+<div class="col"><div class="cap">② 유찬 달력 (1차) — 앱 달력처럼 (화면 모드 따라감)</div>
+<div class="ph"><div class="p">
+ <div class="hd"><i>‹</i><span class="t">유찬 달력</span><i>🖌</i><i>✏️</i></div>
+ <div style="text-align:center;font-weight:800;font-size:19px;margin-bottom:8px"><span style="color:#aaa;margin:0 20px">‹</span>2026.11<span style="color:#aaa;margin:0 20px">›</span></div>
+ <div class="dw"><b>일</b><b>월</b><b>화</b><b>수</b><b>목</b><b>금</b><b>토</b></div>
+ <div class="g" id="g"></div>
+ <div class="hint">· 동그라미 / 칸 채우기 / 또렷하게 = 내 달력 설정 그대로<br>· '학' = 가는 곳 이름 첫 글자 (✏️ 에서 유치원 · 학원 … 으로 바꾸기)<br>· 칸 오른쪽 위 스티커 · 아래 메모 (내 달력과 같은 자리)</div>
+</div></div></div>
+
+<div class="col"><div class="cap">③ 유찬 날짜 창 (1차) — 내 날짜 창처럼 · 스티커판 따로</div>
+<div class="ph"><div class="p">
+ <div class="dh"><span class="ar">‹</span>11월 4일 (수)<span class="ar">›</span><span class="x">✕</span></div>
+ <div class="strip"><div>2<br>월</div><div>3<br>화</div><div class="on">4<br>수</div><div>5<br>목</div><div>6<br>금</div><div>7<br>토</div><div>8<br>일</div></div>
+ <div style="display:flex;gap:6px"><span class="chip on"><span class="mini s">학</span>학교</span><span class="chip"><span class="mini hu">휴</span>쉬는 날</span></div>
+ <div class="lbl">스티커 <span style="font-weight:600;color:#aaa">· 유찬 것 (내 스티커판과 같은 크기)</span></div>
+ <div class="board">
+  <div class="done"><span>🦷</span>양치</div><div class="todo"><span>🎹</span>피아노</div><div><span>💊</span>약</div><div class="done"><span>📖</span>숙제</div><div><span>🎒</span>준비물</div>
+  <div><span>🚴</span>자전거</div><div><span>🏀</span>농구</div><div class="emp"><span>＋</span></div><div class="emp"><span>＋</span></div><div class="emp"><span>＋</span></div>
+ </div>
+ <div class="hint">누르면 붙이기 · 길게 누르면 편집 · ＋ 로 새로 만들기 · 개수 제한 없음</div>
+ <div class="lbl">메모</div>
+ <div class="memo">준비물: 리코더</div>
+</div></div></div>
+
+<div class="col"><div class="cap">④ 스티커 편집 (2차) — 내 달력 · 유찬 달력 같은 화면</div>
+<div class="ph"><div class="p">
+ <div class="hd"><i>‹</i><span class="t">스티커</span><i></i></div>
+ <div class="big"><span class="e">🏊</span><span class="inp">수영</span></div>
+ <div class="prow"><span class="k">반복</span><div class="hseg"><span>없음</span><span class="on">요일</span><span>매일</span><span>근무 맞춤</span><span>매달</span></div></div>
+ <div class="prow"><span class="k"></span><div class="wd"><span>일</span><span class="on">월</span><span>화</span><span class="on">수</span><span>목</span><span class="on">금</span><span>토</span></div></div>
+ <div class="prow"><span class="k">기간</span><span style="color:#888">끝 없음 ›</span></div>
+ <div class="prow"><span class="k">가족</span><span style="font-size:13px">가족에게 보이기</span><span class="sw"></span></div>
+ <div class="prow" style="border:0"><span class="k">알림</span><span class="tb">18:30</span><span style="font-size:12px;color:#888">시작 30분 전 (자동으로 채움)</span></div>
+ <div class="sub">접혀 있을 때</div>
+ <div class="fold"><div class="fh">🎒 학원 · 취미 · 동아리<small>펼치기 ›</small></div></div>
+ <div class="sub">펼쳤을 때</div>
+ <div class="fold"><div class="fh">🎒 학원 · 취미 · 동아리<small>접기 ⌃</small></div>
+  <div class="fb">
+   <div class="prow"><span class="k">활동 시간</span><span class="tb">19:00</span>~<span class="tb">20:00</span></div>
+   <div class="prow" style="border:0"><span class="k">위치</span><div class="sel"><span>🏠 집과 같음</span><span>▾</span></div></div>
+   <div class="hint">· 끝 시간 지나면 자동 완료 (안 간 날은 길게 눌러 빼기)<br>· 근무 시간과 겹치는 날은 자동으로 빠져요<br>· 갈 때 · 올 때 날씨가 나쁘면 알려줘요 ☔</div>
+  </div></div>
+</div></div></div>
+
+<div class="col"><div class="cap">⑤ 활동 넣은 뒤 (2차) — 내 날짜 창 · 가족 탭</div>
+<div class="ph"><div class="p">
+ <div class="dh"><span class="ar">‹</span>11월 6일 (금)<span class="ar">›</span></div>
+ <div style="margin-top:10px"><span class="chip" style="background:#e8eef7;outline:2px solid #5b8fc4"><span class="mini" style="background:#c9d9ec">주</span>주간 07:00~18:00</span></div>
+ <div class="lbl">스티커</div>
+ <div class="board"><div class="todo"><span>🏊</span>19:00</div><div><span>👟</span>운동</div><div><span>💧</span>물</div><div><span>📖</span>독서</div><div><span>💊</span>약</div></div>
+ <div style="background:#e4ecfb;color:#2c58b8;border-radius:12px;padding:10px 12px;font-weight:800;font-size:14px;margin-top:10px">☔ 수영 끝날 때(20시) 비 · 우산 챙기세요</div>
+ <div class="lbl" style="margin-top:18px">가족 탭</div>
+ <div class="me">
+  <div style="display:flex;align-items:center;gap:10px;font-weight:800"><span class="av">나</span>💼 근무 중 <span style="color:#666;font-weight:700;font-size:13px">· 18:00 끝 · 🏊 19:00</span></div>
+  <div class="tl"><div>출근 07<small>☀️ 6°</small></div><div>퇴근 18<small>☁️ 11°</small></div><div style="background:#e4ecfb;color:#2c58b8">🏊 20시<small>☔ 9°</small></div></div>
+ </div>
+ <div class="fc"><div class="mc"><div style="display:flex;align-items:center;gap:6px;color:#555"><span style="width:26px;height:26px;border-radius:50%;background:#f6c89f"></span>유찬</div><div class="bg">🎹 피아노 중</div><div style="color:#0f766e;font-size:12px">17:30 끝</div><div style="margin-top:6px;background:#e4ecfb;color:#2c58b8;border-radius:8px;padding:3px 6px;font-size:12px;font-weight:800">☔ 끝날 때 비 · 우산</div></div></div>
+</div></div></div>
+
+<script>
+let h='';const memo={4:'준비물 리코더',12:'현장체험',19:'치과 4시'};
+for(let i=0;i<35;i++){const d=i+1,day=i%7,o=d>30,n=o?d-30:d,rest=day===0||day===6;
+ let st='';if(!o){if(!rest&&[1,3,5].includes(day))st+='🎹';if(n%2===0)st+='🦷';if(n===11)st+='💊';}
+ h+=`<div class="c" style="${o?'opacity:.35':''};${n===4&&!o?'outline:2px solid #2a9d7a':''}"><span class="n ${day===0?'r':day===6?'b':''}">${n}</span>${st?`<span class="st">${st}</span>`:''}<span class="bd ${rest?'hu':'s'}">${rest?'휴':'학'}</span>${memo[n]&&!o?`<span class="mm">${memo[n]}</span>`:''}</div>`;}
+document.getElementById('g').innerHTML=h;
+</script></body></html>
