@@ -845,9 +845,9 @@ object MonthRenderer {
             btn.color = pal.pill; btn.alpha = 150
             cv.drawCircle(ox, oy, 15f * u, btn)
             val lp = Paint(Paint.ANTI_ALIAS_FLAG)
-            lp.style = Paint.Style.STROKE; lp.strokeWidth = 1.8f * u; lp.strokeCap = Paint.Cap.ROUND; lp.strokeJoin = Paint.Join.ROUND
+            lp.style = Paint.Style.STROKE; lp.strokeWidth = 2.2f * u; lp.strokeCap = Paint.Cap.ROUND; lp.strokeJoin = Paint.Join.ROUND
             lp.color = pal.fg; lp.alpha = 210
-            val s = 0.62f * u   // 16 단위 그림을 10dp 쯤으로
+            val s = 1.2f * u   // 16 단위 그림을 동그라미(30dp)를 거의 채우게 (v0.113: 작다는 의견)
             val x0 = ox - 8f * s
             val y0 = oy - 8f * s
             cv.drawRoundRect(RectF(x0 + 2.5f * s, y0 + 3.5f * s, x0 + 13.5f * s, y0 + 13.5f * s), 2f * s, 2f * s, lp)

@@ -37,7 +37,9 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  T('새 타입에 noGuess 표시',!!nt&&nt.noGuess===true);
  await p.evaluate(()=>history.length);
  await p.click('#page [data-act="pop-close"]').catch(()=>{});
- const tstart=async nm=>{await p.evaluate(()=>{document.getElementById('page').classList.remove('open');});await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(250);await p.evaluate(()=>document.querySelector('[data-act="fam-mytime"]').click());await p.waitForTimeout(400);return p.evaluate(nm=>{const r=[...document.querySelectorAll('#page .ptm .prow')].find(e=>e.innerText.includes(nm));return r?r.innerText.replace(/\s+/g,' '):'';},nm);};   // v0.107: 근무 시간은 근무 패턴 화면 한 곳
+ const tstart=async nm=>{await p.evaluate(()=>{document.getElementById('page').classList.remove('open');window.__wx.closeSheet&&window.__wx.closeSheet();});await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);await p.click('[data-act="more-pattern"]');await p.waitForTimeout(400);   // v0.109~: 근무 시간은 근무타입 편집 창
+   const k=await p.evaluate(nm=>{const r=[...document.querySelectorAll('.tltimes .prow')].find(e=>e.innerText.includes(nm));if(!r)return null;r.click();return 1;},nm);if(!k)return '';await p.waitForTimeout(300);
+   return p.evaluate(()=>{const s=document.getElementById('tdS');const v=s?s.value:'';const [h,m]=v.split(':').map(Number);return v?(h<12?'오전 ':'오후 ')+((h%12)||12)+':'+String(m).padStart(2,'0'):'';});};
  const a=await tstart('야간2'),c=await tstart('야간반');
  console.log(a.slice(0,160),'|',c.slice(0,160));
  T('이미 있던 "야간2"는 그대로 야간처럼(오후 7:00 시작)',/오후 7:00/.test(a));

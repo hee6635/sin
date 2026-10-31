@@ -7,7 +7,7 @@ const O='/tmp/claude-0/-home-user-sin/78e2bc2a-7f65-5612-9a8c-557939742276/scrat
  await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);
  await p.evaluate(()=>document.querySelector('.nc[data-id="f1"]').click());await p.waitForTimeout(400);
  const txt=k=>p.evaluate(k=>document.querySelector(`#page .cell[data-k="${k}"] .bwrap`).innerText.trim(),k);
- T('수요일(10/14) 학교',(await txt('2026-10-14')).includes('학교'),await txt('2026-10-14'));
+ T('수요일(10/14) 학교 (동그라미 "학" · v0.113)',(await txt('2026-10-14'))==='학',await txt('2026-10-14'));
  // 이 날만 바꾸기 → 쉬는 날
  await p.evaluate(()=>document.querySelector('#page .cell[data-k="2026-10-14"]').click());await p.waitForTimeout(300);
  await p.evaluate(()=>document.querySelector('[data-act="man-ov"][data-v="off"]').click());await p.waitForTimeout(300);
@@ -15,8 +15,8 @@ const O='/tmp/claude-0/-home-user-sin/78e2bc2a-7f65-5612-9a8c-557939742276/scrat
  T('저장 형식 ov',await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).family[0].ov['2026-10-14']==='off'));
  // 원래대로
  await p.evaluate(()=>document.querySelector('#page .cell[data-k="2026-10-14"]').click());await p.waitForTimeout(300);
- await p.evaluate(()=>document.querySelector('[data-act="man-ov"][data-v=""]').click());await p.waitForTimeout(300);
- T('원래대로 → 학교',(await txt('2026-10-14')).includes('학교')&&await p.evaluate(()=>!JSON.parse(localStorage.getItem('eonjeswieo:v1')).family[0].ov));
+ await p.evaluate(()=>document.querySelector('[data-act="man-ov"][data-v="on"]').click());await p.waitForTimeout(300);   // v0.113: 원래 칩(학교)을 누르면 원래대로
+ T('원래대로 → 학교',(await txt('2026-10-14'))==='학'&&await p.evaluate(()=>!JSON.parse(localStorage.getItem('eonjeswieo:v1')).family[0].ov));
  // 칠하기: 15·16일을 쉬는 날로, 토요일(17)을 학교로
  await p.evaluate(()=>document.querySelector('[data-act="man-paint"]').click());await p.waitForTimeout(300);
  T('칠하기 막대가 보임',await p.evaluate(()=>!!document.querySelector('#page .vsbar [data-act="man-pk"]')));
@@ -26,7 +26,7 @@ const O='/tmp/claude-0/-home-user-sin/78e2bc2a-7f65-5612-9a8c-557939742276/scrat
  T('쭉 밀면 15·16일 쉬는 날',(await txt('2026-10-15')).includes('휴')&&(await txt('2026-10-16')).includes('휴'));
  await p.evaluate(()=>document.querySelector('[data-act="man-pk"][data-v="on"]').click());await p.waitForTimeout(300);
  const [x3,y3]=await pt('2026-10-17');await p.mouse.click(x3,y3);await p.waitForTimeout(300);
- T('학교로 칠하면 토요일 학교',(await txt('2026-10-17')).includes('학교'));
+ T('학교로 칠하면 토요일 학교',(await txt('2026-10-17'))==='학');
  await p.screenshot({path:O+'man4.png'});
  await p.evaluate(()=>document.querySelector('[data-act="man-paint-off"]').click());await p.waitForTimeout(300);
  T('끝내기 → 막대 사라짐',await p.evaluate(()=>!document.querySelector('#page .vsbar')));

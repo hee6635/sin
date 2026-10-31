@@ -105,3 +105,13 @@
 - 짧게 튕기기: 24px 이상 + 마지막 120ms 빠르기 0.3px/ms 넘으면 넘김 (dsw.pts 로 잼). 천천히 50px 미만은 그대로 제자리.
 - 넘어가는/제자리 돌아가는 0.3초 사이에 또 누르면 앞 마무리를 바로 끝내고(swFlush) 새 화면 기준으로 받음.
 - 시험: s75 진짜 터치(CDP) 빠르게 4번 · 짧게 튕기기 · 천천히 조금(slow 도우미).
+
+## v0.113 (2026-10-31) — 가족 달력을 앱 달력처럼 · 가족 스티커판 · 가족 탭 내 카드
+- 직접 추가한 가족(kind≠sched): 달력 칸은 manBadge(.badge.c / .badge.r) → 화면 모드(동그라미/칸 채우기/또렷하게) 그대로 · 칸 --cb = manCellBg. 색 famLblCol(학생 #a3d4b5).
+- 가는 곳 이름 m.label (≤6자, 가족 ✏️ 의 feLbl) → famLbl(m). 칸 동그라미는 첫 글자.
+- 가족 스티커판 m.sdefs [{id,emoji,name}] · 붙인 기록은 예전처럼 m.stk[k]=[id]. 처음엔 manSdefsInit 이 내 스티커판 복사(같은 id → 예전에 빌려 붙인 것도 그대로). normalize 가 예전 데이터 옮김. 개수 제한 없음.
+- 가족 날짜 창 manDayHtml/openManDay: 날짜 띠(dstripCenter(goFn,curK)) · 칩(원래 값 누르면 원래대로) · 스티커판(＋ 만들기 = openStampBig · 길게 = openManStkEdit) · 메모 · 스와이프 w:'man'.
+- 가족 탭: 가족이 있으면 내 카드는 .now.one 한 줄, 가족 카드는 .now.fams (내용만큼 높이). 내 카드 위쪽 data-act=fam-mycal → 달력 탭 + 오늘 날짜 창 (fam-today 는 시간표 [오늘] 버튼이 이미 씀!). 날씨는 wx-fam 그대로.
+- 또렷하게+동그라미: 밝은 화면 검은 글자(saturate 1.4) · 어두운 화면 흰 글자.
+- 위젯 한 달: 달력 버튼 그림 s 0.62→1.2 · 선 2.2.
+- 시험: s76 (25) · s35 · s31 · s75 고침. s20 은 /tmp/ph.b64 (사진 base64) 가 있어야 돎.
