@@ -48,7 +48,12 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     const routes=[['https://asia-northeast3-demo-wx.cloudfunctions.net/wx**',r=>r.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(raw)})]];
     const p=await boot(b,{...base,addons:{...base.addons,wx:true,wlog:true},wx:{home:'41111',work:'',fw:{}},wlog:{name:'업무 메모',seen:true,days:{'2026-10-14':{a:'인수할 것'}}}},{tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,touch:true});await p.waitForTimeout(2600);
     await p.evaluate(()=>__wx.openDay('2026-10-13'));await p.waitForTimeout(300);await p.click('#wxDay');await p.waitForTimeout(400);
-    await swipe(p,'#pop .wxp .wh',-130);
+    { // 진짜 손가락 터치로 (touch-action 이 막으면 실패함 · v0.109 폰에서 안 되던 것)
+      const cdp=await p.context().newCDPSession(p);const r=await p.evaluate(()=>{const e=document.querySelector('#pop .wxp .wxk')||document.querySelector('#pop .wxp .wh');const b=e.getBoundingClientRect();return [b.left+b.width/2,b.top+10];});
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:r[0],y:r[1]}]});
+      for(let i=1;i<=10;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:r[0]-13*i,y:r[1]}]});await p.waitForTimeout(16);}
+      await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForTimeout(700);
+    }
     T('날씨 팝업 옆으로 밀면 다음날 (10월 14일 날씨)',await p.evaluate(()=>/10월 14일 \(수\) 날씨/.test(document.querySelector('#pop').innerText)),await p.evaluate(()=>document.querySelector('#pop').innerText.slice(0,30)));
     await p.evaluate(()=>{__wx.closePop();__wx.openDay('2026-10-14');});await p.waitForTimeout(300);
     await p.evaluate(()=>document.querySelector('#sheet [data-act="wl-open"]').click());await p.waitForTimeout(400);

@@ -1534,7 +1534,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .nc.me2 .mst{flex:1;min-width:0;font-size:14px;font-weight:800}.nc.me2 .mst small{font-size:12.5px;font-weight:700;color:var(--muted)}.nc.me2 .mst .bar{margin-top:5px}
 .nc.me2.big .mst-t{font-size:24px}.nc.me2.big .sm{margin-top:8px;font-size:13.5px}.nc.me2.big .bar{height:8px;margin-top:8px}
 .nc.me2 .wxcard{margin:12px 0 0;background:rgba(255,255,255,.6)}.nc.me2 .wxcard.wet{background:#e7effb}.nc.me2 .wxcard.bad{background:#fdeedd}
-#sheet,#pop .wlp,#pop .wlp .bd,#pop .wlp textarea,#pop .menu.sdpop,#pop .menu.wxdpop{touch-action:pan-y}#sheet .dstrip,#sheet .tchips,#pop .wxhs{touch-action:pan-x pan-y}
+#sheet,#pop .wlp,#pop .wlp .bd,#pop .wlp textarea,#pop .menu.sdpop,#pop .menu.wxdpop,#pop .menu.wxdpop .wxp{touch-action:pan-y}#sheet .dstrip,#sheet .tchips,#pop .wxhs{touch-action:pan-x pan-y}
 .swc{will-change:transform}.swn{background:var(--bg)}
 .tltimes{margin-top:10px;border-top:1px solid var(--line)}.tltimes .pl2{display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:700}.tltimes .prow{padding:10px 6px}.tltimes .tlt{font-size:15px;font-weight:800;color:var(--fg);white-space:nowrap}.tltimes .tlt.rest{color:var(--muted);font-weight:700}.tltimes .tlt.unset{color:var(--accent)}
 .tdtm{display:flex;align-items:center;gap:8px;margin-top:6px}.tdtm .tbtn{flex:1;font-size:17px;font-weight:800;padding:12px 0;justify-content:center;text-align:center}.tdtm em{font-style:normal;color:var(--muted);font-weight:800}.tdtm small{color:var(--muted);font-size:12px;font-weight:700}.tdtot{text-align:center;margin-top:6px;color:var(--muted);font-size:13px;font-weight:700}.tdtot b{color:var(--text,inherit);font-size:15px}
@@ -5564,11 +5564,11 @@ function applyShift(s){
   if(s===baseShift(d))delete S.overrides[sheetKey];else S.overrides[sheetKey]=s;
   save();render();openDay(sheetKey);
 }
-function goDay(k){
+function goDay(k,quiet){
   const d=parse(k),v=d.getFullYear()*12+d.getMonth();if(v<MIN_M||v>MAX_M)return;
   memoEdit=null;memoText='';
   if(d.getFullYear()!==cur.y||d.getMonth()!==cur.m){cur={y:d.getFullYear(),m:d.getMonth()};render();}
-  buzz(6);openDay(k);
+  if(!quiet)buzz(6);openDay(k);
 }
 // 옆으로 밀면 전날 · 다음날 (v0.109): 날짜 창 · 스티커 창 · 업무 메모 창 · 날씨 팝업
 // 사진 넘기듯 — 창 틀은 그대로, 안 내용과 옆 날짜 내용이 붙은 채로 손가락을 따라 움직이고, 놓으면 스프링으로 자리 잡음
@@ -5601,7 +5601,7 @@ function swHtml(w,k){
 // 진짜로 넘기기 (새 날짜로 다시 그림)
 function swGo(w,dir){
   const k=addK(swKey(w),dir);if(!okDate(k))return false;
-  if(w==='day'){goDay(k);return true;}
+  if(w==='day'){goDay(k,true);return true;}   // 밀어서 넘길 땐 진동 없음
   if(w==='wl'){wlCommitInputs();wlEd={k,ren:false};renderWl(false);return true;}
   if(w==='sd'){openStampDay(k,true);return true;}
   if(w==='wx'){wxOpenDay(k);return true;}
@@ -5624,7 +5624,8 @@ function swSide(st,dir){   // dir: 1 = 다음날(오른쪽에 붙음) · -1 = �
   if(st.nb){st.nb.remove();st.nb=null;}
   st.dir=dir;const h=swHtml(st.w,addK(swKey(st.w),dir));if(h==null)return;
   const nb=document.createElement('div');nb.className='swc swn';nb.innerHTML=h;
-  nb.style.cssText=`position:absolute;left:0;top:${st.el.scrollTop||0}px;width:100%;${st.flex?'display:flex;flex-direction:column;height:100%;':''}pointer-events:none`;
+  const cs=getComputedStyle(st.el),pl=parseFloat(cs.paddingLeft)||0,pr=parseFloat(cs.paddingRight)||0,pt=parseFloat(cs.paddingTop)||0;   // 창 안쪽 여백만큼 비켜서 (옆 판이 더 크게 보였다 줄어드는 것 막기)
+  nb.style.cssText=`position:absolute;left:${pl}px;top:${(st.el.scrollTop||0)+pt}px;width:${st.el.clientWidth-pl-pr}px;${st.flex?'display:flex;flex-direction:column;height:100%;':''}pointer-events:none`;
   st.el.appendChild(nb);st.nb=nb;
   const ds=nb.querySelector('.dstrip'),on=ds&&ds.querySelector('.dsi.on');if(on)ds.scrollLeft=on.offsetLeft+on.offsetWidth/2-ds.clientWidth/2;   // 옆 날짜의 날짜 띠도 가운데 맞춤 (도착해서 툭 안 바뀌게)
 }
@@ -6464,6 +6465,7 @@ function openAddonPage(){
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
 // "새로 생겼어요" 팝업: 버전마다 띄우지 않고, 아래 NEWS 에 그 버전의 소식을 적어 둔 때만 한 번 보여 줌 (없으면 조용히 넘어감)
 const NEWS={
+  'v0.110':`· <b>날씨 창</b>도 옆으로 밀면 넘어가요\n· 옆 날짜가 같은 크기로 붙어서 와요 (넘어간 뒤 크기 바뀌는 느낌 없앰)\n· 밀어서 넘길 땐 진동 없음`,
   'v0.109':`· 옆으로 밀면 <b>옆 날짜가 붙어서</b> 같이 따라와요 (날짜 창 · 업무 메모 · 스티커 · <b>날씨 창</b>)\n· 업무 메모 창도 잘 넘어가요\n· 근무 시간은 <b>근무 패턴 → 근무타입(주 · 야)</b> 눌러서 정해요 · 목록에 시간과 <b>총 근무시간</b>이 보여요\n· ⏱ 연장 +시간 버튼은 <b>누를 때마다 더해져요</b> (+4 두 번 = +8시간)`,
   'v0.108':`· 옆으로 밀기가 <b>손가락을 따라</b> 움직이고 놓으면 스프링처럼 넘어가요 (날짜 창 · 업무 메모 창 · <b>스티커 창</b>)\n· 살짝 비스듬히 밀어도 잘 넘어가요 · 조금만 밀면 제자리로`,
   'v0.107':`· 날짜 창 · 업무 메모 창을 <b>옆으로 밀면</b> 전날 · 다음날로 넘어가요 (창 어디서나)\n· 가족 탭 내 카드: 상태는 "나" 옆에 · 날씨를 켰으면 <b>날씨 카드를 크게</b>, 안 켰으면 근무 중을 크게\n· 내 상태는 근무 중 · 쉬는 중 · 휴무 세 가지만 · 근무 시간은 <b>근무 패턴 화면 한 곳</b>에서 정해요\n· 그림 흰 테두리를 없앴어요\n· 어제 날씨가 비지 않게: 관측이 올라오기 전엔 받아 둔 예보로 보여 줘요`,

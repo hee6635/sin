@@ -89,3 +89,8 @@
 - 근무 시간: openTypeEdit 에 시간 칸(tdS/tdE) → saveType 이 S.shiftTimes 저장(이름 바꾸면 옮김). 근무 패턴 화면의 따로 있던 시간 칸 제거, 근무타입 목록 아래 `.tltimes` 줄에 시간 표시. openPatTimes 는 오늘/다음 근무타입 편집 창을 엶.
 - 근무타입 시간에 총 근무시간(totH) 표시 · 연장 +n시간은 지금 퇴근에서 더함(쌓임).
 - 테스트: s75 (24개) · s72 (46개).
+
+## v0.110 (2026-10-31) — 스와이프 손질
+- 날씨 팝업: 안쪽 스크롤 칸 `.wxp` 가 touch-action auto 라 폰이 옆 밀기를 가져감(pointercancel) → `.wxp` 에도 pan-y. s75 에 진짜 터치(CDP) 시험 추가.
+- 옆 판 swSide: 창 안쪽 여백(padding)만큼 left/top/width 맞춤 (날짜 창이 16px 더 크게 보였다 줄던 것).
+- 밀어서 넘길 땐 진동 없음 (goDay(k,quiet)).
