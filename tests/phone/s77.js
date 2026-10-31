@@ -31,12 +31,17 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     const wd=Object.keys(days).find(i=>days[i].pl&&days[i].work),rd=Object.keys(days).find(i=>days[i].pl&&!days[i].work),nd=Object.keys(days).find(i=>!days[i].pl&&days[i].work);
     const card=i=>p.evaluate(i=>{const x=__wx.wxMine(new Date(2026,9,+i),Date.now());return x?{l:(x.c||[]).map(v=>v.l),k:x.k&&x.k.t,s:x.k&&x.k.s}:null;},i);
     const c=wd?await card(wd):null;
-    T(`근무 날(${wd}일) 3칸: 출근 → 퇴근 → 수영 (시간 순서)`,!!c&&c.l.length===3&&/^출근/.test(c.l[0])&&/^퇴근/.test(c.l[1])&&/^수영 20:00/.test(c.l[2]),JSON.stringify([days,c]));
-    T('결론: 출퇴근은 맑고 수영 끝날 때 비 → "수영 끝날 때 비 와요 · 우산"',!!c&&c.k==='수영 끝날 때 비 와요'&&/우산/.test(c.s),JSON.stringify(c));
+    T(`근무 날(${wd}일) 3칸: 출근 → 퇴근 → 🏊활동 (시간 순서)`,!!c&&c.l.length===3&&/^출근/.test(c.l[0])&&/^퇴근/.test(c.l[1])&&/^🏊활동 20:00/.test(c.l[2]),JSON.stringify([days,c]));
+    T('결론: 출퇴근은 맑고 활동 끝날 때 비 → "활동 끝날 때 비 와요 · 우산"',!!c&&c.k==='활동 끝날 때 비 와요'&&/우산/.test(c.s),JSON.stringify(c));
     const r2=rd?await card(rd):null;
-    T(`쉬는 날(${rd}일) 활동이 있으면 활동 칸만`,!!r2&&r2.l.length===1&&/^수영/.test(r2.l[0])&&r2.k==='수영 끝날 때 비 와요',JSON.stringify(r2));
+    T(`쉬는 날(${rd}일) 활동이 있으면 활동 칸만`,!!r2&&r2.l.length===1&&/^🏊활동/.test(r2.l[0])&&r2.k==='활동 끝날 때 비 와요',JSON.stringify(r2));
     const c2=nd?await card(nd):null;
     T(`활동 없는 근무 날(${nd}일)은 출근 · 퇴근 2칸 그대로`,!!c2&&c2.l.length===2,JSON.stringify(c2));
+    // 시간별 줄: 활동 시간대 묶음 (시작 19시 칸 끼움)
+    await p.evaluate(wd=>__wx.openDay('2026-10-'+wd),wd);await p.waitForTimeout(300);await p.evaluate(()=>document.getElementById('wxDay').click());await p.waitForTimeout(500);
+    const hr=await p.evaluate(()=>[...document.querySelectorAll('#pop .wxhr .sg')].map(g=>[g.className.replace('sg','').trim(),g.querySelector('.hl').innerText,[...g.querySelectorAll('.hc')].map(c=>c.innerText.split('\n')[0]).join(',')]));
+    T('시간별 줄: 집 → 🏊활동(19시 칸 끼움) → 집',hr.length===3&&hr[0][0]==='home'&&hr[1][0]==='act'&&/🏊활동/.test(hr[1][1])&&hr[1][2]==='19시'&&hr[2][0]==='home',JSON.stringify(hr));
+    await p.evaluate(()=>__wx.closePop());
     // 편집 화면: 접는 칸 · 시간 넣으면 알림 30분 전
     await p.evaluate(()=>__wx.openStampReg('2026-10-14','s_sw','day'));await p.waitForTimeout(400);
     T('스티커 편집: 활동 칸 (이미 정한 활동은 펼쳐짐 · 19:00 ~ 20:00)',await p.evaluate(()=>!!document.getElementById('srAS')&&/19:00 ~ 20:00/.test(document.querySelector('.actf').innerText)));
@@ -55,7 +60,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     T('지금(16:30) 상태: 피아노 중 · 17:00 끝',!!f.now&&f.now[1]==='피아노 중'&&/17:00 끝/.test(f.now[2]),JSON.stringify(f.now));
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(500);
     const card=await p.evaluate(()=>document.querySelector('.now.fams .nc').innerText.replace(/\s+/g,' '));
-    T('가족 카드: 피아노 중 · 끝날 때 비 · 우산',/피아노 중/.test(card)&&/피아노 끝날 때 비 · 우산/.test(card),card);
+    T('가족 카드: 피아노 중 (이름) · 날씨는 "활동 끝날 때 비 · 우산"',/피아노 중/.test(card)&&/활동 끝날 때 비 · 우산/.test(card),card);
     await p.evaluate(()=>document.querySelector('[data-act="fam-mancal"]').click());await p.waitForTimeout(500);
     T('달력: 앞으로 깔릴 날(16일 금)은 흐린 피아노',await p.evaluate(()=>{const e=document.querySelector('#vcsl [data-k="2026-10-16"] .stp .se');return !!e&&/opacity/.test(e.getAttribute('style')||'');}));
     await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-12"]').click());await p.waitForTimeout(500);
@@ -72,6 +77,16 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     await tap('#pop [data-act="mstk-ok"]');await p.waitForTimeout(300);
     T('저장: 화 18:00 ~ 19:00',await p.evaluate(()=>{const a=__wx.S.family[0].sdefs[1].act;return !!a&&a.days.join()==='2'&&a.s==='18:00'&&a.e==='19:00';}));
     T('오류 없음 (가족 활동)',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
+  { // 미세먼지 3칸: 활동 동네가 다르면 활동 칸 · 결론 "활동 때(동네)"
+    const raw2={...raw,r:'41113',a:{b:'',d:{'20261014':[3,3],'20261015':[3,3],'20261016':[3,3],'20261012':[3,3],'20261013':[3,3]}}};
+    const raw1={...raw,a:{b:'',d:{'20261014':[1,1],'20261015':[1,1],'20261016':[1,1],'20261012':[1,1],'20261013':[1,1]}}};
+    const routes2=[['https://asia-northeast3-demo-wx.cloudfunctions.net/wx**',r=>r.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({list:[raw1,raw2]})})]];
+    const st={...mine,addons:{...base.addons,wx:true},wx:{home:'41111',work:'',fw:{},nm:{}},stamps:{defs:[{...sw,act:{...sw.act,r:'41113'}}],log:{},v3:1,v4:1}};
+    const p=await boot(b,st,{tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes:routes2});await p.waitForTimeout(2500);
+    const r=await p.evaluate(()=>{const s=__wx.S.stamps.defs[0];for(let i=12;i<=16;i++){const d=new Date(2026,9,i);if(__wx.stampPlanned(s,'2026-10-'+i)&&__wx.wxMyWin(d)){const x=__wx.wxMine(d,Date.now());return {i,dz:x.dz.map(z=>[z.p,z.pl,z.g]),k:x.k};}}return null;});
+    T('활동 동네(다른 곳) 미세먼지 칸 추가 (🏊활동 · "활동 때" · 나쁨) · 결론은 비가 먼저',!!r&&r.dz.length===2&&r.dz[1][0]==='🏊활동'&&r.dz[1][1]==='활동 때'&&r.dz[1][2]===3&&r.k.t==='활동 끝날 때 비 와요',JSON.stringify(r));
+    T('오류 없음 (미세먼지 3칸)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   T.sum();await b.close();
 })();

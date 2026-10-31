@@ -499,8 +499,9 @@ class AlarmActivity : Activity() {
             val c1 = if (bad) badInk else ink
             col.addView(tv("미세먼지 ${w0.optString("lb")}", 16f, c1, round = true))
             val two = zs.size > 1 && zs[1].optInt("g") != w0.optInt("g")
-            col.addView(tv(if (two) "${w0.optString("p")}길(${w0.optString("n")}) ${w0.optString("m")}" else w0.optString("m"), 12.5f, c1, bold = true))
-            if (two) col.addView(tv("${zs[1].optString("p")}길(${zs[1].optString("n")})은 ${zs[1].optString("lb")}", 12f, c1).also { it.alpha = 0.75f })
+            fun pl(z: org.json.JSONObject) = z.optString("pl").ifBlank { z.optString("p") + "길" }   // 출근길 · 퇴근길 · 활동 때
+            col.addView(tv(if (two) "${pl(w0)}(${w0.optString("n")}) ${w0.optString("m")}" else w0.optString("m"), 12.5f, c1, bold = true))
+            if (two) col.addView(tv("${pl(zs[1])}(${zs[1].optString("n")})은 ${zs[1].optString("lb")}", 12f, c1).also { it.alpha = 0.75f })
             l.addView(col); root.addView(l)
         } else if (zs.isEmpty()) w.optString("a").takeIf { it.isNotBlank() }?.let { val l = line(); l.addView(tv(it, 14f, ink, bold = true)); root.addView(l) }
 
