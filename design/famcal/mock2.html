@@ -1,0 +1,114 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans KR",sans-serif;background:#e9ebef;padding:24px;display:flex;gap:22px;align-items:flex-start;width:1760px}
+.ph{width:390px;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.12);position:relative}
+.cap{font-size:15px;font-weight:800;color:#2c3150;margin:0 0 8px 4px;width:390px}
+.col{display:flex;flex-direction:column}
+.p{padding:16px}
+.hd{display:flex;align-items:center;font-weight:800;font-size:18px;margin-bottom:8px}.hd .t{flex:1;text-align:center}.hd i{font-style:normal;color:#777;width:24px}
+.lbl{font-size:13px;color:#666;font-weight:700;margin:14px 0 6px}
+.row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:14px;font-weight:600}
+.row .k{width:70px;color:#666;flex:none}
+.inp{border:1px solid #d6d9de;border-radius:10px;padding:7px 10px;font-weight:700;flex:1}
+.tb{border:1px solid #d6d9de;border-radius:10px;padding:6px 9px;font-weight:800}
+.wd{display:flex;gap:4px}.wd span{width:26px;height:26px;border-radius:50%;background:#f1f2f4;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}.wd span.on{background:#7c66d9;color:#fff}
+.seg{display:flex;background:#f1f2f4;border-radius:10px;padding:3px;gap:3px;flex:1}.seg span{flex:1;text-align:center;padding:6px 0;border-radius:8px;font-size:12.5px;font-weight:700;color:#666}.seg span.on{background:#fff;color:#222;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.sel{border:1px solid #d6d9de;border-radius:10px;padding:7px 10px;font-weight:700;flex:1;display:flex;justify-content:space-between}
+.hint{font-size:12px;color:#888;margin-top:4px;line-height:1.5}
+.box{background:#f6f3fd;border-radius:14px;padding:10px 12px;margin-top:8px}
+.btn{background:#5b4ac0;color:#fff;border-radius:12px;text-align:center;padding:12px;font-weight:800;margin-top:14px}
+.dlg{position:absolute;left:24px;right:24px;top:300px;background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.3);padding:16px}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.c{height:74px;border:1px solid #e3e6ea;border-radius:8px;position:relative;padding:3px 4px;font-size:12px;font-weight:700}
+.c .bd{position:absolute;left:50%;top:20px;transform:translateX(-50%);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.ju{background:#c9d9ec}.ya{background:#ecd3c7}.hu{color:#c8102e}
+.c .ac{position:absolute;left:3px;right:3px;bottom:4px;font-size:9.5px;font-weight:700;background:#efe9fb;color:#5b4a9a;border-radius:3px;padding:0 3px;white-space:nowrap;overflow:hidden}
+.n.r{color:#d0304a}.n.b{color:#2f63c4}
+.dh{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;margin-top:4px}.dh .ar{color:#aaa}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:20px;background:#e8eef7;outline:2px solid #5b8fc4;padding:6px 12px;font-weight:800;font-size:14px}
+.acrow{display:flex;align-items:center;gap:8px;background:#f6f3fd;border-radius:12px;padding:10px 12px;font-size:14px;font-weight:700;color:#4a3d86;margin-top:6px}.acrow small{margin-left:auto;color:#7a70a8;font-weight:600}
+.wx{background:#e4ecfb;color:#2c58b8;border-radius:12px;padding:10px 12px;font-weight:800;font-size:14px;margin-top:8px}
+.wx small{display:block;font-weight:600;font-size:12px;color:#4a6bb0;margin-top:2px}
+.me{background:linear-gradient(135deg,#e3ddf9,#dae6f8);border-radius:18px;padding:12px}
+.av{width:34px;height:34px;border-radius:50%;background:#1d2330;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
+.wc{background:rgba(255,255,255,.7);border-radius:14px;padding:10px;margin-top:10px}
+.tl{display:flex;gap:6px;margin-top:8px}.tl div{flex:1;background:#fff;border-radius:10px;padding:6px 4px;text-align:center;font-size:11.5px;font-weight:800}.tl div small{display:block;font-weight:600;color:#666;font-size:10.5px}.tl .bad{background:#e4ecfb;color:#2c58b8}
+.mc{width:170px;background:#f3f4f6;border-radius:16px;padding:10px 11px;font-weight:700;font-size:13px}
+.mc .big{font-size:15px;font-weight:800;margin-top:6px}.mc small{display:block;color:#7a70a8;font-weight:700;margin-top:2px}.mc .w{margin-top:6px;background:#e4ecfb;color:#2c58b8;border-radius:8px;padding:3px 6px;font-size:12px;font-weight:800}
+.tile{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;background:#f6f7f9;margin-top:6px;font-weight:700}.tile small{margin-left:auto;color:#888;font-weight:600}
+.new{background:#ff5a6a;color:#fff;font-size:10px;font-weight:800;border-radius:8px;padding:1px 6px;margin-left:6px}
+</style></head><body>
+
+<div class="col"><div class="cap">① 반복 일정 (나 · 가족 같은 화면) — 설정 › 반복 일정 / 가족 ✏️</div>
+<div class="ph"><div class="p">
+ <div class="hd"><i>‹</i><span class="t">반복 일정</span><i></i></div>
+ <div class="hint" style="margin:0 0 6px">학원 · 운동 · 취미처럼 매주 가는 곳 · 안 넣으면 지금과 똑같아요</div>
+ <div class="box">
+  <div class="row" style="border:0"><span style="font-size:20px">🏊</span><span class="inp">수영</span></div>
+  <div class="row"><span class="k">요일</span><div class="wd"><span>일</span><span class="on">월</span><span>화</span><span class="on">수</span><span>목</span><span class="on">금</span><span>토</span></div></div>
+  <div class="row"><span class="k">시간</span><span class="tb">19:00</span>~<span class="tb">20:00</span></div>
+  <div class="row" style="border:0"><span class="k">지역</span><div class="sel"><span>🏠 집과 같음</span><span>▾</span></div></div>
+ </div>
+ <div class="hint">근무 시간과 겹치는 날은 자동으로 빠져요<br>(수영 19~20시 → 주간(~18시) 날은 감 · 야간(19시~) 날은 빠짐)</div>
+ <div class="box">
+  <div class="row" style="border:0"><span style="font-size:20px">🎸</span><span class="inp">기타 학원</span></div>
+  <div class="row"><span class="k">요일</span><div class="wd"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="on">토</span></div></div>
+  <div class="row"><span class="k">시간</span><span class="tb">10:00</span>~<span class="tb">12:00</span></div>
+  <div class="row" style="border:0"><span class="k">지역</span><div class="sel"><span>📍 포항시 북구 양덕동</span><span>▾</span></div></div>
+ </div>
+ <div style="color:#5b4ac0;font-weight:800;padding:12px 0 4px">＋ 반복 일정 추가</div>
+</div></div></div>
+
+<div class="col"><div class="cap">② 지역 고를 때 — 가까우면 같게 할지 물어봄</div>
+<div class="ph" style="height:640px"><div class="p">
+ <div class="hd"><i>‹</i><span class="t">지역 고르기</span><i></i></div>
+ <div class="tile">🏠 집과 같음 <small>포항시 남구 효곡동</small></div>
+ <div class="tile" style="outline:2px solid #5b4ac0">📍 포항시 남구 대잠동</div>
+ <div class="tile">📍 포항시 북구 양덕동</div>
+ <div class="tile">🔍 다른 지역 찾기</div>
+</div>
+<div class="dim"></div>
+<div class="dlg">
+ <div style="font-weight:800;font-size:16px">집과 가까워요</div>
+ <div class="hint" style="font-size:13.5px;color:#555;margin-top:6px">대잠동은 집(효곡동)과 날씨가 거의 같아요.<br>같은 지역으로 할까요?</div>
+ <div style="display:flex;gap:8px;margin-top:14px"><div class="btn" style="flex:1;margin:0;background:#f1f2f4;color:#333">따로 볼래요</div><div class="btn" style="flex:1;margin:0">같게 할게요</div></div>
+</div></div></div>
+
+<div class="col"><div class="cap">③ 내 달력 · 날짜 창 — 반복 일정 줄 + 날씨 나쁠 때만</div>
+<div class="ph"><div class="p">
+ <div class="g" id="g"></div>
+ <div style="border-top:1px solid #eee;margin:12px -16px 0;padding:12px 16px 0">
+  <div class="dh"><span class="ar">‹</span>11월 6일 (금)<span class="ar">›</span></div>
+  <div style="margin-top:10px"><span class="chip"><span class="mini" style="background:#c9d9ec;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px">주</span>주간 07:00~18:00</span></div>
+  <div class="lbl">반복 일정</div>
+  <div class="acrow">🏊 수영<small>19:00 ~ 20:00 ☔</small></div>
+  <div class="hint">눌러서 이 날만 시간 바꾸기 · 빼기</div>
+  <div class="wx">☔ 수영 끝날 때(20시) 비 · 우산 챙기세요<small>출근 맑음 → 퇴근 흐림 → 20시 비 3mm</small></div>
+ </div>
+</div></div></div>
+
+<div class="col"><div class="cap">④ 가족 탭 — 내 카드 한 줄 · 출근 → 퇴근 → 수영 · 유찬 학원 날씨</div>
+<div class="ph"><div class="p">
+ <div style="font-size:13px;color:#666;font-weight:800;margin-bottom:8px">지금</div>
+ <div class="me">
+  <div style="display:flex;align-items:center;gap:10px;font-weight:800"><span class="av">나</span>💼 근무 중 <span style="color:#666;font-weight:700;font-size:13px">· 18:00 끝 · 19:00 🏊 수영</span></div>
+  <div class="wc">
+   <div style="font-weight:800">☔ 수영 끝날 때 비 와요 <span style="font-size:13px;color:#555;font-weight:700">· 우산</span></div>
+   <div class="tl"><div>출근 07<small>☀️ 6°</small></div><div>퇴근 18<small>☁️ 11°</small></div><div class="bad">🏊 20시<small>☔ 9°</small></div></div>
+  </div>
+ </div>
+ <div style="display:flex;gap:8px;margin-top:8px">
+  <div class="mc"><div style="display:flex;align-items:center;gap:6px;color:#555"><span style="width:24px;height:24px;border-radius:50%;background:#f6c89f"></span>유찬</div><div class="big">🎹 피아노 중</div><small>17:30 끝</small><div class="w">☔ 끝날 때 비 · 우산</div></div>
+  <div class="mc"><div style="display:flex;align-items:center;gap:6px;color:#555"><span style="width:24px;height:24px;border-radius:50%;background:#b9d3f0"></span>엄마</div><div class="big">💼 회사</div><small style="color:#888">18:00 퇴근</small></div>
+ </div>
+ <div class="hint" style="margin-top:12px">· 날씨가 괜찮으면 반복 일정 칸은 안 붙어요 (맑은 날엔 지금과 같음)<br>· 알람 끝난 뒤 날씨 카드 · 위젯에도 같은 줄 (나쁠 때만)</div>
+</div></div></div>
+
+<script>
+let h='';const pat=['hu','ju','ju','ju','hu','ya','ya'];
+for(let i=0;i<28;i++){const d=i+1,day=i%7,t=pat[(i+3)%7];const k=t==='ju'?'주':t==='ya'?'야':'휴';
+ let ac='';if([1,3,5].includes(day)&&t!=='ya'&&!(t==='ju'&&false))ac='🏊 수영';if(t==='ya'&&[1,3,5].includes(day))ac='';if(day===6)ac='🎸 기타';
+ h+=`<div class="c"><span class="n ${day===0?'r':day===6?'b':''}">${d}</span><span class="bd ${t}">${k}</span>${ac?`<span class="ac">${ac}</span>`:''}</div>`;}
+document.getElementById('g').innerHTML=h;
+</script></body></html>
