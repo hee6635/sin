@@ -1,0 +1,124 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans KR",sans-serif;background:#e9ebef;padding:24px;display:flex;gap:20px;align-items:flex-start;width:2200px}
+.ph{width:390px;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.12);position:relative}
+.cap{font-size:15px;font-weight:800;color:#2c3150;margin:0 0 8px 4px;width:390px}
+.col{display:flex;flex-direction:column}.p{padding:16px}
+.hd{display:flex;align-items:center;font-weight:800;font-size:18px;padding:16px 16px 6px}.hd .t{flex:1;text-align:center}.hd i{font-style:normal;color:#777;width:26px}
+.hint{font-size:12px;color:#888;margin-top:4px;line-height:1.5}
+.lbl{font-size:13px;color:#666;font-weight:700;margin:14px 0 6px}
+.g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 6px}
+.dw{display:grid;grid-template-columns:repeat(7,1fr);font-size:12px;text-align:center;color:#666;padding:0 6px 4px}.dw b:first-child{color:#d0304a}.dw b:last-child{color:#2f63c4}
+.c{height:74px;border:1px solid #e3e6ea;border-radius:8px;position:relative;padding:3px 4px;font-size:12px;font-weight:700}
+.c .bd{position:absolute;left:50%;top:22px;transform:translateX(-50%);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800}
+.t1{background:#a3d4b5;color:#16301f}.t2{background:#cfe9b0;color:#2b4413}.t3{background:#f3c99a;color:#4a2a08}.hu{color:#c8102e}
+.c .st{position:absolute;right:2px;top:1px;font-size:11px}
+.n.r{color:#d0304a}.n.b{color:#2f63c4}
+.paintbar{position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #e3e6ea;padding:10px 12px;box-shadow:0 -4px 12px rgba(0,0,0,.08)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:20px;background:#f1f2f4;padding:6px 10px;font-weight:700;font-size:13px}.chip.on{background:#e6f4ea;outline:2px solid #2a9d7a}
+.mini{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.dh{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;justify-content:space-between}.dh .ar{color:#aaa}
+.strip{display:flex;gap:6px;margin:10px -16px;padding:8px 12px;background:#f4f5f7;font-size:11px;overflow:hidden}.strip div{flex:none;width:44px;text-align:center;border-radius:10px;padding:4px 0;color:#555}.strip div.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);font-weight:800;color:#111}
+.wx{background:#e4ecfb;border-radius:16px;padding:12px;margin-top:12px}
+.wx .k{display:flex;align-items:center;gap:10px;font-weight:800;color:#2c58b8}.wx .k small{display:block;font-weight:700;font-size:12px}
+.tl{display:flex;gap:6px;margin-top:10px}.tl div{flex:1;background:rgba(255,255,255,.85);border-radius:10px;padding:6px 4px;text-align:center;font-size:11.5px;font-weight:800}.tl small{display:block;font-weight:600;color:#666;font-size:11px}.tl .bad{background:#cfdcf7;color:#2c58b8}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.board div{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:700;color:#555}.board span{width:46px;height:46px;border-radius:12px;background:#f1f2f4;display:flex;align-items:center;justify-content:center;font-size:21px}
+.board .done span{background:#e3e9f8;outline:2px solid #5a7fd6}.board .todo span{background:#fff;outline:1.5px dashed #5a7fd6}
+.prow{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;font-weight:600}.k2{width:76px;color:#666;flex:none;font-weight:700}
+.inp{border:1px solid #d6d9de;border-radius:10px;padding:7px 10px;font-weight:700;flex:1}.tb{border:1px solid #d6d9de;border-radius:10px;padding:8px 10px;font-weight:800;font-size:16px}
+.sw{display:flex;gap:6px}.sw span{width:26px;height:26px;border-radius:50%}.sw span.on{outline:3px solid #333;outline-offset:2px}
+.seg{display:flex;background:#f1f2f4;border-radius:10px;padding:3px;gap:3px}.seg span{flex:1;text-align:center;padding:7px 0;border-radius:8px;font-size:13px;font-weight:700;color:#666}.seg span.on{background:#fff;color:#222;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.wd{display:flex;gap:4px}.wd span{width:28px;height:28px;border-radius:50%;background:#f1f2f4;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}.wd span.on{background:#5a7fd6;color:#fff}
+.trow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0;font-weight:700;font-size:14px}.trow small{margin-left:auto;color:#666;font-weight:600}
+.new{outline:2px dashed #ff5a6a;outline-offset:3px;border-radius:12px;position:relative}
+.nb{position:absolute;right:-6px;top:-12px;background:#ff5a6a;color:#fff;font-size:10px;font-weight:800;border-radius:8px;padding:1px 6px;z-index:2}
+.fam{background:#f3f4f6;border-radius:16px;padding:10px 11px;font-weight:700;font-size:13px;width:210px}
+.me{background:linear-gradient(135deg,#e3ddf9,#dae6f8);border-radius:18px;padding:12px;font-weight:800}
+.wxb{display:inline-block;margin-top:6px;background:#e4ecfb;color:#2c58b8;border-radius:8px;padding:3px 7px;font-size:12px;font-weight:800}
+</style></head><body>
+
+<div class="col"><div class="cap">① 유찬 달력 — 위 ✏️🖌 없음 · 종류별 색 동그라미</div>
+<div class="ph" style="height:700px">
+ <div class="hd"><i>‹</i><span class="t">유찬 달력</span><i></i></div>
+ <div style="text-align:center;font-weight:800;font-size:19px;margin:4px 0 8px"><span style="color:#aaa;margin:0 20px">‹</span>2026.11<span style="color:#aaa;margin:0 20px">›</span></div>
+ <div class="dw"><b>일</b><b>월</b><b>화</b><b>수</b><b>목</b><b>금</b><b>토</b></div>
+ <div class="g" id="g"></div>
+ <div class="hint" style="padding:8px 14px">유 = 유치원 · 반 = 반일반 · 특 = 방학특강 (종류는 근무타입처럼 이름 · 색 · 시간)</div>
+ <div class="paintbar new"><span class="nb">칠하기 중</span>
+  <div style="font-size:12.5px;font-weight:800;color:#555;margin-bottom:6px">🖌 날짜를 누르거나 쭉 그으면 칠해져요</div>
+  <div class="chips"><span class="chip on"><span class="mini t1">유</span>유치원</span><span class="chip"><span class="mini t2">반</span>반일반</span><span class="chip"><span class="mini t3">특</span>방학특강</span><span class="chip"><span class="mini hu">휴</span>쉬는 날</span><span class="chip" style="margin-left:auto;background:#5a7fd6;color:#fff">다 했어요</span></div>
+ </div>
+</div></div>
+
+<div class="col"><div class="cap">② 유찬 날짜 창 — 종류 칩 · 🖌 여러 날 칠하기 · 날씨</div>
+<div class="ph"><div class="p">
+ <div style="font-size:13px;color:#888;font-weight:700">‹ 유찬 달력</div>
+ <div class="dh" style="margin-top:6px"><span class="ar">‹</span><span style="text-align:center">11월 4일 (수)<div style="font-size:12px;color:#888;font-weight:600">유찬 · 유치원 09:00~15:00</div></span><span class="ar">›</span></div>
+ <div class="strip"><div>2<br>월</div><div>3<br>화</div><div class="on">4<br>수</div><div>5<br>목</div><div>6<br>금</div><div>7<br>토</div><div>8<br>일</div></div>
+ <div style="display:flex;align-items:center;justify-content:space-between"><span class="lbl" style="margin:4px 0 6px">일정</span><span class="new" style="font-size:12.5px;font-weight:800;color:#5a7fd6;padding:2px 4px"><span class="nb">내 달력과 같은 자리</span>🖌 여러 날 칠하기</span></div>
+ <div class="chips"><span class="chip on"><span class="mini t1">유</span>유치원</span><span class="chip"><span class="mini t2">반</span>반일반</span><span class="chip"><span class="mini t3">특</span>방학특강</span><span class="chip"><span class="mini hu">휴</span>쉬는 날</span></div>
+ <div class="hint">칩 누르면 이 날만 바뀜 · 길게 누르면 종류 고치기</div>
+ <div class="wx new"><span class="nb">새로</span>
+  <div class="k"><span style="font-size:30px">☔</span><div>하원 때 비 와요<small>우산 챙겨 주세요</small></div></div>
+  <div class="tl"><div>등원 09<small>☁️ 8°</small></div><div class="bad">하원 15<small>☔ 11°</small></div><div>🎹활동 17<small>☁️ 10°</small></div></div>
+ </div>
+ <div class="lbl">스티커</div>
+ <div class="board"><div class="done"><span>🦷</span>양치</div><div class="todo"><span>🎹</span>16:00</div><div><span>💊</span>약</div><div><span>📖</span>숙제</div><div><span>🎒</span>준비물</div></div>
+ <div class="lbl">메모</div>
+ <div style="border:2px solid #d8cdf5;border-radius:12px;padding:10px;color:#999;font-size:14px;background:#f6f7f9">준비물: 리코더</div>
+</div></div></div>
+
+<div class="col"><div class="cap">③ 종류 고치기 — 내 근무타입 편집과 같은 모양</div>
+<div class="ph"><div class="p">
+ <div class="hd" style="padding:0 0 10px"><i>‹</i><span class="t">유찬 · 일정 종류</span><i></i></div>
+ <div class="prow"><span class="k2">이름</span><span class="inp">반일반</span><span class="mini t2">반</span></div>
+ <div class="prow"><span class="k2">종류</span><div class="seg" style="flex:1"><span class="on">가는 날</span><span>쉬는 날</span></div></div>
+ <div class="lbl">🕐 시간 <span style="font-weight:600;color:#999">(등원 → 하원 · 날씨 · 가족 탭에 쓰여요)</span></div>
+ <div style="display:flex;align-items:center;gap:8px"><span class="tb" style="flex:1;text-align:center">09:00</span><b style="color:#888">→</b><span class="tb" style="flex:1;text-align:center">13:00</span></div>
+ <div style="text-align:center;font-size:13px;color:#888;font-weight:700;margin-top:6px">총 <b style="color:#222">4시간</b></div>
+ <div class="lbl">색</div>
+ <div class="sw"><span style="background:#a3d4b5"></span><span class="on" style="background:#cfe9b0"></span><span style="background:#f3c99a"></span><span style="background:#a6c6e2"></span><span style="background:#e0b8a3"></span><span style="background:#d8c4ef"></span><span style="background:#f2b8c6"></span></div>
+ <div style="display:flex;gap:8px;margin-top:22px"><span class="chip" style="flex:1;justify-content:center;color:#c33">지우기</span><span class="chip" style="flex:2;justify-content:center;background:#5a7fd6;color:#fff">저장</span></div>
+</div></div></div>
+
+<div class="col"><div class="cap">④ 가족 ✏️ (가족 탭) — 위치 · 일정 종류 목록</div>
+<div class="ph"><div class="p">
+ <div class="hd" style="padding:0 0 10px"><i>‹</i><span class="t">유찬 고치기</span><i style="color:#5a7fd6;width:40px">저장</i></div>
+ <div class="prow"><span class="k2">이름</span><span class="inp">유찬</span></div>
+ <div class="prow"><span class="k2">평소 요일</span><div class="wd"><span>일</span><span class="on">월</span><span class="on">화</span><span class="on">수</span><span class="on">목</span><span class="on">금</span><span>토</span></div></div>
+ <div class="prow new" style="padding:10px 6px"><span class="nb">새로</span><span class="k2">위치</span><span style="margin-left:auto;font-weight:700">📍 포항시 남구 대잠동 ›</span></div>
+ <div class="hint" style="margin-bottom:6px">유치원 동네 · 등원 · 하원 날씨를 여기로 봐요 (안 정하면 집)</div>
+ <div class="lbl new" style="padding:2px 4px"><span class="nb">새로</span>일정 종류 <span style="font-weight:600;color:#999">(평소 요일은 첫 번째 종류)</span></div>
+ <div class="trow"><span class="mini t1">유</span>유치원<small>09:00 ~ 15:00 ›</small></div>
+ <div class="trow"><span class="mini t2">반</span>반일반<small>09:00 ~ 13:00 ›</small></div>
+ <div class="trow"><span class="mini t3">특</span>방학특강<small>10:00 ~ 12:00 ›</small></div>
+ <div class="trow"><span class="mini hu">휴</span>쉬는 날<small>›</small></div>
+ <div style="color:#5a7fd6;font-weight:800;padding:12px 0 4px">＋ 종류 더하기</div>
+ <div class="prow"><span class="k2">방학</span><span style="margin-left:auto;color:#888">＋ 방학 기간 ›</span></div>
+</div></div></div>
+
+<div class="col"><div class="cap">⑤ 가족 탭 — 유찬 카드에 등원 · 하원 날씨</div>
+<div class="ph"><div class="p">
+ <div style="font-size:13px;color:#666;font-weight:800;margin-bottom:8px">지금</div>
+ <div class="me">나 · 💼 근무 중 <span style="color:#666;font-size:13px">· 18:00 끝</span></div>
+ <div style="display:flex;gap:8px;margin-top:8px">
+  <div class="fam"><div style="display:flex;align-items:center;gap:6px;color:#555"><span style="width:24px;height:24px;border-radius:50%;background:#f6c89f"></span>유찬 ✏️</div>
+   <div style="font-size:16px;font-weight:800;margin-top:6px">🏫 유치원</div><div style="color:#888;font-size:12px">15:00 하원</div>
+   <span class="wxb">☔ 하원 때 비 · 우산</span></div>
+ </div>
+ <div class="hint" style="margin-top:12px">· 비 · 눈 · 미세먼지 나쁨일 때만 한 줄 (맑으면 없음)<br>· 누르면 유찬 날씨 팝업 (시간별 줄 · 미세먼지)</div>
+ <div class="lbl">가족 시간표</div>
+ <div style="background:#f3f4f6;border-radius:14px;padding:10px;font-size:12px;font-weight:700;display:grid;grid-template-columns:52px repeat(5,1fr);gap:6px;align-items:center;text-align:center">
+  <span></span><span>월 2</span><span>화 3</span><span>수 4</span><span>목 5</span><span>금 6</span>
+  <span style="text-align:left">유찬</span><span class="mini t1" style="margin:auto">유</span><span class="mini t2" style="margin:auto">반</span><span class="mini t1" style="margin:auto">유</span><span class="mini t1" style="margin:auto">유</span><span class="mini t2" style="margin:auto">반</span>
+ </div>
+</div></div></div>
+
+<script>
+let h='';for(let i=0;i<35;i++){const d=i+1,day=i%7,o=d>30,n=o?d-30:d,rest=day===0||day===6;
+ let t=rest?'hu':([2,5].includes(day)?'t2':'t1');if(!o&&n>=23&&n<=27)t='t3';
+ const ch=t==='hu'?'휴':t==='t1'?'유':t==='t2'?'반':'특';const st=!o&&!rest&&[1,3,5].includes(day)?'🎹':'';
+ h+=`<div class="c" style="${o?'opacity:.35':''};${n===4&&!o?'outline:2px solid #2a9d7a':''}"><span class="n ${day===0?'r':day===6?'b':''}">${n}</span>${st?`<span class="st">${st}</span>`:''}<span class="bd ${t}">${ch}</span></div>`;}
+document.getElementById('g').innerHTML=h;
+</script></body></html>
