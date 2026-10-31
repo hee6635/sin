@@ -4,7 +4,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
 (async()=>{
   const T=mkT();const b=await chromium.launch();
   const swipe=async(p,sel,dx)=>{const r=await p.evaluate(s=>{const e=document.querySelector(s);if(!e)return null;const b=e.getBoundingClientRect();return {x:b.left+b.width/2,y:b.top+Math.min(b.height/2,30)};},sel);if(!r)return false;
-    await p.evaluate(([x,y,dx])=>{const t=document.elementFromPoint(x,y);const ev=(ty,xx)=>t.dispatchEvent(new PointerEvent(ty,{bubbles:true,clientX:xx,clientY:y,pointerId:1}));ev('pointerdown',x);ev('pointerup',x+dx);},[r.x,r.y,dx]);await p.waitForTimeout(300);return true;};
+    await p.evaluate(([x,y,dx])=>{const t=document.elementFromPoint(x,y);const ev=(ty,xx)=>t.dispatchEvent(new PointerEvent(ty,{bubbles:true,clientX:xx,clientY:y,pointerId:1}));ev('pointerdown',x);for(let i=1;i<=6;i++)ev('pointermove',x+dx*i/6);window.__swT=(document.querySelector('#sheet.open')||{style:{}}).style.transform||(document.querySelector('#pop .wlp,#pop .menu')||{style:{}}).style.transform;ev('pointerup',x+dx);},[r.x,r.y,dx]);await p.waitForTimeout(700);return true;};
   { const p=await boot(b,{...base,addons:{...base.addons,wlog:true},wlog:{name:'업무 메모',seen:true,days:{}}},{touch:true});
     await p.evaluate(()=>__wx.openDay('2026-10-14'));await p.waitForTimeout(300);
     const key=()=>p.evaluate(()=>{const b=document.querySelector('#sheet .dft b');return b?b.textContent:'';});
@@ -15,7 +15,10 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     T('오른쪽으로 밀면 전날',/10월 14일/.test(await key()),await key());
     await swipe(p,'#sheet .tchips',-140);
     T('근무타입 칩 줄에서 민 건 날짜 안 바뀜',/10월 14일/.test(await key()),await key());
-    T('미끄러지는 움직임 클래스',await p.evaluate(()=>typeof document.querySelector('#sheet').className==='string'));
+    await swipe(p,'#sheet .dfh',-30);
+    T('조금만 밀면 제자리 (날짜 그대로)',/10월 14일/.test(await key()),await key());
+    T('미는 동안 손가락을 따라 움직임 (translateX)',/translateX\(-30px\)/.test(await p.evaluate(()=>window.__swT||'')),await p.evaluate(()=>window.__swT||''));
+    T('스프링 끝나면 원래 모양 (인라인 transform 지움)',await p.evaluate(()=>document.querySelector('#sheet').style.transform===''));
     T('오류 없음 (날짜 창)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 업무 메모 창도 옆으로 밀면 다음날
@@ -25,6 +28,16 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     await swipe(p,'#pop .wlp h4',-130);
     T('업무 메모 창 옆으로 밀면 다음날 (10월 15일)',await p.evaluate(()=>/10월 15일/.test(document.querySelector('#pop').innerText)));
     T('오류 없음 (업무 메모)',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
+  { // 스티커 창도 옆으로 밀면 다음날 (없는 날은 "없어요")
+    const p=await boot(b,{...base,stamps:{defs:[{id:'p1',kind:'pill',emoji:'💊',name:'비타민',times:3,color:'#ef4d5a',rep:'daily',from:'2026-10-01',to:'',days:[],dates:[],skip:[]}],log:{'2026-10-14':{p1:1}},remind:false,more:false,pillTimes:['07:30','12:30','21:00'],lastRt:''}},{touch:true});
+    await p.evaluate(()=>__wx.render());await p.waitForTimeout(300);
+    const ok=await p.evaluate(()=>{const c=document.querySelector('[data-act="stamp-dn"][data-k="2026-10-14"]');if(!c)return false;c.click();return true;});await p.waitForTimeout(400);
+    const t1=await p.evaluate(()=>document.querySelector('#pop').innerText);
+    if(ok&&/스티커/.test(t1)){await swipe(p,'#pop .menu.sdpop .mh',-130);
+      T('스티커 창 옆으로 밀면 다음날 (10월 15일)',await p.evaluate(()=>/10월 15일/.test(document.querySelector('#pop').innerText)),await p.evaluate(()=>document.querySelector('#pop').innerText.slice(0,40)));}
+    else T('스티커 창 열기 (시험 준비)',false,t1.slice(0,60));
+    T('오류 없음 (스티커)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 근무 시간: 가족 탭 내 카드 → 근무 패턴 화면 근무 시간 칸 펼침 · 날씨 없으면 상태 크게
     const st={...base,anchor:'2026-10-12',shiftTimes:{'주':{start:'09:00',end:'18:00'}}};

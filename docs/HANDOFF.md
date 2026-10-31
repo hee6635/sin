@@ -75,3 +75,9 @@
 - 어제 날씨: 서버 `fetchShortKeep` 이 어제 0시부터 보관 · 앱 병합도 어제부터 · `pastData` 는 어제 관측이 없으면 열쇠에 시각을 붙여 1시간마다 다시 물음 · 앱 `wxPastHtml` 은 관측이 없으면 `WX.day` 예보로 한 줄("예보", 누르면 팝업).
 - 옆으로 밀기: `SW_SKIP` (날짜 띠 · 근무타입 칩 · 입력 칸 · 시간별 줄) 빼고 날짜 창 어디서나 · 업무 메모 창(`.wlp`)도 → `swAnim` 미끄러짐.
 - 시험: 폰 `s75` · s39 지움(예전 자세한 근무 시간 화면) · s31 · s71 고침 · 서버 35개.
+
+## v0.108 (덧붙임 · 2026-10-31) — 스와이프 스프링
+- `swTarget`/`swGo`/`swEnd`: pointermove 로 손가락 따라 translateX · 세로 12px 먼저면 스크롤로 보고 포기 · 놓을 때 50px 넘으면 그 방향으로 빠지고(0.14s) 새 날짜가 반대쪽 45% 에서 스프링(cubic-bezier(.2,1.35,.35,1) .38s)으로 · 덜 밀면 스프링 제자리 · 끝나면 인라인 transform/transition 지움(`tidy`) · prefers-reduced-motion 이면 움직임 없이.
+- `touch-action: pan-y` (#sheet · .wlp · 스티커 창 `.menu.sdpop`) · 가로 스크롤(날짜 띠 · 칩 · 시간별 줄)은 pan-x pan-y.
+- 스티커 창: `openStampDay(k, nav)` — nav 면 스티커 없는 날도 "이 날은 스티커가 없어요" 로 열림 · `stDayK`.
+- 시험 s75 (손가락 움직임 흉내: pointerdown → move 6번 → up).
