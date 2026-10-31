@@ -404,8 +404,19 @@ object MonthRenderer {
         rv.setViewVisibility(R.id.mz_glow, View.GONE)
         for (v in FX_IMGS) rv.setImageViewBitmap(v, tiny)
         // 맨 윗줄: 이름 칩(가족이 있을 때만) · 앞 달 · 제목(이번 달로) · 다음 달
-        rv.setViewVisibility(R.id.mz_chip, if (ppl.isNotEmpty()) View.VISIBLE else View.GONE)
+        val sym = WidgetLayout.monthSym(bmp.width.toFloat(), WidgetRenderer.dens)   // 넓으면 양쪽 같은 폭 → 제목 정중앙
+        rv.setViewVisibility(R.id.mz_chip, if (ppl.isNotEmpty() || sym) View.VISIBLE else View.GONE)
+        rv.setViewVisibility(R.id.mz_rnext, if (sym) View.VISIBLE else View.GONE)
         if (ppl.isNotEmpty()) rv.setOnClickPendingIntent(R.id.mz_chip, navPi(ctx, id, ACT_WHO, 1))
+        else rv.setOnClickPendingIntent(R.id.mz_chip, navPi(ctx, id, ACT_PREV, 2))   // 칩이 없을 때 그 자리 = 앞 달
+        rv.setOnClickPendingIntent(R.id.mz_rnext, navPi(ctx, id, ACT_NEXT, 3))
+        run {   // 오른쪽 위 달력 버튼 → 앱 달력 화면 (위젯에 보이던 그 달)
+            val go = Intent(ctx, MainActivity::class.java)
+            go.putExtra("openDate", String.format(java.util.Locale.US, "%04d-%02d-01#m", grid.year, grid.month0 + 1))
+            go.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            go.data = Uri.parse("eonjeswieo://month/" + id + "/open")
+            rv.setOnClickPendingIntent(R.id.mz_open, PendingIntent.getActivity(ctx, id * 10 + 7, go, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+        }
         rv.setOnClickPendingIntent(R.id.mz_prev, navPi(ctx, id, ACT_PREV, 2))
         rv.setOnClickPendingIntent(R.id.mz_next, navPi(ctx, id, ACT_NEXT, 3))
         rv.setOnClickPendingIntent(R.id.mz_title, navPi(ctx, id, ACT_TODAY, 4))
@@ -827,6 +838,23 @@ object MonthRenderer {
             cv.drawText(if (side == 0) "‹" else "›", x, ay - 1.5f * u, ap)
         }
         if (chipName != null) drawChip(cv, chipName, chipDot, pal, headH, u)
+        // 오른쪽 위 앱 열기: ‹ › 와 같은 연한 동그라미 + 달력 선 아이콘
+        run {
+            val ox = w - WidgetLayout.MONTH_OPEN_DP * u / 2f
+            val oy = headH / 2f
+            btn.color = pal.pill; btn.alpha = 150
+            cv.drawCircle(ox, oy, 15f * u, btn)
+            val lp = Paint(Paint.ANTI_ALIAS_FLAG)
+            lp.style = Paint.Style.STROKE; lp.strokeWidth = 1.8f * u; lp.strokeCap = Paint.Cap.ROUND; lp.strokeJoin = Paint.Join.ROUND
+            lp.color = pal.fg; lp.alpha = 210
+            val s = 0.62f * u   // 16 단위 그림을 10dp 쯤으로
+            val x0 = ox - 8f * s
+            val y0 = oy - 8f * s
+            cv.drawRoundRect(RectF(x0 + 2.5f * s, y0 + 3.5f * s, x0 + 13.5f * s, y0 + 13.5f * s), 2f * s, 2f * s, lp)
+            cv.drawLine(x0 + 2.5f * s, y0 + 7f * s, x0 + 13.5f * s, y0 + 7f * s, lp)
+            cv.drawLine(x0 + 5.5f * s, y0 + 2f * s, x0 + 5.5f * s, y0 + 5f * s, lp)
+            cv.drawLine(x0 + 10.5f * s, y0 + 2f * s, x0 + 10.5f * s, y0 + 5f * s, lp)
+        }
     }
 
     /** 누구 달력인지 보여 주는 알약: ● 이름 ▾ (누르면 다음 사람). 이름이 길면 글자를 줄이고 그래도 길면 … */

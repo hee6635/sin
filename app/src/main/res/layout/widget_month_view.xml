@@ -87,6 +87,19 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1" />
+
+            <!-- 넓은 위젯: 오른쪽에도 칩 자리만큼 (누르면 다음 달) → 제목 정중앙 -->
+            <FrameLayout
+                android:id="@+id/mz_rnext"
+                android:layout_width="56dp"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
+
+            <!-- 오른쪽 위 앱 열기 (달력 선 아이콘은 그림에 그림) -->
+            <FrameLayout
+                android:id="@+id/mz_open"
+                android:layout_width="48dp"
+                android:layout_height="match_parent" />
         </LinearLayout>
 
         <!-- 요일 줄 (누르는 곳 없음) -->

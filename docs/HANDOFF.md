@@ -58,3 +58,11 @@
 - 앱: `wxHrHtml`/`wxHrScroll`(지금 칸이 왼쪽 두 번째) · `wxOpenPop` · 날짜 창 = 근무 타입 → 대기 요청(pending 만) → 날씨 카드(`.wxcard`) → 가족 메모 알림 → 메모 · `S.wx.one`(같은 지역으로 보기, `wxWk()` 가 빈 값) · `wxNear`(같은 시·군·구 또는 시·군·구 격자 10km) → `wxAskOne`.
 - 그림: `design/weather/clean/` (테두리 다듬은 원본) → `assets/wx/{faces,wear,sky,alert}` · 특보 10개 + `sky/uv`.
 - 시험: 폰 `s74` · 서버 `wx.test.mjs` 33개.
+
+## v0.106 (덧붙임 · 2026-10-31)
+- 미세먼지 시간대별: 서버 측정소 값 24개(`q.hh = {'YYYYMMDDHH':[미세, 초미세]}`, "24:00" = 다음날 00시) · `wxcore.dustAt` → 시간별 줄 칸 `f`(얼굴) · `fc`(예보면 true, 흐리게) · 칸 얼굴 누르면 미세먼지 큰 화면.
+- 그림 통일: `design/weather/clean2/` (자르기 = 윤곽선 안쪽만 남기고 흰 테두리 새로 · `/tmp/wxcut/cut3.py` 방식 — 다시 자를 일 있으면 HANDOFF 이 줄 참고) → assets/wx 48개(278KB). 우산 하나(`umbrella`) · 호우 = 침수 위험 · 얼굴 = 단순한 8개(1번 파랑 진하게).
+- 부가 기능에서 응원 버튼 · 내 상태 뺌 (normalize 가 addons 키 목록에서 뺌 → 켜 있던 값은 사라짐). 가족 탭 내 카드 = 늘 `myStatus` (근무 중 · 몇 시 끝 + 막대). 응원 관련 함수는 남아 있지만 화면 입구 없음.
+- 날짜 창 날씨: 오늘 ~ 3일 뒤 = 카드 · 4일 뒤부터 = 한 줄 · 시간 예보 없는 먼 근무 날은 하루 요약으로.
+- 한 달 위젯: 오른쪽 위 `mz_open`(달력 선 아이콘, 누르면 `openDate "YYYY-MM-01#m"` → 그 달 달력만) · 넓으면(360dp↑) `mz_rnext` 56dp 로 양쪽 104dp → 제목 정중앙 (`WidgetLayout.monthZones`) · 칩 없을 때 왼쪽 자리 = 앞 달.
+- `scripts/kotlin-check/layout/run-month-real.sh` 는 지금 Reminders.kt 컴파일(shim)에서 막힘 — 이번 변경 전부터인지 확인 필요.

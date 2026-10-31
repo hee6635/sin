@@ -139,7 +139,7 @@ fun arrowsCheck(): Int {
                 val w = wd * u
                 val twPx = Math.min(tw * u, WidgetLayout.monthTitleMax(w, u, chip))   // 그리는 쪽이 너무 넓은 제목은 줄여서 그림
                 val a = WidgetLayout.monthArrows(w, u, chip, twPx)
-                val chipZone = if (chip) WidgetLayout.MONTH_CHIP_ZONE_DP * u else 0f
+                val chipZone = WidgetLayout.monthZones(w, u, chip)[0]
                 val cx = chipZone + (w - chipZone) / 2f
                 val zoneHalf = WidgetLayout.MONTH_TITLE_ZONE_DP * u / 2f
                 n++

@@ -253,7 +253,7 @@ async function fetchStations(deps, r) {
   }
 }
 async function fetchStationRt(deps, st, now) {
-  const l = items(await getJson(deps, '/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty', { returnType: 'json', numOfRows: 3, pageNo: 1, stationName: st, dataTerm: 'DAILY', ver: '1.0' }));
+  const l = items(await getJson(deps, '/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty', { returnType: 'json', numOfRows: 24, pageNo: 1, stationName: st, dataTerm: 'DAILY', ver: '1.0' }));
   const x = l.find(v => num(v.pm10Value) != null || num(v.pm25Value) != null);
   if (!x) throw new Error('측정값 없음');
   // 표에 쓸 것: 통합대기지수 · 오존 · 이산화질소 · 일산화탄소 · 아황산가스 [값, 등급 1~4] (점검 중 '-' 이면 뺌)
@@ -262,7 +262,15 @@ async function fetchStationRt(deps, st, now) {
     const n = num(x[v]); if (n == null) continue;
     const gr = Math.round(num(x[g]) || 0); gx[k] = [n, gr >= 1 && gr <= 4 ? gr : 0];
   }
-  return { t: String(x.dataTime || ''), p10: num(x.pm10Value) != null ? Math.round(num(x.pm10Value)) : null, p25: num(x.pm25Value) != null ? Math.round(num(x.pm25Value)) : null, st, x: gx, b: rtBase(now) };
+  // 지난 24시간 1시간마다 (시간별 줄 얼굴): {'YYYYMMDDHH': [미세, 초미세]} · "24:00" 은 다음날 00시
+  const hh = {};
+  for (const v of l) {
+    const m = String(v.dataTime || '').match(/^(\d{4})-(\d\d)-(\d\d) (\d\d):/); if (!m) continue;
+    const a = num(v.pm10Value), b = num(v.pm25Value); if (a == null && b == null) continue;
+    const t = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4]) - 9 * HOUR, [yy, mm, dd, h2] = kstParts(t);
+    hh[`${yy}${p2(mm)}${p2(dd)}${p2(h2)}`] = [a == null ? null : Math.round(a), b == null ? null : Math.round(b)];
+  }
+  return { t: String(x.dataTime || ''), p10: num(x.pm10Value) != null ? Math.round(num(x.pm10Value)) : null, p25: num(x.pm25Value) != null ? Math.round(num(x.pm25Value)) : null, st, x: gx, hh, b: rtBase(now) };
 }
 async function stationAir(deps, r) {
   const sl = await cached(deps, `st_${r.c}`, 'v2', () => fetchStations(deps, r));

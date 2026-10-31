@@ -322,20 +322,30 @@ object WidgetLayout {
 
     class MonthArrows(val prevX: Float, val nextX: Float, val titleCx: Float)
 
+    /** 오른쪽 위 "앱 열기" 버튼 자리(dp) — xml 의 mz_open 폭과 같아야 함 · 넓은 위젯은 오른쪽에도 칩 자리만큼(mz_rnext 56 + 버튼 48) 둬서 제목을 정중앙에 */
+    const val MONTH_OPEN_DP = 48f
+    const val MONTH_SYM_MIN_DP = 360f
+    /** 맨 윗줄 왼쪽 · 오른쪽 자리(px): 넓으면 양쪽 104dp(제목 정중앙) · 좁으면 왼쪽 = 칩 있을 때만 104dp, 오른쪽 = 버튼 48dp */
+    fun monthSym(w: Float, u: Float): Boolean = w / u >= MONTH_SYM_MIN_DP
+    fun monthZones(w: Float, u: Float, hasChip: Boolean): FloatArray =
+        if (monthSym(w, u)) floatArrayOf(MONTH_CHIP_ZONE_DP * u, MONTH_CHIP_ZONE_DP * u)
+        else floatArrayOf(if (hasChip) MONTH_CHIP_ZONE_DP * u else 0f, MONTH_OPEN_DP * u)
+
     /** 제목 글자가 이 폭(px)보다 넓으면 줄여서 그림 — 좁은 위젯에서도 양옆 화살표 자리(각 22dp)를 남김 */
-    fun monthTitleMax(w: Float, u: Float, hasChip: Boolean): Float = (w - (if (hasChip) MONTH_CHIP_ZONE_DP * u else 0f)) - 44f * u
+    fun monthTitleMax(w: Float, u: Float, hasChip: Boolean): Float { val z = monthZones(w, u, hasChip); return (w - z[0] - z[1]) - 44f * u }
 
     /**
      * 한 달 위젯 맨 윗줄: 제목 양옆의 ‹ › 글자 가운데 x (제목 가운데 = 이름 칩 자리를 뺀 나머지의 가운데).
      * 화살표는 칩이 있든 없든 제목 바로 옆(16dp)에 두되, 자기 눌리는 칸(앞 달 칸 · 다음 달 칸) 안쪽으로 밀어 넣음 (좁은 위젯 + 이름 칩 + 넓은 제목일 때만 닿음)
      */
     fun monthArrows(w: Float, u: Float, hasChip: Boolean, titleW: Float): MonthArrows {
-        val chipZone = if (hasChip) MONTH_CHIP_ZONE_DP * u else 0f
-        val cx = chipZone + (w - chipZone) / 2f
+        val z = monthZones(w, u, hasChip)
+        val chipZone = z[0]
+        val cx = chipZone + (w - chipZone - z[1]) / 2f
         val half = 6f * u   // 화살표 글자 폭의 절반쯤
         val halfZone = MONTH_TITLE_ZONE_DP * u / 2f
         val p = clamp(cx - titleW / 2f - 22f * u, chipZone + half, cx - halfZone - half)
-        val n = clamp(cx + titleW / 2f + 22f * u, cx + halfZone + half, w - half)
+        val n = clamp(cx + titleW / 2f + 22f * u, cx + halfZone + half, w - z[1] - half)
         return MonthArrows(p, n, cx)
     }
 }

@@ -173,7 +173,7 @@
       const fs = vs.map(v => feel(v.tp, v.ws)), f = Math.min(...fs), tps = vs.map(v => v.tp), hi = Math.max(...tps);
       const rain = vs.some(v => v.pty === 1 || v.pty === 4 || (v.pty === 0 && v.pop >= 60)), snow = vs.some(v => v.pty === 2 || v.pty === 3);
       const windy = vs.some(v => (v.ws || 0) >= 7), heavy = vs.some(v => (v.pcp || 0) >= 3);
-      if (rain) { if (windy) add('raincoat', '우비'); else if (heavy) { add('umbrella', '큰 우산'); add('boots', '장화'); } else add('umbrella_fold', '우산'); }
+      if (rain) { if (windy) add('raincoat', '우비'); else if (heavy) { add('umbrella', '큰 우산'); add('boots', '장화'); } else add('umbrella', '우산'); }
       if (snow) add('boots', '미끄럼 조심 신발');
       if (g >= 3) add('mask', g >= 4 ? 'KF94 마스크' : '마스크');
       if (f <= 0) add('mittens', '장갑');
@@ -214,6 +214,18 @@
   }
   const UVN = v => v >= 11 ? '위험' : v >= 8 ? '매우 높음' : v >= 6 ? '높음' : v >= 3 ? '보통' : '낮음';
 
+  /* 시간별 줄 미세먼지 얼굴: 지난 시간 · 지금 = 측정소 실측(그 2시간 안 가장 늦은 값 · 8단계), 앞으로 = 그날 예보(4단계 · fc) · 없으면 f '' */
+  function dustAt(raw, t, now) {
+    const q = raw && raw.q;
+    if (now != null && t <= now) {
+      const hh = q && q.hh;
+      for (let d = 1; d >= 0; d--) { const tt = t + d * H; if (tt > now) continue; const v = hh && hh[keyH(tt)]; if (v && (v[0] != null || v[1] != null)) return { f: face(Math.max(lv8(v[0], T10), lv8(v[1], T25))), fc: false }; }
+      if (q && now < t + 2 * H && (q.p10 != null || q.p25 != null)) return { f: face(Math.max(lv8(q.p10, T10), lv8(q.p25, T25))), fc: false };   // 지금 칸: 지금 값
+    }
+    const f = raw && raw.a && raw.a.d && raw.a.d[keyD(t)], g = f ? Math.max(f[0] || 0, f[1] || 0) : 0;
+    return g ? { f: face(F4[g]), fc: true } : { f: '', fc: false };
+  }
+
   /* 시간별 줄 (그날 24시간 · 2시간 간격 · 야간이면 다음날 퇴근 뒤까지): 칸마다 내가 있는 곳 — 출근 전 · 퇴근 뒤 = 집, 근무 중 = 직장
    * o = {dk:'YYYYMMDD', s, e (근무 시간 · 없으면 쉬는 날), now, hn, wn (이름)} · work 없으면 전부 집 · 칸 시작 시각이 출근 1시간 전 ~ 퇴근 1시간 뒤면 직장
    * → {at:[{t, l, sk, tp, w(직장), now, past, on(출퇴근 칸), wet, nd(다음날 첫 칸)}], i0 (처음 왼쪽 두 번째에 올 칸), seg(집/직장 나눔), hn, wn} */
@@ -225,7 +237,8 @@
     const at = [];
     for (let t = ms0; t < end; t += 2 * H) {
       const w = !!(work && o.s != null && t >= o.s - H && t < o.e + H), v = exact(w ? work : home, t), hh = kst(t).h;   // 출근 1시간 전 ~ 퇴근 1시간 뒤 = 직장
-      at.push({ t, l: `${p2(hh)}시`, sk: sky(v, t), tp: v ? v.tp : null, w, now: o.now != null && o.now >= t && o.now < t + 2 * H, past: o.now != null && o.now >= t + 2 * H,
+      const df = dustAt(w ? work : home, t, o.now);
+      at.push({ t, l: `${p2(hh)}시`, sk: sky(v, t), tp: v ? v.tp : null, f: df.f, fc: df.fc, w, now: o.now != null && o.now >= t && o.now < t + 2 * H, past: o.now != null && o.now >= t + 2 * H,
         on: o.s != null && ((o.s >= t && o.s < t + 2 * H) || (o.e >= t && o.e < t + 2 * H)), wet: wet(v), nd: t > ms0 && hh < 2 });
     }
     let i = at.findIndex(x => x.now);

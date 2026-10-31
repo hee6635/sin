@@ -384,5 +384,22 @@ await ok('퇴근 1시간 뒤(집에 옴)면 미세먼지 · 결론은 집 동네
   const c = C.commute(home, work, { ...o, now: KST(2026, 10, 30, 21) });
   assert.ok(!/미세먼지/.test(c.k.t), c.k.t); assert.deepEqual(c.dz.map(x => x.p), ['출근']);
 });
+await ok('미세먼지 시간대별: 측정소 24시간 받기 · 시간별 줄 칸 얼굴 (지난 · 지금 = 실측, 앞으로 = 예보)', async () => {
+  W._resetFail();
+  const body = url => {
+    if (/getTMStdrCrdnt/.test(url)) return wrap([{ sggName: '수원시 장안구', umdName: '연무동', tmX: '1', tmY: '2' }]);
+    if (/getNearbyMsrstnList/.test(url)) return wrap([{ stationName: '연무동' }]);
+    if (/getMsrstnAcctoRltmMesureDnsty/.test(url)) { assert.match(url, /numOfRows=24/); return wrap([{ dataTime: '2026-10-30 05:00', pm10Value: '90', pm25Value: '40' }, { dataTime: '2026-10-30 04:00', pm10Value: '20', pm25Value: '5' }, { dataTime: '2026-10-29 24:00', pm10Value: '35', pm25Value: '10' }]); }
+    return null;
+  };
+  const D = req('../lib/wxDongs.json'), yd = D['41111'].find(x => x[1] === '연무동')[0];
+  const r = await W.regionData(deps({ body }), yd);
+  assert.deepEqual(r.q.hh['2026103005'], [90, 40]); assert.deepEqual(r.q.hh['2026103000'], [35, 10]);   // 24:00 → 다음날 00시
+  const x = C.hours(r, null, { dk: '20261030', now: NOW });
+  const at = h => x.at.find(c => c.l === h);
+  assert.equal(at('04시').f, 'faces/5'); assert.equal(at('04시').fc, false);   // 04 · 05시 중 늦은 05시 = 90/40 → 상당히 나쁨
+  assert.equal(at('00시').f, 'faces/2');   // 00시 35 → 양호
+  assert.equal(at('08시').fc, true); assert.match(at('08시').f, /^faces\/[1346]$/);   // 앞으로 = 그날 예보
+});
 await ok('시각 글자(YYYYMMDDHHmm) → ms (한국 시간)', () => assert.equal(W.stampMs('202610300700'), KST(2026, 10, 30, 7)));
 console.log(`\n${n} 통과`);
