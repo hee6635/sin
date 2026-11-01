@@ -133,3 +133,12 @@
 - 시험: s77 (27).
 - (v0.115 추가) 옷: wxPopHtml · AlarmActivity 둘 다 칸별 옷 그림 없앰 → 안 지난 칸 중 가장 추운 칸 한 벌 ("오늘 옷 · 출근 7° 기준", 기온차 10° 이상이면 한마디). 날씨 카드 칸 이름 .wcl 한 줄.
 - (v0.115 추가) 가족 스티커 설정 openManStkPage ('manstk', pageBack=renderManCalPage): .mstgrid 길게 끌기(gdg kind 'mslot') · 누르면 openManStkEdit · 빼기 = sdef.retired (m.stk 기록 남김, 판·깔림·자동 제외) · ＋ = 새로 / 내 스티커 가져오기(mslot-import).
+
+## v0.117 (2026-11-01) — 가족 일정 종류 · 위치 · 가족 날씨 · 이 날부터 새 일정
+- 직접 추가한 가족(kind student/office/free = famUsesTypes): m.ftypes [{k,name,ab?,rest?,s,e,color}] · 없으면 famTypesDef (예전 label/start/end → 'on' · 'off' 키라 예전 ov 그대로).
+- 구간 m.eras [{from,ftypes,days,vac,loc}] · famEraRef(m,d) 고칠 대상 · famEra(m,d) 합친 사본. memberOff 가 구간 · 종류(rest) 를 봄. famTypeAt / famTimes / ftAb(두 글자까지, 세 글자면 첫 글자) / ftBadge.
+- 날짜 창: "일정 ▴ 접기"(manFold · 앱 나가 5분 → 처음) · 🖌 여러 날 칠하기(man-paint) · 칩 길게 = openFtEdit · famDayWxHtml(오늘~3일) → famWxPop. 위쪽 ✏️🖌 없앰.
+- 가족 ✏️ (openFamEdit): 일정 종류 목록(fe-ft · fe-ftadd) · 가는 요일(회사) · 위치(fe-loc → actPickRegion) · 방학 · 📅 이 날부터 새 일정(fe-era-add · 구간 칩 fe-era · m._ed 는 저장 때 지움).
+- 날씨: wxcore commute(o.ls/le/lb 이름표: 학생 = 등원 · 하원 · 등하원) · brief 도. wxMemWin/wxMemWork 가 직접 추가한 가족도 (famTimes · loc). wxCodes 에 가족 위치. famWx(m,d) · 가족 카드 wxFamChip = 다음 칸 날씨 늘 · 앞으로 비면 "하원 때 비 · 우산" (famActWx 는 교대 가족만).
+- 가족 시간표 · 위젯 자료도 종류 동그라미/글자 · 색.
+- 시험: s78 (17) · s35 · s76 · s77 고침.

@@ -10,12 +10,12 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     T('예전 데이터: 가족 스티커판이 생김 (내 판 복사 · 같은 id)',Array.isArray(sd)&&sd.some(x=>x.id==='s_teeth'&&x.emoji==='🦷')&&sd.some(x=>x.id==='s_pill'&&x.emoji==='💊')&&sd.length>=5,JSON.stringify(sd));
     await openCal(p);
     const c=await p.evaluate(()=>{const e=document.querySelector('#vcsl [data-k="2026-10-14"]');return {b:e.querySelector('.bwrap .badge.c').textContent,st:e.querySelectorAll('.stp .ico,.stp img,.stp span').length,cb:e.getAttribute('style')||'',memo:e.innerText};});
-    T('달력 칸: 동그라미 "학" · 칸 채우기 색 · 예전 스티커 · 메모',c.b==='학'&&/--cb/.test(c.cb)&&/준비물/.test(c.memo),JSON.stringify(c));
+    T('달력 칸: 동그라미 "학교"(두 글자까지) · 칸 채우기 색 · 예전 스티커 · 메모',c.b==='학교'&&/--cb/.test(c.cb)&&/준비물/.test(c.memo),JSON.stringify(c));
     T('쉬는 날은 "휴"',await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-17"] .bwrap .badge.r').textContent==='휴'));
     // 날짜 창
     await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-14"]').click());await p.waitForTimeout(500);
     const d=await p.evaluate(()=>({t:document.querySelector('#sheet .dft').innerText,strip:!!document.querySelector('#sheet #dstrip .dsi.on'),chips:[...document.querySelectorAll('#sheet .tchips .tchip')].map(x=>x.className.includes('on')),st:document.querySelectorAll('#sheet .mstk button').length,n:__wx.S.family[0].sdefs.length,on:document.querySelectorAll('#sheet .mstk button.on').length}));
-    T('날짜 창: 제목 · 날짜 띠 · 학교 칩 켜짐 · 스티커판(판 + 만들기) · 붙인 2개',/10월 14일/.test(d.t)&&d.strip&&d.chips[1]===true&&d.chips[0]===false&&d.st===d.n+1&&d.on===2,JSON.stringify(d));
+    T('날짜 창: 제목 · 날짜 띠 · 학교 칩 켜짐 · 스티커판(판 + 만들기) · 붙인 2개',/10월 14일/.test(d.t)&&d.strip&&d.chips[0]===true&&d.chips[1]===false&&d.st===d.n+1&&d.on===2,JSON.stringify(d));
     // 스티커 붙이기
     await p.evaluate(()=>document.querySelector('#sheet .mstk [data-id="s_read"]').click());await p.waitForTimeout(300);
     T('스티커 누르면 붙음 (저장 · 칸에도)',await p.evaluate(()=>__wx.S.family[0].stk['2026-10-14'].includes('s_read')&&document.querySelectorAll('#sheet .mstk button.on').length===3));
@@ -48,13 +48,16 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   }
   { // 가는 곳 이름 바꾸기
     const p=await boot(b,{...base,family:fam},{touch:true});await openCal(p);
-    await p.evaluate(()=>document.querySelector('#page [data-act="man-edit"]').click());await p.waitForTimeout(400);
-    await p.evaluate(()=>{document.getElementById('feLbl').value='유치원';document.querySelector('[data-act="fe-save"]').click();});await p.waitForTimeout(500);
-    T('가는 곳 이름 저장 (유치원)',await p.evaluate(()=>__wx.S.family[0].label==='유치원'));
+    const tap=sel=>p.evaluate(sel=>{const o=document.querySelector(sel);o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();},sel);
+    await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);await tap('[data-act="fam-edit"][data-id="f1"]');await p.waitForTimeout(400);   // v0.117 ✏️ 은 가족 탭에서 · 이름은 일정 종류에서
+    await tap('#page [data-act="fe-ft"][data-k="on"]');await p.waitForTimeout(300);
+    await p.evaluate(()=>{document.getElementById('ftName').value='유치원';});await tap('#pop [data-act="ft-save"]');await p.waitForTimeout(300);
+    await tap('[data-act="fe-save"]');await p.waitForTimeout(500);
+    T('일정 종류 이름 저장 (유치원)',await p.evaluate(()=>__wx.S.family[0].ftypes[0].name==='유치원'),await p.evaluate(()=>JSON.stringify(__wx.S.family[0].ftypes)));
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);
     T('가족 시간표 · 카드에 "유치원"',await p.evaluate(()=>/유치원/.test(document.querySelector('#view').innerText)));
     await p.evaluate(()=>document.querySelector('[data-act="fam-mancal"]').click());await p.waitForTimeout(500);
-    T('달력 칸 동그라미는 첫 글자 "유"',await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-14"] .bwrap .badge.c').textContent==='유'));
+    T('달력 칸 동그라미는 세 글자면 첫 글자 "유"',await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-14"] .bwrap .badge.c').textContent==='유'));
     T('오류 없음 (이름)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 가족 탭: 가족이 있으면 내 카드 한 줄 · 위쪽 = 달력(오늘) · 시간표 [오늘] 은 그대로

@@ -65,7 +65,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     T('지금(16:30) 상태: 피아노 중 · 17:00 끝',!!f.now&&f.now[1]==='피아노 중'&&/17:00 끝/.test(f.now[2]),JSON.stringify(f.now));
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(500);
     const card=await p.evaluate(()=>document.querySelector('.now.fams .nc').innerText.replace(/\s+/g,' '));
-    T('가족 카드: 피아노 중 (이름) · 날씨는 "활동 끝날 때 비 · 우산"',/피아노 중/.test(card)&&/활동 끝날 때 비 · 우산/.test(card),card);
+    T('가족 카드: 피아노 중 (이름) · 날씨는 "활동 끝날 때 비 · 우산"',/피아노 중/.test(card)&&/활동 때 비 · 우산/.test(card),card);
     await p.evaluate(()=>document.querySelector('[data-act="fam-mancal"]').click());await p.waitForTimeout(500);
     T('달력: 앞으로 깔릴 날(16일 금)은 흐린 피아노',await p.evaluate(()=>{const e=document.querySelector('#vcsl [data-k="2026-10-16"] .stp .se');return !!e&&/opacity/.test(e.getAttribute('style')||'');}));
     await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-12"]').click());await p.waitForTimeout(500);

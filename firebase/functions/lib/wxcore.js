@@ -280,6 +280,7 @@
     return z.w.sn ? { t: `${z.w.n} ${z.w.when} 눈 와요`, s: '미끄럼 조심해요', i: 'sky/snow' } : { t: `${z.w.n} ${z.w.when} 비 와요`, s: '우산 챙기세요', i: 'wear/umbrella' };
   }
   function commute(home, work, o) {
+    const LS = o.ls || '출근', LE = o.le || '퇴근', LB = o.lb || '출퇴근';
     const W = work || home;
     const vs = at(home, o.s), ve = at(W, o.e);
     if (!vs && !ve) return null;
@@ -292,7 +293,7 @@
     const ws = wet(vsD), we = wet(veD), sn = snowy(vsD) || snowy(veD);
     let i, h, hs;
     if (ws || we) {
-      const which = ws && we ? '출퇴근' : ws ? '출근' : '퇴근';
+      const which = ws && we ? LB : ws ? LS : LE;
       i = sn ? '❄️' : '☔'; h = `${which}길 ${sn ? '눈' : '비'} 와요 · ${sn ? '미끄럼 조심해요' : '우산 챙겨요'}`; hs = `${which}길 ${sn ? '눈' : '비'} · ${sn ? '조심' : '우산'}`;
     } else if (a && a.g >= 3) {
       i = a.g >= 4 ? '😫' : '😷'; h = airHead(a); hs = a.g >= 4 ? '미세먼지 매우 나쁨 · KF94' : '미세먼지 나쁨 · 마스크';
@@ -301,7 +302,7 @@
       if (vs && ve && Math.abs(vs.tp - ve.tp) >= 10) { i = '🧥'; h = '기온차가 커요, 외투 챙겨요'; hs = '기온차 커요 · 외투'; }
       else if (lo <= 0) { i = '🧣'; h = '많이 추워요 · 따뜻하게 입어요'; hs = '추워요 · 따뜻하게'; }
       else if (hi >= 30) { i = '🥵'; h = '오늘 더워요 · 물 챙겨요'; hs = '더워요 · 물 챙겨요'; }
-      else if ([vs, ve].filter(Boolean).every(v => v.sky <= 1)) { i = '☀️'; h = '출퇴근길 맑아요'; hs = '맑아요'; }
+      else if ([vs, ve].filter(Boolean).every(v => v.sky <= 1)) { i = '☀️'; h = `${LB}길 맑아요`; hs = '맑아요'; }
       else { i = (ve || vs).sky >= 4 ? '☁️' : '⛅'; h = '무난한 날씨예요'; hs = '무난해요'; }
     }
     // q: 그 줄을 누르면 열 날씨 페이지 검색어 (출근 = 집, 퇴근 = 직장)
@@ -312,7 +313,7 @@
       const x = { l: `${l} ${hm(ms)}`, p: same ? '' : place(pl), sk: sky(v, ms), tp: v ? v.tp : null, d: !v ? '예보 없음' : wet(v) ? `${snowy(v) ? '눈' : '비'} ${v.pop}%` : `체감 ${feel(v.tp, v.ws)}°`, hot: wet(v) && !(o.now != null && o.now >= ms), past: o.now != null && o.now >= ms };
       return Object.assign(x, wearOf(v) || {}, sq ? { q: sq } : {});
     };
-    let c = [card('출근', o.s, vs, o.hn, o.hq), card('퇴근', o.e, ve, o.wn, o.wq || o.hq)];
+    let c = [card(LS, o.s, vs, o.hn, o.hq), card(LE, o.e, ve, o.wn, o.wq || o.hq)];
     // 활동이 있는 날: 그날 순서대로 3칸 (출근 · 퇴근 + 다가올 활동 하나)
     const ac = actCards(home, o.acts, o.now), acK = actK(ac), pick = ac.filter(z => !z.x.past).concat(ac.filter(z => z.x.past))[0];
     if (pick) {
@@ -320,8 +321,8 @@
     }
     const dz = [];
     const dh = dustOf(ah), dw = dustOf(aw);
-    if (dh) dz.push(Object.assign({ p: '출근', pl: '출근길', n: place(o.hn) }, dh));
-    if (dw) dz.push(Object.assign({ p: '퇴근', pl: '퇴근길', n: place(o.wn) }, dw));
+    if (dh) dz.push(Object.assign({ p: LS, pl: LS + '길', n: place(o.hn) }, dh));
+    if (dw) dz.push(Object.assign({ p: LE, pl: LE + '길', n: place(o.wn) }, dw));
     { const da = pick && !pick.x.past ? actDz(home, pick.a, dh, o.now, place(o.hn)) : null; if (da) dz.push(da); }   // 활동 미세먼지 (다른 동네 · 또는 그 시간에 더 나쁠 때만)
     const worst = dz.slice().sort((x, y) => y.g - x.g || y.lv - x.lv)[0];
     const vD = [vsD, veD].filter(Boolean).concat(ac.map(z => z.v).filter(Boolean)), sunny = vD.length > 0 && vD.every(v => v.sky <= 1 && !wet(v));
@@ -332,26 +333,26 @@
     if (ak) k = ak;
     else if (acK && !(ws || we)) k = acK;
     else if (ws || we) {
-      const which = ws && we ? '출퇴근' : ws ? '출근' : '퇴근', fr = !ws && we ? wetFrom(W, o.s, o.e) : null;
+      const which = ws && we ? LB : ws ? LS : LE, fr = !ws && we ? wetFrom(W, o.s, o.e) : null;
       k = sn ? { t: `${which}길에 눈 와요`, s: '미끄럼 조심해요', i: 'sky/snow' } : { t: `${which}길에 비 와요`, s: `우산 챙기세요${fr ? ' · ' + fromH(fr) : ''}`, i: 'wear/umbrella' };
     } else if (worst && worst.g >= 3) {
       k = { t: `미세먼지 ${worst.lb}`, s: dz.length > 1 && dz.some(z => z.g !== worst.g) ? `${worst.pl || worst.p + '길'}(${worst.n}) ${worst.m}` : worst.m, i: worst.f, dz: 1 };
     } else if (uv != null && uv >= 8) {
       k = { t: `자외선 ${UVN(uv)}`, s: '선크림 · 모자 챙기세요', i: 'sky/uv' };
     } else {
-      const vv = vD.length ? vD : [vs, ve].filter(Boolean), cold = vv.slice().sort((x, y) => x.tp - y.tp)[0], cw = cold === vs ? '출근' : '퇴근';
+      const vv = vD.length ? vD : [vs, ve].filter(Boolean), cold = vv.slice().sort((x, y) => x.tp - y.tp)[0], cw = cold === vs ? LS : LE;
       if (vs && ve && Math.abs(vs.tp - ve.tp) >= 10) k = { t: '기온차가 커요', s: '벗기 쉬운 겉옷 챙기세요', i: 'wear/cardigan' };
       else if (cold.tp <= 0) k = { t: `${cw}길 ${cold.tp < 0 ? '영하 ' + (-cold.tp) : 0}°`, s: '따뜻하게 입으세요', i: 'wear/scarf_red' };
       else if (Math.max(...vv.map(v => v.tp)) >= 30) k = { t: '오늘 더워요', s: '물 챙기세요', i: 'wear/bottle' };
-      else k = { t: sunny ? (ps && !both ? '퇴근길 맑아요' : '출퇴근길 맑아요') : '무난한 날씨예요', s: '', i: (c.filter(x => !x.past).map(x => x.sk).find(Boolean) || c[1].sk || c[0].sk) };
+      else k = { t: sunny ? (ps && !both ? `${LE}길 맑아요` : `${LB}길 맑아요`) : '무난한 날씨예요', s: '', i: (c.filter(x => !x.past).map(x => x.sk).find(Boolean) || c[1].sk || c[0].sk) };
       if (!k.s) { const wv = c.find(x => x.ws); if (wv) k.s = `${wv.ws} 입으세요`; }
     }
     return {
       i, h, hs,
-      t: [vs ? `출근 ${vs.tp}°` : '', ve ? `퇴근 ${ve.tp}°` : ''].filter(Boolean).join(' · '),
+      t: [vs ? `${LS} ${vs.tp}°` : '', ve ? `${LE} ${ve.tp}°` : ''].filter(Boolean).join(' · '),
       a: airLine(a), an: airNums(a), ag: a ? a.g : 0,
-      r: [row('출근', o.s, o.hn, vs, o.hq), row('퇴근', o.e, o.wn, ve, o.wq || o.hq)],
-      ...((oc => oc ? { o: oc.o, ox: oc.ox, ol: '출퇴근길' } : {})(outfit([vs, ve]))),
+      r: [row(LS, o.s, o.hn, vs, o.hq), row(LE, o.e, o.wn, ve, o.wq || o.hq)],
+      ...((oc => oc ? { o: oc.o, ox: oc.ox, ol: LB + '길' } : {})(outfit([vs, ve]))),
       k, c, b: bring(vD, a ? a.g : 0, sunny, uv), dz, ...(uv != null ? { uv: [uv, UVN(uv)] } : {}),
       src: srcLine(home, work)
     };
@@ -404,7 +405,7 @@
     if (!v) return null;
     const a = air(home, keyD(useE ? o.e : o.s), now);
     const bad = a && a.g >= 3;
-    return { sk: bad && !wet(v) ? dustOf(a).f : sky(v, useE ? o.e : o.s), i: wet(v) ? (snowy(v) ? '❄️' : '☔') : bad ? '😷' : icon(v), t: `${useE ? '퇴근' : '출근'} ${v.tp}°${wet(v) ? (snowy(v) ? ' 눈' : ' 비') : bad ? ' 마스크' : ''}`, wet: wet(v), bad: !!bad };
+    return { sk: bad && !wet(v) ? dustOf(a).f : sky(v, useE ? o.e : o.s), i: wet(v) ? (snowy(v) ? '❄️' : '☔') : bad ? '😷' : icon(v), t: `${useE ? (o.le || '퇴근') : (o.ls || '출근')} ${v.tp}°${wet(v) ? (snowy(v) ? ' 눈' : ' 비') : bad ? ' 마스크' : ''}`, wet: wet(v), bad: !!bad };
   }
   const naver = q => `https://m.search.naver.com/search.naver?query=${encodeURIComponent(String(q || '').trim() + ' 날씨')}`;
   // 지난 날짜 관측 한 줄: "☔ 6°~12° · 비 8mm" / "❄️ … · 눈 3cm" / "🌡 6°~12°"
