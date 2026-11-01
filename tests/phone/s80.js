@@ -25,7 +25,10 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   if(hasDz){await p.evaluate(()=>document.querySelector('#pop [data-act="wx-dust"]').click());await p.waitForTimeout(400);}
   const tabs=await p.evaluate(()=>[...document.querySelectorAll('#pop .wxd .tabs button')].map(b=>b.innerText.replace(/\s*\n\s*/g,' · ')));
   T('미세먼지 탭 3개: 등원 · 할머니동 / 하원 · 학교동 / 🎹활동 · 학원동',tabs.length===3&&/등원 · 수원시 팔달구/.test(tabs[0])&&/하원 · 수원시 권선구/.test(tabs[1])&&/🎹활동 · 수원시 영통구/.test(tabs[2]),JSON.stringify(tabs));
+  const fy=()=>p.evaluate(()=>Math.round(document.querySelector('#pop .wxd img.big').getBoundingClientRect().top));
+  const y0=await fy();
   if(tabs.length===3){await p.evaluate(()=>document.querySelectorAll('#pop .wxd .tabs button')[2].click());await p.waitForTimeout(300);
+    T('v0.124 탭을 바꿔도 큰 얼굴 높이 그대로 (활동 줄 자리를 늘 남김)',Math.abs(await fy()-y0)<=1,y0);await p.waitForTimeout(300);
     const t=await p.evaluate(()=>document.querySelector('#pop .wxd').innerText.replace(/\s+/g,' '));
     T('활동 탭: "활동 16:00 때" · 학원동 측정소',/활동 16:00 때/.test(t)&&/41117 측정소/.test(t),t.slice(0,300));}
   await p.evaluate(()=>{const e=document.querySelector('#pop [data-act="wx-dust-close"]');if(e)e.click();});await p.waitForTimeout(200);

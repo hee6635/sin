@@ -6845,7 +6845,7 @@ function wxDustHtml(){
   const where=d.st?`${d.st} 측정소`:d.w?`${d.w} 평균`:'',when=d.t?`${+d.t.slice(5,7)}월 ${+d.t.slice(8,10)}일 ${d.t.slice(11,16)} 기준`:'';
   const B=az?{f:az.f,lb:az.lb,m:az.m,lv:az.lv}:d,aw=az?`활동 ${wxHm(cur.at)} 때${cur.at>now?' 예보':''}`:'';
   return `<div class="wxd" style="--dc:${B.lv>=0?WX_DC[B.lv]:'#8a8f99'}">${top}
-    ${aw?`<div class="stn" style="margin-top:0">${esc(aw)}</div>`:''}${wxImg(B.f,'big')}<div class="lv">${esc(B.lb||'-')}</div><div class="msg">${esc(B.m||'')}</div>${where||when?`<div class="stn">${esc([where,when].filter(Boolean).join(' · '))}</div>`:''}
+    ${aw||L.some(x=>x.at)?`<div class="stn" style="margin-top:0${aw?'':';visibility:hidden'}">${esc(aw||'활동')}</div>`:''}${wxImg(B.f,'big')}<div class="lv">${esc(B.lb||'-')}</div><div class="msg">${esc(B.m||'')}</div>${where||when?`<div class="stn">${esc([where,when].filter(Boolean).join(' · '))}</div>`:''}
     ${now2||fc?`<div class="row">${now2}${fc}</div>`:''}${tbl}
     <div class="ft">에어코리아 자료 · 실제 수치와 다를 수 있어요${d.lv<0?'<br>지금 측정값이 없어 예보로 보여 줘요':''}</div></div>`;
 }
