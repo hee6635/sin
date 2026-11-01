@@ -564,7 +564,7 @@ class AlarmActivity : Activity() {
         try { gauge?.cancel() } catch (e: Exception) { }
         val go = {
             try {
-                startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                InAppWeb.open(this, url, true)   // 잠금 화면 카드는 곧 닫히므로 새 창으로
             } catch (e: Exception) {
             }
             finish()

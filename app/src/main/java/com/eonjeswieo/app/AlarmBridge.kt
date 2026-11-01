@@ -108,7 +108,7 @@ class AlarmBridge(private val activity: MainActivity) {
         if (!(url.startsWith("https://") || url.startsWith("http://"))) return
         activity.runOnUiThread {
             try {
-                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                InAppWeb.open(activity, url, false)
             } catch (e: Exception) { }
         }
     }

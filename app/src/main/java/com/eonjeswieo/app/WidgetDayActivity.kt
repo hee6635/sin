@@ -142,9 +142,7 @@ class WidgetDayActivity : Activity() {
         if (!url.startsWith("http://") && !url.startsWith("https://")) return
         val go = {
             try {
-                val it2 = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                it2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(it2)
+                InAppWeb.open(this, url, true)
             } catch (e: Exception) {
                 // 열 수 있는 앱이 없으면 그냥 둠
             }
