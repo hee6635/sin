@@ -23,7 +23,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   const hasDz=await p.evaluate(()=>!!document.querySelector('#pop [data-act="wx-dust"]'));
   T('날씨 팝업에 미세먼지 누를 곳',hasDz);
   if(hasDz){await p.evaluate(()=>document.querySelector('#pop [data-act="wx-dust"]').click());await p.waitForTimeout(400);}
-  const tabs=await p.evaluate(()=>[...document.querySelectorAll('#pop .wxd .tabs button')].map(b=>b.innerText));
+  const tabs=await p.evaluate(()=>[...document.querySelectorAll('#pop .wxd .tabs button')].map(b=>b.innerText.replace(/\s*\n\s*/g,' · ')));
   T('미세먼지 탭 3개: 등원 · 할머니동 / 하원 · 학교동 / 🎹활동 · 학원동',tabs.length===3&&/등원 · 수원시 팔달구/.test(tabs[0])&&/하원 · 수원시 권선구/.test(tabs[1])&&/🎹활동 · 수원시 영통구/.test(tabs[2]),JSON.stringify(tabs));
   if(tabs.length===3){await p.evaluate(()=>document.querySelectorAll('#pop .wxd .tabs button')[2].click());await p.waitForTimeout(300);
     const t=await p.evaluate(()=>document.querySelector('#pop .wxd').innerText.replace(/\s+/g,' '));

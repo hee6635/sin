@@ -19,7 +19,7 @@ const st={...base,addons:{...base.addons,wx:true},wx:{home:'4111160000',work:'41
     T('둥근 글씨체(주아) 읽힘',await p.evaluate(async()=>{await document.fonts.ready;return document.fonts.check('20px Jua');}));
     await p.click('#pop [data-act="wx-dust"]');await p.waitForTimeout(300);
     const t1=await p.evaluate(()=>({t:document.querySelector('#pop').innerText,tabs:document.querySelectorAll('#pop .tabs button').length,bg:getComputedStyle(document.querySelector('#pop .menu')).backgroundColor}));
-    T('큰 화면: 출근 · 퇴근 탭 2개 · 출근(연무동) 좋음 · 파랑 배경',t1.tabs===2&&/출근 · 연무동/.test(t1.t)&&/퇴근 · 화성시 동탄구/.test(t1.t)&&/좋음/.test(t1.t)&&/연무동 측정소/.test(t1.t)&&t1.bg==='rgb(75, 158, 230)',JSON.stringify(t1).slice(0,300));
+    T('큰 화면: 출근 · 퇴근 탭 2개 · 출근(연무동) 좋음 · 파랑 배경',t1.tabs===2&&/출근\s*연무동/.test(t1.t)&&/퇴근\s*화성시 동탄구/.test(t1.t)&&/좋음/.test(t1.t)&&/연무동 측정소/.test(t1.t)&&t1.bg==='rgb(75, 158, 230)',JSON.stringify(t1).slice(0,300));
     await p.click('#pop [data-act="wx-dust-tab"][data-i="1"]');await p.waitForTimeout(300);
     const t2=await p.evaluate(()=>({t:document.querySelector('#pop').innerText,rows:document.querySelectorAll('#pop table tr').length,bg:getComputedStyle(document.querySelector('#pop .menu')).backgroundColor,face:document.querySelector('#pop img.big').getAttribute('src')}));
     T('퇴근 탭: 동탄 측정소 · 상당히 나쁨 · 주황 배경 · 큰 얼굴 5번',/동탄 측정소/.test(t2.t)&&/상당히 나쁨/.test(t2.t)&&t2.bg==='rgb(232, 102, 42)'&&t2.face==='wx/faces/5.webp',JSON.stringify(t2).slice(0,300));

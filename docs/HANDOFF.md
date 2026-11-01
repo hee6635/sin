@@ -175,3 +175,8 @@
 - InAppWeb.kt: 링크를 커스텀 탭(세션 extra, 라이브러리 없음)으로. AlarmBridge.openUrl · AlarmActivity · WidgetDayActivity. wx-web 은 앱에서 팝업 안 닫음.
 - 스와이프: 전체 화면 아닌 창(날씨 · 스티커 · 업무 메모 팝업)은 옆 판 높이를 재서(st.h0 → st.h1) 미는 만큼 높이도 바꿈. 시험 s82.
 - 시안: design/wx/pop_compare.png (선 구분) · dust_compare.png (✕ 위 · 탭 두 줄).
+
+## v0.123 (2026-11-01) — 날씨 상세 팝업 선 구분 · 미세먼지 탭 ✕ 아래
+- .wxp.v2: 결론(.wxk 색 있을 때)만 상자 · 칸(.wxcs) · 옷/챙길 것(.wxrw) · 시간별 줄(.wxhr) · 미세먼지 칸(.wxdz3)은 상자 없이 아래 1px 선 · 여백 14~16px.
+- .wxd 미세먼지 큰 화면: ✕ 는 맨 위 · 탭은 아래 한 줄, 탭 글자 두 줄(<small>출근</small>동네). 예전엔 동네 이름이 길면 탭이 ✕ 를 화면 밖으로 밀어냄.
+- 시험: s73 · s80 탭 글자 줄바꿈 반영.

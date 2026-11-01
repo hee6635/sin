@@ -1569,6 +1569,20 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .wxd{min-height:100%;padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(18px + env(safe-area-inset-bottom,0px));color:#fff;text-align:center;box-sizing:border-box}
 .wxd .top{display:flex;align-items:center;gap:8px}.wxd .tabs{flex:1;display:flex;gap:5px;padding:4px;border-radius:13px;background:rgba(0,0,0,.14)}
 .wxd .tabs button{flex:1;padding:8px 4px;border-radius:10px;color:#fff;font-size:13.5px;font-weight:800;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wxd .tabs button.on{background:#fff;color:#333;opacity:1}
+/* v0.122 날씨 상세 팝업: 결론만 색 상자 · 나머지는 상자 없이 얇은 선 · 여백 넓게 */
+.wxp.v2{padding:18px 18px 12px}.wxp.v2 .wh{padding:0 0 6px}
+.wxp.v2 .wxk{margin:8px 0 4px;padding:14px}
+.wxp.v2 .wxk:not(.wet):not(.bad):not(.cold):not(.al1):not(.al2){background:none;padding:14px 0}
+.wxp.v2 .wxcs{gap:0;padding:16px 0;border-bottom:1px solid var(--line)}
+.wxp.v2 .wxc{background:none!important;border:none!important;border-radius:0;padding:4px 6px}
+.wxp.v2 .wxc+.wxc{border-left:1px solid var(--line)!important}
+.wxp.v2 .wxrw{background:none;border:none;border-radius:0;margin:0;padding:16px 2px;border-bottom:1px solid var(--line)}
+.wxp.v2 .wxhr{border:none;border-radius:0;margin:0;padding:14px 0;border-bottom:1px solid var(--line)}
+.wxp.v2 .wxdz3{background:none;border-radius:0;margin:0;padding:16px 0;border-bottom:1px solid var(--line)}
+.wxp.v2 .wxweb{margin-top:14px}
+/* v0.122 미세먼지 큰 화면: ✕ 는 맨 위 오른쪽 · 탭은 아래 한 줄 (두 줄 글자: 출근 / 동네) → 동네 이름이 길어도 ✕ 가 안 밀려남 */
+.wxd .top{flex-wrap:wrap;row-gap:10px}.wxd .x{order:-1;margin-left:auto}.wxd .tabs{order:1;flex-basis:100%;min-width:0}
+.wxd .tabs button{min-width:0;line-height:1.2;padding:6px 4px}.wxd .tabs button small{display:block;font-size:11.5px;opacity:.8;font-weight:700}
 .wxd .one{flex:1;text-align:left;padding-left:6px;font-family:Jua,sans-serif;font-size:19px}.wxd .x{width:40px;height:40px;font-size:22px;color:#fff}
 .wxd img.big{width:150px;height:150px;object-fit:contain;margin-top:14px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.12))}
 .wxd .lv{font-family:Jua,sans-serif;font-size:44px;line-height:1.15}.wxd .msg{font-size:15px;font-weight:700;margin-top:2px}.wxd .stn{font-size:12.5px;font-weight:700;opacity:.85;margin-top:6px}
@@ -6814,7 +6828,7 @@ let wxDzTab=0;
 function wxDustHtml(){
   const L=wxDz&&wxDz.list||[];if(!L.length)return '';
   const cur=L[Math.min(wxDzTab,L.length-1)],now=Date.now(),d=WX.dustInfo(wxRaw(cur.code),now);
-  const top=`<div class="top">${L.length>1?`<div class="tabs">${L.map((x,i)=>`<button class="${x===cur?'on':''}" data-act="wx-dust-tab" data-i="${i}">${esc([x.p,x.n].filter(Boolean).join(' · '))}</button>`).join('')}</div>`:`<div class="one">${esc(cur.n)}</div>`}<button class="x" data-act="wx-dust-close" aria-label="닫기">✕</button></div>`;
+  const top=`<div class="top">${L.length>1?`<div class="tabs">${L.map((x,i)=>`<button class="${x===cur?'on':''}" data-act="wx-dust-tab" data-i="${i}">${x.p?`<small>${esc(x.p)}</small>`:''}${esc(x.n)}</button>`).join('')}</div>`:`<div class="one">${esc(cur.n)}</div>`}<button class="x" data-act="wx-dust-close" aria-label="닫기">✕</button></div>`;
   if(!d)return `<div class="wxd" style="--dc:#8a8f99">${top}<div class="none">미세먼지 자료를 아직 못 받았어요</div></div>`;
   let az=null;if(cur.at){try{az=WX.dzAt(wxRaw(cur.code),cur.at,now,'','','');}catch(e){}}   // 활동 탭: 큰 얼굴은 활동 시간 기준
   const today=WX.keyD(now),dl=k=>{const t=new Date(+k.slice(0,4),+k.slice(4,6)-1,+k.slice(6,8)),n=Math.round((t-new Date(+today.slice(0,4),+today.slice(4,6)-1,+today.slice(6,8)))/864e5);return ['오늘','내일','모레'][n]||`${t.getMonth()+1}/${t.getDate()}`;};
