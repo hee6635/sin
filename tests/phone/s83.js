@@ -17,7 +17,8 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   const tap=(p,sel)=>p.evaluate(sel=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const o=document.querySelector(sel);o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();},sel);
   { const p=await boot(b,state(true),{tz:'Asia/Seoul',T:KST(2026,10,14,10),cfg,routes,touch:true,fold:true});await p.waitForTimeout(2500);
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(500);
-    const c=await p.evaluate(()=>{const e=[...document.querySelectorAll('.now.fams .fc2')].find(x=>/아빠/.test(x.innerText));return e?{t:e.innerText.replace(/\s+/g,' '),wx:!!e.querySelector('.mwx:not(.mwx-off)')}:null;});
+    const c=await p.evaluate(()=>{const e=[...document.querySelectorAll('.now.fams .fc2')].find(x=>/아빠/.test(x.innerText));return e?{t:e.innerText.replace(/\s+/g,' '),wx:!!e.querySelector('.mwx:not(.mwx-off)'),badge:!!e.querySelector('.st .badge')}:null;});
+    T('근무 시간을 모를 때도 🔁 대신 근무 동그라미(야)',!!c&&c.badge&&!/🔁/.test(c.t),JSON.stringify(c));
     T('가족 탭: 아빠 카드에 작은 날씨 줄 (출근 · 퇴근) · 결론 "퇴근길에 비"',!!c&&c.wx&&/출근/.test(c.t)&&/퇴근/.test(c.t)&&/비/.test(c.t),JSON.stringify(c));
     await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(600);
     await p.evaluate(()=>document.querySelector('#vcsl .cell[data-k="2026-10-14"]').click());await p.waitForTimeout(600);

@@ -189,3 +189,4 @@
 - openVcDay → vcDayHtml(k) (전체 화면): dtop · dfh(vc-go) · 날짜 띠 · .vcrq 칩("근무 · 근무 요청/요청 중 ▾", 지난 날은 근무만) → vc-rq 로 펼침(보낸 요청 · tchips vc-want · #rqm2 · 여러 날 · 보내기) · 날씨 카드(vc-wx → vcWxPop) · 가족 메모(vcMemoHtml). 스와이프 대상 'vc'.
 - 집 지역까지 나누려면 firestore.rules 의 scheds.wx 키(w · tm)에 h 추가 + 배포가 필요 (안 함).
 - 시험: s83 (15) · fam4e/5e/10e 는 접힌 요청 칸을 먼저 엶.
+- 가족 카드: 그 가족 근무 시간을 모를 때 🔁 대신 그날 근무 동그라미(schBadge) · .cst .st 는 한 줄(flex)
