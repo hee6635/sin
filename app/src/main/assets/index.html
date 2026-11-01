@@ -5070,7 +5070,7 @@ function manDayHtml(k){
       <div class="dft"><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${esc(m.name)} · ${esc(manLabel(m,d))}${hol?` · <span class="hl">${esc(hol)}</span>`:''}</small></div>
       <button class="ib" data-act="man-go" data-k="${fmt(addDays(d,1))}" aria-label="다음날">›</button></div>
     <div class="dstrip" id="dstrip">${strip}</div>
-    <div class="sec-t" style="margin-top:10px">${m.kind==='shift'?'근무':'일정'}<button class="sh-fold" data-act="man-fold" aria-label="접기">${manFoldOpen()?'▴ 접기':'▾ 펼치기'}</button><button class="paint-lk" data-act="man-paint">🖌 여러 날 칠하기</button>${famUsesTypes(m)?'<button class="paint-lk" data-act="man-pat" style="margin-left:10px">⚙️ 일정 패턴</button>':''}</div>
+    <div class="sec-t" style="margin-top:10px">${m.kind==='shift'?'근무':'일정'}<button class="sh-fold" data-act="man-fold" aria-label="접기">${manFoldOpen()?'▴ 접기':'▾ 펼치기'}</button>${famUsesTypes(m)?'<button class="paint-lk" data-act="man-pat" style="margin-left:14px">⚙️ 일정 패턴</button>':''}<button class="paint-lk" data-act="man-paint">🖌 여러 날 칠하기</button></div>
     ${manFoldOpen()?`<div class="tchips">${manChoices(m,d).map(c=>`<button class="tchip ${cur===c[0]?'on':''}" data-act="man-ov" data-k="${k}" data-v="${esc(c[0])}"${famUsesTypes(m)?` data-hold="mtype" data-hk="${esc(c[0])}" data-hd="${k}"`:''}>${manChipIco(m,c[0],d)}<small>${esc(c[2])}</small></button>`).join('')}</div>${famUsesTypes(m)?'<div class="hint" style="padding:4px 0 0;margin:0">누르면 이 날만 바뀜 · 길게 누르면 종류 고치기</div>':''}`:''}
     ${famDayWxHtml(m,k)}
     <div class="lbl" style="margin-top:14px">스티커</div>
