@@ -43,7 +43,8 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.screenshot({path:'b2.png'});
  // 빈 칸 → 채우고 → 등록 화면
  await p.click('#pop [data-act="sp-fill"]');await p.waitForTimeout(300);
- await p.click('#pop [data-act="icn-tab"][data-i="8"]');await p.waitForTimeout(250);
+ await p.click('#pop [data-act="icn-tab"][data-i="10"]');   // v0.120 기분 · 아이 · 육아 탭이 늘어 약 = 10
+ await p.waitForTimeout(250);
  T('약 탭: 모양 4개(캡슐 · 둥근 알약 · 납작 정제 · 물약)',await p.evaluate(()=>document.querySelectorAll('#pop [data-act="icn-pick"] svg.pillic').length===4));
  await p.screenshot({path:'b3.png'});
  await p.click('#pop [data-act="icn-pick"][data-v="pill:round"]');await p.waitForTimeout(450);
@@ -56,7 +57,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  // ===== ＋ → 등록 화면 (반복 + 알림 가능)
  await opn('2026-10-15');
  await p.click('#pop [data-act="sp-plus"]');await p.waitForTimeout(300);
- await p.click('#pop [data-act="icn-tab"][data-i="7"]');await p.waitForTimeout(200);
+ await p.click('#pop [data-act="icn-tab"][data-i="9"]');await p.waitForTimeout(200);
  await p.click('#pop [data-act="icn-pick"][data-v="🎂"]');await p.waitForTimeout(450);
  T('＋ 로 고르면 등록 화면(이날만 기본)으로',await p.evaluate(()=>!!document.querySelector('#page .srpg')&&!!document.querySelector('#page [data-act="sr-rep"][data-v="once"].on')));
  await p.click('#page [data-act="sr-rep"][data-v="daily"]');await p.waitForTimeout(150);

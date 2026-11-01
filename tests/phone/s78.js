@@ -75,5 +75,23 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   const bb=await (await p.$('#page .cell[data-k="2026-10-16"]')).boundingBox();await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2);await p.waitForTimeout(300);
   T('칠하면 그 날 반일반 ("반" 동그라미)',await p.evaluate(k=>__wx.S.family[0].ov['2026-10-16']===k&&document.querySelector('#page .cell[data-k="2026-10-16"] .bwrap .badge').textContent==='반',kHalf));
   T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
+  { // v0.120 가족 스티커 = 내 스티커 규칙: 일정 맞춤 · 하루 2번(1/2) · 알림 · 스티커 목록 (기분 · 아이 · 육아)
+    const fam2=[{id:'f1',name:'유찬',kind:'student',vac:[],color:'#ec4899',sdefs:[{id:'m_p',emoji:'💊',name:'약',rep:'work',wtypes:['on'],times:2,ats:['08:00','19:00']}]}];
+    const p=await boot(b,{...base,family:fam2},{touch:true,tz:'Asia/Seoul',T:KST(2026,10,14,7)});
+    const pl=await p.evaluate(()=>{const m=__wx.S.family[0],x=m.sdefs[0];return [__wx.manPlanned(m,x,'2026-10-14'),__wx.manPlanned(m,x,'2026-10-17')];});
+    T('일정 맞춤: 유치원 가는 날(수)만 깔림 · 토요일은 안 깔림',pl[0]===true&&pl[1]===false,JSON.stringify(pl));
+    await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(300);await p.evaluate(()=>document.querySelector('[data-act="fam-mancal"]').click());await p.waitForTimeout(400);
+    await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-14"]').click());await p.waitForTimeout(400);
+    T('날짜 창: 깔린 약 (점선 · 0/2)',await p.evaluate(()=>{const e=document.querySelector('#sheet .mstk [data-id="m_p"]');return e.classList.contains('todo')&&/0\/2/.test(e.innerText);}));
+    await tap(p,'#sheet .mstk [data-id="m_p"]');await p.waitForTimeout(300);
+    T('한 번 누르면 1/2',await p.evaluate(()=>/1\/2/.test(document.querySelector('#sheet .mstk [data-id="m_p"]').innerText)));
+    await tap(p,'#sheet .mstk [data-id="m_p"]');await p.waitForTimeout(300);
+    T('두 번이면 2/2 완료',await p.evaluate(()=>{const e=document.querySelector('#sheet .mstk [data-id="m_p"]');return /2\/2/.test(e.innerText)&&e.classList.contains('on')&&!e.classList.contains('half');}));
+    await p.evaluate(()=>__wx.pushRemindersToNative());await p.waitForTimeout(200);
+    T('가족 스티커 알림 (내 폰 · 오늘 08:00 은 한 번 했으니 19:00 만 · 내일 2번)',await p.evaluate(()=>{const r=(window.__rem||[]).filter(x=>/^f_f1_m_p_/.test(x.id)).map(x=>x.id);return !r.includes('f_f1_m_p_2026-10-14_0')&&!r.includes('f_f1_m_p_2026-10-14_1')&&r.includes('f_f1_m_p_2026-10-15_0')&&r.includes('f_f1_m_p_2026-10-15_1');}),await p.evaluate(()=>JSON.stringify((window.__rem||[]).map(x=>x.id).filter(x=>/^f_/.test(x)).slice(0,6))));
+    await tap(p,'#sheet [data-act="man-stk-add"]');await p.waitForTimeout(400);
+    T('스티커 고르기: 기분 · 아이 · 육아 탭',await p.evaluate(()=>{const t=[...document.querySelectorAll('#pop [data-act="icn-tab"]')].map(b=>b.innerText);return t.includes('기분')&&t.includes('아이 · 육아');}));
+    T('오류 없음 (가족 스티커 규칙)',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
   T.sum();await b.close();
 })();

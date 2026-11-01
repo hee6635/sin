@@ -60,7 +60,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     const fam=[{id:'f1',name:'유찬',kind:'student',vac:[],color:'#ec4899',sdefs:[{id:'m_pi',emoji:'🎹',name:'피아노',act:{days:[1,3,5],s:'16:00',e:'17:00',r:'',since:'2026-10-01'}},{id:'m_t',emoji:'🦷',name:'양치'}]}];
     const p=await boot(b,{...base,family:fam,addons:{...base.addons,wx:true},wx:{home:'41111',work:'',fw:{}}},{tz:'Asia/Seoul',T:KST(2026,10,14,16,30),cfg,routes,touch:true});await p.waitForTimeout(2500);
     const f=await p.evaluate(()=>{const m=__wx.S.family[0];return {act:m.sdefs[0].act,stk:m.stk||{},now:__wx.famActNow(m,Date.now())};});
-    T('가족 스티커 활동이 저장된 채로 켜짐',f.act&&f.act.s==='16:00'&&f.act.days.join()==='1,3,5');
+    T('예전 가족 활동(요일) → 요일 반복 + 활동으로 옮김',f.act&&f.act.s==='16:00'&&await p.evaluate(()=>{const x=__wx.S.family[0].sdefs[0];return x.rep==='dow'&&x.days.join()==='1,3,5';}));
     T('지난 월·금(끝난 날)은 자동 완료 · 오늘은 아직',(f.stk['2026-10-12']||[]).includes('m_pi')&&(f.stk['2026-10-09']||[]).includes('m_pi')&&!(f.stk['2026-10-14']||[]).includes('m_pi'),JSON.stringify(f.stk));
     T('지금(16:30) 상태: 피아노 중 · 17:00 끝',!!f.now&&f.now[1]==='피아노 중'&&/17:00 끝/.test(f.now[2]),JSON.stringify(f.now));
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(500);
@@ -71,16 +71,19 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-12"]').click());await p.waitForTimeout(500);
     T('지난 날 창: 피아노 완료(켜짐) · 시각 표시',await p.evaluate(()=>{const e=document.querySelector('#sheet .mstk [data-id="m_pi"]');return e.classList.contains('on')&&/16:00/.test(e.innerText);}));
     await p.evaluate(()=>{const o=document.querySelector('#sheet .mstk [data-id="m_pi"]');o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();});await p.waitForTimeout(400);
-    T('안 간 날: 눌러서 풀면 그 날은 빠짐 (다시 안 채움)',await p.evaluate(()=>{const m=__wx.S.family[0];__wx.actAuto();return !((m.stk||{})['2026-10-12']||[]).includes('m_pi')&&m.sdefs[0].act.skip.includes('2026-10-12')&&!__wx.manPlanned(m,m.sdefs[0],'2026-10-12');}));
+    T('안 간 날: 눌러서 풀면 다시 안 채움',await p.evaluate(()=>{const m=__wx.S.family[0];__wx.actAuto();return !((m.stk||{})['2026-10-12']||[]).includes('m_pi');}));
     // 편집: 양치에 활동 넣기 (요일 · 시간)
     await p.evaluate(()=>{const e=document.querySelector('#sheet .mstk [data-id="m_t"]');e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:5,clientY:5}));});await p.waitForTimeout(700);
     const tap=sel=>p.evaluate(sel=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const o=document.querySelector(sel);o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();},sel);
-    await tap('#pop [data-act="ms-actf"]');await p.waitForTimeout(300);
-    T('가족 스티커 편집: 활동 칸 펼치면 요일 · 시간',await p.evaluate(()=>!!document.querySelector('#pop [data-act="ms-aday"]')&&!!document.getElementById('msAS')));
-    await tap('#pop [data-act="ms-aday"][data-v="2"]');await p.waitForTimeout(200);
-    await p.evaluate(()=>{const s=document.getElementById('msAS');s.value='18:00';s.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(300);
-    await tap('#pop [data-act="mstk-ok"]');await p.waitForTimeout(300);
-    T('저장: 화 18:00 ~ 19:00',await p.evaluate(()=>{const a=__wx.S.family[0].sdefs[1].act;return !!a&&a.days.join()==='2'&&a.s==='18:00'&&a.e==='19:00';}));
+    T('길게 → 스티커 고치기 화면 (활동 스위치)',await p.evaluate(()=>!!document.getElementById('srActOn')&&!document.getElementById('srActOn').checked));
+    await tap('#page [data-act="sr-rep"][data-v="dow"]');await p.waitForTimeout(200);
+    await p.evaluate(()=>{document.querySelectorAll('#page [data-act="sr-day"].on').forEach(b=>b.click());});await p.waitForTimeout(200);
+    await tap('#page [data-act="sr-day"][data-v="2"]');await p.waitForTimeout(200);
+    await p.evaluate(()=>{const c=document.getElementById('srActOn');c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(300);
+    T('스위치 켜면 펼쳐지고 시간 · 위치 (안 바꿔도 적용 · 알림 30분 전)',await p.evaluate(()=>!!document.getElementById('srAS')&&/✅ 16:00 ~ 17:00/.test(document.querySelector('.actf').innerText)&&!!document.getElementById('srAt0')&&document.getElementById('srAt0').value==='15:30'));
+    await p.evaluate(()=>{const s=document.getElementById('srAS');s.value='18:00';s.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(300);
+    await tap('#page [data-act="sr-save"]');await p.waitForTimeout(400);
+    T('저장: 화요일 반복 · 활동 18:00 ~ 19:00',await p.evaluate(()=>{const x=__wx.S.family[0].sdefs[1];return x.rep==='dow'&&x.days.join()==='2'&&x.act&&x.act.s==='18:00'&&x.act.e==='19:00';}),await p.evaluate(()=>JSON.stringify(__wx.S.family[0].sdefs[1])));
     T('오류 없음 (가족 활동)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 미세먼지 3칸: 활동 동네가 다르면 활동 칸 · 결론 "활동 때(동네)"
@@ -114,7 +117,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     T('길게 끌면 순서 바뀜 (숙제 · 준비물 · 양치)',await p.evaluate(()=>__wx.S.family[0].sdefs.map(x=>x.name).join()==='숙제,준비물,양치'),await p.evaluate(()=>__wx.S.family[0].sdefs.map(x=>x.name).join()));
     // 누르면 고치기 → 판에서 빼기
     await tap('#page [data-act="mslot-open"][data-id="m_a"]');await p.waitForTimeout(300);
-    await tap('#pop [data-act="mstk-del"]');await p.waitForTimeout(300);
+    await tap('#page [data-act="mstk-del"]');await p.waitForTimeout(400);   // v0.120 고치기는 스티커 고치기 화면
     T('판에서 빼기: 설정 판에서 사라짐 · 지난 기록(13일)은 그대로',await p.evaluate(()=>!document.querySelector('#page [data-id="m_a"]')&&__wx.S.family[0].stk['2026-10-13'].includes('m_a')&&__wx.S.family[0].sdefs.find(x=>x.id==='m_a').retired===true));
     // 내 스티커에서 가져오기
     await tap('#page [data-act="mslot-add"]');await p.waitForTimeout(300);

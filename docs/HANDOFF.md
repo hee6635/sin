@@ -153,3 +153,10 @@
 - 근무 패턴 patLocHtml → pat-loc → 출퇴근 날씨 설정 (pageBack = 근무 패턴).
 - wxcore: 활동이 다가오면 dz = 출근 · 퇴근(직장 없으면 집 그 시각 dzAt) · 활동(늘) · dayCard 는 🏠집 + 활동. 앱 wxPopHtml 은 dz 에 act 가 있으면 .wxdz3 칸.
 - 시험: s77 (38) · s78 (20) · s76.
+
+## v0.120 (2026-11-01) — 가족 스티커 = 내 스티커 고치기 · 활동 스위치 · 스티커 목록
+- 가족 스티커 sdef 에 내 스티커와 같은 규칙 칸 (rep none/dow/daily/work/month · days · wtypes(가족 일정 종류 키 · 교대 가족은 근무) · times · ats · from/to · noHol/noWknd · dates · skip · mday · act{s,e,r,since}). 예전 act.days → rep 'dow'.
+- 편집 = renderStampReg (stDraft.own = 가족 id): "일정 맞춤" · 가족 칸 숨김 · 이름 입력 · 그림 바꾸기/판에서 빼기. 저장 manStampSave · 뒤로 manStampBack. 열기: 판 길게(mandy) · 설정 칸(manstk) · ＋ 만들기 뒤.
+- 깔림 manStampPlanned (= manPlanned) · 판은 m.stk[k] 의 같은 id 개수 = 횟수 (1/2) · 다 차면 다시 0 · 활동은 손으로 고친 날 actDone. 알림 f_{가족}_{스티커}_{날짜}_{n} (2주).
+- 활동 칸 actFoldHtml: 제목 줄 스위치(srActOn) — 켜면 기본 16:00~17:00 그대로 적용 + 알림 30분 전.
+- STAMP_CAT: 기분 · 아이 · 육아 탭 + 일 · 건강 · 생활 · 돈 더하기 (마음 · 취미의 기분 얼굴은 기분 탭으로).

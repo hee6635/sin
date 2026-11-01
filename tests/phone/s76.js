@@ -24,21 +24,24 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     T('쉬는 날 칩 → 그날만 휴 (달력 칸도)',await p.evaluate(()=>__wx.S.family[0].ov['2026-10-14']==='off'&&!!document.querySelector('#vcsl [data-k="2026-10-14"] .bwrap .badge.r')));
     await p.evaluate(()=>document.querySelector('#sheet .tchips [data-v="on"]').click());await p.waitForTimeout(300);
     T('다시 학교 → 바꾼 것 없어짐',await p.evaluate(()=>!__wx.S.family[0].ov||!__wx.S.family[0].ov['2026-10-14']));
-    // 새 스티커 만들기
+    // 새 스티커 만들기 → 그림 고르면 내 스티커 고치기와 같은 화면 (v0.120)
+    const tp=sel=>p.evaluate(sel=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const o=document.querySelector(sel);o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();},sel);
     await p.evaluate(()=>document.querySelector('#sheet [data-act="man-stk-add"]').click());await p.waitForTimeout(400);
     await p.evaluate(()=>document.querySelector('#pop [data-act="icn-pick"]').click());await p.waitForTimeout(400);
-    const n2=await p.evaluate(()=>({n:__wx.S.family[0].sdefs.length,b:document.querySelectorAll('#sheet .mstk button').length,pop:document.querySelector('#pop').classList.contains('open')}));
-    T('＋ 만들기 → 그림 고르면 판에 하나 늘어남 · 창 닫힘',n2.b===n2.n+1&&n2.n===d.n+1&&!n2.pop,JSON.stringify(n2));
+    T('＋ 만들기 → 그림 고르면 스티커 고치기 화면 (하루 몇 번 · 얼마나 · 일정 맞춤)',await p.evaluate(()=>!!document.querySelector('#page .srpg [data-act="sr-times"]')&&/일정 맞춤/.test(document.querySelector('#page').innerText)&&__wx.S.family[0].sdefs.length>0));
+    await tp('#page [data-act="sr-save"]');await p.waitForTimeout(400);
+    const n2=await p.evaluate(()=>({n:__wx.S.family[0].sdefs.filter(x=>!x.retired).length,b:document.querySelectorAll('#sheet .mstk button').length}));
+    T('저장 → 날짜 창 판에 하나 늘어남',n2.b===n2.n+1&&n2.n===d.n+1,JSON.stringify(n2));
     T('가족 스티커는 내 스티커판에 안 섞임',await p.evaluate(()=>!__wx.S.stamps.defs.some(x=>/^m_/.test(x.id))));
-    // 길게 눌러 고치기 · 지우기
+    // 길게 → 고치기 화면 (이름 · 반복 · 빼기)
     const nid=await p.evaluate(()=>__wx.S.family[0].sdefs.slice(-1)[0].id);
     await p.evaluate(id=>{const e=document.querySelector(`#sheet .mstk [data-id="${id}"]`);e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:10,clientY:10}));},nid);await p.waitForTimeout(700);
-    T('길게 누르면 고치기 창',await p.evaluate(()=>!!document.getElementById('mstkName')));
-    await p.evaluate(()=>{document.getElementById('mstkName').value='피아노';const o=document.querySelector('#pop [data-act="mstk-ok"]');o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();});await p.waitForTimeout(300);
+    T('길게 누르면 스티커 고치기 화면',await p.evaluate(()=>!!document.getElementById('srName')&&!!document.querySelector('#page [data-act="mstk-del"]')));
+    await p.evaluate(()=>{document.getElementById('srName').value='피아노';});await tp('#page [data-act="sr-save"]');await p.waitForTimeout(400);
     T('이름 바꾸기 저장',await p.evaluate(id=>__wx.S.family[0].sdefs.find(x=>x.id===id).name==='피아노',nid));
     await p.evaluate(id=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const e=document.querySelector(`#sheet .mstk [data-id="${id}"]`);e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:10,clientY:10}));},nid);await p.waitForTimeout(700);
-    await p.evaluate(()=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const o=document.querySelector('#pop [data-act="mstk-del"]');o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();});await p.waitForTimeout(300);
-    T('빼기 → 판에서 빠짐 (기록 위해 숨김 · v0.115)',await p.evaluate(id=>__wx.S.family[0].sdefs.find(x=>x.id===id).retired===true&&!document.querySelector(`#sheet .mstk [data-id="${id}"]`),nid));
+    await tp('#page [data-act="mstk-del"]');await p.waitForTimeout(400);
+    T('빼기 → 판에서 빠짐 (기록 위해 숨김)',await p.evaluate(id=>__wx.S.family[0].sdefs.find(x=>x.id===id).retired===true&&!document.querySelector(`#sheet .mstk [data-id="${id}"]`),nid));
     // 옆으로 밀면 다음날
     await p.evaluate(()=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const b=document.getElementById('sheet').getBoundingClientRect();const x=b.left+b.width/2,y=b.top+60,t=document.elementFromPoint(x,y);const ev=(ty,xx)=>t.dispatchEvent(new PointerEvent(ty,{bubbles:true,clientX:xx,clientY:y,pointerId:3}));ev('pointerdown',x);for(let i=1;i<=6;i++)ev('pointermove',x-130*i/6);ev('pointerup',x-130);});await p.waitForTimeout(800);
     T('날짜 창 옆으로 밀면 다음날 (15일)',await p.evaluate(()=>/10월 15일/.test(document.querySelector('#sheet .dft').innerText)),await p.evaluate(()=>document.querySelector('#sheet .dft').innerText));
