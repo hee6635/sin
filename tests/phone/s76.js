@@ -67,12 +67,12 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   { // 가족 탭: 가족이 있으면 내 카드 한 줄 · 위쪽 = 달력(오늘) · 시간표 [오늘] 은 그대로
     const p=await boot(b,{...base,family:fam},{touch:true});
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);
-    const l=await p.evaluate(()=>{const me=document.querySelector('.nc.me2'),f=document.querySelector('.now.fams .nc');return {mw:me.getBoundingClientRect().width,vw:document.querySelector('#view').clientWidth,fh:f.getBoundingClientRect().height,mh:me.getBoundingClientRect().height,sep:me.closest('.now')!==f.closest('.now')};});
-    T('내 카드 한 줄 전체 · 가족 카드는 아래 줄',l.sep&&l.mw>l.vw*0.8,JSON.stringify(l));
+    const l=await p.evaluate(()=>{const me=document.querySelector('.nc.w.fc2'),f=document.querySelector('.now.fams .nc:not(.w)');return {mw:me.getBoundingClientRect().width,fw:f.getBoundingClientRect().width,mt:me.getBoundingClientRect().top,ft:f.getBoundingClientRect().top,same:me.closest('.now')===f.closest('.now')};});
+    T('v0.121 내 카드 · 가족 카드 같은 줄 · 같은 폭',l.same&&Math.abs(l.mw-l.fw)<2&&Math.abs(l.mt-l.ft)<2,JSON.stringify(l));
     await p.evaluate(()=>{const s=document.getElementById('fgs');s.scrollLeft+=s.clientWidth;});await p.waitForTimeout(500);
     await p.click('#fwkNow');await p.waitForTimeout(700);
     T('시간표 [오늘] 은 그대로 가족 탭',await p.evaluate(()=>document.querySelector('#nav [data-tab="fam"]').classList.contains('on')&&!!document.getElementById('fgs')));
-    await p.evaluate(()=>document.querySelector('.nc.me2 [data-act="fam-mycal"],.nc.me2[data-act="fam-mycal"]').click());await p.waitForTimeout(600);
+    await p.evaluate(()=>document.querySelector('.nc.w.fc2[data-act="fam-mycal"]').click());await p.waitForTimeout(600);
     T('내 카드 → 달력 탭 · 오늘(12일) 날짜 창',await p.evaluate(()=>document.querySelector('#nav [data-tab="cal"]').classList.contains('on')&&/10월 12일/.test(document.querySelector('#sheet.open .dft').innerText)));
     T('오류 없음 (가족 탭)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
