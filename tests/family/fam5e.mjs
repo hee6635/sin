@@ -154,7 +154,7 @@ log('   가족 탭 달력 보기 칩:', chips);
 await A.click('.vchip'); await A.waitForSelector('#page .cell[data-k="2026-10-31"]', { timeout: 8000 });
 // 아빠 달력인지 확인 (이름 순서에 따라)
 const pageHead = await A.$eval('#page', e => e.innerText.slice(0, 40).replace(/\s+/g, ' '));
-await A.click('#page .cell[data-k="2026-10-31"]'); await A.waitForTimeout(400);
+await A.click('#page .cell[data-k="2026-10-31"]'); await A.waitForTimeout(400); await A.evaluate(()=>{const b=document.querySelector('#sheet [data-act="vc-rq"]');if(b&&!document.getElementById('rqm2'))b.click();}); await A.waitForTimeout(300);
 await A.fill('#rqm2', '아이 할로윈 파티라 같이 가자'); await A.click('#sheet [data-act="vc-send"]'); await A.waitForTimeout(500);
 pt = await popText(A);
 check('요청 보내기 전 확인창: 받는 사람 · 모두에게 알리기 선택(3명 이상) · 횟수', pt.includes('에게 보낼까요?') && pt.includes('가족 모두에게도 알리기') && pt.includes('무료 9건 남음'), pt);
@@ -182,7 +182,7 @@ check('엄마 횟수는 메모 1 + 요청 1 = 2건 (알림 여러 명이어도 1
 // ───── cc 없이 보내기
 await A.waitForTimeout(500);
 await A.click('#page [data-act="vc-next"]'); await A.waitForTimeout(400);
-await A.click('#page .cell[data-k="2026-11-03"]'); await A.waitForTimeout(400);
+await A.click('#page .cell[data-k="2026-11-03"]'); await A.waitForTimeout(400); await A.evaluate(()=>{const b=document.querySelector('#sheet [data-act="vc-rq"]');if(b&&!document.getElementById('rqm2'))b.click();}); await A.waitForTimeout(300);
 { const n = (await A.$$('#sheet [data-act="vc-want"]')).length;
   for (let i = 0; i < n; i++) { await A.evaluate((i) => document.querySelectorAll('#sheet [data-act="vc-want"]')[i].click(), i);
     await A.click('#sheet [data-act="vc-send"]'); await A.waitForTimeout(500);

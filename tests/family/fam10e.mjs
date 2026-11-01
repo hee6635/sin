@@ -73,7 +73,7 @@ const reqs = async () => ((await restRead(`households/${hostUid}/requests`)).doc
 const memosSrv = async () => ((await restRead(`households/${hostUid}/memos`)).documents || []).map(d => ({ text: d.fields.text.stringValue, date: d.fields.date.stringValue }));
 
 // ───── 1) 엄마가 아빠 달력에서 하루 요청 → 아빠 폰 위쪽 띠
-await A.click('#vcsl .cell[data-k="2026-10-14"]'); await A.waitForSelector('#sheet [data-act="vc-send"]', { timeout: 8000 });
+await A.click('#vcsl .cell[data-k="2026-10-14"]'); await A.waitForSelector('#sheet [data-act="vc-rq"]', { timeout: 8000 }); await A.evaluate(()=>{const b=document.querySelector('#sheet [data-act="vc-rq"]');if(b&&!document.getElementById('rqm2'))b.click();}); await A.waitForTimeout(300);
 check('날짜 화면에 "여러 날 고르기"와 가족 메모 입력칸 · 남은 횟수', !!(await A.$('#sheet [data-act="vc-multi-from"]')) && !!(await A.$('#vcmemo')) && (await A.$eval('#sheet', e => e.innerText)).includes('무료'));
 await A.click('#sheet [data-act="vc-send"]'); await A.waitForTimeout(400); await A.click('#pop [data-act="cfm-ok"]'); await A.waitForTimeout(600);
 check('아빠 폰: 위에서 내려오는 띠에 "엄마 … 요청"', await wait(H, async () => { const t = await H.evaluate(() => { const e = document.getElementById('ban'); return e && e.classList.contains('show') ? e.textContent : ''; }); return t.includes('엄마') && t.includes('요청'); }, 20000));
@@ -148,7 +148,7 @@ await H.click('#nav [data-tab="cal"]'); await H.waitForTimeout(400);
 check('다시 켜면 띠가 돌아옴', (await H.evaluate(() => { const b = document.querySelector('.band'); return b ? getComputedStyle(b).display : 'x'; })) !== 'none');
 
 // ───── 5) 여러 날 고르기 막대: 달 이동 버튼 · 달별 개수
-await A.click('#vcsl .cell[data-k="2026-10-22"]'); await A.waitForSelector('#sheet [data-act="vc-multi-from"]'); await A.click('#sheet [data-act="vc-multi-from"]'); await A.waitForTimeout(500);
+await A.click('#vcsl .cell[data-k="2026-10-22"]'); await A.waitForSelector('#sheet [data-act="vc-rq"]'); await A.evaluate(()=>{const b=document.querySelector('#sheet [data-act="vc-rq"]');if(b&&!document.getElementById('rqm2'))b.click();}); await A.waitForTimeout(300); await A.click('#sheet [data-act="vc-multi-from"]'); await A.waitForTimeout(500);
 check('고르기 막대에 ‹ › 달 이동 버튼', !!(await A.$('#page .vsbar [data-act="vc-prev"]')) && !!(await A.$('#page .vsbar [data-act="vc-next"]')));
 const t0 = await A.$eval('#page .vcnav b', e => e.textContent);
 await A.click('#page .vsbar [data-act="vc-next"]'); await A.waitForTimeout(500);

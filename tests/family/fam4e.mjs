@@ -88,7 +88,7 @@ await closeAll(A);
 // ───── 근무 요청: 엄마가 아빠 달력에서 31일 휴 요청 → 아빠가 수락 → 적용
 await A.click('#nav [data-tab="fam"]'); await A.waitForTimeout(400);
 await A.click('.vchip'); await A.waitForSelector('#page .cell[data-k="2026-10-31"]', { timeout: 8000 });
-await A.click('#page .cell[data-k="2026-10-31"]'); await A.waitForTimeout(400);
+await A.click('#page .cell[data-k="2026-10-31"]'); await A.waitForTimeout(400); await A.evaluate(()=>{const b=document.querySelector('#sheet [data-act="vc-rq"]');if(b&&!document.getElementById('rqm2'))b.click();}); await A.waitForTimeout(300);
 const comp = await A.$eval('#sheet', e => e.innerText.replace(/\s+/g, ' '));
 check('엄마: 아빠 31일 시트에 요청 쓰기 + 무료 남은 횟수', comp.includes('근무 요청') && comp.includes('무료 9건'), comp.slice(0, 140));
 await A.screenshot({ path: SC + 'a_compose.png' });
