@@ -16,8 +16,8 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   T('예전 데이터: 가는 곳 이름 · 시간 → 기본 종류 (유치원 · 쉬는 날) · 이 날만 바꾼 것 · 공휴일(한글날) 쉼',r0.lbl==='유치원'&&r0.wed==='유치원'&&r0.thu===true&&r0.hol===true,JSON.stringify(r0));
   // 가족 탭: 상태 · 날씨 · 시간표 동그라미
   await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(500);
-  const card=await p.evaluate(()=>document.querySelector('.now.fams .nc').innerText.replace(/\s+/g,' '));
-  T('가족 카드: 유치원 · 15:00 하원 · 날씨 한 줄(다음 하원에 비 → "하원 때 비 · 우산")',/유치원/.test(card)&&/15:00 하원/.test(card)&&/하원 때 비 · 우산/.test(card),card);
+  const card=await p.evaluate(()=>document.querySelector('.now.fams .nc:not(.w)').innerText.replace(/\s+/g,' '));
+  T('가족 카드: 유치원 · 15:00 하원 · 날씨 한 줄(다음 하원에 비 → "하원 때 비 · 우산")',/유치원/.test(card)&&/15:00 하원/.test(card)&&/하원길에 비 와요/.test(card),card);
   T('가족 시간표: 유찬도 동그라미 (유치원 → "유")',await p.evaluate(()=>{const c=[...document.querySelectorAll('.fc .badge')].map(e=>e.textContent);return c.includes('유');}));
   // 달력: 위쪽 ✏️🖌 없음
   await p.evaluate(()=>document.querySelector('[data-act="fam-mancal"]').click());await p.waitForTimeout(500);
