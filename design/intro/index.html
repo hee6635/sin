@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>언제쉬어 앱 소개</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* 방향: 앱의 근무 동그라미(주 · 야 · 휴)가 곧 언어 — 한 주 띠가 페이지의 뼈대이고, 각 기능은 앱 화면 조각으로 보여 줌 */
+:root{
+  --bg:#f6f5f2;          /* 종이 같은 바탕 */
+  --ink:#1f2328;         /* 글자 */
+  --muted:#6b7079;
+  --line:#e3e1dc;
+  --card:#ffffff;
+  --accent:#6a55d8;      /* 가족 보라 (앱의 ♥ 가족 색) */
+  --day:#a8c7e6; --day-fg:#1f3550;
+  --night:#e9bfa8; --night-fg:#5a2e17;
+  --rest:#d23a4a;
+  --wet:#2563eb; --wet-bg:#e5edfb;
+  --display:"Jua","IBM Plex Sans KR",system-ui,sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15171b;--ink:#eceef1;--muted:#9aa0aa;--line:#2b2f36;--card:#1d2026;--accent:#9d8cf2;
+  --day:#3b5876;--day-fg:#dcebfb;--night:#6e4733;--night-fg:#fde6d8;--rest:#ff6b78;--wet:#8fb2ff;--wet-bg:#1f2b45;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15171b;--ink:#eceef1;--muted:#9aa0aa;--line:#2b2f36;--card:#1d2026;--accent:#9d8cf2;
+  --day:#3b5876;--day-fg:#dcebfb;--night:#6e4733;--night-fg:#fde6d8;--rest:#ff6b78;--wet:#8fb2ff;--wet-bg:#1f2b45;color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.2;text-wrap:balance;margin:0}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* 근무 동그라미 */
+.b{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:50%;font-family:var(--display);font-size:19px;flex:none}
+.b.d{background:var(--day);color:var(--day-fg)}
+.b.n{background:var(--night);color:var(--night-fg)}
+.b.r{background:transparent;color:var(--rest)}
+.b.sm{width:30px;height:30px;font-size:14px}
+
+/* 머리 */
+header.top{display:flex;align-items:center;justify-content:space-between;padding:22px 0 0}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:22px}
+.logo i{width:34px;height:34px;border-radius:10px;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-style:normal;font-size:17px}
+.tagpill{font-size:13px;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:4px 12px}
+
+/* 첫 화면 */
+.hero{padding:56px 0 40px;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+.hero h1{font-size:clamp(38px,6.2vw,64px);letter-spacing:-.5px}
+.hero h1 em{font-style:normal;color:var(--rest)}.hero h1 .nw{white-space:nowrap}
+.hero .lead{margin-top:18px;font-size:19px;color:var(--muted);max-width:30em}
+.hero .lead b{color:var(--ink);font-weight:600}
+.cta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 20px;border-radius:14px;background:var(--ink);color:var(--bg);font-weight:700;text-decoration:none;font-size:15.5px}
+.cta small{color:var(--muted);font-size:13.5px}
+
+/* 한 주 띠 (페이지의 뼈대) */
+.week{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px 18px 18px;box-shadow:0 18px 40px -24px rgba(20,24,40,.35)}
+.week .wh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.week .wh b{font-family:var(--display);font-size:20px;font-weight:400}
+.week .wh small{color:var(--muted);font-size:13px}
+.wrow{display:grid;grid-template-columns:64px repeat(7,1fr);align-items:center;gap:4px;padding:6px 0}
+.wrow+.wrow{border-top:1px dashed var(--line)}
+.wrow .who{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600}
+.wrow .who i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;color:#fff;font-weight:700}
+.wrow .c{display:grid;place-items:center}
+.wrow.days .c{font-size:12px;color:var(--muted);font-weight:600;line-height:1.25;text-align:center}
+.wrow.days .c b{display:block;color:var(--ink);font-size:15px}
+.wrow.days .c.sun{color:var(--rest)}
+.col-today{position:relative}
+.col-today::after{content:"";position:absolute;inset:-4px 2px;border:2px solid #1e8a6a;border-radius:12px;pointer-events:none}
+.together{margin-top:12px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;background:var(--wet-bg);color:var(--wet);border-radius:12px;padding:9px 12px}
+@media (prefers-reduced-motion:no-preference){
+  .week .b{animation:pop .5s cubic-bezier(.2,.9,.3,1.3) both}
+  .week .wrow .c:nth-child(3) .b{animation-delay:.05s}.week .wrow .c:nth-child(4) .b{animation-delay:.1s}
+  .week .wrow .c:nth-child(5) .b{animation-delay:.15s}.week .wrow .c:nth-child(6) .b{animation-delay:.2s}
+  .week .wrow .c:nth-child(7) .b{animation-delay:.25s}.week .wrow .c:nth-child(8) .b{animation-delay:.3s}
+  @keyframes pop{from{transform:scale(.6)}to{transform:scale(1)}}
+}
+
+/* 질문 띠 */
+.ask{margin:10px 0 0;padding:28px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:center}
+.ask span{font-family:var(--display);font-size:clamp(18px,2.6vw,24px);color:var(--muted)}
+.ask span.q{color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:18px 18px 18px 4px;padding:6px 14px}
+
+/* 기능 */
+section.feat{padding:64px 0 8px}
+.sec-h{max-width:34em}
+.sec-h .k{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.5px}
+.sec-h h2{font-size:clamp(28px,4.2vw,40px);margin-top:6px}
+.sec-h p{margin-top:12px;color:var(--muted)}
+.rows{margin-top:34px;display:grid;gap:28px}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:center;padding:26px;background:var(--card);border:1px solid var(--line);border-radius:26px}
+.f:nth-child(even) .shot{order:-1}
+.f h3{font-size:26px}
+.f p{margin-top:10px;color:var(--muted)}
+.f ul{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+.f li{display:flex;gap:10px;align-items:baseline;font-size:15.5px}
+.f li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--accent);transform:translateY(-2px)}
+.shot{background:var(--bg);border-radius:20px;padding:18px;border:1px solid var(--line)}
+
+/* 앱 화면 조각들 */
+.mini-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.mini-cal .h{font-size:11.5px;text-align:center;color:var(--muted);font-weight:700}
+.mini-cal .h.s{color:var(--rest)}
+.cell{aspect-ratio:3/4;border-radius:10px;background:var(--card);border:1px solid var(--line);padding:4px 5px;display:flex;flex-direction:column;font-size:11px;font-weight:700;position:relative;overflow:hidden}
+.cell .s{margin:auto;font-family:var(--display);font-size:17px}
+.cell.d{background:var(--day);border-color:transparent;color:var(--day-fg)}
+.cell.n{background:var(--night);border-color:transparent;color:var(--night-fg)}
+.cell.r .s{color:var(--rest)}
+.cell .stk{position:absolute;right:4px;top:3px;font-size:11px}
+.cell .memo{font-size:9px;font-weight:600;background:#ece8ff;color:#4b3aa8;border-radius:4px;padding:1px 3px;margin-top:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell .hol{font-size:9px;color:var(--rest)}
+
+.wxc{background:var(--wet-bg);border-radius:18px;padding:14px}
+.wxc .k{display:flex;gap:12px;align-items:center}
+.wxc .k .ic{font-size:38px;line-height:1}
+.wxc .k b{display:block;font-family:var(--display);font-weight:400;font-size:21px;color:var(--wet)}
+.wxc .k small{color:var(--wet);font-weight:600;font-size:13.5px}
+.slots{margin-top:12px;background:var(--card);border-radius:14px;padding:10px;display:grid;grid-template-columns:repeat(3,1fr);text-align:center}
+.slots div+div{border-left:1px solid var(--line)}
+.slots small{display:block;color:var(--muted);font-weight:700;font-size:12px}
+.slots i{font-style:normal;font-size:24px;display:block;margin:2px 0}
+.slots b{font-family:var(--display);font-weight:400;font-size:19px}
+.slots .hot b{color:var(--wet)}
+.dust{margin-top:10px;display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;color:var(--muted)}
+.dust span{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
+
+.alarm{display:grid;gap:10px}
+.al{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.al b{font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:.5px;font-variant-numeric:tabular-nums}
+.al small{display:block;color:var(--muted);font-size:12.5px;font-weight:600}
+.al .on{display:flex;gap:4px}
+.sw{width:42px;height:24px;border-radius:99px;background:#33c27a;position:relative;flex:none}
+.sw::after{content:"";position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+.sw.off{background:var(--line)}.sw.off::after{right:auto;left:3px}
+
+.stk-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;text-align:center}
+.stk-grid div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 2px;font-size:22px;position:relative}
+.stk-grid div small{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
+.stk-grid div.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.stk-grid div em{position:absolute;right:4px;top:3px;font-style:normal;font-size:9.5px;font-weight:800;background:#f08a00;color:#fff;border-radius:7px;padding:0 4px}
+.act{margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:13.5px;display:flex;align-items:center;gap:10px}
+.act b{font-weight:700}
+.act small{color:var(--muted)}
+
+.fam{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px}
+.fc .t{display:flex;align-items:center;gap:8px}
+.fc .t i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;color:#fff;font-weight:700;flex:none}
+.fc .t small{display:block;color:var(--muted);font-size:11.5px;font-weight:600;line-height:1.1}
+.fc .t b{font-weight:700;font-size:15px}
+.fc .sub{margin-top:6px;font-size:12px;color:var(--muted);font-weight:600}
+.bar{height:5px;border-radius:3px;background:var(--line);margin-top:6px;overflow:hidden}.bar i{display:block;height:100%;background:#ffc94d}
+.msg{grid-column:1/-1;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;font-size:13.5px}
+.msg .m{display:flex;gap:8px;align-items:center}
+.msg .m::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.msg .rq{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);display:flex;align-items:center;gap:8px;color:var(--muted);font-weight:600}
+.msg .rq b{color:var(--ink)}
+
+/* 작은 기능들 */
+.more{padding:64px 0 10px}
+.grid3{margin-top:28px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.mini{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px}
+.mini .ic{font-size:24px}
+.mini h3{font-size:19px;margin-top:8px}
+.mini p{margin-top:6px;color:var(--muted);font-size:14.5px}
+
+/* 시작 */
+.start{padding:64px 0}
+.steps{margin-top:28px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;counter-reset:s}
+.step{border-top:3px solid var(--ink);padding-top:14px}
+.step::before{counter-increment:s;content:counter(s);font-family:var(--display);font-size:34px;line-height:1}
+.step h3{font-size:20px;margin-top:8px}
+.step p{margin-top:6px;color:var(--muted);font-size:14.5px}
+.close{margin-top:46px;background:var(--ink);color:var(--bg);border-radius:28px;padding:34px 28px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+.close h2{font-size:clamp(26px,4vw,36px)}
+.close p{opacity:.75;margin-top:6px}
+.close .b{border:2px solid var(--bg)}
+.close .row{display:flex;gap:8px}
+footer{padding:26px 0 40px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+@media (max-width:820px){
+  .hero{grid-template-columns:1fr;padding-top:34px}
+  .f{grid-template-columns:1fr;padding:18px;gap:20px}
+  .f:nth-child(even) .shot{order:0}
+  .grid3{grid-template-columns:1fr 1fr}
+  .steps{grid-template-columns:1fr}
+}
+@media (max-width:440px){
+  .wrap{padding:0 16px}
+  .grid3{grid-template-columns:1fr}
+  .wrow{grid-template-columns:52px repeat(7,1fr)}
+  .b{width:36px;height:36px;font-size:16px}
+  .b.sm{width:28px;height:28px}
+  .stk-grid{grid-template-columns:repeat(4,1fr)}
+  .stk-grid div:nth-child(5){display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="logo"><i>쉬</i>언제쉬어</div>
+  <span class="tagpill">교대근무 달력 · 안드로이드</span>
+</header>
+
+<section class="hero">
+  <div>
+    <h1>“내일 쉬어?”<br>이제 <span class="nw"><em>달력</em>이</span> <span class="nw">대답해요</span></h1>
+    <p class="lead">교대근무 패턴을 한 번만 넣으면 <b>근무표 · 알람 · 출퇴근 날씨</b>가 알아서 따라와요. 가족은 같은 달력을 보면서 <b>지금 근무 중인지, 언제 같이 쉬는지</b> 바로 알아요.</p>
+    <div class="cta">
+      <span class="btn">▶ 안드로이드 앱</span>
+      <small>4조2교대 · 3조2교대 · 상주 · 직접 만든 패턴</small>
+    </div>
+  </div>
+
+  <div class="week" aria-label="가족 시간표 예시">
+    <div class="wh"><b>가족 시간표</b><small>10월 12일 ~ 18일</small></div>
+    <div class="wrow days">
+      <span></span>
+      <span class="c sun">일<b>12</b></span><span class="c">월<b>13</b></span><span class="c col-today">화<b>14</b></span><span class="c">수<b>15</b></span><span class="c">목<b>16</b></span><span class="c">금<b>17</b></span><span class="c">토<b>18</b></span>
+    </div>
+    <div class="wrow">
+      <span class="who"><i style="background:#1d2330">나</i>나</span>
+      <span class="c"><span class="b d">주</span></span><span class="c"><span class="b d">주</span></span><span class="c col-today"><span class="b n">야</span></span><span class="c"><span class="b n">야</span></span><span class="c"><span class="b r">휴</span></span><span class="c"><span class="b r">휴</span></span><span class="c"><span class="b r">휴</span></span>
+    </div>
+    <div class="wrow">
+      <span class="who"><i style="background:#ec4899">유</i>유찬</span>
+      <span class="c"><span class="b r">휴</span></span><span class="c"><span class="b d" style="background:#bfe3c6;color:#1d4a2a">유</span></span><span class="c col-today"><span class="b d" style="background:#bfe3c6;color:#1d4a2a">유</span></span><span class="c"><span class="b d" style="background:#bfe3c6;color:#1d4a2a">유</span></span><span class="c"><span class="b d" style="background:#bfe3c6;color:#1d4a2a">유</span></span><span class="c"><span class="b d" style="background:#bfe3c6;color:#1d4a2a">유</span></span><span class="c"><span class="b r">휴</span></span>
+    </div>
+    <div class="together">☀️ 같이 쉬는 날 · <b>10월 18일 (토)</b></div>
+  </div>
+</section>
+
+<div class="ask" aria-hidden="true">
+  <span class="q">이번 주 야간 언제야?</span><span class="q">추석에 쉬어?</span><span class="q">애 하원 누가 가?</span><span class="q">퇴근길에 비 와?</span>
+</div>
+
+<section class="feat">
+  <div class="sec-h">
+    <span class="k">하는 일</span>
+    <h2>근무에 맞춰서 하루가 정리돼요</h2>
+    <p>평일 달력은 교대근무를 모릅니다. 언제쉬어는 근무 패턴을 기준으로 알람, 날씨, 메모, 가족 일정을 한 화면에 묶어요.</p>
+  </div>
+
+  <div class="rows">
+
+    <article class="f">
+      <div>
+        <h3>근무표 달력</h3>
+        <p>패턴과 오늘 근무만 고르면 몇 년 치 근무가 채워져요. 바뀐 날은 날짜를 눌러 그날만 고치면 돼요.</p>
+        <ul>
+          <li>주간 · 야간 · 휴무 동그라미와 이어지는 근무 띠</li>
+          <li>공휴일 · 대체공휴일 · 임시공휴일 자동 반영, 회사 휴무일 🏢</li>
+          <li>근무타입 직접 만들기 (글자 · 이름 · 색 · 출퇴근 시각 · 연장)</li>
+          <li>조가 바뀌어도 “이 날부터 새 패턴”으로 지난 근무는 그대로</li>
+        </ul>
+      </div>
+      <div class="shot" aria-label="달력 화면 예시">
+        <div class="mini-cal">
+          <span class="h s">일</span><span class="h">월</span><span class="h">화</span><span class="h">수</span><span class="h">목</span><span class="h">금</span><span class="h">토</span>
+          <div class="cell d">1<span class="s">주</span><span class="stk">🏀</span></div>
+          <div class="cell r">2<span class="s">휴</span><span class="memo">9시 지게차 교육</span></div>
+          <div class="cell n">3<span class="s">야</span></div>
+          <div class="cell n">4<span class="s">야</span></div>
+          <div class="cell r">5<span class="s">휴</span></div>
+          <div class="cell r">6<span class="s">휴</span><span class="stk">💊</span></div>
+          <div class="cell d">7<span class="s">주</span></div>
+          <div class="cell d">8<span class="s">주</span></div>
+          <div class="cell r">9<span class="s">휴</span><span class="hol">한글날</span></div>
+          <div class="cell n">10<span class="s">야</span></div>
+          <div class="cell n">11<span class="s">야</span><span class="stk">⭐</span></div>
+          <div class="cell r">12<span class="s">휴</span></div>
+          <div class="cell r">13<span class="s">휴</span></div>
+          <div class="cell d">14<span class="s">주</span></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="f">
+      <div>
+        <h3>출퇴근 날씨</h3>
+        <p>오늘 날씨가 아니라 <b>내가 집을 나서고 돌아오는 시각</b>의 날씨를 알려 줘요. 야간 근무면 밤 날씨를, 학원이나 운동이 있는 날은 그 시간 날씨도 같이 봐요.</p>
+        <ul>
+          <li>출근 → 퇴근 → 활동, 시간 순서대로 한 줄</li>
+          <li>비 · 눈 오면 “우산 챙기세요”, 추우면 오늘 입을 옷 한 벌</li>
+          <li>미세먼지는 동네 측정소 값과 시간대별 예보</li>
+          <li>기상청 · 에어코리아 자료 · 위치(GPS)는 쓰지 않아요</li>
+        </ul>
+      </div>
+      <div class="shot" aria-label="날씨 카드 예시">
+        <div class="wxc">
+          <div class="k"><span class="ic">☂️</span><div><b>퇴근길에 비 와요</b><small>우산 챙기세요 · 저녁 6시부터</small></div></div>
+          <div class="slots">
+            <div><small>출근 07:00</small><i>⛅</i><b>7°</b></div>
+            <div class="hot"><small>퇴근 19:00</small><i>🌧️</i><b>12°</b></div>
+            <div class="hot"><small>🏀 활동 20:00</small><i>🌧️</i><b>11°</b></div>
+          </div>
+        </div>
+        <div class="dust"><span>미세먼지 좋음</span><span>초미세 보통</span><span>👕 자켓 + 가디건</span></div>
+      </div>
+    </article>
+
+    <article class="f">
+      <div>
+        <h3>근무에 맞춰 울리는 알람</h3>
+        <p>주간 근무 날엔 5시 반, 야간 근무 날엔 오후 4시. 쉬는 날엔 울리지 않아요. 알람 화면에서 바로 출근길 날씨도 보여 줘요.</p>
+        <ul>
+          <li>근무별 · 전날 · 당일 · 다음날 · 한 번만</li>
+          <li>점점 커지는 소리, 알람마다 볼륨 · 진동 · 다시 울림</li>
+          <li>약 먹을 시각, 학원 갈 시각 같은 스티커 알림도</li>
+        </ul>
+      </div>
+      <div class="shot alarm" aria-label="알람 목록 예시">
+        <div class="al"><div><b>05:30</b><small>주간 근무 날만 · 점점 크게</small></div><div class="on"><span class="b d sm">주</span><span class="sw"></span></div></div>
+        <div class="al"><div><b>16:00</b><small>야간 근무 날만 · 출근 날씨 함께</small></div><div class="on"><span class="b n sm">야</span><span class="sw"></span></div></div>
+        <div class="al"><div><b>09:00</b><small>쉬는 날 · 늦잠 알람</small></div><div class="on"><span class="b r sm">휴</span><span class="sw off"></span></div></div>
+      </div>
+    </article>
+
+    <article class="f">
+      <div>
+        <h3>스티커로 남기는 하루</h3>
+        <p>약, 운동, 기분, 아이 학원까지. 스티커를 매일 · 요일마다 · 쉬는 날에만처럼 깔아 두고, 하면 눌러요. 한 달 통계로 돌아봐요.</p>
+        <ul>
+          <li>하루 몇 번 (약 아침 · 저녁 1/2), 시각 알림</li>
+          <li>학원 · 운동 같은 활동은 시간과 동네를 넣으면 그 시간 날씨까지</li>
+          <li>아이 사진으로 나만의 스티커</li>
+        </ul>
+      </div>
+      <div class="shot" aria-label="스티커판 예시">
+        <div class="stk-grid">
+          <div class="on">💊<small>약</small><em>1/2</em></div>
+          <div class="on">🏃<small>달리기</small></div>
+          <div>😌<small>기분</small></div>
+          <div>📖<small>독서</small></div>
+          <div>💧<small>물</small></div>
+        </div>
+        <div class="act"><span style="font-size:22px">🎹</span><div><b>피아노 학원</b> · 16:00 ~ 17:00<br><small>월 · 수 · 금 · 영통구 · 끝나면 자동 완료</small></div></div>
+      </div>
+    </article>
+
+    <article class="f">
+      <div>
+        <h3>가족이 함께 보는 달력</h3>
+        <p>가족방에 초대하면 가족 폰에도 내 근무표가 그대로 보여요. 근무를 직접 쓰지 않는 가족은 “보기만” 모드로 가족 달력만 볼 수 있어요.</p>
+        <ul>
+          <li>가족 탭: 지금 누가 근무 중인지, 몇 시에 끝나는지, 그 사람 날씨까지</li>
+          <li>♥ 가족 메모와 월 포스트잇 (장보기 · 할 일 체크)</li>
+          <li>“이날 쉬어 줄 수 있어?” 근무 요청과 답장</li>
+          <li>아이 · 부모님 달력도 따로: 유치원 · 학교 일정, 방학, 등원 · 하원 날씨</li>
+        </ul>
+      </div>
+      <div class="shot fam" aria-label="가족 탭 예시">
+        <div class="fc"><div class="t"><i style="background:#1d2330">나</i><div><b>🏭 근무 중</b></div></div><div class="sub">주간 · 19:00 끝</div><div class="bar"><i style="width:62%"></i></div></div>
+        <div class="fc"><div class="t"><i style="background:#ec4899">유</i><div><small>유찬</small><b>🏫 유치원</b></div></div><div class="sub">15:00 하원 · ☂️ 하원길 비</div><div class="bar"><i style="width:40%"></i></div></div>
+        <div class="msg">
+          <div class="m">토요일 시댁 · 10시 출발</div>
+          <div class="rq">📩 <b>17일 휴무</b> 요청 · 아이 운동회라 같이 가자 · <span style="color:#1e8a6a">수락</span></div>
+        </div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<section class="more">
+  <div class="sec-h">
+    <span class="k">필요한 사람만 켜는 기능</span>
+    <h2>안 쓰는 기능은 화면에 안 보여요</h2>
+    <p>설정 › 부가 기능에서 켜면 그때부터 나타나요.</p>
+  </div>
+  <div class="grid3">
+    <div class="mini"><div class="ic">📋</div><h3>업무 메모 (인수인계)</h3><p>날짜마다 인수 · 인계 · 지시 · 특이를 칸별로 적어요. 나만 보고 백업에서도 빠져요.</p></div>
+    <div class="mini"><div class="ic">📊</div><h3>근무 통계 · 수당</h3><p>대근 · 연차 · 교육 횟수와 야간 · 연장 수당을 달마다 계산해요.</p></div>
+    <div class="mini"><div class="ic">👥</div><h3>동료 근무</h3><p>같은 회사 다른 조 근무를 한 표로 보고, 내 조를 강조해요.</p></div>
+    <div class="mini"><div class="ic">☀️</div><h3>같이 쉬는 날</h3><p>가족이 모두 쉬는 날을 찾아 가족 탭에 알려 줘요.</p></div>
+    <div class="mini"><div class="ic">🏢</div><h3>휴무일 · 기념일</h3><p>회사 휴무일, 생일, 기념일을 달력에 표시하고 미리 알려요.</p></div>
+    <div class="mini"><div class="ic">🧩</div><h3>위젯 · 백업</h3><p>홈 화면 한 달 · 일주일 위젯, 구글 드라이브 자동 백업.</p></div>
+  </div>
+</section>
+
+<section class="start">
+  <div class="sec-h">
+    <span class="k">시작하기</span>
+    <h2>처음 설정은 1분이면 끝나요</h2>
+  </div>
+  <div class="steps">
+    <div class="step"><h3>근무 형태 고르기</h3><p>4조2교대, 3조2교대, 상주 중에서 고르거나 주 · 야 · 휴를 직접 이어 붙여요.</p></div>
+    <div class="step"><h3>오늘 근무 누르기</h3><p>오늘이 주간인지 야간인지만 누르면 앞뒤 근무가 전부 채워져요.</p></div>
+    <div class="step"><h3>출근 알람 켜기</h3><p>근무별 기상 시각을 정하면 쉬는 날엔 조용하고 근무 날만 깨워요.</p></div>
+  </div>
+
+  <div class="close">
+    <div>
+      <h2>이번 달, 언제 쉬어?</h2>
+      <p>근무표 한 장으로 나도 가족도 같은 답을 봐요.</p>
+    </div>
+    <div class="row" aria-hidden="true"><span class="b d">주</span><span class="b n">야</span><span class="b r" style="color:var(--bg)">휴</span></div>
+  </div>
+</section>
+
+<footer>
+  <span>언제쉬어 · 교대근무 가족 달력</span>
+  <span>날씨: 기상청 · 미세먼지: 에어코리아</span>
+</footer>
+
+</div>
+</body>
+</html>
