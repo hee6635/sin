@@ -165,4 +165,5 @@
 - 직접 추가한 가족 m.home (지역 코드 · 없으면 우리 집): famHome(m). famWx 의 등원/출근 · 쉬는 날 · 활동(위치 없을 때) 날씨가 그 집 기준. 일정 패턴 화면 "🏠 집" 줄 (fe-home · 우리 집 고르면 지움). normalize · wxCodes · 지역 이름 정리에 포함.
 - 미세먼지 큰 화면 탭 wxDzList(win,home,work,acts,ls,le): 활동 있는 날은 "🎹활동 · 동네" 탭 (최대 2개) · 시간 순서. 활동 탭의 큰 얼굴은 WX.dzAt(활동 시작 시각) 기준 ("활동 16:00 때 예보"), 아래 지금 값 · 예보 · 표는 그 동네 측정소. wxcore 가 dzAt 을 내보냄.
 - actWx 에 rc(지역 코드) · home 인자.
-- 시험: s80 (7).
+- 가족 탭 "지금": 가족이 있으면 나 · 가족 카드 모두 같은 크기(.now.fams 2칸 · 600px 이상은 자동 칸) · 같은 모양(.nc.fc2): 상태 · 진행 막대(famProg = famWinOf 안이면) · 작은 날씨 줄 wxMiniHtml(c.c 최대 3칸 + 비 · 미세먼지 · 특보면 결론 한 줄, 누르면 wx-fam). 가족 날씨 자료 famNowWx. 가족이 없으면 내 큰 카드(.now.one .me2) 그대로. 예전 wxFamChip · famActWx 는 가족 탭 카드에서 안 씀.
+- 시험: s80 (7) · s81 (11).

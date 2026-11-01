@@ -1549,7 +1549,16 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .now.fams{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;align-items:start}.now.fams .nc{width:auto;min-width:0}
 .nowwrap .nc.me2{padding:9px 11px}.nowwrap .nc.me2 .wxcard{margin-top:8px;padding:8px 10px}.nowwrap .nc.me2 .wxcard .wa img{width:34px;height:34px}.nowwrap .nc.me2 .wxcard .wa b{font-size:16.5px}.nowwrap .nc.me2 .wxcard .wa small{font-size:12px}
 .nowwrap .nc.me2 .wxcard .wb{margin-top:6px;padding:3px 8px}.nowwrap .nc.me2 .wxcard .wb img{width:28px;height:28px}.nowwrap .nc.me2 .wxcard .wb em{font-size:18px}
-@media (min-width:600px){.nowwrap{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}.nowwrap .now.fams{margin-top:0}}.nc.me2 .wxcard.wet{background:#e7effb}.nc.me2 .wxcard.bad{background:#fdeedd}
+@media (min-width:600px){.now.fams{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}}
+.now.fams:has(.fc2){align-items:stretch}.nc.fc2{position:relative}.nc.fc2 .bar{margin-top:6px}.nc.fc2:not(.w) .bar{background:rgba(127,127,127,.18)}
+.mwx{margin-top:8px;border-radius:12px;padding:5px 4px;background:rgba(127,127,127,.09)}.nc.w .mwx{background:rgba(255,255,255,.55)}
+.mwx .mcs{display:flex;justify-content:space-around;gap:2px}
+.mwx .mc{display:flex;flex-direction:column;align-items:center;min-width:0;line-height:1.15}
+.mwx .mc i{font-style:normal;font-size:10.5px;font-weight:700;color:var(--muted);white-space:nowrap;max-width:56px;overflow:hidden;text-overflow:ellipsis}
+.mwx .mc img{width:24px;height:24px;margin:1px 0}.mwx .mc em{font-style:normal;font-size:13.5px;font-weight:800}
+.mwx .mc.past{opacity:.45}.mwx .mc.hot em{color:#2563eb}
+.mwx .mk{display:flex;align-items:center;gap:4px;margin:4px 2px 0;font-size:11.5px;font-weight:800;min-width:0}.mwx .mk img{width:18px;height:18px;flex:none}.mwx .mk span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mwx .mk.wet{color:#2563eb}.mwx .mk.bad{color:#c2410c}.mwx .mk.al1,.mwx .mk.al2{color:#dc2626}.nc.me2 .wxcard.wet{background:#e7effb}.nc.me2 .wxcard.bad{background:#fdeedd}
 #sheet,#pop .wlp,#pop .wlp .bd,#pop .wlp textarea,#pop .menu.sdpop,#pop .menu.wxdpop,#pop .menu.wxdpop .wxp{touch-action:pan-y}#sheet .dstrip,#sheet .tchips,#pop .wxhs{touch-action:pan-x pan-y}
 .swc{will-change:transform}.swn{background:var(--bg)}
 .tltimes{margin-top:10px;border-top:1px solid var(--line)}.tltimes .pl2{display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:700}.tltimes .prow{padding:10px 6px}.tltimes .tlt{font-size:15px;font-weight:800;color:var(--fg);white-space:nowrap}.tltimes .tlt.rest{color:var(--muted);font-weight:700}.tltimes .tlt.unset{color:var(--accent)}
@@ -4900,7 +4909,10 @@ function renderFamily(){
       <div class="sm">${esc([st.sub,st.left].filter(Boolean).join(' · '))}</div>
       ${st.prog!==undefined?`<div class="bar"><i style="width:${Math.round(st.prog*100)}%"></i></div>`:''}
     </div>`;
-  const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);return `<div class="nc ${l==='자는 중'?'sl':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-mancal" data-id="${m.id}" data-hold="fam"`}>${m.kind==='sched'?'':`<span class="mced" data-act="fam-edit" data-id="${m.id}" aria-label="고치기">✏️</span>`}<div class="nwho">${famAv(m,i)}${esc(m.name)}</div><div class="st">${e?ico(e)+' ':''}${esc(l)}</div><div class="sm">${esc(sub)}</div>${wxFamChip(m,now)}${famActWx(m,now)}</div>`;}).join('');
+  // v0.121 가족이 있으면 나 · 가족 카드 모두 같은 크기 · 같은 모양: 상태 · 막대 · 작은 날씨 줄 · (비 · 미세먼지면) 결론 한 줄
+  const pbar=v=>v!==undefined&&v!==null?`<div class="bar"><i style="width:${Math.round(v*100)}%"></i></div>`:'';
+  const meCard2=`<div class="nc w fc2" ${isHost?'data-act="fam-mycal"':''}><div class="nwho">${isHost?'<i style="background:#1d2330">나</i>':'<i style="background:#1d2330">근</i>근무자'}</div><div class="st">${st.e?ico(st.e)+' ':''}${esc(st.t)}</div><div class="sm">${esc(st.sub||st.left||'')}</div>${pbar(st.prog)}${myWx?wxMiniHtml(myWx,'data-act="wx-fam" data-u="me"'):''}</div>`;
+  const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);const fw=wxOn()?famNowWx(m,now):null;return `<div class="nc fc2 ${l==='자는 중'?'sl':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-mancal" data-id="${m.id}" data-hold="fam"`}>${m.kind==='sched'?'':`<span class="mced" data-act="fam-edit" data-id="${m.id}" aria-label="고치기">✏️</span>`}<div class="nwho">${famAv(m,i)}${esc(m.name)}</div><div class="st">${e?ico(e)+' ':''}${esc(l)}</div><div class="sm">${esc(sub)}</div>${pbar(famProg(m,now))}${fw?wxMiniHtml(fw,`data-act="wx-fam" data-u="${esc(wxMemKey(m))}"`):''}</div>`;}).join('');
   const cheerBtns='';   // v0.106: 응원 버튼 없앰
   // 이번 주 시간표
   // 가족 시간표: 오늘 가운데(앞뒤 30일) 또는 주 단위(앞뒤 4주) · 옆으로 쓸어서 넘김 · 오늘 열은 위에서 아래까지 하나의 네모 박스
@@ -4927,7 +4939,7 @@ function renderFamily(){
     :(myReq.length?`<div class="fsec">내 요청</div>${myReq.map(r=>`<div class="frq g" data-act="req-go" data-k="${r.date}"><b>${mdw(r.date)} ${esc(shiftLabel(r.want))} 요청 · ${REQ_ST[r.st].ic} ${r.st==='pending'?'답장 기다리는 중':REQ_ST[r.st].name}</b>${r.msg?`<small>"${esc(r.msg)}"</small>`:''}</div>`).join('')}`:'');
   return `<div class="famv">${famSyncHtml()}
     <div class="fsec">지금</div>
-    ${isHost&&fam.length?`<div class="nowwrap">${famView()?'':`<div class="now one">${meCard}</div>`}<div class="now fams">${memCards}</div></div>`:`<div class="now one">${famView()?'':meCard}${isHost?memCards:''}</div>`}
+    ${isHost&&fam.length?`<div class="nowwrap"><div class="now fams">${famView()?'':meCard2}${memCards}</div></div>`:`<div class="now one">${famView()?'':meCard}${isHost?memCards:''}</div>`}
     ${cheerBtns}
     ${famPeers().length?`<div class="fsec">달력 보기 <span class="vsub">· 눌러서 한 달 보기</span></div><div class="vcrow">${famPeers().map(m=>`<button class="vchip" data-act="fam-viewcal" data-u="${esc(m.uid)}">${famAv(m,0)}${esc(m.name)}<em>›</em></button>`).join('')}</div>`:''}
     <div class="fsec">가족 시간표 <button class="lnk" data-act="fam-add">＋ 가족 추가</button></div>
@@ -6706,6 +6718,21 @@ function wxCardHtml(c,cls,attrs){
   return `<div class="wxl wxcard ${cls}" ${attrs}><div class="wa">${wxImg(kk.i,'wi')}<div><b>${esc(kk.t)}</b>${kk.s?`<small>${esc(kk.s)}</small>`:''}</div></div>
     ${(c.c||[]).length?`<div class="wb">${c.c.map(cell).join('<span class="ar">→</span>')}${z?wxImg(z.f,'f'):''}</div>`:''}</div>`;
 }
+// v0.121 가족 탭 작은 카드의 날씨: 칸(출근 · 퇴근 · 활동 / 오전 · 오후) 한 줄 + 비 · 미세먼지 · 특보면 결론 한 줄
+function wxMiniHtml(c,attrs){
+  const L=(c.c||[]).slice(0,3);if(!L.length&&!c.k)return '';const cls=wxCls(c),kk=c.k||{};
+  const cell=x=>`<span class="mc${x.past?' past':''}${x.hot?' hot':''}"><i>${esc(String(x.l||'').split(' ')[0])}</i>${wxImg(x.sk)||esc(x.i||'')}<em>${x.tp!=null?x.tp+'°':'–'}</em></span>`;
+  return `<div class="mwx" ${attrs}>${L.length?`<div class="mcs">${L.map(cell).join('')}</div>`:''}${cls&&kk.t?`<div class="mk ${cls}">${wxImg(kk.i)}<span>${esc(kk.t)}</span></div>`:''}</div>`;
+}
+// 가족 지금 날씨 카드 자료 (직접 추가한 가족 = famWx · 근무 가족 = 집 → 직장)
+function famNowWx(m,now){
+  try{const d=new Date(now);if(famUsesTypes(m)){const x=famWx(m,d,now);return x&&x.c;}
+    const H=wxRaw(S.wx.home);if(!H)return null;const win=wxMemWin(m,d),wk=wxMemWork(m),W=wxRaw(wk),hq=wxFull(S.wx.home);
+    return (win?WX.commute(H,W,{s:win.s,e:win.e,hn:`집 · ${wxName(S.wx.home)}`,wn:W?`직장 · ${wxName(wk)}`:`집 · ${wxName(S.wx.home)}`,hq,wq:wk?wxFull(wk):hq,now}):null)||WX.dayCard(H,WX.keyD(now),{now,hq});
+  }catch(e){return null;}
+}
+// 가족 진행 막대: 지금 가는 중(근무 · 등원~하원)이면 0~1
+function famProg(m,now){try{const d=new Date(now),f=famWinOf(m);for(const dd of [d,addDays(d,-1)]){const w=f(dd);if(w&&now>=w.s&&now<w.e)return (now-w.s)/(w.e-w.s);}}catch(e){}return undefined;}
 const wxCls=c=>{const kk=c.k||{};return kk.al===2?'al2':kk.al===1?'al1':(c.c||[]).some(x=>x.hot)?'wet':kk.dz?'bad':'';};
 function wxDayHtml(k){
   const empty=`<div id="wxDay" data-k="${k}" hidden></div>`;
