@@ -1,0 +1,91 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans KR",sans-serif;background:#e9ebef;padding:24px;display:flex;gap:20px;align-items:flex-start;width:1760px}
+.ph{width:390px;background:#f6f7f9;border-radius:28px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.12);position:relative}
+.cap{font-size:15px;font-weight:800;color:#2c3150;margin:0 0 8px 4px;width:390px}
+.col{display:flex;flex-direction:column}
+.hd{display:flex;align-items:center;font-weight:800;font-size:17px;padding:16px;background:#fff}.hd .t{flex:1;text-align:center}.hd i{font-style:normal;color:#777;width:26px}
+.big{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 0 6px;font-weight:800;font-size:16px}.big span{font-size:40px}
+.capx{font-size:12.5px;color:#777;font-weight:700;padding:12px 16px 6px}
+.sec{background:#fff;margin:0 0 2px;padding:6px 16px}
+.seg{display:flex;background:#eef0f3;border-radius:12px;padding:3px;gap:2px}.seg span{flex:1;text-align:center;padding:8px 0;border-radius:10px;font-size:13px;font-weight:700;color:#666}.seg span.on{background:#fff;color:#222;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0}.chip{display:inline-flex;align-items:center;gap:6px;border-radius:18px;background:#eef0f3;padding:6px 10px;font-weight:700;font-size:13px}.chip.on{background:#e6f4ea;outline:2px solid #2a9d7a}
+.mini{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.t1{background:#a3d4b5}.t2{background:#cfe9b0}.hu{color:#c8102e}
+.row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;font-weight:600}.row:last-child{border:0}.row small{display:block;color:#888;font-size:11.5px;font-weight:600}
+.tb{border:1px solid #d6d9de;border-radius:10px;padding:6px 10px;font-weight:800;background:#fff}
+.sw{width:42px;height:24px;border-radius:12px;background:#5a7fd6;position:relative;margin-left:auto;flex:none}.sw:after{content:"";position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+.sw.off{background:#c9ccd4}.sw.off:after{left:3px;right:auto}
+.fold{background:#fff;margin-top:12px;padding:4px 16px}
+.hint{font-size:12px;color:#888;line-height:1.5;padding:6px 0}
+.btn{margin:14px 16px;background:#5a7fd6;color:#fff;text-align:center;border-radius:14px;padding:13px;font-weight:800}
+.new{outline:2px dashed #ff5a6a;outline-offset:-2px;position:relative}
+.nb{position:absolute;right:8px;top:-9px;background:#ff5a6a;color:#fff;font-size:10px;font-weight:800;border-radius:8px;padding:1px 6px;z-index:2}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px 0}.board div{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:700;color:#555}.board span{width:52px;height:52px;border-radius:12px;background:#eef0f3;display:flex;align-items:center;justify-content:center;font-size:23px;position:relative}
+.board .done span{background:#e3e9f8;outline:2px solid #5a7fd6}.board .todo span{background:#fff;outline:1.5px dashed #5a7fd6;opacity:.75}.board .half span{background:#fff;outline:2px solid #5a7fd6}
+.board em{position:absolute;right:-3px;bottom:-3px;background:#5a7fd6;color:#fff;font-style:normal;font-size:9.5px;font-weight:800;border-radius:8px;padding:0 4px}
+.wh{background:#fff;padding:14px 16px}
+</style></head><body>
+
+<div class="col"><div class="cap">① 유찬 스티커 고치기 = 내 스티커 고치기 화면 그대로</div>
+<div class="ph">
+ <div class="hd"><i>‹</i><span class="t">💊 약 고치기 <span style="font-size:12px;color:#888">· 유찬</span></span><i></i></div>
+ <div class="big"><span>💊</span>약</div>
+ <div class="capx">하루 몇 번</div><div class="sec"><div class="seg" style="margin:6px 0"><span>1번</span><span class="on">2번</span><span>3번</span></div></div>
+ <div class="capx">얼마나</div>
+ <div class="sec"><div class="seg" style="margin:6px 0"><span>반복 없음</span><span>요일</span><span>매일</span><span class="on">일정 맞춤</span><span>매달</span></div>
+  <div class="chips new" style="padding:8px 4px"><span class="nb">유찬 일정 종류</span><span class="chip on"><span class="mini t1">유</span>유치원</span><span class="chip on"><span class="mini t2">반</span>반일반</span><span class="chip"><span class="mini hu">휴</span>쉬는 날</span></div>
+  <div class="hint">고른 일정인 날에만 나와요 (내 것의 "근무 맞춤" 자리)</div></div>
+ <div class="capx">기간</div><div class="sec"><div class="row">📅 기간<span class="tb" style="margin-left:auto">11/1</span>~<span class="tb">끝 없음 ›</span></div><div class="row">🎌 공휴일엔 빼기<span class="sw off"></span></div></div>
+ <div class="capx">알림</div><div class="sec"><div class="row">⏰ 시각 알림<small style="display:inline;margin-left:6px">내 폰에서 울려요</small><span class="sw"></span></div><div class="row">1번째<span class="tb" style="margin-left:auto">08:00</span></div><div class="row">2번째<span class="tb" style="margin-left:auto">19:00</span></div></div>
+ <div class="fold new"><span class="nb">스위치</span><div class="row" style="border:0">🎒 학원 · 취미 · 동아리<small style="display:inline;margin-left:6px">안 씀</small><span class="sw off"></span></div></div>
+ <div class="btn">저장</div>
+</div></div>
+
+<div class="col"><div class="cap">② 학원 스티커: 스위치 켜면 펼쳐지고 적용</div>
+<div class="ph">
+ <div class="hd"><i>‹</i><span class="t">🎹 피아노 고치기 <span style="font-size:12px;color:#888">· 유찬</span></span><i></i></div>
+ <div class="big"><span>🎹</span>피아노</div>
+ <div class="capx">얼마나</div>
+ <div class="sec"><div class="seg" style="margin:6px 0"><span>반복 없음</span><span class="on">요일</span><span>매일</span><span>일정 맞춤</span><span>매달</span></div>
+  <div class="chips"><span class="chip">일</span><span class="chip on">월</span><span class="chip">화</span><span class="chip on">수</span><span class="chip">목</span><span class="chip on">금</span><span class="chip">토</span></div></div>
+ <div class="capx">알림</div><div class="sec"><div class="row">⏰ 시각 알림<span class="sw"></span></div><div class="row">시각<span class="tb" style="margin-left:auto">15:30</span><small style="display:inline">시작 30분 전</small></div></div>
+ <div class="fold new"><span class="nb">켜면 펼쳐짐</span>
+  <div class="row">🎒 학원 · 취미 · 동아리<small style="display:inline;margin-left:6px;color:#2a9d7a">✅ 16:00 ~ 17:00 · 📍 집</small><span class="sw"></span></div>
+  <div class="row">활동 시간<span class="tb" style="margin-left:auto">16:00</span>~<span class="tb">17:00</span></div>
+  <div class="row">위치<small style="display:inline;margin-left:6px">날씨를 볼 곳</small><span style="margin-left:auto;font-weight:700">🏠 집과 같음 ›</span></div>
+  <div class="hint">끝나면 자동 완료 · 유치원 시간과 겹치는 날은 빠져요 · 비 오면 알려줘요</div></div>
+ <div class="btn">저장</div>
+</div></div>
+
+<div class="col"><div class="cap">③ 유찬 날짜 창 스티커판 — 내 것과 같은 모양</div>
+<div class="ph">
+ <div class="wh">
+  <div style="font-weight:800;font-size:17px;text-align:center">11월 4일 (수)</div>
+  <div style="font-size:13px;color:#666;font-weight:700;margin-top:14px">스티커</div>
+  <div class="board">
+   <div class="half"><span>💊<em>1/2</em></span>약</div>
+   <div class="todo"><span>🎹</span>16:00</div>
+   <div class="done"><span>🦷</span>양치</div>
+   <div class="todo"><span>📖</span>숙제</div>
+   <div><span>🎒</span>준비물</div>
+  </div>
+  <div class="hint">· 점선 = 오늘 깔린 것 (아직) · 누르면 완료 · 하루 여러 번이면 1/2 → 2/2<br>· 안 깔린 스티커는 눌러서 이 날만 붙여요 · 길게 누르면 고치기</div>
+ </div>
+ <div class="wh" style="margin-top:8px">
+  <div style="font-size:13px;color:#666;font-weight:700">내 날짜 창 (참고: 지금과 같음)</div>
+  <div class="board"><div class="half"><span>💊<em>1/2</em></span>약</div><div class="todo"><span>🏊</span>19:00</div><div><span>👟</span>조깅</div><div class="done"><span>💧</span>물</div><div><span>📖</span>독서</div></div>
+ </div>
+</div></div>
+
+<div class="col"><div class="cap">④ 내 스티커도 같은 스위치 (통일)</div>
+<div class="ph">
+ <div class="hd"><i>‹</i><span class="t">🏊 수영 고치기</span><i></i></div>
+ <div class="capx">얼마나</div><div class="sec"><div class="seg" style="margin:6px 0"><span>반복 없음</span><span class="on">요일</span><span>매일</span><span>근무 맞춤</span><span>매달</span></div></div>
+ <div class="fold"><div class="row" style="border:0">🎒 학원 · 취미 · 동아리<small style="display:inline;margin-left:6px">안 씀</small><span class="sw off"></span></div></div>
+ <div class="hint" style="padding:6px 16px">끄면 접힌 채 · 활동 안 씀</div>
+ <div class="fold"><div class="row">🎒 학원 · 취미 · 동아리<small style="display:inline;margin-left:6px;color:#2a9d7a">✅ 19:00 ~ 20:00</small><span class="sw"></span></div><div class="row">활동 시간<span class="tb" style="margin-left:auto">19:00</span>~<span class="tb">20:00</span></div><div class="row">위치<span style="margin-left:auto;font-weight:700">🏠 집과 같음 ›</span></div></div>
+ <div class="hint" style="padding:6px 16px">켜면 펼쳐지고 보이는 시간 그대로 적용 (안 바꿔도 됨)<br>저장하면 "🏊 수영 · 활동 19:00~20:00 저장했어요"</div>
+ <div class="btn">저장</div>
+</div></div>
+</body></html>
