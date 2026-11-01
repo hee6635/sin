@@ -17,7 +17,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   // 가족 탭: 상태 · 날씨 · 시간표 동그라미
   await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(500);
   const card=await p.evaluate(()=>document.querySelector('.now.fams .nc:not(.w)').innerText.replace(/\s+/g,' '));
-  T('가족 카드: 유치원 · 15:00 하원 · 날씨 한 줄(다음 하원에 비 → "하원 때 비 · 우산")',/유치원/.test(card)&&/15:00 하원/.test(card)&&/하원길에 비 와요/.test(card),card);
+  T('가족 카드: 유치원 · 15:00 하원 · 날씨 한 줄(다음 하원에 비 → "하원 때 비 · 우산")',/유치원/.test(card)&&/오후 3시 하원/.test(card)&&/하원길에 비 와요/.test(card),card);
   T('가족 시간표: 유찬도 동그라미 (유치원 → "유")',await p.evaluate(()=>{const c=[...document.querySelectorAll('.fc .badge')].map(e=>e.textContent);return c.includes('유');}));
   // 달력: 위쪽 ✏️🖌 없음
   await p.evaluate(()=>document.querySelector('[data-act="fam-mancal"]').click());await p.waitForTimeout(500);
@@ -41,13 +41,13 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   await p.evaluate(()=>__wx.closeSheet());
   // 가족 ✏️: 종류 더하기 · 구간
   await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);await tap(p,'[data-act="fam-edit"][data-id="f1"]');await p.waitForTimeout(400);
-  T('가족 ✏️: "🔁 일정 패턴" 한 줄 (유치원 08:50~15:00 · 위치)',await p.evaluate(()=>{const e=document.querySelector('#page [data-act="fe-pat"]');return !!e&&/유치원 08:50~15:00/.test(e.innerText)&&/📍/.test(e.innerText);}));
+  T('가족 ✏️: "🔁 일정 패턴" 한 줄 (유치원 08:50~15:00 · 위치)',await p.evaluate(()=>{const e=document.querySelector('#page [data-act="fe-pat"]');return !!e&&/유치원 오전 8:50~오후 3시/.test(e.innerText)&&/📍/.test(e.innerText);}));
   await tap(p,'#page [data-act="fe-pat"]');await p.waitForTimeout(400);
   T('일정 패턴: 일정 종류 목록 · 위치 · 이 날부터 새 일정 · 공휴일',await p.evaluate(()=>document.querySelectorAll('#page [data-act="fe-ft"]').length===2&&!!document.querySelector('#page [data-act="fe-loc"]')&&!!document.querySelector('#page [data-act="fe-era-add"]')&&!!document.getElementById('feHol')));
   await tap(p,'#page [data-act="fe-ftadd"]');await p.waitForTimeout(300);
   await p.evaluate(()=>{document.getElementById('ftName').value='반일반';const s=document.getElementById('ftE');s.value='13:00';s.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(200);
   await p.evaluate(()=>{document.getElementById('ftName').value='반일반';});await tap(p,'#pop [data-act="ft-save"]');await p.waitForTimeout(300);
-  T('＋ 종류 더하기 → 반일반 (달력 표시 자동 "반")',await p.evaluate(()=>{const r=[...document.querySelectorAll('#page [data-act="fe-ft"]')].map(e=>e.innerText.replace(/\s+/g,' '));return r.length===3&&r.some(x=>/반 반일반/.test(x)&&/13:00/.test(x));}));
+  T('＋ 종류 더하기 → 반일반 (달력 표시 자동 "반")',await p.evaluate(()=>{const r=[...document.querySelectorAll('#page [data-act="fe-ft"]')].map(e=>e.innerText.replace(/\s+/g,' '));return r.length===3&&r.some(x=>/반 반일반/.test(x)&&/오후 1시/.test(x));}));
   // 이 날부터 새 일정 (11월 2일부터 학교)
   await tap(p,'#page [data-act="fe-era-add"]');await p.waitForTimeout(300);
   await p.evaluate(()=>{const s=document.getElementById('eraD');s.value='2026-11-02';});await tap(p,'#pop [data-act="fe-era-ok"]');await p.waitForTimeout(400);
@@ -89,7 +89,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     T('두 번이면 2/2 완료',await p.evaluate(()=>{const e=document.querySelector('#sheet .mstk [data-id="m_p"]');return /2\/2/.test(e.innerText)&&e.classList.contains('on')&&!e.classList.contains('half');}));
     await p.evaluate(()=>__wx.pushRemindersToNative());await p.waitForTimeout(200);
     T('가족 스티커 알림 (내 폰 · 오늘 08:00 은 한 번 했으니 19:00 만 · 내일 2번)',await p.evaluate(()=>{const r=(window.__rem||[]).filter(x=>/^f_f1_m_p_/.test(x.id)).map(x=>x.id);return !r.includes('f_f1_m_p_2026-10-14_0')&&!r.includes('f_f1_m_p_2026-10-14_1')&&r.includes('f_f1_m_p_2026-10-15_0')&&r.includes('f_f1_m_p_2026-10-15_1');}),await p.evaluate(()=>JSON.stringify((window.__rem||[]).map(x=>x.id).filter(x=>/^f_/.test(x)).slice(0,6))));
-    await tap(p,'#sheet [data-act="man-stk-add"]');await p.waitForTimeout(400);
+    await tap(p,'#sheet [data-act="man-stk-pick"]');await p.waitForTimeout(300);await tap(p,'#pop [data-act="man-stk-add"]');await p.waitForTimeout(400);
     T('스티커 고르기: 기분 · 아이 · 육아 탭',await p.evaluate(()=>{const t=[...document.querySelectorAll('#pop [data-act="icn-tab"]')].map(b=>b.innerText);return t.includes('기분')&&t.includes('아이 · 육아');}));
     T('오류 없음 (가족 스티커 규칙)',p.errs.length===0,p.errs.join('|'));await p.close();
   }

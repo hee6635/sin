@@ -132,7 +132,7 @@ await ok('출퇴근 문구: 퇴근길 비 → 우산 · 수치 · 미세먼지 �
   const o = await W.handle(d, { h: '41111', w: '41597', s: '202610300700', e: '202610301900' });
   const c = o.body;
   assert.equal(c.i, '☔'); assert.equal(c.h, '퇴근길 비 와요 · 우산 챙겨요'); assert.equal(c.t, '출근 6° · 퇴근 12°');
-  assert.equal(c.r[0].l, '출근 07:00'); assert.equal(c.r[0].p, '집 · 수원시 장안구'); assert.equal(c.r[0].d, '흐림');
+  assert.equal(c.r[0].l, '출근 오전 7시'); assert.equal(c.r[0].p, '집 · 수원시 장안구'); assert.equal(c.r[0].d, '흐림');
   assert.equal(c.r[1].p, '직장 · 화성시 동탄구'); assert.equal(c.r[1].pop, 70); assert.equal(c.r[1].pcp, 3); assert.equal(c.r[1].tag, '우산');
   assert.equal(c.a, '😷 미세먼지 상당히 나쁨 · KF94 마스크 써요');   // 지금 값 8단계
   assert.equal(c.an, '미세먼지 80㎍/㎥ (상당히 나쁨)\n초미세먼지 40㎍/㎥ (상당히 나쁨)\n지금 · 경기 평균 · 오늘 예보 나쁨');
@@ -259,7 +259,7 @@ await ok('그림 화면용: 한 줄 결론 · 출근/퇴근 칸(날씨 그림 ·
   const d = deps();
   const c = (await W.handle(d, { h: '41111', w: '41597', s: '202610300700', e: '202610301900' })).body;
   assert.deepEqual(c.k, { t: '퇴근길에 비 와요', s: '우산 챙기세요 · 오후 5시부터', i: 'wear/umbrella' });
-  assert.equal(c.c.length, 2); assert.equal(c.c[0].l, '출근 07:00'); assert.equal(c.c[0].sk, 'sky/cloudy'); assert.equal(c.c[1].sk, 'sky/rain');
+  assert.equal(c.c.length, 2); assert.equal(c.c[0].l, '출근 오전 7시'); assert.equal(c.c[0].sk, 'sky/cloudy'); assert.equal(c.c[1].sk, 'sky/rain');
   assert.equal(c.c[0].w, 'wear/coat'); assert.equal(c.c[0].ws, '코트'); assert.equal(c.c[1].hot, true); assert.equal(c.c[1].d, '비 70%');
   assert.deepEqual(c.b.slice(0, 2).map(x => x.n), ['큰 우산', '장화']);   // 3mm 비 = 큰 우산 · 장화
   assert.ok(c.b.length <= 3);

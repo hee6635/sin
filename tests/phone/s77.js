@@ -31,7 +31,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     const wd=Object.keys(days).find(i=>days[i].pl&&days[i].work),rd=Object.keys(days).find(i=>days[i].pl&&!days[i].work),nd=Object.keys(days).find(i=>!days[i].pl&&days[i].work);
     const card=i=>p.evaluate(i=>{const x=__wx.wxMine(new Date(2026,9,+i),Date.now());return x?{l:(x.c||[]).map(v=>v.l),k:x.k&&x.k.t,s:x.k&&x.k.s}:null;},i);
     const c=wd?await card(wd):null;
-    T(`근무 날(${wd}일) 3칸: 출근 → 퇴근 → 🏊활동 (시간 순서)`,!!c&&c.l.length===3&&/^출근/.test(c.l[0])&&/^퇴근/.test(c.l[1])&&/^🏊활동 20:00/.test(c.l[2]),JSON.stringify([days,c]));
+    T(`근무 날(${wd}일) 3칸: 출근 → 퇴근 → 🏊활동 (시간 순서)`,!!c&&c.l.length===3&&/^출근/.test(c.l[0])&&/^퇴근/.test(c.l[1])&&/^🏊활동 오후 8시/.test(c.l[2]),JSON.stringify([days,c]));
     T('결론: 출퇴근은 맑고 활동 끝날 때 비 → "활동 끝날 때 비 와요 · 우산"',!!c&&c.k==='활동 끝날 때 비 와요'&&/우산/.test(c.s),JSON.stringify(c));
     const r2=rd?await card(rd):null;
     T(`쉬는 날(${rd}일) 활동이 있으면 활동 칸만`,!!r2&&r2.l.length===1&&/^🏊활동/.test(r2.l[0])&&r2.k==='활동 끝날 때 비 와요',JSON.stringify(r2));
@@ -49,7 +49,9 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     await p.evaluate(()=>__wx.closeSheet());
     // 편집 화면: 접는 칸 · 시간 넣으면 알림 30분 전
     await p.evaluate(()=>__wx.openStampReg('2026-10-14','s_sw','day'));await p.waitForTimeout(400);
-    T('스티커 편집: 활동 칸 (이미 정한 활동은 펼쳐짐 · 19:00 ~ 20:00)',await p.evaluate(()=>!!document.getElementById('srAS')&&/19:00 ~ 20:00/.test(document.querySelector('.actf').innerText)));
+    T('스티커 편집: 상세 조건은 접혀 있고 요약에 활동 시각',await p.evaluate(()=>!document.getElementById('srAS')&&/🎒 오후 7시/.test(document.querySelector('.srmore').innerText)));
+    await p.evaluate(()=>document.querySelector('#page [data-act="sr-more"]').click());await p.waitForTimeout(300);
+    T('상세 조건 더보기 → 활동 칸 (이미 정한 활동은 펼쳐짐 · 오후 7시 ~ 오후 8시)',await p.evaluate(()=>!!document.getElementById('srAS')&&/오후 7시 ~ 오후 8시/.test(document.querySelector('.actf').innerText)));
     await p.evaluate(()=>{const s=document.getElementById('srAS');s.value='18:30';s.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(300);
     T('시작을 바꾸면 길이 그대로 끝도 (18:30 ~ 19:30) · 알림 18:00 미리 채움',await p.evaluate(()=>document.getElementById('srAE').value==='19:30'&&!!document.getElementById('srAt0')&&document.getElementById('srAt0').value==='18:00'));
     await p.evaluate(()=>document.querySelector('[data-act="sr-save"]').click());await p.waitForTimeout(400);
@@ -62,25 +64,28 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     const f=await p.evaluate(()=>{const m=__wx.S.family[0];return {act:m.sdefs[0].act,stk:m.stk||{},now:__wx.famActNow(m,Date.now())};});
     T('예전 가족 활동(요일) → 요일 반복 + 활동으로 옮김',f.act&&f.act.s==='16:00'&&await p.evaluate(()=>{const x=__wx.S.family[0].sdefs[0];return x.rep==='dow'&&x.days.join()==='1,3,5';}));
     T('지난 월·금(끝난 날)은 자동 완료 · 오늘은 아직',(f.stk['2026-10-12']||[]).includes('m_pi')&&(f.stk['2026-10-09']||[]).includes('m_pi')&&!(f.stk['2026-10-14']||[]).includes('m_pi'),JSON.stringify(f.stk));
-    T('지금(16:30) 상태: 피아노 중 · 17:00 끝',!!f.now&&f.now[1]==='피아노 중'&&/17:00 끝/.test(f.now[2]),JSON.stringify(f.now));
+    T('지금(16:30) 상태: 피아노 중 · 17:00 끝',!!f.now&&f.now[1]==='피아노 중'&&/오후 5시 끝/.test(f.now[2]),JSON.stringify(f.now));
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(500);
     const card=await p.evaluate(()=>document.querySelector('.now.fams .nc:not(.w)').innerText.replace(/\s+/g,' '));
     T('가족 카드: 피아노 중 (이름) · 날씨는 "활동 끝날 때 비 · 우산"',/피아노 중/.test(card)&&/활동/.test(card)&&/비 와요/.test(card),card);
     await p.evaluate(()=>document.querySelector('[data-act="fam-mancal"]').click());await p.waitForTimeout(500);
     T('달력: 앞으로 깔릴 날(16일 금)은 흐린 피아노',await p.evaluate(()=>{const e=document.querySelector('#vcsl [data-k="2026-10-16"] .stp .se');return !!e&&/opacity/.test(e.getAttribute('style')||'');}));
     await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-12"]').click());await p.waitForTimeout(500);
-    T('지난 날 창: 피아노 완료(켜짐) · 시각 표시',await p.evaluate(()=>{const e=document.querySelector('#sheet .mstk [data-id="m_pi"]');return e.classList.contains('on')&&/16:00/.test(e.innerText);}));
+    T('지난 날 창: 피아노 완료(켜짐) · 시각 표시',await p.evaluate(()=>{const e=document.querySelector('#sheet .mstk [data-id="m_pi"]');return e.classList.contains('on')&&/오후 4시/.test(e.innerText);}));
     await p.evaluate(()=>{const o=document.querySelector('#sheet .mstk [data-id="m_pi"]');o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();});await p.waitForTimeout(400);
     T('안 간 날: 눌러서 풀면 다시 안 채움',await p.evaluate(()=>{const m=__wx.S.family[0];__wx.actAuto();return !((m.stk||{})['2026-10-12']||[]).includes('m_pi');}));
     // 편집: 양치에 활동 넣기 (요일 · 시간)
-    await p.evaluate(()=>{const e=document.querySelector('#sheet .mstk [data-id="m_t"]');e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:5,clientY:5}));});await p.waitForTimeout(700);
+    // v0.126 날짜 창엔 그날 깔린 것만 → 양치는 설정 › 에서 고침
+    await p.evaluate(()=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));document.querySelector('#sheet [data-act="mstk-page"]').click();});await p.waitForTimeout(500);
+    await p.evaluate(()=>document.querySelector('#page [data-act="mslot-open"][data-id="m_t"]').click());await p.waitForTimeout(500);
+    await p.evaluate(()=>{const e=document.querySelector('#page [data-act="sr-more"]');if(e)e.click();});await p.waitForTimeout(300);
     const tap=sel=>p.evaluate(sel=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const o=document.querySelector(sel);o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();},sel);
     T('길게 → 스티커 고치기 화면 (활동 스위치)',await p.evaluate(()=>!!document.getElementById('srActOn')&&!document.getElementById('srActOn').checked));
     await tap('#page [data-act="sr-rep"][data-v="dow"]');await p.waitForTimeout(200);
     await p.evaluate(()=>{document.querySelectorAll('#page [data-act="sr-day"].on').forEach(b=>b.click());});await p.waitForTimeout(200);
     await tap('#page [data-act="sr-day"][data-v="2"]');await p.waitForTimeout(200);
     await p.evaluate(()=>{const c=document.getElementById('srActOn');c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(300);
-    T('스위치 켜면 펼쳐지고 시간 · 위치 (안 바꿔도 적용 · 알림 30분 전)',await p.evaluate(()=>!!document.getElementById('srAS')&&/✅ 16:00 ~ 17:00/.test(document.querySelector('.actf').innerText)&&!!document.getElementById('srAt0')&&document.getElementById('srAt0').value==='15:30'));
+    T('스위치 켜면 펼쳐지고 시간 · 위치 (안 바꿔도 적용 · 알림 30분 전)',await p.evaluate(()=>!!document.getElementById('srAS')&&/✅ 오후 4시 ~ 오후 5시/.test(document.querySelector('.actf').innerText)&&!!document.getElementById('srAt0')&&document.getElementById('srAt0').value==='15:30'));
     await p.evaluate(()=>{const s=document.getElementById('srAS');s.value='18:00';s.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(300);
     await tap('#page [data-act="sr-save"]');await p.waitForTimeout(400);
     T('저장: 화요일 반복 · 활동 18:00 ~ 19:00',await p.evaluate(()=>{const x=__wx.S.family[0].sdefs[1];return x.rep==='dow'&&x.days.join()==='2'&&x.act&&x.act.s==='18:00'&&x.act.e==='19:00';}),await p.evaluate(()=>JSON.stringify(__wx.S.family[0].sdefs[1])));

@@ -13,6 +13,7 @@
   const keyD = ms => { const k = kst(ms); return `${k.y}${p2(k.mo)}${p2(k.d)}`; };
   const keyH = ms => { const k = kst(ms); return `${k.y}${p2(k.mo)}${p2(k.d)}${p2(k.h)}`; };
   const hm = ms => { const k = kst(ms); return `${p2(k.h)}:${p2(k.mi)}`; };
+  const hm12 = ms => { const k = kst(ms), h = k.h % 12 || 12; return `${k.h < 12 ? '오전' : '오후'} ${k.mi ? `${h}:${p2(k.mi)}` : `${h}시`}`; };   // 화면 글자: 12시간제 (정각은 "오후 7시")
   const H = 3600000;
   const G10 = v => v == null ? 0 : v <= 30 ? 1 : v <= 80 ? 2 : v <= 150 ? 3 : 4;
   const G25 = v => v == null ? 0 : v <= 15 ? 1 : v <= 35 ? 2 : v <= 75 ? 3 : 4;
@@ -260,7 +261,7 @@
   function actCards(home, acts, now) {
     return (acts || []).filter(a => a && a.e > a.s).map(a => {
       const R = a.raw || home, v = at(R, a.e), v0 = at(R, a.s), past = now != null && now >= a.e, gone = now != null && now >= a.s;
-      const x = Object.assign({ l: `${a.ic || ''}${a.n} ${hm(a.e)}`, p: a.p || '', sk: sky(v, a.e), tp: v ? v.tp : null, d: !v ? '예보 없음' : wet(v) ? `${snowy(v) ? '눈' : '비'} ${v.pop}%` : `체감 ${feel(v.tp, v.ws)}°`, hot: wet(v) && !past, past, act: 1 }, wearOf(v) || {}, a.q ? { q: a.q } : {});
+      const x = Object.assign({ l: `${a.ic || ''}${a.n} ${hm12(a.e)}`, p: a.p || '', sk: sky(v, a.e), tp: v ? v.tp : null, d: !v ? '예보 없음' : wet(v) ? `${snowy(v) ? '눈' : '비'} ${v.pop}%` : `체감 ${feel(v.tp, v.ws)}°`, hot: wet(v) && !past, past, act: 1 }, wearOf(v) || {}, a.q ? { q: a.q } : {});
       const w1 = !past && wet(v), w0 = !gone && wet(v0);
       return { a, x, ms: a.e, v: past ? null : v, w: w1 || w0 ? { n: a.n, when: w0 ? '갈 때' : '끝날 때', sn: snowy(w0 ? v0 : v) } : null };
     });
@@ -312,11 +313,11 @@
       else { i = (ve || vs).sky >= 4 ? '☁️' : '⛅'; h = '무난한 날씨예요'; hs = '무난해요'; }
     }
     // q: 그 줄을 누르면 열 날씨 페이지 검색어 (출근 = 집, 퇴근 = 직장)
-    const row = (l, ms, pl, v, sq) => Object.assign(v ? { l: `${l} ${hm(ms)}`, p: pl || '', i: icon(v), tp: v.tp, d: desc(v), pop: v.pop, pcp: v.pcp, ws: v.ws, reh: v.reh, tag: wet(v) ? (snowy(v) ? '조심' : '우산') : '' } : { l: `${l} ${hm(ms)}`, p: pl || '', i: '', tp: null, d: '예보 없음' }, sq ? { q: sq } : {});
+    const row = (l, ms, pl, v, sq) => Object.assign(v ? { l: `${l} ${hm12(ms)}`, p: pl || '', i: icon(v), tp: v.tp, d: desc(v), pop: v.pop, pcp: v.pcp, ws: v.ws, reh: v.reh, tag: wet(v) ? (snowy(v) ? '조심' : '우산') : '' } : { l: `${l} ${hm12(ms)}`, p: pl || '', i: '', tp: null, d: '예보 없음' }, sq ? { q: sq } : {});
     const place = s => String(s || '').split(' · ').pop();
     const same = place(o.hn) === place(o.wn);   // 집 = 직장 (같은 동네 · 직장 안 정함 · 같은 지역으로 보기) → 칸마다 이름 안 붙임
     const card = (l, ms, v, pl, sq) => {
-      const x = { l: `${l} ${hm(ms)}`, p: same ? '' : place(pl), sk: sky(v, ms), tp: v ? v.tp : null, d: !v ? '예보 없음' : wet(v) ? `${snowy(v) ? '눈' : '비'} ${v.pop}%` : `체감 ${feel(v.tp, v.ws)}°`, hot: wet(v) && !(o.now != null && o.now >= ms), past: o.now != null && o.now >= ms };
+      const x = { l: `${l} ${hm12(ms)}`, p: same ? '' : place(pl), sk: sky(v, ms), tp: v ? v.tp : null, d: !v ? '예보 없음' : wet(v) ? `${snowy(v) ? '눈' : '비'} ${v.pop}%` : `체감 ${feel(v.tp, v.ws)}°`, hot: wet(v) && !(o.now != null && o.now >= ms), past: o.now != null && o.now >= ms };
       return Object.assign(x, wearOf(v) || {}, sq ? { q: sq } : {});
     };
     let c = [card(LS, o.s, vs, o.hn, o.hq), card(LE, o.e, ve, o.wn, o.wq || o.hq)];
@@ -425,5 +426,5 @@
     if (rn >= 0.5) return { i: '☔', sk: 'sky/rain', t: `${t} · 비 ${rn >= 1 ? Math.round(rn) : rn}mm` };
     return { i: '🌡', t };
   }
-  return { naver, pastLine, keyD, keyH, hm, kst, at, day, air, airLine, airNums, commute, dayCard, brief, wfIcon, icon, desc, G10, G25, feel, outfit, sky, skyT, dustOf, dustInfo, dzAt, bring, wearOf, L8, hours, alertK, uvMax };
+  return { naver, pastLine, keyD, keyH, hm, hm12, kst, at, day, air, airLine, airNums, commute, dayCard, brief, wfIcon, icon, desc, G10, G25, feel, outfit, sky, skyT, dustOf, dustInfo, dzAt, bring, wearOf, L8, hours, alertK, uvMax };
 });

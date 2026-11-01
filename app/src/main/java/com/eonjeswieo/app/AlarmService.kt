@@ -45,6 +45,7 @@ class AlarmService : Service() {
             i.putExtra(AlarmActivity.EXTRA_SHIFT, if (r.col.isNotEmpty()) r.shiftName else "")
             i.putExtra(AlarmActivity.EXTRA_SN_MAX, r.snMax)
             i.putExtra(AlarmActivity.EXTRA_SN_COUNT, r.snCount)
+            if (r.msg.isNotEmpty()) i.putExtra(AlarmActivity.EXTRA_MSG, r.msg)
             if (r.wx == 1) {
                 i.putExtra(AlarmActivity.EXTRA_WXQ, r.wxq)
                 i.putExtra(AlarmActivity.EXTRA_WXP, r.wxp)

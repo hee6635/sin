@@ -30,6 +30,7 @@ class AlarmActivity : Activity() {
         const val EXTRA_SN_COUNT = "snCount" // 지금까지 다시 울린 횟수
         const val EXTRA_WXQ = "wxq"        // 출퇴근 날씨: 새로 물어볼 주소 (없으면 날씨 카드 없음)
         const val EXTRA_WXP = "wxp"        // 출퇴근 날씨: 인터넷이 안 될 때 쓸 예비 문구
+        const val EXTRA_MSG = "msg"        // v0.126 이름 아래 문구 한 줄 (근무 · 할 일 · 요청)
         private const val CARD_MS = 10_000L
     }
 
@@ -248,6 +249,20 @@ class AlarmActivity : Activity() {
         val chipLp = lp(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         chipLp.topMargin = dp(24)
         root.addView(chipRow, chipLp)
+        val msg = intent.getStringExtra(EXTRA_MSG) ?: ""
+        if (msg.isNotBlank()) {   // v0.126 문구 한 줄 (작게)
+            val mv = TextView(this)
+            mv.text = msg.take(60)
+            mv.textSize = 15f
+            mv.setTextColor(ink)
+            mv.alpha = 0.78f
+            mv.gravity = Gravity.CENTER
+            mv.maxLines = 2
+            mv.setPadding(dp(28), 0, dp(28), 0)
+            val ml = lp(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            ml.topMargin = dp(14)
+            root.addView(mv, ml)
+        }
 
         val mid = android.widget.Space(this)
         root.addView(mid, LinearLayout.LayoutParams(1, 0, 1.4f))

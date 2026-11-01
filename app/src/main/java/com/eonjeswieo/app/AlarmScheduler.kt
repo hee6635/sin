@@ -35,14 +35,15 @@ class Ring(
     val ico: String = "",   // 이름 앞 아이콘(☀️ 주간 · 🌙 야간 …)
     val wx: Int = 0,        // 1 = 끄기를 누르면 출퇴근 날씨 카드
     val wxq: String = "",   // 날씨를 새로 물어볼 서버 주소 (앱이 만들어 줌)
-    val wxp: String = ""    // 인터넷이 안 될 때 쓸 예비 날씨 문구(JSON, 앱이 가진 예보로 미리 만든 것)
+    val wxp: String = "",   // 인터넷이 안 될 때 쓸 예비 날씨 문구(JSON, 앱이 가진 예보로 미리 만든 것)
+    val msg: String = ""    // v0.126 끄기 화면 문구 한 줄 (근무 · 할 일 · 근무 요청 …, 앱이 미리 만듦)
 ) {
     fun toJson(): JSONObject = JSONObject()
         .put("id", id).put("at", at).put("label", label).put("shift", shift)
         .put("sound", sound).put("vib", vib).put("shiftName", shiftName)
         .put("vol", vol).put("ramp", ramp).put("tone", tone)
         .put("snMin", snMin).put("snMax", snMax).put("snCount", snCount).put("col", col).put("ico", ico)
-        .put("wx", wx).put("wxq", wxq).put("wxp", wxp)
+        .put("wx", wx).put("wxq", wxq).put("wxp", wxp).put("msg", msg)
 
     companion object {
         fun from(o: JSONObject) = Ring(
@@ -51,7 +52,8 @@ class Ring(
             o.optInt("vol", 100).coerceIn(0, 100), o.optBoolean("ramp", false), o.optString("tone", ""),
             o.optInt("snMin", 5).coerceIn(1, 60), o.optInt("snMax", 3), o.optInt("snCount", 0),
             o.optString("col", "").let { if (Regex("^#[0-9a-fA-F]{6}$").matches(it)) it else "" }, o.optString("ico", "").take(4),
-            o.optInt("wx", 0), o.optString("wxq", "").take(400), o.optString("wxp", "").take(4000)
+            o.optInt("wx", 0), o.optString("wxq", "").take(400), o.optString("wxp", "").take(4000),
+            o.optString("msg", "").take(80)
         )
     }
 }
@@ -187,7 +189,7 @@ object AlarmScheduler {
         list.add(
             Ring(
                 "snooze_$at", at, r.label, r.shift, r.sound, r.vib, r.shiftName,
-                r.vol, r.ramp, r.tone, r.snMin, r.snMax, r.snCount + 1, r.col, r.ico, r.wx, r.wxq, r.wxp
+                r.vol, r.ramp, r.tone, r.snMin, r.snMax, r.snCount + 1, r.col, r.ico, r.wx, r.wxq, r.wxp, r.msg
             )
         )
         writeKey(ctx, KEY_SNOOZE, list)
@@ -250,7 +252,8 @@ object AlarmScheduler {
             due.any { it.sound }, due.any { it.vib }, first.shiftName,
             due.maxOf { it.vol }, due.all { it.ramp }, due.firstOrNull { it.tone.isNotEmpty() }?.tone ?: "",
             first.snMin, first.snMax, first.snCount, first.col, first.ico,
-            due.firstOrNull { it.wx == 1 }?.wx ?: 0, due.firstOrNull { it.wx == 1 }?.wxq ?: "", due.firstOrNull { it.wx == 1 }?.wxp ?: ""
+            due.firstOrNull { it.wx == 1 }?.wx ?: 0, due.firstOrNull { it.wx == 1 }?.wxq ?: "", due.firstOrNull { it.wx == 1 }?.wxp ?: "",
+            due.firstOrNull { it.msg.isNotEmpty() }?.msg ?: ""
         )
     }
 

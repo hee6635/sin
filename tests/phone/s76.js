@@ -15,10 +15,17 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     // 날짜 창
     await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-14"]').click());await p.waitForTimeout(500);
     const d=await p.evaluate(()=>({t:document.querySelector('#sheet .dft').innerText,strip:!!document.querySelector('#sheet #dstrip .dsi.on'),chips:[...document.querySelectorAll('#sheet .tchips .tchip')].map(x=>x.className.includes('on')),st:document.querySelectorAll('#sheet .mstk button').length,n:__wx.S.family[0].sdefs.length,on:document.querySelectorAll('#sheet .mstk button.on').length}));
-    T('날짜 창: 제목 · 날짜 띠 · 학교 칩 켜짐 · 스티커판(판 + 만들기) · 붙인 2개',/10월 14일/.test(d.t)&&d.strip&&d.chips[0]===true&&d.chips[1]===false&&d.st===d.n+1&&d.on===2,JSON.stringify(d));
+    T('날짜 창: 제목 · 날짜 띠 · 학교 칩 켜짐 · 스티커판(그날 붙인 2개 + ＋ 붙이기)',/10월 14일/.test(d.t)&&d.strip&&d.chips[0]===true&&d.chips[1]===false&&d.st===3&&d.on===2,JSON.stringify(d));
     // 스티커 붙이기
-    await p.evaluate(()=>document.querySelector('#sheet .mstk [data-id="s_read"]').click());await p.waitForTimeout(300);
-    T('스티커 누르면 붙음 (저장 · 칸에도)',await p.evaluate(()=>__wx.S.family[0].stk['2026-10-14'].includes('s_read')&&document.querySelectorAll('#sheet .mstk button.on').length===3));
+    // v0.126 내 방식: ＋ → 붙일 스티커 창 → 고르면 창이 닫히고 옵션(이날만) → 등록하면 반투명으로 깔림 → 누르면 완료
+    await p.evaluate(()=>document.querySelector('#sheet [data-act="man-stk-pick"]').click());await p.waitForTimeout(300);
+    T('＋ → 붙일 스티커 창 (판에 없는 것 + 새로)',await p.evaluate(()=>!!document.querySelector('#pop [data-act="man-stk-place"][data-id="s_read"]')&&!!document.querySelector('#pop [data-act="man-stk-add"]')));
+    await p.evaluate(()=>document.querySelector('#pop [data-act="man-stk-place"][data-id="s_read"]').click());await p.waitForTimeout(400);
+    T('고르면 창 닫히고 옵션 화면 (이날만)',await p.evaluate(()=>!document.querySelector('#pop.open')&&!!document.querySelector('#page .srpg')&&!!document.querySelector('#page [data-act="sr-rep"][data-v="once"].on')));
+    await p.evaluate(()=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));document.querySelector('#page [data-act="sr-save"]').click();});await p.waitForTimeout(500);
+    T('등록 → 날짜 창에 반투명으로 깔림 (아직 안 함)',await p.evaluate(()=>{const e=document.querySelector('#sheet .mstk [data-id="s_read"]');return !!e&&e.classList.contains('todo')&&!(__wx.S.family[0].stk['2026-10-14']||[]).includes('s_read');}));
+    await p.evaluate(()=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const o=document.querySelector('#sheet .mstk [data-id="s_read"]');o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();});await p.waitForTimeout(300);
+    T('스티커 누르면 완료 (저장 · 칸에도)',await p.evaluate(()=>__wx.S.family[0].stk['2026-10-14'].includes('s_read')&&document.querySelectorAll('#sheet .mstk button.on').length===3));
     // 쉬는 날로 바꾸기
     await p.evaluate(()=>document.querySelector('#sheet .tchips [data-v="off"]').click());await p.waitForTimeout(300);
     T('쉬는 날 칩 → 그날만 휴 (달력 칸도)',await p.evaluate(()=>__wx.S.family[0].ov['2026-10-14']==='off'&&!!document.querySelector('#vcsl [data-k="2026-10-14"] .bwrap .badge.r')));
@@ -26,12 +33,13 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     T('다시 학교 → 바꾼 것 없어짐',await p.evaluate(()=>!__wx.S.family[0].ov||!__wx.S.family[0].ov['2026-10-14']));
     // 새 스티커 만들기 → 그림 고르면 내 스티커 고치기와 같은 화면 (v0.120)
     const tp=sel=>p.evaluate(sel=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const o=document.querySelector(sel);o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();},sel);
-    await p.evaluate(()=>document.querySelector('#sheet [data-act="man-stk-add"]').click());await p.waitForTimeout(400);
+    await p.evaluate(()=>document.querySelector('#sheet [data-act="man-stk-pick"]').click());await p.waitForTimeout(300);
+    await p.evaluate(()=>document.querySelector('#pop [data-act="man-stk-add"]').click());await p.waitForTimeout(400);
     await p.evaluate(()=>document.querySelector('#pop [data-act="icn-pick"]').click());await p.waitForTimeout(400);
     T('＋ 만들기 → 그림 고르면 스티커 고치기 화면 (하루 몇 번 · 얼마나 · 일정 맞춤)',await p.evaluate(()=>!!document.querySelector('#page .srpg [data-act="sr-times"]')&&/일정 맞춤/.test(document.querySelector('#page').innerText)&&__wx.S.family[0].sdefs.length>0));
     await tp('#page [data-act="sr-save"]');await p.waitForTimeout(400);
-    const n2=await p.evaluate(()=>({n:__wx.S.family[0].sdefs.filter(x=>!x.retired).length,b:document.querySelectorAll('#sheet .mstk button').length}));
-    T('저장 → 날짜 창 판에 하나 늘어남',n2.b===n2.n+1&&n2.n===d.n+1,JSON.stringify(n2));
+    const n2=await p.evaluate(()=>({n:__wx.S.family[0].sdefs.filter(x=>!x.retired).length,b:document.querySelectorAll('#sheet .mstk button').length,todo:document.querySelectorAll('#sheet .mstk button.todo').length}));
+    T('저장 → 그날 판에 반투명으로 하나 늘어남',n2.b===5&&n2.todo===1&&n2.n===d.n+1,JSON.stringify(n2));
     T('가족 스티커는 내 스티커판에 안 섞임',await p.evaluate(()=>!__wx.S.stamps.defs.some(x=>/^m_/.test(x.id))));
     // 길게 → 고치기 화면 (이름 · 반복 · 빼기)
     const nid=await p.evaluate(()=>__wx.S.family[0].sdefs.slice(-1)[0].id);

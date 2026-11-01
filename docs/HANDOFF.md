@@ -190,3 +190,14 @@
 - 집 지역까지 나누려면 firestore.rules 의 scheds.wx 키(w · tm)에 h 추가 + 배포가 필요 (안 함).
 - 시험: s83 (15) · fam4e/5e/10e 는 접힌 요청 칸을 먼저 엶.
 - 가족 카드: 그 가족 근무 시간을 모를 때 🔁 대신 그날 근무 동그라미(schBadge) · .cst .st 는 한 줄(flex)
+
+## v0.126 — 단순하게 · 12시간제 · 알람 문구 · 유찬 스티커 내 방식
+- 12시간제: t12(v,short) "오후 7:30" / 정각 "오후 7시". wxHm · 근무 시간 · 상태 · 활동 · 가족 일정 · 근무 시간 목록 · fmtTm12 모두 t12. wxcore hm12 → 날씨 칸 이름 "출근 오전 7시" (서버 시험 2곳 맞춤 · sync-app).
+- 알람 탭 위쪽 큰 카드 → 한 줄 .anext1.
+- 알람 끄기 화면 문구: alarmMsg(x) → setAlarms 의 msg (요청 > 오늘 메모 > 포스트잇 남은 할 일 > 어제 인계 > 근무 흐름 > 응원). Ring.msg · EXTRA_MSG · AlarmActivity 이름 아래 한 줄. 알람 편집 "💬 알람 화면 한 줄" 스위치(S.alarmMsg, 전체).
+- 스티커 등록: srMoreHtml — 기간 · 공휴일 · 토일 · 가족 · 활동은 "상세 조건 더보기 ▾" (stDraft.more, 접힌 줄에 요약).
+- 안내 줄 처음만: S.hints{wxweb,fep,mstk} · 내 메모 3개 전까지만 메모 안내 줄 · 가족 메모 무료 횟수는 3건 이하일 때만.
+- 유찬 스티커: 날짜 창엔 그날 깔린 것만(안 함 반투명 todo) · ＋ → openManStkPick → man-stk-place → openManStampReg(…,place) (규칙 없던 스티커는 "이날만") · 새로 만들기도 그날 "이날만".
+- 오늘 색: 동그라미 모양도 (html[data-tdc] 테두리 + 10% 바탕) · 띠 모양 고르기는 칸 채우기 전용.
+- 유찬 · 가족 달력 [오늘] (vcNavHtml).
+- 시험: s84 (12) · s76 · s77 · s78 새 흐름 · 12시간제.
