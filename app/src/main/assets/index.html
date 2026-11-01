@@ -1550,7 +1550,9 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .nowwrap .nc.me2{padding:9px 11px}.nowwrap .nc.me2 .wxcard{margin-top:8px;padding:8px 10px}.nowwrap .nc.me2 .wxcard .wa img{width:34px;height:34px}.nowwrap .nc.me2 .wxcard .wa b{font-size:16.5px}.nowwrap .nc.me2 .wxcard .wa small{font-size:12px}
 .nowwrap .nc.me2 .wxcard .wb{margin-top:6px;padding:3px 8px}.nowwrap .nc.me2 .wxcard .wb img{width:28px;height:28px}.nowwrap .nc.me2 .wxcard .wb em{font-size:18px}
 @media (min-width:600px){.now.fams{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}}
-.now.fams:has(.fc2){align-items:stretch}.nc.fc2{position:relative}.nc.fc2 .bar{margin-top:6px}.nc.fc2:not(.w) .bar{background:rgba(127,127,127,.18)}
+.now.fams:has(.fc2){align-items:stretch}.nc.fc2{position:relative}
+.nc.fc2 .ctop{display:flex;align-items:center;gap:8px;min-width:0;padding-right:16px}.nc.fc2 .ctop>i{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font-style:normal;font-size:12px;color:#fff;font-weight:800;overflow:hidden}.nc.fc2 .ctop>i img{width:100%;height:100%;object-fit:cover;display:block}
+.nc.fc2 .cst{min-width:0;flex:1}.nc.fc2 .cst small{display:block;font-size:11.5px;font-weight:700;color:var(--muted);line-height:1.2}.nc.fc2 .cst .st{margin:0;padding-left:0;font-size:17px;line-height:1.25}.nc.fc2 .sm{margin-top:4px}.nc.fc2 .bar{margin-top:6px}.nc.fc2:not(.w) .bar{background:rgba(127,127,127,.18)}
 .mwx{margin-top:8px;border-radius:12px;padding:5px 4px;background:rgba(127,127,127,.09)}.nc.w .mwx{background:rgba(255,255,255,.55)}
 .mwx .mcs{display:flex;justify-content:space-around;gap:2px}
 .mwx .mc{display:flex;flex-direction:column;align-items:center;min-width:0;line-height:1.15}
@@ -3305,12 +3307,12 @@ function fitStz(root){
     if(h1)h1.textContent=h1.dataset.t2||t;   // 스티커 크기는 두 글자 이름 기준 (전부 보이는 이름 때문에 스티커가 작아지지 않게)
     const ov=dn.clientWidth>0?(lastE.offsetLeft+lastE.offsetWidth)-(dn.clientWidth-padR):0;
     if(h1)h1.textContent=t;   // 자리 계산은 옮김 · 배율(모양 조정)을 빼고 원래 자리로 (스티커를 조금 옆으로 옮겨도 아래로 밀리지 않게)
-    if(ov>.5)need=Math.max(need,ov/Math.max(1,stp.children.length));
+    if(ov>1.5)need=Math.max(need,(ov-1)/Math.max(1,stp.children.length));   // v0.121 1.5px 까지는 오른쪽 여백(5px) 안이라 안 보임 (이모지 폭이 반올림으로 1px 튐)
   });return need;};
   let cur=probe();const orig=cur;
-  for(let i=0;i<6;i++){
+  for(let i=0;i<14;i++){   // v0.121 이모지 글자 크기는 딱 비례하지 않아서(몇 번 줄여도 조금 남음) 최소 0.4px 씩은 줄여 감
     const need=measure();if(need<=0)return;
-    const nx=Math.floor((cur-need-.3)*10)/10;
+    const nx=Math.min(Math.floor((cur-need-.3)*10)/10,Math.floor((cur-.4)*10)/10);
     if(nx<9){rt.style.removeProperty('--stz');return;}   // 9px 아래로는 안 줄임 (그래도 안 들어가면 원래대로 이름을 뺌)
     cur=nx;rt.style.setProperty('--stz',cur+'px');
   }
@@ -3370,7 +3372,7 @@ function fitDn(root,keepStz){
   const over=dn=>{
     const last=dn.lastElementChild;if(!last)return false;
     const padR=parseFloat(getComputedStyle(dn).paddingRight)||0;
-    return dn.clientWidth>0&&last.offsetLeft+last.offsetWidth>dn.clientWidth-padR+.5;   // 모양 조정의 옮김 · 배율은 빼고 원래 자리로 잼
+    return dn.clientWidth>0&&last.offsetLeft+last.offsetWidth>dn.clientWidth-padR+1.5;   // 모양 조정의 옮김 · 배율은 빼고 원래 자리로 잼
   };
   [...(root||document).querySelectorAll('.cell .dn>.stp')].forEach(stp=>{
     const dn=stp.parentNode,h1=dn.querySelector('.h1');
@@ -4911,8 +4913,8 @@ function renderFamily(){
     </div>`;
   // v0.121 가족이 있으면 나 · 가족 카드 모두 같은 크기 · 같은 모양: 상태 · 막대 · 작은 날씨 줄 · (비 · 미세먼지면) 결론 한 줄
   const pbar=v=>v!==undefined&&v!==null?`<div class="bar"><i style="width:${Math.round(v*100)}%"></i></div>`:'';
-  const meCard2=`<div class="nc w fc2" ${isHost?'data-act="fam-mycal"':''}><div class="nwho">${isHost?'<i style="background:#1d2330">나</i>':'<i style="background:#1d2330">근</i>근무자'}</div><div class="st">${st.e?ico(st.e)+' ':''}${esc(st.t)}</div><div class="sm">${esc(st.sub||st.left||'')}</div>${pbar(st.prog)}${myWx?wxMiniHtml(myWx,'data-act="wx-fam" data-u="me"'):''}</div>`;
-  const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);const fw=wxOn()?famNowWx(m,now):null;return `<div class="nc fc2 ${l==='자는 중'?'sl':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-mancal" data-id="${m.id}" data-hold="fam"`}>${m.kind==='sched'?'':`<span class="mced" data-act="fam-edit" data-id="${m.id}" aria-label="고치기">✏️</span>`}<div class="nwho">${famAv(m,i)}${esc(m.name)}</div><div class="st">${e?ico(e)+' ':''}${esc(l)}</div><div class="sm">${esc(sub)}</div>${pbar(famProg(m,now))}${fw?wxMiniHtml(fw,`data-act="wx-fam" data-u="${esc(wxMemKey(m))}"`):''}</div>`;}).join('');
+  const meCard2=`<div class="nc w fc2" ${isHost?'data-act="fam-mycal"':''}><div class="ctop"><i style="background:#1d2330">${isHost?'나':'근'}</i><div class="cst">${isHost?'':'<small>근무자</small>'}<div class="st">${st.e?ico(st.e)+' ':''}${esc(st.t)}</div></div></div><div class="sm">${esc(st.sub||st.left||'')}</div>${pbar(st.prog)}${myWx?wxMiniHtml(myWx,'data-act="wx-fam" data-u="me"'):''}</div>`;
+  const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);const fw=wxOn()?famNowWx(m,now):null;return `<div class="nc fc2 ${l==='자는 중'?'sl':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-mancal" data-id="${m.id}" data-hold="fam"`}>${m.kind==='sched'?'':`<span class="mced" data-act="fam-edit" data-id="${m.id}" aria-label="고치기">✏️</span>`}<div class="ctop">${famAv(m,i)}<div class="cst"><small>${esc(m.name)}</small><div class="st">${e?ico(e)+' ':''}${esc(l)}</div></div></div><div class="sm">${esc(sub)}</div>${pbar(famProg(m,now))}${fw?wxMiniHtml(fw,`data-act="wx-fam" data-u="${esc(wxMemKey(m))}"`):''}</div>`;}).join('');
   const cheerBtns='';   // v0.106: 응원 버튼 없앰
   // 이번 주 시간표
   // 가족 시간표: 오늘 가운데(앞뒤 30일) 또는 주 단위(앞뒤 4주) · 옆으로 쓸어서 넘김 · 오늘 열은 위에서 아래까지 하나의 네모 박스
@@ -5421,6 +5423,7 @@ function renderPiEd(focus){
     <div class="pi-tools">
       ${piEd.isNew?`<div class="hseg"><button class="${isList?'on':''}" data-act="pi-type" data-v="list">☑ 할 일</button><button class="${isList?'':'on'}" data-act="pi-type" data-v="note">📝 메모</button></div>`:''}
       ${own&&!famView()?`<div class="hseg"><button class="${n.shared?'':'on'}" data-act="pi-share" data-v="0">🔒 나만</button><button class="${n.shared?'on fam':''}" data-act="pi-share" data-v="1">♥ 가족</button></div>`:''}
+      ${own&&n.shared&&S.link&&!n.srv&&(piEd.isNew||n.cnt)?`<div class="usage-hint" style="width:100%;text-align:center">무료 ${famRemain()}건 남음 · 가족 포스트잇은 새로 붙일 때만 1건</div>`:''}
       ${own&&!n.shared?`<div class="pi-cols">${PI_COL.map(c=>`<button class="c-${c} ${n.color===c?'on':''}" data-act="pi-color" data-v="${c}" aria-label="색"></button>`).join('')}</div>`:''}
       ${own?`<button class="pi-tb ${n.repeat?'on':''}" data-act="pi-repeat">🔁 매달 반복</button>`:''}
       ${!piEd.isNew&&piDone(n)?'<button class="pi-tb" data-act="pi-tear">📤 떼기</button>':''}
@@ -5438,6 +5441,7 @@ function piCommit(){
   if(piEd.isNew){
     if(n.type==='note'?!n.text.trim():!(n.lines.length||n.title)){toast('내용을 적어주세요');return false;}
     if(n.type==='list'&&!n.title&&!n.lines.length)return false;
+    if(n.shared&&S.link){if(famRemain()<=0){famLimitSheet();return false;}n.cnt=1;}
     n.t=Date.now();
     const mk=boardKey();(S.board[mk]=S.board[mk]||[]).push(n);
     if(n.shared&&!S.link)pushEvent(other(),'board',mk,`🗒 ${cur.m+1}월 포스트잇: "${piLabel(n).slice(0,24)}"`);
@@ -8233,7 +8237,8 @@ document.addEventListener('click',e=>{
     case 'pi-type':{const n=piTarget();if(!n)break;piPull();n.type=t.dataset.v;if(n.type==='list'&&!n.lines.length&&n.text.trim()){n.text.split('\n').map(x=>x.trim()).filter(Boolean).forEach(x=>n.lines.push({id:uid(),text:x.slice(0,60),done:false,doneBy:''}));n.text='';}renderPiEd(true);break;}
     case 'pi-share':{let n=piTarget();if(!n)break;piPull();
       if(n.srv){if(t.dataset.v==='1')break;n=piUnshare(n);if(!n)break;piEd={isNew:false,id:n.id};renderPiEd();break;}   // 가족 → 나만: 서버에서 내 폰으로 되돌림
-      n.shared=t.dataset.v==='1';if(!piEd.isNew){save();if(n.shared&&!S.link)pushEvent(other(),'board',boardKey(),`🗒 ${cur.m+1}월 포스트잇: "${piLabel(n).slice(0,24)}"`);if(n.shared&&S.link)famSyncBoardSoon();}renderPiEd();break;}
+      if(t.dataset.v==='1'&&S.link&&!n.shared){if(famRemain()<=0){famLimitSheet();break;}n.cnt=1;}   // v0.121 가족 포스트잇: 새로 붙일 때 1건
+      n.shared=t.dataset.v==='1';if(!n.shared)delete n.cnt;if(!piEd.isNew){save();if(n.shared&&!S.link)pushEvent(other(),'board',boardKey(),`🗒 ${cur.m+1}월 포스트잇: "${piLabel(n).slice(0,24)}"`);if(n.shared&&S.link)famSyncBoardSoon();}renderPiEd();break;}
     case 'pi-color':{const n=piTarget();if(!n)break;piPull();n.color=t.dataset.v;if(!piEd.isNew)save();renderPiEd();break;}
     case 'pi-repeat':{const n=piTarget();if(!n)break;piPull();n.repeat=!n.repeat;if(!piEd.isNew)piSave(n);renderPiEd();toast(n.repeat?'🔁 다음 달부터 매달 자동으로 붙어요':'매달 반복을 껐어요');break;}
     case 'pi-react':{const n=piTarget();if(!n)break;piPull();n.reacts=n.reacts||{};const r=role();n.reacts[r]=n.reacts[r]===t.dataset.v?'':t.dataset.v;piSave(n);renderPiEd();break;}
@@ -9930,7 +9935,7 @@ const famNameOf=uid=>{const m=((S.fam2&&S.fam2.members)||[]).find(x=>x.uid===uid
 const tsMs=v=>v&&v.toMillis?v.toMillis():0;
 function famLimitSheet(){
   openSheet(`${sheetHead('무료 메시지를 다 썼어요')}
-    <div class="hint">가족 메모와 근무 요청은 처음 ${FAM_FREE}건까지 무료예요.</div>
+    <div class="hint">가족 메모 · 근무 요청 · 가족 포스트잇(새로 붙일 때)은 합쳐서 처음 ${FAM_FREE}건까지 무료예요.</div>
     <button class="btn ghost" style="width:100%" data-act="close">닫기</button>`);
 }
 // ---- 가족 메모 올리기 · 받기
@@ -10215,7 +10220,8 @@ function piSrvPush(n){
 async function piSrvCreate(n,mk){   // 내 폰의 가족 포스트잇 → 서버로 옮김 (올라가면 폰 쪽 원본은 지움)
   const me=piMe(),id=me+'_'+n.id,tgt=piShape(n,null,mk);
   const {F,db}=await famReady();if(!S.link||S.link.uid!==me)return;
-  await F.setDoc(F.doc(db,'households',S.link.hid,'board',id),{...tgt,ua:F.serverTimestamp()});
+  if(n.cnt){const b=F.writeBatch(db);b.set(F.doc(db,'households',S.link.hid,'board',id),{...tgt,ua:F.serverTimestamp()});b.update(famMember(F,db,S.link.hid,me),{sent:F.increment(1)});await b.commit();}   // 새로 붙인 가족 포스트잇 = 무료 횟수 1건
+  else await F.setDoc(F.doc(db,'households',S.link.hid,'board',id),{...tgt,ua:F.serverTimestamp()});   // 매달 반복 · 가족방 들어오기 전에 쓴 것은 횟수 없이
   if(!S.link)return;
   S.fam2.board[id]=S.fam2.board[id]||tgt;
   S.board[mk]=(S.board[mk]||[]).filter(x=>x.id!==n.id);
@@ -10495,7 +10501,7 @@ function renderLinkPage(){
     <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기</div><span class="muted">${esc(L.name)} ›</span></div>
       <div class="prow tap" data-act="link-move"><div class="pl2">다른 가족방으로 옮기기<small>새 초대 코드로 옮겨요</small></div><span class="muted">›</span></div>
       <div class="prow danger-row" data-act="link-leave">${alone?'가족방에서 나가기 (나 혼자라 방이 없어져요)':'가족방에서 나가기'}</div></div>
-    <div class="hint" style="padding:10px 16px;line-height:1.7">가족방엔 방장이 없어요. 누구나 초대하고 나갈 수 있고, 마지막 사람이 나가면 방이 없어져요. 가족을 빼려면 가족 과반이 찬성해야 해요 (30일 넘게 안 들어온 사람 · 내가 초대한 지 하루가 안 된 사람은 바로 뺄 수 있어요).<br>가족 메모(♥)와 근무 요청은 날짜를 눌러 주고받아요 · 처음 10건은 무료예요.</div>`;
+    <div class="hint" style="padding:10px 16px;line-height:1.7">가족방엔 방장이 없어요. 누구나 초대하고 나갈 수 있고, 마지막 사람이 나가면 방이 없어져요. 가족을 빼려면 가족 과반이 찬성해야 해요 (30일 넘게 안 들어온 사람 · 내가 초대한 지 하루가 안 된 사람은 바로 뺄 수 있어요).<br>가족 메모(♥)와 근무 요청은 날짜를 눌러 주고받아요 · 가족 메모 · 근무 요청 · 가족 포스트잇(새로 붙일 때)은 합쳐서 처음 10건 무료예요.</div>`;
   }
   openPage(`${pageHead('가족 연결')}<div class="pg-b">${body}</div>`,'link');
 }
