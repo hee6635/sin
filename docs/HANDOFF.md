@@ -142,3 +142,8 @@
 - 날씨: wxcore commute(o.ls/le/lb 이름표: 학생 = 등원 · 하원 · 등하원) · brief 도. wxMemWin/wxMemWork 가 직접 추가한 가족도 (famTimes · loc). wxCodes 에 가족 위치. famWx(m,d) · 가족 카드 wxFamChip = 다음 칸 날씨 늘 · 앞으로 비면 "하원 때 비 · 우산" (famActWx 는 교대 가족만).
 - 가족 시간표 · 위젯 자료도 종류 동그라미/글자 · 색.
 - 시험: s78 (17) · s35 · s76 · s77 고침.
+
+## v0.118 (2026-11-01) — 반복 메모 · 💡 이럴 땐 이렇게
+- 반복 메모 S.rmemos [{id,text,md(1~28 · -1 말일 · -2 · -3),sh:[근무],miss:'skip'|'next',from,color,todo,time,al,done:[날짜],skip:[날짜]}] · 미리 만들지 않음: rmTarget(그 달 날짜) · rmemoOn(k) → visibleMemos 에 'r:'+id 가짜 메모로 섞임 (칸 · 날짜 창 · 위젯). 알림은 70일치 r_{id}_{날짜}.
+- 메모 자세히: 🔁 반복 줄(md-rep → openRrPick) · 반복이면 가족에게 칸 숨김 · 저장하면 그 날 메모 대신 틀로 · 반복 메모를 누르면 틀 고치기 · 길게 = 이 날만 빼기 / 고치기 / 그만하기 · 할 일 체크는 done[날짜].
+- 💡 TIPS 배열(묶음 8 · 팁 36) · openTipsPage · tipGo('tab:…' 이면 탭, 아니면 그 data-act 를 눌러 열고 pageBack=팁). 기능 바꾸면 TIPS 글도 같이 · s79 가 바로 가기 전부 시험.
