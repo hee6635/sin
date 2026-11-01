@@ -167,3 +167,11 @@
 - actWx 에 rc(지역 코드) · home 인자.
 - 가족 탭 "지금": 가족이 있으면 나 · 가족 카드 모두 같은 크기(.now.fams 2칸 · 600px 이상은 자동 칸) · 같은 모양(.nc.fc2): 상태 · 진행 막대(famProg = famWinOf 안이면) · 작은 날씨 줄 wxMiniHtml(c.c 최대 3칸 + 비 · 미세먼지 · 특보면 결론 한 줄, 누르면 wx-fam). 가족 날씨 자료 famNowWx. 가족이 없으면 내 큰 카드(.now.one .me2) 그대로. 예전 wxFamChip · famActWx 는 가족 탭 카드에서 안 씀.
 - 시험: s80 (7) · s81 (11).
+
+## v0.122 (2026-11-01) — 가족 카드 상태 한 줄 · 가족 포스트잇 횟수 · 스티커 한 줄 · 인앱 브라우저 · 팝업 높이 미리
+- 가족 탭 카드(.fc2): 동그라미(.ctop) 옆에 이름(작게) + 상태.
+- 가족 포스트잇: 새로 붙일 때(piCommit · pi-share 켤 때) n.cnt=1 → piSrvCreate 가 같은 묶음에서 members.sent +1 (무료 10건에 합침). 매달 반복 · 가족방 전에 쓴 것은 횟수 없음. 서버 규칙은 그대로(앱에서만 셈).
+- fitStz: 최소 0.4px 씩 줄임 · 14번까지, 1.5px 까지 넘침은 봐줌(오른쪽 여백 5px 안) → 폭 360 등에서 스티커 둘이 아래 줄로 내려가던 것 고침.
+- InAppWeb.kt: 링크를 커스텀 탭(세션 extra, 라이브러리 없음)으로. AlarmBridge.openUrl · AlarmActivity · WidgetDayActivity. wx-web 은 앱에서 팝업 안 닫음.
+- 스와이프: 전체 화면 아닌 창(날씨 · 스티커 · 업무 메모 팝업)은 옆 판 높이를 재서(st.h0 → st.h1) 미는 만큼 높이도 바꿈. 시험 s82.
+- 시안: design/wx/pop_compare.png (선 구분) · dust_compare.png (✕ 위 · 탭 두 줄).
