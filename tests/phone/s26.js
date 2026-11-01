@@ -42,6 +42,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.click('#pop [data-act="sd-add"]');await p.waitForTimeout(300);
  await p.click('#pop [data-act="sp-pick"][data-id="a"]');await p.waitForTimeout(350);
  await p.click('#page [data-act="sr-rep"][data-v="daily"]');await p.waitForTimeout(150);
+ await p.evaluate(()=>{const e=document.querySelector('#page [data-act="sr-more"]');if(e&&e.getAttribute('aria-expanded')!=='true')e.click();});await p.waitForTimeout(250);
  T('등록 화면: 매일이면 "토 · 일 빼기" 스위치',await p.evaluate(()=>!!document.getElementById('srWknd')));
  await p.click('#page [data-act="sr-rep"][data-v="dow"]');await p.waitForTimeout(150);
  T('요일 방식이면 스위치 숨김',await p.evaluate(()=>!document.getElementById('srWknd')));

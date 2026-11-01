@@ -253,8 +253,8 @@ const ONLY=process.env.ONLY||'';
     const f=k=>al.find(x=>x.id.startsWith(k));
     T('알람 전달: 주간 = 하늘 #a6c6e2 · ☀️ / 야간 = 살구 #e0b8a3 · 🌙 / 매일 = 색 없음',f('a1').col==='#a6c6e2'&&f('a1').ico==='☀️'&&f('a2').col==='#e0b8a3'&&f('a2').ico==='🌙'&&f('a3').col===''&&f('a3').ico==='',JSON.stringify([f('a1'),f('a2'),f('a3')].map(x=>x&&[x.col,x.ico])));
     await p.click('#nav [data-tab="alarm"]');await p.waitForTimeout(400);
-    const r=await p.evaluate(()=>{const n=document.querySelector('.anext');const cards=[...document.querySelectorAll('.acard')];return {next:n&&n.textContent.replace(/\s+/g,' '),nextAc:n&&n.style.getPropertyValue('--ac'),acs:cards.map(c=>c.style.getPropertyValue('--ac')),names:cards.map(c=>(c.querySelector('.acard-n b')||{}).textContent),left:document.querySelectorAll('.acard .aleft').length};});
-    T('맨 위 "다음 알람" 카드: 시각 · 이름 · 남은 시간',!!r.next&&/다음 알람/.test(r.next)&&/후에 울려요/.test(r.next),JSON.stringify(r));
+    const r=await p.evaluate(()=>{const n=document.querySelector('.anext1');const cards=[...document.querySelectorAll('.acard')];return {next:n&&n.textContent.replace(/\s+/g,' '),nextAc:n&&n.style.getPropertyValue('--ac'),acs:cards.map(c=>c.style.getPropertyValue('--ac')),names:cards.map(c=>(c.querySelector('.acard-n b')||{}).textContent),left:document.querySelectorAll('.acard .aleft').length};});
+    T('맨 위 "다음 알람" 한 줄: 날짜 · 오전/오후 시각 · 남은 시간',!!r.next&&/다음 알람/.test(r.next)&&/(오전|오후) \d/.test(r.next)&&/ 후/.test(r.next),JSON.stringify(r));
     T('알람마다 근무 색(주간 · 야간) · 매일은 색 없음 · 이름 굵게(이름 없으면 "야간 알람")',r.acs.filter(Boolean).length===2&&r.names.includes('출근')&&r.names.some(x=>/알람$/.test(x)),JSON.stringify(r));
     T('목록 줄에는 남은 시간 없음(다음 알람 카드에만)',r.left===0,JSON.stringify(r));
     // 근무 종류 색: 파스텔이 맨 앞 · 새로 만들면 안 쓰는 파스텔

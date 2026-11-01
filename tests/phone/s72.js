@@ -44,7 +44,7 @@ const chg=(p,id,v)=>p.evaluate(([id,v])=>{const e=document.getElementById(id);e.
     T('가족(근무표를 올린 사람)이 보낸 연장 → "근무 중 · 23:00 끝"',await p.evaluate(()=>{
       const m={kind:'sched',name:'아빠',sch:{pattern:['주'],anchor:'2026-10-01',types:[{k:'주',name:'주간',rest:false}],overrides:{},tm:{'주':['07:00','19:00']},ot:{'2026-10-12':['07:00','23:00']}}};
       const a=__wx.memberStatus(m,new Date(2026,9,12,10).getTime()),b2=__wx.memberStatus({...m,sch:{...m.sch,ot:{}}},new Date(2026,9,12,10).getTime());
-      return a[1]==='근무 중'&&/23:00 끝/.test(a[2])&&/19:00 끝/.test(b2[2]);}));
+      return a[1]==='근무 중'&&/오후 11시 끝/.test(a[2])&&/오후 7시 끝/.test(b2[2]);}));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 3) 근무 통계: 대근 세 갈래 · 시간 · 연차 · 무급 · 명세서로 맞춘 예상 월급 · 달 넘기기
@@ -99,7 +99,7 @@ const chg=(p,id,v)=>p.evaluate(([id,v])=>{const e=document.getElementById(id);e.
     await p.click('#pop .wxc[data-act="wx-web"] >> nth=1');await p.waitForTimeout(200);
     const u=await p.evaluate(()=>window.__urls[0]||'');
     T('퇴근 줄 → 직장(화성시 동탄구) 네이버 날씨',u.startsWith('https://m.search.naver.com/search.naver?query=')&&decodeURIComponent(u).includes('경기 화성시 동탄구 날씨'),u);
-    await p.evaluate(()=>{__wx.closeSheet();__wx.openDay('2026-10-14');});await p.waitForTimeout(250);await p.click('#wxDay');await p.waitForTimeout(150);
+    await p.evaluate(()=>{__wx.closePop();__wx.closeSheet();__wx.openDay('2026-10-14');});await p.waitForTimeout(250);await p.click('#wxDay');await p.waitForTimeout(150);
     await p.click('#pop .wxc[data-act="wx-web"] >> nth=0');await p.waitForTimeout(150);
     T('출근 줄 → 집(수원시 장안구 연무동)',decodeURIComponent(await p.evaluate(()=>window.__urls[1]||'')).includes('경기 수원시 장안구 연무동 날씨'));
     await p.evaluate(()=>{__wx.closeSheet();__wx.openDay('2026-10-05');});await p.waitForTimeout(900);

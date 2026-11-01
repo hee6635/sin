@@ -30,7 +30,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   if(tabs.length===3){await p.evaluate(()=>document.querySelectorAll('#pop .wxd .tabs button')[2].click());await p.waitForTimeout(300);
     T('v0.124 탭을 바꿔도 큰 얼굴 높이 그대로 (활동 줄 자리를 늘 남김)',Math.abs(await fy()-y0)<=1,y0);await p.waitForTimeout(300);
     const t=await p.evaluate(()=>document.querySelector('#pop .wxd').innerText.replace(/\s+/g,' '));
-    T('활동 탭: "활동 16:00 때" · 학원동 측정소',/활동 16:00 때/.test(t)&&/41117 측정소/.test(t),t.slice(0,300));}
+    T('활동 탭: "활동 16:00 때" · 학원동 측정소',/활동 오후 4시 때/.test(t)&&/41117 측정소/.test(t),t.slice(0,300));}
   await p.evaluate(()=>{const e=document.querySelector('#pop [data-act="wx-dust-close"]');if(e)e.click();});await p.waitForTimeout(200);
   await p.evaluate(()=>__wx.closePop&&__wx.closePop());await p.evaluate(()=>__wx.closeSheet&&__wx.closeSheet());await p.waitForTimeout(300);
   // 일정 패턴 화면: 🏠 집 줄

@@ -35,6 +35,7 @@ const {mkT}=require('./lib.js');
       await p.evaluate(k=>document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"] .stz`).click(),'2026-10-15');await p.waitForTimeout(350);
       await p.evaluate(()=>document.querySelector('#pop [data-act="sd-add"]')?.click());await p.waitForTimeout(350);
       await p.evaluate(()=>document.querySelector('#pop [data-act="sp-pick"][data-id="s_gym"]')?.click());await p.waitForTimeout(400);
+      await p.evaluate(()=>{const e=document.querySelector('#page [data-act="sr-more"]');if(e&&e.getAttribute('aria-expanded')!=='true')e.click();});await p.waitForTimeout(250);
       const reg=await p.evaluate(()=>({page:!!document.querySelector('#page .srpg'),fam:!!document.querySelector('#page #srFam')}));
       T('등록 화면에도 "가족에게 보이기" 칸이 있음',reg.page&&reg.fam,JSON.stringify(reg));
       if(reg.fam){

@@ -121,7 +121,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     const p=await boot(b,st,{tz:'Asia/Seoul',T:KST(2026,10,12,10)});
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);
     const me=await p.evaluate(()=>{const c=document.querySelector('.nc.me2');return c?{big:c.classList.contains('big'),t:c.innerText}:null;});
-    T('날씨 안 켠 사람: 내 카드 상태 크게 (근무 중 · 18:00 끝 · 퇴근까지)',!!me&&me.big&&/근무 중/.test(me.t)&&/18:00 끝/.test(me.t)&&/퇴근까지/.test(me.t),JSON.stringify(me));
+    T('날씨 안 켠 사람: 내 카드 상태 크게 (근무 중 · 18:00 끝 · 퇴근까지)',!!me&&me.big&&/근무 중/.test(me.t)&&/오후 6시 끝/.test(me.t)&&/퇴근까지/.test(me.t),JSON.stringify(me));
     await p.evaluate(()=>document.querySelector('.nc.me2').click());await p.waitForTimeout(400);
     T('내 카드 누르면 달력 탭 · 오늘 날짜 창 (v0.113)',await p.evaluate(()=>document.querySelector('#nav [data-tab="cal"]').classList.contains('on')&&document.querySelector('#sheet.open')&&/10월 12일/.test(document.querySelector('#sheet .dft').innerText)),await p.evaluate(()=>(document.querySelector('#sheet .dft')||{}).innerText));
     T('오류 없음 (근무 시간)',p.errs.length===0,p.errs.join('|'));await p.close();
