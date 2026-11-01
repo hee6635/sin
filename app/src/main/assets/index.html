@@ -6072,6 +6072,7 @@ function swWrap(st){
   el.appendChild(cur);keep();
   st.cur=cur;st.prevPos=el.style.position;st.prevOx=el.style.overflowX;
   if(cs.position==='static')el.style.position='relative';
+  st.prevTr=el.style.transition;
   el.style.overflowX='hidden';
   if(flex){cur.style.cssText='display:flex;flex-direction:column;height:100%;min-height:0';}
   st.flex=flex;st.W=el.clientWidth||el.getBoundingClientRect().width||360;
@@ -6086,11 +6087,17 @@ function swSide(st,dir){   // dir: 1 = 다음날(오른쪽에 붙음) · -1 = �
   st.el.appendChild(nb);st.nb=nb;
   nb.querySelectorAll('.wlta').forEach(wlGrow);   // 업무 메모 칸 높이도 미리 맞춤 (넘어간 뒤 칸이 늘어나는 것 막기)
   const ds=nb.querySelector('.dstrip'),on=ds&&ds.querySelector('.dsi.on');if(on)ds.scrollLeft=on.offsetLeft+on.offsetWidth/2-ds.clientWidth/2;   // 옆 날짜의 날짜 띠도 가운데 맞춤 (도착해서 툭 안 바뀌게)
+  // v0.121 창 높이도 미리: 옆 날짜 판의 높이를 재서, 미는 만큼 창 높이를 그쪽으로 (도착한 뒤 높이가 툭 바뀌지 않게)
+  st.h0=st.h0||st.el.getBoundingClientRect().height;st.h1=null;
+  if(!st.flex&&!st.el.classList.contains('full')){const pb=parseFloat(cs.paddingBottom)||0,bt=(parseFloat(cs.borderTopWidth)||0)+(parseFloat(cs.borderBottomWidth)||0),mx=parseFloat(cs.maxHeight);
+    let h=nb.getBoundingClientRect().height+pt+pb+bt;if(mx>0)h=Math.min(h,mx);if(h>0&&Math.abs(h-st.h0)>1)st.h1=h;}
 }
+function swHeight(st,p){if(st.h1==null||!st.h0)return;st.el.style.height=(st.h0+(st.h1-st.h0)*Math.max(0,Math.min(1,p))).toFixed(1)+'px';}
 function swMove(st,dx){
   const W=st.W,lim=!st.nb?dx*0.3:dx;   // 옆 날짜가 없으면(끝) 고무줄처럼 조금만
   st.cur.style.transform=`translateX(${lim}px)`;
   if(st.nb)st.nb.style.transform=`translateX(${st.dir*W+lim}px)`;
+  if(st.nb)swHeight(st,Math.abs(lim)/W);else if(st.h0&&st.el.style.height)st.el.style.height=st.h0+'px';
 }
 function swUnwrap(st){
   const el=st.el;if(st.nb){st.nb.remove();st.nb=null;}
@@ -6098,6 +6105,7 @@ function swUnwrap(st){
   if(st.cur&&st.cur.parentNode===el){while(st.cur.firstChild)el.insertBefore(st.cur.firstChild,st.cur);st.cur.remove();}
   keep();
   el.style.position=st.prevPos||'';el.style.overflowX=st.prevOx||'';
+  if(st.h0){el.style.height='';el.style.transition=st.prevTr||'';}
 }
 let swPend=null;   // 넘어가는/제자리로 돌아가는 중인 마무리 (그 사이 또 밀면 바로 끝내고 새로 받음)
 function swFlush(){const f=swPend;swPend=null;if(f){clearTimeout(f.tm);f.run();}}
@@ -6129,11 +6137,13 @@ const swEnd=e=>{
   if(!go||!st.nb){   // 덜 밀었거나 끝 → 스프링으로 제자리
     st.cur.style.transition=SPRING;st.cur.style.transform='';
     if(st.nb){st.nb.style.transition=SPRING;st.nb.style.transform=`translateX(${st.dir*st.W}px)`;}
+    if(st.h1!=null&&st.el.style.height){st.el.style.transition='height .3s ease';st.el.style.height=st.h0+'px';}
     swLater(()=>swUnwrap(st),360);return;
   }
   // 넘김: 지금 판은 밀던 쪽으로 빠지고, 옆 날짜 판이 스프링으로 자리 → 다 오면 진짜 그 날짜로 다시 그림(같은 모양이라 티 안 남)
   st.cur.style.transition=SPRING;st.cur.style.transform=`translateX(${-st.dir*st.W}px)`;
   st.nb.style.transition=SPRING;st.nb.style.transform='translateX(0)';
+  if(st.h1!=null){st.el.style.transition='height .26s ease';st.el.style.height=st.h1+'px';}
   swLater(()=>{swUnwrap(st);if(swGo(st.w,st.dir)&&st.w==='day'){const sh=$('#sheet');if(sh)sh.scrollTop=0;}},300);
 };
 document.addEventListener('pointerup',swEnd);
@@ -7033,14 +7043,14 @@ function wxActs(act,t){
       S.addons.wx=true;save();pageBack=null;closePage();render();toast('☔ 출퇴근 날씨를 켰어요');wxFetch(true);famSoon();return true;
     case 'wx-day':wxOpenDay(t.dataset.v);return true;
     case 'wx-fam':wxOpenFam(t.dataset.u);return true;
-    case 'wx-web':closePop();lnkGo(WX.naver(t.dataset.q));return true;   // 출근 줄 = 집 · 퇴근 줄 = 직장 지역 네이버 날씨
+    case 'wx-web':if(!hasBridge('openUrl'))closePop();lnkGo(WX.naver(t.dataset.q));return true;   // v0.121 앱에선 위에 뜨는 창으로 열려서 팝업은 그대로 (돌아오면 보던 화면)   // 출근 줄 = 집 · 퇴근 줄 = 직장 지역 네이버 날씨
   }
   return false;
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>wxFetch(false),1500);});
 // 시험용 창구 (tests/phone/s71.js) — 날씨 기능 함수만
 window.__wx={manPlanned,visibleMemos,famLbl,famTypeAt,famWx,shiftOf,wxMyWin,openStampReg,actAuto,stampPlanned,myActs,manPlanned,famActNow,wxMine,get S(){return S;},get page(){return {pageMode,pageBack};},openDay,closeSheet,closePop,closePage,openAddonPage,render,save,pushAlarmsToNative,pushRemindersToNative,famCleanSched,famPayload,
-  newAlarm:o=>{draft=Object.assign(newAlarm(),o||{});alSnd=false;openAlarmPage();},wxOn,wxRaw,wxFam,wxMemWin,wxMemWork,wxMemKey,wxOpenFam,wxChipIcon,
+  newAlarm:o=>{draft=Object.assign(newAlarm(),o||{});alSnd=false;openAlarmPage();},wxOn,wxRaw,wxFam,wxMemWin,wxMemWork,wxMemKey,wxOpenFam,wxOpenDay,wxChipIcon,
   openPatternPage,openStatsPage,openSlipPage:ym=>{slipYM=ym;openSlipPage();},statsCalc,payRates,dayHours,famTimesPayload,memberStatus,otOpen,get stYM(){return stYM;},set stYM(v){stYM=v;}};
 
 /* ================= 부가 기능 (설정 › 부가 기능) =================
