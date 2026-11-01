@@ -1537,7 +1537,13 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .nc.me2 .mtop{display:flex;align-items:center;gap:10px}.nc.me2 .mav{flex:none;display:inline-flex;width:38px;height:38px;border-radius:50%;background:#1d2330;color:#fff;font-style:normal;font-weight:800;align-items:center;justify-content:center;font-size:16px}
 .nc.me2 .mst{flex:1;min-width:0;font-size:14px;font-weight:800}.nc.me2 .mst small{font-size:12.5px;font-weight:700;color:var(--muted)}.nc.me2 .mst .bar{margin-top:5px}
 .nc.me2.big .mst-t{font-size:24px}.nc.me2.big .sm{margin-top:8px;font-size:13.5px}.nc.me2.big .bar{height:8px;margin-top:8px}
-.nc.me2 .wxcard{margin:12px 0 0;background:rgba(255,255,255,.6)}.nc.me2 .wxcard.wet{background:#e7effb}.nc.me2 .wxcard.bad{background:#fdeedd}
+.nc.me2 .wxcard{margin:12px 0 0;background:rgba(255,255,255,.6)}
+/* v0.116 가족이 있으면: 내 카드는 낮게 · 가족 카드는 2열 바둑판 (5명도 한눈에) · 넓은 화면은 내 카드 절반 + 옆에 가족 */
+.nowwrap .now{margin:0;padding:0;overflow:visible}
+.now.fams{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;align-items:start}.now.fams .nc{width:auto;min-width:0}
+.nowwrap .nc.me2{padding:9px 11px}.nowwrap .nc.me2 .wxcard{margin-top:8px;padding:8px 10px}.nowwrap .nc.me2 .wxcard .wa img{width:34px;height:34px}.nowwrap .nc.me2 .wxcard .wa b{font-size:16.5px}.nowwrap .nc.me2 .wxcard .wa small{font-size:12px}
+.nowwrap .nc.me2 .wxcard .wb{margin-top:6px;padding:3px 8px}.nowwrap .nc.me2 .wxcard .wb img{width:28px;height:28px}.nowwrap .nc.me2 .wxcard .wb em{font-size:18px}
+@media (min-width:600px){.nowwrap{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}.nowwrap .now.fams{margin-top:0}}.nc.me2 .wxcard.wet{background:#e7effb}.nc.me2 .wxcard.bad{background:#fdeedd}
 #sheet,#pop .wlp,#pop .wlp .bd,#pop .wlp textarea,#pop .menu.sdpop,#pop .menu.wxdpop,#pop .menu.wxdpop .wxp{touch-action:pan-y}#sheet .dstrip,#sheet .tchips,#pop .wxhs{touch-action:pan-x pan-y}
 .swc{will-change:transform}.swn{background:var(--bg)}
 .tltimes{margin-top:10px;border-top:1px solid var(--line)}.tltimes .pl2{display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:700}.tltimes .prow{padding:10px 6px}.tltimes .tlt{font-size:15px;font-weight:800;color:var(--fg);white-space:nowrap}.tltimes .tlt.rest{color:var(--muted);font-weight:700}.tltimes .tlt.unset{color:var(--accent)}
@@ -4832,7 +4838,7 @@ function renderFamily(){
     :(myReq.length?`<div class="fsec">내 요청</div>${myReq.map(r=>`<div class="frq g" data-act="req-go" data-k="${r.date}"><b>${mdw(r.date)} ${esc(shiftLabel(r.want))} 요청 · ${REQ_ST[r.st].ic} ${r.st==='pending'?'답장 기다리는 중':REQ_ST[r.st].name}</b>${r.msg?`<small>"${esc(r.msg)}"</small>`:''}</div>`).join('')}`:'');
   return `<div class="famv">${famSyncHtml()}
     <div class="fsec">지금</div>
-    ${isHost&&fam.length?`${famView()?'':`<div class="now one">${meCard}</div>`}<div class="now fams">${memCards}</div>`:`<div class="now one">${famView()?'':meCard}${isHost?memCards:''}</div>`}
+    ${isHost&&fam.length?`<div class="nowwrap">${famView()?'':`<div class="now one">${meCard}</div>`}<div class="now fams">${memCards}</div></div>`:`<div class="now one">${famView()?'':meCard}${isHost?memCards:''}</div>`}
     ${cheerBtns}
     ${famPeers().length?`<div class="fsec">달력 보기 <span class="vsub">· 눌러서 한 달 보기</span></div><div class="vcrow">${famPeers().map(m=>`<button class="vchip" data-act="fam-viewcal" data-u="${esc(m.uid)}">${famAv(m,0)}${esc(m.name)}<em>›</em></button>`).join('')}</div>`:''}
     <div class="fsec">가족 시간표 <button class="lnk" data-act="fam-add">＋ 가족 추가</button></div>
