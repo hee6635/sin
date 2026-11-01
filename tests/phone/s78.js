@@ -41,7 +41,9 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   await p.evaluate(()=>__wx.closeSheet());
   // 가족 ✏️: 종류 더하기 · 구간
   await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);await tap(p,'[data-act="fam-edit"][data-id="f1"]');await p.waitForTimeout(400);
-  T('가족 ✏️: 일정 종류 목록 · 위치 · 이 날부터 새 일정',await p.evaluate(()=>document.querySelectorAll('#page [data-act="fe-ft"]').length===2&&!!document.querySelector('#page [data-act="fe-loc"]')&&!!document.querySelector('#page [data-act="fe-era-add"]')));
+  T('가족 ✏️: "🔁 일정 패턴" 한 줄 (유치원 08:50~15:00 · 위치)',await p.evaluate(()=>{const e=document.querySelector('#page [data-act="fe-pat"]');return !!e&&/유치원 08:50~15:00/.test(e.innerText)&&/📍/.test(e.innerText);}));
+  await tap(p,'#page [data-act="fe-pat"]');await p.waitForTimeout(400);
+  T('일정 패턴: 일정 종류 목록 · 위치 · 이 날부터 새 일정 · 공휴일',await p.evaluate(()=>document.querySelectorAll('#page [data-act="fe-ft"]').length===2&&!!document.querySelector('#page [data-act="fe-loc"]')&&!!document.querySelector('#page [data-act="fe-era-add"]')&&!!document.getElementById('feHol')));
   await tap(p,'#page [data-act="fe-ftadd"]');await p.waitForTimeout(300);
   await p.evaluate(()=>{document.getElementById('ftName').value='반일반';const s=document.getElementById('ftE');s.value='13:00';s.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(200);
   await p.evaluate(()=>{document.getElementById('ftName').value='반일반';});await tap(p,'#pop [data-act="ft-save"]');await p.waitForTimeout(300);
@@ -52,9 +54,17 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   T('구간 생김 · 그 구간을 고치는 중 (칩 "2026.11.2부터")',await p.evaluate(()=>/2026\.11\.2부터/.test(document.querySelector('#page').innerText)&&!!document.querySelector('#page [data-act="fe-era"].on[data-i="0"]')));
   await tap(p,'#page [data-act="fe-ft"][data-k="on"]');await p.waitForTimeout(300);
   await p.evaluate(()=>{document.getElementById('ftName').value='학교';});await tap(p,'#pop [data-act="ft-save"]');await p.waitForTimeout(300);
-  await tap(p,'[data-act="fe-save"]');await p.waitForTimeout(500);
+  await tap(p,'[data-act="fp-done"]');await p.waitForTimeout(300);await tap(p,'[data-act="fe-save"]');await p.waitForTimeout(500);
   const e=await p.evaluate(()=>{const m=__wx.S.family[0];return {before:__wx.famTypeAt(m,new Date(2026,10,1+1-1)).name,b2:__wx.famTypeAt(m,new Date(2026,9,30)).name,after:__wx.famTypeAt(m,new Date(2026,10,3)).name,ed:m._ed};});
   T('이 날부터 새 일정: 10월 30일 유치원 · 11월 3일 학교 · 저장엔 편집 표시 없음',e.b2==='유치원'&&e.after==='학교'&&e.ed===undefined,JSON.stringify(e));
+  // 날짜 창 ⚙️ 일정 패턴 → 바로 고치고 [저장]
+  await p.evaluate(()=>document.querySelector('[data-act="fam-mancal"]').click());await p.waitForTimeout(400);
+  await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-14"]').click());await p.waitForTimeout(400);
+  await tap(p,'#sheet [data-act="man-pat"]');await p.waitForTimeout(400);
+  T('날짜 창 "⚙️ 일정 패턴" → 일정 패턴 화면 [저장]',await p.evaluate(()=>/유찬 일정 패턴/.test(document.querySelector('#page .pg-h').innerText)&&!!document.querySelector('#page [data-act="fp-save"]')));
+  await p.evaluate(()=>{document.getElementById('feHol').checked=false;});await tap(p,'#page [data-act="fp-save"]');await p.waitForTimeout(400);
+  T('[저장] → 유찬 달력으로 · 바꾼 것 저장 (공휴일엔 쉬어요 끔)',await p.evaluate(()=>!!document.getElementById('vcsl')&&__wx.S.family[0].holOff===false&&__wx.S.family[0]._own===undefined));
+  await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(300);
   // 칠하기: 반일반으로
   await p.evaluate(()=>document.querySelector('[data-act="fam-mancal"]').click());await p.waitForTimeout(400);
   await p.evaluate(()=>document.querySelector('#vcsl [data-k="2026-10-14"]').click());await p.waitForTimeout(400);

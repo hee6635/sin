@@ -147,3 +147,9 @@
 - 반복 메모 S.rmemos [{id,text,md(1~28 · -1 말일 · -2 · -3),sh:[근무],miss:'skip'|'next',from,color,todo,time,al,done:[날짜],skip:[날짜]}] · 미리 만들지 않음: rmTarget(그 달 날짜) · rmemoOn(k) → visibleMemos 에 'r:'+id 가짜 메모로 섞임 (칸 · 날짜 창 · 위젯). 알림은 70일치 r_{id}_{날짜}.
 - 메모 자세히: 🔁 반복 줄(md-rep → openRrPick) · 반복이면 가족에게 칸 숨김 · 저장하면 그 날 메모 대신 틀로 · 반복 메모를 누르면 틀 고치기 · 길게 = 이 날만 빼기 / 고치기 / 그만하기 · 할 일 체크는 done[날짜].
 - 💡 TIPS 배열(묶음 8 · 팁 36) · openTipsPage · tipGo('tab:…' 이면 탭, 아니면 그 data-act 를 눌러 열고 pageBack=팁). 기능 바꾸면 TIPS 글도 같이 · s79 가 바로 가기 전부 시험.
+
+## v0.119 (2026-11-01) — 가족 일정 패턴 화면 · 근무 패턴 위치 · 미세먼지 활동 칸
+- 가족 일정(종류 · 시간 · 위치 · 방학 · 구간 · 공휴일)은 openManPat ('manpat') 로 모음 — famSchedHtml(m) · famReRender(). 날짜 창 "⚙️ 일정 패턴"(man-pat, famDraft._own → [저장] fp-save) · 가족 ✏️ 의 "🔁 일정 패턴" 한 줄(fe-pat → [완료] fp-done 로 돌아감).
+- 근무 패턴 patLocHtml → pat-loc → 출퇴근 날씨 설정 (pageBack = 근무 패턴).
+- wxcore: 활동이 다가오면 dz = 출근 · 퇴근(직장 없으면 집 그 시각 dzAt) · 활동(늘) · dayCard 는 🏠집 + 활동. 앱 wxPopHtml 은 dz 에 act 가 있으면 .wxdz3 칸.
+- 시험: s77 (38) · s78 (20) · s76.

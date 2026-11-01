@@ -90,7 +90,14 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     const st={...mine,addons:{...base.addons,wx:true},wx:{home:'41111',work:'',fw:{},nm:{}},stamps:{defs:[{...sw,act:{...sw.act,r:'41113'}}],log:{},v3:1,v4:1}};
     const p=await boot(b,st,{tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes:routes2});await p.waitForTimeout(2500);
     const r=await p.evaluate(()=>{const s=__wx.S.stamps.defs[0];for(let i=12;i<=16;i++){const d=new Date(2026,9,i);if(__wx.stampPlanned(s,'2026-10-'+i)&&__wx.wxMyWin(d)){const x=__wx.wxMine(d,Date.now());return {i,dz:x.dz.map(z=>[z.p,z.pl,z.g]),k:x.k};}}return null;});
-    T('활동 동네(다른 곳) 미세먼지 칸 추가 (🏊활동 · "활동 때" · 나쁨) · 결론은 비가 먼저',!!r&&r.dz.length===2&&r.dz[1][0]==='🏊활동'&&r.dz[1][1]==='활동 때'&&r.dz[1][2]===3&&r.k.t==='활동 끝날 때 비 와요',JSON.stringify(r));
+    T('활동 동네(다른 곳) 미세먼지 칸 추가 (🏊활동 · "활동 때" · 나쁨) · 결론은 비가 먼저',!!r&&r.dz.length===3&&r.dz[2][0]==='🏊활동'&&r.dz[2][1]==='활동 때'&&r.dz[2][2]===3&&r.k.t==='활동 끝날 때 비 와요',JSON.stringify(r));
+    await p.evaluate(i=>__wx.openDay('2026-10-'+i),r.i);await p.waitForTimeout(300);await p.evaluate(()=>document.getElementById('wxDay').click());await p.waitForTimeout(500);
+    const dz=await p.evaluate(()=>[...document.querySelectorAll('#pop .wxdz3 .dzc small')].map(e=>e.innerText));
+    T('날씨 팝업 미세먼지도 칸으로: 출근 · 퇴근 · 🏊활동',dz.length===3&&dz[0]==='출근'&&dz[1]==='퇴근'&&dz[2]==='🏊활동',JSON.stringify(dz));
+    await p.evaluate(()=>{__wx.closePop();__wx.closeSheet();});await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);await p.evaluate(()=>document.querySelector('[data-act="more-pattern"]').click());await p.waitForTimeout(400);
+    T('근무 패턴에 📍 위치 (집 · 직장) 줄',await p.evaluate(()=>{const e=document.querySelector('#page [data-act="pat-loc"]');return !!e&&/📍 위치/.test(e.innerText);}));
+    await p.evaluate(()=>document.querySelector('#page [data-act="pat-loc"]').click());await p.waitForTimeout(400);
+    T('누르면 출퇴근 날씨 설정 · 뒤로 가면 근무 패턴',await p.evaluate(()=>document.querySelector('#page [data-act="wx-pick-home"]')!==null)&&await p.evaluate(()=>{document.querySelector('#page [data-act="page-close"]').click();return !!document.querySelector('#page [data-act="pat-loc"]');}));
     T('오류 없음 (미세먼지 3칸)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 유찬 스티커 설정: 내 스티커 설정처럼 (끌어서 순서 · 고치기 · 판에서 빼기는 기록 남김 · 내 스티커 가져오기)

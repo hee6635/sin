@@ -265,6 +265,12 @@
       return { a, x, ms: a.e, v: past ? null : v, w: w1 || w0 ? { n: a.n, when: w0 ? '갈 때' : '끝날 때', sn: snowy(w0 ? v0 : v) } : null };
     });
   }
+  // 그 시각 미세먼지 칸 (시간별 측정 · 없으면 그날 예보)
+  function dzAt(raw, t, now, p, pl, n) {
+    const x = dustAt(raw, t, now), lv = x.f ? +x.f.split('/')[1] : -1; if (lv < 0) return null;
+    const g = x.fc ? F4.indexOf(lv) : g4of8(lv); if (g <= 0) return null;
+    return { p, pl, n, f: x.f, lb: x.fc ? N4[g] : L8[lv], m: x.fc ? M4[g] : M8[lv], g, lv };
+  }
   function actDz(home, a, base, now, hn) {
     if (!a) return null;
     let d = null;
@@ -323,7 +329,10 @@
     const dh = dustOf(ah), dw = dustOf(aw);
     if (dh) dz.push(Object.assign({ p: LS, pl: LS + '길', n: place(o.hn) }, dh));
     if (dw) dz.push(Object.assign({ p: LE, pl: LE + '길', n: place(o.wn) }, dw));
-    { const da = pick && !pick.x.past ? actDz(home, pick.a, dh, o.now, place(o.hn)) : null; if (da) dz.push(da); }   // 활동 미세먼지 (다른 동네 · 또는 그 시간에 더 나쁠 때만)
+    if (pick && !pick.x.past) {   // 활동이 있는 날: 미세먼지도 출근 · 퇴근 · 활동 칸 (날씨 칸과 같은 모양)
+      if (!dw) { const de = dzAt(home, o.e, o.now, LE, LE + '길', place(o.wn)); if (de) dz.push(de); }
+      const da = actDz(home, pick.a, null, o.now, place(o.hn)); if (da) dz.push(da);
+    }
     const worst = dz.slice().sort((x, y) => y.g - x.g || y.lv - x.lv)[0];
     const vD = [vsD, veD].filter(Boolean).concat(ac.map(z => z.v).filter(Boolean)), sunny = vD.length > 0 && vD.every(v => v.sky <= 1 && !wet(v));
     const uv = uvMax([home, work], ps && !both ? o.now : o.s, o.e);
@@ -377,7 +386,7 @@
     const ac = actCards(home, o && o.acts, o && o.now), acK = actK(ac);
     const c = ac.length ? ac.slice().sort((p, q) => p.ms - q.ms).slice(0, 3).map(z => z.x) : [cd('오전', d.am, d.lo), cd('오후', d.pm, d.hi)].filter(Boolean);   // 쉬는 날 활동이 있으면 활동만
     const dd = dustOf(a), dz = dd ? [Object.assign({ p: '', n: '' }, dd)] : [];
-    { const ap = ac.slice().sort((p, q) => p.ms - q.ms).find(z => !z.x.past), da = ap ? actDz(home, ap.a, dd, o && o.now, '') : null; if (da) { if (dz[0]) Object.assign(dz[0], { p: '집', pl: '집' }); dz.push(da); } }
+    { const ap = ac.slice().sort((p, q) => p.ms - q.ms).find(z => !z.x.past), da = ap ? actDz(home, ap.a, null, o && o.now, '') : null; if (da) { if (dz[0]) Object.assign(dz[0], { p: '🏠집', pl: '집' }); dz.push(da); } }
     const d0 = Date.UTC(+dk.slice(0, 4), +dk.slice(4, 6) - 1, +dk.slice(6, 8)) - 9 * H, uv = uvMax([home], d0 + 9 * H, d0 + 17 * H), ak = alertK([home], [dk], o && o.now);
     const k = ak ? ak : acK ? acK : d.wet ? { t: h, s: d.snow ? '미끄럼 조심해요' : '우산 챙기세요', i: d.snow ? 'sky/snow' : 'wear/umbrella' }
       : dd && dd.g >= 3 ? { t: `미세먼지 ${dd.lb}`, s: dd.m, i: dd.f, dz: 1 }

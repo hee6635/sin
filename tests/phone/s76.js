@@ -50,9 +50,10 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const p=await boot(b,{...base,family:fam},{touch:true});await openCal(p);
     const tap=sel=>p.evaluate(sel=>{const o=document.querySelector(sel);o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();},sel);
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);await tap('[data-act="fam-edit"][data-id="f1"]');await p.waitForTimeout(400);   // v0.117 ✏️ 은 가족 탭에서 · 이름은 일정 종류에서
+    await tap('#page [data-act="fe-pat"]');await p.waitForTimeout(300);   // v0.119 일정은 일정 패턴 화면
     await tap('#page [data-act="fe-ft"][data-k="on"]');await p.waitForTimeout(300);
     await p.evaluate(()=>{document.getElementById('ftName').value='유치원';});await tap('#pop [data-act="ft-save"]');await p.waitForTimeout(300);
-    await tap('[data-act="fe-save"]');await p.waitForTimeout(500);
+    await tap('[data-act="fp-done"]');await p.waitForTimeout(300);await tap('[data-act="fe-save"]');await p.waitForTimeout(500);
     T('일정 종류 이름 저장 (유치원)',await p.evaluate(()=>__wx.S.family[0].ftypes[0].name==='유치원'),await p.evaluate(()=>JSON.stringify(__wx.S.family[0].ftypes)));
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);
     T('가족 시간표 · 카드에 "유치원"',await p.evaluate(()=>/유치원/.test(document.querySelector('#view').innerText)));
