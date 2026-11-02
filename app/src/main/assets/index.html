@@ -6252,7 +6252,8 @@ function swSide(st,dir){   // dir: 1 = 다음날(오른쪽에 붙음) · -1 = �
   const cs=getComputedStyle(st.el),pl=parseFloat(cs.paddingLeft)||0,pr=parseFloat(cs.paddingRight)||0,pt=parseFloat(cs.paddingTop)||0;   // 창 안쪽 여백만큼 비켜서 (옆 판이 더 크게 보였다 줄어드는 것 막기)
   nb.style.cssText=`position:absolute;left:${pl}px;top:${(st.el.scrollTop||0)+pt}px;width:${st.el.clientWidth-pl-pr}px;${st.flex?'display:flex;flex-direction:column;height:100%;':''}pointer-events:none`;
   st.el.appendChild(nb);st.nb=nb;
-  nb.querySelectorAll('.wlta').forEach(x=>{x.readOnly=true;x.tabIndex=-1;wlGrow(x);});   // 업무 메모 칸 높이도 미리 맞춤 (넘어간 뒤 칸이 늘어나는 것 막기)
+  nb.querySelectorAll('.wlta').forEach(x=>{x.readOnly=true;x.tabIndex=-1;wlGrow(x);});
+  if(st.w==='wx')wxHrScroll(nb);   // v0.132 시간별 줄을 미리 제자리로 (넘긴 뒤 툭 바뀌지 않게)   // 업무 메모 칸 높이도 미리 맞춤 (넘어간 뒤 칸이 늘어나는 것 막기)
   const ds=nb.querySelector('.dstrip'),on=ds&&ds.querySelector('.dsi.on');if(on)ds.scrollLeft=on.offsetLeft+on.offsetWidth/2-ds.clientWidth/2;   // 옆 날짜의 날짜 띠도 가운데 맞춤 (도착해서 툭 안 바뀌게)
   // v0.121 창 높이도 미리: 옆 날짜 판의 높이를 재서, 미는 만큼 창 높이를 그쪽으로 (도착한 뒤 높이가 툭 바뀌지 않게)
   st.h0=st.h0||st.el.getBoundingClientRect().height;st.h1=null;
@@ -6318,8 +6319,11 @@ function swAdoptWx(st){
   try{
     const k=addK(swKey('wx'),st.dir),nb=st.nb,m=st.el;if(!nb||!okDate(k)||!m.classList.contains('wxdpop'))return false;
     if(!wxDayPopHtml(k))return false;   // 미세먼지 자료(wxDz) 등 상태만 새 날짜로
-    st.nb=null;swUnwrap(st);
-    m.replaceChildren(...nb.childNodes);wxPopK=k;m.scrollTop=0;wxHrScroll();   // 커버 화면처럼 팝업이 화면보다 길면(스크롤) 옆 판은 맨 위부터 보였음 → 넘긴 뒤에도 맨 위 (안 그러면 툭 튐)
+    // v0.132 옆 날짜 판(이미 화면에 그려진 층)을 그대로 남기고 옛 판만 지움 — 내용을 다른 곳으로 옮기면 폰이 다시 그리는 한 프레임 동안 글 · 그림이 비어 보였음(커버 화면 녹화로 확인)
+    st.nb=null;if(st.cur){st.cur.remove();st.cur=null;}
+    m.style.position=st.prevPos||'';m.style.overflowX=st.prevOx||'';if(st.h0){m.style.height='';m.style.transition=st.prevTr||'';}
+    nb.classList.remove('swn');Object.assign(nb.style,{position:'relative',left:'',top:'',width:'',pointerEvents:'',transition:'',transform:'translateZ(0)'});
+    wxPopK=k;m.scrollTop=0;   // 팝업이 화면보다 길면(커버 화면) 옆 판은 맨 위부터 보였음 → 넘긴 뒤에도 맨 위
     if(m.querySelector('.wxweb')){hintBump('wxweb');save();}
     return true;
   }catch(e){return false;}
@@ -7014,9 +7018,9 @@ function wxHrHtml(hr){
   const lbl=g=>g.ac?`${esc(g.ac)}${g.an?' · '+esc(g.an):''}`:hr.seg?(g.w?`🏢 직장 · ${esc(hr.wn)}`:'🏠 집'):`시간별 · ${esc(hr.hn)}`;
   return `<div class="wxhr"><div class="wxhs" data-i0="${hr.i0}">${grp.map(g=>`<div class="sg ${g.ac?'act':hr.seg?(g.w?'work':'home'):''}"><div class="hl">${lbl(g)}</div><div class="hh">${g.l.map(chip).join('')}</div></div>`).join('')}</div></div>`;
 }
-function wxHrScroll(){try{const s=document.querySelector('#pop .wxhs');if(!s)return;{const W=s.clientWidth;if(W>0){const n=Math.floor(W/46);const w=Math.max(40,Math.min(54,W/(n+0.5)-2));s.style.setProperty('--hcw',w.toFixed(1)+'px');}}   // v0.127 오른쪽 끝 칸이 반쯤 걸쳐 보이게 (더 밀 수 있다는 느낌)
+function wxHrScroll(root){try{const s=root?root.querySelector('.wxhs'):document.querySelector('#pop .wxhs');if(!s)return;{const W=s.clientWidth;if(W>0){const n=Math.floor(W/46);const w=Math.max(40,Math.min(54,W/(n+0.5)-2));s.style.setProperty('--hcw',w.toFixed(1)+'px');}}   // v0.127 오른쪽 끝 칸이 반쯤 걸쳐 보이게 (더 밀 수 있다는 느낌)
 const c=s.querySelector(`.hc[data-i="${s.dataset.i0}"]`);if(c)s.scrollLeft=Math.max(0,c.getBoundingClientRect().left-s.getBoundingClientRect().left+s.scrollLeft-4);}catch(e){}}
-function wxOpenPop(html){openPop(html);requestAnimationFrame(wxHrScroll);if(/class="wxweb"/.test(html)){hintBump('wxweb');save();}}
+function wxOpenPop(html){openPop(html);requestAnimationFrame(()=>wxHrScroll());if(/class="wxweb"/.test(html)){hintBump('wxweb');save();}}
 // 시간별 줄 자료 (나 / 가족): 근무 날 = 집 · 직장 구간, 쉬는 날 = 집
 function wxHrOf(d,win,home,work,hn,wn,now,acts){
   const H=wxRaw(home),W=work&&work!==home?wxRaw(work):null;if(!H)return null;
