@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>이럴 땐 이렇게 시안</title>
+<style>
+:root{--bg:#fff;--fg:#1d2330;--muted:#6b7380;--line:#e7e9ee;--card:#f6f7f9;--ac:#3b6fd8;--hl:#ff7a00}
+@media (prefers-color-scheme:dark){:root{--bg:#15181e;--fg:#e8eaee;--muted:#9aa1ad;--line:#2a2f38;--card:#1e222a;--ac:#8fb0f5}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 -apple-system,"Noto Sans KR",sans-serif}
+.wrap{max-width:390px;margin:0 auto;padding:0 0 40px}
+.hd{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);font-weight:800;font-size:17px}
+.hd span{color:var(--muted);font-weight:600}
+.grp{margin:14px 16px 0;font-weight:800;font-size:14px;color:var(--muted)}
+.tip{margin:8px 16px 0;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.tip>summary{list-style:none;padding:13px 14px;font-weight:800;cursor:pointer;display:flex;justify-content:space-between}
+.tip>summary::after{content:'▾';color:var(--muted)}.tip[open]>summary::after{content:'▴'}
+.body{padding:0 14px 14px}
+.when{background:var(--card);border-radius:12px;padding:10px 12px;font-size:14px}
+.when b{display:block;font-size:12px;color:var(--muted);margin-bottom:2px}
+.pre{font-size:13px;color:var(--muted);margin:8px 2px 0}
+ol{margin:12px 0 0;padding:0;list-style:none;counter-reset:s}
+ol li{counter-increment:s;position:relative;padding:0 0 0 30px;margin:0 0 12px;font-size:14.5px}
+ol li::before{content:counter(s);position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;background:var(--fg);color:var(--bg);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+ol li img{display:block;width:100%;margin-top:8px;border-radius:12px;border:1px solid var(--line)}
+.btn{display:block;width:100%;margin-top:4px;padding:11px;border:0;border-radius:12px;background:var(--ac);color:#fff;font-weight:800;font-size:15px}
+.note{font-size:13px;color:var(--muted);margin-top:10px}
+</style></head><body><div class="wrap">
+<div class="hd">‹ <span></span>💡 이럴 땐 이렇게</div>
+
+<div class="grp">⏰ 알람</div>
+<details class="tip" open><summary>내일 하루만 일찍 일어나야 해요</summary><div class="body">
+  <div class="when"><b>이럴 때</b>다음 주 수요일만 평소보다 1시간 일찍 나가야 할 때. 원래 알람은 그대로 두고, 한 번만 울릴 알람을 하나 더 만들어요.</div>
+  <ol>
+    <li>아래 <b>알람</b> 탭에서 오른쪽 위 <b>＋</b>를 눌러요.<img src="t1_a.webp" alt=""></li>
+    <li>그날 근무타입을 고르고 알람시간을 정해요. 그날이 주간이면 <b>주간</b>, 시간은 오전 5:00.</li>
+    <li><b>알람반복</b>을 꺼요. 아래에 "다음 한 번만 울리고 꺼져요"가 보이면 맞게 된 거예요.<img src="t1_b.webp" alt=""></li>
+    <li>오른쪽 위 <b>저장</b>. 한 번 울리면 알아서 꺼지고 목록엔 남아 있어서, 다음에 또 쓸 때 켜기만 하면 돼요.</li>
+  </ol>
+  <button class="btn">알람 탭 열기</button>
+</div></details>
+
+<div class="grp">💰 통계 · 수당</div>
+<details class="tip" open><summary>퇴근이 늦어진 날 연장 남기기</summary><div class="body">
+  <div class="when"><b>이럴 때</b>오늘 퇴근이 2시간 늦어졌을 때. 남겨 두면 이번 달 연장 시간과 예상 월급에 들어가고, 가족 폰에도 늦게 끝나는 게 보여요.</div>
+  <div class="pre">먼저: 설정 › 부가 기능에서 <b>근무 통계 · 수당</b>이 켜져 있어야 ⏱ 연장이 보여요.</div>
+  <ol>
+    <li>달력에서 그 날짜를 눌러요. 근무타입 줄 끝에 <b>⏱ 연장</b>이 있어요.<img src="t2_a.webp" alt=""></li>
+    <li><b>+2시간</b>을 누르면 실제 퇴근이 오후 9시로 바뀌고 "연장 2시간"이 떠요. 한 번 더 누르면 시간이 더 붙어요.<img src="t2_b.webp" alt=""></li>
+    <li>정확한 시각이면 <b>실제 퇴근</b> 칸을 눌러 직접 고쳐요.</li>
+    <li>창을 닫으면 저장돼요. 달력 날짜 칸에 "+2시간"이 붙어요.</li>
+  </ol>
+  <button class="btn">오늘 날짜 창 열기</button>
+</div></details>
+<div class="note" style="margin:16px">※ 시안입니다. 사진은 시험 도구가 예시 자료로 실제 앱을 찍은 것 · 버전마다 다시 찍어요.</div>
+</div></body></html>
