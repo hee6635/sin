@@ -125,7 +125,7 @@ const {mkT}=require('./lib.js');
    let ok=false;for(let i=0;i<40&&!ok;i++){await p.waitForTimeout(250);ok=await p.evaluate(()=>document.getElementById('onboard').classList.contains('open'));}
    T('모두 지우기: 처음 시작 화면이 열림',ok);
    T('확인창 2번 · 첫 글에 "구글 드라이브 백업은 안 지워져요" 안내',p.__dialogs.length===2&&p.__dialogs[0].includes('드라이브')&&p.__dialogs[0].includes('안 지워져요'),JSON.stringify(p.__dialogs));
-   const left=await p.evaluate(()=>Object.keys(localStorage).sort());
+   const left=await p.evaluate(()=>Object.keys(localStorage).filter(k=>k!=='eonjeswieo:stz').sort());   // (stz = 달력 스티커 크기 기억 · 사용자 자료 아님 · 지운 뒤 달력을 다시 그리며 새로 생김)
    T('앱이 저장한 키는 새 기본값 하나만 남고 다른 앱 키는 그대로',JSON.stringify(left)===JSON.stringify(['eonjeswieo:v1','other:key']),JSON.stringify(left));
    const sv=await S(p);
    T('저장 값이 처음 상태 (근무표 · 메모 · 알람 · 드라이브 기록 없음)',!sv.myset&&Object.keys(sv.memos||{}).length===0&&(sv.alarms||[]).length===0&&!sv.drive.last&&!sv.link,JSON.stringify(sv).slice(0,160));

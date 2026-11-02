@@ -156,8 +156,7 @@ class AlarmBridge(private val activity: MainActivity) {
     /** 홈 화면 위젯에 보여줄 날짜별 근무 · 스티커 · 메모 (JSON) */
     @JavascriptInterface
     fun setWidgetData(json: String) {
-        WidgetStore.saveFromApp(context, json)
-        WidgetRefresher.refreshAll(context)
+        if (WidgetStore.saveFromApp(context, json)) WidgetRefresher.refreshAll(context)   // v0.127 자료가 같으면 다시 안 그림
     }
 
     /** 위젯을 마지막에 그린 상태 (앱 \"모양 조정\" 화면에서 보여 줌) */

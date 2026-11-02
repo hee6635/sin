@@ -267,7 +267,7 @@ class WidgetDayActivity : Activity() {
     }
 
     private fun build(dir: Int) {
-        data = WidgetStore.load(this)
+        data = WidgetStore.loadFresh(this)
         person = if (who.isEmpty()) null else MonthRenderer.people(data).firstOrNull { MonthRenderer.personKey(it) == who }   // 그 사람이 없어졌으면 내 달력
         val pj = person
         val pal = palette()

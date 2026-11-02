@@ -213,3 +213,14 @@
 - 모닝콜 문구 순서 새로(요청 > 대근 > 메모 > 인계 > 포스트잇 > D-day 7일 > 마지막 날 > 근무 흐름/인사 번갈아 > 쉬는 날 문구). 월급날은 앱에 월급날 칸이 없어 뺌.
 - 연차: "1년 연차" + "연차 새로 시작"(S.salary.leaveFrom 'MM-DD' · 비우면 1월 1일) · leaveStart · 통계 "(M/D 기준)".
 - 시험: s85 (20).
+
+## v0.128 — 버벅임 줄이기 · 업무 메모 옆 날짜 저장 버그 · 포스트잇 바로 저장
+- 업무 메모 버그: 옆으로 미는 동안 옆 날짜 판(.swn)의 .wlta 까지 "지금 날짜"로 저장 → 쓰고 0.35초 안에 밀면 옆 날짜 글이 복사. 이제 textarea 에 data-k · wlTas(k) = 그 날짜 칸만(.swn 빼고) · 입력 저장은 t.dataset.k · 옆 판 칸은 readOnly.
+- 버벅임(앱): stzWindow 가 render 때마다 7달을 숨겨 그려 스티커 크기를 잼(첫 화면 · 달 넘김 약 0.7초). 이제 stzKey + 7달 html 해시(약 그림 clipPath 번호 · class · style 뺌)가 같으면 저장값(localStorage `eonjeswieo:stz`, 40개) 바로 씀. fitStz.measure 는 글자 바꾸기를 모아서 한 번 → 배치 계산 한 번. 측정(로컬): 다시 켤 때 긴 작업 0.9초 → 0.08초 · 달 넘김 0.7 → 0.06초 (처음 가는 달 · 내용이 바뀐 달만 약 0.5초).
+- 버벅임(위젯): WidgetStore.saveFromApp 가 전과 같으면 false → setWidgetData 가 refreshAll 안 함. load() 는 같은 글이면 기억한 JSONObject (WidgetDayActivity 는 고쳐 쓰니 loadFresh). 달 넘김 효과의 그림 4장 재사용은 아직(다음).
+- 포스트잇: 새로 쓰다가 바깥 · 뒤로 → 글이 있으면 piCommit + toastUndo("📌 저장했어요", 지우기). 빈 건 그냥 닫힘.
+- 위젯 → 직접 추가한 가족: widgetSync "@id" 가 S.family id 면 manId · renderManCalPage · openManDay.
+- 시간별 줄: "내일" 글자 빼고 .hc.nd::before 흐린 동그란 점선(위아래 흐려짐).
+- 근무타입 편집: 가운데 "다음날" 빼고 넘어갈 때만 퇴근 칸 .tbtn.nx 안에 "다음날 ".
+- wxcore coldWear: 결론 아래 "… 입으세요" 도 팝업 "오늘 옷"과 같은 칸(안 지난 칸 중 가장 추운 때).
+- 시험: s86 (13).

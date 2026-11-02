@@ -69,7 +69,8 @@ object WidgetStore {
     }
 
     /** 앱이 새 데이터를 보내도, 아직 앱에 반영 안 된 위젯 체크는 그 위에 다시 입혀서 되돌아가 보이지 않게 */
-    fun saveFromApp(ctx: Context, json: String) {
+    /** 앱이 보낸 위젯 자료를 저장 · 전과 똑같으면 false (v0.127: 그러면 위젯을 다시 그리지 않음 — 날씨 받기 같은 저장마다 위젯이 버벅이던 것) */
+    fun saveFromApp(ctx: Context, json: String): Boolean {
         var out = json
         try {
             val sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -109,7 +110,10 @@ object WidgetStore {
         } catch (e: Exception) {
             out = json
         }
+        val old = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null)
+        if (old == out) return false
         save(ctx, out)
+        return true
     }
 
     /** 위젯을 마지막에 그린 상태(크기 · 어떤 값을 썼는지)를 적어 둠 — 앱 "모양 조정" 화면에서 볼 수 있게 (그림이 예상과 다를 때 원인 찾기용) */
@@ -127,13 +131,24 @@ object WidgetStore {
         return sb.toString().trim()
     }
 
+    // v0.127 한 번 읽은 자료(약 100KB)는 기억해 두고, 저장된 글이 바뀔 때만 다시 읽음 (한 달 위젯을 누를 때마다 3~4번씩 새로 읽던 것)
+    private var cacheStr: String? = null
+    private var cacheObj: JSONObject? = null
+
+    @Synchronized
     fun load(ctx: Context): JSONObject? {
         val s = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null) ?: return null
-        return try {
-            JSONObject(s)
-        } catch (e: Exception) {
-            null
-        }
+        if (s == cacheStr) return cacheObj
+        val o = try { JSONObject(s) } catch (e: Exception) { null }
+        cacheStr = s
+        cacheObj = o
+        return o
+    }
+
+    /** 고쳐 쓸 사본 (날짜 창에서 체크를 바로 보여 줄 때 — 기억해 둔 자료를 건드리지 않게) */
+    fun loadFresh(ctx: Context): JSONObject? {
+        val s = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null) ?: return null
+        return try { JSONObject(s) } catch (e: Exception) { null }
     }
 }
 

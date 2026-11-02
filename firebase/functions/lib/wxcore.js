@@ -148,6 +148,8 @@
   const CLOTH = [[28, '반팔 · 민소매 · 반바지', 'tshirt', '반팔'], [23, '반팔 · 얇은 셔츠', 'tshirt', '반팔'], [20, '얇은 긴팔 · 가디건', 'shirt', '얇은 긴팔'], [17, '얇은 니트 · 맨투맨', 'sweat', '맨투맨'], [12, '자켓 · 가디건', 'jacket', '자켓'], [9, '트렌치코트 · 야상', 'trench', '트렌치코트'], [5, '코트 · 히트텍', 'coat', '코트'], [-4, '패딩 · 목도리', 'pad_green', '패딩'], [-99, '두꺼운 패딩 · 목도리 · 장갑', 'pad_navy', '두꺼운 패딩']];
   const clothOf = f => CLOTH.find(c => f >= c[0]);
   // 한 칸 옷 (출근 · 퇴근 따로): {w 그림, ws 짧은 말, wt 문구}
+  // 하루 옷 한 벌: 안 지난 칸 중 가장 추운 칸 (앱 팝업 "오늘 옷"과 같은 기준)
+  const coldWear = c => { const all = (c || []).filter(x => x.ws && x.tp != null), p = all.filter(x => !x.past); return (p.length ? p : all).slice().sort((a, b) => a.tp - b.tp)[0] || null; };
   const wearOf = v => { if (!v || v.tp == null) return null; const c = clothOf(feel(v.tp, v.ws)); return { w: 'wear/' + c[2], ws: c[3], wt: c[1] }; };
   function outfit(vs) {
     vs = vs.filter(v => v && v.tp != null);
@@ -366,7 +368,7 @@
       else if (cold.tp <= 0) k = { t: `${cw}길 ${cold.tp < 0 ? '영하 ' + (-cold.tp) : 0}°`, s: '따뜻하게 입으세요', i: 'wear/scarf_red' };
       else if (Math.max(...vv.map(v => v.tp)) >= 30) k = { t: '오늘 더워요', s: '물 챙기세요', i: 'wear/bottle' };
       else k = { t: sunny ? (ps && !both ? `${LE}길 맑아요` : `${LB}길 맑아요`) : '무난한 날씨예요', s: '', i: (c.filter(x => !x.past).map(x => x.sk).find(Boolean) || c[1].sk || c[0].sk) };
-      if (!k.s) { const wv = c.find(x => x.ws); if (wv) k.s = `${wv.ws} 입으세요`; }
+      if (!k.s) { const wv = coldWear(c); if (wv) k.s = `${wv.ws} 입으세요`; }   // v0.127 팝업 "오늘 옷"과 같은 기준 (안 지난 칸 중 가장 추운 때)
     }
     return {
       i, h, hs,
@@ -404,7 +406,7 @@
     const k = ak ? ak : acK ? acK : d.wet ? { t: h, s: d.snow ? '미끄럼 조심해요' : '우산 챙기세요', i: d.snow ? 'sky/snow' : 'wear/umbrella' }
       : dd && dd.g >= 3 ? { t: `미세먼지 ${dd.lb}`, s: dd.m, i: dd.f, dz: 1 }
       : uv != null && uv >= 8 ? { t: `자외선 ${UVN(uv)}`, s: '선크림 · 모자 챙기세요', i: 'sky/uv' }
-      : { t: h, s: c.length && c[0].ws ? `${c[0].ws} 입으세요` : '', i: d.hi >= 30 ? 'wear/bottle' : d.lo <= 0 ? 'wear/scarf_red' : d.sk || '' };
+      : { t: h, s: coldWear(c) ? `${coldWear(c).ws} 입으세요` : '', i: d.hi >= 30 ? 'wear/bottle' : d.lo <= 0 ? 'wear/scarf_red' : d.sk || '' };
     const sunny = [d.am, d.pm].filter(Boolean).every(x => x.sk === 'sky/sun');
     return { i, h, hs, t: d.lo != null && d.hi != null ? `${d.lo}° ~ ${d.hi}°` : '', a: airLine(a), an: airNums(a), ag: a ? a.g : 0, r: [half('오전', d.am), half('오후', d.pm)].filter(Boolean), ...(oc ? { o: oc.o, ox: oc.ox, ol: '오늘 하루' } : {}),
       k, c, b: bring(c.length ? [hv(d.am, d.lo), hv(d.pm, d.hi)] : [], a ? a.g : 0, sunny, uv), dz, ...(uv != null ? { uv: [uv, UVN(uv)] } : {}), day: d, src: srcLine(home, null, d.src) };
