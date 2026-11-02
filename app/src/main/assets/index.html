@@ -6311,8 +6311,19 @@ const swEnd=e=>{
   st.cur.style.transition=SPRING;st.cur.style.transform=`translateX(${-st.dir*st.W}px)`;
   st.nb.style.transition=SPRING;st.nb.style.transform='translateX(0)';
   if(st.h1!=null){st.el.style.transition='height .26s ease';st.el.style.height=st.h1+'px';}
-  swLater(()=>{swUnwrap(st);if(swGo(st.w,st.dir)&&(st.w==='day'||st.w==='vc')){const sh=$('#sheet');if(sh)sh.scrollTop=0;}},300);
+  swLater(()=>{if(st.w==='wx'&&swAdoptWx(st))return;swUnwrap(st);if(swGo(st.w,st.dir)&&(st.w==='day'||st.w==='vc')){const sh=$('#sheet');if(sh)sh.scrollTop=0;}},300);
 };
+// v0.131 날씨 팝업: 넘긴 뒤 다시 그리지 않고, 밀면서 이미 그려 둔 옆 날짜 판(그림까지 다 풀린 것)을 그대로 씀 → 새 그림을 푸는 한 프레임 동안 하얗게 깜빡이던 것
+function swAdoptWx(st){
+  try{
+    const k=addK(swKey('wx'),st.dir),nb=st.nb,m=st.el;if(!nb||!okDate(k)||!m.classList.contains('wxdpop'))return false;
+    if(!wxDayPopHtml(k))return false;   // 미세먼지 자료(wxDz) 등 상태만 새 날짜로
+    st.nb=null;swUnwrap(st);
+    m.replaceChildren(...nb.childNodes);wxPopK=k;m.scrollTop=0;wxHrScroll();   // 커버 화면처럼 팝업이 화면보다 길면(스크롤) 옆 판은 맨 위부터 보였음 → 넘긴 뒤에도 맨 위 (안 그러면 툭 튐)
+    if(m.querySelector('.wxweb')){hintBump('wxweb');save();}
+    return true;
+  }catch(e){return false;}
+}
 document.addEventListener('pointerup',swEnd);
 document.addEventListener('pointercancel',swEnd);
 // 3일 띠: 가운데에 오늘 고른 날 · 옆으로 밀면 따라 움직이고, 멈췄을 때 가운데에 온 날로 이동
