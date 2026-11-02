@@ -247,3 +247,7 @@
 - 녹화(60fps): 넘김이 끝나는 순간 1프레임 동안 글 · 그림이 비고 구분선만 보임 → 내용을 다른 요소로 옮기면(replaceChildren · innerHTML) WebView 가 그 층을 다시 그리는 동안 비어 보임(커버 화면만 티 남).
 - swAdoptWx: 옆 날짜 판(.swc · will-change:transform 층)을 옮기지 않고 그대로 남김 — 옛 판(cur)만 지우고 판을 position:relative · translateZ(0) 로 바꿔 흐름에 넣음. 다음 넘김 때 swWrap 이 이 판을 감싸도 깊이는 늘 1.
 - wxHrScroll(root): 옆 날짜 판을 만들 때(swSide) 시간별 줄 스크롤을 미리 맞춤 → 넘긴 뒤 바꾸지 않음. rAF 호출은 ()=>wxHrScroll() 로.
+
+## v0.133 — 날씨 팝업 깜빡임 4 (밀기 시작할 때)
+- 두 번째 녹화: 넘김 끝 깜빡임은 사라졌고, 밀기 시작할 때 1프레임 전체가 빔 → swWrap 이 내용을 새 .swc 로 옮기기 때문.
+- 날씨 팝업은 열 때부터 내용을 .swc(position:relative · translateZ(0))로 감쌈(wxOpenDay · swGo 대체 경로). swWrap: 이미 .swc 하나뿐이면 그걸 cur 로 씀(st.keepCur) · swUnwrap 은 keepCur 면 옮기지 않고 transform 만 되돌림. → 밀기 시작 · 넘김 · 제자리 어디서도 내용을 옮기지 않음.
