@@ -19,5 +19,5 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     ev('pointerdown',x);for(let i=1;i<=9;i++)ev('pointermove',x-dir*150*i/9);const mid=H();ev('pointerup',x-dir*150);
     const w=ms=>new Promise(r=>setTimeout(r,ms));await w(285);const pre=H();await w(60);const m2=document.querySelector('#pop .menu');const post=Math.round(m2.getBoundingClientRect().height);
     return {h0,mid,pre,post};},dir);
-  T(`${from} → ${dir>0?'다음날':'전날'}: 미는 동안 높이가 바뀌고 · 도착 높이 = 다시 그린 높이`,r.h0!==r.pre&&r.mid!==r.h0&&Math.abs(r.pre-r.post)<=2,JSON.stringify(r));}
+  T(`${from} → ${dir>0?'다음날':'전날'}: 미는 동안 높이가 바뀌고 · 도착 높이 = 다시 그린 높이`,(Math.abs(r.h0-r.post)<=2?Math.abs(r.mid-r.h0)<=2:(r.h0!==r.pre&&r.mid!==r.h0))&&Math.abs(r.pre-r.post)<=2,JSON.stringify(r));}
   T('오류 없음',p.errs.length===0,p.errs.join('|'));T.sum();await b.close();})();

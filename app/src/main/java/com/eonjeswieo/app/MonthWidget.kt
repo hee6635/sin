@@ -412,7 +412,7 @@ object MonthRenderer {
         rv.setOnClickPendingIntent(R.id.mz_rnext, navPi(ctx, id, ACT_NEXT, 3))
         run {   // 오른쪽 위 달력 버튼 → 앱 달력 화면 (위젯에 보이던 그 달)
             val go = Intent(ctx, MainActivity::class.java)
-            go.putExtra("openDate", String.format(java.util.Locale.US, "%04d-%02d-01#m", grid.year, grid.month0 + 1))
+            go.putExtra("openDate", String.format(java.util.Locale.US, "%04d-%02d-01#m", grid.year, grid.month0 + 1) + (if (who.isNotEmpty()) "@$who" else ""))   // 이름 칩으로 고른 사람 달력으로
             go.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             go.data = Uri.parse("eonjeswieo://month/" + id + "/open")
             rv.setOnClickPendingIntent(R.id.mz_open, PendingIntent.getActivity(ctx, id * 10 + 7, go, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))

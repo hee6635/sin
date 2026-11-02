@@ -286,6 +286,17 @@
     const z = (ac || []).find(y => y.w); if (!z) return null;
     return z.w.sn ? { t: `${z.w.n} ${z.w.when} 눈 와요`, s: '미끄럼 조심해요', i: 'sky/snow' } : { t: `${z.w.n} ${z.w.when} 비 와요`, s: '우산 챙기세요', i: 'wear/umbrella' };
   }
+  // 옷 줄 아래 작은 문구 (출퇴근 기온 · 눈 · 야간) — 비는 결론 · 챙길 것에 이미 있어서 안 씀
+  function otipOf(vs, ve, LS, LE, LB, night) {
+    if (!vs || !ve) return '';
+    const a = vs.tp, b = ve.tp;
+    if (a == null || b == null) return '';
+    if (snowy(vs) || snowy(ve)) return '눈 소식이 있어요. 따뜻하게 챙겨 입으세요';
+    if (a <= 5 && b <= 5) return night ? '밤새 기온이 뚝 떨어져요. 따뜻한 겉옷 필수!' : `${LB} 모두 추워요. 든든하게 껴입으세요`;
+    if (a >= 27 && b >= 27) return `${LB} 모두 더워요. 가장 가벼운 옷차림으로!`;
+    if (Math.abs(a - b) >= 10) return a < b ? `${LS} 땐 입고, ${LE} 땐 가볍게 들어요` : `${LE} 땐 쌀쌀해요. 벗기 쉬운 겉옷을 챙겨요`;
+    return '';
+  }
   function commute(home, work, o) {
     const LS = o.ls || '출근', LE = o.le || '퇴근', LB = o.lb || '출퇴근';
     const W = work || home;
@@ -363,6 +374,7 @@
       a: airLine(a), an: airNums(a), ag: a ? a.g : 0,
       r: [row(LS, o.s, o.hn, vs, o.hq), row(LE, o.e, o.wn, ve, o.wq || o.hq)],
       ...((oc => oc ? { o: oc.o, ox: oc.ox, ol: LB + '길' } : {})(outfit([vs, ve]))),
+      ...((t => t ? { ot: t } : {})(otipOf(vs, ve, LS, LE, LB, kst(o.s).h >= 15))),
       k, c, b: bring(vD, a ? a.g : 0, sunny, uv), dz, ...(uv != null ? { uv: [uv, UVN(uv)] } : {}),
       src: srcLine(home, work)
     };

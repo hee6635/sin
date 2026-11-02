@@ -487,9 +487,11 @@ class AlarmActivity : Activity() {
             val l = line()
             wxImg(cold.optString("w"), 50)?.let { l.addView(it) }
             val col = LinearLayout(this); col.orientation = LinearLayout.VERTICAL; col.setPadding(dp(8), 0, 0, 0)
-            col.addView(tv("오늘 옷 · ${cold.optString("l").substringBefore(" ")} ${cold.optInt("tp")}° 기준", 12f, sub))
+            col.addView(tv("오늘 옷", 12f, sub))
             col.addView(tv(cold.optString("wt").replace(" · ", " + "), 17f, ink, round = true))
-            if (gap >= 10) col.addView(tv("낮엔 따뜻해요 · 벗기 쉬운 걸로", 12f, sub))
+            // v0.127 옷 아래 상황 문구 (서버 · 앱 같은 문구: 출퇴근 기온차 · 추위 · 더위 · 눈)
+            val ot = w.optString("ot").takeIf { it.isNotBlank() } ?: if (gap >= 10) "낮엔 따뜻해요 · 벗기 쉬운 걸로" else "${cold.optString("l").substringBefore(" ")} ${cold.optInt("tp")}° 기준"
+            col.addView(tv(ot, 12f, sub))
             l.addView(col); root.addView(l)
         }
         // 챙길 것

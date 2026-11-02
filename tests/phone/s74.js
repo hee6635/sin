@@ -25,15 +25,15 @@ const SH=process.env.SHOT||'';
     if(SH)await p.screenshot({path:SH+'b_day.png'});
     await p.click('#wxDay');await p.waitForTimeout(500);
     const pop=await p.evaluate(()=>({t:document.querySelector('#pop').innerText,past:!!document.querySelector('#pop .wxc.past .tag'),k:document.querySelector('#pop .wxk').getAttribute('data-act'),dzRow:!!document.querySelector('#pop .wxrw.dz')}));
-    T('지난 출근 칸: 그때 날씨 + "지남"',pop.past&&/출근 오전 7시/.test(pop.t),pop.t.slice(0,200));
-    T('미세먼지가 결론 → 결론을 누르면 큰 화면 · 아래 미세먼지 칸은 없음',/미세먼지 상당히 나쁨/.test(pop.t)&&pop.k==='wx-dust'&&!pop.dzRow,JSON.stringify(pop).slice(0,300));
+    T('지난 출근 칸: 그때 날씨 + "지남"',pop.past&&/출근\s*오전 7시/.test(pop.t),pop.t.slice(0,200));
+    T('미세먼지가 결론 → 결론 칸은 안 눌림 · 미세먼지 줄은 늘 같은 자리 (v0.127)',/미세먼지 상당히 나쁨/.test(pop.t)&&!pop.k&&pop.dzRow,JSON.stringify(pop).slice(0,300));
     const hr=await p.evaluate(()=>{const s=document.querySelector('#pop .wxhs');const hs=[...s.querySelectorAll('.hc')];const now=s.querySelector('.hc.hn');const left=s.getBoundingClientRect().left;const vis=hs.filter(h=>h.getBoundingClientRect().left>=left-2).map(h=>h.innerText.split('\n')[0]);return {n:hs.length,segs:[...s.querySelectorAll('.sg')].map(g=>g.className+':'+g.querySelector('.hl').innerText),vis:vis.slice(0,3),now:now&&now.innerText};});
     T('시간별 줄: 12칸 · 집 → 직장 → 집 구간',hr.n===12&&hr.segs.length===3&&/home/.test(hr.segs[0])&&/work.*직장 · 화성시 동탄구/.test(hr.segs[1])&&/home/.test(hr.segs[2]),JSON.stringify(hr));
     const end=await p.evaluate(()=>{const s=document.querySelector('#pop .wxhs');return s.scrollLeft+s.clientWidth>=s.scrollWidth-2;});
     T('열면 지금 칸이 왼쪽에서 두 번째 (줄 끝이면 끝까지 밀린 채)',(hr.vis[1]&&/지금/.test(hr.vis[1]))||(end&&hr.vis.length>0),JSON.stringify(hr.vis));
     if(SH)await p.screenshot({path:SH+'b_pop.png'});
-    await p.click('#pop .wxk[data-act="wx-dust"]');await p.waitForTimeout(300);
-    T('결론 눌러 미세먼지 큰 화면',await p.evaluate(()=>document.querySelector('#pop').classList.contains('wxfull')));
+    await p.click('#pop .wxrw.dz[data-act="wx-dust"]');await p.waitForTimeout(300);
+    T('미세먼지 줄 눌러 큰 화면',await p.evaluate(()=>document.querySelector('#pop').classList.contains('wxfull')));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 2) 특보 · 자외선

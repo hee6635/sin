@@ -201,3 +201,15 @@
 - 오늘 색: 동그라미 모양도 (html[data-tdc] 테두리 + 10% 바탕) · 띠 모양 고르기는 칸 채우기 전용.
 - 유찬 · 가족 달력 [오늘] (vcNavHtml).
 - 시험: s84 (12) · s76 · s77 · s78 새 흐름 · 12시간제.
+
+## v0.127 — 지난 날 날씨 기록 · 부를 이름 · 위젯 → 그 사람 달력 · 날씨 팝업 높이 통일
+- 지난 날 날씨 기록: wxHistSave() 가 날씨를 받을 때(wxChanged) · wxFetch 때(10분에 한 번) 오늘 카드를 localStorage `eonjeswieo:wxh` {날짜:{at,s,c,hr,f:{가족키:{c,s}}}} 에 덮어씀. 하루 처음 시각(now=d0)으로 계산 → 지난 칸 없이 하루 전체 · past/q/now 지움. 줄이지 않고 계속 보관. 지난 날짜 창 = .wxhist "그날 예보 기준" 카드 + "실제 …"(wxObsTxt) · 팝업 = wxHistPop (dz 없음). 가족 날짜 창(famDayWxHtml · vcDayWx) · 팝업(famWxPop · vcWxPop)도 저장본(시간별 줄은 내 것만). 백업 data.wxh · 복원은 폰에 없는 날만 채움. 하루 약 3~5KB.
+- 10/31 관측 빈칸 원인: wxPastFetch 가 지난달은 한 번 받으면 다시 안 받음 → 달 바뀐 날 아침(전날 관측 올라오기 전)에 받으면 말일이 계속 빔. 이제 말일 관측이 없고 달 끝난 지 3일 안에 받은 거면 6시간마다 다시 받음.
+- 부를 이름: S.famAlias{uid:이름} (normalize 20개 · 12자 · 백업). famAka → famNameOf · famPeers · famOthers · 요청 peerName · 가족 연결 목록(원래 이름 작게). 가족 메뉴 "📛 내 폰에서 부를 이름"(mem-aka · mem-aka-ok). 위젯 사람 칩도 famPeers 라 같이. 푸시 글자는 서버가 만들어 원래 이름(나중).
+- 위젯 → 그 사람 달력: openDate 에 "@사람키"(MonthRenderer.personKey) — WidgetDayActivity "앱에서 열기"(가족 보던 때만) · MonthWidget 오른쪽 위 달력 버튼. 앱 widgetSync: 연결된 가족(u_uid)이면 그 사람 달력(famcal · 보기만 폰은 cal 탭) + 그 날짜 창(#m 면 달력만) · 없으면 내 달력.
+- 날씨 팝업: 챙길 것 없으면 "없어요 + misc/smile" · 미세먼지 줄 늘 · 옷 아래 상황 문구(wxcore otipOf → c.ot) · 결론 칸 안 눌림 · 지남 태그 칸 맨 아래 · 여백/글자 굵기 · 시간별 줄 끝 칸 반쯤 보이게(--hcw). 알람 화면 옷 줄도 "오늘 옷 / 이름 / 상황".
+- 미세먼지 큰 화면 옆으로 밀면 탭 넘김(끝에서 튕김).
+- 오늘 색 = 근무 색 · 쉬는 날이면 회색(#9aa0a8) 테두리만(data-tdc="rest").
+- 모닝콜 문구 순서 새로(요청 > 대근 > 메모 > 인계 > 포스트잇 > D-day 7일 > 마지막 날 > 근무 흐름/인사 번갈아 > 쉬는 날 문구). 월급날은 앱에 월급날 칸이 없어 뺌.
+- 연차: "1년 연차" + "연차 새로 시작"(S.salary.leaveFrom 'MM-DD' · 비우면 1월 1일) · leaveStart · 통계 "(M/D 기준)".
+- 시험: s85 (20).

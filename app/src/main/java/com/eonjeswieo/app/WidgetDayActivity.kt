@@ -482,7 +482,7 @@ class WidgetDayActivity : Activity() {
         open.background = rounded(if (pal.bg != 0xFFFFFFFF.toInt()) 0xFF3A4262.toInt() else 0xFFDDE7F8.toInt(), 20)   // 둥근 파스텔 버튼
         open.setOnClickListener {
             val go = Intent(this, MainActivity::class.java)
-            go.putExtra("openDate", key)
+            go.putExtra("openDate", if (person != null && who.isNotEmpty()) "$key@$who" else key)   // 가족 달력을 보다 눌렀으면 앱도 그 사람 달력으로
             go.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             startActivity(go)
             finish()

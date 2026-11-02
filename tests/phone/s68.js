@@ -20,7 +20,7 @@ const ONLY=process.env.ONLY||'';
     T('다른 색을 고르면 근무 색이 풀림',st!=='shift',st);
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
     const p2=await boot(b,{...base,anchor:'2026-10-10',calLook:'fill',todayColor:'shift'});   // 10/12 = 휴
-    T('쉬는 날은 장미색',await p2.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--tdc').trim())==='#d0607a');
+    T('쉬는 날은 회색 (v0.127 · 빨강은 명절 느낌)',await p2.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--tdc').trim())==='#9aa0a8');
     await p2.close();
   }
   if(want('view')){
