@@ -187,13 +187,14 @@ await ok('옷차림: 체감온도(바람) · 비 · 눈 · 바람 · 기온차 �
   const v = (tp, ws = 1, pty = 0, pop = 0, pcp = 0) => ({ tp, ws, pty, pop, pcp, sky: 1 });
   assert.equal(C.feel(15, 9), 15); assert.equal(C.feel(5, 1), 5); assert.ok(C.feel(-3, 8) <= -9);   // 10° 넘으면 기온 그대로 · 바람 세면 더 춥게
   const a = C.outfit([v(6, 2), v(12, 2, 1, 70, 3)]); assert.equal(a.o, '👕 코트 · 히트텍'); assert.match(a.ox, /체감 6°~12°/);   // 약한 바람(2m/s)은 기온 그대로 assert.match(a.ox, /큰 우산 · 젖어도 되는 신발/);
-  assert.equal(C.outfit([v(-3, 8), v(1, 3)]).o, '👕 두꺼운 패딩 · 목도리 · 장갑');
+  assert.equal(C.outfit([v(-3, 8), v(1, 3)]).o, '👕 두꺼운 패딩 · 히트텍 · 기모 바지'); assert.match(C.outfit([v(-3, 8), v(1, 3)]).ox, /목도리 · 🧤 장갑/); assert.match(C.outfit([v(-3, 8)]).ox, /바람이 세요 · 목까지 잠그세요/); assert.doesNotMatch(C.outfit([v(-3, 8)]).ox, /바람 막는 겉옷/);   // v0.128 목도리 · 장갑은 챙길 것 · 추운 날 바람은 문구
+  assert.equal(C.outfit([v(3)]).o, '👕 패딩 · 니트'); assert.equal(C.outfit([v(-2)]).o, '👕 패딩 · 히트텍'); assert.equal(C.outfit([v(10)]).o, '👕 트렌치코트 · 니트');
   assert.match(C.outfit([v(10, 8, 1, 80)]).ox, /우산이 뒤집힐 수 있어요/);
   assert.match(C.outfit([v(15, 9)]).ox, /바람 막는 겉옷/);
   assert.match(C.outfit([v(2, 1, 3, 90)]).ox, /미끄럽지 않은 신발/);
   assert.match(C.outfit([v(3), v(13)]).ox, /겹쳐 입기/);
   assert.equal(C.outfit([v(26), v(32)]).o, '👕 반팔 · 얇은 셔츠'); assert.match(C.outfit([v(26), v(32)]).ox, /물 · 통풍/);
-  assert.equal(C.outfit([v(29)]).o, '👕 반팔 · 민소매 · 반바지'); assert.equal(C.outfit([v(18)]).o, '👕 얇은 니트 · 맨투맨');
+  assert.equal(C.outfit([v(29)]).o, '👕 반팔 · 반바지'); assert.equal(C.outfit([v(18)]).o, '👕 맨투맨 (또는 얇은 니트)');
   assert.equal(C.outfit([null]), null);
 });
 await ok('미세먼지 8단계 (지금 값) · 마스크 안내 · 예보는 4단계', () => {

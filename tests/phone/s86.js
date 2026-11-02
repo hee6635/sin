@@ -54,4 +54,20 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     T('주간(오전 7시 → 오후 7시): "다음날" 없음',await p.evaluate(()=>!document.querySelector('.tdtm .tbtn.nx')&&!/다음날/.test(document.querySelector('.tdtm').innerText)));
     T('오류 없음 (위젯 · 스티커 · 다음날)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
+  { // 4) v0.129 스티커 크기 원인 보기 (모양 조정) · 범위 바꾸기
+    const mk=(id,e,dates)=>({id,kind:'mark',emoji:e,name:id,times:1,rep:'none',days:[],dates,skip:[],ats:[]});
+    const defs=[mk('w','💧',['2026-11-04','2026-12-25']),mk('bk','📖',['2026-11-04','2026-12-25']),mk('bi','🚴',['2026-11-04','2026-12-25']),mk('z','💤',['2026-11-04','2026-12-25'])];
+    const p=await boot(b,{...base,stamps:{defs,log:{},snap:{},remind:false,pillTimes:['08:00'],lastAt:[],v3:1,v4:1}},{T:+new Date('2026-11-02T10:00:00')});
+    await p.evaluate(()=>{const x=document.createElement('button');x.dataset.act='tune-open';document.body.appendChild(x);x.click();});await p.waitForTimeout(800);
+    const g=await p.evaluate(()=>{const e=document.getElementById('stzDiagG');return e&&!e.hidden?e.innerText:'';});
+    T('모양 조정: 스티커 크기 · 기본보다 몇 % · 원인 날짜(12월 25일) · 대책',/지금 [\d.]+px/.test(g)&&/원인: 12월 25일/.test(g)&&/대책/.test(g),g.slice(0,160));
+    await p.evaluate(()=>document.querySelector('[data-act="stz-go"]').click());await p.waitForTimeout(500);
+    T('원인 날짜를 누르면 그 날 날짜 창',await p.evaluate(()=>!!document.querySelector('#sheet.open')&&/25/.test(document.querySelector('#sheet.open').innerText)));
+    await p.evaluate(()=>{__wx.closeSheet();const x=document.createElement('button');x.dataset.act='tune-open';document.body.appendChild(x);x.click();});await p.waitForTimeout(600);
+    await p.evaluate(()=>document.querySelector('[data-act="stz-mode"][data-v="m"]').click());await p.waitForTimeout(600);
+    T('"달마다 따로" → 저장 · 범위 "그 달만"',await p.evaluate(()=>__wx.S.stzMode==='m'&&/그 달만/.test(document.getElementById('stzDiag').innerText)));
+    const q=await boot(b,{...base});await q.evaluate(()=>{const x=document.createElement('button');x.dataset.act='tune-open';document.body.appendChild(x);x.click();});await q.waitForTimeout(600);
+    T('스티커가 없으면 이 줄은 안 보임',await q.evaluate(()=>document.getElementById('stzDiagG').hidden));await q.close();
+    T('오류 없음 (스티커 크기 원인)',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
   T.sum();await b.close();})();

@@ -145,7 +145,8 @@
   }
   // 옷차림 (출퇴근길 · 더 추운 쪽 체감온도 기준) + 챙길 것 (비 · 눈 · 바람 · 기온차 · 더위)
   // [체감 이상, 문구, 그림, 짧은 말]
-  const CLOTH = [[28, '반팔 · 민소매 · 반바지', 'tshirt', '반팔'], [23, '반팔 · 얇은 셔츠', 'tshirt', '반팔'], [20, '얇은 긴팔 · 가디건', 'shirt', '얇은 긴팔'], [17, '얇은 니트 · 맨투맨', 'sweat', '맨투맨'], [12, '자켓 · 가디건', 'jacket', '자켓'], [9, '트렌치코트 · 야상', 'trench', '트렌치코트'], [5, '코트 · 히트텍', 'coat', '코트'], [-4, '패딩 · 목도리', 'pad_green', '패딩'], [-99, '두꺼운 패딩 · 목도리 · 장갑', 'pad_navy', '두꺼운 패딩']];
+  // v0.128 실제로 같이 입는 조합 (예전엔 "트렌치코트 · 야상"처럼 둘 중 하나였는데 화면이 " + "로 보여 줘서 어색) · 목도리 · 장갑은 챙길 것으로
+  const CLOTH = [[28, '반팔 · 반바지', 'tshirt', '반팔'], [23, '반팔 · 얇은 셔츠', 'tshirt', '반팔'], [20, '얇은 긴팔 · 가디건', 'shirt', '얇은 긴팔'], [17, '맨투맨 (또는 얇은 니트)', 'sweat', '맨투맨'], [12, '자켓 · 긴팔', 'jacket', '자켓'], [9, '트렌치코트 · 니트', 'trench', '트렌치코트'], [5, '코트 · 히트텍', 'coat', '코트'], [1, '패딩 · 니트', 'pad_green', '패딩'], [-4, '패딩 · 히트텍', 'pad_green', '패딩'], [-99, '두꺼운 패딩 · 히트텍 · 기모 바지', 'pad_navy', '두꺼운 패딩']];
   const clothOf = f => CLOTH.find(c => f >= c[0]);
   // 한 칸 옷 (출근 · 퇴근 따로): {w 그림, ws 짧은 말, wt 문구}
   // 하루 옷 한 벌: 안 지난 칸 중 가장 추운 칸 (앱 팝업 "오늘 옷"과 같은 기준)
@@ -161,10 +162,11 @@
     const windy = vs.some(v => (v.ws || 0) >= 7), heavy = vs.some(v => (v.pcp || 0) >= 3);
     if (snow) x.push('❄️ 미끄럽지 않은 신발');
     if (rain) x.push(windy ? '☔ 우산이 뒤집힐 수 있어요 · 우비나 방수 겉옷' : heavy ? '☔ 큰 우산 · 젖어도 되는 신발' : '☂️ 우산');
-    else if (windy) x.push('💨 바람 막는 겉옷');
+    else if (windy && f > 5) x.push('💨 바람 막는 겉옷');
+    else if (windy) x.push('💨 바람이 세요 · 목까지 잠그세요');
     if (Math.max(...tps) - Math.min(...tps) >= 8) x.push('🧥 겹쳐 입기 (벗기 쉬운 겉옷)');
     if (Math.max(...tps) >= 30) x.push('💧 물 · 통풍 잘되는 옷');
-    if (f <= 0 && !/장갑/.test(w)) x.push('🧤 장갑');
+    if (f < 5) x.push(f <= 0 ? '🧣 목도리 · 🧤 장갑' : '🧣 목도리');
     return { w, f, x, o: `👕 ${w}`, ox: [`체감 ${f}°${fs.length > 1 && Math.max(...fs) !== f ? `~${Math.max(...fs)}°` : ''}`, ...x].join(' · ') };
   }
 
@@ -179,12 +181,13 @@
       if (rain) { if (windy) add('raincoat', '우비'); else if (heavy) { add('umbrella', '큰 우산'); add('boots', '장화'); } else add('umbrella', '우산'); }
       if (snow) add('boots', '미끄럼 조심 신발');
       if (g >= 3) add('mask', g >= 4 ? 'KF94 마스크' : '마스크');
+      if (f < 5) add('scarf_red', '목도리');   // v0.128 패딩 날: 목도리 · 장갑은 "챙길 것" (아침에 두르고 낮엔 풂)
       if (f <= 0) add('mittens', '장갑');
       if (f <= -5) { add('hotpack', '핫팩'); add('beanie', '비니'); }
       if (hi >= 30) { add('bottle', '물'); add('fan', '손풍기'); }
       if (uv != null ? uv >= 6 : sunny && hi >= 25 && !rain) add('sunscreen', uv != null ? `선크림 (자외선 ${UVN(uv)})` : '선크림');
-      if (hi - Math.min(...tps) >= 8) add('cardigan', '얇은 겉옷');
-      if (windy && !rain) add('jacket', '바람막이');
+      // (기온차는 "오늘 옷" 아래 문구 하나로만 — 얇은 겉옷은 뺌 · v0.128)
+      if (windy && !rain && f > 5) add('windbreaker', '바람막이');   // 추운 날(패딩)엔 바람막이 대신 "바람이 세요 · 목까지 잠그세요" 문구
     } else if (g >= 3) add('mask', g >= 4 ? 'KF94 마스크' : '마스크');
     return out.slice(0, 3);
   }
@@ -294,9 +297,10 @@
     const a = vs.tp, b = ve.tp;
     if (a == null || b == null) return '';
     if (snowy(vs) || snowy(ve)) return '눈 소식이 있어요. 따뜻하게 챙겨 입으세요';
+    if (Math.min(feel(a, vs.ws), feel(b, ve.ws)) <= 5 && Math.max(vs.ws || 0, ve.ws || 0) >= 7) return '바람이 세요 · 목까지 잠그세요';   // v0.128 추운 날 바람
     if (a <= 5 && b <= 5) return night ? '밤새 기온이 뚝 떨어져요. 따뜻한 겉옷 필수!' : `${LB} 모두 추워요. 든든하게 껴입으세요`;
     if (a >= 27 && b >= 27) return `${LB} 모두 더워요. 가장 가벼운 옷차림으로!`;
-    if (Math.abs(a - b) >= 10) return a < b ? `${LS} 땐 입고, ${LE} 땐 가볍게 들어요` : `${LE} 땐 쌀쌀해요. 벗기 쉬운 겉옷을 챙겨요`;
+    if (Math.abs(a - b) >= 8) return a < b ? `${LS} 땐 입고, ${LE} 땐 가볍게 들어요` : `${LE} 땐 쌀쌀해요. 안에 얇게 입고 겉옷은 벗기 쉽게`;
     return '';
   }
   function commute(home, work, o) {

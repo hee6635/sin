@@ -1502,6 +1502,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .otsum{margin-top:6px;padding:10px 12px;border-radius:12px;background:var(--surface);font-size:14px}
 .ptm-t{display:flex;align-items:center;gap:4px;flex:none}.ptm-t em{font-style:normal;color:var(--muted)}.ptm-t small{font-size:11px;color:var(--muted)}
 .wxl.past{opacity:.75;cursor:default;font-weight:700}
+.sdg{font-size:13px;line-height:1.6;color:var(--fg);padding:2px 2px}.sdg-go{display:block;width:100%;text-align:left;font:inherit;font-size:13px;line-height:1.6;background:var(--card,#fff);border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin:4px 0;color:var(--fg)}
 /* v0.127 지난 날 날씨 기록 */.wxhist{margin:12px 0 10px}.wxhist .wxl.wxcard{margin:0}.wxhl{font-size:11.5px;font-weight:700;color:var(--muted);margin:0 0 4px 4px}.wxob{font-size:12.5px;font-weight:700;color:var(--muted);margin:6px 0 0 4px}.wxrw.obs .n{font-weight:700}
 .wxr .wtag{flex:none;font-size:12px;font-weight:800;padding:4px 9px;border-radius:10px;background:#e4ecfb;color:#2c58b8}
 .wxp .wair{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--surface);font-size:13.5px;font-weight:800}.wxp .wair small{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px;white-space:pre-line;line-height:1.55}
@@ -1784,7 +1785,8 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
   }
   // 옷차림 (출퇴근길 · 더 추운 쪽 체감온도 기준) + 챙길 것 (비 · 눈 · 바람 · 기온차 · 더위)
   // [체감 이상, 문구, 그림, 짧은 말]
-  const CLOTH = [[28, '반팔 · 민소매 · 반바지', 'tshirt', '반팔'], [23, '반팔 · 얇은 셔츠', 'tshirt', '반팔'], [20, '얇은 긴팔 · 가디건', 'shirt', '얇은 긴팔'], [17, '얇은 니트 · 맨투맨', 'sweat', '맨투맨'], [12, '자켓 · 가디건', 'jacket', '자켓'], [9, '트렌치코트 · 야상', 'trench', '트렌치코트'], [5, '코트 · 히트텍', 'coat', '코트'], [-4, '패딩 · 목도리', 'pad_green', '패딩'], [-99, '두꺼운 패딩 · 목도리 · 장갑', 'pad_navy', '두꺼운 패딩']];
+  // v0.128 실제로 같이 입는 조합 (예전엔 "트렌치코트 · 야상"처럼 둘 중 하나였는데 화면이 " + "로 보여 줘서 어색) · 목도리 · 장갑은 챙길 것으로
+  const CLOTH = [[28, '반팔 · 반바지', 'tshirt', '반팔'], [23, '반팔 · 얇은 셔츠', 'tshirt', '반팔'], [20, '얇은 긴팔 · 가디건', 'shirt', '얇은 긴팔'], [17, '맨투맨 (또는 얇은 니트)', 'sweat', '맨투맨'], [12, '자켓 · 긴팔', 'jacket', '자켓'], [9, '트렌치코트 · 니트', 'trench', '트렌치코트'], [5, '코트 · 히트텍', 'coat', '코트'], [1, '패딩 · 니트', 'pad_green', '패딩'], [-4, '패딩 · 히트텍', 'pad_green', '패딩'], [-99, '두꺼운 패딩 · 히트텍 · 기모 바지', 'pad_navy', '두꺼운 패딩']];
   const clothOf = f => CLOTH.find(c => f >= c[0]);
   // 한 칸 옷 (출근 · 퇴근 따로): {w 그림, ws 짧은 말, wt 문구}
   // 하루 옷 한 벌: 안 지난 칸 중 가장 추운 칸 (앱 팝업 "오늘 옷"과 같은 기준)
@@ -1800,10 +1802,11 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
     const windy = vs.some(v => (v.ws || 0) >= 7), heavy = vs.some(v => (v.pcp || 0) >= 3);
     if (snow) x.push('❄️ 미끄럽지 않은 신발');
     if (rain) x.push(windy ? '☔ 우산이 뒤집힐 수 있어요 · 우비나 방수 겉옷' : heavy ? '☔ 큰 우산 · 젖어도 되는 신발' : '☂️ 우산');
-    else if (windy) x.push('💨 바람 막는 겉옷');
+    else if (windy && f > 5) x.push('💨 바람 막는 겉옷');
+    else if (windy) x.push('💨 바람이 세요 · 목까지 잠그세요');
     if (Math.max(...tps) - Math.min(...tps) >= 8) x.push('🧥 겹쳐 입기 (벗기 쉬운 겉옷)');
     if (Math.max(...tps) >= 30) x.push('💧 물 · 통풍 잘되는 옷');
-    if (f <= 0 && !/장갑/.test(w)) x.push('🧤 장갑');
+    if (f < 5) x.push(f <= 0 ? '🧣 목도리 · 🧤 장갑' : '🧣 목도리');
     return { w, f, x, o: `👕 ${w}`, ox: [`체감 ${f}°${fs.length > 1 && Math.max(...fs) !== f ? `~${Math.max(...fs)}°` : ''}`, ...x].join(' · ') };
   }
 
@@ -1818,12 +1821,13 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
       if (rain) { if (windy) add('raincoat', '우비'); else if (heavy) { add('umbrella', '큰 우산'); add('boots', '장화'); } else add('umbrella', '우산'); }
       if (snow) add('boots', '미끄럼 조심 신발');
       if (g >= 3) add('mask', g >= 4 ? 'KF94 마스크' : '마스크');
+      if (f < 5) add('scarf_red', '목도리');   // v0.128 패딩 날: 목도리 · 장갑은 "챙길 것" (아침에 두르고 낮엔 풂)
       if (f <= 0) add('mittens', '장갑');
       if (f <= -5) { add('hotpack', '핫팩'); add('beanie', '비니'); }
       if (hi >= 30) { add('bottle', '물'); add('fan', '손풍기'); }
       if (uv != null ? uv >= 6 : sunny && hi >= 25 && !rain) add('sunscreen', uv != null ? `선크림 (자외선 ${UVN(uv)})` : '선크림');
-      if (hi - Math.min(...tps) >= 8) add('cardigan', '얇은 겉옷');
-      if (windy && !rain) add('jacket', '바람막이');
+      // (기온차는 "오늘 옷" 아래 문구 하나로만 — 얇은 겉옷은 뺌 · v0.128)
+      if (windy && !rain && f > 5) add('windbreaker', '바람막이');   // 추운 날(패딩)엔 바람막이 대신 "바람이 세요 · 목까지 잠그세요" 문구
     } else if (g >= 3) add('mask', g >= 4 ? 'KF94 마스크' : '마스크');
     return out.slice(0, 3);
   }
@@ -1933,9 +1937,10 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
     const a = vs.tp, b = ve.tp;
     if (a == null || b == null) return '';
     if (snowy(vs) || snowy(ve)) return '눈 소식이 있어요. 따뜻하게 챙겨 입으세요';
+    if (Math.min(feel(a, vs.ws), feel(b, ve.ws)) <= 5 && Math.max(vs.ws || 0, ve.ws || 0) >= 7) return '바람이 세요 · 목까지 잠그세요';   // v0.128 추운 날 바람
     if (a <= 5 && b <= 5) return night ? '밤새 기온이 뚝 떨어져요. 따뜻한 겉옷 필수!' : `${LB} 모두 추워요. 든든하게 껴입으세요`;
     if (a >= 27 && b >= 27) return `${LB} 모두 더워요. 가장 가벼운 옷차림으로!`;
-    if (Math.abs(a - b) >= 10) return a < b ? `${LS} 땐 입고, ${LE} 땐 가볍게 들어요` : `${LE} 땐 쌀쌀해요. 벗기 쉬운 겉옷을 챙겨요`;
+    if (Math.abs(a - b) >= 8) return a < b ? `${LS} 땐 입고, ${LE} 땐 가볍게 들어요` : `${LE} 땐 쌀쌀해요. 안에 얇게 입고 겉옷은 벗기 쉽게`;
     return '';
   }
   function commute(home, work, o) {
@@ -2469,7 +2474,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.alarmMsg=s.alarmMsg!==false;
+  s.alarmMsg=s.alarmMsg!==false;s.stzMode=(o&&o.stzMode)==='m'?'m':'';   // v0.128 스티커 크기 범위
   {const a=isObj(s.famAlias)?s.famAlias:{},o={};Object.keys(a).slice(0,20).forEach(k=>{const v=typeof a[k]==='string'?a[k].trim().slice(0,12):'';if(/^[A-Za-z0-9_-]{1,64}$/.test(k)&&v)o[k]=v;});s.famAlias=o;}   // v0.127 부를 이름
   {const h=isObj(s.hints)?s.hints:{},o2={};Object.keys(h).slice(0,30).forEach(k=>{const v=Math.round(+h[k]);if(/^[a-z0-9]{1,12}$/.test(k)&&v>=0&&v<1000)o2[k]=v;});s.hints=o2;}   // v0.126 안내 줄 본 횟수
   s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.pushBoard=!(o&&o.pushBoard===false);s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'||((o&&o.calLook)!=='circle'&&!(o&&o.onboarded))?'fill':'circle';/* v0.97 새로 설치 = 칸 채우기 · 예전부터 쓰던 사람(고른 적 없음 = 동그라미)은 그대로 */s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.todayColor=(o&&o.todayColor==='shift')?'shift':/^#[0-9a-f]{6}$/i.test((o&&o.todayColor)||'')?o.todayColor.toLowerCase():'';/* 'shift' = 그날 근무 색 */s.linkLost=(o&&isObj(o.linkLost)&&typeof o.linkLost.hid==='string')?{hid:cutTxt(o.linkLost.hid,128),role:o.linkLost.role==='host'?'host':'guest',name:cutTxt(o.linkLost.name,12),at:+o.linkLost.at||0}:null;s.linkMissAt=+(o&&o.linkMissAt)||0;s.hostSeenAt=+(o&&o.hostSeenAt)||0;s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&(o.bg==='paper'||o.bg==='vivid'))?o.bg:'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
@@ -3403,13 +3408,53 @@ function fitStz(root){
   }
   if(measure()>0)rt.style.removeProperty('--stz');
 }
+// v0.128 스티커 크기 원인 보기 (설정 › 모양 조정 · 열 때만 계산): 기본 크기에서 칸마다 넘치는 만큼 → 그 칸이 들어가는 크기 · 가장 빡빡한 날 = 원인 · 다음 날 = 대책
+function stzDiag(){
+  const host=$('#view');if(!host||!(host.clientWidth>0))return null;
+  const rt=document.documentElement,saved=rt.style.getPropertyValue('--stz');
+  const probe=document.createElement('div');probe.style.cssText=`position:fixed;left:0;top:0;width:${host.clientWidth}px;visibility:hidden;pointer-events:none;overflow:hidden`;
+  const mk=cur.y*12+cur.m;let html='';
+  for(let d=-stzR();d<=stzR();d++){const v=mk+d;if(v<MIN_M||v>MAX_M)continue;html+=`<div class="panel">${calPanel(Math.floor(v/12),v%12)}</div>`;}
+  probe.innerHTML=`<div class="track">${html}</div>`;host.appendChild(probe);
+  const pr=document.createElement('i');pr.style.cssText='position:absolute;visibility:hidden;width:var(--stz)';
+  try{
+    rt.style.removeProperty('--stz');document.body.appendChild(pr);const base=pr.getBoundingClientRect().width;
+    const cells=[...probe.querySelectorAll('.cell .dn>.stp')].map(stp=>{const dn=stp.parentNode,h1=dn.querySelector('.h1'),c=stp.closest('.cell');return {stp,dn,h1,t:h1?h1.textContent:'',k:c&&c.dataset.k||''};});
+    cells.forEach(c=>{if(c.h1)c.h1.textContent=c.h1.dataset.t2||c.t;});
+    const ico=e=>e.tagName&&e.tagName.toLowerCase()==='svg'?'💊':(e.tagName==='IMG'||(e.querySelector&&e.querySelector('img')))?'🖼':(e.textContent||'').trim()||'⭐';
+    const seen=new Set(),list=[];
+    cells.forEach(c=>{if(!c.k||seen.has(c.k))return;seen.add(c.k);
+      const padR=parseFloat(getComputedStyle(c.dn).paddingRight)||0,last=c.dn.lastElementChild;
+      const ov=c.dn.clientWidth>0?(last.offsetLeft+last.offsetWidth)-(c.dn.clientWidth-padR):0,n=Math.max(1,c.stp.children.length),need=ov>1.5?(ov-1)/n:0;
+      list.push({k:c.k,n:c.stp.children.length,need,fit:Math.max(9,base-need-.3),ic:[...c.stp.children].map(ico).join(' '),two:+c.k.slice(8)>=10,hol:!!(c.h1&&c.t)});});
+    cells.forEach(c=>{if(c.h1)c.h1.textContent=c.t;});
+    list.sort((a,b)=>a.fit-b.fit);
+    return {base,cur:parseFloat(saved)||base,list};
+  }catch(e){return null;}finally{pr.remove();probe.remove();if(saved)rt.style.setProperty('--stz',saved);else rt.style.removeProperty('--stz');}
+}
+function stzDiagHtml(){
+  const d=stzDiag();if(!d||!d.list.length)return '';
+  const md=k=>`${+k.slice(5,7)}월 ${+k.slice(8)}일`,L=d.list,t0=L[0],t1=L.find(x=>x.k!==t0.k&&x.fit>t0.fit+.05);
+  const pct=Math.round((1-d.cur/d.base)*100);
+  const why=x=>`${x.two?'두 자리':'한 자리'} 날짜${x.hol?' + 공휴일 이름':''} + 날짜 옆 스티커 ${x.n}개 (${x.ic})`;
+  let h=`<div class="sdg"><b>지금 ${d.cur.toFixed(1)}px</b> · 기본 ${d.base.toFixed(1)}px${pct>0?` → <b>기본보다 ${pct}% 작아요</b>`:' → 기본 크기 그대로예요'}</div>`;
+  if(t0.need>0){
+    h+=`<button class="sdg-go" data-act="stz-go" data-k="${t0.k}">원인: <b>${md(t0.k)}</b> — ${esc(why(t0))} ›</button>`;
+    const nx=t1?Math.min(d.base,t1.fit):d.base,grow=Math.round((nx/d.cur-1)*100);
+    h+=`<div class="sdg">대책: ${grow>0?`이 날 날짜 옆 스티커를 하나 줄이면 → <b>약 ${grow}% 커져요</b>${t1&&t1.need>0?` (다음으로 빡빡한 날: ${md(t1.k)})`:''}`:'이 날을 줄여도 다른 날이 비슷하게 빡빡해서 거의 안 변해요'}</div>`;
+  }else h+=`<div class="sdg">빡빡한 칸이 없어요 (모든 칸에 기본 크기로 들어가요)</div>`;
+  h+=`<div class="sdg" style="margin-top:6px">크기 맞추는 범위 (${S.stzMode==='m'?'그 달만':'앞뒤 3달'} · ${md(fmt(new Date(cur.y,cur.m,1))).replace(/ 1일$/,'')} 기준)</div>
+    <div class="chips"><button class="${S.stzMode==='m'?'':'on'}" data-act="stz-mode" data-v="">앞뒤 3달 같은 크기</button><button class="${S.stzMode==='m'?'on':''}" data-act="stz-mode" data-v="m">달마다 따로 (최대한 크게)</button></div>`;
+  return h;
+}
 // 스티커 크기는 "보는 달 앞뒤 3달(7달)"에서 가장 빡빡한 칸 기준으로 한 번에 맞춤 → 달을 넘겨도(명절이 있는 달 · 없는 달) 크기가 안 바뀜.
 // 보이지 않는 곳에 7달을 그려서 재고(visibility:hidden) 바로 지움
 const STZ_KEY='eonjeswieo:stz';let stzP=null;
 function stzStore(){if(!stzP){try{stzP=JSON.parse(localStorage.getItem(STZ_KEY)||'{}');if(!isObj(stzP))stzP={};}catch(e){stzP={};}}return stzP;}
 function strHash(t){let h=5381;for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return h+':'+t.length;}
 const stzCache={};let stzUse,stzDirty=false,stzFitW=0,stzFitKey='';
-const stzKey=()=>`${tuneAppKey()}|${Math.round(innerWidth)}|${cur.y*12+cur.m}|${S.fontScale}|${S.calLook}`;
+const stzKey=()=>`${tuneAppKey()}|${Math.round(innerWidth)}|${cur.y*12+cur.m}|${S.fontScale}|${S.calLook}|${S.stzMode||''}`;
+const stzR=()=>S.stzMode==='m'?0:3;   // v0.128 스티커 크기 기준: 앞뒤 3달(기본 · 달을 넘겨도 크기 같음) / 'm' = 그 달만(달마다 최대한 크게)
 function stzWindow(host){
   host=host||$('#view');if(!host)return;
   const rt=document.documentElement,main=host.id==='view';
@@ -3419,7 +3464,7 @@ function stzWindow(host){
   const probe=document.createElement('div');
   probe.style.cssText=`position:fixed;left:0;top:0;width:${host.clientWidth||innerWidth}px;visibility:hidden;pointer-events:none;overflow:hidden;height:0`;
   const mk=cur.y*12+cur.m;let html='';
-  for(let d=-3;d<=3;d++){const v=mk+d;if(v<MIN_M||v>MAX_M)continue;html+=`<div class="panel">${calPanel(Math.floor(v/12),v%12)}</div>`;}
+  for(let d=-stzR();d<=stzR();d++){const v=mk+d;if(v<MIN_M||v>MAX_M)continue;html+=`<div class="panel">${calPanel(Math.floor(v/12),v%12)}</div>`;}
   // v0.127 버벅임: 같은 화면 조건(stzKey) · 같은 7달 내용이면 전에 잰 크기를 그대로 씀 (폰에 저장 → 앱을 다시 켜도 안 잼). 내용이 바뀌었을 때만 다시 잼
   const sk=main?stzKey():'',sh=main?strHash(html.replace(/\bpc\d+/g,'').replace(/ (class|style)="[^"]*"/g,'')):0,SP=main?stzStore():null,se=SP&&SP[sk];
   if(se&&se.h===sh){if(se.v)rt.style.setProperty('--stz',se.v);else rt.style.removeProperty('--stz');stzCache[sk]=se.v;stzFitW=innerWidth;stzFitKey=tuneAppKey();stzDirty=false;return;}
@@ -6719,6 +6764,7 @@ function openTunePage(){
       ${dbg?`<div class="hint" style="padding:6px 16px 0;font-size:11.5px">놓인 한 달 위젯 마지막 그림 상태<br>${esc(dbg).replace(/\n/g,'<br>')}</div>`:''}
       <div class="tn-g"><h4>앱 달력 모양</h4><div class="chips"><button class="${S.calLook==='fill'?'':'on'}" data-act="callook" data-v="circle">동그라미</button><button class="${S.calLook==='fill'?'on':''}" data-act="callook" data-v="fill">칸 채우기</button></div></div>
       <div class="tn-g"><h4>오늘 표시</h4>${todayColorRow()}${S.calLook==='fill'?`<div class="chips">${[['a','바탕+그림자+띠'],['b','띠만'],['c','띠 굵고 진하게'],['d','띠+그림자']].map(([v,n])=>`<button class="${S.todayLook===v?'on':''}" data-act="todaylook" data-v="${v}">${n}</button>`).join('')}</div>`:''}</div>
+      <div class="tn-g" id="stzDiagG" hidden><h4>스티커 크기 (왜 작아졌나)</h4><div id="stzDiag"></div></div>
       <div class="tn-top"><div class="tn-prev" id="tnPrev"></div><div class="tn-bar" id="tnBar"></div><div class="tn-warn" id="tnWarn"></div></div>
       <div class="tn-g"><h4>앱 달력 · 안쪽 화면(큰 화면)${tuneAppKey()==='appInner'?' ← 지금 이 화면':''}</h4>${tuneRows('appInner')}</div>
       <div class="tn-g"><h4>앱 달력 · 커버 화면(작은 화면)${tuneAppKey()==='appCover'?' ← 지금 이 화면':''}</h4>${tuneRows('appCover')}</div>
@@ -6727,6 +6773,7 @@ function openTunePage(){
       <div style="padding:12px 14px 24px;display:flex;gap:8px"><button class="btn ghost grow" data-act="tune-reset">처음 값으로</button><button class="btn grow" data-act="tune-copy">값 복사</button></div>
     </div>`,'tune');
   tunePrev();
+  setTimeout(()=>{try{const h=stzDiagHtml(),e=$('#stzDiag'),g=$('#stzDiagG');if(e&&g&&h){e.innerHTML=h;g.hidden=false;}}catch(err){}},150);   // v0.128 스티커가 있을 때만 보임 · 열 때만 계산
 }
 function tuneText(){
   const f=g=>{const t=tuneVal()[g];return `스티커 ${t.stk} · 좌우 ${t.stkX} · 높이 ${t.stkY} / 주야 ${t.ink} · 높이 ${t.inkY}${g.startsWith('app')?` · 빨간 점 ${t.dotX}`:''} / 메모 글자 ${t.memo} · 칸 ${t.pill}`;};
@@ -6926,7 +6973,7 @@ function wxPopHtml(title,sub,c,extra,dz,hr){
   // 옷은 하루 한 벌: 아직 안 지난 칸 중 가장 추운 때 기준 (칸마다 따로 보여 주면 외투 여러 벌처럼 보임)
   const wpool=(cs.some(x=>x.w&&!x.past)?cs.filter(x=>x.w&&!x.past):cs.filter(x=>x.w)).filter(x=>x.tp!=null),wcold=wpool.slice().sort((a,b)=>a.tp-b.tp)[0];
   const wgap=wpool.length>1?Math.max(...wpool.map(x=>x.tp))-Math.min(...wpool.map(x=>x.tp)):0;
-  const otip=c.ot||(wgap>=10?'낮엔 따뜻해요 · 벗기 쉬운 걸로':'');   // v0.127 옷 아래 상황 문구 (출퇴근 기온차 · 추위 · 더위 · 눈)
+  const otip=c.ot||(wgap>=8?'낮엔 따뜻해요 · 안에 얇게 입고 겉옷은 벗기 쉽게':'');   // v0.127 옷 아래 상황 문구 (출퇴근 기온차 · 추위 · 더위 · 눈)
   const all=wcold?`<div class="wxrw all">${wxImg(wcold.w)}<div><small>오늘 옷</small><b>${esc(wcold.wt.replace(/ · /g,' + '))}</b><small class="ot">${esc(otip||`${wcold.l.split(' ')[0]} ${wcold.tp}° 기준`)}</small></div></div>`:'';
   const b=(c.b||[]).length?`<div class="wxrw"><span class="k">챙길 것</span>${c.b.map(x=>wxImg(x.i)).join('')}<span class="n">${esc(c.b.map(x=>x.n).join(' · '))}</span></div>`
     :cs.length?`<div class="wxrw nob"><span class="k">챙길 것</span><span class="n">없어요</span>${wxImg('misc/smile','sm')}</div>`:'';   // v0.127 없는 날도 자리 (높이 통일)
@@ -7896,7 +7943,7 @@ function exportBad(){
   if(hasBridge('shareFile')){try{window.AndroidBridge.shareFile(name,raw);return;}catch(e){}}
   toast('앱에서만 보낼 수 있어요');
 }
-const BACKUP_KEYS=['famAlias','onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','tune','calLook','todayLook','todayColor','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons','wx','ot','salary'];
+const BACKUP_KEYS=['stzMode','famAlias','onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','tune','calLook','todayLook','todayColor','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','famDayToo','stamps','icons','wx','ot','salary'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});if(S.wlog&&S.wlog.backup)data.wlog=S.wlog;try{const h=wxHist();if(Object.keys(h).length)data.wxh=h;}catch(e){}return data;}   // v0.127 지난 날 날씨 기록도   // 업무 일지는 "백업에 넣기"를 켠 사람만
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -8440,6 +8487,8 @@ document.addEventListener('click',e=>{
     case 'pi-purge':{if(!confirm('완전히 지울까요?'))break;const n=piFind(t.dataset.id);if(n&&n.srv)piSrvDelete(n);else{const mk=boardKey();S.board[mk]=(S.board[mk]||[]).filter(x=>x.id!==t.dataset.id);}save();openPiPast();break;}
     case 'pi-carry-go':boardCarryDo(true);break;
     /* 업무 일지 · 찾기 */
+    case 'stz-go':{const k=t.dataset.k,d=parse(k);closePage();tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
+    case 'stz-mode':S.stzMode=t.dataset.v==='m'?'m':'';save();render();openTunePage();break;
     case 'wl-open':wlOpen(t.dataset.k);break;
     case 'wl-new':{const k=t.dataset.k;mdDraft=null;closePage();if(!S.wlog.name)wlNamePrompt(k);else wlOpen(k);break;}
     case 'wl-nmchip':{const i=$('#wlNm');if(i)i.value=t.dataset.v;break;}
