@@ -204,10 +204,12 @@ service cloud.firestore {
         && request.resource.data.get('stk', {}) is map && request.resource.data.get('stk', {}).size() <= 400
         && request.resource.data.get('sdefs', []) is list && request.resource.data.get('sdefs', []).size() <= 60
         && request.resource.data.get('sv', 2) == 2
-        // 출퇴근 날씨(켠 사람만): 직장 지역 번호(시·군·구 5자리 · 동 10자리) + 근무별 출퇴근 시각
+        // 출퇴근 날씨(켠 사람만): 직장 지역 번호(시·군·구 5자리 · 동 10자리) + 집 지역(h) + 근무별 출퇴근 시각
         && (!('wx' in request.resource.data) || (request.resource.data.wx is map
-            && request.resource.data.wx.keys().hasOnly(['w', 'tm'])
+            && request.resource.data.wx.keys().hasOnly(['w', 'h', 'tm'])
             && request.resource.data.wx.w is string && request.resource.data.wx.w.matches('[0-9]{5}([0-9]{5})?')
+            // v0.134 집 지역(동네까지 · 가족 폰이 고르지 않아도 출퇴근 날씨)
+            && (!('h' in request.resource.data.wx) || (request.resource.data.wx.h is string && request.resource.data.wx.h.matches('[0-9]{5}([0-9]{5})?')))
             && request.resource.data.wx.get('tm', {}) is map && request.resource.data.wx.get('tm', {}).size() <= 24))
         // 근무 종류별 출퇴근 시각 · ⏱ 연장으로 바꾼 날짜별 실제 시각 (가족 탭 "몇 시 끝" · 가족 날씨)
         && request.resource.data.get('tm', {}) is map && request.resource.data.get('tm', {}).size() <= 24

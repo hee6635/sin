@@ -368,6 +368,7 @@ class WidgetDayActivity : Activity() {
             val chn = if (pj != null) "" else day.optString("ch", "")
             if (chn.isNotEmpty()) topBox.addView(tv("회사 휴무 · " + chn, 13f, pal.link))
             val an = if (pj != null) null else day.optJSONArray("an")
+            if (pj != null) pj.optJSONObject("d")?.optJSONObject(key)?.optString("l", "")?.takeIf { it.isNotEmpty() }?.let { topBox.addView(tv(it, 13f, pal.sub)) }   // v0.134 가족 일정 (유치원 · 오전 9시~오후 3시)
             if (an != null) {
                 for (i in 0 until an.length()) {
                     val t = an.optString(i, "")
@@ -393,9 +394,23 @@ class WidgetDayActivity : Activity() {
             if (pj == null) wxRowView(day, pal)?.let { content.addView(it) }   // 날씨 한 줄 (오늘 · 내일 · 날씨를 켠 사람만) → 누르면 앱 날씨 팝업
             if (pj == null) wlRowView(day, pal)?.let { wlBox = it; content.addView(it) }   // 업무 일지 줄(표시만 · 내 달력일 때만) → 누르면 앱 일지 팝업
             if (pj != null) {
-                // 가족 달력: 그 사람이 공유한 스티커 · 가족 메모(♥)만 — 보기만 (체크는 못 함)
-                val ps = pj.optJSONObject("k")?.optJSONArray(key)
+                // v0.134 가족 달력도 내 것처럼: 날씨 줄 · (직접 추가한 가족) 체크되는 스티커 · 그 사람 메모 / (근무표 올린 가족) 공유한 스티커는 보기만
+                val pd = pj.optJSONObject("d")?.optJSONObject(key)
+                pd?.optJSONObject("wx")?.let { w -> wxRowView(JSONObject().put("k", key).put("wx", w), pal)?.let { content.addView(it) } }
+                val pst = pd?.optJSONArray("st")
+                val ps = if (pst != null) null else pj.optJSONObject("k")?.optJSONArray(key)
                 val fm = day.optJSONArray("fm")
+                if (pst != null && pst.length() > 0) {
+                    content.addView(sectionTitle("스티커", pal))
+                    for (i in 0 until pst.length()) {
+                        val s = pst.optJSONObject(i) ?: continue
+                        content.addView(stickerRow(s, pal, false) { id -> toggleManSticker(id) })
+                    }
+                }
+                pd?.optString("nt", "")?.takeIf { it.isNotEmpty() }?.let {
+                    content.addView(sectionTitle("메모", pal))
+                    content.addView(memoRow(JSONObject().put("r", "t").put("t", it).put("o", 1), pal))
+                }
                 if (ps != null && ps.length() > 0) {
                     content.addView(sectionTitle("스티커", pal))
                     for (i in 0 until ps.length()) {
@@ -515,7 +530,7 @@ class WidgetDayActivity : Activity() {
         return v
     }
 
-    private fun stickerRow(s: JSONObject, pal: Pal, readOnly: Boolean = false): View {
+    private fun stickerRow(s: JSONObject, pal: Pal, readOnly: Boolean = false, onTap: ((String) -> Unit)? = null): View {
         val n = s.optInt("n", 0)
         val total = Math.max(1, s.optInt("N", 1))
         val row = LinearLayout(this)
@@ -556,7 +571,7 @@ class WidgetDayActivity : Activity() {
         }
         val cnt = tv(if (total > 1) "$n/$total" else if (n > 0) "✓" else "○", 19f, if (n >= total) pal.accent else pal.sub, true)
         row.addView(cnt)
-        if (!readOnly) row.setOnClickListener { toggleSticker(s.optString("id")) }
+        if (!readOnly) row.setOnClickListener { val id = s.optString("id"); if (onTap != null) onTap(id) else toggleSticker(id) }
         val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         lp.bottomMargin = dp(6)
         row.layoutParams = lp
@@ -635,7 +650,7 @@ class WidgetDayActivity : Activity() {
         row.addView(tv("›", 18f, pal.sub, true))
         row.setOnClickListener {
             val go = Intent(this, MainActivity::class.java)
-            go.putExtra("openDate", "$key#wx")
+            go.putExtra("openDate", if (person != null && who.isNotEmpty()) "$key#wx@$who" else "$key#wx")
             go.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             startActivity(go)
             finish()
@@ -779,6 +794,27 @@ class WidgetDayActivity : Activity() {
         lp.bottomMargin = dp(6)
         row.layoutParams = lp
         return row
+    }
+
+    /** v0.134 직접 추가한 가족(유찬)의 스티커 체크: 위젯 자료의 그 사람 칸을 바로 바꾸고, 앱에는 할 일로 넘김 (앱을 열면 반영) */
+    private fun toggleManSticker(id: String) {
+        val d = data ?: return
+        val p = MonthRenderer.people(d).firstOrNull { MonthRenderer.personKey(it) == who } ?: return
+        val arr = p.optJSONObject("d")?.optJSONObject(key)?.optJSONArray("st") ?: return
+        var newN = -1
+        for (j in 0 until arr.length()) {
+            val s = arr.optJSONObject(j) ?: continue
+            if (s.optString("id") != id) continue
+            val total = Math.max(1, s.optInt("N", 1)); val n = s.optInt("n", 0)
+            newN = if (total <= 1) (if (n > 0) 0 else 1) else (if (n < total) n + 1 else 0)
+            s.put("n", newN)
+        }
+        if (newN < 0) return
+        p.optJSONObject("k")?.optJSONArray(key)?.let { ks -> for (j in 0 until ks.length()) { val s = ks.optJSONObject(j) ?: continue; if (j < arr.length() && arr.optJSONObject(j)?.optString("id") == id) s.put("n", newN) } }
+        WidgetStore.save(this, d.toString())
+        WidgetStore.addAction(this, JSONObject().put("t", "mstk").put("p", p.optString("id")).put("k", key).put("id", id).put("n", newN))
+        WidgetRefresher.refreshAll(this)
+        build(0)
     }
 
     private fun toggleSticker(id: String) {

@@ -130,7 +130,7 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
       const w=__wx.wxMemWin({kind:'sched',sch},new Date(2026,9,14)),a=new Date(w.s),e=new Date(w.e);
       const w2=__wx.wxMemWin({kind:'sched',sch:{...sch,wx:{w:'41597',tm:{'야':['20:00','08:00']}}}},new Date(2026,9,14));
       return a.getHours()===19&&e.getHours()===7&&e.getDate()===15&&new Date(w2.s).getHours()===20&&__wx.wxMemWork({kind:'sched',sch:{...sch,wx:{w:'41597'}}})==='41597';}));
-    T('내 근무표에 날씨 싣기: 직장을 정한 사람만',await p.evaluate(()=>{const a=!('wx' in __wx.famPayload());__wx.S.wx.work='41597';const b=__wx.famPayload().wx;return a&&b.w==='41597'&&Array.isArray(b.tm['주']);}));
+    T('내 근무표에 날씨 싣기: 직장이 없으면 집을 직장 자리에 · 집(h)도 같이 (v0.134)',await p.evaluate(()=>{const a=__wx.famPayload().wx;__wx.S.wx.work='41597';const b=__wx.famPayload().wx;return a&&a.w===a.h&&b.w==='41597'&&b.h===__wx.S.wx.home&&Array.isArray(b.tm['주']);}));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 4) 깨진 저장 값 · 보안 잠금(CSP) 켠 채로 서버 부르기

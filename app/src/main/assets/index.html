@@ -2133,7 +2133,7 @@ function famCleanSched(v){   // 가족 근무표 한 건 → 모양이 맞는 �
   (Array.isArray(v.types)?v.types:[]).slice(0,24).forEach(t=>{if(isObj(t)&&typeof t.k==='string'&&t.k&&t.k.length<=6)o.types.push({k:cutTxt(t.k,6),name:cutTxt(t.name||t.k,12),color:safeColor(t.color,''),rest:!!t.rest});});
   if(isObj(v.overrides)){let n=0;for(const k of Object.keys(v.overrides)){const x=v.overrides[k];if(okDate(k)&&typeof x==='string'&&x.length<=6&&n++<520)o.overrides[k]=x;}}
   if(isObj(v.wx)&&typeof v.wx.w==='string'&&/^\d{5}(\d{5})?$/.test(v.wx.w)){   // 출퇴근 날씨: 직장 지역 + 근무별 출퇴근 시각
-    o.wx={w:v.wx.w,tm:{}};
+    o.wx={w:v.wx.w,tm:{},...(typeof v.wx.h==='string'&&/^\d{5}(\d{5})?$/.test(v.wx.h)?{h:v.wx.h}:{})};
     if(isObj(v.wx.tm))Object.keys(v.wx.tm).slice(0,24).forEach(k=>{const t=v.wx.tm[k];if(k.length<=6&&Array.isArray(t)&&okTime(t[0])&&okTime(t[1]))o.wx.tm[k]=[t[0],t[1]];});
   }
   if(isObj(v.tm)){const tm={};Object.keys(v.tm).slice(0,24).forEach(k=>{const t=v.tm[k];if(k.length<=6&&Array.isArray(t)&&okTime(t[0])&&okTime(t[1]))tm[k]=[t[0],t[1]];});o.tm=tm;}   // 근무 종류별 출퇴근 시각
@@ -2732,6 +2732,19 @@ function widgetJson(){
       if(key&&!p.t[key])p.t[key]=col;
       p.s.push(key);
       if(m.kind==='sched'){const sk=schStk(m.sch,k).slice(0,4).map(stkD);if(sk.length)p.k[k]=sk;}
+      // v0.134 위젯 날짜 창도 내 것처럼: 직접 추가한 가족 = 일정 · 스티커(체크) · 메모 · 날씨 / 근무표 올린 가족 = 날씨
+      if(i>=-6&&i<=14){try{
+        const pd={},now=Date.now();
+        if(m.kind!=='sched'){
+          pd.l=String(manLabel(m,d)||'').slice(0,30);
+          const on=(m.stk&&m.stk[k])||[],defs=manSdefs(m).filter(x=>!x.retired||on.includes(x.id));
+          const st=defs.filter(x=>on.includes(x.id)||manPlanned(m,x,k)).slice(0,8).map(x=>({id:String(x.id),nm:String(x.name||'').slice(0,12),e:typeof x.img==='string'?'⭐':icoTxt(x.emoji||'⭐','⭐'),n:on.filter(y=>y===x.id).length,N:Math.max(1,x.times||1)}));
+          if(st.length){pd.st=st;p.k[k]=st.slice(0,4).map(x=>({e:x.e,n:x.n,N:x.N}));}
+          const nt=m.notes&&m.notes[k];if(nt)pd.nt=String(nt).slice(0,40);
+        }
+        if(i===0||i===1){const c=m.kind==='sched'?(famSchedWx(m,d,now)||{}).c:famUsesTypes(m)&&wxOn()?(famWx(m,d,now)||{}).c:null;const w=c&&c.k?wxWidgetOf(c,now):null;if(w)pd.wx=w;}
+        if(Object.keys(pd).length)(p.d=p.d||{})[k]=pd;
+      }catch(e){}}
     });
     const rq0=rqRing((S.requests||[]).filter(r=>r.date===k&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r)).slice(3),   // 요청 링 (한 달 위젯 · 칸 채우기 모양): ask · hold · ok · no — 달력과 같은 기준(답한 요청은 3일 뒤 사라짐)
       nfm=vm.filter(x=>x.shared&&x.text.trim()).length,   // 메모 줄 맨 앞 nfm 개가 가족 메모(♥) — 위젯이 연보라 칸으로 그림
@@ -2758,6 +2771,7 @@ function applyWidgetActions(){
   let n=0;
   list.forEach(a=>{
     if(!a||!a.k)return;
+    if(a.t==='mstk'){const m=(S.family||[]).find(x=>String(x.id)===String(a.p));if(!m)return;const x=manSdefs(m).find(y=>y.id===a.id);if(!x)return;const N=Math.max(1,x.times||1),c=Math.max(0,Math.min(N,+a.n||0));m.stk=m.stk||{};const rest=(m.stk[a.k]||[]).filter(y=>y!==a.id);m.stk[a.k]=rest.concat(Array(c).fill(a.id));if(!m.stk[a.k].length)delete m.stk[a.k];n++;return;}   // v0.134 위젯 유찬 달력에서 체크
     if(a.t==='stk'){const d=S.stamps.defs.find(x=>x.id===a.id);if(!d)return;const N=stView(d,a.k).N;stampSet(d.id,a.k,Math.max(0,Math.min(N,+a.n||0)));n++;}
     else if(a.t==='memo'){const m=memosOf(a.k).find(x=>String(x.id)===a.id);if(!m||!m.todo)return;if(a.d)m.done=true;else delete m.done;n++;}
     else if(a.t==='line'){const p=boardList(a.k.slice(0,7)).find(x=>String(x.id)===a.pid),l=p&&(p.lines||[]).find(x=>String(x.id)===a.lid);if(!l)return;l.done=!!a.d;l.doneBy=l.done?role():'';if(p.srv)piSrvPush(p);n++;}
@@ -2772,10 +2786,10 @@ function widgetSync(){
       const raw=String(window.AndroidBridge.takeOpenDate()||''),mm=raw.match(/^(\d{4}-\d\d-\d\d)(#wl|#wx|#m)?(?:@(.{1,80}))?$/),k=mm?mm[1]:'';   // "#wl": 위젯 날짜 창의 업무 일지 줄 → 일지 팝업까지 · "#wx": 날씨 줄 → 날씨 팝업까지
       // v0.127 "@사람": 위젯 이름 칩으로 가족 달력을 보다 눌렀으면 앱도 그 사람 달력 (연결된 가족만 · 없으면 내 달력)
       const wp=mm&&mm[3]?famPeers().find(p=>p.id===mm[3]):null;
-      if(k&&wp){const d=parse(k);if(pageMode)closePage();vcSel.on=false;vcSel.dates=new Set();vcUid=wp.uid;vcY=d.getFullYear();vcM=d.getMonth();if(famView()){tab='cal';render();}else renderFamCalPage();if(mm[2]!=='#m')openVcDay(k);return;}
+      if(k&&wp){const d=parse(k);if(pageMode)closePage();vcSel.on=false;vcSel.dates=new Set();vcUid=wp.uid;vcY=d.getFullYear();vcM=d.getMonth();if(famView()){tab='cal';render();}else renderFamCalPage();if(mm[2]!=='#m')openVcDay(k);if(mm[2]==='#wx')vcWxPop(k);return;}
       // v0.127 직접 추가한 가족(유찬처럼): 그 사람 달력 + 그 날짜 창
       const wm=mm&&mm[3]&&!wp?(S.family||[]).find(m=>String(m.id)===mm[3]):null;
-      if(k&&wm){const d=parse(k);if(pageMode)closePage();manId=wm.id;vcY=d.getFullYear();vcM=d.getMonth();renderManCalPage();if(mm[2]!=='#m')openManDay(k);return;}
+      if(k&&wm){const d=parse(k);if(pageMode)closePage();manId=wm.id;vcY=d.getFullYear();vcM=d.getMonth();renderManCalPage();if(mm[2]!=='#m')openManDay(k);if(mm[2]==='#wx')famWxPop(wm,k);return;}
       if(k){const d=parse(k);if(pageMode)closePage();tab='cal';setCur(d.getFullYear(),d.getMonth());render();if(mm[2]==='#m')return;   // "#m": 위젯 달력 버튼 → 그 달 달력만 (날짜 창 안 엶)
         openDay(k);if(mm[2]==='#wl'&&wlOn())wlOpen(k);if(mm[2]==='#wx'&&wxOn())wxOpenDay(k);}
     }
@@ -3286,10 +3300,10 @@ function render(){
       ${mid}
       <div class="hr">${(()=>{const c=famInCounts(),n=c.ask+c.hold;return n?`<button class="rqmail" data-act="feed-req" aria-label="처리할 요청 ${n}개">📩<i class="${c.ask?'':'hold'}">${n}</i></button>`:'';})()}${todayBtn}</div>`;
     if(!renderAgain){try{stzWindow(v);}catch(err){}}   // 스티커 크기: 앞뒤 3달 기준
-    v.innerHTML=renderCal();
+    v.innerHTML=renderCal();stzPanels(v);
     fitDn(v,true);memoShift(v);
     // 처음 켤 때 · 다른 탭에서 돌아올 때는 그리기 전에는 달력 칸 높이를 잴 수 없어서 어림값으로 메모 줄 수를 정함 → 그린 뒤 실제 높이로 다시 재서 다르면 한 번만 다시 그림
-    if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();fitDn(v,true);memoShift(v);}finally{renderAgain=false;}}}
+    if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();stzPanels(v);fitDn(v,true);memoShift(v);}finally{renderAgain=false;}}}
     glowCheck();
   }else if(tab==='colleague'){
     top.innerHTML=`<div class="hl"><button class="hb" data-act="back-set" aria-label="뒤로" style="font-size:28px">‹</button></div>${mid}<div class="hr">${todayBtn}</div>`;
@@ -3414,9 +3428,9 @@ function stzDiag(){
   const host=$('#view');if(!host||!(host.clientWidth>0))return null;
   const rt=document.documentElement,saved=rt.style.getPropertyValue('--stz');
   const probe=document.createElement('div');probe.style.cssText=`position:fixed;left:0;top:0;width:${host.clientWidth}px;visibility:hidden;pointer-events:none;overflow:hidden`;
-  const mk=cur.y*12+cur.m;let html='';
+  const mk=cur.y*12+cur.m,ll=lastLines;let html='';
   for(let d=-stzR();d<=stzR();d++){const v=mk+d;if(v<MIN_M||v>MAX_M)continue;html+=`<div class="panel">${calPanel(Math.floor(v/12),v%12)}</div>`;}
-  probe.innerHTML=`<div class="track">${html}</div>`;host.appendChild(probe);
+  lastLines=ll;probe.innerHTML=`<div class="track">${html}</div>`;host.appendChild(probe);
   const pr=document.createElement('i');pr.style.cssText='position:absolute;visibility:hidden;width:var(--stz)';
   try{
     rt.style.removeProperty('--stz');document.body.appendChild(pr);const base=pr.getBoundingClientRect().width;
@@ -3455,7 +3469,8 @@ function stzStore(){if(!stzP){try{stzP=JSON.parse(localStorage.getItem(STZ_KEY)|
 function strHash(t){let h=5381;for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return h+':'+t.length;}
 const stzCache={};let stzUse,stzDirty=false,stzFitW=0,stzFitKey='';
 const stzKey=()=>`${tuneAppKey()}|${Math.round(innerWidth)}|${cur.y*12+cur.m}|${S.fontScale}|${S.calLook}|${S.stzMode||''}`;
-const stzR=()=>S.stzMode==='3'?3:0;   // v0.128 스티커 크기 기준: 앞뒤 3달(기본 · 달을 넘겨도 크기 같음) / 'm' = 그 달만(달마다 최대한 크게)
+const stzR=()=>S.stzMode==='3'?3:0;
+const stzPanels=v=>{try{const tr=v&&v.querySelector('#track'),mk0=cur.y*12+cur.m;if(tr)[...tr.children].forEach((p,i)=>stzPanel(p,mk0+i-1));}catch(err){}};   // v0.134 판마다 그 달 크기   // v0.128 스티커 크기 기준: 앞뒤 3달(기본 · 달을 넘겨도 크기 같음) / 'm' = 그 달만(달마다 최대한 크게)
 function stzWindow(host){
   host=host||$('#view');if(!host)return;
   const rt=document.documentElement,main=host.id==='view';
@@ -3480,6 +3495,25 @@ function stzWindow(host){
       try{SP[sk]={h:sh,v,t:Date.now()};const ks=Object.keys(SP);if(ks.length>40)ks.sort((a,b)=>SP[a].t-SP[b].t).slice(0,ks.length-40).forEach(k=>delete SP[k]);localStorage.setItem(STZ_KEY,JSON.stringify(SP));}catch(e){}}
   }finally{probe.remove();}
 }
+// v0.134 "달마다 따로"(기본): 달력 판(.panel)마다 그 달 크기를 따로 달아 둠 → 옆 달이 미끄러져 들어오는 동안에도 제 크기 (도착한 뒤 스티커 · 메모가 툭 바뀌던 것)
+function stzMonth(mk){
+  const host=$('#view');if(!host)return null;
+  const key=`${tuneAppKey()}|${Math.round(innerWidth)}|${mk}|${S.fontScale}|${S.calLook}|${S.stzMode||''}`;
+  const ll=lastLines,html=`<div class="panel">${calPanel(Math.floor(mk/12),mk%12)}</div>`;lastLines=ll;   // (calPanel 이 메모 줄 수 lastLines 를 바꿈 → 다시 그릴지 판단이 틀어지지 않게 되돌림)
+  const sh=strHash(html.replace(/\bpc\d+/g,'').replace(/ (class|style)="[^"]*"/g,'')),SP=stzStore(),se=SP[key];
+  if(se&&se.h===sh)return se.v;
+  if(document.hidden||!((host.clientWidth||innerWidth)>0))return se?se.v:null;
+  const rt=document.documentElement,saved=rt.style.getPropertyValue('--stz'),probe=document.createElement('div');
+  probe.style.cssText=`position:fixed;left:0;top:0;width:${host.clientWidth||innerWidth}px;visibility:hidden;pointer-events:none;overflow:hidden`;
+  probe.innerHTML=`<div class="track">${html}</div>`;host.appendChild(probe);
+  try{
+    const c0=probe.querySelector('.cell');if(c0&&!(c0.clientWidth>0))return se?se.v:null;
+    fitStz(probe);const v=rt.style.getPropertyValue('--stz');
+    try{SP[key]={h:sh,v,t:Date.now()};const ks=Object.keys(SP);if(ks.length>40)ks.sort((a,b)=>SP[a].t-SP[b].t).slice(0,ks.length-40).forEach(k=>delete SP[k]);localStorage.setItem(STZ_KEY,JSON.stringify(SP));}catch(e){}
+    return v;
+  }catch(e){return null;}finally{probe.remove();if(saved)rt.style.setProperty('--stz',saved);else rt.style.removeProperty('--stz');}
+}
+function stzPanel(el,mk){if(!el)return;if(S.stzMode==='3'){el.style.removeProperty('--stz');return;}const v=stzMonth(mk);if(v==null)el.style.removeProperty('--stz');else el.style.setProperty('--stz',v||'var(--stz0)');}
 /* 1/2 배지 크기 맞춤: 실제로 그려진 글자 크기(웹뷰 최소 글자 · 큰 글씨가 곱해진 값)를 재서, 스티커 크기의 .36 배가 되도록 배율을 정함 */
 function cbFit(){
   const bs=document.querySelectorAll('.sx .cb');if(!bs.length)return;
@@ -3755,7 +3789,7 @@ function todayGo(){
   if(to===from)return;
   if(!tr||tab!=='cal'){setCur(y,m);render();return;}
   const dir=to>from?1:-1,pn=tr.children[dir>0?2:0];
-  if(pn&&Math.abs(to-from)>1)pn.innerHTML=calPanel(y,m);
+  if(pn&&Math.abs(to-from)>1){pn.innerHTML=calPanel(y,m);try{stzPanel(pn,to);fitDn(pn,true);memoShift(pn);}catch(e){}}
   busy=true;glowStop();
   tr.style.transition='transform .26s ease';
   tr.style.transform=`translateX(${dir>0?'-66.6667%':'0%'})`;
@@ -5062,7 +5096,7 @@ function renderFamily(){
   // v0.121 가족이 있으면 나 · 가족 카드 모두 같은 크기 · 같은 모양: 상태 · 막대 · 작은 날씨 줄 · (비 · 미세먼지면) 결론 한 줄
   const pbar=v=>v!==undefined&&v!==null?`<div class="bar"><i style="width:${Math.round(v*100)}%"></i></div>`:'<div class="bar" style="visibility:hidden"></div>';   // v0.124 막대가 없어도 자리는 남김 → 카드끼리 날씨 칸 높이가 맞음
   const meCard2=`<div class="nc w fc2" ${isHost?'data-act="fam-mycal"':''}><div class="ctop"><i style="background:#1d2330">${isHost?'나':'근'}</i><div class="cst">${isHost?'':'<small>근무자</small>'}<div class="st">${st.e?ico(st.e)+' ':''}${esc(st.t)}</div></div></div><div class="sm">${esc(st.sub||st.left||'')||'&nbsp;'}</div>${pbar(st.prog)}${myWx?wxMiniHtml(myWx,'data-act="wx-fam" data-u="me"'):''}</div>`;
-  const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);const fw=wxOn()?famNowWx(m,now):null;return `<div class="nc fc2 ${l==='자는 중'?'sl':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-mancal" data-id="${m.id}" data-hold="fam"`}>${m.kind==='sched'?'':`<span class="mced" data-act="fam-edit" data-id="${m.id}" aria-label="고치기">✏️</span>`}<div class="ctop">${famAv(m,i)}<div class="cst"><small>${esc(m.name)}</small><div class="st">${e==='🔁'&&m.kind==='sched'?schBadge(m.sch,schShift(m.sch,new Date(now)),'sm')+' ':e?ico(e)+' ':''}${esc(l)}</div></div></div><div class="sm">${esc(sub)||'&nbsp;'}</div>${pbar(famProg(m,now))}${fw?wxMiniHtml(fw,`data-act="wx-fam" data-u="${esc(wxMemKey(m))}"`):!wxOn()&&m.kind==='sched'&&m.sch&&m.sch.wx&&wxOk(m.sch.wx.w)?'<div class="mwx mwx-off" data-act="wx-set">☔ 날씨도 보기 · 집 지역 고르기 ›</div>':''}</div>`;}).join('');
+  const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);const fw=(wxOn()||(m.kind==='sched'&&famSchedHome(m)))?famNowWx(m,now):null;return `<div class="nc fc2 ${l==='자는 중'?'sl':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-mancal" data-id="${m.id}" data-hold="fam"`}>${m.kind==='sched'?'':`<span class="mced" data-act="fam-edit" data-id="${m.id}" aria-label="고치기">✏️</span>`}<div class="ctop">${famAv(m,i)}<div class="cst"><small>${esc(m.name)}</small><div class="st">${e==='🔁'&&m.kind==='sched'?schBadge(m.sch,schShift(m.sch,new Date(now)),'sm')+' ':e?ico(e)+' ':''}${esc(l)}</div></div></div><div class="sm">${esc(sub)||'&nbsp;'}</div>${pbar(famProg(m,now))}${fw?wxMiniHtml(fw,`data-act="wx-fam" data-u="${esc(wxMemKey(m))}"`):false?'<div class="mwx mwx-off" data-act="wx-set">☔ 날씨도 보기 · 집 지역 고르기 ›</div>':''}</div>`;}).join('');
   const cheerBtns='';   // v0.106: 응원 버튼 없앰
   // 이번 주 시간표
   // 가족 시간표: 오늘 가운데(앞뒤 30일) 또는 주 단위(앞뒤 4주) · 옆으로 쓸어서 넘김 · 오늘 열은 위에서 아래까지 하나의 네모 박스
@@ -5235,7 +5269,7 @@ function famDayWxHtml(m,k){
   if(!famUsesTypes(m)||!wxOn())return '';
   const d=parse(k),today=new Date(),df=Math.round((d-new Date(today.getFullYear(),today.getMonth(),today.getDate()))/864e5);
   if(df<0)return wxHistCard(wxMemKey(m),k,'man-wx');   // v0.127 지난 날 = 저장본
-  if(df>3)return '';
+  if(df>3){const x=famWx(m,d);return x&&x.c?wxFarLine(x.c,`data-act="man-wx" data-k="${k}"`):'';}   // v0.134 먼 날 한 줄
   const x=famWx(m,d);if(!x||!x.c||!x.c.k)return '';
   return wxCardHtml(x.c,wxCls(x.c),`data-act="man-wx" data-k="${k}"`);
 }
@@ -6843,10 +6877,11 @@ const wxMemKey=m=>m.uid||m.id;
 function wxMemWork(m,d){if(famUsesTypes(m)){const l=famEra(m,d||new Date()).loc;return wxOk(l)?l:'';}const fw=(S.wx&&S.wx.fw)||{};const sh=m.kind==='sched'&&m.sch&&m.sch.wx&&m.sch.wx.w;return wxOk(sh)?sh:wxOk(fw[wxMemKey(m)])?fw[wxMemKey(m)]:'';}
 function wxFam(){return (S.family||[]).concat(famPeers()).filter(m=>m.kind==='shift'||m.kind==='sched');}
 function actRegions(){const r=[];try{(S.stamps.defs||[]).forEach(s=>{if(s.act&&wxOk(s.act.r)&&!s.retired)r.push(s.act.r);});(S.family||[]).forEach(m=>(m.sdefs||[]).forEach(x=>{if(x.act&&wxOk(x.act.r))r.push(x.act.r);}));}catch(e){}return [...new Set(r)];}
-function wxCodes(){if(!wxOn())return [];const s=new Set([S.wx.home,...actRegions()]);(S.family||[]).forEach(m=>{if(!famUsesTypes(m))return;[m,...(m.eras||[])].forEach(x=>{if(x&&wxOk(x.loc))s.add(x.loc);});if(wxOk(m.home))s.add(m.home);});if(wxOk(S.wx.work))s.add(S.wx.work);wxFam().forEach(m=>{const w=wxMemWork(m);if(w)s.add(w);});return [...s];}
+function wxFamCodes(){const r=[];try{famPeers().forEach(p=>{const h=famSchedHome(p),w=wxMemWork(p);if(wxOk(h))r.push(h);if(wxOk(w))r.push(w);});}catch(e){}return r;}   // v0.134
+function wxCodes(){if(!wxOn())return [...new Set(wxFamCodes())];const s=new Set([S.wx.home,...actRegions()]);(S.family||[]).forEach(m=>{if(!famUsesTypes(m))return;[m,...(m.eras||[])].forEach(x=>{if(x&&wxOk(x.loc))s.add(x.loc);});if(wxOk(m.home))s.add(m.home);});if(wxOk(S.wx.work))s.add(S.wx.work);wxFam().forEach(m=>{const w=wxMemWork(m);if(w)s.add(w);});wxFamCodes().forEach(c=>s.add(c));return [...s];}
 async function wxFetch(force){
   wxHistSave();   // 받아 둔 날씨로도 오늘 기록 (10분에 한 번)
-  if(!wxOn()||!WX_URL||wxBusy)return;
+  if(!WX_URL||wxBusy)return;
   const codes=wxCodes(),now=Date.now(),C=wxCache();
   const need=codes.filter(c=>force||!C[c]||now-C[c].at>30*60000||now<C[c].at);
   if(!need.length)return;
@@ -6899,17 +6934,21 @@ function wxHist(){if(!wxHC){try{wxHC=JSON.parse(localStorage.getItem(WXH_KEY)||'
 const wxHClean=c=>{const o=JSON.parse(JSON.stringify(c));(o.c||[]).forEach(x=>{delete x.past;delete x.q;});return o;};   // 저장본: 지남 · 네이버 링크 빼기
 function wxHistSave(force){
   try{
-    if(!wxOn()||!wxRaw(S.wx.home))return;const now=Date.now();if(!force&&now-wxHAt<10*60000)return;wxHAt=now;
+    const now=Date.now();if(!force&&now-wxHAt<10*60000)return;
     const t=new Date(now),k=fmt(t),d0=new Date(t.getFullYear(),t.getMonth(),t.getDate()).getTime();   // 하루 처음 시각 기준으로 계산 = 지난 칸 없이 하루 전체
-    const c=wxMine(t,d0);if(!c||!c.k)return;
-    const w=wxMyWin(t),acts=myActs(t),hr=wxHrOf(t,w,S.wx.home,wxWk(),wxName(S.wx.home),wxWk()?wxName(wxWk()):'',d0,acts);
-    if(hr&&Array.isArray(hr.at)){hr.at.forEach(x=>{delete x.now;delete x.past;});const on=hr.at.findIndex(x=>x.on);hr.i0=on>=0?on:Math.min(3,hr.at.length-1);}
-    const sub=w?`${shiftLabel(w.k)} · ${wxHm(w.s)} 출근 → ${wxHm(w.e)} 퇴근`:'하루 요약';
+    const mine=wxOn()&&wxRaw(S.wx.home)?wxMine(t,d0):null;
     const f={};
-    (S.family||[]).filter(famUsesTypes).forEach(m=>{const x=famWx(m,t,d0);if(x&&x.c&&x.c.k){const L=x.L||{};f[wxMemKey(m)]={c:wxHClean(x.c),s:x.win?`${wxHm(x.win.s)} ${L.ls||'출근'} → ${wxHm(x.win.e)} ${L.le||'퇴근'}`:''};}});
-    famPeers().forEach(p=>{const x=famSchedWx(p,t,d0);if(x&&x.c&&x.c.k)f[wxMemKey(p)]={c:wxHClean(x.c),s:x.win?`${wxHm(x.win.s)} 출근 → ${wxHm(x.win.e)} 퇴근`:''};});
-    const H=wxHist();H[k]={at:now,s:sub,c:wxHClean(c),...(hr?{hr}:{}),...(Object.keys(f).length?{f}:{})};
-    localStorage.setItem(WXH_KEY,JSON.stringify(H));
+    if(wxOn())(S.family||[]).filter(famUsesTypes).forEach(m=>{const x=famWx(m,t,d0);if(x&&x.c&&x.c.k){const L=x.L||{};f[wxMemKey(m)]={c:wxHClean(x.c),s:x.win?`${wxHm(x.win.s)} ${L.ls||'출근'} → ${wxHm(x.win.e)} ${L.le||'퇴근'}`:''};}});
+    famPeers().forEach(p=>{const x=famSchedWx(p,t,d0);if(x&&x.c&&x.c.k)f[wxMemKey(p)]={c:wxHClean(x.c),s:x.win?`${wxHm(x.win.s)} 출근 → ${wxHm(x.win.e)} 퇴근`:''};});   // v0.134 내 날씨를 안 켰어도 가족 것은 저장
+    if(!(mine&&mine.k)&&!Object.keys(f).length)return;
+    wxHAt=now;const H=wxHist(),o=H[k]&&isObj(H[k])?H[k]:{};
+    const e={at:now,...(Object.keys(f).length?{f}:{})};
+    if(mine&&mine.k){
+      const w=wxMyWin(t),acts=myActs(t),hr=wxHrOf(t,w,S.wx.home,wxWk(),wxName(S.wx.home),wxWk()?wxName(wxWk()):'',d0,acts);
+      if(hr&&Array.isArray(hr.at)){hr.at.forEach(x=>{delete x.now;delete x.past;});const on=hr.at.findIndex(x=>x.on);hr.i0=on>=0?on:Math.min(3,hr.at.length-1);}
+      Object.assign(e,{s:w?`${shiftLabel(w.k)} · ${wxHm(w.s)} 출근 → ${wxHm(w.e)} 퇴근`:'하루 요약',c:wxHClean(mine),...(hr?{hr}:{})});
+    }else if(o.c)Object.assign(e,{s:o.s,c:o.c,...(o.hr?{hr:o.hr}:{})});
+    H[k]=e;localStorage.setItem(WXH_KEY,JSON.stringify(H));
   }catch(e){}
 }
 // 지난 날짜 관측 한 줄 ("12°~21° · 비 14mm") · 없으면 ''
@@ -7132,6 +7171,9 @@ function famWx(m,d,now){
     return {c:c||WX.dayCard(H,WX.keyD(new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime()),{now,hq,hp:wxName(hm),acts}),win,loc,L,hm,acts};
   }catch(e){return null;}
 }
+// v0.134 먼 날(4일 뒤부터 · 중기예보) 한 줄 — 내 날짜 창과 같은 모양
+function wxFarLine(c,attrs){const x=c&&c.day;if(!x)return '';const h=(l,v)=>v?`${l} ${v.d}${v.pop>=30?` ${v.pop}%`:''}`:'';
+  return `<div class="wxl ${wxCls(c)}" ${attrs}>${wxImg(x.sk,'wi')||`<span class="wi">${c.i||''}</span>`}<span>${esc([h('오전',x.am),h('오후',x.pm)].filter(Boolean).join(' · '))}</span><span class="wt">${esc(c.t||'')}</span></div>`;}
 // v0.127 가족 지난 날 저장본 (카드 · 팝업) — 시간별 줄은 내 것만 저장
 const wxHistOf=(u,k)=>{const h=wxHist()[k],f=h&&h.f&&h.f[u];return f&&f.c?f:null;};
 function wxHistCard(u,k,act){const f=wxHistOf(u,k);if(!f)return '';return `<div class="wxhist"><div class="wxhl">그날 예보 기준</div>${wxCardHtml(f.c,wxCls(f.c),`data-act="${act}" data-k="${k}"`)}</div>`;}
@@ -7172,6 +7214,9 @@ function wxAlarmQ(x){
   return {q:`${WX_URL}?h=${S.wx.home}&d=${dk}`,p:c?JSON.stringify(c):''};
 }
 // 위젯 큰 창 맨 위 날씨 한 줄 (오늘 · 내일만): 앱이 가진 예보로 만든 것 + 창을 열 때 새로 물어볼 주소(q)
+// 위젯 날씨 줄 모양 (가족 것도 같은 모양 · 서버에서 새로 받기(q)는 내 것만)
+function wxWidgetOf(c,now){const z=(c.dz||[]).slice().sort((a,b)=>b.g-a.g||b.lv-a.lv)[0],sub=(c.b||[]).length?c.b.map(v=>v.n).join(' · '):c.k.s||'';
+  return {t:String(c.k.t).slice(0,24),s:String(sub).slice(0,30),i:c.k.i||'',c:(c.c||[]).slice(0,2).map(v=>[v.sk||'',v.tp==null?null:v.tp]),f:z?z.f:'',wet:(c.c||[]).some(v=>v.hot)?1:0,at:now};}
 function wxWidget(d){
   try{
     if(!wxOn()||!wxRaw(S.wx.home))return {};
@@ -7183,10 +7228,10 @@ function wxWidget(d){
   }catch(e){return {};}
 }
 // 가족에게 보낼 것: 내 직장 지역 + 근무별 출퇴근 시각 (날씨를 켜고 직장을 정한 사람만)
-function wxShare(){
-  if(!wxOn()||!wxOk(S.wx.work))return null;
+function wxShare(){   // v0.134 집(h)도 같이 → 가족 폰은 아무것도 안 골라도 내 출퇴근 날씨 (동네까지만 · 주소 아님)
+  if(!wxOn())return null;
   const tm={};workTypes().slice(0,24).forEach(t=>{const x=timesOf(t.k);tm[String(t.k)]=[x.start,x.end];});
-  return {w:S.wx.work,tm};
+  return {w:wxOk(S.wx.work)?S.wx.work:S.wx.home,h:S.wx.home,tm};
 }
 
 /* ---- 설정: 날씨 켤 때 화면 하나 (집 · 직장 지역 + 근무 시간 확인) ---- */
@@ -7293,7 +7338,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout
 window.__wx={manPlanned,visibleMemos,famLbl,famTypeAt,famWx,shiftOf,wxMyWin,openStampReg,actAuto,stampPlanned,myActs,manPlanned,famActNow,wxMine,get S(){return S;},get page(){return {pageMode,pageBack};},openDay,closeSheet,closePop,closePage,openAddonPage,render,save,pushAlarmsToNative,pushRemindersToNative,famCleanSched,famPayload,
   newAlarm:o=>{draft=Object.assign(newAlarm(),o||{});alSnd=false;openAlarmPage();},wxOn,wxRaw,wxFam,wxMemWin,wxMemWork,wxMemKey,wxOpenFam,wxOpenDay,wxChipIcon,
   openPatternPage,openStatsPage,openSlipPage:ym=>{slipYM=ym;openSlipPage();},statsCalc,payRates,dayHours,famTimesPayload,memberStatus,otOpen,get stYM(){return stYM;},set stYM(v){stYM=v;}};
-Object.assign(window.__wx,{wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
+Object.assign(window.__wx,{pushWidgetNow:()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
 
 /* ================= 부가 기능 (설정 › 부가 기능) =================
  * 기본은 모두 꺼짐. 꺼도 저장된 내용은 그대로이고, 켜면 그 자리에 바로 생겨요. */
@@ -7980,7 +8025,7 @@ function applyBackup(d){
   BACKUP_KEYS.forEach(k=>{if(d[k]!==undefined)next[k]=d[k];});
   if(d.familyMemos)next.familyMemos=d.familyMemos;
   if(d.wlog)next.wlog=d.wlog;   // (백업에 일지가 없으면 지금 폰의 일지를 그대로 둠)
-  if(isObj(d.wxh)){try{const H=wxHist();Object.keys(d.wxh).forEach(k=>{const v=d.wxh[k];if(/^\d{4}-\d\d-\d\d$/.test(k)&&isObj(v)&&isObj(v.c)&&!H[k])H[k]=v;});localStorage.setItem(WXH_KEY,JSON.stringify(H));}catch(e){}}   // v0.127 날씨 기록: 폰에 없는 날만 채움
+  if(isObj(d.wxh)){try{const H=wxHist();Object.keys(d.wxh).forEach(k=>{const v=d.wxh[k];if(/^\d{4}-\d\d-\d\d$/.test(k)&&isObj(v)&&(isObj(v.c)||isObj(v.f))&&!H[k])H[k]=v;});localStorage.setItem(WXH_KEY,JSON.stringify(H));}catch(e){}}   // v0.127 날씨 기록: 폰에 없는 날만 채움
   try{localStorage.setItem(KEY+':prev',JSON.stringify({at:Date.now(),s:S}));}catch(e){}   // 복원 직전 상태를 하나 남겨 둠 (백업 · 복원 화면에서 되돌리기)
   const info={};
   S=safeNormalize(Object.assign({},S,next,{onboarded:true,myset:next.myset!==undefined?!!next.myset:true,noPat:next.noPat!==undefined?!!next.noPat:false}),info);   // 예전 백업엔 myset · noPat 이 없음 → 근무표가 있는 걸로
@@ -9740,7 +9785,9 @@ async function famPush(force){
   const p=famPayload(),h=famHash(JSON.stringify(p));
   if(!force&&S.link.hash===h)return;
   try{await F.setDoc(F.doc(db,'households',S.link.hid,'schedules',uid),{...p,updatedAt:F.serverTimestamp()});}
-  catch(e){if(!(p.wx||p.tm||p.ot)||!/permission/i.test(String((e&&e.code)||e)))throw e;const q={...p};delete q.wx;delete q.tm;delete q.ot;await F.setDoc(F.doc(db,'households',S.link.hid,'schedules',uid),{...q,updatedAt:F.serverTimestamp()});}   // 서버 규칙이 아직 옛날이면 날씨만 빼고
+  catch(e){if(!(p.wx||p.tm||p.ot)||!/permission/i.test(String((e&&e.code)||e)))throw e;
+    if(p.wx&&p.wx.h){const q0={...p,wx:{...p.wx}};delete q0.wx.h;try{await F.setDoc(F.doc(db,'households',S.link.hid,'schedules',uid),{...q0,updatedAt:F.serverTimestamp()});if(S.link){S.link.hash=h;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e2){}}return;}catch(e2){}}   // v0.134 서버 규칙이 아직 집(h)을 모르면 h 만 빼고
+    const q={...p};delete q.wx;delete q.tm;delete q.ot;await F.setDoc(F.doc(db,'households',S.link.hid,'schedules',uid),{...q,updatedAt:F.serverTimestamp()});}   // 서버 규칙이 아직 옛날이면 날씨만 빼고
   if(S.link){S.link.hash=h;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 }
 var famPushWarnAt=0;
@@ -10160,22 +10207,24 @@ function vcGo(k,quiet){
   if(!quiet)buzz(6);openVcDay(k);const sh=$('#sheet');if(sh)sh.scrollTop=0;
 }
 // 그 가족(근무표를 나눈 사람)의 그날 날씨: 집(내 폰의 집) → 직장(그 가족이 실어 보낸 직장) · 오늘부터 3일 뒤까지
+// v0.134 근무표를 올린 가족의 집: 그 사람이 보낸 집(h) → 내 폰 집 → 그 사람 직장 (버튼 없이 늘 자동)
+function famSchedHome(m){const x=m&&m.sch&&m.sch.wx;if(x&&wxOk(x.h))return x.h;if(wxOn())return S.wx.home;return x&&wxOk(x.w)?x.w:'';}
 function famSchedWx(m,d,now){
-  try{if(!wxOn())return null;const H=wxRaw(S.wx.home);if(!H)return null;now=now||Date.now();
-    const win=wxMemWin(m,d),wk=wxMemWork(m),W=wxRaw(wk),hq=wxFull(S.wx.home);
-    const c=(win?WX.commute(H,W,{s:win.s,e:win.e,hn:`집 · ${wxName(S.wx.home)}`,wn:W?`직장 · ${wxName(wk)}`:`집 · ${wxName(S.wx.home)}`,hq,wq:wk?wxFull(wk):hq,now}):null)||WX.dayCard(H,WX.keyD(new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime()),{now,hq,hp:wxName(S.wx.home)});
-    return c?{c,win,wk}:null;}catch(e){return null;}
+  try{const hm=famSchedHome(m);if(!hm)return null;const H=wxRaw(hm);if(!H)return null;now=now||Date.now();
+    const win=wxMemWin(m,d),wk=wxMemWork(m),W=wk&&wk!==hm?wxRaw(wk):null,hq=wxFull(hm);
+    const c=(win?WX.commute(H,W,{s:win.s,e:win.e,hn:`집 · ${wxName(hm)}`,wn:W?`직장 · ${wxName(wk)}`:`집 · ${wxName(hm)}`,hq,wq:wk?wxFull(wk):hq,now}):null)||WX.dayCard(H,WX.keyD(new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime()),{now,hq,hp:wxName(hm)});
+    return c?{c,win,wk,hm}:null;}catch(e){return null;}
 }
 function vcDayWx(p,k){
   const d=parse(k),t=new Date(),df=Math.round((d-new Date(t.getFullYear(),t.getMonth(),t.getDate()))/864e5);
   if(df<0)return wxHistCard(wxMemKey(p),k,'vc-wx');   // v0.127 지난 날 = 저장본
-  if(df>3)return '';
+  if(df>3){const x=famSchedWx(p,d);return x&&x.c?wxFarLine(x.c,`data-act="vc-wx" data-k="${k}"`):'';}   // v0.134 먼 날 한 줄
   const x=famSchedWx(p,d);if(!x||!x.c||!x.c.k)return '';
   return wxCardHtml(x.c,wxCls(x.c),`data-act="vc-wx" data-k="${k}"`);
 }
 function vcWxPop(k){
   const p=famPeers().find(x=>x.uid===vcUid);if(!p)return;if(k<fmt(new Date())&&wxHistFamPop(p.name,wxMemKey(p),k))return;const d=parse(k),x=famSchedWx(p,d);if(!x)return;
-  wxOpenPop(wxPopHtml(`${p.name} · ${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`,x.win?`${wxHm(x.win.s)} 출근 → ${wxHm(x.win.e)} 퇴근`:'',x.c,'',wxDzList(x.win,S.wx.home,x.wk),wxHrOf(d,x.win,S.wx.home,x.wk,wxName(S.wx.home),x.wk?wxName(x.wk):'',null)));
+  wxOpenPop(wxPopHtml(`${p.name} · ${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`,x.win?`${wxHm(x.win.s)} 출근 → ${wxHm(x.win.e)} 퇴근`:'',x.c,'',wxDzList(x.win,x.hm,x.wk),wxHrOf(d,x.win,x.hm,x.wk,wxName(x.hm),x.wk?wxName(x.wk):'',null)));
 }
 function vcRerender(){if(pageMode==='famcal')renderFamCalPage();else if(pageMode==='mancal')renderManCalPage();else render();}
 function vcEnter(){   // 달이 넘어간 뒤 새 달이 옆에서 들어오는 효과
@@ -10813,7 +10862,7 @@ function renderLinkPage(){
       ${full?'<div class="prow"><div class="pl2 muted" style="text-align:center">가족 자리가 가득 찼어요</div></div>':`<div class="prow" data-act="link-invite" style="color:var(--accent);font-weight:700;justify-content:center">＋ 가족 초대하기</div>`}
     </div>
     ${u.invites.length?`<div class="pg-cap">내가 보낸 초대 코드 (쓰면 사라져요)</div><div class="pg-sec" style="margin-top:0">${u.invites.map(v=>`<div class="prow"><div class="pl2"><b class="mono">${famFmt(v.code)}</b><small>${esc(v.name||'호칭 미정')} · ${daysLeft(v.exp)}일 남음</small></div><button class="btn ghost sm" data-act="inv-share" data-c="${v.code}">보내기</button><button class="xbtn" data-act="inv-del" data-c="${v.code}" aria-label="코드 지우기">✕</button></div>`).join('')}</div>`:''}
-    ${host?(S.myset?`<div class="pg-sec" style="margin-top:16px">${stkRow()}</div>`:''):`<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">내 근무표를 가족에게 보여요<small>끄면 가족 근무표만 보고, 달력 탭이 가족 달력으로 바뀌어요</small></div><label class="sw"><input type="checkbox" id="famOwn" ${L.mode==='view'?'':'checked'}><i></i></label></div>${!S.myset&&L.mode!=='view'?'<div class="prow tap" data-act="mk-sched" style="color:var(--accent);font-weight:700"><div class="pl2">내 근무표 만들기<small>만들기 전에는 가족에게 내 근무표가 안 보여요</small></div><span class="muted">›</span></div>':''}${S.myset&&L.mode!=='view'?stkRow():''}</div>`}
+    ${host?(S.myset?`<div class="pg-sec" style="margin-top:16px">${stkRow()}</div>${wxOn()?'<div class="hint" style="padding:6px 4px 0;margin:0">☔ 출퇴근 날씨를 켜 두면 집 · 직장 동네(주소 아님)와 근무 시간도 가족 폰에 보여요</div>':''}`:''):`<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">내 근무표를 가족에게 보여요<small>끄면 가족 근무표만 보고, 달력 탭이 가족 달력으로 바뀌어요</small></div><label class="sw"><input type="checkbox" id="famOwn" ${L.mode==='view'?'':'checked'}><i></i></label></div>${!S.myset&&L.mode!=='view'?'<div class="prow tap" data-act="mk-sched" style="color:var(--accent);font-weight:700"><div class="pl2">내 근무표 만들기<small>만들기 전에는 가족에게 내 근무표가 안 보여요</small></div><span class="muted">›</span></div>':''}${S.myset&&L.mode!=='view'?stkRow():''}</div>`}
     ${pushRow()}
     ${googleRow()}
     <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기</div><span class="muted">${esc(L.name)} ›</span></div>

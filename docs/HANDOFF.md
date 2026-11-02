@@ -251,3 +251,12 @@
 ## v0.133 — 날씨 팝업 깜빡임 4 (밀기 시작할 때)
 - 두 번째 녹화: 넘김 끝 깜빡임은 사라졌고, 밀기 시작할 때 1프레임 전체가 빔 → swWrap 이 내용을 새 .swc 로 옮기기 때문.
 - 날씨 팝업은 열 때부터 내용을 .swc(position:relative · translateZ(0))로 감쌈(wxOpenDay · swGo 대체 경로). swWrap: 이미 .swc 하나뿐이면 그걸 cur 로 씀(st.keepCur) · swUnwrap 은 keepCur 면 옮기지 않고 transform 만 되돌림. → 밀기 시작 · 넘김 · 제자리 어디서도 내용을 옮기지 않음.
+
+## v0.134 — 가족에게 집 위치 자동 · 가족 달력 날씨 · 판마다 스티커 크기 · 위젯 유찬 달력
+- 집 위치 자동: wxShare = {w(직장 · 없으면 집), h(집), tm} (날씨 켠 사람). famCleanSched 가 h 보관. famPush: 규칙이 h 를 거절하면 h 만 빼고 다시. firestore.rules scheds.wx keys ['w','h','tm'] + h 형식 (규칙 시험 120 통과) → **배포 필요: firebase deploy --only firestore:rules**.
+- 받는 쪽: famSchedHome(m) = 보낸 h → 내 폰 집(날씨 켰으면) → 그 사람 직장. famSchedWx 는 wxOn 아니어도 됨(+hm 반환 · vcWxPop 이 씀). wxCodes: 날씨 꺼진 폰도 wxFamCodes(가족 h · w) 받아 옴 · wxFetch 의 wxOn 조건 뺌. 가족 카드 "날씨도 보기 · 집 지역 고르기" 버튼 없앰(늘 자동).
+- 가족 날짜 창: 4일 뒤부터 wxFarLine(중기 한 줄) · wxHistSave 는 내 날씨를 안 켜도 가족 것(f)만 저장 · 복원은 c 또는 f 있는 날.
+- 스티커 크기 판마다("달마다 따로"): stzMonth(mk) 가 그 달 크기(저장값 · 없으면 그 달만 재기) → render 뒤 stzPanels 가 #track 판 3개에 style --stz(기본이면 var(--stz0)) · todayGo 가 끼워 넣는 판도. 넘어오는 달이 들어오는 동안에도 제 크기(시험: 5월 9.2 → 11월 14px 가 미끄러지는 중에도 14).
+- 위젯 유찬: widgetJson people[].d[날짜](6일 전~14일 뒤) = 직접 추가한 가족 {l 일정 · st 스티커(id · n · N) · nt 메모} + 오늘 · 내일 wx(wxWidgetOf · 근무표 가족도). people[].k 에 유찬 스티커(달력 칸). WidgetDayActivity: 가족 달력이면 위쪽 일정 줄 · 날씨 줄(누르면 "#wx@사람") · 유찬 스티커 체크(toggleManSticker → 할 일 t:'mstk') · 메모. 앱 applyWidgetActions 가 mstk 를 m.stk 에 반영 · widgetSync "#wx@사람" = 그 사람 달력 + 가족 날씨 팝업.
+- 연결 화면(근무자): 날씨 켠 사람에게 "집 · 직장 동네와 근무 시간도 가족 폰에 보여요" 한 줄.
+- 시험: s87 (12) · 규칙 시험 h.

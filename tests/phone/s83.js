@@ -49,9 +49,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   }
   { const p=await boot(b,state(false),{tz:'Asia/Seoul',T:KST(2026,10,14,10),touch:true});await p.waitForTimeout(1200);
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(500);
-    T('날씨 꺼진 폰: 카드에 "날씨도 보기" 한 줄 → 누르면 날씨 설정',await p.evaluate(()=>!!document.querySelector('.now.fams .mwx-off')));
-    await p.evaluate(()=>document.querySelector('.now.fams .mwx-off').click());await p.waitForTimeout(400);
-    T('날씨 설정 화면이 열림',await p.evaluate(()=>/출퇴근 날씨|집 지역/.test(document.querySelector('#page').innerText)));
+    T('날씨 꺼진 폰: "날씨도 보기" 버튼 없음 (v0.134 가족 날씨는 늘 자동)',await p.evaluate(()=>!document.querySelector('.now.fams .mwx-off')&&!/날씨도 보기/.test(document.querySelector('.now.fams').innerText)));
     T('오류 없음 (날씨 꺼짐)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   T.sum();await b.close();
