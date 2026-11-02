@@ -490,7 +490,7 @@ class AlarmActivity : Activity() {
             col.addView(tv("오늘 옷", 12f, sub))
             col.addView(tv(cold.optString("wt").replace(" · ", " + "), 17f, ink, round = true))
             // v0.127 옷 아래 상황 문구 (서버 · 앱 같은 문구: 출퇴근 기온차 · 추위 · 더위 · 눈)
-            val ot = w.optString("ot").takeIf { it.isNotBlank() } ?: if (gap >= 10) "낮엔 따뜻해요 · 벗기 쉬운 걸로" else "${cold.optString("l").substringBefore(" ")} ${cold.optInt("tp")}° 기준"
+            val ot = w.optString("ot").takeIf { it.isNotBlank() } ?: if (gap >= 8) "낮엔 따뜻해요 · 안에 얇게 입고 겉옷은 벗기 쉽게" else "${cold.optString("l").substringBefore(" ")} ${cold.optInt("tp")}° 기준"
             col.addView(tv(ot, 12f, sub))
             l.addView(col); root.addView(l)
         }

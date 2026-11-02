@@ -401,9 +401,9 @@
     const oc = d.lo != null && d.hi != null ? outfit([{ tp: d.lo, pty: d.snow ? 3 : 0, pop: d.wet ? 60 : 0 }, { tp: d.hi, pty: 0, pop: 0 }]) : null;
     // 그림 화면용: 오전 = 최저 · 오후 = 최고 기온 칸
     const hv = (x, tp) => x ? { tp, pty: x.snow ? 3 : x.wet ? 1 : 0, pop: x.pop || 0 } : null;
-    const cd = (l, x, tp) => x ? Object.assign({ l, p: '', sk: x.sk || '', tp: tp != null ? tp : null, d: x.wet ? `${x.snow ? '눈' : '비'} ${x.pop}%` : x.d, hot: !!x.wet }, wearOf(hv(x, tp)) || {}, o && o.hq ? { q: o.hq } : {}) : null;
+    const cd = (l, x, tp) => x ? Object.assign({ l, p: (o && o.hp) || '', sk: x.sk || '', tp: tp != null ? tp : null, d: x.wet ? `${x.snow ? '눈' : '비'} ${x.pop}%` : x.d, hot: !!x.wet }, wearOf(hv(x, tp)) || {}, o && o.hq ? { q: o.hq } : {}) : null;
     const ac = actCards(home, o && o.acts, o && o.now), acK = actK(ac);
-    const c = ac.length ? ac.slice().sort((p, q) => p.ms - q.ms).slice(0, 3).map(z => z.x) : [cd('오전', d.am, d.lo), cd('오후', d.pm, d.hi)].filter(Boolean);   // 쉬는 날 활동이 있으면 활동만
+    const c = ac.length ? ac.slice().sort((p, q) => p.ms - q.ms).slice(0, 3).map(z => z.x) : [cd('오전 6~12시', d.am, d.lo), cd('오후 12~6시', d.pm, d.hi)].filter(Boolean);   // v0.130 근무 날 칸처럼 시각 · 동네 줄 (높이 같게)   // 쉬는 날 활동이 있으면 활동만
     const dd = dustOf(a), dz = dd ? [Object.assign({ p: '', n: '' }, dd)] : [];
     { const ap = ac.slice().sort((p, q) => p.ms - q.ms).find(z => !z.x.past), da = ap ? actDz(home, ap.a, null, o && o.now, '') : null; if (da) { if (dz[0]) Object.assign(dz[0], { p: '🏠집', pl: '집' }); dz.push(da); } }
     const d0 = Date.UTC(+dk.slice(0, 4), +dk.slice(4, 6) - 1, +dk.slice(6, 8)) - 9 * H, uv = uvMax([home], d0 + 9 * H, d0 + 17 * H), ak = alertK([home], [dk], o && o.now);

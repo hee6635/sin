@@ -273,7 +273,7 @@ await ok('그림 화면용: 한 줄 결론 · 출근/퇴근 칸(날씨 그림 ·
   assert.equal(C.skyT('흐리고 비/눈'), 'sky/sleet'); assert.equal(C.skyT('구름많음', 70), 'sky/rain');
   // 쉬는 날도 같은 모양 (오전 · 오후 칸)
   const y = (await W.handle(d, { h: '41111', d: '20261031' })).body;
-  assert.ok(y.k && y.k.t); assert.deepEqual(y.c.map(x => x.l), ['오전', '오후']); assert.ok(y.c.every(x => x.sk && x.w));
+  assert.ok(y.k && y.k.t); assert.deepEqual(y.c.map(x => x.l), ['오전 6~12시', '오후 12~6시']); assert.ok(y.c.every(x => x.sk && x.w));
 });
 await ok('미세먼지: 출근·퇴근 동네 중 나쁜 쪽이 결론 · 얼굴 8단계 · 챙길 것에 마스크', () => {
   const now = KST(2026, 10, 30, 6), dk = '20261030';

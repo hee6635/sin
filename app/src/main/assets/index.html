@@ -1502,6 +1502,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .otsum{margin-top:6px;padding:10px 12px;border-radius:12px;background:var(--surface);font-size:14px}
 .ptm-t{display:flex;align-items:center;gap:4px;flex:none}.ptm-t em{font-style:normal;color:var(--muted)}.ptm-t small{font-size:11px;color:var(--muted)}
 .wxl.past{opacity:.75;cursor:default;font-weight:700}
+.wxrw.dz.none img{filter:grayscale(1);opacity:.45}.wxrw.dz.none .k{color:var(--muted)}
 .sdg{font-size:13px;line-height:1.6;color:var(--fg);padding:2px 2px}.sdg-go{display:block;width:100%;text-align:left;font:inherit;font-size:13px;line-height:1.6;background:var(--card,#fff);border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin:4px 0;color:var(--fg)}
 /* v0.127 지난 날 날씨 기록 */.wxhist{margin:12px 0 10px}.wxhist .wxl.wxcard{margin:0}.wxhl{font-size:11.5px;font-weight:700;color:var(--muted);margin:0 0 4px 4px}.wxob{font-size:12.5px;font-weight:700;color:var(--muted);margin:6px 0 0 4px}.wxrw.obs .n{font-weight:700}
 .wxr .wtag{flex:none;font-size:12px;font-weight:800;padding:4px 9px;border-radius:10px;background:#e4ecfb;color:#2c58b8}
@@ -2041,9 +2042,9 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
     const oc = d.lo != null && d.hi != null ? outfit([{ tp: d.lo, pty: d.snow ? 3 : 0, pop: d.wet ? 60 : 0 }, { tp: d.hi, pty: 0, pop: 0 }]) : null;
     // 그림 화면용: 오전 = 최저 · 오후 = 최고 기온 칸
     const hv = (x, tp) => x ? { tp, pty: x.snow ? 3 : x.wet ? 1 : 0, pop: x.pop || 0 } : null;
-    const cd = (l, x, tp) => x ? Object.assign({ l, p: '', sk: x.sk || '', tp: tp != null ? tp : null, d: x.wet ? `${x.snow ? '눈' : '비'} ${x.pop}%` : x.d, hot: !!x.wet }, wearOf(hv(x, tp)) || {}, o && o.hq ? { q: o.hq } : {}) : null;
+    const cd = (l, x, tp) => x ? Object.assign({ l, p: (o && o.hp) || '', sk: x.sk || '', tp: tp != null ? tp : null, d: x.wet ? `${x.snow ? '눈' : '비'} ${x.pop}%` : x.d, hot: !!x.wet }, wearOf(hv(x, tp)) || {}, o && o.hq ? { q: o.hq } : {}) : null;
     const ac = actCards(home, o && o.acts, o && o.now), acK = actK(ac);
-    const c = ac.length ? ac.slice().sort((p, q) => p.ms - q.ms).slice(0, 3).map(z => z.x) : [cd('오전', d.am, d.lo), cd('오후', d.pm, d.hi)].filter(Boolean);   // 쉬는 날 활동이 있으면 활동만
+    const c = ac.length ? ac.slice().sort((p, q) => p.ms - q.ms).slice(0, 3).map(z => z.x) : [cd('오전 6~12시', d.am, d.lo), cd('오후 12~6시', d.pm, d.hi)].filter(Boolean);   // v0.130 근무 날 칸처럼 시각 · 동네 줄 (높이 같게)   // 쉬는 날 활동이 있으면 활동만
     const dd = dustOf(a), dz = dd ? [Object.assign({ p: '', n: '' }, dd)] : [];
     { const ap = ac.slice().sort((p, q) => p.ms - q.ms).find(z => !z.x.past), da = ap ? actDz(home, ap.a, null, o && o.now, '') : null; if (da) { if (dz[0]) Object.assign(dz[0], { p: '🏠집', pl: '집' }); dz.push(da); } }
     const d0 = Date.UTC(+dk.slice(0, 4), +dk.slice(4, 6) - 1, +dk.slice(6, 8)) - 9 * H, uv = uvMax([home], d0 + 9 * H, d0 + 17 * H), ak = alertK([home], [dk], o && o.now);
@@ -2474,7 +2475,7 @@ function normalize(o){
   if(!(Number.isInteger(s.myTeam)&&s.myTeam>=0&&s.myTeam<s.teamOffsets.length))s.myTeam=Math.min(2,s.teamOffsets.length-1);
   if(!['abc','num','team','custom'].includes(s.teamStyle))s.teamStyle='abc';
   if(!Array.isArray(s.teamNames))s.teamNames=[];
-  s.alarmMsg=s.alarmMsg!==false;s.stzMode=(o&&o.stzMode)==='m'?'m':'';   // v0.128 스티커 크기 범위
+  s.alarmMsg=s.alarmMsg!==false;s.stzMode=(o&&o.stzMode)==='3'?'3':'m';   // v0.130 스티커 크기 범위: 기본 'm' 그 달만(달마다 최대한 크게) · '3' 앞뒤 3달
   {const a=isObj(s.famAlias)?s.famAlias:{},o={};Object.keys(a).slice(0,20).forEach(k=>{const v=typeof a[k]==='string'?a[k].trim().slice(0,12):'';if(/^[A-Za-z0-9_-]{1,64}$/.test(k)&&v)o[k]=v;});s.famAlias=o;}   // v0.127 부를 이름
   {const h=isObj(s.hints)?s.hints:{},o2={};Object.keys(h).slice(0,30).forEach(k=>{const v=Math.round(+h[k]);if(/^[a-z0-9]{1,12}$/.test(k)&&v>=0&&v<1000)o2[k]=v;});s.hints=o2;}   // v0.126 안내 줄 본 횟수
   s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.pushBoard=!(o&&o.pushBoard===false);s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'||((o&&o.calLook)!=='circle'&&!(o&&o.onboarded))?'fill':'circle';/* v0.97 새로 설치 = 칸 채우기 · 예전부터 쓰던 사람(고른 적 없음 = 동그라미)은 그대로 */s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.todayColor=(o&&o.todayColor==='shift')?'shift':/^#[0-9a-f]{6}$/i.test((o&&o.todayColor)||'')?o.todayColor.toLowerCase():'';/* 'shift' = 그날 근무 색 */s.linkLost=(o&&isObj(o.linkLost)&&typeof o.linkLost.hid==='string')?{hid:cutTxt(o.linkLost.hid,128),role:o.linkLost.role==='host'?'host':'guest',name:cutTxt(o.linkLost.name,12),at:+o.linkLost.at||0}:null;s.linkMissAt=+(o&&o.linkMissAt)||0;s.hostSeenAt=+(o&&o.hostSeenAt)||0;s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&(o.bg==='paper'||o.bg==='vivid'))?o.bg:'';s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
@@ -3443,8 +3444,8 @@ function stzDiagHtml(){
     const nx=t1?Math.min(d.base,t1.fit):d.base,grow=Math.round((nx/d.cur-1)*100);
     h+=`<div class="sdg">대책: ${grow>0?`이 날 날짜 옆 스티커를 하나 줄이면 → <b>약 ${grow}% 커져요</b>${t1&&t1.need>0?` (다음으로 빡빡한 날: ${md(t1.k)})`:''}`:'이 날을 줄여도 다른 날이 비슷하게 빡빡해서 거의 안 변해요'}</div>`;
   }else h+=`<div class="sdg">빡빡한 칸이 없어요 (모든 칸에 기본 크기로 들어가요)</div>`;
-  h+=`<div class="sdg" style="margin-top:6px">크기 맞추는 범위 (${S.stzMode==='m'?'그 달만':'앞뒤 3달'} · ${md(fmt(new Date(cur.y,cur.m,1))).replace(/ 1일$/,'')} 기준)</div>
-    <div class="chips"><button class="${S.stzMode==='m'?'':'on'}" data-act="stz-mode" data-v="">앞뒤 3달 같은 크기</button><button class="${S.stzMode==='m'?'on':''}" data-act="stz-mode" data-v="m">달마다 따로 (최대한 크게)</button></div>`;
+  h+=`<div class="sdg" style="margin-top:6px">크기 맞추는 범위 (${S.stzMode==='3'?'앞뒤 3달':'그 달만'} · ${md(fmt(new Date(cur.y,cur.m,1))).replace(/ 1일$/,'')} 기준)</div>
+    <div class="chips"><button class="${S.stzMode==='3'?'':'on'}" data-act="stz-mode" data-v="m">달마다 따로 (최대한 크게)</button><button class="${S.stzMode==='3'?'on':''}" data-act="stz-mode" data-v="3">앞뒤 3달 같은 크기</button></div>`;
   return h;
 }
 // 스티커 크기는 "보는 달 앞뒤 3달(7달)"에서 가장 빡빡한 칸 기준으로 한 번에 맞춤 → 달을 넘겨도(명절이 있는 달 · 없는 달) 크기가 안 바뀜.
@@ -3454,7 +3455,7 @@ function stzStore(){if(!stzP){try{stzP=JSON.parse(localStorage.getItem(STZ_KEY)|
 function strHash(t){let h=5381;for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return h+':'+t.length;}
 const stzCache={};let stzUse,stzDirty=false,stzFitW=0,stzFitKey='';
 const stzKey=()=>`${tuneAppKey()}|${Math.round(innerWidth)}|${cur.y*12+cur.m}|${S.fontScale}|${S.calLook}|${S.stzMode||''}`;
-const stzR=()=>S.stzMode==='m'?0:3;   // v0.128 스티커 크기 기준: 앞뒤 3달(기본 · 달을 넘겨도 크기 같음) / 'm' = 그 달만(달마다 최대한 크게)
+const stzR=()=>S.stzMode==='3'?3:0;   // v0.128 스티커 크기 기준: 앞뒤 3달(기본 · 달을 넘겨도 크기 같음) / 'm' = 그 달만(달마다 최대한 크게)
 function stzWindow(host){
   host=host||$('#view');if(!host)return;
   const rt=document.documentElement,main=host.id==='view';
@@ -6224,7 +6225,7 @@ function swGo(w,dir){
   if(w==='sd'){openStampDay(k,true);return true;}
   if(w==='man'){manGo(k,true);return true;}
   if(w==='vc'){vcGo(k,true);return true;}
-  if(w==='wx'){wxOpenDay(k);return true;}
+  if(w==='wx'){const m=$('#pop .menu.wxdpop'),h=m&&wxDayPopHtml(k);if(m&&h){wxPopK=k;m.innerHTML=h;wxHrScroll();if(/class="wxweb"/.test(h)){hintBump('wxweb');save();}return true;}wxOpenDay(k);return true;}   // v0.130 틀(.menu)은 그대로 · 안 내용만 (틀을 새로 만들면 그림 풀기 전 하얗게 깜빡임)
   return false;
 }
 // 끌기 시작: 안 내용을 판(.swc) 하나로 감싸고, 옆 날짜 판을 바로 옆에 붙임
@@ -6869,7 +6870,7 @@ function wxMine(d,now){
   const H=wxRaw(S.wx.home),W=wxRaw(wxWk())||null,w=wxMyWin(d),acts=myActs(d);
   const hq=wxFull(S.wx.home),wq=wxOk(wxWk())?wxFull(wxWk()):hq;
   if(w){const c=WX.commute(H,W,{s:w.s,e:w.e,hn:`집 · ${wxName(S.wx.home)}`,wn:W?`직장 · ${wxName(wxWk())}`:`집 · ${wxName(S.wx.home)}`,hq,wq,now:now||Date.now(),acts});if(c)return c;}   // 시간 예보가 없는 먼 근무 날은 하루 요약
-  return WX.dayCard(H,WX.keyD(new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime()),{now:now||Date.now(),hq,acts});
+  return WX.dayCard(H,WX.keyD(new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime()),{now:now||Date.now(),hq,hp:wxName(S.wx.home),acts});
 }
 // 날짜 창 맨 위 한 줄 (간단하게): 근무 날 3일 안 = "☔ 퇴근길 비 · 우산 | 출근 6° · 퇴근 12°" · 그 밖 = "☀️ 오전 맑음 · ☔ 오후 비 60% | 4°~15°"
 const WXP_KEY='eonjeswieo:wxp';let wxPC=null;const wxPBusy={};
@@ -6985,6 +6986,7 @@ function wxPopHtml(title,sub,c,extra,dz,hr){
     const l1=two?`${w0.pl||w0.p+'길'}(${w0.n}) ${w0.m}`:w0.m,l2=two?`${w1.pl||w1.p+'길'}(${w1.n})은 ${w1.lb}`:'';
     air=`<div class="wxrw dz${w0.g>=3?' bad':''}"${dz?' data-act="wx-dust"':''}>${wxImg(w0.f)}<div><b class="k">미세먼지 ${esc(w0.lb)}</b>${k.dz&&dz?'<small>자세히 보기</small>':`<small>${esc(l1)}</small>${l2?`<small style="opacity:.7">${esc(l2)}</small>`:''}`}</div>${dz?'<span class="go">›</span>':''}</div>`;
   }else if(!w0&&c.a)air=`<div class="wxrw"><b class="k">${esc(c.a)}</b></div>`;
+  else if(!w0&&cs.length&&!(c.day&&c.day.src==='m'))air=`<div class="wxrw dz none">${wxImg('faces/2')}<div><b class="k">미세먼지 · 예보 전이에요</b><small>보통 2~3일 전에 나와요</small></div></div>`;   // v0.130 줄을 빼지 않고 자리 유지 (높이 같게) · 누르지 않음
   const kOther=k.dz&&two?`<small style="opacity:.75">${esc(`${w1.pl||w1.p+'길'}(${w1.n})은 ${w1.lb}`)}</small>`:'';
   const kCls=k.al===2?'al2':k.al===1?'al1':wet?'wet':bad?'bad':cold?'cold':'';
   return `<div class="wxp v2"><div class="wh"><div><b>${esc(title)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div><button class="ib" data-act="pop-close" aria-label="닫기">✕</button></div>
@@ -7110,7 +7112,7 @@ function famWx(m,d,now){
     const win=wxMemWin(m,d),l0=wxMemWork(m,d),loc=l0&&l0!==hm?l0:'',W=loc?wxRaw(loc):null,L=famWxL(m),hq=wxFull(hm);
     const acts=famActs(m,d).map(z=>actWx(z.x.act,z.sp,z.x.emoji,hm)),ty=famTypeAt(m,d);
     const c=win?WX.commute(H,W,{s:win.s,e:win.e,hn:`집 · ${wxName(hm)}`,wn:W?`${ty.name||famLbl(m)} · ${wxName(loc)}`:`집 · ${wxName(hm)}`,hq,wq:loc?wxFull(loc):hq,now,acts,...L}):null;
-    return {c:c||WX.dayCard(H,WX.keyD(new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime()),{now,hq,acts}),win,loc,L,hm,acts};
+    return {c:c||WX.dayCard(H,WX.keyD(new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime()),{now,hq,hp:wxName(hm),acts}),win,loc,L,hm,acts};
   }catch(e){return null;}
 }
 // v0.127 가족 지난 날 저장본 (카드 · 팝업) — 시간별 줄은 내 것만 저장
@@ -8488,7 +8490,7 @@ document.addEventListener('click',e=>{
     case 'pi-carry-go':boardCarryDo(true);break;
     /* 업무 일지 · 찾기 */
     case 'stz-go':{const k=t.dataset.k,d=parse(k);closePage();tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
-    case 'stz-mode':S.stzMode=t.dataset.v==='m'?'m':'';save();render();openTunePage();break;
+    case 'stz-mode':S.stzMode=t.dataset.v==='3'?'3':'m';save();render();openTunePage();break;
     case 'wl-open':wlOpen(t.dataset.k);break;
     case 'wl-new':{const k=t.dataset.k;mdDraft=null;closePage();if(!S.wlog.name)wlNamePrompt(k);else wlOpen(k);break;}
     case 'wl-nmchip':{const i=$('#wlNm');if(i)i.value=t.dataset.v;break;}
@@ -10144,7 +10146,7 @@ function vcGo(k,quiet){
 function famSchedWx(m,d,now){
   try{if(!wxOn())return null;const H=wxRaw(S.wx.home);if(!H)return null;now=now||Date.now();
     const win=wxMemWin(m,d),wk=wxMemWork(m),W=wxRaw(wk),hq=wxFull(S.wx.home);
-    const c=(win?WX.commute(H,W,{s:win.s,e:win.e,hn:`집 · ${wxName(S.wx.home)}`,wn:W?`직장 · ${wxName(wk)}`:`집 · ${wxName(S.wx.home)}`,hq,wq:wk?wxFull(wk):hq,now}):null)||WX.dayCard(H,WX.keyD(new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime()),{now,hq});
+    const c=(win?WX.commute(H,W,{s:win.s,e:win.e,hn:`집 · ${wxName(S.wx.home)}`,wn:W?`직장 · ${wxName(wk)}`:`집 · ${wxName(S.wx.home)}`,hq,wq:wk?wxFull(wk):hq,now}):null)||WX.dayCard(H,WX.keyD(new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime()),{now,hq,hp:wxName(S.wx.home)});
     return c?{c,win,wk}:null;}catch(e){return null;}
 }
 function vcDayWx(p,k){
