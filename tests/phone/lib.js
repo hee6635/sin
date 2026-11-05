@@ -1,9 +1,10 @@
 const {chromium}=require('/opt/node22/lib/node_modules/playwright');
 const T=+new Date('2026-10-12T10:00:00');
-const base={tune:{appCover:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1},appInner:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1},cover:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1},inner:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1}},onboarded:true,addonNote:'done',addons:{comp:false,cheer:false,together:false,colleague:false,stats:false,status:false},anchor:'2026-10-02',myTeam:1,patternName:'4조2교대',pattern:['주','야','휴','휴'],overrides:{},memos:{},alarms:[],myset:true,fontScale:100};
+const base={tune:{appCover:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1},appInner:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1},cover:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1},inner:{stk:1,stkX:0,stkY:0,ink:1,inkY:0,memo:1,pill:1}},onboarded:true,addonNote:'done',addons:{comp:false,cheer:false,together:false,colleague:false,stats:false,status:false},anchor:'2026-10-02',myTeam:1,patternName:'4조2교대',pattern:['주','야','휴','휴'],overrides:{},memos:{},alarms:[],myset:true,fontScale:100,hints:{tcal:1,twx:1,tfam:1}};
 async function boot(b,state,opts={}){
   const p=await b.newPage({viewport:{width:opts.w||390,height:opts.h||844},deviceScaleFactor:2,hasTouch:!!opts.touch,reducedMotion:opts.rm?'reduce':'no-preference',bypassCSP:opts.csp!==true,...(opts.tz?{timezoneId:opts.tz}:{})});
   const errs=[];p.on('pageerror',e=>errs.push('PAGEERR '+e.message));p.on('console',m=>{if(m.type()==='error')errs.push('CONSOLE '+m.text());});
+  if(!opts.coach)await p.addInitScript(()=>{document.addEventListener('DOMContentLoaded',()=>{const st=document.createElement('style');st.textContent='#tutx{display:none!important}';document.head.appendChild(st);});});   // v0.135 처음 안내 말풍선은 s88 에서만 ({coach:true})
   if(!opts.fold)await p.addInitScript(()=>{   // (v0.92 날짜 창 근무타입 접기 전에 쓴 시험들: 늘 펼친 채로 · 접기 자체는 s64 가 {fold:true} 로 시험)
     document.addEventListener('DOMContentLoaded',()=>{const st=document.createElement('style');st.textContent='.shsec .sh-body{transition:none!important}';document.head.appendChild(st);
       new MutationObserver(()=>{document.querySelectorAll('.shsec:not(.open)').forEach(e=>{if(!e.dataset.tOpen){e.dataset.tOpen=1;e.classList.add('open');}});}).observe(document.body,{subtree:true,childList:true});});});

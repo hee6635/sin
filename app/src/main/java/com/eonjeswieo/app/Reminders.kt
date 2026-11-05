@@ -107,22 +107,30 @@ object Reminders {
             nm.createNotificationChannel(ch)
             val w = Weather.get(o.optString("wxq"), o.optString("wxp"), 7000)
             val title = if (w != null) "${w.optString("i")} ${w.optString("h")}".trim() else o.optString("title", "☔ 오늘 출퇴근 날씨")
+            // v0.135 단순하게: 출퇴근 기온 (체감) · 우산 · (나쁠 때만) 미세먼지 — 버튼은 [오늘 날씨 보기] [앱 열기]
             val lines = ArrayList<String>()
+            var short = o.optString("text", "")
             if (w != null) {
-                w.optString("t").takeIf { it.isNotBlank() }?.let { lines.add(it) }
                 val rows = w.optJSONArray("r")
+                val temps = ArrayList<String>()
+                var wet = false
                 if (rows != null) for (k in 0 until rows.length()) {
                     val r = rows.optJSONObject(k) ?: continue
-                    lines.add("${r.optString("l")} ${r.optString("i")} ${Weather.temp(r)} ${Weather.rowText(r)}".replace(Regex("\\s+"), " ").trim())
+                    val lb = r.optString("l").trim().split(" ").firstOrNull() ?: ""
+                    temps.add("$lb ${Weather.temp(r)}".trim())
+                    if (r.optString("tag").isNotBlank() || r.optInt("pop", 0) >= 60) wet = true
                 }
-                w.optString("o").takeIf { it.isNotBlank() }?.let { lines.add(it + (w.optString("ox").takeIf { x -> x.isNotBlank() }?.let { x -> " · $x" } ?: "")) }
-                w.optString("a").takeIf { it.isNotBlank() }?.let { lines.add(it) }
-                w.optString("an").takeIf { it.isNotBlank() }?.let { lines.add(it) }
+                val feel = w.optString("ox").split(" · ").firstOrNull()?.takeIf { it.startsWith("체감") } ?: ""
+                val l1 = temps.joinToString(" · ") + (if (feel.isNotEmpty()) " ($feel)" else "")
+                val umb = if (wet) "☂️ 우산 챙기세요" else "☂️ 우산 필요 없어요"
+                if (l1.isNotBlank()) lines.add(l1)
+                lines.add(umb)
+                if (w.optInt("ag", 0) >= 3) w.optString("a").takeIf { it.isNotBlank() }?.let { lines.add(it) }
+                short = listOf(temps.joinToString(" · "), umb.removePrefix("☂️ ")).filter { it.isNotBlank() }.joinToString(" · ")
             } else o.optString("text").takeIf { it.isNotBlank() }?.let { lines.add(it) }
             val intent = Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             intent.putExtra("type", "wx").putExtra("date", o.optString("date", ""))
             val open = PendingIntent.getActivity(ctx, o.optString("id").hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-            val short = if (w != null) listOf(w.optString("t"), w.optString("a")).filter { it.isNotBlank() }.joinToString(" · ") else o.optString("text", "")
             val nb = Notification.Builder(ctx, CHANNEL_WX)
                 .setSmallIcon(R.drawable.ic_stat_notify)
                 .setContentTitle(title)
@@ -130,15 +138,14 @@ object Reminders {
                 .setStyle(Notification.BigTextStyle().bigText(lines.joinToString("\n")))
                 .setAutoCancel(true)
                 .setContentIntent(open)
-            // 버튼: [출근지 날씨] [퇴근지 날씨] (쉬는 날은 [우리 동네 날씨]) → 그 지역 네이버 날씨
-            val rows = w?.optJSONArray("r")
-            val qs = ArrayList<String>()
-            if (rows != null) for (k in 0 until rows.length()) rows.optJSONObject(k)?.optString("q")?.takeIf { it.isNotBlank() }?.let { qs.add(it) }
-            val labels = if (qs.distinct().size >= 2) listOf("출근지 날씨", "퇴근지 날씨") else listOf("우리 동네 날씨")
-            qs.distinct().take(labels.size).forEachIndexed { i, q ->
-                val pi = PendingIntent.getActivity(ctx, (o.optString("id") + i).hashCode(), Intent(Intent.ACTION_VIEW, android.net.Uri.parse(Weather.webUrl(q))).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-                nb.addAction(Notification.Action.Builder(null, labels[i], pi).build())
-            }
+            // 버튼: [오늘 날씨 보기] = 앱 날씨 팝업 바로 · [앱 열기]
+            val today = java.time.LocalDate.now().toString()
+            val wxGo = Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra("openDate", "${o.optString("date", "").ifEmpty { today }}#wx")
+            wxGo.data = android.net.Uri.parse("eonjeswieo://wx/" + o.optString("id"))
+            nb.addAction(Notification.Action.Builder(null, "오늘 날씨 보기", PendingIntent.getActivity(ctx, (o.optString("id") + "w").hashCode(), wxGo, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)).build())
+            val appGo = Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            appGo.data = android.net.Uri.parse("eonjeswieo://app/" + o.optString("id"))
+            nb.addAction(Notification.Action.Builder(null, "앱 열기", PendingIntent.getActivity(ctx, (o.optString("id") + "a").hashCode(), appGo, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)).build())
             val n = nb.build()
             nm.notify("wx".hashCode(), n)   // 날씨 알림은 하나만 (새 것이 옛 것을 바꿈)
         } catch (e: Exception) {

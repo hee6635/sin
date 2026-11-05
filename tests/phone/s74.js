@@ -53,7 +53,7 @@ const SH=process.env.SHOT||'';
     mode={from:0};
     const p=await boot(b,{...st0,wx:{home:'4711158000',work:'',fw:{},nm:{'4711158000':'효곡동'}}},{tz:'Asia/Seoul',T:KST(2026,10,30,6),cfg,routes});await p.waitForTimeout(2200);
     await p.evaluate(()=>{__wx.closePage();});await p.evaluate(()=>{window.__wx.openAddonPage();});await p.waitForTimeout(150);
-    await p.evaluate(()=>{document.querySelector('[data-act="wx-set"]')?document.querySelector('[data-act="wx-set"]').click():null;});
+    await p.evaluate(()=>{const x=document.createElement('button');x.dataset.act='wx-set';document.body.appendChild(x);x.click();x.remove();});
     await p.evaluate(()=>{const W=window.__wx;W.S.wx.work='';});
     const asked=await p.evaluate(()=>{window.__wxPick&&0;return true;});
     // 직장 고르기 흐름 대신 직접: 가까운 시·군·구(포항 북구) 고르기

@@ -8,7 +8,7 @@ const ONLY=process.env.ONLY||'';
   if(want('set')){
     const p=await boot(b,{...base,calLook:'fill'});
     await toSet(p);
-    const r=await p.evaluate(()=>({tiles:[...document.querySelectorAll('.stile b')].map(e=>e.textContent),look:!!document.querySelector('.mi2[data-act="more-look"]'),info:!!document.querySelector('.mi2[data-act="more-info"]'),
+    const r=await p.evaluate(()=>({tiles:[...document.querySelectorAll('.stile b')].map(e=>e.textContent),look:!!document.querySelector('#view [data-act="more-look"]'),info:!!document.querySelector('#view [data-act="more-info"]'),
       chips:!!document.querySelector('#view [data-act="font"]'),band:!!document.querySelector('#showBand')}));
     T('첫 화면 타일: 근무 패턴 · 가족 · 알림 · 스티커 · 백업',['근무 패턴','알림','스티커','백업'].every(x=>r.tiles.includes(x))&&r.tiles.some(x=>x.startsWith('가족')),JSON.stringify(r.tiles));
     T('화면 · 도움 줄이 있고, 글자 크기 같은 칩은 첫 화면에 없음 · 근무 띠 없음',r.look&&r.info&&!r.chips&&!r.band,JSON.stringify(r));

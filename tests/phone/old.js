@@ -12,7 +12,7 @@ const cases = {
 (async () => {
   const b = await chromium.launch(); let bad = 0;
   for (const [n, st] of Object.entries(cases)) {
-    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } }); const p = await ctx.newPage(); const errs = [];
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } }); const p = await ctx.newPage();await p.addInitScript(()=>{document.addEventListener('DOMContentLoaded',()=>{const st=document.createElement('style');st.textContent='#tutx{display:none!important}';document.head.appendChild(st);});}); const errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept());
     await p.addInitScript(s => { localStorage.setItem('eonjeswieo:v1', JSON.stringify(s)); window.AndroidBridge = { status: () => '', setAlarms() {}, setReminders() {}, fcmToken: () => '', takePush: () => '', googleAvailable: () => false }; }, st);
     await p.goto('http://127.0.0.1:8140/index.html'); await p.waitForTimeout(1200);

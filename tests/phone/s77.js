@@ -40,7 +40,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     // 시간별 줄: 활동 시간대 묶음 (시작 19시 칸 끼움)
     await p.evaluate(wd=>__wx.openDay('2026-10-'+wd),wd);await p.waitForTimeout(300);await p.evaluate(()=>document.getElementById('wxDay').click());await p.waitForTimeout(500);
     const hr=await p.evaluate(()=>[...document.querySelectorAll('#pop .wxhr .sg')].map(g=>[g.className.replace('sg','').trim(),g.querySelector('.hl').innerText,[...g.querySelectorAll('.hc')].map(c=>c.innerText.split('\n')[0]).join(',')]));
-    T('시간별 줄: 집 → 🏊활동(19시 칸 끼움) → 집',hr.length===3&&hr[0][0]==='home'&&hr[1][0]==='act'&&/🏊활동/.test(hr[1][1])&&hr[1][2]==='19시'&&hr[2][0]==='home',JSON.stringify(hr));
+    T('시간별 줄: 집 → 🏊활동(19시 칸 끼움 · v0.135 퇴근 뒤 2시간 안 빈 칸도 활동) → 집',hr.length===3&&hr[0][0]==='home'&&hr[1][0]==='act'&&/🏊활동/.test(hr[1][1])&&/(^|,)19시$/.test(hr[1][2])&&hr[2][0]==='home',JSON.stringify(hr));
     const ow=await p.evaluate(()=>({all:[...document.querySelectorAll('#pop .wxrw.all')].map(e=>e.innerText.replace(/\s+/g,' ')),per:document.querySelectorAll('#pop .wxc img.w').length}));
     T('옷은 하루 한 벌 (칸마다 옷 그림 없음 · "오늘 옷 · … 기준")',ow.all.length===1&&/오늘 옷/.test(ow.all[0])&&ow.per===0,JSON.stringify(ow));
     await p.evaluate(()=>__wx.closePop());

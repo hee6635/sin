@@ -11,6 +11,7 @@ async function boot(browser,state,opts={}){
   p.on('pageerror',e=>errs.push('PAGEERR '+e.message));
   p.on('console',m=>{if(m.type()==='error')errs.push('CONSOLE '+m.text());});
   p.on('dialog',d=>{p.__dialogs=(p.__dialogs||[]);p.__dialogs.push(d.message());d.dismiss().catch(()=>{});});
+  if(!opts.coach)await p.addInitScript(()=>{document.addEventListener('DOMContentLoaded',()=>{const st=document.createElement('style');st.textContent='#tutx{display:none!important}';document.head.appendChild(st);});});   // v0.135 처음 안내 말풍선은 s88 에서만
   if(!opts.fold)await p.addInitScript(()=>{   // (v0.92 날짜 창 근무타입 접기 전에 쓴 시험들: 늘 펼친 채로 · 접기 자체는 s64 가 {fold:true} 로 시험)
     document.addEventListener('DOMContentLoaded',()=>{const st=document.createElement('style');st.textContent='.shsec .sh-body{transition:none!important}';document.head.appendChild(st);
       new MutationObserver(()=>{document.querySelectorAll('.shsec:not(.open)').forEach(e=>{if(!e.dataset.tOpen){e.dataset.tOpen=1;e.classList.add('open');}});}).observe(document.body,{subtree:true,childList:true});});});

@@ -704,7 +704,7 @@ object MonthRenderer {
 
     /** "근무 색"일 때 오늘 색: 색 있는 근무 = 한 단계 진하게 · 쉬는 날 = 장미 · 색 없음 = 기본 파랑 */
     internal fun shiftToday(hasColor: Boolean, bg: Int, rest: Boolean, night: Boolean): Int =
-        if (hasColor) deepen(bg, night) else if (rest) 0xFFD0607A.toInt() else 0xFF5A7FD6.toInt()
+        if (hasColor) deepen(bg, night) else if (rest) 0xFF6B7482.toInt() else 0xFF5A7FD6.toInt()   // v0.135 쉬는 날 = 회색 (앱과 같게 · 빨강은 명절 느낌)
 
     internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal, profileWDp: Float = -1f, part: Int = 0, moving: Boolean = false) {   // part: 0 = 전부 · 1 = 바깥 틀(바탕 · 맨 윗줄 · 요일 줄)만 · 2 = 날짜 칸들만 (월 넘김 · 오늘 효과가 따로 그려 겹침)
         lastToday = null

@@ -76,6 +76,7 @@ const ONLY=process.env.ONLY||'';
     const w=await p.evaluate(()=>document.querySelector('#page').textContent);
     T('벽에 "장보기 · 우유(엄마가 완료) · 계란" · 점은 사라짐',/장보기/.test(w)&&/엄마가 완료/.test(w)&&/계란/.test(w)&&await p.evaluate(()=>!JSON.parse(localStorage.getItem('eonjeswieo:v1')).fam2.boardDot),w.slice(0,200));
     await p.evaluate(()=>[...document.querySelectorAll('#page .pi')].find(e=>/장보기/.test(e.textContent)).click());await p.waitForTimeout(400);
+    await p.evaluate(()=>{const x=document.querySelector('#pop [data-act="pi-vedit"]');x&&x.click();});await p.waitForTimeout(400);   // v0.135 할 일은 먼저 크게 보기 → 수정하기
     T('남의 가족 포스트잇: 제목 읽기 전용 · 지우기 없음 · 나만/가족 고르기 없음 · 줄 추가 칸은 있음',await p.evaluate(()=>document.querySelector('#piTitle').readOnly&&!document.querySelector('#pop [data-act="pi-del"]')&&!document.querySelector('#pop [data-act="pi-share"]')&&!!document.querySelector('#piLine')));
     // 체크하면 복사본이 바로 바뀜 (서버는 연결이 없어 안 감 · 오류도 없음)
     await p.evaluate(()=>[...document.querySelectorAll('#pop .ck i')][1].click());await p.waitForTimeout(400);

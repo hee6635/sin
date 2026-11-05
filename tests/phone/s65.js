@@ -127,7 +127,8 @@ const ONLY=process.env.ONLY||'';
     await p.evaluate(()=>{const it=[...document.querySelectorAll('[data-act]')].find(e=>/부가 기능/.test(e.textContent));it.click();});await p.waitForTimeout(400);
     T('부가 기능에 "업무 메모 (인수인계)" 스위치',await p.evaluate(()=>!!document.querySelector('#ad_wlog')));
     await p.evaluate(()=>{const c=document.querySelector('#ad_wlog');c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(400);
-    T('켜면 그 아래 "📋 업무 일지 설정" 줄',await p.evaluate(()=>/업무 일지 설정/.test(document.querySelector('#page').textContent)));
+    await p.evaluate(()=>document.querySelector('#page [data-act="ad-tile"][data-k="wlog"]').click());await p.waitForTimeout(400);   // v0.135 부가 기능이 칸으로: 켜진 칸을 누르면 그 설정
+    T('켜진 칸을 누르면 업무 일지 설정',await p.evaluate(()=>/업무/.test(document.querySelector('#page.open').textContent)&&!document.querySelector('#page.open .stiles.adt')));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   T.sum();await b.close();

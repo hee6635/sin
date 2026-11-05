@@ -146,7 +146,7 @@
   // 옷차림 (출퇴근길 · 더 추운 쪽 체감온도 기준) + 챙길 것 (비 · 눈 · 바람 · 기온차 · 더위)
   // [체감 이상, 문구, 그림, 짧은 말]
   // v0.128 실제로 같이 입는 조합 (예전엔 "트렌치코트 · 야상"처럼 둘 중 하나였는데 화면이 " + "로 보여 줘서 어색) · 목도리 · 장갑은 챙길 것으로
-  const CLOTH = [[28, '반팔 · 반바지', 'tshirt', '반팔'], [23, '반팔 · 얇은 셔츠', 'tshirt', '반팔'], [20, '얇은 긴팔 · 가디건', 'shirt', '얇은 긴팔'], [17, '맨투맨 (또는 얇은 니트)', 'sweat', '맨투맨'], [12, '자켓 · 긴팔', 'jacket', '자켓'], [9, '트렌치코트 · 니트', 'trench', '트렌치코트'], [5, '코트 · 히트텍', 'coat', '코트'], [1, '패딩 · 니트', 'pad_green', '패딩'], [-4, '패딩 · 히트텍', 'pad_green', '패딩'], [-99, '두꺼운 패딩 · 히트텍 · 기모 바지', 'pad_navy', '두꺼운 패딩']];
+  const CLOTH = [[28, '반팔 · 반바지', 'tshirt', '반팔'], [23, '반팔 · 얇은 셔츠', 'tshirt', '반팔'], [20, '얇은 긴팔 · 가디건', 'shirt', '얇은 긴팔'], [17, '맨투맨 (또는 얇은 니트)', 'sweat', '맨투맨'], [12, '자켓 · 긴팔', 'jacket', '자켓'], [9, '경량패딩 · 니트', 'pad_light', '경량패딩'], [5, '코트 · 히트텍', 'coat', '코트'], [1, '패딩 · 니트', 'pad_green', '패딩'], [-4, '패딩 · 히트텍', 'pad_green', '패딩'], [-99, '두꺼운 패딩 · 히트텍 · 기모 바지', 'pad_navy', '두꺼운 패딩']];
   const clothOf = f => CLOTH.find(c => f >= c[0]);
   // 한 칸 옷 (출근 · 퇴근 따로): {w 그림, ws 짧은 말, wt 문구}
   // 하루 옷 한 벌: 안 지난 칸 중 가장 추운 칸 (앱 팝업 "오늘 옷"과 같은 기준)
@@ -246,8 +246,15 @@
     acts.forEach(a => { const t0 = hr0(a.s); if (t0 >= ms0 && t0 < end && !ts.includes(t0)) ts.push(t0); });
     ts.sort((x, y) => x - y);
     ts.forEach((t, i) => {
-      const nx = ts[i + 1] || t + 2 * H, ac = acts.find(a => t >= hr0(a.s) && t < a.e);
-      const w = !ac && !!(work && o.s != null && t >= o.s - H && t < o.e + H), R = ac ? (ac.raw || home) : w ? work : home, v = exact(R, t), hh = kst(t).h;   // 출근 1시간 전 ~ 퇴근 1시간 뒤 = 직장 · 활동 시간 = 활동 동네
+      const nx = ts[i + 1] || t + 2 * H, ac0 = acts.find(a => t >= hr0(a.s) && t < a.e);
+      let w = !ac0 && !!(work && o.s != null && t >= o.s - H && t < o.e + H), ac = ac0;
+      // v0.135 빈 시간: 앞 일정(퇴근 · 활동)이 끝나고 다음 일정(출근 · 활동)까지 2시간 이내면 그 사이 칸은 다음 목적지 날씨 (집에 들를 시간 없음)
+      if (!ac && !w) {
+        const ends = acts.map(a => a.e).concat(o.e != null ? [o.e] : []).filter(e => e <= t), pe = ends.length ? Math.max(...ends) : null;
+        const nexts = acts.filter(a => a.s > t).map(a => ({ s: a.s, a })).concat(o.s != null && o.s > t ? [{ s: o.s, w: 1 }] : []).sort((x, y) => x.s - y.s), nn = nexts[0];
+        if (pe != null && nn && nn.s - pe <= 2 * H) { if (nn.w) w = !!work; else ac = nn.a; }
+      }
+      const R = ac ? (ac.raw || home) : w ? work : home, v = exact(R, t), hh = kst(t).h;   // 출근 1시간 전 ~ 퇴근 1시간 뒤 = 직장 · 활동 시간 = 활동 동네
       const df = dustAt(R, t, o.now);
       at.push(Object.assign({ t, l: `${p2(hh)}시`, sk: sky(v, t), tp: v ? v.tp : null, f: df.f, fc: df.fc, w, now: o.now != null && o.now >= t && o.now < nx, past: o.now != null && o.now >= nx,
         on: o.s != null && ((o.s >= t && o.s < nx) || (o.e >= t && o.e < nx)), wet: wet(v), nd: t > ms0 && hh < 2 }, ac ? { ac: `${ac.ic || ''}${ac.n}`, an: ac.p || '' } : {}));

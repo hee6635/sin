@@ -260,3 +260,16 @@
 - 위젯 유찬: widgetJson people[].d[날짜](6일 전~14일 뒤) = 직접 추가한 가족 {l 일정 · st 스티커(id · n · N) · nt 메모} + 오늘 · 내일 wx(wxWidgetOf · 근무표 가족도). people[].k 에 유찬 스티커(달력 칸). WidgetDayActivity: 가족 달력이면 위쪽 일정 줄 · 날씨 줄(누르면 "#wx@사람") · 유찬 스티커 체크(toggleManSticker → 할 일 t:'mstk') · 메모. 앱 applyWidgetActions 가 mstk 를 m.stk 에 반영 · widgetSync "#wx@사람" = 그 사람 달력 + 가족 날씨 팝업.
 - 연결 화면(근무자): 날씨 켠 사람에게 "집 · 직장 동네와 근무 시간도 가족 폰에 보여요" 한 줄.
 - 시험: s87 (12) · 규칙 시험 h.
+
+## v0.135 — 2026-11-05 사용자 묶음 (사진 7장) + 근무 기록 · 처음 안내 · 이럴 땐 이렇게 자세히 · 렉
+- 버그: 와이프 폰 가족 카드 날씨 안 열림(wxOpenFam sched → famWxOpen) · 쉬는 날 오늘 회색 #6b7482(가족 달력 회색 위에서도 보임 · 위젯 MonthWidget shiftToday 도) · 칸 채우기 명절 띠 · 자는 카드 class sl→slp(스티커 칸 .sl 과 겹쳐 유찬 카드가 어둡게 · 점선).
+- 같이 쉬는 날 둥근 띠(.fh.all/.fc.all · 마지막 줄 lst) · 새로 설치 기본 vivid · 알람 "이번만 끄기 ›" 작은 글자(askip-l · 카드 높이 그대로) · 유찬 스티커 그만하기(mstk-end)/지우기 · 가족 날씨 팝업 밀어 넘기기(wxPopFam · famWxOpen) · 경량패딩 그림(pad_light) · 시간별 줄 빈 시간 2시간 규칙(wxcore hours).
+- 날씨만 알림(Reminders postWeather): 출근 · 퇴근 기온 한 줄 + 우산 한 줄 + 미세먼지(나쁠 때) · [오늘 날씨 보기](#wx) [앱 열기].
+- 포스트잇: 할 일은 누르면 크게 보기(openPiView · 줄 눌러 체크 · [수정하기]) · 다 하면 가족 알림 한 번(piAllDoneNote) · 쓴 날짜 · 벽은 두 줄 쌓기(piMasonry).
+- 설정: 네모 칸 12개(LINE_ICON 선 아이콘) · 부가 기능도 칸 + 스위치(ad-tile: 꺼져 있으면 켜기 · 켜져 있으면 그 설정 AD_GO).
+- 유찬 스티커 4개 넘으면 묻기(manHidSnap · msh-undo).
+- 근무 바뀐 기록(각자 폰 · 3개월 · 300개): S.chLog [{t,k,w,a,f,to,rcv,want}] · chLogAdd. 내 변경 = save() 앞 chLogMine(ovSnap 과 비교) · 가족 변경 = famSchChange · 요청 = 미러 갱신 때 상태 비교(req · pending=보류 · accepted · rejected). 소식 창 "근무 기록" 탭(chLogBody · feed-go). normalize + BACKUP_KEYS.
+- 처음 안내(coach): coachSets() 3묶음 tcal(달력 3단계) · twx(날짜 창 날씨) · tfam(가족 메모 · 근무 요청) — S.hints 에 한 번만 · render/openDay 뒤 coachSoon · 이럴 땐 이렇게 "처음 안내 다시 보기"(coach-again). 시험 도구는 #tutx 를 숨김(lib.js · x_common.js · old/t6/t7/t8) · s88 만 {coach:true}.
+- 이럴 땐 이렇게 자세히: TIPD(10개 · 이럴 때 · 먼저 · 단계 · 사진 tips/*.webp). 사진은 시험 도구로 찍고 주황 테두리(스크래치 tipshot2.js 방식). 한 번만 알람 저장 때 그날 다른 알람이 울리면 "그날만 건너뛸까요?"(askip-day → skipAt).
+- 렉: renderCal 이 그린 판 글을 stzMonth 가 그대로 씀(calMemo) · fitDn 은 한꺼번에 재고 넘치는 칸만 고침. 아직 남은 것(TODO): 날짜 창 넘김 다시 그리기 · 탭 돌아올 때 다시 그리기.
+- 시험: s88 (25) · s64/s65/s68/s69/s74/s77 새 화면에 맞춤.

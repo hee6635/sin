@@ -4,7 +4,7 @@ const T=+new Date('2026-10-12T10:00:00');
 const fs=require('fs');
 async function mk(b,init){
   const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2});
-  const p=await ctx.newPage();
+  const p=await ctx.newPage();await p.addInitScript(()=>{document.addEventListener('DOMContentLoaded',()=>{const st=document.createElement('style');st.textContent='#tutx{display:none!important}';document.head.appendChild(st);});});
   const errs=[];p.on('pageerror',e=>errs.push('PAGEERR '+e.message));p.on('console',m=>{if(m.type()==='error')errs.push('CONSOLE '+m.text());});
   await p.addInitScript(([d,T])=>{const D=Date;globalThis.Date=class extends D{constructor(...a){super(...(a.length?a:[T]))}static now(){return T}};if(d&&!localStorage.getItem('eonjeswieo:v1'))localStorage.setItem('eonjeswieo:v1',JSON.stringify(d));window.AndroidBridge={status:()=>'',setAlarms:()=>{},setReminders:()=>{}};},[init,T]);
   await p.route('**/firebase/config.js',r=>r.fulfill({body:'',contentType:'text/javascript'}));
