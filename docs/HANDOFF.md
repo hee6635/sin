@@ -326,3 +326,9 @@
 - 유찬(man) · 가족(vc) 날짜 창: swAdoptFam = swAdoptDay 처럼 옆 판 그대로(manDayK · rqD · 달 바뀌면 뒤 달력만 다시).
 - 가족 날씨 팝업(famWxPopHtml) · "나 · 오늘" 팝업도 쉬는 날이면 wxRestCards.
 - 시험: s91 (15) · s71.
+
+## v0.143 — 날씨만 알람 소리 = 폰 알림음 목록 · 가족 탭 내 카드 쉬는 날 지금 · 유찬 시간별 줄 "🏫 유치원"
+- 소리 고르기: 날씨만 알람이면 pickTone('n:'+id) → MainActivity.openTonePicker 가 "n:" 이면 TYPE_NOTIFICATION(알림음 목록 · 제목 "알림음 선택") · __onTone 은 'n:'+id 도 받음 · 미리 듣기(previewTone 'n:'…) = 알림 소리 · 기본 알림음. 일반 알람은 그대로.
+- 가족 탭 내 카드: wxRestMini 로 쉬는 날 오늘 = 미니 "지금 n° · 오늘 lo°/hi°"(mc 에 tt) · 큰 카드는 "지금" 한 칸.
+- famWxPopHtml: 학생 가족은 hr.wl = "🏫 " + 그날 일정 이름(famTypeAt · famLbl · m.label · 없으면 학교) → wxHrHtml 묶음 이름 "직장" 대신.
+- 시험: s92 (6).

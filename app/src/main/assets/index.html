@@ -1645,6 +1645,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .tn-pg .tn-grp>summary::before{content:'▸';color:var(--muted);transition:transform .15s}.tn-pg .tn-grp[open]>summary::before{transform:rotate(90deg)}.tn-pg .tn-grp>summary small{color:var(--accent);font-weight:700}
 .tn-wk{display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 0 0;font-size:13px;font-weight:800;color:var(--muted)}.tn-wk .ib{width:34px;height:28px;font-size:14px}.tn-wk .ib[disabled]{opacity:.3}
 .tn-foot{display:flex;gap:8px;padding:14px 14px calc(24px + env(safe-area-inset-bottom,0px))}   /* (저장 · 이전 저장으로는 위 미리보기 아래에 늘 붙어 있음) */
+.mwx .mc em.tt{font-size:15px;white-space:nowrap;margin-top:auto}   /* v0.143 가족 탭 내 카드 "오늘 4°/15°" */
 /* v0.136 겹침 팝업 버튼 */
 #pop .mi.clb{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}#pop .mi.clb b{font-size:15px}#pop .mi.clb small{font-size:12px;color:var(--muted);font-weight:600;line-height:1.4}
 /* v0.135 처음 안내 */
@@ -5258,11 +5259,12 @@ function renderFamily(){
   const meWho=isHost?(fam.length?'<div class="nwho"><i style="background:#1d2330">나</i></div>':''):'<div class="nwho"><i style="background:#1d2330">근</i>근무자</div>';
   // 내 카드 (v0.107): 상태는 "나" 옆 · 날씨를 켰으면 상태는 작게 + 날씨 카드 크게, 안 켰으면 상태를 크게
   const myWx=isHost&&wxOn()&&wxRaw(S.wx.home)?(()=>{try{return wxMine(new Date(now),now);}catch(e){return null;}})():null;
+  const myRs=myWx?wxRestMini(myWx,new Date(now)):null,myWxC=myRs?{...myWx,c:myRs}:myWx,myWxM=myRs&&myWx.day?{...myWx,c:[myRs[0],{l:'오늘',tt:`${myWx.day.lo}°/${myWx.day.hi}°`}]}:myWx;   // v0.143 쉬는 날: 지금 · 오늘 최저/최고
   const av=isHost?'<i class="mav">나</i>':'<i class="mav">근</i>';
   const stLine=`<span class="mst-t">${st.e?ico(st.e)+' ':''}${esc(st.t)}</span>${st.sub?`<small> · ${esc(st.sub)}</small>`:''}`;
   const meCard=myWx?`<div class="nc w me2">
       <div class="mtop" ${isHost?'data-act="fam-mycal"':''}>${av}<div class="mst">${stLine}${st.prog!==undefined?`<div class="bar"><i style="width:${Math.round(st.prog*100)}%"></i></div>`:''}</div></div>
-      ${wxCardHtml(myWx,wxCls(myWx),'data-act="wx-fam" data-u="me"')}
+      ${wxCardHtml(myWxC,wxCls(myWx),'data-act="wx-fam" data-u="me"')}
     </div>`:`<div class="nc w me2 big" ${isHost?'data-act="fam-mycal"':''}>
       <div class="mtop">${av}<div class="mst"><span class="mst-t">${st.e?ico(st.e)+' ':''}${esc(st.t)}</span></div></div>
       <div class="sm">${esc([st.sub,st.left].filter(Boolean).join(' · '))}</div>
@@ -5270,7 +5272,7 @@ function renderFamily(){
     </div>`;
   // v0.121 가족이 있으면 나 · 가족 카드 모두 같은 크기 · 같은 모양: 상태 · 막대 · 작은 날씨 줄 · (비 · 미세먼지면) 결론 한 줄
   const pbar=v=>v!==undefined&&v!==null?`<div class="bar"><i style="width:${Math.round(v*100)}%"></i></div>`:'<div class="bar" style="visibility:hidden"></div>';   // v0.124 막대가 없어도 자리는 남김 → 카드끼리 날씨 칸 높이가 맞음
-  const meCard2=`<div class="nc w fc2" ${isHost?'data-act="fam-mycal"':''}><div class="ctop"><i style="background:#1d2330">${isHost?'나':'근'}</i><div class="cst">${isHost?'':'<small>근무자</small>'}<div class="st">${st.e?ico(st.e)+' ':''}${esc(st.t)}</div></div></div><div class="sm">${esc(st.sub||st.left||'')||'&nbsp;'}</div>${pbar(st.prog)}${myWx?wxMiniHtml(myWx,'data-act="wx-fam" data-u="me"'):''}</div>`;
+  const meCard2=`<div class="nc w fc2" ${isHost?'data-act="fam-mycal"':''}><div class="ctop"><i style="background:#1d2330">${isHost?'나':'근'}</i><div class="cst">${isHost?'':'<small>근무자</small>'}<div class="st">${st.e?ico(st.e)+' ':''}${esc(st.t)}</div></div></div><div class="sm">${esc(st.sub||st.left||'')||'&nbsp;'}</div>${pbar(st.prog)}${myWx?wxMiniHtml(myWxM,'data-act="wx-fam" data-u="me"'):''}</div>`;
   const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);const fw=(wxOn()||(m.kind==='sched'&&famSchedHome(m)))?famNowWx(m,now):null;return `<div class="nc fc2 ${l==='자는 중'?'slp':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-mancal" data-id="${m.id}" data-hold="fam"`}>${m.kind==='sched'?'':`<span class="mced" data-act="fam-edit" data-id="${m.id}" aria-label="고치기">✏️</span>`}<div class="ctop">${famAv(m,i)}<div class="cst"><small>${esc(m.name)}</small><div class="st">${e==='🔁'&&m.kind==='sched'?schBadge(m.sch,schShift(m.sch,new Date(now)),'sm')+' ':e?ico(e)+' ':''}${esc(l)}</div></div></div><div class="sm">${esc(sub)||'&nbsp;'}</div>${pbar(famProg(m,now))}${fw?wxMiniHtml(fw,`data-act="wx-fam" data-u="${esc(wxMemKey(m))}"`):false?'<div class="mwx mwx-off" data-act="wx-set">☔ 날씨도 보기 · 집 지역 고르기 ›</div>':''}</div>`;}).join('');
   const cheerBtns='';   // v0.106: 응원 버튼 없앰
   // 이번 주 시간표
@@ -6808,8 +6810,8 @@ const isFileTone=u=>/^file:/.test(u||'');
 function cleanTones(){try{if(hasBridge('cleanTones'))window.AndroidBridge.cleanTones(JSON.stringify((S.alarms||[]).map(a=>a.tone).filter(isFileTone)));}catch(e){}}
 window.__onTone=o=>{
   if(o&&o.error){toast(o.error);return;}
-  if(!draft||!o||o.req!==draft.id)return;
-  draft.tone=o.uri||'';draft.toneName=o.title||'기본 알람음';
+  if(!draft||!o||(o.req!==draft.id&&o.req!=='n:'+draft.id))return;   // (v0.143 "n:" = 날씨만 알람의 알림음)
+  draft.tone=o.uri||'';draft.toneName=o.title||(o.req.startsWith('n:')?'기본 알림음':'기본 알람음');
   if(pageMode==='alarm')openAlarmPage();
 };
 
@@ -7421,7 +7423,7 @@ function wxCardHtml(c,cls,attrs){
 // v0.121 가족 탭 작은 카드의 날씨: 칸(출근 · 퇴근 · 활동 / 오전 · 오후) 한 줄 + 비 · 미세먼지 · 특보면 결론 한 줄
 function wxMiniHtml(c,attrs){
   const L=(c.c||[]).slice(0,3);if(!L.length&&!c.k)return '';const cls=wxCls(c),kk=c.k||{};
-  const cell=x=>`<span class="mc${x.past?' past':''}${x.hot?' hot':''}"><i>${esc(String(x.l||'').split(' ')[0])}</i>${wxImg(x.sk)||esc(x.i||'')}<em>${x.tp!=null?x.tp+'°':'–'}</em></span>`;
+  const cell=x=>`<span class="mc${x.past?' past':''}${x.hot?' hot':''}"><i>${esc(String(x.l||'').split(' ')[0])}</i>${x.tt!=null?'':wxImg(x.sk)||esc(x.i||'')}<em${x.tt!=null?' class="tt"':''}>${x.tt!=null?esc(x.tt):x.tp!=null?x.tp+'°':'–'}</em></span>`;
   return `<div class="mwx" ${attrs}>${L.length?`<div class="mcs">${L.map(cell).join('')}</div>`:''}${cls&&kk.t?`<div class="mk ${cls}">${wxImg(kk.i)}<span>${esc(kk.t)}</span></div>`:''}</div>`;
 }
 // 가족 지금 날씨 카드 자료 (직접 추가한 가족 = famWx · 근무 가족 = 집 → 직장)
@@ -7508,7 +7510,7 @@ function wxHrHtml(hr){
   const gk=x=>x.ac?'a:'+x.ac:x.w?'w':'h';   // 묶음: 집 · 직장 · 활동
   const grp=[];hr.at.forEach((x,i)=>{const g=grp[grp.length-1];if(hr.seg&&g&&g.k===gk(x))g.l.push([x,i]);else if(!hr.seg&&g)g.l.push([x,i]);else grp.push({k:gk(x),w:x.w,ac:x.ac||'',an:x.an||'',l:[[x,i]]});});
   const chip=([x,i])=>`<div class="hc${x.now?' hn':''}${x.past?' hp':''}${x.on?' ho':''}${x.wet?' hw':''}${x.nd?' nd':''}" data-i="${i}">${x.now?'지금':esc(x.l)}${wxImg(x.sk)||'<span class="no"></span>'}<b>${x.tp!=null?x.tp+'°':'–'}</b>${x.f?`<span data-act="wx-dust">${wxImg(x.f,'f'+(x.fc?' fc':''))}<small>${x.fc?'예보':'실측'}</small></span>`:''}</div>`;
-  const lbl=g=>g.ac?`${esc(g.ac)}${g.an?' · '+esc(g.an):''}`:hr.seg?(g.w?`🏢 직장 · ${esc(hr.wn)}`:'🏠 집'):`시간별 · ${esc(hr.hn)}`;
+  const lbl=g=>g.ac?`${esc(g.ac)}${g.an?' · '+esc(g.an):''}`:hr.seg?(g.w?`${esc(hr.wl||'🏢 직장')} · ${esc(hr.wn)}`:'🏠 집'):`시간별 · ${esc(hr.hn)}`;
   return `<div class="wxhr"><div class="wxhs" data-i0="${hr.i0}">${grp.map(g=>`<div class="sg ${g.ac?'act':hr.seg?(g.w?'work':'home'):''}"><div class="hl">${lbl(g)}</div><div class="hh">${g.l.map(chip).join('')}</div></div>`).join('')}</div></div>`;
 }
 function wxHrScroll(root){try{const s=root?root.querySelector('.wxhs'):document.querySelector('#pop .wxhs');if(!s)return;{const W=s.clientWidth;if(W>0){const n=Math.floor(W/46);const w=Math.max(40,Math.min(54,W/(n+0.5)-2));s.style.setProperty('--hcw',w.toFixed(1)+'px');}}   // v0.127 오른쪽 끝 칸이 반쯤 걸쳐 보이게 (더 밀 수 있다는 느낌)
@@ -7639,7 +7641,8 @@ function famWxPopHtml(m,k){
   const rsOf=(win,hm,acts)=>!win&&!(acts&&acts.length)?{today:k===fmt(new Date()),raw:wxRaw(hm),md:`${d.getMonth()+1}월 ${d.getDate()}일`}:null;   // v0.142 가족도 쉬는 날은 지금 · 오늘 요약
   if(m.kind==='sched'){const x=famSchedWx(m,d);if(!x||!x.c)return '';return wxPopHtml(ti,x.win?`${wxHm(x.win.s)} 출근 → ${wxHm(x.win.e)} 퇴근`:'',x.c,'',wxDzList(x.win,x.hm,x.wk),wxHrOf(d,x.win,x.hm,x.wk,wxName(x.hm),x.wk&&x.wk!==x.hm?wxName(x.wk):'',null),rsOf(x.win,x.hm));}
   const x=famWx(m,d);if(!x||!x.c)return '';const L=x.L,ls=L.ls||'출근',le=L.le||'퇴근';
-  return wxPopHtml(ti,x.win?`${wxHm(x.win.s)} ${ls} → ${wxHm(x.win.e)} ${le}`:'',x.c,'',wxDzList(x.win,x.hm,x.loc,x.acts,ls,le),wxHrOf(d,x.win,x.hm,x.loc,wxName(x.hm),x.loc?wxName(x.loc):'',null,x.acts),rsOf(x.win,x.hm,x.acts));
+  const hr=wxHrOf(d,x.win,x.hm,x.loc,wxName(x.hm),x.loc?wxName(x.loc):'',null,x.acts);if(hr&&m.kind==='student'){let n='';try{n=famTypeAt(m,d).name||famLbl(m)||'';}catch(e){}hr.wl=`🏫 ${String(n||m.label||'').trim()||'학교'}`;}   // v0.143 학생 가족은 "직장" 대신 유치원 · 학교
+  return wxPopHtml(ti,x.win?`${wxHm(x.win.s)} ${ls} → ${wxHm(x.win.e)} ${le}`:'',x.c,'',wxDzList(x.win,x.hm,x.loc,x.acts,ls,le),hr,rsOf(x.win,x.hm,x.acts));
 }
 function famWxOpen(m,k){const h=famWxPopHtml(m,k);if(!h)return;wxPopK=k;wxPopFam=m;wxOpenPop(`<div class="swc" style="position:relative;transform:translateZ(0)">${h}</div>`);const mm=$('#pop .menu');if(mm)mm.classList.add('wxdpop');}
 function famWxPop(m,k){famWxOpen(m,k);}
@@ -9407,6 +9410,7 @@ document.addEventListener('click',e=>{
     case 'dsnmax':draft.snMax=Number(t.dataset.v);openAlarmPage();break;
     case 'dtone':
       if(!hasBridge('pickTone')){toast('앱에서 폰 알람음 · 음악 파일을 고를 수 있어요');break;}
+      if(draft&&draft.wxOnly&&ad('wx')){window.AndroidBridge.pickTone('n:'+draft.id,isFileTone(draft.tone)?'':(draft.tone||''));break;}   // v0.143 날씨만 알람 = 폰 알림음 목록 (벨소리 · 알람음 아님)
       if(!hasBridge('pickToneFile')){window.AndroidBridge.pickTone(draft.id,draft.tone||'');break;}
       openPop(`<div class="mh">알람음<b>어디서 고를까요?</b></div>
         <button class="mi" data-act="dtone-sys">🔔 기본 알람음<small style="margin-left:auto;color:var(--muted);font-size:12px">폰에 있는 알람음 목록</small></button>
@@ -9414,7 +9418,7 @@ document.addEventListener('click',e=>{
         <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);break;
     case 'dtone-sys':closePop();if(draft)window.AndroidBridge.pickTone(draft.id,isFileTone(draft.tone)?'':(draft.tone||''));break;
     case 'dtone-file':closePop();if(draft)window.AndroidBridge.pickToneFile(draft.id);break;
-    case 'dtone-play':if(draft&&hasBridge('previewTone')){const on=window.AndroidBridge.previewTone(draft.tone||'');t.textContent=on?'■ 멈춤':'▶ 듣기';}break;
+    case 'dtone-play':if(draft&&hasBridge('previewTone')){const on=window.AndroidBridge.previewTone((draft.wxOnly&&ad('wx')?'n:':'')+(draft.tone||''));t.textContent=on?'■ 멈춤':'▶ 듣기';}break;
     case 'asave':{
       const item=Object.assign({},draft,{label:(draft.label||'').trim(),time:draft.time||'06:00'});
       delete item.isNew;

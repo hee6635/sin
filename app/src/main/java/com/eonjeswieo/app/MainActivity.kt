@@ -103,8 +103,8 @@ class MainActivity : ComponentActivity() {
         @Suppress("DEPRECATION")
         val uri: Uri? = res.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
         val title = if (uri == null) "무음" else try {
-            RingtoneManager.getRingtone(this, uri)?.getTitle(this) ?: "알람음"
-        } catch (e: Exception) { "알람음" }
+            RingtoneManager.getRingtone(this, uri)?.getTitle(this) ?: (if (toneReq.startsWith("n:")) "알림음" else "알람음")
+        } catch (e: Exception) { if (toneReq.startsWith("n:")) "알림음" else "알람음" }
         val o = JSONObject().put("req", toneReq).put("uri", uri?.toString() ?: "").put("title", title)
         js("window.__onTone&&window.__onTone($o)")
     }
@@ -167,15 +167,17 @@ class MainActivity : ComponentActivity() {
     private var preview: MediaPlayer? = null
 
     @Synchronized
-    fun togglePreview(uri: String): Boolean {
+    fun togglePreview(uri0: String): Boolean {
         if (preview != null) { stopPreview(); return false }
+        val notif = uri0.startsWith("n:")   // v0.143 날씨만 알람: 알림음 기본 · 알림 소리로 미리 듣기
+        val uri = if (notif) uri0.substring(2) else uri0
         return try {
             val mp = MediaPlayer()
             mp.setAudioAttributes(
-                AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM)
+                AudioAttributes.Builder().setUsage(if (notif) AudioAttributes.USAGE_NOTIFICATION else AudioAttributes.USAGE_ALARM)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
             )
-            val u = if (uri.isEmpty()) RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM) else Uri.parse(uri)
+            val u = if (uri.isEmpty()) RingtoneManager.getDefaultUri(if (notif) RingtoneManager.TYPE_NOTIFICATION else RingtoneManager.TYPE_ALARM) else Uri.parse(uri)
             mp.setDataSource(this, u)
             mp.prepare()
             mp.setOnCompletionListener { stopPreview() }
@@ -589,20 +591,22 @@ class MainActivity : ComponentActivity() {
         } catch (e: Exception) { "" }
     }
 
-    /** 폰의 알람음 목록 창 열기 */
+    /** 폰의 알람음 목록 창 열기 · v0.143 req 가 "n:" 로 시작하면 알림음 목록 (날씨만 알람) */
     fun openTonePicker(req: String, current: String) {
         toneReq = req
+        val notif = req.startsWith("n:")
+        val type = if (notif) RingtoneManager.TYPE_NOTIFICATION else RingtoneManager.TYPE_ALARM
         val i = Intent(RingtoneManager.ACTION_RINGTONE_PICKER)
-            .putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM)
-            .putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "알람음 선택")
+            .putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, type)
+            .putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, if (notif) "알림음 선택" else "알람음 선택")
             .putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
             .putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
             .putExtra(
                 RingtoneManager.EXTRA_RINGTONE_EXISTING_URI,
-                if (current.isEmpty()) RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM) else Uri.parse(current)
+                if (current.isEmpty()) RingtoneManager.getDefaultUri(type) else Uri.parse(current)
             )
         try { pickTone.launch(i) } catch (e: Exception) {
-            Toast.makeText(this, "알람음 목록을 열 수 없어요", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, if (notif) "알림음 목록을 열 수 없어요" else "알람음 목록을 열 수 없어요", Toast.LENGTH_SHORT).show()
         }
     }
 
