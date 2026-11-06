@@ -29,11 +29,11 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     T('오류 없음 (날짜 창)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 업무 메모 창도 옆으로 밀면 다음날
-    const p=await boot(b,{...base,addons:{...base.addons,wlog:true},wlog:{name:'업무 메모',seen:true,days:{'2026-10-14':{a:'인수할 것'}}}},{touch:true});
+    const p=await boot(b,{...base,addons:{...base.addons,wlog:true},wlog:{name:'업무 메모',seen:true,days:{'2026-10-14':{a:'인수할 것'},'2026-10-16':{a:'모레 것'}}}},{touch:true});
     await p.evaluate(()=>__wx.openDay('2026-10-14'));await p.waitForTimeout(300);
     await p.evaluate(()=>document.querySelector('#sheet [data-act="wl-open"]').click());await p.waitForTimeout(400);
     await swipe(p,'#pop .wlp h4',-130);
-    T('업무 메모 창 옆으로 밀면 다음날 (10월 15일)',await p.evaluate(()=>/10월 15일/.test(document.querySelector('#pop').innerText)));
+    T('업무 메모 창 옆으로 밀면 적어 둔 다음 날 (빈 15일 건너뛰고 10월 16일 · v0.139)',await p.evaluate(()=>/10월 16일/.test(document.querySelector('#pop').innerText)));
     T('오류 없음 (업무 메모)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 스티커 창도 옆으로 밀면 다음날 (없는 날은 "없어요")
@@ -93,7 +93,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     const raw={v:1,r:'41111',n:'',s:{b:'202610120500',h,n:{}},m:{b:'',d:{}},a:{b:'',d:{}},q:null};
     const cfg="window.FIREBASE_CONFIG={projectId:'demo-wx',apiKey:'x',authDomain:'x',appId:'x'};";
     const routes=[['https://asia-northeast3-demo-wx.cloudfunctions.net/wx**',r=>r.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(raw)})]];
-    const p=await boot(b,{...base,addons:{...base.addons,wx:true,wlog:true},wx:{home:'41111',work:'',fw:{}},wlog:{name:'업무 메모',seen:true,days:{'2026-10-14':{a:'인수할 것'}}}},{tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,touch:true});await p.waitForTimeout(2600);
+    const p=await boot(b,{...base,addons:{...base.addons,wx:true,wlog:true},wx:{home:'41111',work:'',fw:{}},wlog:{name:'업무 메모',seen:true,days:{'2026-10-14':{a:'인수할 것'},'2026-10-15':{a:'내일 것'}}}},{tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,touch:true});await p.waitForTimeout(2600);
     await p.evaluate(()=>__wx.openDay('2026-10-13'));await p.waitForTimeout(300);await p.click('#wxDay');await p.waitForTimeout(400);
     { // 진짜 손가락 터치로 (touch-action 이 막으면 실패함 · v0.109 폰에서 안 되던 것)
       const cdp=await p.context().newCDPSession(p);const r=await p.evaluate(()=>{const e=document.querySelector('#pop .wxp .wxk')||document.querySelector('#pop .wxp .wh');const b=e.getBoundingClientRect();return [b.left+b.width/2,b.top+10];});

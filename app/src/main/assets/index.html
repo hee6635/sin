@@ -3853,7 +3853,7 @@ function glowFrame(){
 let todayQ=false;
 function todayGo(){
   if(busy){todayQ=true;return;}
-  todayQ=false;
+  todayQ=false;calSync();
   const n=new Date(),y=n.getFullYear(),m=n.getMonth(),to=y*12+m,from=cur.y*12+cur.m,tr=$('#track');
   if(to===from)return;
   if(!tr||tab!=='cal'){setCur(y,m);render();return;}
@@ -3872,7 +3872,14 @@ document.addEventListener('pointerup',e=>{
   if(!on||Math.abs(e.clientX-d.x)+Math.abs(e.clientY-d.y)>12||performance.now()-d.t>600)return;
   clearTimeout(tdFb);tdFb=setTimeout(todayGo,100);
 },true);
+// v0.140 버튼(‹ › · 오늘)을 누르기 전에: 손으로 넘겨 놓고 아직 가운데로 정리 안 된 달이 있으면 먼저 그 달을 지금 달로 (위 숫자 4월인데 › 누르면 2월로 가던 것)
+function calSync(){
+  const tr=$('#track');if(!tr||tab!=='cal'||calAnimOn||busy)return;const W=calW(tr),i=Math.round(tr.scrollLeft/W),d=i-CAL_R;if(!d)return;
+  clearTimeout(calSetT);const nm=cur.y*12+cur.m+d;if(nm<MIN_M||nm>MAX_M)return;
+  if(calShiftFast(d,true))render();else{cur={y:Math.floor(nm/12),m:nm%12};render();}
+}
 function slideTo(dir,cb){
+  calSync();
   const tr=$('#track'),mk=cur.y*12+cur.m+dir;
   if(mk<MIN_M||mk>MAX_M)return;
   if(!tr){shiftMonth(dir);if(cb)cb();return;}
@@ -3881,7 +3888,7 @@ function slideTo(dir,cb){
   calAnim(tr,dir,()=>{busy=false;shiftMonth(dir,true);if(cb)cb();});
 }
 // v0.138 가로 스크롤 달력: 판 너비 · 가운데로 · 버튼 넘김(0.26초) · 손으로 민 뒤 멈추면 판 옮기기
-const calW=tr=>(tr&&tr.clientWidth)||$('#view').clientWidth||innerWidth;
+const calW=tr=>(tr&&tr.getBoundingClientRect().width)||$('#view').getBoundingClientRect().width||innerWidth;   // v0.140 소수점 폭 그대로 (폰은 411.43px 처럼 소수 · clientWidth 는 정수라 판 자리가 어긋나 가운데로 못 돌아오던 것)
 let calIgn=0,calTouch=false,calSetT=0,calAnimOn=false;
 function calCenter(){const tr=$('#track');if(!tr)return;const W=calW(tr);if(W>0&&Math.abs(tr.scrollLeft-CAL_R*W)>.5){calIgn=performance.now();tr.scrollLeft=CAL_R*W;}}
 function calAnim(tr,dir,done){
@@ -3896,7 +3903,7 @@ function calAnim(tr,dir,done){
 function calSettle(){
   if(tab!=='cal'||calTouch||calAnimOn||busy)return;
   const tr=$('#track');if(!tr)return;const W=calW(tr),x=tr.scrollLeft,i=Math.round(x/W);
-  if(Math.abs(x-i*W)>1.5)return;   // 아직 움직이는 중 (멈추면 다시 불림)
+  if(Math.abs(x-i*W)>3)return;   // 아직 움직이는 중 (멈추면 다시 불림)
   const d=i-CAL_R;if(!d)return;
   const nm=cur.y*12+cur.m+d,p=[...tr.children].find(x=>+x.dataset.mk===nm);
   if(nm<MIN_M||nm>MAX_M||!p){tr.scrollTo({left:CAL_R*W,behavior:'smooth'});return;}   // 끝 달: 다시 가운데

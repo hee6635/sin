@@ -128,4 +128,18 @@ const fs=require('fs');
     T('달력 넘기는 중(손가락 안 뗌)에도 위 월 숫자가 바로 11월',mid==='2026.11',mid);
     T('오류 없음 (업무 메모 넘기기)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
+  { // 8) 폰처럼 화면 폭이 소수(389.43px)여도 멈추면 가운데로 돌아옴 → 13번 넘겨도 안 막힘 (v0.140: 12달 지나면 안 넘어가던 것)
+    const p=await boot(b,{...base},{touch:true});await p.waitForTimeout(500);
+    await p.evaluate(()=>{document.getElementById('view').style.width='389.43px';__wx.render();});await p.waitForTimeout(300);
+    const cdp=await p.context().newCDPSession(p);
+    const swipe=async()=>{const y=500,x0=330;await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x0,y}]});for(let i=1;i<=6;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x0-i*40,y}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});};
+    const a=await p.evaluate(()=>document.querySelector('.ym h1').textContent);
+    for(let i=0;i<13;i++){await swipe();await p.waitForTimeout(700);}
+    const r=await p.evaluate(()=>{const t=document.getElementById('track');return {ym:document.querySelector('.ym h1').textContent,i:+(t.scrollLeft/t.getBoundingClientRect().width).toFixed(2)};});
+    T('소수 폭 화면: 13번 넘김 → 13달 (2026.10 → 2027.11) · 멈추면 가운데(12)',a==='2026.10'&&r.ym==='2027.11'&&Math.abs(r.i-12)<.02,JSON.stringify(r));
+    for(let i=0;i<3;i++){await swipe();await p.waitForTimeout(150);}await p.waitForTimeout(250);
+    await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(900);
+    T('손으로 3달 넘긴 바로 뒤 › 버튼 → 그 다음 달 (처음 달 기준으로 가지 않음)',await p.evaluate(()=>document.querySelector('.ym h1').textContent)==='2028.03',await p.evaluate(()=>document.querySelector('.ym h1').textContent));
+    T('오류 없음 (소수 폭)',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
   T.sum();await b.close();})();
