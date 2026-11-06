@@ -1637,6 +1637,13 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .tips ol.tds li::before{content:counter(s);position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;background:var(--fg);color:var(--bg);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .tips ol.tds li img{display:block;width:100%;margin-top:8px;border-radius:12px;border:1px solid var(--line)}
 #vcsl{touch-action:pan-y}   /* v0.138 가족 달력 옆으로 밀기는 앱이 (폰 스크롤이 가로를 안 가져감) */
+.wxp .wxc .s b.big{font-size:30px;white-space:nowrap}   /* v0.141 쉬는 날 오른쪽 "4° / 15°" · 다른 날 왼쪽 날씨 글 */
+.prow.pcol{flex-direction:column;align-items:stretch;gap:6px}.prow.pcol .tdc-row{padding-left:46px;flex-wrap:wrap}.prow.pcol .chips{padding-left:46px;flex-wrap:wrap;justify-content:flex-start}
+/* v0.141 모양 조정 정리 */
+.tn-pg .tn-grp>summary{list-style:none;cursor:pointer;font-weight:800;font-size:14px;padding:10px 0 6px;display:flex;align-items:center;gap:6px}.tn-pg .tn-grp>summary::-webkit-details-marker{display:none}
+.tn-pg .tn-grp>summary::before{content:'▸';color:var(--muted);transition:transform .15s}.tn-pg .tn-grp[open]>summary::before{transform:rotate(90deg)}.tn-pg .tn-grp>summary small{color:var(--accent);font-weight:700}
+.tn-wk{display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 0 0;font-size:13px;font-weight:800;color:var(--muted)}.tn-wk .ib{width:34px;height:28px;font-size:14px}.tn-wk .ib[disabled]{opacity:.3}
+.tn-foot{display:flex;gap:8px;padding:14px 14px calc(24px + env(safe-area-inset-bottom,0px))}   /* (저장 · 이전 저장으로는 위 미리보기 아래에 늘 붙어 있음) */
 /* v0.136 겹침 팝업 버튼 */
 #pop .mi.clb{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}#pop .mi.clb b{font-size:15px}#pop .mi.clb small{font-size:12px;color:var(--muted);font-weight:600;line-height:1.4}
 /* v0.135 처음 안내 */
@@ -7053,7 +7060,8 @@ function openLookPage(){
     <div class="pg-cap">달력</div>
     <div class="pg-sec" style="margin-top:0">
       ${row('▦','달력 모양',`<div class="chips"><button class="${S.calLook==='fill'?'':'on'}" data-act="callook" data-v="circle">동그라미</button><button class="${S.calLook==='fill'?'on':''}" data-act="callook" data-v="fill">칸 채우기</button></div>`)}
-      <div class="prow tdc-line"><div class="pl2"><span class="e e-in">${lineIcon('▦')}</span>오늘 표시 색</div>${todayColorRow()}</div>
+      <div class="prow pcol tdc-line"><div class="pl2"><span class="e e-in">${lineIcon("▦")}</span>오늘 표시</div>${todayColorRow()}
+      ${S.calLook==='fill'?`<div class="chips">${[['a','바탕+그림자+띠'],['b','띠만'],['c','띠 굵고 진하게'],['d','띠+그림자']].map(([v,n])=>`<button class="${S.todayLook===v?'on':''}" data-act="todaylook" data-v="${v}">${n}</button>`).join('')}</div>`:''}</div>
       ${row('📅','주 시작 요일',`<div class="chips"><button class="${S.weekStart===1?'':'on'}" data-act="weekstart" data-v="0">일요일</button><button class="${S.weekStart===1?'on':''}" data-act="weekstart" data-v="1">월요일</button></div>`)}
     </div>
     <div class="pg-cap">보기</div>
@@ -7064,7 +7072,7 @@ function openLookPage(){
       <div class="hint" style="padding:2px 16px 10px">또렷하게: 근무 · 휴무 색과 글자를 진하게 (눈이 피곤하거나 잘 안 보일 때) · 위젯도 같이 바뀌어요</div>
     </div>
     <div class="pg-cap">자세히</div>
-    <div class="pg-sec mlist" style="margin-top:0"><div class="mi2" data-act="tune-open"><span class="e">${lineIcon('🎚')}</span><span class="t2">모양 세부 조정<i>스티커 · 메모 크기와 위치 · 오늘 표시 모양 (앱 · 위젯)</i></span><small>›</small></div></div>
+    <div class="pg-sec mlist" style="margin-top:0"><div class="mi2" data-act="tune-open"><span class="e">${lineIcon('🎚')}</span><span class="t2">모양 세부 조정<i>스티커 · 메모 크기와 위치 (앱 · 위젯)</i></span><small>›</small></div></div>
   </div>`,'look');
 }
 // 설정 › 알림: 흩어져 있던 알림 설정을 한 곳에
@@ -7148,11 +7156,14 @@ function tunePrev(){   // 미리보기는 "일주일 줄"만: 스티커 · 메�
   e.innerHTML=calPanel(cur.y,cur.m);
   try{stzWindow($('#page'));}catch(err){}   // 스티커 크기는 실제 달력과 같게(앞뒤 3달 기준) — 그 뒤에 한 주만 남김
   const g=e.querySelector('.grid');if(!g)return;
-  const cells=[...g.children],rows=Math.floor(cells.length/7);let best=0,bs=-9;
+  const cells=[...g.children],rows=Math.floor(cells.length/7);let best=0,bs=-9;tnRows=rows;
   for(let r=0;r<rows;r++){let sc=0;for(let c=0;c<7;c++){const x=cells[r*7+c];sc+=x.querySelectorAll('.pl').length*2+x.querySelectorAll('.stp>*,.s2>*').length*2+(/rq-/.test(x.className)?3:0)+(x.classList.contains('today')?1:0)-(x.classList.contains('out')?3:0);}if(sc>bs){bs=sc;best=r;}}
-  cells.forEach((x,i)=>{if(Math.floor(i/7)!==best)x.remove();});
+  tnBest=best;const wk=tnWeek==null?best:Math.max(0,Math.min(rows-1,tnWeek));
+  cells.forEach((x,i)=>{if(Math.floor(i/7)!==wk)x.remove();});
   g.style.gridTemplateRows='1fr';
-  e.style.height=(Math.max(90,Math.round((innerHeight-230)/6))+34)+'px';
+  {const rc=document.querySelector('#view #track>.panel:nth-child(2) .cell'),h0=rc?rc.getBoundingClientRect().height:0,ch=Math.round(h0>40?h0:tnCellH>40?tnCellH:Math.max(90,(innerHeight-230)/6)),dw=e.querySelector('.dow');   // v0.141 실제 달력 칸 높이 그대로 (전엔 칸이 틀보다 길게 늘어나 아래가 잘려 보였음)
+   g.style.height=ch+'px';g.style.flex='none';e.style.height=(ch+((dw&&dw.offsetHeight)||34))+'px';}
+  {const w=$('#tnWk');if(w)w.innerHTML=`<button class="ib" data-act="tn-wk" data-d="-1" aria-label="앞 주"${wk<=0?' disabled':''}>▲</button><span>${cur.m+1}월 ${wk+1}째 주</span><button class="ib" data-act="tn-wk" data-d="1" aria-label="다음 주"${wk>=rows-1?' disabled':''}>▼</button>`;}
   try{fitDn(e,true);memoShift(e);}catch(err){}   // 실제 달력처럼 날짜 줄에 안 들어가면 공휴일 이름을 줄이고 스티커를 아래 줄로 (미리보기도 똑같이)
   tuneBar();tuneWarn();
 }
@@ -7184,22 +7195,23 @@ function todayColorRow(){   // 오늘 띠 색: 근무 색 + 동그라미 6개 + 
   const cur=S.todayColor||'';
   return `<div class="tdc-row"><button class="tdc tdc-shift${cur==='shift'?' on':''}" data-act="todaycolor" data-v="shift" aria-label="그날 근무 색"></button>${TODAY_COLORS.map(([v,n])=>`<button class="tdc${cur===v?' on':''}" data-act="todaycolor" data-v="${v}" aria-label="${n}" style="background:${v||'var(--accent)'}"></button>`).join('')}<label class="tdc tdc-pick${cur&&!TODAY_COLORS.some(x=>x[0]===cur)?' on':''}" aria-label="직접 고르기"><input type="color" id="tdcInput" value="${cur||'#2f6bf0'}"></label></div>`;
 }
+// v0.141 모양 조정 정리: 오늘 표시 · 달력 모양은 설정 › 화면으로 · 위젯 상태 줄은 맨 아래 접힌 칸 · 지금 이 화면 묶음만 펼침 · 미리보기 주 고르기(▲ ▼) · 버튼은 아래에 붙음
+let tnWeek=null,tnRows=0,tnBest=0,tnCellH=0;
 function openTunePage(){
+  if(pageMode!=='tune')tnWeek=null;
+  {const rc=document.querySelector('#view #track>.panel:nth-child(2) .cell'),h=rc?rc.getBoundingClientRect().height:0;if(h>40)tnCellH=h;}   // 실제 달력 칸 높이 (페이지가 열리면 못 잼)
   if(!tuneDraft)tuneDraft=JSON.parse(JSON.stringify(S.tune));
   let dbg='';try{if(hasBridge('widgetDebug'))dbg=String(window.AndroidBridge.widgetDebug()||'');}catch(e){}
+  const G=[['appInner','앱 달력 · 안쪽 화면(큰 화면)'],['appCover','앱 달력 · 커버 화면(작은 화면)'],['cover','한 달 위젯 · 커버 화면(작은 위젯)'],['inner','한 달 위젯 · 안쪽 화면(큰 위젯)']];
+  const me=tuneAppKey(),order=[...G.filter(g=>g[0]===me),...G.filter(g=>g[0]!==me)],wasOpen=pageMode==='tune'?new Set([...document.querySelectorAll('#page details.tn-grp[open]')].map(d=>d.id)):null;   // 다시 그릴 때(스티커 범위 · 처음 값 …) 펼친 칸 그대로
   openPage(`${pageHead('모양 조정')}
-    <div class="pg-b">
-      <div class="hint" style="padding:10px 16px 0">움직이면 미리보기에 바로 보여요. 마음에 들면 "저장"을 눌러야 앱과 홈 화면 위젯에 반영돼요. 잘못 저장했으면 "이전 저장으로"로 돌아갈 수 있어요(최근 5번).</div>
-      ${dbg?`<div class="hint" style="padding:6px 16px 0;font-size:11.5px">놓인 한 달 위젯 마지막 그림 상태<br>${esc(dbg).replace(/\n/g,'<br>')}</div>`:''}
-      <div class="tn-g"><h4>앱 달력 모양</h4><div class="chips"><button class="${S.calLook==='fill'?'':'on'}" data-act="callook" data-v="circle">동그라미</button><button class="${S.calLook==='fill'?'on':''}" data-act="callook" data-v="fill">칸 채우기</button></div></div>
-      <div class="tn-g"><h4>오늘 표시</h4>${todayColorRow()}${S.calLook==='fill'?`<div class="chips">${[['a','바탕+그림자+띠'],['b','띠만'],['c','띠 굵고 진하게'],['d','띠+그림자']].map(([v,n])=>`<button class="${S.todayLook===v?'on':''}" data-act="todaylook" data-v="${v}">${n}</button>`).join('')}</div>`:''}</div>
-      <div class="tn-g" id="stzDiagG" hidden><h4>스티커 크기 (왜 작아졌나)</h4><div id="stzDiag"></div></div>
-      <div class="tn-top"><div class="tn-prev" id="tnPrev"></div><div class="tn-bar" id="tnBar"></div><div class="tn-warn" id="tnWarn"></div></div>
-      <div class="tn-g"><h4>앱 달력 · 안쪽 화면(큰 화면)${tuneAppKey()==='appInner'?' ← 지금 이 화면':''}</h4>${tuneRows('appInner')}</div>
-      <div class="tn-g"><h4>앱 달력 · 커버 화면(작은 화면)${tuneAppKey()==='appCover'?' ← 지금 이 화면':''}</h4>${tuneRows('appCover')}</div>
-      <div class="tn-g"><h4>한 달 위젯 · 커버 화면(작은 위젯)</h4>${tuneRows('cover')}</div>
-      <div class="tn-g"><h4>한 달 위젯 · 안쪽 화면(큰 위젯)</h4>${tuneRows('inner')}</div>
-      <div style="padding:12px 14px 24px;display:flex;gap:8px"><button class="btn ghost grow" data-act="tune-reset">처음 값으로</button><button class="btn grow" data-act="tune-copy">값 복사</button></div>
+    <div class="pg-b tn-pg">
+      <div class="tn-top"><div class="tn-wk" id="tnWk"></div><div class="tn-prev" id="tnPrev"></div><div class="tn-bar" id="tnBar"></div><div class="tn-warn" id="tnWarn"></div></div>
+      <div class="hint" style="padding:8px 16px 0">움직이면 미리보기에 바로 보여요 · "저장"을 눌러야 앱 · 위젯에 반영 · 잘못 저장했으면 "이전 저장으로"(최근 5번)</div>
+      ${order.map(([g,n])=>`<details class="tn-g tn-grp" id="tng_${g}"${(wasOpen?wasOpen.has('tng_'+g):g===me)?' open':''}><summary>${n}${g===me?' <small>← 지금 이 화면</small>':''}</summary>${tuneRows(g)}</details>`).join('')}
+      <details class="tn-g tn-grp" id="stzDiagG" hidden${wasOpen&&wasOpen.has('stzDiagG')?' open':''}><summary>스티커 크기 (왜 작아졌나)</summary><div id="stzDiag"></div></details>
+      ${dbg?`<details class="tn-g tn-grp"><summary>문제 찾기 정보</summary><div class="hint" style="padding:4px 2px 0;font-size:11.5px">놓인 한 달 위젯 마지막 그림 상태<br>${esc(dbg).replace(/\n/g,'<br>')}</div></details>`:''}
+      <div class="tn-foot"><button class="btn ghost grow" data-act="tune-reset">처음 값으로</button><button class="btn ghost grow" data-act="tune-copy">값 복사</button></div>
     </div>`,'tune');
   tunePrev();
   setTimeout(()=>{try{const h=stzDiagHtml(),e=$('#stzDiag'),g=$('#stzDiagG');if(e&&g&&h){e.innerHTML=h;g.hidden=false;}}catch(err){}},150);   // v0.128 스티커가 있을 때만 보임 · 열 때만 계산
@@ -7408,12 +7420,26 @@ function wxDayHtml(k){
 const wxImg=(id,cls)=>id&&/^(sky|wear|faces|alert|misc)\/[a-z0-9_]+$/.test(id)?`<img${cls?` class="${cls}"`:''} src="wx/${id}.webp" alt="" draggable="false">`:'';
 // 큰 팝업: 한 줄 결론 → 출근/퇴근 칸(날씨 · 옷) → (옷이 같으면 한 번만) → 챙길 것 → 미세먼지 (누르면 큰 화면) — 알람 카드 · 위젯 창과 같은 순서
 let wxDz=null;   // 미세먼지 큰 화면에 쓸 것: {list:[{p,n,code}], back}
-function wxPopHtml(title,sub,c,extra,dz,hr){
+// v0.141 쉬는 날(근무 · 활동 없음) 위쪽 두 칸: 오전 · 오후(사실은 하루 최저 · 최고라 시간별 줄과 안 맞아 보였음) → 왼쪽 지금 날씨 · 체감 / 오른쪽 오늘 요약(최저 / 최고 · 비 · 일교차). 두 칸 자리 그대로(팝업 높이 같게)
+function wxRestCards(cs,c,rs){
+  try{
+    const d=c&&c.day;if(!rs||!d||cs.length!==2||d.lo==null||d.hi==null)return null;
+    const wt=v=>!!v&&(v.pty>0||v.pop>=60);
+    const pl=cs[0].p||'',q=cs[0].q,pop=Math.max((d.am&&d.am.pop)||0,(d.pm&&d.pm.pop)||0),wet=(d.am&&d.am.wet)||(d.pm&&d.pm.wet),snow=(d.am&&d.am.snow)||(d.pm&&d.pm.snow);
+    const right={l:`${rs.today?'오늘':'하루'}\u00a0요약 최저 · 최고`,p:pl,big:`${d.lo}° / ${d.hi}°`,d:`${snow?'눈':'비'} ${pop}% · 일교차 ${d.hi-d.lo}°`,...(q?{q}:{}),...(wet?{hot:true}:{})};
+    let left;
+    if(rs.today&&rs.raw){const now=Date.now(),v=WX.at(rs.raw,now);if(!v)return null;const fl=WX.feel(v.tp,v.ws);
+      left={l:`지금 ${wxHm(now)}`,p:pl,sk:WX.sky(v,now),tp:v.tp,d:`${fl!=null&&fl!==v.tp?`체감 ${fl}° · `:''}${WX.desc(v)}`,...(q?{q}:{}),...(wt(v)?{hot:true}:{})};}
+    else{const a=d.am||d.pm,b=d.pm||d.am,same=a.d===b.d;left={l:`하루 ${rs.md||''}`.trim(),p:pl,sk:(b.wet?b:a).sk,big:same?a.d:`${a.d} → ${b.d}`,d:same?'하루 종일':`오전 ${a.d} · 오후 ${b.d}`,...(q?{q}:{}),...(wet?{hot:true}:{})};}
+    return [left,right];
+  }catch(e){return null;}
+}
+function wxPopHtml(title,sub,c,extra,dz,hr,rs){
   wxDz=dz||null;
   const k=c.k||{t:c.h,s:'',i:''},cs=c.c||[];
   const wet=cs.some(x=>x.hot),bad=!!k.dz&&(c.dz||[]).some(x=>x.g>=3),cold=/^wear\/(scarf|mittens)/.test(k.i||'');
   const same=cs.length===2&&cs[0].w&&cs[0].w===cs[1].w;
-  const card=x=>`<div class="wxc${x.hot?' hot':''}${x.past?' past':''}"${x.q?` data-act="wx-web" data-q="${esc(x.q)}"`:''}><div class="l">${(()=>{const i=String(x.l).indexOf(' ');return i>0?`${esc(x.l.slice(0,i))}<small class="lt">${esc(x.l.slice(i+1))}</small>`:esc(x.l);})()}</div>${x.p?`<div class="p">${esc(x.p)}</div>`:''}<div class="s">${wxImg(x.sk)}${x.tp!=null?`<b>${x.tp}°</b>`:''}</div><div class="d">${esc(x.d||'')}</div>${x.past?'<span class="tag pastb">지남</span>':''}</div>`;
+  const card=x=>`<div class="wxc${x.hot?' hot':''}${x.past?' past':''}"${x.q?` data-act="wx-web" data-q="${esc(x.q)}"`:''}><div class="l">${(()=>{const i=String(x.l).indexOf(' ');return i>0?`${esc(x.l.slice(0,i))}<small class="lt">${esc(x.l.slice(i+1))}</small>`:esc(x.l);})()}</div>${x.p?`<div class="p">${esc(x.p)}</div>`:''}<div class="s">${x.sk?wxImg(x.sk):''}${x.big?`<b class="big">${esc(x.big)}</b>`:x.tp!=null?`<b>${x.tp}°</b>`:''}</div><div class="d">${esc(x.d||'')}</div>${x.past?'<span class="tag pastb">지남</span>':''}</div>`;
   // 옷은 하루 한 벌: 아직 안 지난 칸 중 가장 추운 때 기준 (칸마다 따로 보여 주면 외투 여러 벌처럼 보임)
   const wpool=(cs.some(x=>x.w&&!x.past)?cs.filter(x=>x.w&&!x.past):cs.filter(x=>x.w)).filter(x=>x.tp!=null),wcold=wpool.slice().sort((a,b)=>a.tp-b.tp)[0];
   const wgap=wpool.length>1?Math.max(...wpool.map(x=>x.tp))-Math.min(...wpool.map(x=>x.tp)):0;
@@ -7434,7 +7460,7 @@ function wxPopHtml(title,sub,c,extra,dz,hr){
   const kCls=k.al===2?'al2':k.al===1?'al1':wet?'wet':bad?'bad':cold?'cold':'';
   return `<div class="wxp v2"><div class="wh"><div><b>${esc(title)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div><button class="ib" data-act="pop-close" aria-label="닫기">✕</button></div>
     <div class="wxk ${kCls}">${wxImg(k.i)}<div><b>${esc(k.t)}</b>${k.s?`<small>${esc(k.s)}</small>`:''}${kOther}</div></div>
-    ${cs.length?`<div class="wxcs">${cs.map(card).join('')}</div>`:''}${all}${wxHrHtml(hr)}${b}${air}${extra||''}
+    ${cs.length?`<div class="wxcs">${(wxRestCards(cs,c,rs)||cs).map(card).join('')}</div>`:''}${all}${wxHrHtml(hr)}${b}${air}${extra||''}
     ${cs.some(x=>x.q)&&hintN('wxweb')<5?'<span class="wxweb">칸을 누르면 그 동네 네이버 날씨</span>':''}<div class="wsrc">${esc(c.src||'')}</div></div>`;
 }
 // 시간별 줄: 그날 24시간 · 2시간 간격 · 칸마다 내가 있는 곳(집 · 직장 구간) · 열면 지금 칸이 왼쪽에서 두 번째 (wxHrScroll)
@@ -7521,7 +7547,7 @@ function wxDayPopHtml(k){
   if(k<fmt(new Date())&&wxHist()[k]&&wxHist()[k].c){const hs=wxHist()[k];return wxHistPop(`${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]}) 날씨`,hs,wxObsTxt(k),hs.hr);}   // v0.127 지난 날 = 저장본
   const c=wxMine(d);if(!c)return '';
   const w=wxMyWin(d);
-  return (wxPopHtml(`${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]}) 날씨`,w?`${shiftLabel(w.k)} · ${wxHm(w.s)} 출근 → ${wxHm(w.e)} 퇴근`:(c.day&&c.day.src==='m'?'하루 요약 (중기예보)':'하루 요약'),c,'',wxDzList(w,S.wx.home,wxWk(),myActs(d)),wxHrOf(d,w,S.wx.home,wxWk(),wxName(S.wx.home),wxWk()?wxName(wxWk()):'',null,myActs(d))));
+  return (wxPopHtml(`${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]}) 날씨`,w?`${shiftLabel(w.k)} · ${wxHm(w.s)} 출근 → ${wxHm(w.e)} 퇴근`:(c.day&&c.day.src==='m'?'하루 요약 (중기예보)':'하루 요약'),c,'',wxDzList(w,S.wx.home,wxWk(),myActs(d)),wxHrOf(d,w,S.wx.home,wxWk(),wxName(S.wx.home),wxWk()?wxName(wxWk()):'',null,myActs(d)),(!w&&!myActs(d).length)?{today:k===fmt(new Date()),raw:wxRaw(S.wx.home),md:`${d.getMonth()+1}월 ${d.getDate()}일`}:null));
 }
 function wxOpenDay(k){wxPopFam=null;const h=wxDayPopHtml(k);if(!h)return;wxPopK=k;wxOpenPop(`<div class="swc" style="position:relative;transform:translateZ(0)">${h}</div>`);   /* v0.133 처음부터 판으로 감싸 둠 → 밀기 시작할 때 옮기지 않음 */const m=$('#pop .menu');if(m)m.classList.add('wxdpop');}
 const wxHm=ms=>{const x=new Date(ms);return t12(`${pad(x.getHours())}:${pad(x.getMinutes())}`,true);};   // v0.126 화면 글자는 12시간제
@@ -9542,7 +9568,8 @@ document.addEventListener('click',e=>{
     case 'thememode':S.theme=t.dataset.v;save();applyTheme();render();lookRefresh();break;
     case 'leave-from':S.salary.leaveFrom=t.dataset.v?(S.salary.leaveFrom||'01-01'):'';save();openStatsPage();break;
     case 'todaycolor':S.todayColor=t.dataset.v==='shift'?'shift':/^#[0-9a-f]{6}$/i.test(t.dataset.v||'')?t.dataset.v:'';save();applyTune();if(pageMode==='tune')openTunePage();else{render();lookRefresh();}break;
-    case 'todaylook':S.todayLook=['a','b','c','d'].includes(t.dataset.v)?t.dataset.v:'b';save();applyTune();openTunePage();break;
+    case 'todaylook':S.todayLook=['a','b','c','d'].includes(t.dataset.v)?t.dataset.v:'b';save();applyTune();if(pageMode==='tune')openTunePage();else lookRefresh();break;
+    case 'tn-wk':tnWeek=Math.max(0,Math.min(tnRows-1,(tnWeek==null?tnBest:tnWeek)+(+t.dataset.d||0)));tunePrev();break;
     case 'callook':S.calLook=t.dataset.v==='fill'?'fill':'circle';save();applyTune();if(pageMode==='tune')openTunePage();else{render();lookRefresh();}break;
     case 'tune-open':openTunePage();break;
     case 'tune-reset':tuneDraft=tuneAll(null);applyTune();openTunePage();toast('처음 값으로 돌렸어요 · 저장해야 반영돼요');break;

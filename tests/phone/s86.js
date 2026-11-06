@@ -59,6 +59,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const defs=[mk('w','💧',['2026-11-04','2026-12-25']),mk('bk','📖',['2026-11-04','2026-12-25']),mk('bi','🚴',['2026-11-04','2026-12-25']),mk('z','💤',['2026-11-04','2026-12-25'])];
     const p=await boot(b,{...base,stamps:{defs,log:{},snap:{},remind:false,pillTimes:['08:00'],lastAt:[],v3:1,v4:1}},{T:+new Date('2026-11-02T10:00:00')});
     await p.evaluate(()=>{const x=document.createElement('button');x.dataset.act='tune-open';document.body.appendChild(x);x.click();});await p.waitForTimeout(800);
+    await p.evaluate(()=>{const e=document.getElementById('stzDiagG');if(e)e.open=true;});   // v0.141 접혀 있음 → 펼쳐서 읽음
     const g0=await p.evaluate(()=>{const e=document.getElementById('stzDiagG');return e&&!e.hidden?e.innerText:'';});
     T('기본 = "달마다 따로": 11월은 기본 크기 그대로 · 범위 "그 달만"',(/기본 크기 그대로/.test(g0)&&/그 달만/.test(g0)),g0.slice(0,160));
     await p.evaluate(()=>document.querySelector('[data-act="stz-mode"][data-v="3"]').click());await p.waitForTimeout(700);
@@ -81,7 +82,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     await p.waitForTimeout(2500);
     const pop=async k=>{await p.evaluate(k=>{__wx.closePop();__wx.wxOpenDay(k);},k);await p.waitForTimeout(300);return p.evaluate(()=>{const m=document.querySelector('#pop .menu');return {h:Math.round(m.getBoundingClientRect().height),t:m.innerText.replace(/\s+/g,' '),dz:!!m.querySelector('.wxrw.dz.none'),dzAct:!!m.querySelector('.wxrw.dz.none[data-act]')};});};
     const r=await pop('2026-10-12'),w=await pop('2026-10-14');
-    T('쉬는 날 칸: "오전 6~12시" · 동네 이름 줄',/오전\s*6~12시/.test(r.t)&&/오후\s*12~6시/.test(r.t),r.t.slice(0,220));
+    T('쉬는 날 칸(v0.141): 왼쪽 "지금" · 오른쪽 "오늘 요약 최저 · 최고" · 동네 이름 줄',/지금/.test(r.t)&&/오늘\s*요약/.test(r.t)&&/최저 · 최고/.test(r.t),r.t.slice(0,220));
     T('미세먼지 예보 전: 회색 자리 "예보 전이에요" (누르지 않음)',r.dz&&!r.dzAct&&/예보 전이에요/.test(r.t));
     T('쉬는 날 · 근무 날 팝업 높이 같음 (±4px)',Math.abs(r.h-w.h)<=4,r.h+' / '+w.h);
     await p.evaluate(()=>{__wx.closePop();__wx.wxOpenDay('2026-10-14');});await p.waitForTimeout(300);

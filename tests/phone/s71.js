@@ -68,7 +68,7 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
     await p.click('#wxDay');await p.waitForTimeout(200);
     const pop2=await p.evaluate(()=>document.querySelector('#pop').innerText);
     T('오늘 팝업: 미세먼지 지금 값 8단계 (보통) + 마스크 안내',/미세먼지 보통/.test(pop2)&&/민감하면 마스크/.test(pop2),pop2);
-    T('오늘(쉬는 날) 팝업: 오전 · 오후 칸 + 옷은 한 번만 (오늘 옷)',/오전/.test(pop2)&&/오후/.test(pop2)&&/오늘 옷/.test(pop2)&&await p.evaluate(()=>document.querySelectorAll('#pop .wxc img.w').length===0),pop2);
+    T('오늘(쉬는 날) 팝업: 지금 · 오늘 요약 칸(v0.141) + 옷은 한 번만 (오늘 옷)',/지금/.test(pop2)&&/오늘\s*요약/.test(pop2)&&/오늘 옷/.test(pop2)&&await p.evaluate(()=>document.querySelectorAll('#pop .wxc img.w').length===0),pop2);
     await p.click('#pop [data-act="wx-dust"]');await p.waitForTimeout(250);
     const dz=await p.evaluate(()=>({t:document.querySelector('#pop').innerText,full:document.querySelector('#pop').classList.contains('wxfull')}));
     T('미세먼지 큰 화면: 지금 42㎍/㎥ · 18㎍/㎥ · 경기 평균 · 오늘 예보 (탭 없음 = 쉬는 날)',dz.full&&/42㎍\/㎥/.test(dz.t)&&/18㎍\/㎥/.test(dz.t)&&/경기 평균/.test(dz.t)&&/오늘\s*예보/.test(dz.t)&&await p.evaluate(()=>!document.querySelector('#pop .tabs')),dz.t);

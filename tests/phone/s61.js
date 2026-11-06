@@ -34,7 +34,7 @@ await p.evaluate(()=>{const b=document.querySelector('[data-act="more-look"]');i
     await p.evaluate(()=>document.querySelector('[data-act="page-close"]')&&document.querySelector('[data-act="page-close"]').click());await p.waitForTimeout(250);
     await p.evaluate(()=>{const b=document.querySelector('[data-act="more-look"]');if(b)b.click();});await p.waitForTimeout(300);await p.waitForTimeout(300);
     await p.evaluate(()=>document.querySelector('[data-act="tune-open"]')&&document.querySelector('[data-act="tune-open"]').click());await p.waitForTimeout(500);
-    T('조정 화면에도 띠 색 줄 · 메모 칸 높이 하한 0.4',await p.evaluate(()=>!!document.querySelector('#page .tdc-row')&&+document.querySelector('.tn-r[data-g="appCover"][data-k="pill"]').min===0.4));
+    T('메모 칸 높이 하한 0.4 (v0.141 띠 색은 설정 › 화면에만)',await p.evaluate(()=>+document.querySelector('.tn-r[data-g="appCover"][data-k="pill"]').min===0.4));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   // (시간 고르기는 v0.83 에서 바퀴로 바뀜 → s63)
