@@ -3698,8 +3698,8 @@ function plCut(t){
 function renderCal(){
   const mk=cur.y*12+cur.m;
   calMemo={};const at=v=>(calMemo[v]=calPanel(Math.floor(v/12),v%12));   // v0.135 렉: 방금 그린 판 글을 스티커 크기 재기에 그대로 씀 (같은 달을 두 번 만들지 않음)
-  const pn=(v,h)=>`<div class="panel" data-mk="${v}" style="order:${3+v-mk}">${h}</div>`;   // v0.138 앞뒤 3달씩 (문서 순서 = 앞 · 지금 · 다음 · 나머지 → 지금 달은 늘 두 번째 · 보이는 순서는 order) · 먼 판은 조금 뒤에 채움
-  return `<div class="track" id="track">${pn(mk-1,mk>MIN_M?at(mk-1):'')}${pn(mk,at(mk))}${pn(mk+1,mk<MAX_M?at(mk+1):'')}${pn(mk-2,'')}${pn(mk+2,'')}${pn(mk-3,'')}${pn(mk+3,'')}</div>
+  const pn=(v,h)=>`<div class="panel" data-mk="${v}" style="order:${CAL_R+v-mk}">${h}</div>`;   // v0.138 앞뒤 3달씩 (문서 순서 = 앞 · 지금 · 다음 · 나머지 → 지금 달은 늘 두 번째 · 보이는 순서는 order) · 먼 판은 조금 뒤에 채움
+  return `<div class="track" id="track">${pn(mk-1,mk>MIN_M?at(mk-1):'')}${pn(mk,at(mk))}${pn(mk+1,mk<MAX_M?at(mk+1):'')}${calFar(mk).map(v=>pn(v,'')).join('')}</div>
     ${paint?paintBar():''}`;
 }
 /* 칠하기: 근무타입을 고르고 날짜를 쭉 누르면 한 번에 바뀜 */
@@ -3883,9 +3883,9 @@ function slideTo(dir,cb){
 // v0.138 가로 스크롤 달력: 판 너비 · 가운데로 · 버튼 넘김(0.26초) · 손으로 민 뒤 멈추면 판 옮기기
 const calW=tr=>(tr&&tr.clientWidth)||$('#view').clientWidth||innerWidth;
 let calIgn=0,calTouch=false,calSetT=0,calAnimOn=false;
-function calCenter(){const tr=$('#track');if(!tr)return;const W=calW(tr);if(W>0&&Math.abs(tr.scrollLeft-3*W)>.5){calIgn=performance.now();tr.scrollLeft=3*W;}}
+function calCenter(){const tr=$('#track');if(!tr)return;const W=calW(tr);if(W>0&&Math.abs(tr.scrollLeft-CAL_R*W)>.5){calIgn=performance.now();tr.scrollLeft=CAL_R*W;}}
 function calAnim(tr,dir,done){
-  const W=calW(tr),a=tr.scrollLeft,b=(3+dir)*W,t0=performance.now(),ms=swReduce()?0:260;
+  const W=calW(tr),a=tr.scrollLeft,b=(CAL_R+dir)*W,t0=performance.now(),ms=swReduce()?0:260;
   calAnimOn=true;tr.style.scrollSnapType='none';
   const end=()=>{tr.scrollLeft=b;calAnimOn=false;tr.style.scrollSnapType='';done();};
   if(!ms){end();return;}
@@ -3897,19 +3897,20 @@ function calSettle(){
   if(tab!=='cal'||calTouch||calAnimOn||busy)return;
   const tr=$('#track');if(!tr)return;const W=calW(tr),x=tr.scrollLeft,i=Math.round(x/W);
   if(Math.abs(x-i*W)>1.5)return;   // 아직 움직이는 중 (멈추면 다시 불림)
-  const d=i-3;if(!d)return;
+  const d=i-CAL_R;if(!d)return;
   const nm=cur.y*12+cur.m+d,p=[...tr.children].find(x=>+x.dataset.mk===nm);
-  if(nm<MIN_M||nm>MAX_M||!p){tr.scrollTo({left:3*W,behavior:'smooth'});return;}   // 끝 달: 다시 가운데
+  if(nm<MIN_M||nm>MAX_M||!p){tr.scrollTo({left:CAL_R*W,behavior:'smooth'});return;}   // 끝 달: 다시 가운데
   if(calShiftFast(d,true)){render();if(pageMode==='stats')openStatsPage();if(todayQ)setTimeout(todayGo,0);}
   else{cur={y:Math.floor(nm/12),m:nm%12};render();}
 }
-let calLastX=0,calDir=0;
+let calLastX=0,calDir=0,calLastS=0;
 document.addEventListener('scroll',e=>{
   if(!e.target||e.target.id!=='track')return;
-  {const x=e.target.scrollLeft;if(Math.abs(x-calLastX)>.5)calDir=x>calLastX?1:-1;calLastX=x;}
+  {const x=e.target.scrollLeft;if(Math.abs(x-calLastX)>.5)calDir=x>calLastX?1:-1;calLastX=x;calLastS=performance.now();}
   if(performance.now()-calIgn<40||calAnimOn)return;
-  if((glowStart||glowTm)&&Math.abs(e.target.scrollLeft-3*calW(e.target))>2)glowStop();   // 손으로 밀 때만 빛을 멈춤 (가운데 맞춤 스크롤은 그대로)
-  {const tr=e.target,W=calW(tr),i=Math.round(tr.scrollLeft/W);[...tr.children].forEach(p=>{if(Math.abs((+p.style.order)-i)<=1&&!p.firstElementChild){calFill(p);calFillLater();}});}   // 다가오는 먼 판이 비었으면 바로 채움
+  if((glowStart||glowTm)&&Math.abs(e.target.scrollLeft-CAL_R*calW(e.target))>2)glowStop();
+  {const tr=e.target,i=Math.round(tr.scrollLeft/calW(tr)),v=cur.y*12+cur.m+i-CAL_R,h=document.querySelector('#top .ym h1');if(h&&v>=MIN_M&&v<=MAX_M){const t=`${Math.floor(v/12)}.${pad(v%12+1)}`;if(h.textContent!==t)h.textContent=t;}}   // v0.138 넘어가는 중에도 위 월 숫자는 바로 (반 넘게 오면)   // 손으로 밀 때만 빛을 멈춤 (가운데 맞춤 스크롤은 그대로)
+  {const tr=e.target,W=calW(tr),i=Math.round(tr.scrollLeft/W);let f=0;[...tr.children].forEach(p=>{if(Math.abs((+p.style.order)-i)<=2&&!p.firstElementChild){calFill(p);f=1;}});if(f)calFillLater(150);}   // 다가오는 먼 판: 글만 바로 (크기 맞추기는 잠깐 뒤)   // 다가오는 먼 판이 비었으면 바로 채움
   clearTimeout(calSetT);calSetT=setTimeout(calSettle,90);
 },true);
 document.addEventListener('scrollend',e=>{if(e.target&&e.target.id==='track'&&!calAnimOn){clearTimeout(calSetT);calSettle();}},true);
@@ -6424,6 +6425,8 @@ function swTarget(t){
   const x=pop.querySelector('.menu.wxdpop');if(x&&wxPopK)return {w:'wx',el:x};
   return null;
 }
+// v0.139 업무 메모 창은 옆으로 넘기면 적어 둔 날로만 건너뜀 (빈 날은 안 보임 · 1년 안)
+const swNext=(w,dir)=>{const k0=swKey(w);if(w!=='wl')return addK(k0,dir);for(let i=1;i<=366;i++){const k=addK(k0,dir*i);if(wlHas(k))return k;}return null;};
 const swKey=w=>w==='vc'?rqD.k:w==='man'?manDayK:w==='day'?sheetKey:w==='wl'?wlEd&&wlEd.k:w==='sd'?stDayK:wxPopK;
 // 옆 날짜 내용(상태는 안 바꿈)
 function swHtml(w,k){
@@ -6440,7 +6443,7 @@ function swHtml(w,k){
 }
 // 진짜로 넘기기 (새 날짜로 다시 그림)
 function swGo(w,dir){
-  const k=addK(swKey(w),dir);if(!okDate(k))return false;
+  const k=swNext(w,dir);if(!k||!okDate(k))return false;
   if(w==='day'){goDay(k,true);return true;}   // 밀어서 넘길 땐 진동 없음
   if(w==='wl'){wlCommitInputs();wlEd={k,ren:false};renderWl(false);return true;}
   if(w==='sd'){openStampDay(k,true);return true;}
@@ -6470,7 +6473,7 @@ function swWrap(st){
 function swSide(st,dir){   // dir: 1 = 다음날(오른쪽에 붙음) · -1 = 전날(왼쪽)
   if(st.nb&&st.dir===dir)return;
   if(st.nb){st.nb.remove();st.nb=null;}
-  st.dir=dir;const h=swHtml(st.w,addK(swKey(st.w),dir));if(h==null)return;
+  st.dir=dir;const nk=swNext(st.w,dir),h=nk?swHtml(st.w,nk):null;if(h==null)return;
   const nb=document.createElement('div');nb.className='swc swn';nb.innerHTML=h;nb.querySelectorAll('[id]').forEach(x=>{x.dataset.swid=x.id;x.removeAttribute('id');});   // 옆 판엔 같은 id 없게 (v0.136 넘긴 뒤 그 판을 그대로 쓰면 되살림)
   const cs=getComputedStyle(st.el),pl=parseFloat(cs.paddingLeft)||0,pr=parseFloat(cs.paddingRight)||0,pt=parseFloat(cs.paddingTop)||0;   // 창 안쪽 여백만큼 비켜서 (옆 판이 더 크게 보였다 줄어드는 것 막기)
   nb.style.cssText=`position:absolute;left:${pl}px;top:${(st.el.scrollTop||0)+pt}px;width:${st.el.clientWidth-pl-pr}px;${st.flex?'display:flex;flex-direction:column;height:100%;':''}pointer-events:none`;
@@ -8853,30 +8856,32 @@ const monthDirOf=(k,y,m)=>{const d=parse(k);return (d.getFullYear()*12+d.getMont
 // v0.136 달 넘김을 "페이지 넘기기"처럼: 옆 판은 이미 그려져 있으니 판을 옮기기만 하고, 새로 필요한 맨 끝 판 하나만 만든다
 // (전에는 넘길 때마다 세 판을 다 다시 그리고 새 달 스티커 크기를 그때 재서 느린 폰에서 1초 가까이 멈춤 → 그 사이 손가락이 씹힘)
 var calKeep=false,calFarT=0,calPreT=0;
+const CAL_R=12;   // v0.138 앞뒤 몇 달을 판으로 둘지 (연달아 밀어도 끝에 안 닿게 · 먼 판은 다가올 때 채움)
+const calFar=mk=>{const a=[];for(let i=2;i<=CAL_R;i++)a.push(mk-i,mk+i);return a;};
 function calShiftFast(n,keepView){
-  if(tab!=='cal'||Math.abs(n)>3||S.stzMode==='3'||paint||(famView()&&famPeers().length))return false;
+  if(tab!=='cal'||Math.abs(n)>CAL_R||S.stzMode==='3'||paint||(famView()&&famPeers().length))return false;
   return calReorder(cur.y*12+cur.m+n,keepView);
 }
 function calFill(p){const v=+p.dataset.mk;if(v<MIN_M||v>MAX_M){p.innerHTML='';return;}const ll=lastLines;p.style.removeProperty('--stz');p.innerHTML=calPanel(Math.floor(v/12),v%12);lastLines=ll;}
 function calFillLater(ms){clearTimeout(calFarT);calFarT=setTimeout(()=>{try{   // 한 번에 판 하나씩 (가까운 것부터) → 손가락이 와도 바로 받음
-  const tr=$('#track');if(!tr||tab!=='cal')return;if(calTouch||busy){calFillLater(200);return;}
-  const P=[...tr.children].sort((a,b)=>Math.abs(+a.style.order-3)-Math.abs(+b.style.order-3));
+  const tr=$('#track');if(!tr||tab!=='cal')return;if(calTouch||busy||performance.now()-calLastS<120){calFillLater(150);return;}   // 손가락 · 움직이는 중엔 미룸
+  const vi=Math.round(tr.scrollLeft/calW(tr)),P=[...tr.children].sort((a,b)=>Math.abs(+a.style.order-vi)-Math.abs(+b.style.order-vi)).filter(x=>Math.abs(+x.style.order-vi)<=2);   // 보이는 판 앞뒤 2달까지 (더 먼 판은 다가올 때)
   const p=P.find(x=>{const v=+x.dataset.mk;return (v>=MIN_M&&v<=MAX_M)&&(!x.firstElementChild||!x.dataset.fit);});if(!p)return;
   const v=+p.dataset.mk;if(!p.firstElementChild)calFill(p);p.dataset.fit=1;stzPanel(p,v);fitDn(p,true);memoShift(p);calFillLater(60);
 }catch(e){}},ms==null?80:ms);}
 // v0.138 지금 달을 nm 으로: 이미 있는 판은 그대로 두고 자리(order)만 바꿈 · 빠진 판만 새로 · keepView = 손으로 밀어 온 자리 그대로
 function calReorder(nm,keepView){
-  const tr=$('#track');if(!tr||tr.children.length!==7)return false;
-  const mk=cur.y*12+cur.m,d=nm-mk;if(nm<MIN_M||nm>MAX_M||Math.abs(d)>3)return false;
+  const tr=$('#track');if(!tr||tr.children.length!==3+CAL_R*2-2)return false;
+  const mk=cur.y*12+cur.m,d=nm-mk;if(nm<MIN_M||nm>MAX_M||Math.abs(d)>CAL_R)return false;
   const P=[...tr.children],by={};P.forEach(p=>{by[+p.dataset.mk]=p;});
-  const want=[nm-1,nm,nm+1,nm-2,nm+2,nm-3,nm+3],free=P.filter(p=>!want.includes(+p.dataset.mk));
+  const want=[nm-1,nm,nm+1,...calFar(nm)],free=P.filter(p=>!want.includes(+p.dataset.mk));
   const W=calW(tr),x0=tr.scrollLeft;
-  const nodes=want.map(v=>{let p=by[v];if(!p){p=free.shift();p.dataset.mk=v;delete p.dataset.fit;p.innerHTML='';p.style.removeProperty('--stz');}p.style.order=3+v-nm;return p;});
+  const nodes=want.map(v=>{let p=by[v];if(!p){p=free.shift();p.dataset.mk=v;delete p.dataset.fit;p.innerHTML='';p.style.removeProperty('--stz');}p.style.order=CAL_R+v-nm;return p;});
   if(!nodes[1].firstElementChild)calFill(nodes[1]);
   [nodes[0],nodes[2]].forEach(p=>{if(!p.firstElementChild)calFill(p);});
   nodes.forEach(p=>tr.appendChild(p));
   cur={y:Math.floor(nm/12),m:nm%12};
-  calIgn=performance.now();tr.scrollLeft=keepView?x0-d*W:3*W;
+  calIgn=performance.now();tr.scrollLeft=keepView?x0-d*W:CAL_R*W;
   calFillLater();calKeep=true;return true;
 }
 // 쉬는 동안 앞뒤 2달 스티커 크기를 미리 재 둠 (폰에 저장 · 넘길 때 다시 안 잼)

@@ -212,13 +212,28 @@ class WidgetDayActivity : Activity() {
 
     /** 앞뒤 날짜로 이동: dir -1 = 전날 · +1 = 다음 날 (위젯이 가진 범위 밖이면 가만히) */
     private fun step(dir: Int) {
+        val j = stepTo(dir)
+        if (j == null) return
+        key = j
+        build(dir)
+    }
+
+    /** 다음에 갈 날짜. 업무 일지를 펼쳐 둔 채면 업무 일지가 있는 날로만 건너뜀 (빈 날은 안 보임) · 없으면 null */
+    private fun stepTo(dir: Int): String? {
         val keys = dayKeys(data)
         val i = keys.indexOf(key)
-        if (i < 0) return
+        if (i < 0) return null
+        if (wlOpen) {
+            val arr = data?.optJSONArray("days")
+            var j = i + dir
+            while (j >= 0 && j < keys.size) {
+                if ((arr?.optJSONObject(j)?.optInt("wl", 0) ?: 0) == 1) return keys[j]
+                j += dir
+            }
+            return null
+        }
         val j = i + dir
-        if (j < 0 || j >= keys.size) return
-        key = keys[j]
-        build(dir)
+        return if (j < 0 || j >= keys.size) null else keys[j]
     }
 
     private fun arrow(label: String, desc: String, enabled: Boolean, pal: Pal, dir: Int): TextView {
@@ -302,7 +317,7 @@ class WidgetDayActivity : Activity() {
             head.gravity = Gravity.CENTER_VERTICAL
             val keys = dayKeys(data)
             val at = keys.indexOf(key)
-            head.addView(arrow("‹", "전날", at > 0, pal, -1))
+            head.addView(arrow("‹", "전날", stepTo(-1) != null, pal, -1))
             val title = tv(day.optInt("m").toString() + "월 " + day.optInt("d") + "일 (" + dow[w] + ")", if (resources.configuration.screenWidthDp < 360) 17f else 20f, dateColor, true)
             title.maxLines = 1
             head.addView(title)
@@ -321,7 +336,7 @@ class WidgetDayActivity : Activity() {
                 cl.leftMargin = dp(6)
                 head.addView(chipT, cl)
             }
-            head.addView(arrow("›", "다음 날", at >= 0 && at < keys.size - 1, pal, 1))
+            head.addView(arrow("›", "다음 날", stepTo(1) != null, pal, 1))
             head.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
             var wk = day.optString("t", "")
             var wbg = day.optString("bg", "")

@@ -18,7 +18,7 @@ const fs=require('fs');
     for(let i=0;i<2;i++){await swipe(-1);await p.waitForTimeout(120);}await p.waitForTimeout(900);
     T('뒤로 2번 → 11월 · 판 10 · 11 · 12월',await ym()==='2026.11'&&JSON.stringify(await st())==='["2026-10","2026-11","2026-12"]',await ym()+JSON.stringify(await st()));
     await p.waitForTimeout(400);
-    T('옆 판도 스티커 크기 붙음 (조금 뒤)',await p.evaluate(()=>[...document.querySelectorAll('#track>.panel')].every(x=>x.style.getPropertyValue('--stz')!=='')));
+    T('옆 판도 스티커 크기 붙음 (조금 뒤 · 그려진 판)',await p.evaluate(()=>{const P=[...document.querySelectorAll('#track>.panel')].filter(x=>x.firstElementChild);return P.length>=3&&P.every(x=>x.style.getPropertyValue('--stz')!=='');}));
     await p.click('#top [data-act="next"]');await p.waitForTimeout(500);
     T('‹ › 버튼도 그대로',await ym()==='2026.12');
     await p.evaluate(()=>{__wx.S.memos['2027-01-05']=[{id:'m1',text:'새 메모',shared:false,by:'host',t:1}];__wx.save();__wx.render();});await p.waitForTimeout(200);
@@ -108,5 +108,24 @@ const fs=require('fs');
     await p.evaluate(()=>{const H=__wx.wxHist();const x=H['2026-10-14'],c=x.hr.at.find(c=>c.fc);window.__ct=c.t;c.f='faces/7';c.fc=false;localStorage.setItem('eonjeswieo:wxh',JSON.stringify(H));__wx.wxHistSave(true);});
     T('한 번 저장된 실제 값은 예보로 다시 덮이지 않음',await p.evaluate(()=>{const c=__wx.wxHist()['2026-10-14'].hr.at.find(c=>c.t===window.__ct);return c&&c.f==='faces/7'&&!c.fc;}));
     T('오류 없음 (미세먼지 기록)',p.errs.filter(x=>!/Failed to load resource/.test(x)).length===0,p.errs.join('|'));await p.close();
+  }
+  { // 7) 업무 메모 창: 옆으로 넘기면 적어 둔 날로만 (빈 날은 건너뜀) · 월 숫자는 넘어가는 중에도 바로
+    const wlog={name:'인수인계',secs:[{id:'a',n:'인수',h:false},{id:'b',n:'인계',h:false}],backup:false,seen:true,days:{'2026-10-12':{b:'순찰 2회'},'2026-10-20':{b:'점검표 제출'},'2026-09-30':{b:'월말 정리'}}};
+    const p=await boot(b,{...base,addons:{...base.addons,wlog:true},wlog},{touch:true});await p.waitForTimeout(400);
+    const cdp=await p.context().newCDPSession(p);
+    const swipe=async(dir=1,y=420)=>{const x0=dir>0?330:60;await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x0,y}]});for(let i=1;i<=6;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x0-dir*i*40,y}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});};
+    await p.evaluate(()=>{const x=document.createElement('button');x.dataset.act='wl-open';x.dataset.k='2026-10-12';document.body.appendChild(x);x.click();x.remove();});await p.waitForTimeout(500);
+    const k=()=>p.evaluate(()=>{const e=document.querySelector('#pop .wlp');return e?e.innerText.replace(/\s+/g,' ').slice(0,60):'';});
+    const y=await p.evaluate(()=>{const r=document.querySelector('#pop .wlp').getBoundingClientRect();return r.top+r.height/2;});
+    await swipe(1,y);await p.waitForTimeout(700);
+    T('업무 메모 창 왼쪽으로 → 빈 날 건너뛰고 10/20',/10월 20일/.test(await k()),await k());
+    await swipe(-1,y);await p.waitForTimeout(700);await swipe(-1,y);await p.waitForTimeout(700);
+    T('오른쪽으로 2번 → 10/12 → 9/30 (달 넘어도 적은 날만)',/9월 30일/.test(await k()),await k());
+    await p.evaluate(()=>__wx.closePop());await p.waitForTimeout(200);
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:330,y:500}]});for(let i=1;i<=6;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:330-i*40,y:500}]});
+    await p.waitForTimeout(60);const mid=await p.evaluate(()=>document.querySelector('.ym h1').textContent);
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForTimeout(900);
+    T('달력 넘기는 중(손가락 안 뗌)에도 위 월 숫자가 바로 11월',mid==='2026.11',mid);
+    T('오류 없음 (업무 메모 넘기기)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   T.sum();await b.close();})();
