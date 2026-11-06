@@ -541,6 +541,7 @@ textarea{resize:none;min-height:84px}
 
 .dnum{height:26px;display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--muted)}
 .dsi small{font-size:11px;color:var(--muted);font-weight:700}
+.dsi.td small{color:#fff!important;background:var(--tdc,var(--accent));border-radius:8px;padding:0 6px}.dft .tdy{display:inline-block;margin-left:6px;font-size:12px;font-weight:800;color:#fff;background:var(--tdc,var(--accent));border-radius:8px;padding:1px 7px;vertical-align:1px}.dft[data-act]{cursor:pointer}.dft .tgo{display:block;font-size:11px;color:var(--muted);margin-top:2px}   /* v0.144 오늘 표시 */
 .dsi .badge{transform:scale(.9)}
 .dsi.on small{color:var(--fg)}.dsi.on .badge{position:relative;overflow:visible}
 .dsi.on .badge::after{content:'';position:absolute;inset:-5px;border:2px solid var(--accent);border-radius:8px;pointer-events:none}
@@ -1638,7 +1639,8 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .tips ol.tds li::before{content:counter(s);position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;background:var(--fg);color:var(--bg);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .tips ol.tds li img{display:block;width:100%;margin-top:8px;border-radius:12px;border:1px solid var(--line)}
 
-.wxp .wxc .s b.big{font-size:30px;white-space:nowrap}   /* v0.141 쉬는 날 오른쪽 "4° / 15°" · 다른 날 왼쪽 날씨 글 */
+.wxp .wxc .s b.big{font-size:30px;white-space:nowrap}   .wxp .wxc .s.two img{width:46px;height:46px}.wxc .s .ar{font-style:normal;font-size:18px;color:var(--muted);margin:0 2px}.wxp .wxc .d{overflow-wrap:anywhere}   /* v0.144 쉬는 날 다른 날 왼쪽: 오전 → 오후 그림 두 개 */
+/* v0.141 쉬는 날 오른쪽 "4° / 15°" · 다른 날 왼쪽 날씨 글 */
 .prow.pcol{flex-direction:column;align-items:stretch;gap:6px}.prow.pcol .tdc-row{padding-left:46px;flex-wrap:wrap}.prow.pcol .chips{padding-left:46px;flex-wrap:wrap;justify-content:flex-start}
 /* v0.141 모양 조정 정리 */
 .tn-pg .tn-grp>summary{list-style:none;cursor:pointer;font-weight:800;font-size:14px;padding:10px 0 6px;display:flex;align-items:center;gap:6px}.tn-pg .tn-grp>summary::-webkit-details-marker{display:none}
@@ -5455,13 +5457,18 @@ function manChipIco(m,v,d){
   if(m.kind==='shift')return badge(v,'tc');
   const c=famEra(m,d||new Date()),t=famTypes(c).find(x=>x.k===v)||(v==='off'?famRestType(c):famWorkType(c));return ftBadge(t,'tc');
 }
+// v0.144 날짜 창 오늘 표시: 띠의 오늘 칸 색 · 제목 줄 "오늘" · 다른 날이면 제목을 눌러 오늘로
+function dsTK(){return fmt(new Date());}
+function dsTgo(k,act){const t=dsTK();return k===t?'':` data-act="${act}" data-k="${t}" role="button"`;}
+function dsTdy(k){return k===dsTK()?'<span class="tdy">오늘</span>':'';}
+function dsHint(k){return k===dsTK()?'':`<span class="tgo">날짜를 누르면 오늘(${new Date().getDate()}일)로</span>`;}
 function manDayHtml(k){
   const m=manMember();if(!m)return '';
   const d=parse(k),hol=holName(k),on=(m.stk&&m.stk[k])||[],note=(m.notes&&m.notes[k])||'',cur=(m.ov&&m.ov[k])||manBase(m,d),defs=manSdefs(m).filter(x=>!x.retired||on.includes(x.id));
-  const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}" data-act="man-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${manBadge(m,x,'','sm')}</button>`;}).join('');
+  const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}${fmt(x)===dsTK()?' td':''}" data-act="man-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${manBadge(m,x,'','sm')}</button>`;}).join('');
   return `<div class="dtop"><button data-act="close">‹ ${esc(m.name)} 달력</button></div>
     <div class="dfh"><button class="ib" data-act="man-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
-      <div class="dft"><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${esc(m.name)} · ${esc(manLabel(m,d))}${hol?` · <span class="hl">${esc(hol)}</span>`:''}</small></div>
+      <div class="dft"${dsTgo(k,'man-go')}><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${esc(m.name)} · ${esc(manLabel(m,d))}${hol?` · <span class="hl">${esc(hol)}</span>`:''}${dsTdy(k)}</small>${dsHint(k)}</div>
       <button class="ib" data-act="man-go" data-k="${fmt(addDays(d,1))}" aria-label="다음날">›</button></div>
     <div class="dstrip" id="dstrip">${strip}</div>
     <div class="sec-t" style="margin-top:10px">${m.kind==='shift'?'근무':'일정'}<button class="sh-fold" data-act="man-fold" aria-label="접기">${manFoldOpen()?'▴ 접기':'▾ 펼치기'}</button>${famUsesTypes(m)?'<button class="paint-lk" data-act="man-pat" style="margin-left:14px">⚙️ 일정 패턴</button>':''}<button class="paint-lk" data-act="man-paint">🖌 여러 날 칠하기</button></div>
@@ -6339,11 +6346,11 @@ function dayHtml(k){
   const openReqs=dayReqs.filter(r=>r.st==='pending'||r.st==='hold');   // 날짜 창엔 답 안 한 요청만 (답한 건 요청함에)
   const reqHtml=openReqs.map(r=>reqCard(r)).join('');
   const dd=ddayHits(k);
-  const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);const rq=rqRing(S.requests.filter(r=>r.date===fmt(x)&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r));return `<button class="dsi ${i===0?'on':''} ${rq}" data-act="day-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${S.personal?`<span class="dnum">${DOW[x.getDay()]}</span>`:badge(shiftOf(x),'sm')}</button>`;}).join('');
+  const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);const rq=rqRing(S.requests.filter(r=>r.date===fmt(x)&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r));return `<button class="dsi ${i===0?'on':''}${fmt(x)===dsTK()?' td':''} ${rq}" data-act="day-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${S.personal?`<span class="dnum">${DOW[x.getDay()]}</span>`:badge(shiftOf(x),'sm')}</button>`;}).join('');
   const head=`
       <div class="dtop"><button data-act="close">‹ 달력</button></div>
       <div class="dfh"><button class="ib" data-act="day-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
-        <div class="dft"><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${persOn(k)?(hol?`<span class="hl">${esc(hol)}</span>`:''):esc(shiftLabel(c))}${hol&&!persOn(k)?` · <span class="hl">${esc(hol)}</span>`:''}${dd.map(x=>` · ${ico(x.emoji||'⭐')} ${esc(x.name)}`).join('')}</small></div>
+        <div class="dft"${dsTgo(k,'day-go')}><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${persOn(k)?(hol?`<span class="hl">${esc(hol)}</span>`:''):esc(shiftLabel(c))}${hol&&!persOn(k)?` · <span class="hl">${esc(hol)}</span>`:''}${dd.map(x=>` · ${ico(x.emoji||'⭐')} ${esc(x.name)}`).join('')}${dsTdy(k)}</small>${dsHint(k)}</div>
         <button class="ib" data-act="day-go" data-k="${fmt(addDays(d,1))}" aria-label="다음날">›</button></div>
       <div class="dstrip" id="dstrip">${strip}</div>`;
   let topPart='';
@@ -7471,7 +7478,7 @@ function wxRestCards(cs,c,rs){
     let left;
     if(rs.today&&rs.raw){const now=Date.now(),v=WX.at(rs.raw,now);if(!v)return null;const fl=WX.feel(v.tp,v.ws);
       left={l:`지금 ${wxHm(now)}`,p:pl,sk:WX.sky(v,now),tp:v.tp,d:`${fl!=null&&fl!==v.tp?`체감 ${fl}° · `:''}${WX.desc(v)}`,...(q?{q}:{}),...(wt(v)?{hot:true}:{})};}
-    else{const a=d.am||d.pm,b=d.pm||d.am,same=a.d===b.d;left={l:`하루 ${rs.md||''}`.trim(),p:pl,sk:(b.wet?b:a).sk,big:same?a.d:`${a.d} → ${b.d}`,d:same?'하루 종일':`오전 ${a.d} · 오후 ${b.d}`,...(q?{q}:{}),...(wet?{hot:true}:{})};}
+    else{const a=d.am||d.pm,b=d.pm||d.am,same=a.d===b.d;left={l:`하루 ${rs.md||''}`.trim(),p:pl,sk:a.sk,...(same&&a.sk===b.sk?{}:{sk2:b.sk}),d:same?`하루 종일 ${a.d}`:`${a.d} → ${b.d}`,...(q?{q}:{}),...(wet?{hot:true}:{})};}
     return [left,right];
   }catch(e){return null;}
 }
@@ -7480,7 +7487,7 @@ function wxPopHtml(title,sub,c,extra,dz,hr,rs){
   const k=c.k||{t:c.h,s:'',i:''},cs=c.c||[];
   const wet=cs.some(x=>x.hot),bad=!!k.dz&&(c.dz||[]).some(x=>x.g>=3),cold=/^wear\/(scarf|mittens)/.test(k.i||'');
   const same=cs.length===2&&cs[0].w&&cs[0].w===cs[1].w;
-  const card=x=>`<div class="wxc${x.hot?' hot':''}${x.past?' past':''}"${x.q?` data-act="wx-web" data-q="${esc(x.q)}"`:''}><div class="l">${(()=>{const i=String(x.l).indexOf(' ');return i>0?`${esc(x.l.slice(0,i))}<small class="lt">${esc(x.l.slice(i+1))}</small>`:esc(x.l);})()}</div>${x.p?`<div class="p">${esc(x.p)}</div>`:''}<div class="s">${x.sk?wxImg(x.sk):''}${x.big?`<b class="big">${esc(x.big)}</b>`:x.tp!=null?`<b>${x.tp}°</b>`:''}</div><div class="d">${esc(x.d||'')}</div>${x.past?'<span class="tag pastb">지남</span>':''}</div>`;
+  const card=x=>`<div class="wxc${x.hot?' hot':''}${x.past?' past':''}"${x.q?` data-act="wx-web" data-q="${esc(x.q)}"`:''}><div class="l">${(()=>{const i=String(x.l).indexOf(' ');return i>0?`${esc(x.l.slice(0,i))}<small class="lt">${esc(x.l.slice(i+1))}</small>`:esc(x.l);})()}</div>${x.p?`<div class="p">${esc(x.p)}</div>`:''}<div class="s${x.sk2?' two':''}">${x.sk?wxImg(x.sk):''}${x.sk2?`<i class="ar">→</i>${wxImg(x.sk2)}`:''}${x.big?`<b class="big">${esc(x.big)}</b>`:x.tp!=null?`<b>${x.tp}°</b>`:''}</div><div class="d">${esc(x.d||'')}</div>${x.past?'<span class="tag pastb">지남</span>':''}</div>`;
   // 옷은 하루 한 벌: 아직 안 지난 칸 중 가장 추운 때 기준 (칸마다 따로 보여 주면 외투 여러 벌처럼 보임)
   const wpool=(cs.some(x=>x.w&&!x.past)?cs.filter(x=>x.w&&!x.past):cs.filter(x=>x.w)).filter(x=>x.tp!=null),wcold=wpool.slice().sort((a,b)=>a.tp-b.tp)[0];
   const wgap=wpool.length>1?Math.max(...wpool.map(x=>x.tp))-Math.min(...wpool.map(x=>x.tp)):0;
@@ -7648,7 +7655,7 @@ function famWxOpen(m,k){const h=famWxPopHtml(m,k);if(!h)return;wxPopK=k;wxPopFam
 function famWxPop(m,k){famWxOpen(m,k);}
 function wxOpenFam(u){
   const now=Date.now(),d=new Date(now),H=wxRaw(S.wx.home);if(!H&&u==='me')return;
-  if(u==='me'){const c=wxMine(d,now);if(c){const w=wxMyWin(d);wxOpenPop(wxPopHtml('나 · 오늘',w?`${wxHm(w.s)} 출근 → ${wxHm(w.e)} 퇴근`:'',c,'',wxDzList(w,S.wx.home,wxWk(),myActs(d)),wxHrOf(d,w,S.wx.home,wxWk(),wxName(S.wx.home),wxWk()?wxName(wxWk()):'',now),!w&&!myActs(d).length?{today:true,raw:H}:null));}return;}
+  if(u==='me'){wxOpenDay(fmt(d));if($('#pop.open .wxdpop'))return;const c=wxMine(d,now);if(c){const w=wxMyWin(d);wxOpenPop(wxPopHtml('나 · 오늘',w?`${wxHm(w.s)} 출근 → ${wxHm(w.e)} 퇴근`:'',c,'',wxDzList(w,S.wx.home,wxWk(),myActs(d)),wxHrOf(d,w,S.wx.home,wxWk(),wxName(S.wx.home),wxWk()?wxName(wxWk()):'',now),!w&&!myActs(d).length?{today:true,raw:H}:null));}return;}
   const m=wxFam().concat((S.family||[]).filter(famUsesTypes)).find(x=>wxMemKey(x)===u);if(!m)return;
   if(famUsesTypes(m)){famWxPop(m,fmt(d));return;}
   if(m.kind==='sched'){famWxOpen(m,fmt(d));return;}   // v0.135 근무표 가족: 그 사람 집(h) · 직장 (내 폰 집이 없어도 — 와이프 폰에서 안 열리던 것) · 옆으로 밀기
@@ -10712,7 +10719,7 @@ function vcDayHtml(k){
   const want=rqD.k===k&&rqD.u===p.uid?rqD.want:((p.sch.types||[]).find(x=>x.rest)||{k:'휴'}).k;
   const mine=reqUniq(S.requests.filter(r=>r.srv&&r.dir==='out'&&r.peer===p.uid&&r.date===k).sort((a,b)=>b.t-a.t));
   const open=mine.some(r=>r.st==='pending'||r.st==='accepted');
-  const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}" data-act="vc-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${schBadge(p.sch,schShift(p.sch,x),'sm')}</button>`;}).join('');
+  const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}${fmt(x)===dsTK()?' td':''}" data-act="vc-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${schBadge(p.sch,schShift(p.sch,x),'sm')}</button>`;}).join('');
   const tag=open?'요청 중':past?'':'근무 요청',canRq=!past||mine.length,isOpen=vcRqOpen&&canRq;
   const chips=(p.sch.types||[]).slice(0,8).map(x=>`<button class="tchip ${want===x.k?'on':''}" data-act="vc-want" data-s="${esc(x.k)}">${schBadge(p.sch,x.k,'tc')}<small>${esc(x.name)}</small></button>`).join('');
   const body=!isOpen?'':`<div class="sec-t">📩 ${esc(p.name)}에게 근무 요청<button class="sh-fold" data-act="vc-rq">▴ 접기</button></div>
@@ -10723,7 +10730,7 @@ function vcDayHtml(k){
         <div class="row" style="margin-top:10px"><div class="usage-hint">무료 ${famRemain()}건 남음</div><span class="grow"></span><button class="btn sm ghost" data-act="vc-multi-from" data-k="${k}">여러 날 고르기</button><button class="btn sm" data-act="vc-send">요청 보내기</button></div>`}`;
   return `<div class="dtop"><button data-act="close">‹ ${esc(p.name)} 달력</button></div>
     <div class="dfh"><button class="ib" data-act="vc-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
-      <div class="dft"><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${esc(p.name)} · ${esc(ty.name)} · 보기만${hol?` · <span class="hl">${esc(hol)}</span>`:''}</small></div>
+      <div class="dft"${dsTgo(k,'vc-go')}><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${esc(p.name)} · ${esc(ty.name)} · 보기만${hol?` · <span class="hl">${esc(hol)}</span>`:''}${dsTdy(k)}</small>${dsHint(k)}</div>
       <button class="ib" data-act="vc-go" data-k="${fmt(addDays(d,1))}" aria-label="다음날">›</button></div>
     <div class="dstrip" id="dstrip">${strip}</div>
     <div class="sec shsec vcrq ${isOpen?'open':''}">

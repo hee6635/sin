@@ -332,3 +332,9 @@
 - 가족 탭 내 카드: wxRestMini 로 쉬는 날 오늘 = 미니 "지금 n° · 오늘 lo°/hi°"(mc 에 tt) · 큰 카드는 "지금" 한 칸.
 - famWxPopHtml: 학생 가족은 hr.wl = "🏫 " + 그날 일정 이름(famTypeAt · famLbl · m.label · 없으면 학교) → wxHrHtml 묶음 이름 "직장" 대신.
 - 시험: s92 (6).
+
+## v0.144 (덧붙임)
+- 날짜 창 오늘 표시: dsTK · dsTgo · dsTdy · dsHint (manDayHtml 위). 띠 `.dsi.td`(오늘 칸 글자 --tdc 알약) · 오늘이면 제목 줄 끝 `.tdy` "오늘" · 다른 날이면 `.dft` 에 data-act(day-go · man-go · vc-go) + 아래 `.tgo` 안내 → 누르면 오늘로. 내 · 가족(man) · 근무표 가족(vc) 세 창 모두.
+- 쉬는 날 다른 날 왼쪽 칸(wxRestCards): big 글 대신 sk + sk2(오전 → 오후 그림, `.s.two` · `.ar`) · d 한 줄 "구름많음 → 맑음" / "하루 종일 맑음". 그림이 같으면 sk2 없음.
+- 가족 탭 내 카드 날씨(wxOpenFam 'me') → wxOpenDay(오늘) 로 날씨 탭과 같은 팝업(옆으로 밀기). 못 열면 예전 팝업.
+- 시험 s93.
