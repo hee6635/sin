@@ -35,7 +35,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.click('#page [data-act="sr-rep"][data-v="daily"]');await p.click('#page [data-act="sr-save"]');await p.waitForTimeout(500);
  const pop=await p.$eval('#pop',e=>e.innerText.replace(/\s+/g,' ')).catch(()=>'');
  console.log(pop);
- T('기존 스티커가 밀려나면 안내창(어느 쪽이든)',pop.includes('가려져요')&&pop.includes('밀려서')&&pop.includes('넷'));
+ T('기존 스티커가 밀려나면 안내창(v0.136 버튼 3개: "4개를 넘어요" · 넷이 가려져요)',pop.includes('가려져요')&&pop.includes('4개를 넘어요')&&pop.includes('넷')&&pop.includes('겹친 날은 건너뛰기'));
  await p.click('#pop [data-act="sh-undo"]');await p.waitForTimeout(300);
  T('등록 취소하면 앞칸 스티커는 반복 아님으로 복귀',(await S()).stamps.defs[0].rep==='none');
  console.log(p.errs);T.sum();await b.close();})();

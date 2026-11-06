@@ -49,7 +49,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     await p.evaluate(()=>document.querySelector('[data-act="tune-open"]').click());await p.waitForTimeout(500);
     T('모양 조정 화면: 앱 달력 미리보기(일주일 줄만 · 7칸) + 슬라이더 46개(앱 안쪽 · 앱 커버 × 12 · 위젯 커버 · 위젯 안쪽 × 11)',await p.evaluate(()=>document.querySelectorAll('#tnPrev .grid .cell').length===7&&document.querySelectorAll('.tn-r').length===46),String(await p.evaluate(()=>document.querySelectorAll('.tn-r').length)));
     T('모양 조정 화면에 놓인 위젯의 마지막 그림 상태(커버 · 안쪽 중 어느 값을 썼는지)가 보임',await p.evaluate(()=>/최소폭 300dp → 커버 값/.test(document.querySelector('#page').textContent)));
-    T('이상한 저장 값은 범위 안으로(99 → 1.6 · 글자 → 기본 1.15)',await p.evaluate(()=>{const s=document.querySelector('.tn-r[data-g="appCover"][data-k="stk"]'),i=document.querySelector('.tn-r[data-g="appCover"][data-k="ink"]');return +s.value===1.6&&+i.value===1.15;}));
+    T('이상한 저장 값은 범위 안으로(99 → 1.6 · 글자 → 기본 1.25)',await p.evaluate(()=>{const s=document.querySelector('.tn-r[data-g="appCover"][data-k="stk"]'),i=document.querySelector('.tn-r[data-g="appCover"][data-k="ink"]');return +s.value===1.6&&+i.value===1.25;}));   // v0.136 기본값 = 사용자 값
     const setR=(g,k,v)=>p.evaluate(([g,k,v])=>{const e=document.querySelector(`.tn-r[data-g="${g}"][data-k="${k}"]`);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));},[g,k,v]);
     await setR('appCover','stk',1.3);await setR('appCover','ink',0.8);await setR('appCover','memo',1.2);await p.waitForTimeout(300);
     const css=await p.evaluate(()=>{const s=getComputedStyle(document.documentElement);return {stk:s.getPropertyValue('--tstk').trim(),ink:s.getPropertyValue('--tink').trim(),plf:parseFloat(s.getPropertyValue('--plf'))};});
@@ -65,9 +65,9 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const cp=await p.evaluate(()=>window.__cp);
     T('값 복사: 앱 · 위젯 커버 · 위젯 안쪽 값이 한 글에 들어감',cp.length===1&&/\[모양 조정\]/.test(cp[0])&&/앱 달력 안쪽/.test(cp[0])&&/앱 달력 커버/.test(cp[0])&&/위젯 커버/.test(cp[0])&&/위젯 안쪽/.test(cp[0])&&/1\.3/.test(cp[0]),cp[0]);
     await p.evaluate(()=>document.querySelector('[data-act="tune-reset"]').click());await p.waitForTimeout(400);
-    T('처음 값으로: 화면에서만 기본값(저장은 "저장"을 눌러야)',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('eonjeswieo:v1')).tune;return s.appCover.stk===1.3&&+document.querySelector('.tn-r[data-g="appInner"][data-k="stk"]').value===1.05&&+document.querySelector('.tn-r[data-g="cover"][data-k="ink"]').value===1.5;}));
+    T('처음 값으로: 화면에서만 기본값(저장은 "저장"을 눌러야)',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('eonjeswieo:v1')).tune;return s.appCover.stk===1.3&&+document.querySelector('.tn-r[data-g="appInner"][data-k="stk"]').value===0.9&&+document.querySelector('.tn-r[data-g="cover"][data-k="ink"]').value===1.5;}));
     await p.evaluate(()=>document.querySelector('[data-act="tune-save"]').click());await p.waitForTimeout(300);
-    T('저장하면 기본값이 됨(앱 커버 주야 1.15 · 앱 안쪽 메모 1 · 위젯 안쪽 메모 1.1) · 이전 저장이 기록에 남음',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('eonjeswieo:v1'));return s.tune.appCover.ink===1.15&&s.tune.appInner.memo===1&&s.tune.inner.memo===1.1&&s.tuneHist.length>=2;}));
+    T('저장하면 기본값이 됨(앱 커버 주야 1.25 · 앱 안쪽 메모 1.1 · 위젯 안쪽 메모 1.1) · 이전 저장이 기록에 남음',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('eonjeswieo:v1'));return s.tune.appCover.ink===1.25&&s.tune.appInner.memo===1.1&&s.tune.inner.memo===1.1&&s.tuneHist.length>=2;}));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   // ── 공휴일 이름 · 스티커 자리 (v0.87: 커버 화면에서 스티커 2개 이상이면 이름은 숫자 아래 두 글자 · 아래 줄 스티커와 부딪히면 한 글자)
@@ -116,8 +116,8 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const st={...base};delete st.tune;
     const rd=async(w,h)=>{const p=await boot(b,st,{w,h,touch:true});const r=await p.evaluate(()=>{const c=getComputedStyle(document.documentElement);return {stk:c.getPropertyValue('--tstk').trim(),ink:c.getPropertyValue('--tink').trim(),err:0};});r.errs=p.errs.length;await p.close();return r;};
     const small=await rd(390,844),big=await rd(820,1100);
-    T('작은 화면(390): 앱 커버 값(기본 스티커 1.15 · 주야 1.15)',small.stk==='1.15'&&small.ink==='1.15'&&small.errs===0,JSON.stringify(small));
-    T('큰 화면(820): 앱 안쪽 값(기본 스티커 1.05 · 주야 1.15)',big.stk==='1.05'&&big.ink==='1.15'&&big.errs===0,JSON.stringify(big));
+    T('작은 화면(390): 앱 커버 값(기본 스티커 1.05 · 주야 1.25)',small.stk==='1.05'&&small.ink==='1.25'&&small.errs===0,JSON.stringify(small));
+    T('큰 화면(820): 앱 안쪽 값(기본 스티커 0.9 · 주야 1.05)',big.stk==='0.9'&&big.ink==='1.05'&&big.errs===0,JSON.stringify(big));
     const p=await boot(b,st,{touch:true});await p.evaluate(()=>{window.__wg=[];window.AndroidBridge.setWidgetData=j=>window.__wg.push(JSON.parse(j));});await p.click('#nav [data-tab="set"]');await p.waitForTimeout(300);
     await p.evaluate(()=>document.querySelector('[data-act="more-widget"]').click());await p.waitForTimeout(300);
     await p.evaluate(()=>document.querySelector('[data-act="wg-look"][data-v="fill"]').click());await p.waitForTimeout(1000);

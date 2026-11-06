@@ -44,7 +44,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   }
   // ── 경고 줄: 메모가 줄어들 때
   {
-    const st={...base};delete st.tune;
+    const st={...base};   // (v0.136 기본값이 사용자 값(메모 칸 0.7)이라 3줄 날 경고가 뜸 → 이 시험은 중립 값으로)
     const memos={'2026-10-16':[m('a','첫째'),m('b','둘째'),m('c','셋째')]};
     const p=await boot(b,{...st,memos},{touch:true});
     await openTune(p);

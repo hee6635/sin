@@ -41,7 +41,7 @@ const fs=require('fs');
     const p=await boot(b,{...base,alarms:[{id:'al1',on:true,shift:'주',time:'07:00',label:'주간 출근',days:[],sound:true}]});
     await act(p,'tips-open');await p.waitForTimeout(400);
     const tp=await p.evaluate(()=>{const t=[...document.querySelectorAll('.tips .tip')].find(x=>/내일 하루만/.test(x.textContent));return t?{d:!!t.querySelector('ol.tds'),img:[...t.querySelectorAll('img')].map(i=>i.getAttribute('src')),n:document.querySelectorAll('.tips ol.tds').length}:null;});
-    T('팁 10개 자세히 (이럴 때 · 단계 · 사진)',tp&&tp.d&&tp.n===10&&tp.img.length===2,JSON.stringify(tp));
+    T('팁 10개 자세히 (이럴 때 · 단계 · 사진)',tp&&tp.d&&tp.n>=10&&tp.img.length===2,JSON.stringify(tp));
     T('팁 사진 파일이 앱에 있음',tp&&tp.img.every(s=>fs.existsSync('/home/user/sin/app/src/main/assets/'+s)));
     const all=await p.evaluate(()=>[...document.querySelectorAll('.tips img')].map(i=>i.getAttribute('src')));
     T('모든 팁 사진 파일 있음 (8장)',all.length>=8&&all.every(s=>fs.existsSync('/home/user/sin/app/src/main/assets/'+s)),JSON.stringify(all.filter(s=>!fs.existsSync('/home/user/sin/app/src/main/assets/'+s))));

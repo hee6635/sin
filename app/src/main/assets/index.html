@@ -1635,6 +1635,8 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .tips ol.tds li{counter-increment:s;position:relative;padding:0 0 0 30px;margin:0 0 12px;font-size:14px;line-height:1.55}
 .tips ol.tds li::before{content:counter(s);position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;background:var(--fg);color:var(--bg);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .tips ol.tds li img{display:block;width:100%;margin-top:8px;border-radius:12px;border:1px solid var(--line)}
+/* v0.136 겹침 팝업 버튼 */
+#pop .mi.clb{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}#pop .mi.clb b{font-size:15px}#pop .mi.clb small{font-size:12px;color:var(--muted);font-weight:600;line-height:1.4}
 /* v0.135 처음 안내 */
 #tutx{position:fixed;inset:0;z-index:9999}
 #tutx .hole{position:absolute;border-radius:12px;box-shadow:0 0 0 9999px rgba(15,20,30,.62);outline:2.5px solid #ffb547;pointer-events:none;transition:all .2s}
@@ -2484,7 +2486,8 @@ const REM_DAYS=[7,3,2,1,0],REM_SHORT={7:'1주',3:'3일',2:'2일',1:'전날',0:'�
 const TUNE_KEYS=[['stk','스티커 크기',.6,1.6,.05,1,'스티커'],['stkX','스티커 좌우 위치',-1,1,.05,0,'스티커'],['stkY','스티커 높이 위치',-1,1,.05,0,'스티커'],['stkGX','스티커 좌우 간격',-1,1,.05,0,'스티커'],['stkGY','스티커 상하 간격',-1,1,.05,0,'스티커'],['ink','주야 크기',.6,1.5,.05,1,'주야'],['inkY','주야 높이 위치',-1,1,.05,0,'주야'],['dotX','변경 표시(빨간 점) 좌우',-1,1,.05,0,'주야','app'],['memo','메모 글자 크기',.7,1.6,.05,1,'메모'],['pill','메모 칸 높이',.4,1.6,.05,1,'메모'],['memoY','메모 위치 (위 − · 아래 +)',-1,3,.05,0,'메모'],['memoG','메모 줄 사이 간격',-1,1,.05,0,'메모']];
 const TUNE_NEUTRAL=Object.fromEntries(TUNE_KEYS.map(k=>[k[0],k[5]]));
 // 기본값(사용자가 폰에서 맞춘 값): 앱 달력은 화면 폭 600dp 이상(폴더폰 안쪽 · 태블릿)이면 "안쪽" · 아니면 "커버" 값 / 한 달 위젯은 위젯 폭(440dp 기준)으로 커버 · 안쪽 (새 값은 0 = 지금 모양 그대로)
-const TUNE_DEF={appCover:{...TUNE_NEUTRAL,stk:1.15,stkX:.15,stkY:-.1,ink:1.15,inkY:.35,memo:.85,pill:.8},appInner:{...TUNE_NEUTRAL,stk:1.05,stkX:0,stkY:-.05,ink:1.15,inkY:.1,memo:1,pill:.95},cover:{...TUNE_NEUTRAL,stk:1.05,stkX:.8,stkY:.95,ink:1.5,inkY:.65,memo:1.5,pill:1.5},inner:{...TUNE_NEUTRAL,stk:1.2,stkX:.4,stkY:-.1,ink:.95,inkY:-.1,memo:1.1,pill:1.1}};
+const TUNE_DEF={appCover:{...TUNE_NEUTRAL,stk:1.05,stkX:.55,stkY:.05,ink:1.25,inkY:.65,memo:.9,pill:.7},appInner:{...TUNE_NEUTRAL,stk:.9,stkX:-.25,stkY:-.05,ink:1.05,inkY:.1,memo:1.1,pill:.95},   // v0.136 앱 달력 기본 = 사용자가 쓰는 값 (새로 설치하는 사람 · 이미 쓰는 사람은 저장된 값 그대로)
+  cover:{...TUNE_NEUTRAL,stk:1.05,stkX:.8,stkY:.95,ink:1.5,inkY:.65,memo:1.5,pill:1.5},inner:{...TUNE_NEUTRAL,stk:1.2,stkX:.4,stkY:-.1,ink:.95,inkY:-.1,memo:1.1,pill:1.1}};
 function tuneClean(o,df){const d=df||TUNE_NEUTRAL,r={};TUNE_KEYS.forEach(([k,,lo,hi])=>{const v=o&&typeof o==='object'&&o[k]!=null?+o[k]:NaN,dv=Number.isFinite(+d[k])?+d[k]:TUNE_NEUTRAL[k];r[k]=Number.isFinite(v)?Math.max(lo,Math.min(hi,Math.round(v*100)/100)):dv;});return r;}
 function tuneAll(t){return {appCover:tuneClean(t&&t.appCover,TUNE_DEF.appCover),appInner:tuneClean(t&&(t.appInner||t.app),TUNE_DEF.appInner),cover:tuneClean(t&&t.cover,TUNE_DEF.cover),inner:tuneClean(t&&t.inner,TUNE_DEF.inner)};}
 function normalize(o){
@@ -3354,12 +3357,15 @@ function render(){
       </div>
       ${mid}
       <div class="hr">${(()=>{const c=famInCounts(),n=c.ask+c.hold;return n?`<button class="rqmail" data-act="feed-req" aria-label="처리할 요청 ${n}개">📩<i class="${c.ask?'':'hold'}">${n}</i></button>`:'';})()}${todayBtn}</div>`;
+    if(calKeep&&$('#track')){calKeep=false;}   // v0.136 달 넘김: 판은 옮기기만 (calShiftFast) · 위 머리줄 · 오늘 빛만 새로
+    else{calKeep=false;
     if(!renderAgain){try{stzWindow(v);}catch(err){}}   // 스티커 크기: 앞뒤 3달 기준
     v.innerHTML=renderCal();stzPanels(v);
     fitDn(v,true);memoShift(v);
     // 처음 켤 때 · 다른 탭에서 돌아올 때는 그리기 전에는 달력 칸 높이를 잴 수 없어서 어림값으로 메모 줄 수를 정함 → 그린 뒤 실제 높이로 다시 재서 다르면 한 번만 다시 그림
     if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();stzPanels(v);fitDn(v,true);memoShift(v);}finally{renderAgain=false;}}}
-    glowCheck();
+    }
+    glowCheck();calPrefetch();
   }else if(tab==='colleague'){
     top.innerHTML=`<div class="hl"><button class="hb" data-act="back-set" aria-label="뒤로" style="font-size:28px">‹</button></div>${mid}<div class="hr">${todayBtn}</div>`;
     v.innerHTML=renderColleague();
@@ -3869,6 +3875,7 @@ function slideTo(dir,cb){
   const tr=$('#track'),mk=cur.y*12+cur.m+dir;
   if(mk<MIN_M||mk>MAX_M)return;
   if(!tr){shiftMonth(dir);if(cb)cb();return;}
+  if(busy){if(calPend)calFlush();else return;}   // v0.136 쓸어 넘기는 중에 ‹ › 를 눌러도 버리지 않음
   if(busy)return;
   busy=true;
   tr.style.transition='transform .26s ease';
@@ -4595,8 +4602,7 @@ function stampRegSave(){
   }
   const back=d.back;stDraft=null;save();if(back==='stamps'){render();openStampPage();}else{closePage();if(back==='day')stampReopen(k);}
   const ic=s.kind==='pill'?'💊':icoTxt(s.emoji,'✔');
-  const hid=d.rep==='once'?{n:0,mv:0}:stampHidden(s,d.edit?k:(s.from||k),s.to);
-  if(hid.n||hid.mv){stampHiddenAsk(s,hid,snap);return;}
+  if(d.rep!=='once'){const c=stClashScan(s,d.edit?k:(s.from||k),s.to);if(c.dup.length||c.hid.length||c.mv.length){stClashAsk(s,c,snap);return;}}   // v0.136 같은 그림 겹침 · 4개 넘음 → 버튼 3개
   toast(d.edit?`${ic} ${s.name} 고쳤어요 · ${stampRule(s)}`:d.rep==='once'?`${ic} ${s.name} 이날 등록했어요${s.ats&&s.ats.length?' · 시각에 알림이 울려요':''}`:`${ic} ${s.name} · ${stampRule(s)}`);
 }
 // 반복 스티커가 깔리는 날 중 하루 한도(2개 · 설정 4개) 때문에 가려지는 날 수 (앞으로 200일 안)
@@ -4615,6 +4621,45 @@ function stampHidden(s,from,to){
   return {n,first,names,mv,mvFirst,mvNames};
 }
 let hidSnap=null;
+// v0.136 반복 스티커 저장 때: 같은 그림 스티커가 이미 있는 날(dup) · 4개가 넘어 새 것이 가려지는 날(hid) · 새 것 때문에 다른 것이 밀리는 날(mv)
+const stPic=x=>x.kind==='pill'?'p:'+(x.shape||'caps'):'m:'+x.emoji;
+function stClashScan(s,from,to){
+  const dup=[],hid=[],mv=[],same=S.stamps.defs.filter(x=>x.id!==s.id&&!x.retired&&!x.empty&&stPic(x)===stPic(s));
+  for(let i=0;i<=200;i++){
+    const k=addK(from,i);if(to&&k>to)break;if(!stampPlanned(s,k))continue;
+    const o=same.filter(x=>stampPlanned(x,k)||stampCnt(k,x.id)>0);if(o.length){dup.push({k,ids:o.map(x=>x.id)});continue;}
+    const on=stampsOn(k);
+    if(!on.some(x=>x.s.id===s.id))hid.push({k,last:on.length?on[on.length-1].s.id:''});
+    else{const lost=stampsOn(k,s.id).filter(x=>!on.some(y=>y.s.id===x.s.id));if(lost.length)mv.push({k,ids:lost.map(x=>x.s.id)});}
+  }
+  return {dup,hid,mv};
+}
+let clashCtx=null;
+function stClashAsk(s,c,snap){
+  hidSnap=snap;clashCtx={id:s.id,...c};
+  const nm=id=>{const x=S.stamps.defs.find(y=>y.id===id);return x?`${x.kind==='pill'?'💊':icoTxt(x.emoji,'')}${x.name}`:'';};
+  const days=L=>`${md(L[0].k)}${L.length>1?` 외 ${L.length-1}일`:''}`;
+  const lines=[];
+  if(c.dup.length){const w=nm(c.dup[0].ids[0]);lines.push(`${days(c.dup)}에 ${esc(w)}${josa(w,'이','가')} 이미 있어요`);}
+  if(c.hid.length||c.mv.length)lines.push(`${days(c.hid.length?c.hid:c.mv)}부터 스티커가 ${stampMax()}개를 넘어요`);
+  const lose=[...new Set([...c.hid.map(x=>x.last),...c.mv.flatMap(x=>x.ids)].filter(Boolean))].slice(0,3).map(nm).join(' · ');
+  const dw=c.dup.length?nm(c.dup[0].ids[0]):'';const showSub=[dw?`그 날 있던 ${esc(dw)}${josa(dw,'은','는')} 빼고 체크는 옮겨요`:'',lose?`${esc(lose)}${josa(lose,'이','가')} 가려져요`:''].filter(Boolean).join(' · ');
+  openPop(`<div class="mh">${s.kind==='pill'?'💊':esc(icoTxt(s.emoji,''))} ${esc(s.name)}<b>${lines.join('<br>')}</b></div>
+    <button class="mi clb" data-act="clash-show"><b>지금 만든 스티커만 보이기</b><small>${showSub}</small></button>
+    <button class="mi clb" data-act="clash-skip"><b>겹친 날은 건너뛰기</b><small>먼저 있던 스티커는 그대로 · 새 ${esc(s.name)}만 그 날 빠져요</small></button>
+    <button class="mi" data-act="sh-undo" style="justify-content:center;color:var(--muted)">취소</button>`);
+}
+function stClashDo(how){
+  const c=clashCtx;clashCtx=null;closePop();hidSnap=null;if(!c)return;
+  const s=S.stamps.defs.find(x=>x.id===c.id);if(!s)return;
+  const lg=k=>S.stamps.log[k]||(S.stamps.log[k]={});
+  const offDay=(x,k)=>{if((x.dates||[]).includes(k))x.dates=x.dates.filter(y=>y!==k);if(stampPlanned(x,k))(x.skip=x.skip||[]).push(k);};
+  if(how==='skip'){[...c.dup,...c.hid,...c.mv].forEach(({k})=>offDay(s,k));save();render();toast(`겹친 날은 새 ${s.name}${josa(s.name,'을','를')} 건너뛰어요`);return;}
+  c.dup.forEach(({k,ids})=>ids.forEach(id=>{const x=S.stamps.defs.find(y=>y.id===id);if(!x)return;const L=lg(k),n=L[id]||0;if(n){L[s.id]=Math.min(stN(s),Math.max(L[s.id]||0,n));delete L[id];}offDay(x,k);}));
+  c.hid.forEach(({k,last})=>{const x=S.stamps.defs.find(y=>y.id===last);if(x&&!stampCnt(k,x.id))offDay(x,k);});
+  Object.keys(S.stamps.log).forEach(k=>{if(!Object.keys(S.stamps.log[k]).length)delete S.stamps.log[k];});
+  save();render();toast(`${s.name}${josa(s.name,'이','가')} 보여요 · 체크는 그대로`);
+}
 function stampHiddenAsk(s,h,snap){
   hidSnap=snap;
   const m1=h.n?`${md(h.first)}부터는 <b>${esc(h.names)}</b>이(가) 먼저 보여서 ${esc(s.name)} 은(는) 안 보이고, 그 날 알림도 안 와요.`:'',m2=h.mv?`${md(h.mvFirst)}부터 <b>${esc(h.mvNames)}</b>이(가) 밀려서 안 보이고, 그 날 알림도 안 와요 (설정에서 순서를 바꿀 수 있어요).`:'';
@@ -6732,6 +6777,7 @@ const TIPS=[
     ['쉬는 날에만 하는 일','스티커 고치기 → 얼마나 → 근무 맞춤.','stk-board'],
     ['학원 · 동아리 · 운동 날씨까지','스티커 고치기 맨 아래 🎒 학원 · 취미 · 동아리 → 활동 시간 · 위치. 끝나면 자동 완료돼요.','stk-board'],
     ['반복 스티커를 그만하고 싶어요','그만두는 날의 스티커 창 → "그만하기". 지난 기록은 남아요.','tab:cal'],
+    ['스티커가 왜 안 붙지?','하루 4개까지 · 반복 조건 · 근무와 겹치는 활동 · 그만하기 한 뒤 날짜는 안 보여요.','stk-board'],
     ['아이 얼굴로 스티커 만들기','스티커 고르기 → 내 것 → ＋ 사진.','stk-board'],
     ['그날 기분 남기기','스티커 고르기 → 기분 탭 (😄 · 😌 · 😫 · 😢 …). 한 달 통계로 기분을 돌아봐요.','stk-board'],
     ['아이 약 · 준비물 챙기기','아이 달력 날짜 창 → 스티커 ＋ → 아이 · 육아 탭. 하루 몇 번 · 일정 맞춤(유치원 가는 날만) · 알림도 내 스티커처럼.','tab:fam']]],
@@ -6805,6 +6851,78 @@ const TIPD={
     ['<b>📩 근무 변경 요청</b>에서 원하는 근무(예: 휴무)를 고르고 한 마디 적어 <b>요청 보내기</b>.'],
     ['받는 사람은 소식에서 <b>수락 · 보류 · 거절</b>. 수락하면 달력에 바로 반영되고, 소식 › 근무 기록에 남아요.']]}
 };
+// v0.136 나머지 자세히 (단계가 여러 개인 것만 · 한두 번 누르면 끝나는 것은 한 줄 그대로)
+Object.assign(TIPD,{
+  '스티커가 왜 안 붙지?':{w:'반복으로 깔았는데 어떤 날엔 스티커가 안 보일 때. 아래 중 하나예요 (흔한 순서).',s:[
+    ['<b>하루 4개까지만</b> 보여요. 설정 › 스티커에서 순서를 바꾸면 먼저 보일 것을 정해요. 새로 깔 때 넘치면 "4개를 넘어요" 창이 떠요.'],
+    ['<b>같은 그림 스티커</b>가 그 날 따로 있으면 겹쳐요. 새로 깔 때 "이미 있어요" 창에서 어느 쪽을 보일지 골라요.'],
+    ['<b>반복 조건</b>에 안 맞는 날: 근무 맞춤(고른 근무만) · 요일 · 공휴일 빼기 · 토 · 일 빼기. 스티커 고치기에서 확인해요.'],
+    ['<b>학원 · 동아리 활동 시간</b>이 그 날 근무와 겹치면 빠져요.'],
+    ['<b>그만하기</b>를 누른 뒤의 날짜 · <b>이 날만 빼기</b> 한 날은 안 깔려요. 다시 쓰려면 스티커 고치기에서 반복을 다시 켜요.']]},
+  '조가 바뀌었어요 · 회사가 바뀌었어요':{w:'다음 달부터 B조 → C조로 바뀌거나 회사를 옮겨 근무 순서가 달라질 때. 지난 근무표와 통계는 그대로 두고 그 날부터만 바꿔요.',s:[
+    ['설정 › <b>근무 패턴</b>을 열어요.','t11_a'],
+    ['새 순서로 패턴을 고르거나 만들고, <b>1번째 칸 시작 날</b>을 바뀌는 날로 정해요.'],
+    ['물어보면 <b>이 날부터 새 패턴 (이전은 그대로)</b>을 눌러요. 그 전 날짜는 예전 근무 그대로 남아요.']]},
+  '근무표가 불규칙해요':{w:'매달 근무표가 따로 나와서 정해진 순서가 없을 때.',s:[
+    ['설정 › 근무 패턴에서 <b>불규칙</b>으로 바꿔요.'],
+    ['달력 날짜 → 근무타입 줄 <b>🖌 여러 날 칠하기</b>로 한 달 근무를 쭉 칠해요.'],
+    ['다음 달 근무표가 나오면 같은 방법으로 칠해요. 가족 폰에도 바로 가요.']]},
+  '휴직 · 퇴사로 근무 없이 쓰고 싶어요':{w:'육아휴직 · 퇴사로 한동안 근무가 없을 때. 근무표는 지우지 않고 숨겨 두기만 해요.',s:[
+    ['설정 › 근무 패턴 → <b>📒 개인 캘린더로 쓰기</b>.','t13_a'],
+    ['기간을 정하면 그 동안 달력 · 위젯에서 근무 표시가 빠지고 메모 · 스티커만 보여요.'],
+    ['복직하면 같은 곳에서 끄면 근무표가 그대로 돌아와요.']]},
+  '매달 1일 · 말일 할 일 미리 띄우기':{w:'"매달 말일 카드값 확인" · "1일 관리비"처럼 매달 같은 날 할 일.',s:[
+    ['달력에서 그 날짜를 누르고 메모 줄 <b>자세히 ›</b>를 눌러요.'],
+    ['<b>🔁 반복</b> → 매달 1일 · 말일 · 말일 하루 전 중에서 골라요.'],
+    ['근무 조건도 붙일 수 있어요: "주간인 날만", 아니면 "다음 근무 날로" 미루기.']]},
+  '근무 인수인계 적기':{w:'인수 · 인계 · 지시 사항을 날짜마다 따로 남기고 나중에 찾아보고 싶을 때.',s:[
+    ['설정 › <b>부가 기능</b> → 업무 메모 칸의 스위치를 켜요.'],
+    ['날짜 창에 업무 메모 줄이 생겨요. 인수 · 인계 · 지시를 색으로 나눠 적어요.'],
+    ['지난 것은 설정 맨 위 🔍 찾기에서 글자로 찾아요.']]},
+  '아이 등하교 · 학원 날씨':{w:'아이 하교 시간에 비가 오는지, 학원 끝날 때 추운지 미리 알고 싶을 때.',pre:'먼저: 가족 탭에 아이를 추가하고, 부가 기능에서 날씨를 켜요.',s:[
+    ['가족 탭에서 아이 달력 → 날짜 창 <b>⚙️ 일정 패턴</b>.'],
+    ['일정 종류(유치원 · 학교)마다 시간과 <b>📍 위치</b>를 넣어요.'],
+    ['학원은 아이 달력 스티커를 고쳐 <b>🎒 활동</b> 시간 · 위치를 넣어요. 날씨 팝업에 그 시간 칸이 생겨요.']]},
+  '아침 알람 끄고 바로 날씨 보기':{w:'알람을 끄자마자 오늘 출근 · 퇴근 날씨와 우산이 필요한지 보고 싶을 때.',pre:'먼저: 부가 기능에서 날씨를 켜고 집 · 직장 동네를 정해요.',s:[
+    ['알람 탭에서 알람 카드를 눌러 고쳐요.'],
+    ['<b>☔ 날씨</b> 스위치를 켜요.'],
+    ['다음부터 알람을 끄면 날씨 카드가 바로 떠요.']]},
+  '알람 없이 출근 전 날씨만':{w:'소리 나는 알람은 필요 없고, 출근 전에 날씨 알림만 받고 싶을 때.',s:[
+    ['알람 탭 ＋ (또는 알람 고치기)에서 시각을 정해요.'],
+    ['<b>날씨만</b>으로 두면 울리지 않고 그 시각에 날씨 알림만 와요.'],
+    ['알림을 누르면 오늘 날씨가 열려요.']]},
+  '아이 · 가족 일정 같이 보기':{w:'앱을 안 쓰는 아이 · 부모님 일정도 내 폰에서 같이 보고 싶을 때.',s:[
+    ['<b>가족</b> 탭 → <b>＋ 가족 추가</b>.'],
+    ['학교 · 회사 · 교대 중에서 고르고 시간 · 쉬는 날을 정해요.'],
+    ['가족 탭 카드와 그 사람 달력에서 일정 · 스티커 · 메모를 봐요. 같이 쉬는 날도 계산돼요.']]},
+  '유치원에서 학교 가요':{w:'3월부터 유치원 → 초등학교처럼 일정이 통째로 바뀔 때. 그 전 날짜는 예전 그대로 둬요.',s:[
+    ['아이 달력 날짜 창 → <b>⚙️ 일정 패턴</b>.'],
+    ['<b>📅 이 날부터 새 일정</b>을 누르고 바뀌는 날을 정해요.'],
+    ['새 일정 종류 · 시간을 넣어요. 그 전 날짜는 유치원 일정 그대로 남아요.']]},
+  '폰을 바꿔도 가족방 그대로':{w:'방장(근무표를 보내는 사람)이 폰을 바꿀 때 가족방이 끊기지 않게.',s:[
+    ['방장 폰에서 가족 연결 화면 → <b>구글 계정 연결</b>을 해 둬요.'],
+    ['새 폰에 앱을 깔고 같은 구글 계정으로 연결하면 가족방이 이어져요.'],
+    ['가족 쪽 폰은 아무것도 안 해도 돼요.']]},
+  '가족이 다 같이 쉬는 날 찾기':{w:'가족 여행 · 외식 날을 잡을 때 모두 쉬는 날을 한눈에.',s:[
+    ['설정 › 부가 기능 → <b>같이 쉬는 날</b>을 켜요.'],
+    ['가족 탭 · 가족 달력에 모두 쉬는 날이 노란 띠로 보여요.'],
+    ['날짜를 누르면 누가 쉬는지 한 줄로 나와요.']]},
+  '이번 달 월급이 얼마일지':{w:'야간 · 연장 · 휴일 근무가 많은 달, 이번 달 월급이 얼마쯤일지 미리 보고 싶을 때.',s:[
+    ['설정 › 부가 기능 → <b>근무 통계 · 수당</b>을 켜요.'],
+    ['고정금(기본급 등)을 넣고, 지난 달 명세서 한 장으로 연장 · 야간 1시간 금액을 맞춰요.'],
+    ['근무 통계에서 이번 달 예상 금액을 봐요. ⏱ 연장을 남기면 바로 더해져요.']]},
+  '홈 화면에서 근무 바로 보기':{w:'앱을 안 열고 홈 화면에서 오늘 · 이번 달 근무를 보고 싶을 때.',s:[
+    ['폰 홈 화면 빈 곳을 꾹 눌러 <b>위젯</b> → 언제쉬어를 골라요.'],
+    ['1칸 · 2칸 · 7일 · 한 달 중에서 골라 놓아요.'],
+    ['모양 · 투명도는 설정 › 위젯에서 바꿔요.','t15_a']]},
+  '폰을 바꿔도 데이터 지키기':{w:'폰을 바꾸거나 앱을 지웠다 깔아도 근무 · 메모 · 스티커를 그대로.',s:[
+    ['설정 › <b>백업</b>을 열어요.'],
+    ['<b>구글 드라이브</b>를 연결하면 자동으로 백업돼요.'],
+    ['새 폰에서 같은 계정으로 연결하고 복원을 눌러요.']]},
+  '실수로 옛날 백업을 복원했어요':{w:'복원을 잘못 눌러 요즘 적은 것이 사라졌을 때.',s:[
+    ['설정 › <b>백업</b>을 열어요.'],
+    ['<b>복원 직전 상태로 되돌리기</b>를 눌러요. 복원하기 바로 전 모습으로 돌아가요.']]}
+});
 function tipDetail(q){const D=TIPD[q];if(!D)return '';
   return `<div class="tdw"><b>이럴 때</b>${D.w}</div>${D.pre?`<div class="tdp">${D.pre}</div>`:''}<ol class="tds">${D.s.map(([t,im])=>`<li>${t}${im?`<img src="tips/${im}.webp" alt="" loading="lazy" onerror="this.remove()">`:''}</li>`).join('')}</ol>`;}
 function openTipsPage(){
@@ -7541,7 +7659,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout
 window.__wx={manPlanned,visibleMemos,famLbl,famTypeAt,famWx,shiftOf,wxMyWin,openStampReg,actAuto,stampPlanned,myActs,manPlanned,famActNow,wxMine,get S(){return S;},get page(){return {pageMode,pageBack};},openDay,closeSheet,closePop,closePage,openAddonPage,render,save,pushAlarmsToNative,pushRemindersToNative,famCleanSched,famPayload,
   newAlarm:o=>{draft=Object.assign(newAlarm(),o||{});alSnd=false;openAlarmPage();},wxOn,wxRaw,wxFam,wxMemWin,wxMemWork,wxMemKey,wxOpenFam,wxOpenDay,wxChipIcon,
   openPatternPage,openStatsPage,openSlipPage:ym=>{slipYM=ym;openSlipPage();},statsCalc,payRates,dayHours,famTimesPayload,memberStatus,otOpen,get stYM(){return stYM;},set stYM(v){stYM=v;}};
-Object.assign(window.__wx,{openFeed,coachCheck,pushWidgetNow:()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
+Object.assign(window.__wx,{stampsOn,openFeed,coachCheck,pushWidgetNow:()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
 
 /* ================= 부가 기능 (설정 › 부가 기능) =================
  * 기본은 모두 꺼짐. 꺼도 저장된 내용은 그대로이고, 켜면 그 자리에 바로 생겨요. */
@@ -8668,7 +8786,33 @@ function refreshHolidays(force){
 /* ================= 이벤트 처리 ================= */
 // 흐린(이웃 달) 칸을 눌렀을 때 어느 쪽 달로 갈지: 앞달 -1 · 다음달 +1
 const monthDirOf=(k,y,m)=>{const d=parse(k);return (d.getFullYear()*12+d.getMonth())>(y*12+m)?1:-1;};
+// v0.136 달 넘김을 "페이지 넘기기"처럼: 옆 판은 이미 그려져 있으니 판을 옮기기만 하고, 새로 필요한 맨 끝 판 하나만 만든다
+// (전에는 넘길 때마다 세 판을 다 다시 그리고 새 달 스티커 크기를 그때 재서 느린 폰에서 1초 가까이 멈춤 → 그 사이 손가락이 씹힘)
+var calKeep=false,calFarT=0,calPreT=0;
+function calShiftFast(n){
+  const tr=$('#track');
+  if(!tr||tab!=='cal'||Math.abs(n)!==1||S.stzMode==='3'||paint||(famView()&&famPeers().length)||tr.children.length!==3)return false;
+  const mk=cur.y*12+cur.m,v=mk+n;if(v<MIN_M||v>MAX_M)return false;
+  const P=[...tr.children],nb=n>0?P[2]:P[0];if(!nb.firstElementChild)return false;
+  const far=n>0?P[0]:P[2];
+  if(n>0)tr.appendChild(far);else tr.insertBefore(far,tr.firstChild);
+  tr.style.transition='none';tr.style.transform='translateX(-33.3333%)';
+  cur={y:Math.floor(v/12),m:v%12};
+  const fm=v+n;far.style.removeProperty('--stz');
+  try{const ll=lastLines;far.innerHTML=fm>=MIN_M&&fm<=MAX_M?calPanel(Math.floor(fm/12),fm%12):'';lastLines=ll;}catch(e){far.innerHTML='';}
+  clearTimeout(calFarT);calFarT=setTimeout(()=>{try{if(far.isConnected&&far.firstElementChild){stzPanel(far,fm);fitDn(far,true);memoShift(far);}}catch(e){}},60);   // 스티커 크기 · 칸 맞추기는 잠깐 뒤 (보이지 않는 판)
+  calKeep=true;return true;
+}
+// 쉬는 동안 앞뒤 2달 스티커 크기를 미리 재 둠 (폰에 저장 · 넘길 때 다시 안 잼)
+function calPrefetch(){
+  clearTimeout(calPreT);if(S.stzMode==='3')return;
+  const mk0=cur.y*12+cur.m,q=[mk0+1,mk0-1,mk0+2,mk0-2].filter(v=>v>=MIN_M&&v<=MAX_M);   // 한 번에 한 달씩 (손가락이 오면 바로 받게)
+  const step=()=>{calPreT=setTimeout(()=>{const go=()=>{try{if(tab!=='cal'||busy||sx!==null||document.hidden||cur.y*12+cur.m!==mk0)return;const v=q.shift();if(v==null)return;stzMonth(v);if(q.length)step();}catch(e){}};
+    if(window.requestIdleCallback)requestIdleCallback(go,{timeout:3000});else go();},q.length===4?1200:150);};
+  step();
+}
 function shiftMonth(n){
+  if(calShiftFast(n)){render();if(pageMode==='stats')openStatsPage();if(todayQ)setTimeout(todayGo,0);return;}
   const v=Math.min(MAX_M,Math.max(MIN_M,cur.y*12+cur.m+n));
   cur={y:Math.floor(v/12),m:v%12};render();
   if(pageMode==='stats')openStatsPage();
@@ -9284,7 +9428,9 @@ document.addEventListener('click',e=>{
     case 'ms-actr':{mstkPull();const d=msDraft;actPickRegion(code=>{if(msDraft!==d)return;d.act=Object.assign({s:'',e:'',days:[]},d.act||{},{r:code||''});renderManStkEdit();});break;}
     case 'sr-more':{if(typeof srPull==='function')srPull();if(stDraft){stDraft.more=!stDraft.more;renderStampReg();}break;}
     case 'sr-save':afterCompose('#srName',stampRegSave);break;
-    case 'sh-undo':{if(hidSnap){S.stamps=JSON.parse(hidSnap);hidSnap=null;save();render();if(pageMode==='stamps')openStampPage();}closePop();toast('등록을 취소했어요');break;}
+    case 'clash-show':stClashDo('show');break;
+    case 'clash-skip':stClashDo('skip');break;
+    case 'sh-undo':{clashCtx=null;if(hidSnap){S.stamps=JSON.parse(hidSnap);hidSnap=null;save();render();if(pageMode==='stamps')openStampPage();}closePop();toast('등록을 취소했어요');break;}
     case 'more-status':openStatusPage();break;
     case 'st-show-on':openCfm({type:'status'});break;
     case 'tt-tab':timesTab=t.dataset.k;openTimesPage();break;
@@ -9590,11 +9736,21 @@ window.addEventListener('resize',()=>{
 });
 
 /* 스와이프 */
-let sx=null,sy=0,dx=0,lock=null,st=0;
+let sx=null,sy=0,dx=0,lock=null,st=0,swBase=0,calPend=null;
 const V=$('#view');
+// v0.136 넘어가는 중(0.25초)에 또 밀면 버리지 않음: 지금 넘김을 바로 끝내고(보이는 자리 그대로) 새 손가락을 이어서 따라감
+function calFlush(){if(!calPend)return 0;clearTimeout(calPend.t);const d=calPend.dir;calPend=null;busy=false;shiftMonth(d);return d;}
 V.addEventListener('touchstart',e=>{
   if(paint){sx=null;return;}
-  if((tab!=='cal'&&tab!=='colleague')||busy||$('#sheet').classList.contains('open')){sx=null;return;}
+  if((tab!=='cal'&&tab!=='colleague')||$('#sheet').classList.contains('open')){sx=null;return;}
+  swBase=0;
+  if(busy){
+    const tr=$('#track');if(!calPend||!tr||tab!=='cal'){sx=null;return;}
+    let x0=0;try{x0=new DOMMatrixReadOnly(getComputedStyle(tr).transform).m41;}catch(err){}
+    const W=V.clientWidth,d=calFlush(),tr2=$('#track');
+    swBase=x0+d*W+W;if(Math.abs(swBase)>W)swBase=0;
+    if(tr2){tr2.style.transition='none';tr2.style.transform=`translateX(calc(-33.3333% + ${swBase}px))`;}
+  }
   sx=e.touches[0].clientX;sy=e.touches[0].clientY;dx=0;lock=null;st=Date.now();
 },{passive:true});
 V.addEventListener('touchmove',e=>{
@@ -9611,20 +9767,20 @@ V.addEventListener('touchmove',e=>{
   dx=((x>0&&mk<=MIN_M)||(x<0&&mk>=MAX_M))?x*0.25:x;
   const tr=$('#track');if(!tr)return;
   tr.style.transition='none';
-  tr.style.transform=`translateX(calc(-33.3333% + ${dx}px))`;
+  tr.style.transform=`translateX(calc(-33.3333% + ${swBase+dx}px))`;
 },{passive:false});
 V.addEventListener('touchend',()=>{
   if(sx===null||lock!=='x'){sx=null;return;}
   sx=null;
-  const w=V.clientWidth,fast=Math.abs(dx)/(Date.now()-st+1)>0.5;
+  const w=V.clientWidth,fast=Math.abs(dx)/(Date.now()-st+1)>0.5,px=swBase+dx;swBase=0;
   const mk=cur.y*12+cur.m;
-  let dir=(Math.abs(dx)>w*0.22||(fast&&Math.abs(dx)>30))?(dx<0?1:-1):0;
+  let dir=(Math.abs(px)>w*0.22||(fast&&Math.abs(dx)>30))?((fast&&Math.abs(dx)>30?dx:px)<0?1:-1):0;
   if(mk+dir<MIN_M||mk+dir>MAX_M)dir=0;
   if(tab==='colleague'){if(dir)shiftMonth(dir);return;}
   const tr=$('#track');if(!tr)return;
   tr.style.transition='transform .24s ease';
   tr.style.transform=`translateX(${dir>0?'-66.6667%':dir<0?'0%':'-33.3333%'})`;
-  if(dir){busy=true;setTimeout(()=>{busy=false;shiftMonth(dir);},250);}
+  if(dir){busy=true;calPend={dir,t:setTimeout(calFlush,250)};}
 },{passive:true});
 
 /* ================= 화면 공유 · 파일 백업 ================= */
