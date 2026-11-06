@@ -317,3 +317,12 @@
 - wxRestCards(cs,c,rs): 내 날씨 팝업(wxDayPopHtml)에서 근무 · 활동 없는 날이면 rs={today,raw,md} → 두 칸 자리 그대로 왼쪽 "지금 오전 10시"(WX.at 지금 기온 · 체감 WX.feel · WX.desc) / 다른 날 "하루 n월 n일"(그날 날씨 글) · 오른쪽 "오늘(하루) 요약 최저 · 최고"(lo / hi · 비 % · 일교차). 옷 · 챙길 것은 원래 칸(cs) 기준 그대로. card() 에 big(글자) 추가. 지난 날(wxHistPop) · 가족 팝업은 그대로.
 - 모양 조정(openTunePage): 위젯 상태 줄 → 맨 아래 접힌 "문제 찾기 정보" · 달력 모양 · 오늘 표시 빠짐(설정 › 화면: "오늘 표시" 한 줄에 색 + 모양 칩) · 묶음 details(tng_*) 지금 화면만 펼침(다시 그릴 때 펼친 것 유지) · 스티커 크기(왜 작아졌나) 접힘 · 미리보기 주 ▲ ▼(tnWeek · 처음은 메모 많은 주) · 미리보기 칸 높이 = 실제 달력 칸(tnCellH · 열기 전에 잼 · 전엔 칸이 390px 로 늘어나 140px 틀에 잘림).
 - 시험: s90 (13) · s60 s61 s71 s84 s86 바뀐 화면에 맞춤.
+
+## v0.142 — 날씨만 알림 소리(알람마다) · 알람 5분 전 "이번만 끄기" · 날짜 창 쉬는 날 날씨 · 유찬 · 가족 달력도 가로 스크롤
+- 날씨만 알림: 채널은 그대로 소리 없음 · Reminders.playOnce 가 알람마다 고른 소리(tone · 없으면 폰 기본 알림음)를 한 번만(6초까지 · 무음/진동 모드면 안 틈). JS 가 wx 알림에 snd · tone 실어 보냄. 알람 고치기(날씨만) = "🔔 알림 소리 [소리 · 무음]" + "소리 고르기"(dtone 그대로).
+- 5분 전 알림: setAlarms 목록에 pre(반복 · a.pre5!==false · 건너뛴 시각 아님). AlarmScheduler.schedulePre(scheduleNext 끝에서) = 가장 가까운 pre 알람 5분 전에 PreAlarmReceiver(새 파일 · 매니페스트) → 소리 없는 알림(IMPORTANCE_LOW · setTimeoutAfter 알람 시각) [이번만 끄기] → skipOne(목록에서 빼고 KEY_SKIP 에 적음 · 토스트) · 알람이 울리면 PreAlarmReceiver.cancel. 앱: takeSkips 브리지 → alarmTakeSkips(pushAlarmsToNative 앞 · 화면 다시 보일 때) = 그 알람 skipAt. 알람 고치기에 "⏰ 5분 전 알림" 스위치(기본 켜짐 · 반복 알람만).
+- 날짜 창 작은 날씨 카드 wxRestMini: 쉬는 날 오늘 = "지금 n°" 한 칸 · 다른 날 = 그날 그림 + "lo°~hi°"(cell 에 tt). 근무 날 그대로.
+- 가족 · 유찬 달력: vcTrack(gridFn, cls) = .vctr 가로 스크롤(scroll-snap) · 지금 달 판만 id="vcsl"(기존 '#vcsl …' 선택자 그대로) · 앞뒤 3달(±1 은 바로 · 나머지는 vcFillFar · 다가오면 바로) · vcSettle(멈추면 vcY/vcM 바꾸고 vcRerender) · 넘기는 중 위 월 숫자 · 칠하기 · 여러 날 고르기 중엔 .lock(가로 스크롤 끔 · 옛 손가락 처리). 옛 #vcsl touch 처리는 .vctr 안에선 안 씀.
+- 유찬(man) · 가족(vc) 날짜 창: swAdoptFam = swAdoptDay 처럼 옆 판 그대로(manDayK · rqD · 달 바뀌면 뒤 달력만 다시).
+- 가족 날씨 팝업(famWxPopHtml) · "나 · 오늘" 팝업도 쉬는 날이면 wxRestCards.
+- 시험: s91 (15) · s71.

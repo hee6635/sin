@@ -83,6 +83,11 @@
             android:name=".ReminderReceiver"
             android:exported="false" />
 
+        <!-- v0.142 알람 5분 전 "알람 끌까요?" -->
+        <receiver
+            android:name=".PreAlarmReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".BootReceiver"
             android:directBootAware="true"

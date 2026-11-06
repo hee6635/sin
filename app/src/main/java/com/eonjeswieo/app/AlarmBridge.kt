@@ -257,6 +257,10 @@ class AlarmBridge(private val activity: MainActivity) {
         AlarmScheduler.saveList(context, json)
     }
 
+    /** v0.142 5분 전 알림에서 "이번만 끄기" 한 알람들 [{id, at}] (가져가면 비움) */
+    @JavascriptInterface
+    fun takeSkips(): String = AlarmScheduler.takeSkips(context)
+
     /** 반복 알람이 켜져 있는지: 켜져 있으면 목록이 끝나기 한 주 전에 "앱을 열어 주세요" 알림을 예약 */
     @JavascriptInterface
     fun setAlarmsCont(cont: Boolean) {

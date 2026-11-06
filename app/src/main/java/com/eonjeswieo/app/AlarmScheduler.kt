@@ -72,6 +72,8 @@ object AlarmScheduler {
     private const val KEY_CONT = "cont"          // 반복 알람이 켜져 있어서 목록 끝 뒤로도 알람이 이어져야 하는지
     private const val REQ_NEXT = 4242
     private const val REQ_TAIL = 4243
+    private const val REQ_PRE = 4244
+    private const val KEY_SKIP = "skips"      // v0.142 5분 전 알림에서 "이번만 끄기" 한 알람 (앱이 다음에 열릴 때 가져감)
     private var migrated = false
 
     /**
@@ -221,7 +223,62 @@ object AlarmScheduler {
         } catch (e: SecurityException) {
             // 정확한 알람 권한이 없는 상태 → 앱 화면의 안내 배너에서 설정을 열 수 있다
         }
+        schedulePre(ctx)
     }
+
+    // ── v0.142 알람 5분 전 "알람 끌까요?" (소리 없는 알림 · 알람 시각에 저절로 사라짐) ──
+    private fun prePending(ctx: Context, id: String, at: Long): PendingIntent =
+        PendingIntent.getBroadcast(
+            ctx, REQ_PRE, Intent(ctx, PreAlarmReceiver::class.java).putExtra("id", id).putExtra(EXTRA_AT, at),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+    /** 앱이 pre=1 로 보낸 알람(반복 알람) 중 5분 전 시각이 아직 안 지난 가장 가까운 것 하나를 예약 */
+    fun schedulePre(ctx: Context) {
+        val am = manager(ctx)
+        am.cancel(prePending(ctx, "", 0L))
+        val now = System.currentTimeMillis()
+        var bestId = ""
+        var bestAt = Long.MAX_VALUE
+        try {
+            val arr = JSONArray(prefs(ctx).getString(KEY, null) ?: return)
+            for (i in 0 until arr.length()) {
+                val o = arr.optJSONObject(i) ?: continue
+                val at = o.optLong("at")
+                if (o.optInt("pre", 0) == 1 && at - 300_000L > now + 2_000L && at < bestAt) { bestAt = at; bestId = o.optString("id") }
+            }
+        } catch (e: Exception) { return }
+        if (bestId.isEmpty()) return
+        val pi = prePending(ctx, bestId, bestAt)
+        try {
+            if (canScheduleExact(ctx)) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, bestAt - 300_000L, pi)
+            else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, bestAt - 300_000L, pi)
+        } catch (e: Exception) {
+        }
+    }
+
+    /** 목록에서 그 알람 찾기 (5분 전 알림 글자용) */
+    fun ringOf(ctx: Context, id: String): Ring? = readKey(ctx, KEY).firstOrNull { it.id == id }
+
+    /** "이번만 끄기": 그 알람 한 번만 목록에서 빼고 다음 알람 예약 · 앱이 다음에 열리면 같은 알람에 "건너뜀"을 적음 */
+    fun skipOne(ctx: Context, id: String, at: Long) {
+        writeKey(ctx, KEY, readKey(ctx, KEY).filter { it.id != id })
+        try {
+            val arr = JSONArray(prefs(ctx).getString(KEY_SKIP, null) ?: "[]")
+            arr.put(org.json.JSONObject().put("id", id).put("at", at))
+            prefs(ctx).edit().putString(KEY_SKIP, arr.toString()).apply()
+        } catch (e: Exception) {
+        }
+        scheduleNext(ctx)
+    }
+
+    /** 앱이 가져감: 5분 전 알림에서 끈 알람들 (가져가면 비움) */
+    fun takeSkips(ctx: Context): String {
+        val s = prefs(ctx).getString(KEY_SKIP, null) ?: return "[]"
+        prefs(ctx).edit().remove(KEY_SKIP).apply()
+        return s
+    }
+
 
     /** 지금 울릴 알람(같은 시각 ±1분 묶음)을 목록은 그대로 둔 채 확인만 (서비스를 띄운 뒤에 consumeDue 로 지움) */
     fun peekDue(ctx: Context, at: Long): List<Ring> {

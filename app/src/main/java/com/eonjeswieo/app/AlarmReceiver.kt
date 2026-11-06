@@ -16,6 +16,7 @@ class AlarmReceiver : BroadcastReceiver() {
             return
         }
 
+        PreAlarmReceiver.cancel(context)   // v0.142 5분 전 알림은 알람이 울리면 사라짐
         val ring = AlarmScheduler.merge(due, at)
         var started = false
         try {

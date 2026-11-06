@@ -64,7 +64,7 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
     T('큰 팝업: 미세먼지 (예보 보통 · 얼굴 · 누르면 큰 화면)',/미세먼지 보통/.test(pop)&&await p.evaluate(()=>!!document.querySelector('#pop .wxrw.dz[data-act="wx-dust"] img[src="wx/faces/3.webp"]')),pop);
     await p.evaluate(()=>{__wx.closePop();__wx.openDay('2026-10-12');});await p.waitForTimeout(300);
     const l2=await p.evaluate(()=>document.getElementById('wxDay').textContent);
-    T('쉬는 날(오늘): 날씨 카드 "맑은 날이에요" · 오전 · 오후 10°',/맑은 날이에요/.test(l2)&&/오전\s*10°/.test(l2)&&/오후\s*10°/.test(l2),l2);
+    T('쉬는 날(오늘): 날씨 카드 "맑은 날이에요" · 지금 10° 한 칸 (v0.142)',/맑은 날이에요/.test(l2)&&/지금\s*10°/.test(l2)&&!/오전/.test(l2),l2);
     await p.click('#wxDay');await p.waitForTimeout(200);
     const pop2=await p.evaluate(()=>document.querySelector('#pop').innerText);
     T('오늘 팝업: 미세먼지 지금 값 8단계 (보통) + 마스크 안내',/미세먼지 보통/.test(pop2)&&/민감하면 마스크/.test(pop2),pop2);

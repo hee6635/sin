@@ -148,7 +148,32 @@ object Reminders {
             nb.addAction(Notification.Action.Builder(null, "앱 열기", PendingIntent.getActivity(ctx, (o.optString("id") + "a").hashCode(), appGo, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)).build())
             val n = nb.build()
             nm.notify("wx".hashCode(), n)   // 날씨 알림은 하나만 (새 것이 옛 것을 바꿈)
+            if (o.optInt("snd", 1) == 1) playOnce(ctx, o.optString("tone", ""))   // v0.142 알람마다 고른 소리 한 번 (알림 자체는 소리 없는 채널)
         } catch (e: Exception) {
+        }
+    }
+
+    /** v0.142 날씨만 알람: 고른 소리(없으면 폰 기본 알림음)를 한 번만 · 무음 · 진동 모드면 안 틈 · 길면 6초에서 끊음 */
+    private fun playOnce(ctx: Context, tone: String) {
+        var mp: android.media.MediaPlayer? = null
+        try {
+            val am = ctx.getSystemService(android.media.AudioManager::class.java)
+            if (am != null && am.ringerMode != android.media.AudioManager.RINGER_MODE_NORMAL) return
+            val uri = (if (tone.isNotEmpty()) try { android.net.Uri.parse(tone) } catch (e: Exception) { null } else null)
+                ?: android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION) ?: return
+            mp = android.media.MediaPlayer()
+            mp.setAudioAttributes(android.media.AudioAttributes.Builder()
+                .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
+            mp.setDataSource(ctx, uri)
+            mp.prepare()
+            mp.start()
+            val t0 = System.currentTimeMillis()
+            while (mp.isPlaying && System.currentTimeMillis() - t0 < 6000) Thread.sleep(100)
+        } catch (e: Exception) {
+        } finally {
+            try { mp?.stop() } catch (e: Exception) {}
+            try { mp?.release() } catch (e: Exception) {}
         }
     }
 

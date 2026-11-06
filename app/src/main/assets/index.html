@@ -168,7 +168,8 @@ button{border:0;background:none;padding:0;cursor:pointer}
 @media (prefers-reduced-motion:reduce){#ban{transition:none}}
 .cell[class*="rq-"] .bwrap .badge.r{border-radius:50%}
 .rq-grid{grid-template-columns:repeat(3,1fr) !important}
-.vcsl{flex:1;display:flex;flex-direction:column;min-height:0;touch-action:pan-y;will-change:transform}
+.vcsl{flex:1;display:flex;flex-direction:column;min-height:0}
+.vctr{flex:1;display:flex;min-height:0;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none}.vctr::-webkit-scrollbar{display:none}.vctr>.vcsl{flex:0 0 100%;width:100%;scroll-snap-align:start;scroll-snap-stop:always}.vctr.lock{overflow-x:hidden}
 .vcsl.sel{touch-action:none;user-select:none}
 .vcchips .grow{flex:1}
 .vcsl .calwrap{flex:1;height:auto;min-height:0}
@@ -1636,7 +1637,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .tips ol.tds li{counter-increment:s;position:relative;padding:0 0 0 30px;margin:0 0 12px;font-size:14px;line-height:1.55}
 .tips ol.tds li::before{content:counter(s);position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;background:var(--fg);color:var(--bg);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .tips ol.tds li img{display:block;width:100%;margin-top:8px;border-radius:12px;border:1px solid var(--line)}
-#vcsl{touch-action:pan-y}   /* v0.138 가족 달력 옆으로 밀기는 앱이 (폰 스크롤이 가로를 안 가져감) */
+
 .wxp .wxc .s b.big{font-size:30px;white-space:nowrap}   /* v0.141 쉬는 날 오른쪽 "4° / 15°" · 다른 날 왼쪽 날씨 글 */
 .prow.pcol{flex-direction:column;align-items:stretch;gap:6px}.prow.pcol .tdc-row{padding-left:46px;flex-wrap:wrap}.prow.pcol .chips{padding-left:46px;flex-wrap:wrap;justify-content:flex-start}
 /* v0.141 모양 조정 정리 */
@@ -2719,6 +2720,7 @@ function alarmMsg(x){
   }catch(e){return '';}
 }
 function pushAlarmsToNative(){
+  try{alarmTakeSkips();}catch(e){}
   try{
     if(window.AndroidBridge&&typeof window.AndroidBridge.setAlarms==='function'){
       // col · ico: 끄기 화면을 근무 색으로(주간 하늘 · 야간 살구 …) · 이름 앞 ☀️/🌙. 매일 알람은 빈 값(라벤더)
@@ -2728,7 +2730,7 @@ function pushAlarmsToNative(){
         return {col:colOf[x.sh],ico:ty.color==='v:night'||h>=15||h<3?'🌙':'☀️'};};
       const wxq=x=>{if(x.a.wx===false)return {};const w=wxAlarmQ(x);return w?{wx:1,wxq:w.q,wxp:w.p}:{};};
       const list=buildSchedule(180).filter(x=>!x.a.wxOnly).map(x=>({...wxq(x),...(()=>{const m=alarmMsg(x);return m?{msg:m}:{};})(),id:`${x.a.id}_${fmt(x.d)}`,at:x.at.getTime(),label:x.a.label||'',shift:x.sh,shiftName:shiftLabel(x.sh),time:x.a.time,
-        sound:x.a.sound!==false,vib:x.a.vib!==false,vol:x.a.vol??100,ramp:!!x.a.ramp,tone:x.a.tone||'',snMin:x.a.snMin||5,snMax:x.a.snMax??3,...look(x)}));
+        sound:x.a.sound!==false,vib:x.a.vib!==false,vol:x.a.vol??100,ramp:!!x.a.ramp,tone:x.a.tone||'',snMin:x.a.snMin||5,snMax:x.a.snMax??3,...look(x),pre:!x.a.once&&x.a.pre5!==false&&x.at.getTime()!==x.a.skipAt?1:0}));   // pre: v0.142 5분 전 알림
       window.AndroidBridge.setAlarms(JSON.stringify(list));
       // 반복 알람이 켜져 있으면 폰이 "목록이 끝나기 한 주 전" 알림을 예약 (앱을 한 번도 안 열면 180일 뒤 알람이 끊기므로)
       if(typeof window.AndroidBridge.setAlarmsCont==='function')window.AndroidBridge.setAlarmsCont(S.alarms.some(a=>a.on&&!a.once));
@@ -2937,11 +2939,19 @@ function pushRemindersToNative(){
     }
     if(wxOn())buildSchedule(14).filter(x=>x.a.wxOnly).forEach(x=>{   // ☔ 날씨만 알람 = 조용한 알림 (폰이 그 시각에 새 예보를 받아 문구를 만듦 · 못 받으면 아래 예비 문구)
       const w=wxAlarmQ(x);if(!w)return;let c=null;try{c=w.p?JSON.parse(w.p):null;}catch(e){}
-      out.push({id:`w_${x.a.id}_${fmt(x.d)}`,date:fmt(x.d),at:x.at.getTime(),title:c?`${c.i} ${c.h}`:'☔ 오늘 출퇴근 날씨',text:c?[c.t,c.a].filter(Boolean).join(' · '):'눌러서 앱에서 확인해요',type:'wx',wxq:w.q,wxp:w.p});
+      out.push({id:`w_${x.a.id}_${fmt(x.d)}`,date:fmt(x.d),at:x.at.getTime(),title:c?`${c.i} ${c.h}`:'☔ 오늘 출퇴근 날씨',text:c?[c.t,c.a].filter(Boolean).join(' · '):'눌러서 앱에서 확인해요',type:'wx',wxq:w.q,wxp:w.p,snd:x.a.sound!==false?1:0,tone:x.a.tone||''});   // v0.142 알람마다 고른 소리 한 번
     });
     window.AndroidBridge.setReminders(JSON.stringify(out));
   }catch(e){}
 }
+// v0.142 폰의 "5분 전 알림"에서 [이번만 끄기] 한 알람: 그 알람에 건너뜀(skipAt)을 적음 → 다시 보내도 그 시각은 빠짐 · 카드에 "건너뜀 · 되돌리기"
+function alarmTakeSkips(){
+  if(!hasBridge('takeSkips'))return false;let L=[];try{L=JSON.parse(window.AndroidBridge.takeSkips()||'[]');}catch(e){return false;}
+  if(!Array.isArray(L)||!L.length)return false;let n=0;
+  L.forEach(x=>{const id=String(x&&x.id||''),i=id.lastIndexOf('_'),aid=i>0?id.slice(0,i):'',at=+x.at||0;const a=(S.alarms||[]).find(y=>y.id===aid);if(a&&at>0){a.skipAt=at;n++;}});
+  if(n){save();if(tab==='alarm')render();}return n>0;
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){try{if(alarmTakeSkips())pushAlarmsToNative();}catch(e){}}});
 // v0.135 근무 바뀐 기록 (각자 폰 · 3개월): 언제 · 누가 · 며칠 근무를 무엇에서 무엇으로 · 요청 / 보류 / 수락 / 거절
 function chLogAdd(e){const now=Date.now();S.chLog=(Array.isArray(S.chLog)?S.chLog:[]);S.chLog.unshift({t:now,...e});const lim=now-92*864e5;S.chLog=S.chLog.filter(x=>x&&x.t>=lim).slice(0,300);}
 let ovSnap=null;
@@ -5422,9 +5432,9 @@ function renderManCalPage(){
   const m=manMember();if(!m){closePage();return;}
   openPage(`${pageHead(esc(m.name)+' 달력')}<div class="pg-b" style="display:flex;flex-direction:column;padding:0">
     ${vcNavHtml()}
-    <div class="vcbox"><div id="vcsl" class="vcsl ${manPaint?'sel':''}">${manGrid(m)}</div></div>
+    <div class="vcbox">${vcTrack(()=>manGrid(m),`vcsl ${manPaint?'sel':''}`)}</div>
     ${manPaint?manBar(m):'<div class="hint" style="padding:8px 16px">메모 · 스티커는 이 폰에만 저장돼요</div>'}</div>`,'mancal');
-  applyTdc();fitDn($('#page'));vcEnter();glowCheck();
+  applyTdc();fitDn($('#page'));vcCenter();glowCheck();
 }
 let manDayK='',manFold=null,manHidAt=0;
 const manFoldOpen=()=>manFold===null?true:manFold;
@@ -6552,7 +6562,7 @@ const swEnd=e=>{
   st.cur.style.transition=SPRING;st.cur.style.transform=`translateX(${-st.dir*st.W}px)`;
   st.nb.style.transition=SPRING;st.nb.style.transform='translateX(0)';
   if(st.h1!=null){st.el.style.transition='height .26s ease';st.el.style.height=st.h1+'px';}
-  swLater(()=>{if(st.w==='wx'&&swAdoptWx(st))return;if(st.w==='day'&&swAdoptDay(st))return;swUnwrap(st);if(swGo(st.w,st.dir)&&(st.w==='day'||st.w==='vc')){const sh=$('#sheet');if(sh)sh.scrollTop=0;}},300);
+  swLater(()=>{if(st.w==='wx'&&swAdoptWx(st))return;if(st.w==='day'&&swAdoptDay(st))return;if((st.w==='man'||st.w==='vc')&&swAdoptFam(st))return;swUnwrap(st);if(swGo(st.w,st.dir)&&(st.w==='day'||st.w==='vc')){const sh=$('#sheet');if(sh)sh.scrollTop=0;}},300);
 };
 // v0.136 날짜 창도 날씨 팝업처럼: 넘긴 뒤 창 전체를 다시 그리지 않고, 밀면서 그려 둔 옆 날짜 판을 그대로 씀 (깜빡임 · 다시 그리는 시간 없음)
 function swAdoptDay(st){
@@ -6568,6 +6578,23 @@ function swAdoptDay(st){
     const mk=cur.y*12+cur.m,changed=dataRev!==r0;
     if(v!==mk){if(changed||!(Math.abs(v-mk)===1&&calShiftFast(v-mk)))cur={y:Math.floor(v/12),m:v%12};render();}else if(changed)render();
     markSel(k);el.scrollTop=0;dstripCenter();coachSoon();
+    return true;
+  }catch(e){return false;}
+}
+// v0.142 유찬(man) · 가족(vc) 날짜 창도 넘긴 뒤 그려 둔 옆 판 그대로 (달이 바뀌면 뒤의 달력만 새 달로)
+function swAdoptFam(st){
+  try{
+    const w=st.w,k=addK(swKey(w),st.dir),nb=st.nb,el=st.el;if(!nb||!okDate(k))return false;
+    const d=parse(k),v=d.getFullYear()*12+d.getMonth();if(v<MIN_M||v>MAX_M)return false;
+    let p=null;if(w==='vc'){p=famPeers().find(x=>x.uid===vcUid);if(!p)return false;}else if(!manMember())return false;
+    st.nb=null;if(st.cur){st.cur.remove();st.cur=null;}
+    el.style.position=st.prevPos||'';el.style.overflowX=st.prevOx||'';if(st.h0){el.style.height='';el.style.transition=st.prevTr||'';}
+    nb.classList.remove('swn');Object.assign(nb.style,{position:'relative',left:'',top:'',width:'',pointerEvents:'',transition:'',transform:'translateZ(0)'});
+    nb.querySelectorAll('[data-swid]').forEach(x=>{x.id=x.dataset.swid;delete x.dataset.swid;});
+    if(w==='man')manDayK=k;else if(rqD.k!==k||rqD.u!==p.uid)rqD={k,u:p.uid,want:((p.sch.types||[]).find(x=>x.rest)||{k:'휴'}).k};
+    if(d.getFullYear()!==vcY||d.getMonth()!==vcM){vcY=d.getFullYear();vcM=d.getMonth();if(w==='man')renderManCalPage();else vcRerender();}
+    el.scrollTop=0;
+    if(w==='man')dstripCenter(x=>manGo(x,true),()=>manDayK);else dstripCenter(x=>vcGo(x,true),()=>rqD.k);
     return true;
   }catch(e){return false;}
 }
@@ -6755,11 +6782,14 @@ function openAlarmPage(){
         <div class="prow"><div class="pl2">알람시간</div><button type="button" class="timebox" data-act="tpk" data-id="at" data-type="time"><em>${t.ap}</em>${t.tm}</button><input type="hidden" id="at" value="${a.time}"></div>
         <div class="prow"><div class="pl2">공휴일엔 안 울리기<small>공휴일 · 대체공휴일 · 회사 휴무일에는 쉬어요</small></div><label class="sw"><input type="checkbox" id="aNoHol" ${a.noHol?'checked':''}><i></i></label></div>
         <div class="prow"><div class="pl2">알람반복<small>${a.once?'다음 한 번만 울리고 꺼져요':'근무가 돌아올 때마다 울려요'}</small></div><label class="sw"><input type="checkbox" id="aRepeat" ${a.once?'':'checked'}><i></i></label></div>
+        ${!a.once&&!(a.wxOnly&&ad('wx'))?`<div class="prow"><div class="pl2">⏰ 5분 전 알림<small>먼저 깼으면 울리기 전에 이번만 끌 수 있어요 · 소리 없음 · 알람 때 저절로 사라짐</small></div><label class="sw"><input type="checkbox" id="aPre" ${a.pre5!==false?'checked':''}><i></i></label></div>`:''}
       </div>
       <div class="pg-sec">
         <div class="prow"><div class="pl2">알람 이름</div><input type="text" class="inl" id="al" value="${esc(a.label)}" placeholder="설정 안됨" maxlength="20"></div>
-        ${ad('wx')?`<div class="prow"><div class="pl2">☔ 날씨<small>${a.wxOnly?'울리지 않고 그날 출퇴근 날씨 알림만 와요':a.wx!==false?'끄기를 누르면 출퇴근 날씨 카드가 떠요':'날씨 없이 알람만'}</small></div><div class="chips">${ch([['card','끈 뒤 보기'],['only','날씨만'],['off','안 함']],a.wxOnly?'only':a.wx!==false?'card':'off','dwx')}</div></div>`:''}
+        ${ad('wx')?`<div class="prow"><div class="pl2">☔ 날씨<small>${a.wxOnly?'알람 대신 알림 소리 한 번 + 그날 출퇴근 날씨 알림':a.wx!==false?'끄기를 누르면 출퇴근 날씨 카드가 떠요':'날씨 없이 알람만'}</small></div><div class="chips">${ch([['card','끈 뒤 보기'],['only','날씨만'],['off','안 함']],a.wxOnly?'only':a.wx!==false?'card':'off','dwx')}</div></div>`:''}
         ${a.wxOnly&&ad('wx')?'':`<div class="prow"><div class="pl2">💬 알람 화면 한 줄<small>${S.alarmMsg!==false?'근무 요청 · 오늘 메모 · 할 일 · 남은 근무 중 하나':'안 보여요'}</small></div><label class="sw"><input type="checkbox" id="almsg" ${S.alarmMsg!==false?'checked':''}><i></i></label></div>`}
+        ${a.wxOnly&&ad('wx')?`<div class="prow"><div class="pl2">🔔 알림 소리<small>알람처럼 계속 울리지 않고 한 번만 · 폰이 무음 · 진동이면 안 나요</small></div><div class="chips"><button class="${a.sound!==false?'on':''}" data-act="dwxsnd" data-v="1">소리</button><button class="${a.sound===false?'on':''}" data-act="dwxsnd" data-v="0">무음</button></div></div>
+        ${a.sound!==false?`<div class="prow tap" data-act="dtone"><div class="pl2">소리 고르기</div>${isFileTone(a.tone)&&hasBridge('previewTone')?'<button class="btn ghost sm" data-act="dtone-play">▶ 듣기</button>':''}<div class="pv">${esc(a.tone?(a.toneName||'고른 소리'):'폰 기본 알림음')} ›</div></div>`:''}`:''}
         ${a.wxOnly&&ad('wx')?'':`<div class="prow tap" data-act="dsnd-open"><div class="pl2">🔊 소리 · 다시 울림<small>${esc(sndSum)}</small></div><div class="pv">${alSnd?'접기 ▴':'›'}</div></div>`}
         ${alSnd&&!(a.wxOnly&&ad('wx'))?`<div class="prow"><div class="pl2">알람종류</div><div class="chips">
           <button class="${a.sound?'on':''}" data-act="dsound">소리</button><button class="${a.vib?'on':''}" data-act="dvib">진동</button><button class="${kind?'on':''}" data-act="dsilent">무음</button></div></div>
@@ -7384,7 +7414,7 @@ function wxPastHtml(k){
 // 날씨 카드 (날짜 창 · 가족 탭 내 카드): 결론 + 출근 → 퇴근(또는 오전 → 오후) 그림 · 기온 + 미세먼지 얼굴
 function wxCardHtml(c,cls,attrs){
   const kk=c.k||{t:c.hs,s:'',i:''},z=(c.dz||[]).slice().sort((x,y)=>y.g-x.g||y.lv-x.lv)[0];
-  const cell=x=>`<span class="wc"><i class="wcl">${esc(x.l.split(' ')[0])}</i>${wxImg(x.sk)}<em>${x.tp!=null?x.tp+'°':'–'}</em></span>`;
+  const cell=x=>`<span class="wc"><i class="wcl">${esc(x.l.split(' ')[0])}</i>${wxImg(x.sk)}<em>${x.tt!=null?esc(x.tt):x.tp!=null?x.tp+'°':'–'}</em></span>`;
   return `<div class="wxl wxcard ${cls}" ${attrs}><div class="wa">${wxImg(kk.i,'wi')}<div><b>${esc(kk.t)}</b>${kk.s?`<small>${esc(kk.s)}</small>`:''}</div></div>
     ${(c.c||[]).length?`<div class="wb">${c.c.map(cell).join('<span class="ar">→</span>')}${z?wxImg(z.f,'f'):''}</div>`:''}</div>`;
 }
@@ -7414,7 +7444,16 @@ function wxDayHtml(k){
   const far=Math.round((parse(k)-parse(fmt(new Date())))/864e5)>3;   // 오늘 ~ 3일 뒤 = 큰 카드 · 4일 뒤부터 = 한 줄
   if(far&&c.day){const x=c.day,h=(l,v)=>v?`${l} ${v.d}${v.pop>=30?` ${v.pop}%`:''}`:'';
     return `<div class="wxl ${cls}" id="wxDay" data-k="${k}" data-act="wx-day" data-v="${k}">${wxImg(x.sk,'wi')||`<span class="wi">${c.i}</span>`}<span>${esc([h('오전',x.am),h('오후',x.pm)].filter(Boolean).join(' · '))}</span><span class="wt">${esc(c.t)}</span></div>`;}
-  return wxCardHtml(c,cls,`id="wxDay" data-k="${k}" data-act="wx-day" data-v="${k}"`);
+  // v0.142 쉬는 날(근무 · 활동 없음): "오전 4° → 오후 15°"(사실 하루 최저 · 최고라 헷갈림) 대신 오늘 = "지금 12°" 한 칸 · 다른 날 = 그날 그림 + "4°~15°"
+  const rs=wxRestMini(c,d);
+  return wxCardHtml(rs?{...c,c:rs}:c,cls,`id="wxDay" data-k="${k}" data-act="wx-day" data-v="${k}"`);
+}
+function wxRestMini(c,d){
+  try{if(wxMyWin(d)||myActs(d).length||!c.day||(c.c||[]).length!==2||c.day.lo==null)return null;
+    const x=c.day;
+    if(fmt(d)===fmt(new Date())){const now=Date.now(),v=WX.at(wxRaw(S.wx.home),now);if(!v)return null;return [{l:'지금',sk:WX.sky(v,now),tp:v.tp}];}
+    const a=x.am||x.pm,b=x.pm||x.am;return [{l:'하루',sk:(b&&b.wet?b:a).sk,tt:`${x.lo}°~${x.hi}°`}];
+  }catch(e){return null;}
 }
 // 날씨 그림 (assets/wx/…webp · 'sky/rain' · 'wear/coat' · 'faces/4')
 const wxImg=(id,cls)=>id&&/^(sky|wear|faces|alert|misc)\/[a-z0-9_]+$/.test(id)?`<img${cls?` class="${cls}"`:''} src="wx/${id}.webp" alt="" draggable="false">`:'';
@@ -7597,15 +7636,16 @@ let wxPopFam=null;
 function famWxPopHtml(m,k){
   const d=parse(k),u=wxMemKey(m),ti=`${m.name} · ${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`;
   if(k<fmt(new Date())){const f=wxHistOf(u,k);if(f)return wxHistPop(ti,f,'',null);}
-  if(m.kind==='sched'){const x=famSchedWx(m,d);if(!x||!x.c)return '';return wxPopHtml(ti,x.win?`${wxHm(x.win.s)} 출근 → ${wxHm(x.win.e)} 퇴근`:'',x.c,'',wxDzList(x.win,x.hm,x.wk),wxHrOf(d,x.win,x.hm,x.wk,wxName(x.hm),x.wk&&x.wk!==x.hm?wxName(x.wk):'',null));}
+  const rsOf=(win,hm,acts)=>!win&&!(acts&&acts.length)?{today:k===fmt(new Date()),raw:wxRaw(hm),md:`${d.getMonth()+1}월 ${d.getDate()}일`}:null;   // v0.142 가족도 쉬는 날은 지금 · 오늘 요약
+  if(m.kind==='sched'){const x=famSchedWx(m,d);if(!x||!x.c)return '';return wxPopHtml(ti,x.win?`${wxHm(x.win.s)} 출근 → ${wxHm(x.win.e)} 퇴근`:'',x.c,'',wxDzList(x.win,x.hm,x.wk),wxHrOf(d,x.win,x.hm,x.wk,wxName(x.hm),x.wk&&x.wk!==x.hm?wxName(x.wk):'',null),rsOf(x.win,x.hm));}
   const x=famWx(m,d);if(!x||!x.c)return '';const L=x.L,ls=L.ls||'출근',le=L.le||'퇴근';
-  return wxPopHtml(ti,x.win?`${wxHm(x.win.s)} ${ls} → ${wxHm(x.win.e)} ${le}`:'',x.c,'',wxDzList(x.win,x.hm,x.loc,x.acts,ls,le),wxHrOf(d,x.win,x.hm,x.loc,wxName(x.hm),x.loc?wxName(x.loc):'',null,x.acts));
+  return wxPopHtml(ti,x.win?`${wxHm(x.win.s)} ${ls} → ${wxHm(x.win.e)} ${le}`:'',x.c,'',wxDzList(x.win,x.hm,x.loc,x.acts,ls,le),wxHrOf(d,x.win,x.hm,x.loc,wxName(x.hm),x.loc?wxName(x.loc):'',null,x.acts),rsOf(x.win,x.hm,x.acts));
 }
 function famWxOpen(m,k){const h=famWxPopHtml(m,k);if(!h)return;wxPopK=k;wxPopFam=m;wxOpenPop(`<div class="swc" style="position:relative;transform:translateZ(0)">${h}</div>`);const mm=$('#pop .menu');if(mm)mm.classList.add('wxdpop');}
 function famWxPop(m,k){famWxOpen(m,k);}
 function wxOpenFam(u){
   const now=Date.now(),d=new Date(now),H=wxRaw(S.wx.home);if(!H&&u==='me')return;
-  if(u==='me'){const c=wxMine(d,now);if(c){const w=wxMyWin(d);wxOpenPop(wxPopHtml('나 · 오늘',w?`${wxHm(w.s)} 출근 → ${wxHm(w.e)} 퇴근`:'',c,'',wxDzList(w,S.wx.home,wxWk(),myActs(d)),wxHrOf(d,w,S.wx.home,wxWk(),wxName(S.wx.home),wxWk()?wxName(wxWk()):'',now)));}return;}
+  if(u==='me'){const c=wxMine(d,now);if(c){const w=wxMyWin(d);wxOpenPop(wxPopHtml('나 · 오늘',w?`${wxHm(w.s)} 출근 → ${wxHm(w.e)} 퇴근`:'',c,'',wxDzList(w,S.wx.home,wxWk(),myActs(d)),wxHrOf(d,w,S.wx.home,wxWk(),wxName(S.wx.home),wxWk()?wxName(wxWk()):'',now),!w&&!myActs(d).length?{today:true,raw:H}:null));}return;}
   const m=wxFam().concat((S.family||[]).filter(famUsesTypes)).find(x=>wxMemKey(x)===u);if(!m)return;
   if(famUsesTypes(m)){famWxPop(m,fmt(d));return;}
   if(m.kind==='sched'){famWxOpen(m,fmt(d));return;}   // v0.135 근무표 가족: 그 사람 집(h) · 직장 (내 폰 집이 없어도 — 와이프 폰에서 안 열리던 것) · 옆으로 밀기
@@ -7758,7 +7798,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout
 window.__wx={manPlanned,visibleMemos,famLbl,famTypeAt,famWx,shiftOf,wxMyWin,openStampReg,actAuto,stampPlanned,myActs,manPlanned,famActNow,wxMine,get S(){return S;},get page(){return {pageMode,pageBack};},openDay,closeSheet,closePop,closePage,openAddonPage,render,save,pushAlarmsToNative,pushRemindersToNative,famCleanSched,famPayload,
   newAlarm:o=>{draft=Object.assign(newAlarm(),o||{});alSnd=false;openAlarmPage();},wxOn,wxRaw,wxFam,wxMemWin,wxMemWork,wxMemKey,wxOpenFam,wxOpenDay,wxChipIcon,
   openPatternPage,openStatsPage,openSlipPage:ym=>{slipYM=ym;openSlipPage();},statsCalc,payRates,dayHours,famTimesPayload,memberStatus,otOpen,get stYM(){return stYM;},set stYM(v){stYM=v;}};
-Object.assign(window.__wx,{stampsOn,openFeed,coachCheck,pushWidgetNow:()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
+Object.assign(window.__wx,{famWxOpen,stampsOn,openFeed,coachCheck,pushWidgetNow:()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
 
 /* ================= 부가 기능 (설정 › 부가 기능) =================
  * 기본은 모두 꺼짐. 꺼도 저장된 내용은 그대로이고, 켜면 그 자리에 바로 생겨요. */
@@ -9361,6 +9401,7 @@ document.addEventListener('click',e=>{
     case 'dsound':draft.sound=!draft.sound;openAlarmPage();break;
     case 'dvib':draft.vib=!draft.vib;openAlarmPage();break;
     case 'dsilent':draft.sound=false;draft.vib=false;openAlarmPage();break;
+    case 'dwxsnd':draft.sound=t.dataset.v==='1';openAlarmPage();break;   // v0.142 날씨만 알람 소리 한 번 / 무음
     case 'dwx':draft.wxOnly=t.dataset.v==='only';draft.wx=t.dataset.v!=='off';if(draft.wxOnly&&!wxOk((S.wx||{}).home))toast('설정 › 부가 기능 › 출퇴근 날씨에서 집 지역을 골라 주세요');openAlarmPage();break;
     case 'dsnmin':draft.snMin=Number(t.dataset.v);openAlarmPage();break;
     case 'dsnmax':draft.snMax=Number(t.dataset.v);openAlarmPage();break;
@@ -9788,6 +9829,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='aRepeat'&&draft){draft.once=!t.checked;openAlarmPage();}
   else if(t.id==='aRamp'&&draft){draft.ramp=t.checked;}
   else if(t.id==='aNoHol'&&draft){draft.noHol=t.checked;}
+  else if(t.id==='aPre'&&draft){draft.pre5=t.checked;}   // v0.142 5분 전 알림
   else if(t.id==='at'&&draft){draft.time=t.value||draft.time;openAlarmPage();}
   else if(t.id.startsWith('obT_')&&ob){const r=obAlarms()[+t.id.slice(4)];if(r&&t.value)r[1].t=t.value;renderOb();}
   else if(t.id.startsWith('obOn_')&&ob){const r=obAlarms()[+t.id.slice(5)];if(r)r[1].on=t.checked;}
@@ -10645,8 +10687,8 @@ function renderViewTab(){   // 달력 탭 (가족 것만 볼래요)
   top.className='cal-top';v.className='calv';
   const pmk=`${vcY}-${pad(vcM+1)}`,todoN=boardLeft(pmk);   // 가족 것만 보는 폰에도 포스트잇 (그 폰에선 가족 포스트잇만)
   top.innerHTML=`<div class="hl"><button class="hb pi-btn" data-act="open-board-vc" aria-label="월 포스트잇"><span class="pi-ic"></span>${todoN?`<span class="bdg pur">${todoN>9?'9+':todoN}</span>`:''}${S.link&&S.fam2&&S.fam2.boardDot?'<i class="pi-dot" aria-label="가족이 포스트잇을 고쳤어요"></i>':''}</button></div><div class="cal-mid"><div class="ym"><button class="ib" data-act="vc-prev">‹</button><h1>${vcY}.${pad(vcM+1)}</h1><button class="ib" data-act="vc-next">›</button></div><div class="sub"><b>${esc(p.name)} 달력</b> · 보기만</div></div><div class="hr">${isCur?'':'<button class="today-btn" data-act="vc-today">오늘</button>'}</div>`;
-  v.innerHTML=`${vcTools()}<div id="vcsl" class="vcsl ${vcSel.on?'sel':''}">${vcGrid(p)}</div>${vcSelBar(p)}`;
-  applyTdc();fitDn(v);vcEnter();glowCheck();
+  v.innerHTML=`${vcTools()}${vcTrack(()=>vcGrid(p),`vcsl ${vcSel.on?'sel':''}`)}${vcSelBar(p)}`;
+  applyTdc();fitDn(v);vcCenter();glowCheck();
 }
 // v0.126 가족 · 유찬 달력 위쪽: ‹ 2026.11 › + 다른 달일 때만 [오늘]
 function vcNavHtml(){const n=new Date(),isCur=vcY===n.getFullYear()&&vcM===n.getMonth();return `<div class="vcnav"><span class="vcn-l"></span><button class="ib" data-act="vc-prev">‹</button><b>${vcY}.${pad(vcM+1)}</b><button class="ib" data-act="vc-next">›</button><span class="vcn-r">${isCur?'':'<button class="today-btn" data-act="vc-today">오늘</button>'}</span></div>`;}
@@ -10654,8 +10696,8 @@ function renderFamCalPage(){   // 가족 탭에서 이름을 누르면 (내 달�
   const p=vcEnsure();if(!p){closePage();return;}
   openPage(`${pageHead(esc(p.name)+' 달력')}<div class="pg-b" style="display:flex;flex-direction:column;padding:0">
     ${vcNavHtml()}
-    ${vcTools()}<div class="vcbox"><div id="vcsl" class="vcsl ${vcSel.on?'sel':''}">${vcGrid(p)}</div></div>${vcSelBar(p)}</div>`,'famcal');
-  applyTdc();fitDn($('#page'));vcEnter();glowCheck();
+    ${vcTools()}<div class="vcbox">${vcTrack(()=>vcGrid(p),`vcsl ${vcSel.on?'sel':''}`)}</div>${vcSelBar(p)}</div>`,'famcal');
+  applyTdc();fitDn($('#page'));vcCenter();glowCheck();
 }
 var rqD={k:'',u:'',want:''};
 // v0.125 가족(보기만) 폰에서 그 사람 달력의 날짜를 누르면: 내 날짜 창과 같은 틀 — 날짜 띠 · "주간 · 근무 요청 ▾"(누르면 요청) · 날씨 · 가족 메모 · 옆으로 밀면 다음날
@@ -10717,6 +10759,44 @@ function vcDayWx(p,k){
 }
 function vcWxPop(k){const p=famPeers().find(x=>x.uid===vcUid);if(p)famWxOpen(p,k);}
 function vcRerender(){if(pageMode==='famcal')renderFamCalPage();else if(pageMode==='mancal')renderManCalPage();else render();}
+// v0.142 가족 · 유찬 달력도 내 달력처럼 가로 스크롤(scroll-snap): 지금 달 판만 id="vcsl"(다른 기능은 그대로 그 판만 봄) · 앞뒤 3달 판 · 멈추면 그 달로 다시 그림
+const VC_R=3;let vcGridFn=null,vcSetT=0,vcTouch=false,vcFillT=0;
+function vcTrack(gridFn,cls){
+  vcGridFn=gridFn;const mk=vcY*12+vcM,lock=/\bsel\b/.test(cls);
+  let h=`<div id="vcsl" class="${cls}" data-mk="${mk}" style="order:${VC_R}">${gridFn()}</div>`;
+  for(let d=1;d<=VC_R;d++)[-d,d].forEach(o=>{const v=mk+o;h+=`<div class="vcsl vcn" data-mk="${v}" style="order:${VC_R+o}">${Math.abs(o)===1?vcGridAt(v):''}</div>`;});
+  return `<div class="vctr${lock?' lock':''}" id="vctr">${h}</div>`;
+}
+function vcGridAt(v){if(!vcGridFn||v<MIN_M||v>MAX_M)return '';const sy=vcY,sm=vcM;vcY=Math.floor(v/12);vcM=v%12;try{return vcGridFn();}catch(e){return '';}finally{vcY=sy;vcM=sm;}}
+const vcW=tr=>(tr&&tr.getBoundingClientRect().width)||innerWidth;
+function vcCenter(){
+  const tr=document.getElementById('vctr');if(!tr)return;const W=vcW(tr);if(W>0){calIgn=performance.now();tr.scrollLeft=VC_R*W;}
+  clearTimeout(vcFillT);vcFillT=setTimeout(vcFillFar,120);
+}
+function vcFillFar(){   // 먼 판은 조금 뒤에 하나씩
+  const tr=document.getElementById('vctr');if(!tr)return;if(vcTouch){vcFillT=setTimeout(vcFillFar,200);return;}
+  const p=[...tr.children].find(x=>!x.firstElementChild&&+x.dataset.mk>=MIN_M&&+x.dataset.mk<=MAX_M);if(!p)return;
+  p.innerHTML=vcGridAt(+p.dataset.mk);try{fitDn(p);}catch(e){}vcFillT=setTimeout(vcFillFar,60);
+}
+function vcSettle(){
+  const tr=document.getElementById('vctr');if(!tr||vcTouch)return;const W=vcW(tr),x=tr.scrollLeft,i=Math.round(x/W);
+  if(Math.abs(x-i*W)>3)return;const d=i-VC_R;if(!d)return;
+  const v=vcY*12+vcM+d;if(v<MIN_M||v>MAX_M){tr.scrollTo({left:VC_R*W,behavior:'smooth'});return;}
+  vcY=Math.floor(v/12);vcM=v%12;vcRerender();
+}
+document.addEventListener('scroll',e=>{
+  if(!e.target||e.target.id!=='vctr')return;
+  const tr=e.target,W=vcW(tr),i=Math.round(tr.scrollLeft/W),v=vcY*12+vcM+i-VC_R;
+  if(performance.now()-calIgn>40){
+    if((glowStart||glowTm)&&Math.abs(tr.scrollLeft-VC_R*W)>2)glowStop();
+    [...tr.children].forEach(p=>{if(Math.abs(+p.style.order-i)<=1&&!p.firstElementChild&&+p.dataset.mk>=MIN_M&&+p.dataset.mk<=MAX_M)p.innerHTML=vcGridAt(+p.dataset.mk);});   // 다가오는 먼 판
+    {const t=`${Math.floor(v/12)}.${pad(v%12+1)}`;document.querySelectorAll('.vcnav b,#top .ym h1').forEach(h=>{if(v>=MIN_M&&v<=MAX_M&&h.textContent!==t)h.textContent=t;});}   // 넘어가는 중에도 위 월 숫자
+  }
+  clearTimeout(vcSetT);vcSetT=setTimeout(vcSettle,90);
+},true);
+document.addEventListener('scrollend',e=>{if(e.target&&e.target.id==='vctr'){clearTimeout(vcSetT);vcSettle();}},true);
+document.addEventListener('touchstart',e=>{if(e.target.closest&&e.target.closest('#vctr'))vcTouch=true;},{passive:true,capture:true});
+['touchend','touchcancel'].forEach(ev=>document.addEventListener(ev,e=>{if(!vcTouch||(e.touches&&e.touches.length))return;vcTouch=false;clearTimeout(vcSetT);vcSetT=setTimeout(vcSettle,140);},{passive:true,capture:true}));
 function vcEnter(){   // 달이 넘어간 뒤 새 달이 옆에서 들어오는 효과
   if(!vcAnim)return;const d=vcAnim;vcAnim=0;const el=document.getElementById('vcsl');if(!el||reduceMotion())return;
   const w=el.clientWidth||innerWidth;el.style.transition='none';el.style.transform=`translateX(${d>0?w:-w}px)`;el.getBoundingClientRect();
@@ -10725,7 +10805,7 @@ function vcEnter(){   // 달이 넘어간 뒤 새 달이 옆에서 들어오는 
 let vsx=null,vsy=0,vdx=0,vlock=null,vst=0,vbusy=false;
 document.addEventListener('touchstart',e=>{
   const el=e.target.closest&&e.target.closest('#vcsl');
-  if(!el||vbusy||vcSel.on||manPaint||$('#sheet').classList.contains('open')||$('#pop').classList.contains('open')){vsx=null;return;}
+  if(!el||(e.target.closest('#vctr')&&!e.target.closest('#vctr.lock'))||vbusy||vcSel.on||manPaint||$('#sheet').classList.contains('open')||$('#pop').classList.contains('open')){vsx=null;return;}
   vsx=e.touches[0].clientX;vsy=e.touches[0].clientY;vdx=0;vlock=null;vst=Date.now();
 },{passive:true});
 document.addEventListener('touchmove',e=>{
