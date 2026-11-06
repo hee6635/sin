@@ -130,7 +130,7 @@ const ONLY=process.env.ONLY||'';
     // 쓸어서 돌아오기
     await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(600);
     const sw=async dx=>{const box=await p.evaluate(()=>{const r=document.querySelector('#view').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2];});
-      await p.evaluate(([x,y,dx])=>{const v=document.querySelector('#view');const T=(t,x)=>{const tc=new Touch({identifier:1,target:v,clientX:x,clientY:y});v.dispatchEvent(new TouchEvent(t,{touches:t==='touchend'?[]:[tc],changedTouches:[tc],bubbles:true}));};T('touchstart',x);for(let i=1;i<=6;i++)T('touchmove',x+dx*i/6);T('touchend',x+dx);},[box[0],box[1],dx]);};
+      const cdp=await p.context().newCDPSession(p);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:box[0]-dx/2,y:box[1]}]});for(let i=1;i<=6;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:box[0]-dx/2+dx*i/6,y:box[1]}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});};   // v0.138 달력은 브라우저 가로 스크롤 → 진짜 손가락(CDP)으로
     await sw(220);
     T('오른쪽으로 쓸어 이번 달로 돌아오면 빛',await seen(1200));
     const n1=await p.evaluate(()=>window.__glowN);
@@ -177,8 +177,8 @@ const ONLY=process.env.ONLY||'';
   if(want('today')){
     const p=await boot(b,{...base,calLook:'fill'},{touch:true});
     for(let i=0;i<3;i++){await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(450);}
-    const r=await p.evaluate(()=>{const tr=document.getElementById('track');document.querySelector('[data-act="today"]').click();return {same:document.getElementById('track')===tr,tf:tr.style.transform,left:tr.children[0].querySelector('.cell[data-k="2026-10-12"]')?1:0};});
-    T('"오늘" 누른 순간: 달력을 다시 그리지 않고 이번 달 쪽(왼쪽)으로 미끄러지기 시작 · 옆 칸에 이번 달',r.same&&r.tf==='translateX(0%)'&&r.left===1,JSON.stringify(r));
+    const r=await p.evaluate(()=>{const tr=document.getElementById('track');document.querySelector('[data-act="today"]').click();return {same:document.getElementById('track')===tr,tf:tr.style.scrollSnapType,left:tr.children[0].querySelector('.cell[data-k="2026-10-12"]')?1:0};});
+    T('"오늘" 누른 순간: 달력을 다시 그리지 않고 이번 달 쪽(왼쪽)으로 미끄러지기 시작 · 옆 칸에 이번 달',r.same&&r.tf==='none'&&r.left===1,JSON.stringify(r));
     await p.waitForTimeout(500);
     T('미끄러진 뒤 이번 달',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell.today')));
     await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(600);
@@ -188,7 +188,9 @@ const ONLY=process.env.ONLY||'';
     T('넘기는 중에 "오늘"을 눌러도 버려지지 않고 넘김이 끝나면 이번 달로(한 번만 눌러도)',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell.today')));
     // 쓸어 넘긴 직후 누르기
     await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(600);
-    await p.evaluate(([dx])=>{const v=document.querySelector('#view'),r=v.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;const T=(t,x)=>{const tc=new Touch({identifier:1,target:v,clientX:x,clientY:y});v.dispatchEvent(new TouchEvent(t,{touches:t==='touchend'?[]:[tc],changedTouches:[tc],bubbles:true}));};T('touchstart',x);for(let i=1;i<=6;i++)T('touchmove',x+dx*i/6);T('touchend',x+dx);document.querySelector('[data-act="today"]').click();},[-220]);
+    {const r=await p.evaluate(()=>{const v=document.querySelector('#view').getBoundingClientRect();return [v.x+v.width/2,v.y+v.height/2];});const cdp=await p.context().newCDPSession(p);
+     await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:r[0]+110,y:r[1]}]});for(let i=1;i<=6;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:r[0]+110-220*i/6,y:r[1]}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+     await p.evaluate(()=>document.querySelector('[data-act="today"]').click());}
     await p.waitForTimeout(1000);
     T('쓸어 넘긴 바로 뒤 "오늘" 한 번 → 이번 달',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell.today')));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
@@ -217,8 +219,8 @@ const ONLY=process.env.ONLY||'';
     await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(800);
     T('그 뒤 다음 달로 넘겨도 엉뚱하게 오늘로 되돌아가지 않음',await p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell[data-k="2026-11-12"]')));
     // 옆으로 쓸 때 폰 스크롤을 막음(preventDefault)
-    const pd=await p.evaluate(()=>{const v=document.querySelector('#view'),r=v.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;const mk=(t,x)=>{const tc=new Touch({identifier:3,target:v,clientX:x,clientY:y});return new TouchEvent(t,{touches:t==='touchend'?[]:[tc],changedTouches:[tc],bubbles:true,cancelable:true});};v.dispatchEvent(mk('touchstart',x));let blocked=false;for(let i=1;i<=4;i++){const ev=mk('touchmove',x-i*15);v.dispatchEvent(ev);if(ev.defaultPrevented)blocked=true;}v.dispatchEvent(mk('touchend',x-60));return blocked;});
-    T('옆으로 쓸면 폰 기본 스크롤을 막음(넘긴 직후 첫 누름이 안 버려지게)',pd===true);
+    const pd=await p.evaluate(()=>{const t=getComputedStyle(document.getElementById('track'));return t.scrollSnapType.includes('x')&&t.overflowX==='auto';});
+    T('v0.138 달력 넘기기 = 브라우저 가로 스크롤 + 판에 멈춤 (손가락을 앱이 막지 않음)',pd===true);
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   // ── 명절 이름: 자리가 되면 전부 → 두 글자 → 한 글자 (스티커가 있으면 이름부터 줄임)

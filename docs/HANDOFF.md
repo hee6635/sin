@@ -290,3 +290,14 @@
 - swAdoptDay(st): 날씨 팝업 swAdoptWx 처럼 옆 판(.swc.swn)을 그대로 남기고 옛 판만 지움. swSide 가 지운 id 는 data-swid 로 남겨 두었다가 되살림(dstrip · memoInput · wxDay …). 상태: tidyMemos · memoEdit/memoText 비움 · sheetKey · markSel · dstripCenter · coachSoon. 달이 바뀌면 calShiftFast(±1) 로 달력 판만 옮김(데이터가 바뀌었으면 다시 그림).
 - dsiX(el,on): 날짜 띠 가운데 맞춤을 띠 안 자리로 계산(판이 위치 기준이 되면 16px 어긋났음).
 - 시험: s89 날짜 창 넘기기 (메모 · 근무 · 달 바뀜) · s75 판 하나 남는 것 허용.
+
+## v0.138 — 달 넘기기 = 브라우저 가로 스크롤(scroll-snap) · 지난 시간 미세먼지 남기기
+- #track = overflow-x:auto + scroll-snap-type:x mandatory · .panel = 100% · scroll-snap-align:start · scroll-snap-stop:always. 손가락 따라가기 · 튕기기는 브라우저가 직접(앱이 바빠도 안 씹힘).
+- 판 7개: 문서 순서 [mk-1, mk, mk+1, mk-2, mk+2, mk-3, mk+3] (지금 달은 늘 nth-child(2) → 옛 코드 · 시험 그대로) · 보이는 순서는 style.order(3+v-mk) · data-mk. 먼 판은 calFillLater 가 한 판씩 채움(가까운 것부터) · 미는 동안 다가오는 빈 판은 바로 채움.
+- 가운데 = scrollLeft 3W (calCenter: 다시 그린 뒤 · 화면 크기 바뀔 때). 판 옮기기 = calReorder(nm,keepView): 있는 판은 order 만 바꾸고 빠진 판만 새로 · scrollLeft 를 보이는 자리 그대로.
+- 판을 옮기는 때 = 완전히 멈춘 뒤만(calSettle: scrollend 또는 0.09초 조용 · 판에 딱 맞을 때 · 손가락 없을 때). 움직이는 중에 scrollLeft 를 바꾸면 손가락 스크롤이 옛 자리로 되돌려 튀었음(시험으로 확인) → 대신 앞뒤 3달씩 둬서 연달아 밀어도 끝에 안 막힘.
+- ‹ › · 오늘: calAnim (0.26초 · 그동안 scroll-snap 끔) → shiftMonth(dir,true). 
+- 브라우저가 기다리지 않게: document 의 막는(passive:false) touchmove 를 없앰 — 끌기는 #page · #pop 에만 · 동료 근무표 · 가족 달력(#vcsl, touch-action:pan-y)은 막지 않음.
+- 오늘 칸 빛은 손으로 밀 때만 멈춤(가운데 맞춤 스크롤은 무시). 닫힌 날짜 창의 날짜 띠 scroll 은 무시(닫자마자 다시 열리던 것).
+- wxHistSave: 시간별 줄을 지금 시각 기준으로 저장 → 지난 칸은 실제 잰 미세먼지 얼굴 · wxDustKeep 로 실제 값은 예보로 안 덮음 · 어제 저장본의 예보 칸도 서버 지난 값(q.hh)으로 채움.
+- 시험: s89 (35) · s63 · s47 · s87 판 7개 · CDP 손가락.

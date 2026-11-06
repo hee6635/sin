@@ -16,7 +16,7 @@ const {mkT}=require('./lib.js');
   const lab2=await p.evaluate(()=>document.querySelector('#track .panel:nth-child(2) .cell[data-k="2026-10-09"]').getAttribute('aria-label'));
   T('공휴일 칸 이름에 공휴일이 들어감(한글날)',lab2.includes('한글날'),lab2);
   const hid=await p.$$eval('#track .panel',ps=>ps.map(x=>x.getAttribute('aria-hidden')));
-  T('양옆 달은 화면 읽기에서 숨김 · 가운데 달만 읽힘',JSON.stringify(hid)==='["true","false","true"]',JSON.stringify(hid));
+  T('양옆 달은 화면 읽기에서 숨김 · 가운데 달만 읽힘',hid[1]==='false'&&hid.filter(x=>x==='true').length===hid.length-1,JSON.stringify(hid));
   const stz=await q('.cell .stz');
   T('칸 위쪽 눈에 안 보이는 누르는 자리는 읽기에서 뺌',stz.length>0&&stz.every(x=>x.hidden==='true'));
   // 아래 메뉴

@@ -213,8 +213,9 @@ button{border:0;background:none;padding:0;cursor:pointer}
 #view{touch-action:pan-y}
 #view.calv{display:flex;flex-direction:column}
 #view.calv .notice-banner{flex:none;margin-top:6px}
-.track{display:flex;width:300%;flex:1;min-height:420px;transform:translateX(-33.3333%);will-change:transform}
-.panel{width:33.3333%;height:100%;flex:none;overflow:hidden}
+/* v0.138 달 넘기기 = 가로 스크롤 + 판에 딱 멈춤(scroll-snap): 손가락 따라가기 · 튕기기를 브라우저가 직접 (앱이 바빠도 안 씹힘). 판 3개(앞 · 지금 · 다음), 멈춘 뒤에 판을 옮겨 늘 가운데가 지금 달 */
+.track{display:flex;width:100%;flex:1;min-height:420px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none}.track::-webkit-scrollbar{display:none}.paint-on .track{overflow-x:hidden}
+.panel{width:100%;height:100%;flex:none;overflow:hidden;scroll-snap-align:start;scroll-snap-stop:always}
 .dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:13px;font-weight:600;padding:2px 0 6px;background:var(--head-bg)}
 .dow .s{color:var(--sun)}.dow .t{color:var(--sat)}
 .grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:1fr;border-top:1px solid var(--line)}
@@ -1635,6 +1636,7 @@ html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box
 .tips ol.tds li{counter-increment:s;position:relative;padding:0 0 0 30px;margin:0 0 12px;font-size:14px;line-height:1.55}
 .tips ol.tds li::before{content:counter(s);position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;background:var(--fg);color:var(--bg);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .tips ol.tds li img{display:block;width:100%;margin-top:8px;border-radius:12px;border:1px solid var(--line)}
+#vcsl{touch-action:pan-y}   /* v0.138 가족 달력 옆으로 밀기는 앱이 (폰 스크롤이 가로를 안 가져감) */
 /* v0.136 겹침 팝업 버튼 */
 #pop .mi.clb{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}#pop .mi.clb b{font-size:15px}#pop .mi.clb small{font-size:12px;color:var(--muted);font-weight:600;line-height:1.4}
 /* v0.135 처음 안내 */
@@ -3360,12 +3362,12 @@ function render(){
     if(calKeep&&$('#track')){calKeep=false;}   // v0.136 달 넘김: 판은 옮기기만 (calShiftFast) · 위 머리줄 · 오늘 빛만 새로
     else{calKeep=false;
     if(!renderAgain){try{stzWindow(v);}catch(err){}}   // 스티커 크기: 앞뒤 3달 기준
-    v.innerHTML=renderCal();stzPanels(v);
+    v.innerHTML=renderCal();calCenter();stzPanels(v);
     fitDn(v,true);memoShift(v);
     // 처음 켤 때 · 다른 탭에서 돌아올 때는 그리기 전에는 달력 칸 높이를 잴 수 없어서 어림값으로 메모 줄 수를 정함 → 그린 뒤 실제 높이로 다시 재서 다르면 한 번만 다시 그림
-    if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();stzPanels(v);fitDn(v,true);memoShift(v);}finally{renderAgain=false;}}}
+    if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();calCenter();stzPanels(v);fitDn(v,true);memoShift(v);}finally{renderAgain=false;}}}
     }
-    glowCheck();calPrefetch();
+    glowCheck();calPrefetch();if(tab==='cal')calFillLater();
   }else if(tab==='colleague'){
     top.innerHTML=`<div class="hl"><button class="hb" data-act="back-set" aria-label="뒤로" style="font-size:28px">‹</button></div>${mid}<div class="hr">${todayBtn}</div>`;
     v.innerHTML=renderColleague();
@@ -3532,7 +3534,7 @@ const stzCache={};let stzUse,stzDirty=false,stzFitW=0,stzFitKey='';
 const stzKey=()=>`${tuneAppKey()}|${Math.round(innerWidth)}|${cur.y*12+cur.m}|${S.fontScale}|${S.calLook}|${S.stzMode||''}`;
 const stzR=()=>S.stzMode==='3'?3:0;
 var calMemo=null;
-const stzPanels=v=>{try{const tr=v&&v.querySelector('#track'),mk0=cur.y*12+cur.m;if(tr)[...tr.children].forEach((p,i)=>stzPanel(p,mk0+i-1));}catch(err){}finally{calMemo=null;}};   // v0.134 판마다 그 달 크기   // v0.128 스티커 크기 기준: 앞뒤 3달(기본 · 달을 넘겨도 크기 같음) / 'm' = 그 달만(달마다 최대한 크게)
+const stzPanels=v=>{try{const tr=v&&v.querySelector('#track');if(tr)[...tr.children].forEach(p=>{if(p.firstElementChild)stzPanel(p,+p.dataset.mk);});}catch(err){}finally{calMemo=null;}};   // v0.134 판마다 그 달 크기   // v0.128 스티커 크기 기준: 앞뒤 3달(기본 · 달을 넘겨도 크기 같음) / 'm' = 그 달만(달마다 최대한 크게)
 function stzWindow(host){
   host=host||$('#view');if(!host)return;
   const rt=document.documentElement,main=host.id==='view';
@@ -3696,7 +3698,8 @@ function plCut(t){
 function renderCal(){
   const mk=cur.y*12+cur.m;
   calMemo={};const at=v=>(calMemo[v]=calPanel(Math.floor(v/12),v%12));   // v0.135 렉: 방금 그린 판 글을 스티커 크기 재기에 그대로 씀 (같은 달을 두 번 만들지 않음)
-  return `<div class="track" id="track"><div class="panel">${mk>MIN_M?at(mk-1):''}</div><div class="panel">${at(mk)}</div><div class="panel">${mk<MAX_M?at(mk+1):''}</div></div>
+  const pn=(v,h)=>`<div class="panel" data-mk="${v}" style="order:${3+v-mk}">${h}</div>`;   // v0.138 앞뒤 3달씩 (문서 순서 = 앞 · 지금 · 다음 · 나머지 → 지금 달은 늘 두 번째 · 보이는 순서는 order) · 먼 판은 조금 뒤에 채움
+  return `<div class="track" id="track">${pn(mk-1,mk>MIN_M?at(mk-1):'')}${pn(mk,at(mk))}${pn(mk+1,mk<MAX_M?at(mk+1):'')}${pn(mk-2,'')}${pn(mk+2,'')}${pn(mk-3,'')}${pn(mk+3,'')}</div>
     ${paint?paintBar():''}`;
 }
 /* 칠하기: 근무타입을 고르고 날짜를 쭉 누르면 한 번에 바뀜 */
@@ -3854,12 +3857,10 @@ function todayGo(){
   const n=new Date(),y=n.getFullYear(),m=n.getMonth(),to=y*12+m,from=cur.y*12+cur.m,tr=$('#track');
   if(to===from)return;
   if(!tr||tab!=='cal'){setCur(y,m);render();return;}
-  const dir=to>from?1:-1,pn=tr.children[dir>0?2:0];
+  const dir=to>from?1:-1,pn=[...tr.children].find(p=>+p.dataset.mk===from+dir);
   if(pn&&Math.abs(to-from)>1){pn.innerHTML=calPanel(y,m);try{stzPanel(pn,to);fitDn(pn,true);memoShift(pn);}catch(e){}}
   busy=true;glowStop();
-  tr.style.transition='transform .26s ease';
-  tr.style.transform=`translateX(${dir>0?'-66.6667%':'0%'})`;
-  setTimeout(()=>{busy=false;setCur(y,m);render();todayQ=false;},270);   // (그 사이 또 누른 것은 이미 오늘이라 버림)
+  calAnim(tr,dir,()=>{busy=false;setCur(y,m);render();todayQ=false;});   // (그 사이 또 누른 것은 이미 오늘이라 버림)
 }
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.today-btn'))clearTimeout(tdFb);},true);
 // 안전장치: 버튼 위에서 짧게 눌렀다 뗐는데 0.1초 안에 누름(click)이 안 오면 앱이 직접 "오늘" (폰이 누름을 버리는 경우)
@@ -3875,13 +3876,46 @@ function slideTo(dir,cb){
   const tr=$('#track'),mk=cur.y*12+cur.m+dir;
   if(mk<MIN_M||mk>MAX_M)return;
   if(!tr){shiftMonth(dir);if(cb)cb();return;}
-  if(busy){if(calPend)calFlush();else return;}   // v0.136 쓸어 넘기는 중에 ‹ › 를 눌러도 버리지 않음
   if(busy)return;
   busy=true;
-  tr.style.transition='transform .26s ease';
-  tr.style.transform=`translateX(${dir>0?'-66.6667%':'0%'})`;
-  setTimeout(()=>{busy=false;shiftMonth(dir);if(cb)cb();},270);
+  calAnim(tr,dir,()=>{busy=false;shiftMonth(dir,true);if(cb)cb();});
 }
+// v0.138 가로 스크롤 달력: 판 너비 · 가운데로 · 버튼 넘김(0.26초) · 손으로 민 뒤 멈추면 판 옮기기
+const calW=tr=>(tr&&tr.clientWidth)||$('#view').clientWidth||innerWidth;
+let calIgn=0,calTouch=false,calSetT=0,calAnimOn=false;
+function calCenter(){const tr=$('#track');if(!tr)return;const W=calW(tr);if(W>0&&Math.abs(tr.scrollLeft-3*W)>.5){calIgn=performance.now();tr.scrollLeft=3*W;}}
+function calAnim(tr,dir,done){
+  const W=calW(tr),a=tr.scrollLeft,b=(3+dir)*W,t0=performance.now(),ms=swReduce()?0:260;
+  calAnimOn=true;tr.style.scrollSnapType='none';
+  const end=()=>{tr.scrollLeft=b;calAnimOn=false;tr.style.scrollSnapType='';done();};
+  if(!ms){end();return;}
+  const f=now=>{const p=Math.min(1,(now-t0)/ms),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;calIgn=performance.now();tr.scrollLeft=a+(b-a)*e;if(p<1)requestAnimationFrame(f);else end();};
+  requestAnimationFrame(f);
+}
+// 손으로 밀고 판에 멈췄을 때: 멈춘 판이 지금 달이 되게 판 자리를 바꿈 (멈추기 전에는 안 건드림 → 튕기는 힘이 한 판 더 넘어가지 않음 · 앞뒤 2달씩 있어서 연달아 밀어도 안 막힘)
+function calSettle(){
+  if(tab!=='cal'||calTouch||calAnimOn||busy)return;
+  const tr=$('#track');if(!tr)return;const W=calW(tr),x=tr.scrollLeft,i=Math.round(x/W);
+  if(Math.abs(x-i*W)>1.5)return;   // 아직 움직이는 중 (멈추면 다시 불림)
+  const d=i-3;if(!d)return;
+  const nm=cur.y*12+cur.m+d,p=[...tr.children].find(x=>+x.dataset.mk===nm);
+  if(nm<MIN_M||nm>MAX_M||!p){tr.scrollTo({left:3*W,behavior:'smooth'});return;}   // 끝 달: 다시 가운데
+  if(calShiftFast(d,true)){render();if(pageMode==='stats')openStatsPage();if(todayQ)setTimeout(todayGo,0);}
+  else{cur={y:Math.floor(nm/12),m:nm%12};render();}
+}
+let calLastX=0,calDir=0;
+document.addEventListener('scroll',e=>{
+  if(!e.target||e.target.id!=='track')return;
+  {const x=e.target.scrollLeft;if(Math.abs(x-calLastX)>.5)calDir=x>calLastX?1:-1;calLastX=x;}
+  if(performance.now()-calIgn<40||calAnimOn)return;
+  if((glowStart||glowTm)&&Math.abs(e.target.scrollLeft-3*calW(e.target))>2)glowStop();   // 손으로 밀 때만 빛을 멈춤 (가운데 맞춤 스크롤은 그대로)
+  {const tr=e.target,W=calW(tr),i=Math.round(tr.scrollLeft/W);[...tr.children].forEach(p=>{if(Math.abs((+p.style.order)-i)<=1&&!p.firstElementChild){calFill(p);calFillLater();}});}   // 다가오는 먼 판이 비었으면 바로 채움
+  clearTimeout(calSetT);calSetT=setTimeout(calSettle,90);
+},true);
+document.addEventListener('scrollend',e=>{if(e.target&&e.target.id==='track'&&!calAnimOn){clearTimeout(calSetT);calSettle();}},true);
+document.addEventListener('touchstart',e=>{if(e.target.closest&&e.target.closest('#track'))calTouch=true;},{passive:true,capture:true});   // (움직이는 중엔 판을 건드리지 않음: 손가락 스크롤이 옛 자리로 되돌려 튐 → 앞뒤 3달씩 두고 멈춘 뒤에만 옮김)
+['touchend','touchcancel'].forEach(ev=>document.addEventListener(ev,e=>{if(!calTouch||(e.touches&&e.touches.length))return;calTouch=false;clearTimeout(calSetT);calSetT=setTimeout(calSettle,140);},{passive:true,capture:true}));
+addEventListener('resize',()=>{if(tab==='cal')requestAnimationFrame(calCenter);});
 
 /* ================= 동료근무 ================= */
 // 조 이름: 회사마다 다르게 (A조 · 1조 · 1팀 · 직접)
@@ -6550,6 +6584,7 @@ function dstripCenter(goFn,curK){   // goFn: 가운데 온 날로 이동 (기본
       const kids=el.children,w=kids[0]?kids[0].offsetWidth:el.clientWidth/7;
       const i=Math.max(0,Math.min(kids.length-1,Math.round((el.scrollLeft+el.clientWidth/2)/w-.5))),k=kids[i]&&kids[i].dataset.k;
       if(dsw||performance.now()-swQuiet<600)return;   // 옆으로 밀어 넘기는 중 생긴 scroll 은 무시
+      if(!el.isConnected||!el.closest('#sheet.open,#page.open'))return;   // v0.138 닫힌 창 안의 날짜 띠가 화면 폭이 바뀌며 움직인 건 무시 (닫자마자 다시 열리던 것)
       if(k&&k!==curK()){held=true;setTimeout(()=>{held=false;},50);goFn(k);}
     },140);
   },{passive:true});
@@ -7276,12 +7311,22 @@ function wxHistSave(force){
     wxHAt=now;const H=wxHist(),o=H[k]&&isObj(H[k])?H[k]:{};
     const e={at:now,...(Object.keys(f).length?{f}:{})};
     if(mine&&mine.k){
-      const w=wxMyWin(t),acts=myActs(t),hr=wxHrOf(t,w,S.wx.home,wxWk(),wxName(S.wx.home),wxWk()?wxName(wxWk()):'',d0,acts);
-      if(hr&&Array.isArray(hr.at)){hr.at.forEach(x=>{delete x.now;delete x.past;});const on=hr.at.findIndex(x=>x.on);hr.i0=on>=0?on:Math.min(3,hr.at.length-1);}
+      // v0.138 시간별 줄은 지금 시각 기준 → 지난 칸은 실제 잰 미세먼지 얼굴로 남음 (전에 저장한 실제 값은 예보로 덮지 않음)
+      const w=wxMyWin(t),acts=myActs(t),hr=wxHrOf(t,w,S.wx.home,wxWk(),wxName(S.wx.home),wxWk()?wxName(wxWk()):'',now,acts);
+      if(hr&&Array.isArray(hr.at)){hr.at.forEach(x=>{delete x.now;delete x.past;});wxDustKeep(o.hr,hr);const on=hr.at.findIndex(x=>x.on);hr.i0=on>=0?on:Math.min(3,hr.at.length-1);}
       Object.assign(e,{s:w?`${shiftLabel(w.k)} · ${wxHm(w.s)} 출근 → ${wxHm(w.e)} 퇴근`:'하루 요약',c:wxHClean(mine),...(hr?{hr}:{})});
     }else if(o.c)Object.assign(e,{s:o.s,c:o.c,...(o.hr?{hr:o.hr}:{})});
-    H[k]=e;localStorage.setItem(WXH_KEY,JSON.stringify(H));
+    H[k]=e;
+    // v0.138 어제 저장본에 아직 예보로 남은 칸: 서버 지난 24시간 값으로 채움 (밤늦게 앱을 안 열었어도)
+    try{const yk=addK(k,-1),Y=H[yk];if(mine&&Y&&Y.hr&&Array.isArray(Y.hr.at)&&Y.hr.at.some(x=>x.fc||!x.f)){const yd=parse(yk),yw=wxMyWin(yd),yh=wxHrOf(yd,yw,S.wx.home,wxWk(),wxName(S.wx.home),wxWk()?wxName(wxWk()):'',now,myActs(yd));if(yh&&Array.isArray(yh.at))wxDustKeep(yh,Y.hr);}}catch(err){}
+    localStorage.setItem(WXH_KEY,JSON.stringify(H));
   }catch(e){}
+}
+// 시간별 줄 미세먼지: old 에 실제 잰 얼굴(fc 없음)이 있는 칸은 hr 에도 실제 얼굴로 (예보 · 빈칸을 덮음)
+function wxDustKeep(old,hr){
+  if(!old||!hr||!Array.isArray(old.at)||!Array.isArray(hr.at))return;
+  const m={};old.at.forEach(x=>{if(x&&x.f&&!x.fc)m[x.t]=x.f;});
+  hr.at.forEach(x=>{if(x&&m[x.t]&&(x.fc||!x.f)){x.f=m[x.t];delete x.fc;}});
 }
 // 지난 날짜 관측 한 줄 ("12°~21° · 비 14mm") · 없으면 ''
 function wxObsTxt(k){const x=wxPast()[S.wx.home+'_'+k.slice(0,7).replace('-','')],l=WX.pastLine(x&&x.d&&x.d[k.replace(/-/g,'')]);return l?l.t:'';}
@@ -8016,7 +8061,8 @@ document.addEventListener('pointermove',e=>{
   if(o!==g.over){g.over=o;items.forEach((r,i)=>r.classList.toggle('over',i===o&&i!==g.from));buzz(5);}
 },true);
 // 끄는 중에는 화면이 같이 스크롤되지 않게
-document.addEventListener('touchmove',e=>{if(gdg&&gdg.on&&e.cancelable)e.preventDefault();},{passive:false,capture:true});
+// v0.138 화면 전체(document)에 막는 손가락 처리를 두면 달력 가로 스크롤도 앱을 기다려야 함 → 끌기가 있는 곳(설정 페이지 · 팝업)에만
+['#page','#pop'].forEach(s=>{const el=document.querySelector(s);if(el)el.addEventListener('touchmove',e=>{if(gdg&&gdg.on&&e.cancelable)e.preventDefault();},{passive:false,capture:true});});
 ['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,e=>{
   const g=gdg;if(!g||e.pointerId!==g.id)return;
   clearTimeout(g.t);gdg=null;
@@ -8807,19 +8853,31 @@ const monthDirOf=(k,y,m)=>{const d=parse(k);return (d.getFullYear()*12+d.getMont
 // v0.136 달 넘김을 "페이지 넘기기"처럼: 옆 판은 이미 그려져 있으니 판을 옮기기만 하고, 새로 필요한 맨 끝 판 하나만 만든다
 // (전에는 넘길 때마다 세 판을 다 다시 그리고 새 달 스티커 크기를 그때 재서 느린 폰에서 1초 가까이 멈춤 → 그 사이 손가락이 씹힘)
 var calKeep=false,calFarT=0,calPreT=0;
-function calShiftFast(n){
-  const tr=$('#track');
-  if(!tr||tab!=='cal'||Math.abs(n)!==1||S.stzMode==='3'||paint||(famView()&&famPeers().length)||tr.children.length!==3)return false;
-  const mk=cur.y*12+cur.m,v=mk+n;if(v<MIN_M||v>MAX_M)return false;
-  const P=[...tr.children],nb=n>0?P[2]:P[0];if(!nb.firstElementChild)return false;
-  const far=n>0?P[0]:P[2];
-  if(n>0)tr.appendChild(far);else tr.insertBefore(far,tr.firstChild);
-  tr.style.transition='none';tr.style.transform='translateX(-33.3333%)';
-  cur={y:Math.floor(v/12),m:v%12};
-  const fm=v+n;far.style.removeProperty('--stz');
-  try{const ll=lastLines;far.innerHTML=fm>=MIN_M&&fm<=MAX_M?calPanel(Math.floor(fm/12),fm%12):'';lastLines=ll;}catch(e){far.innerHTML='';}
-  clearTimeout(calFarT);calFarT=setTimeout(()=>{try{if(far.isConnected&&far.firstElementChild){stzPanel(far,fm);fitDn(far,true);memoShift(far);}}catch(e){}},60);   // 스티커 크기 · 칸 맞추기는 잠깐 뒤 (보이지 않는 판)
-  calKeep=true;return true;
+function calShiftFast(n,keepView){
+  if(tab!=='cal'||Math.abs(n)>3||S.stzMode==='3'||paint||(famView()&&famPeers().length))return false;
+  return calReorder(cur.y*12+cur.m+n,keepView);
+}
+function calFill(p){const v=+p.dataset.mk;if(v<MIN_M||v>MAX_M){p.innerHTML='';return;}const ll=lastLines;p.style.removeProperty('--stz');p.innerHTML=calPanel(Math.floor(v/12),v%12);lastLines=ll;}
+function calFillLater(ms){clearTimeout(calFarT);calFarT=setTimeout(()=>{try{   // 한 번에 판 하나씩 (가까운 것부터) → 손가락이 와도 바로 받음
+  const tr=$('#track');if(!tr||tab!=='cal')return;if(calTouch||busy){calFillLater(200);return;}
+  const P=[...tr.children].sort((a,b)=>Math.abs(+a.style.order-3)-Math.abs(+b.style.order-3));
+  const p=P.find(x=>{const v=+x.dataset.mk;return (v>=MIN_M&&v<=MAX_M)&&(!x.firstElementChild||!x.dataset.fit);});if(!p)return;
+  const v=+p.dataset.mk;if(!p.firstElementChild)calFill(p);p.dataset.fit=1;stzPanel(p,v);fitDn(p,true);memoShift(p);calFillLater(60);
+}catch(e){}},ms==null?80:ms);}
+// v0.138 지금 달을 nm 으로: 이미 있는 판은 그대로 두고 자리(order)만 바꿈 · 빠진 판만 새로 · keepView = 손으로 밀어 온 자리 그대로
+function calReorder(nm,keepView){
+  const tr=$('#track');if(!tr||tr.children.length!==7)return false;
+  const mk=cur.y*12+cur.m,d=nm-mk;if(nm<MIN_M||nm>MAX_M||Math.abs(d)>3)return false;
+  const P=[...tr.children],by={};P.forEach(p=>{by[+p.dataset.mk]=p;});
+  const want=[nm-1,nm,nm+1,nm-2,nm+2,nm-3,nm+3],free=P.filter(p=>!want.includes(+p.dataset.mk));
+  const W=calW(tr),x0=tr.scrollLeft;
+  const nodes=want.map(v=>{let p=by[v];if(!p){p=free.shift();p.dataset.mk=v;delete p.dataset.fit;p.innerHTML='';p.style.removeProperty('--stz');}p.style.order=3+v-nm;return p;});
+  if(!nodes[1].firstElementChild)calFill(nodes[1]);
+  [nodes[0],nodes[2]].forEach(p=>{if(!p.firstElementChild)calFill(p);});
+  nodes.forEach(p=>tr.appendChild(p));
+  cur={y:Math.floor(nm/12),m:nm%12};
+  calIgn=performance.now();tr.scrollLeft=keepView?x0-d*W:3*W;
+  calFillLater();calKeep=true;return true;
 }
 // 쉬는 동안 앞뒤 2달 스티커 크기를 미리 재 둠 (폰에 저장 · 넘길 때 다시 안 잼)
 function calPrefetch(){
@@ -8829,8 +8887,8 @@ function calPrefetch(){
     if(window.requestIdleCallback)requestIdleCallback(go,{timeout:3000});else go();},q.length===4?1200:150);};
   step();
 }
-function shiftMonth(n){
-  if(calShiftFast(n)){render();if(pageMode==='stats')openStatsPage();if(todayQ)setTimeout(todayGo,0);return;}
+function shiftMonth(n,keepView){
+  if(calShiftFast(n,keepView)){render();if(pageMode==='stats')openStatsPage();if(todayQ)setTimeout(todayGo,0);return;}
   const v=Math.min(MAX_M,Math.max(MIN_M,cur.y*12+cur.m+n));
   cur={y:Math.floor(v/12),m:v%12};render();
   if(pageMode==='stats')openStatsPage();
@@ -9760,7 +9818,7 @@ const V=$('#view');
 function calFlush(){if(!calPend)return 0;clearTimeout(calPend.t);const d=calPend.dir;calPend=null;busy=false;shiftMonth(d);return d;}
 V.addEventListener('touchstart',e=>{
   if(paint){sx=null;return;}
-  if((tab!=='cal'&&tab!=='colleague')||$('#sheet').classList.contains('open')){sx=null;return;}
+  if(tab!=='colleague'||$('#sheet').classList.contains('open')){sx=null;return;}   // v0.138 달력은 가로 스크롤(scroll-snap)이 직접 · 동료 근무표만 여기서
   swBase=0;
   if(busy){
     const tr=$('#track');if(!calPend||!tr||tab!=='cal'){sx=null;return;}
@@ -9777,7 +9835,6 @@ V.addEventListener('touchmove',e=>{
   if(lock===null&&(Math.abs(x)>8||Math.abs(y)>8))lock=Math.abs(x)>Math.abs(y)?'x':'y';
   if(lock!=='x')return;
   // 옆으로 넘기는 건 앱이 처리한다고 폰에 알림 → 폰이 스크롤 · 관성을 시작하지 않음. (안 그러면 폰은 "관성으로 움직이는 중"이라 보고, 넘긴 직후 첫 누름(오늘 · 날짜 칸)을 멈추는 데만 쓰고 버림)
-  if(e.cancelable)e.preventDefault();
   dx=x;
   if(tab==='colleague')return;
   if(glowStart||glowTm)glowStop();   // 넘기기 시작하면 빛은 바로 멈춤
@@ -9786,7 +9843,7 @@ V.addEventListener('touchmove',e=>{
   const tr=$('#track');if(!tr)return;
   tr.style.transition='none';
   tr.style.transform=`translateX(calc(-33.3333% + ${swBase+dx}px))`;
-},{passive:false});
+},{passive:true});   // v0.138 달력은 가로 스크롤 · 이 처리는 동료 근무표만 (막지 않음)
 V.addEventListener('touchend',()=>{
   if(sx===null||lock!=='x'){sx=null;return;}
   sx=null;
@@ -10637,10 +10694,9 @@ document.addEventListener('touchmove',e=>{
   const x=e.touches[0].clientX-vsx,y=e.touches[0].clientY-vsy;
   if(vlock===null&&(Math.abs(x)>8||Math.abs(y)>8))vlock=Math.abs(x)>Math.abs(y)?'x':'y';
   if(vlock!=='x')return;
-  if(e.cancelable)e.preventDefault();   // (달력과 같은 이유: 넘긴 직후 첫 누름이 버려지지 않게)
   vdx=x;const el=document.getElementById('vcsl');if(!el)return;
   el.style.transition='none';el.style.transform=`translateX(${x}px)`;
-},{passive:false});
+},{passive:true});   // v0.138 막지 않음 (가로는 #vcsl touch-action:pan-y 로 폰이 안 가져감)
 document.addEventListener('touchend',()=>{
   if(vsx===null||vlock!=='x'){vsx=null;return;}
   vsx=null;const el=document.getElementById('vcsl');if(!el)return;

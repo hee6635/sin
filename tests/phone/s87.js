@@ -34,7 +34,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     const pl=await p.evaluate(()=>__wx.famPayload().wx);
     T('가족에게 보내는 날씨 = 직장 · 집 · 시간',pl&&pl.w==='41113'&&pl.h==='41111'&&pl.tm,JSON.stringify(pl));
     const ps=await p.evaluate(()=>[...document.querySelectorAll('#view #track>.panel')].map(e=>e.style.getPropertyValue('--stz')));
-    T('"달마다 따로": 달력 판 3개마다 스티커 크기가 따로 달림',ps.length===3&&ps.every(v=>v!==''),JSON.stringify(ps));
+    T('"달마다 따로": 달력 판마다 스티커 크기가 따로 달림',ps.length>=3&&ps.slice(0,3).every(v=>v!==''),JSON.stringify(ps));
     T('오류 없음 (보내기 · 판 크기)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 3) 유찬(직접 추가한 가족): 위젯 자료 · 위젯에서 체크 · 날씨 줄 → 앱

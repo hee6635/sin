@@ -9,7 +9,7 @@ const fs=require('fs');
     const cdp=await p.context().newCDPSession(p);
     const swipe=async(dir=1)=>{const y=500,x0=dir>0?330:60;await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x0,y}]});for(let i=1;i<=6;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x0-dir*i*40,y}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});};
     const ym=()=>p.evaluate(()=>document.querySelector('.ym h1').textContent);
-    const st=()=>p.evaluate(()=>{const P=[...document.querySelectorAll('#track>.panel')];const mk=x=>{const ks=[...x.querySelectorAll('.cell[data-k]')].map(c=>c.dataset.k.slice(0,7));const c={};ks.forEach(k=>c[k]=(c[k]||0)+1);return Object.keys(c).sort((a,b)=>c[b]-c[a])[0]||'-';};return P.map(mk);});
+    const st=()=>p.evaluate(()=>{const P=[...document.querySelectorAll('#track>.panel')];const mk=x=>{const ks=[...x.querySelectorAll('.cell[data-k]')].map(c=>c.dataset.k.slice(0,7));const c={};ks.forEach(k=>c[k]=(c[k]||0)+1);return Object.keys(c).sort((a,b)=>c[b]-c[a])[0]||'-';};return P.slice(0,3).map(mk);});   // (v0.138 판 7개 · 문서 앞 3개 = 앞 · 지금 · 다음)
     const a=await ym();
     for(let i=0;i<3;i++){await swipe();await p.waitForTimeout(120);}   // 넘어가는 0.25초 안에 다음 밀기
     await p.waitForTimeout(900);
@@ -89,5 +89,24 @@ const fs=require('fs');
     T('"스티커가 왜 안 붙지?" 자세히',r.why);
     T('사진 파일 모두 있음',r.img.length>=11&&r.img.every(s=>fs.existsSync('/home/user/sin/app/src/main/assets/'+s)),JSON.stringify(r.img));
     T('오류 없음 (팁)',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
+  { // 6) 지난 날 날씨 팝업: 시간별 줄 지난 칸 미세먼지 = 실제 잰 얼굴로 남음 · 어제 남은 칸도 채움
+    const KST=(y,mo,d,h)=>Date.UTC(y,mo-1,d,h-9);const p2=n=>String(n).padStart(2,'0');
+    const mk=r=>{const h={},hh={};for(let d=12;d<=16;d++)for(let x=0;x<24;x++){h[`202610${p2(d)}${p2(x)}`]=[12,10,0,1,0,2,50];if(d<14||(d===14&&x<=15))hh[`202610${p2(d)}${p2(x)}`]=[95,60];}
+      const md={};for(let d=12;d<=18;d++)md[`202610${p2(d)}`]=[1,1];
+      return {v:1,r,n:'',s:{b:'202610140500',h,n:{}},m:{b:'',d:{}},a:{b:'202610140500',d:md},q:{t:'2026-10-14 15:00',p10:95,p25:60,hh}};};
+    const routes=[['https://asia-northeast3-demo-wx.cloudfunctions.net/wx**',r=>{const u=new URL(r.request().url());r.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(u.searchParams.has('past')?{d:{}}:{list:[mk('41111')]})});}]];
+    const cfg="window.FIREBASE_CONFIG={projectId:'demo-wx',apiKey:'x',authDomain:'x',appId:'x'};";
+    const p=await boot(b,{...base,addons:{...base.addons,wx:true},wx:{home:'41111',work:'',fw:{},nm:{}}},{tz:'Asia/Seoul',T:KST(2026,10,14,16),cfg,routes});
+    await p.waitForTimeout(2200);
+    await p.evaluate(()=>{const H=__wx.wxHist();H['2026-10-13']={at:1,s:'하루 요약',c:H['2026-10-14']&&H['2026-10-14'].c,hr:{i0:3,at:Array.from({length:12},(_,i)=>({t:Date.UTC(2026,9,12,15+2*i),l:'',f:'faces/1',fc:true}))}};__wx.wxHistSave(true);});
+    const r=await p.evaluate(()=>{const H=__wx.wxHist(),x=H['2026-10-14'],y=H['2026-10-13'];const at=x&&x.hr&&x.hr.at||[];const past=at.filter(c=>c.t<Date.now()-2*3600e3),fut=at.filter(c=>c.t>Date.now());
+      return {past:past.map(c=>[c.f,!!c.fc]).slice(0,3),pastReal:past.length>0&&past.every(c=>c.f&&!c.fc),futFc:fut.length>0&&fut.every(c=>c.fc||!c.f),yReal:y.hr.at.filter(c=>!c.fc).length};});
+    T('오늘 저장본: 지난 칸 미세먼지 = 실제 잰 얼굴 (예보 아님)',r.pastReal,JSON.stringify(r));
+    T('앞으로의 칸은 예보 그대로',r.futFc,JSON.stringify(r));
+    T('어제 저장본에 예보로 남은 칸도 서버 지난 값으로 채움',r.yReal>=6,JSON.stringify(r));
+    await p.evaluate(()=>{const H=__wx.wxHist();const x=H['2026-10-14'],c=x.hr.at.find(c=>c.fc);window.__ct=c.t;c.f='faces/7';c.fc=false;localStorage.setItem('eonjeswieo:wxh',JSON.stringify(H));__wx.wxHistSave(true);});
+    T('한 번 저장된 실제 값은 예보로 다시 덮이지 않음',await p.evaluate(()=>{const c=__wx.wxHist()['2026-10-14'].hr.at.find(c=>c.t===window.__ct);return c&&c.f==='faces/7'&&!c.fc;}));
+    T('오류 없음 (미세먼지 기록)',p.errs.filter(x=>!/Failed to load resource/.test(x)).length===0,p.errs.join('|'));await p.close();
   }
   T.sum();await b.close();})();
