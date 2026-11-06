@@ -284,3 +284,9 @@
 - 스티커 저장 때 stClashScan(같은 그림 dup · 4개 넘음 hid · 밀림 mv) → stClashAsk 버튼 3개: 지금 만든 스티커만 보이기(clash-show: 겹친 날 옛 것 빼고 체크 옮김 · 4개 날은 맨 뒤 것 그 날 빼기) · 겹친 날은 건너뛰기(clash-skip: 새 것 skip) · 취소(sh-undo). stampHiddenAsk 는 안 씀.
 - 이럴 땐 이렇게: TIPD 17개 더(자세히 27 · 한 줄 12) · "스티커가 왜 안 붙지?" 새 팁 · 사진 t11/t13/t15.
 - 시험: s89 (24) · s23/s57/s58 새 기본값 · 새 팝업 · s88 팁 수.
+
+## v0.137 — 날짜 창 넘기기도 "그려 둔 옆 판 그대로"
+- 잰 값: 날짜 창 밀기는 이미 안 씹힘(swPend/swFlush). 남은 것 = 넘긴 뒤 openDay 가 창 전체를 다시 그림(깜빡임 · 다시 그리는 시간).
+- swAdoptDay(st): 날씨 팝업 swAdoptWx 처럼 옆 판(.swc.swn)을 그대로 남기고 옛 판만 지움. swSide 가 지운 id 는 data-swid 로 남겨 두었다가 되살림(dstrip · memoInput · wxDay …). 상태: tidyMemos · memoEdit/memoText 비움 · sheetKey · markSel · dstripCenter · coachSoon. 달이 바뀌면 calShiftFast(±1) 로 달력 판만 옮김(데이터가 바뀌었으면 다시 그림).
+- dsiX(el,on): 날짜 띠 가운데 맞춤을 띠 안 자리로 계산(판이 위치 기준이 되면 16px 어긋났음).
+- 시험: s89 날짜 창 넘기기 (메모 · 근무 · 달 바뀜) · s75 판 하나 남는 것 허용.

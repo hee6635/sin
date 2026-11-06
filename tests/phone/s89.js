@@ -25,6 +25,25 @@ const fs=require('fs');
     T('데이터가 바뀌면 옆 판도 다시 그림',await p.evaluate(()=>/새 메모/.test(document.querySelector('#track>.panel:nth-child(3)').textContent)));
     T('오류 없음 (달 넘기기)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
+  { // 1-2) 날짜 창 넘기기: 그려 둔 옆 판을 그대로 씀 (다시 안 그림) · 넘긴 뒤에도 메모 · 근무 · 날짜 띠 그대로 동작 · 달 바뀌면 달력도
+    const p=await boot(b,{...base},{touch:true});await p.waitForTimeout(500);
+    const cdp=await p.context().newCDPSession(p);
+    const swipe=async(dir=1)=>{const y=420,x0=dir>0?330:60;await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x0,y}]});for(let i=1;i<=6;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x0-dir*i*40,y}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});};
+    await p.evaluate(()=>__wx.openDay('2026-10-30'));await p.waitForTimeout(500);
+    await p.evaluate(()=>{window.__mark=document.querySelector('#sheet .dft');});
+    await swipe();await p.waitForTimeout(700);
+    const r=await p.evaluate(()=>({t:document.querySelector('#sheet.open .dft b').textContent,same:!document.querySelector('#sheet').contains(window.__mark),ids:['dstrip','memoInput'].every(i=>document.getElementById(i)&&document.getElementById(i).closest('#sheet')),one:document.querySelectorAll('#sheet [id="dstrip"]').length,left:document.querySelectorAll('#sheet .swc').length}));
+    T('밀어서 10/31 · 옆 판을 그대로 씀 · id 되살림 (날짜 띠 · 메모 칸)',/10월 31일/.test(r.t)&&r.ids&&r.one===1&&r.left===1,JSON.stringify(r));
+    await swipe();await p.waitForTimeout(700);
+    T('한 번 더 → 11/1 · 달력도 11월',await p.evaluate(()=>/11월 1일/.test(document.querySelector('#sheet.open .dft b').textContent)&&document.querySelector('.ym h1').textContent==='2026.11'));
+    await p.fill('#memoInput','넘긴 뒤 메모');await p.click('#sheet [data-act="memo-send"]');await p.waitForTimeout(300);
+    T('넘긴 뒤 메모 쓰기 → 그 날(11/1)에 저장',await p.evaluate(()=>(__wx.S.memos['2026-11-01']||[]).some(x=>x.text==='넘긴 뒤 메모')));
+    await p.evaluate(()=>{const cur=__wx.shiftOf(new Date(2026,10,1)),b=[...document.querySelectorAll('#sheet [data-act="setshift"]')].find(x=>x.dataset.s&&x.dataset.s!==cur);b&&b.click();});await p.waitForTimeout(300);
+    T('넘긴 뒤 근무 바꾸기 → 그 날 근무',await p.evaluate(()=>__wx.S.overrides['2026-11-01']!=null));
+    await swipe(-1);await p.waitForTimeout(700);
+    T('뒤로 → 10/31 · 달력 10월',await p.evaluate(()=>/10월 31일/.test(document.querySelector('#sheet.open .dft b').textContent)&&document.querySelector('.ym h1').textContent==='2026.10'));
+    T('오류 없음 (날짜 창 넘기기)',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
   { // 2) 앱 달력 기본 모양값: 새로 설치 = 사용자 값 · 이미 저장된 값은 그대로
     const p=await boot(b,{...base,tune:undefined});await p.waitForTimeout(300);
     const t=await p.evaluate(()=>({c:__wx.S.tune.appCover,i:__wx.S.tune.appInner}));

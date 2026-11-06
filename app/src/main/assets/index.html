@@ -6437,13 +6437,13 @@ function swSide(st,dir){   // dir: 1 = 다음날(오른쪽에 붙음) · -1 = �
   if(st.nb&&st.dir===dir)return;
   if(st.nb){st.nb.remove();st.nb=null;}
   st.dir=dir;const h=swHtml(st.w,addK(swKey(st.w),dir));if(h==null)return;
-  const nb=document.createElement('div');nb.className='swc swn';nb.innerHTML=h;nb.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));   // 옆 판엔 같은 id 없게
+  const nb=document.createElement('div');nb.className='swc swn';nb.innerHTML=h;nb.querySelectorAll('[id]').forEach(x=>{x.dataset.swid=x.id;x.removeAttribute('id');});   // 옆 판엔 같은 id 없게 (v0.136 넘긴 뒤 그 판을 그대로 쓰면 되살림)
   const cs=getComputedStyle(st.el),pl=parseFloat(cs.paddingLeft)||0,pr=parseFloat(cs.paddingRight)||0,pt=parseFloat(cs.paddingTop)||0;   // 창 안쪽 여백만큼 비켜서 (옆 판이 더 크게 보였다 줄어드는 것 막기)
   nb.style.cssText=`position:absolute;left:${pl}px;top:${(st.el.scrollTop||0)+pt}px;width:${st.el.clientWidth-pl-pr}px;${st.flex?'display:flex;flex-direction:column;height:100%;':''}pointer-events:none`;
   st.el.appendChild(nb);st.nb=nb;
   nb.querySelectorAll('.wlta').forEach(x=>{x.readOnly=true;x.tabIndex=-1;wlGrow(x);});
   if(st.w==='wx')wxHrScroll(nb);   // v0.132 시간별 줄을 미리 제자리로 (넘긴 뒤 툭 바뀌지 않게)   // 업무 메모 칸 높이도 미리 맞춤 (넘어간 뒤 칸이 늘어나는 것 막기)
-  const ds=nb.querySelector('.dstrip'),on=ds&&ds.querySelector('.dsi.on');if(on)ds.scrollLeft=on.offsetLeft+on.offsetWidth/2-ds.clientWidth/2;   // 옆 날짜의 날짜 띠도 가운데 맞춤 (도착해서 툭 안 바뀌게)
+  const ds=nb.querySelector('.dstrip'),on=ds&&ds.querySelector('.dsi.on');if(on)ds.scrollLeft=dsiX(ds,on)+on.offsetWidth/2-ds.clientWidth/2;   // 옆 날짜의 날짜 띠도 가운데 맞춤 (도착해서 툭 안 바뀌게)
   // v0.121 창 높이도 미리: 옆 날짜 판의 높이를 재서, 미는 만큼 창 높이를 그쪽으로 (도착한 뒤 높이가 툭 바뀌지 않게)
   st.h0=st.h0||st.el.getBoundingClientRect().height;st.h1=null;
   if(!st.flex&&!st.el.classList.contains('full')){const pb=parseFloat(cs.paddingBottom)||0,bt=(parseFloat(cs.borderTopWidth)||0)+(parseFloat(cs.borderBottomWidth)||0),mx=parseFloat(cs.maxHeight);
@@ -6501,8 +6501,25 @@ const swEnd=e=>{
   st.cur.style.transition=SPRING;st.cur.style.transform=`translateX(${-st.dir*st.W}px)`;
   st.nb.style.transition=SPRING;st.nb.style.transform='translateX(0)';
   if(st.h1!=null){st.el.style.transition='height .26s ease';st.el.style.height=st.h1+'px';}
-  swLater(()=>{if(st.w==='wx'&&swAdoptWx(st))return;swUnwrap(st);if(swGo(st.w,st.dir)&&(st.w==='day'||st.w==='vc')){const sh=$('#sheet');if(sh)sh.scrollTop=0;}},300);
+  swLater(()=>{if(st.w==='wx'&&swAdoptWx(st))return;if(st.w==='day'&&swAdoptDay(st))return;swUnwrap(st);if(swGo(st.w,st.dir)&&(st.w==='day'||st.w==='vc')){const sh=$('#sheet');if(sh)sh.scrollTop=0;}},300);
 };
+// v0.136 날짜 창도 날씨 팝업처럼: 넘긴 뒤 창 전체를 다시 그리지 않고, 밀면서 그려 둔 옆 날짜 판을 그대로 씀 (깜빡임 · 다시 그리는 시간 없음)
+function swAdoptDay(st){
+  try{
+    const k=addK(sheetKey,st.dir),nb=st.nb,el=st.el;if(!nb||!okDate(k)||sheetMode!=='day')return false;
+    const d=parse(k),v=d.getFullYear()*12+d.getMonth();if(v<MIN_M||v>MAX_M)return false;
+    const r0=dataRev;tidyMemos(sheetKey);memoEdit=null;memoText='';
+    st.nb=null;if(st.cur){st.cur.remove();st.cur=null;}
+    el.style.position=st.prevPos||'';el.style.overflowX=st.prevOx||'';if(st.h0){el.style.height='';el.style.transition=st.prevTr||'';}
+    nb.classList.remove('swn');Object.assign(nb.style,{position:'relative',left:'',top:'',width:'',pointerEvents:'',transition:'',transform:'translateZ(0)'});
+    nb.querySelectorAll('[data-swid]').forEach(x=>{x.id=x.dataset.swid;delete x.dataset.swid;});
+    sheetKey=k;
+    const mk=cur.y*12+cur.m,changed=dataRev!==r0;
+    if(v!==mk){if(changed||!(Math.abs(v-mk)===1&&calShiftFast(v-mk)))cur={y:Math.floor(v/12),m:v%12};render();}else if(changed)render();
+    markSel(k);el.scrollTop=0;dstripCenter();coachSoon();
+    return true;
+  }catch(e){return false;}
+}
 // v0.131 날씨 팝업: 넘긴 뒤 다시 그리지 않고, 밀면서 이미 그려 둔 옆 날짜 판(그림까지 다 풀린 것)을 그대로 씀 → 새 그림을 푸는 한 프레임 동안 하얗게 깜빡이던 것
 function swAdoptWx(st){
   try{
@@ -6520,10 +6537,11 @@ function swAdoptWx(st){
 document.addEventListener('pointerup',swEnd);
 document.addEventListener('pointercancel',swEnd);
 // 3일 띠: 가운데에 오늘 고른 날 · 옆으로 밀면 따라 움직이고, 멈췄을 때 가운데에 온 날로 이동
+const dsiX=(el,on)=>on.offsetParent===el.offsetParent?on.offsetLeft-el.offsetLeft:on.offsetLeft;   // v0.136 날짜 띠 안에서의 자리 (넘긴 뒤 판(.swc)이 기준이 되어도 같게)
 function dstripCenter(goFn,curK){   // goFn: 가운데 온 날로 이동 (기본 = 내 날짜 창) · curK: 지금 날짜
   goFn=goFn||goDay;curK=curK||(()=>sheetKey);
   const el=document.getElementById('dstrip');if(!el)return;
-  const go=()=>{const on=el.querySelector('.dsi.on');if(on)el.scrollLeft=on.offsetLeft+on.offsetWidth/2-el.clientWidth/2;};
+  const go=()=>{const on=el.querySelector('.dsi.on');if(on)el.scrollLeft=dsiX(el,on)+on.offsetWidth/2-el.clientWidth/2;};
   go();requestAnimationFrame(go);
   let tm=null;
   el.addEventListener('scroll',()=>{
