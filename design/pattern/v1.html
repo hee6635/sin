@@ -1,0 +1,417 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>
+@font-face{font-family:Pretendard;src:url(PretendardVariable.woff2) format("woff2-variations");font-weight:45 920}
+:root{--sc:#a6c6e2;--sf:#1c2a31;--ink:#191f28;--ink2:#4e5968;--ink3:#8b95a1;--bg:#f4f6f8;--card:#fff;--fill:#f2f4f6;--acc:#3182f6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,sans-serif;letter-spacing:-.2px;-webkit-font-smoothing:antialiased}
+.top{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 12px}.top .b{color:#333d4b;display:flex}.top h1{font-size:17px;font-weight:700;margin:0}.top .s{color:var(--acc);font-weight:600;font-size:15px;padding:6px 8px}
+main{padding:4px 16px 32px}
+.hero{position:relative;overflow:hidden;background:var(--card);border-radius:26px;padding:22px 20px 20px;box-shadow:0 2px 12px rgba(15,23,42,.04)}
+.glow{position:absolute;top:-70px;right:-60px;width:240px;height:240px;border-radius:50%;background:var(--sc);filter:blur(40px);opacity:.75;pointer-events:none}
+.glow2{position:absolute;top:30px;right:40px;width:110px;height:110px;border-radius:50%;background:var(--sc);filter:blur(30px);opacity:.5}
+.hero>*:not(.glow):not(.glow2){position:relative}
+.tm{display:flex;align-items:baseline;gap:8px}.tm small{font-size:20px;font-weight:700;color:var(--ink2)}.tm b{font-size:56px;font-weight:800;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}
+.pills{display:flex;gap:8px;margin-top:18px;overflow:hidden}.p{flex:none;padding:8px 15px;border-radius:999px;background:var(--fill);color:var(--ink2);font-size:14px;font-weight:600}.p.on{background:var(--sc);color:var(--sf);font-weight:700;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--sf) 18%,transparent)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--fill);padding:4px;border-radius:16px;margin-top:16px}.seg span{text-align:center;padding:9px 0;border-radius:12px;font-size:14px;font-weight:600;color:var(--ink3)}.seg span.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+h2{font-size:13px;font-weight:700;color:var(--ink3);margin:24px 6px 8px}
+.g{background:var(--card);border-radius:22px;box-shadow:0 2px 12px rgba(15,23,42,.03),0 1px 2px rgba(15,23,42,.02);overflow:hidden}
+.r{display:flex;align-items:center;gap:12px;padding:16px;position:relative}.r+.r::before,.r+.sd::before{content:'';position:absolute;top:0;left:60px;right:16px;height:1px;background:#f2f4f6}
+.ti{width:32px;height:32px;border-radius:10px;background:var(--fill);color:var(--ink2);display:flex;align-items:center;justify-content:center;flex:none}
+.l{flex:1;min-width:0}.n{font-size:15.5px;font-weight:600}.d{font-size:13px;color:var(--ink3);margin-top:2px}
+.v{display:flex;align-items:center;gap:2px;font-size:14.5px;font-weight:500;color:var(--ink2);flex:none}.v svg{color:#b0b8c1}
+.tg{width:50px;height:30px;border-radius:15px;background:#e5e8eb;position:relative;flex:none}.tg::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.15)}.tg.on{background:var(--acc)}.tg.on::after{left:23px}
+.sd{padding:0 16px 16px 60px;position:relative}
+.mini{display:flex;gap:6px}.mp{padding:6px 11px;border-radius:9px;background:var(--fill);font-size:13px;font-weight:600;color:var(--ink2)}.mp.on{background:var(--ink);color:#fff}
+.sl{display:flex;align-items:center;gap:10px;margin-top:14px}.trk{flex:1;height:6px;border-radius:3px;background:var(--acc);position:relative}.trk::after{content:'';position:absolute;right:-2px;top:-7px;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--acc);box-shadow:0 2px 6px rgba(0,0,0,.15)}.sl b{font-size:13px;width:38px;text-align:right}
+.tone{display:flex;justify-content:space-between;margin-top:14px;font-size:13.5px;color:var(--ink3)}.tone span:last-child{color:var(--acc);font-weight:600}
+.wseg{margin:0 16px 16px 60px}
+.del{margin-top:24px;background:var(--card);border-radius:20px;padding:16px;display:flex;justify-content:center;align-items:center;gap:6px;color:#f04452;font-weight:600;font-size:15px;box-shadow:0 2px 12px rgba(15,23,42,.03)}
+
+.hero{background:radial-gradient(140% 100% at 100% 0%,color-mix(in srgb,var(--sc) 60%,#fff) 0%,color-mix(in srgb,var(--sc) 22%,#fff) 45%,#fff 80%)!important}
+.hero .seg{background:rgba(242,244,246,.85)}
+.pills{position:relative;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent)}
+.p{display:flex;align-items:center;gap:6px;background:rgba(242,244,246,.9)}.p i{width:8px;height:8px;border-radius:50%;flex:none}
+.p.on{background:var(--sf)!important;color:#fff!important;box-shadow:none!important}.p.on i{box-shadow:0 0 0 1.5px rgba(255,255,255,.6)}
+.chev{color:#b0b8c1;display:flex;margin-left:2px}
+
+.hero{background:radial-gradient(140% 100% at 100% 0%,color-mix(in srgb,#a6c6e2 60%,#fff) 0%,color-mix(in srgb,#a6c6e2 22%,#fff) 45%,#fff 80%)!important}
+.bd{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;flex:none}
+.ht{font-size:13px;font-weight:600;color:var(--ink2)}.hn{font-size:26px;font-weight:800;letter-spacing:-.8px;margin-top:2px}.hs{font-size:14px;color:var(--ink2);margin-top:6px;font-weight:500}.hs b{color:var(--ink)}
+.cells{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:16px}.cell{background:rgba(255,255,255,.75);border-radius:12px;padding:8px 0 6px;display:flex;flex-direction:column;align-items:center;gap:4px}.cell small{font-size:11px;color:var(--ink3);font-weight:600}.cell.on{box-shadow:inset 0 0 0 2px var(--ink);background:#fff}
+.hb{display:flex;gap:8px;margin-top:12px}.hb span{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 0;border-radius:12px;background:rgba(242,244,246,.9);font-size:14px;font-weight:600;color:var(--ink2)}
+.tv{font-size:14.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;flex:none}.tv small{color:var(--ink3);font-weight:500;margin-left:4px}.v.acc{color:var(--acc);font-weight:600}.v.acc svg{color:var(--acc)}
+.add{color:var(--acc)!important;font-weight:600}.add .ti{background:#e8f3ff;color:var(--acc)}
+.chip{padding:6px 14px;border-radius:10px;background:var(--fill);font-size:14px;font-weight:600;color:var(--ink2)}.chip.on{background:var(--ink);color:#fff}
+.tgrid{padding:12px 12px 4px}.tg-h,.tg-r{display:grid;grid-template-columns:44px repeat(8,1fr);align-items:center;text-align:center}.tg-h span{font-size:13px;font-weight:700;padding:6px 0;line-height:1.2}.tg-h small{display:block;font-size:11px;color:var(--ink3);font-weight:600}
+.tg-h span.td{background:var(--ink);color:#fff;border-radius:10px 10px 0 0}.tg-h span.td small{color:#fff}.tg-r span.td{background:#f2f4f6}.tg-r:last-child span.td{border-radius:0 0 10px 10px}
+.tg-r{padding:5px 0}.tg-r .tn{font-size:14px;font-weight:700;text-align:left;padding-left:4px;line-height:1.1}.tg-r .tn small{display:block;font-size:10.5px;color:var(--acc);font-weight:600}.tg-r>span{padding:5px 0;display:flex;justify-content:center}.tg-r.me{background:#eef5ff;border-radius:12px}
+.danger{color:#f04452;text-align:center;font-weight:600;padding:16px;font-size:15px}
+.tg-r>span.tn{display:block!important;white-space:nowrap}</style>
+<div class="top"><span class="b"><svg
+  class="lucide lucide-chevron-left"
+  xmlns="http://www.w3.org/2000/svg"
+  width="26"
+  height="26"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m15 18-6-6 6-6" />
+</svg></span><h1>근무 패턴 · 조</h1><span class="s"></span></div>
+<main>
+<section class="hero">
+ <div class="ht">8일 반복 · C조</div><div class="hn">4조2교대</div>
+ <div class="hs">오늘은 <b>1번째 칸</b> · 주간 첫날</div>
+ <div class="cells"><div class="cell on"><span class="bd" style="width:28px;height:28px;font-size:13px;background:#a6c6e2;color:#1c2a31">주</span><small>1</small></div><div class="cell"><span class="bd" style="width:28px;height:28px;font-size:13px;background:#a6c6e2;color:#1c2a31">주</span><small>2</small></div><div class="cell"><span class="bd" style="width:28px;height:28px;font-size:13px;color:#d0607a">휴</span><small>3</small></div><div class="cell"><span class="bd" style="width:28px;height:28px;font-size:13px;color:#d0607a">휴</span><small>4</small></div><div class="cell"><span class="bd" style="width:28px;height:28px;font-size:13px;background:#e0b8a3;color:#2b1f1b">야</span><small>5</small></div><div class="cell"><span class="bd" style="width:28px;height:28px;font-size:13px;background:#e0b8a3;color:#2b1f1b">야</span><small>6</small></div><div class="cell"><span class="bd" style="width:28px;height:28px;font-size:13px;color:#d0607a">휴</span><small>7</small></div><div class="cell"><span class="bd" style="width:28px;height:28px;font-size:13px;color:#d0607a">휴</span><small>8</small></div></div>
+ <div class="hb"><span><svg
+  class="lucide lucide-plus"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 12h14" />
+  <path d="M12 5v14" />
+</svg>칸 추가</span><span><svg
+  class="lucide lucide-minus"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 12h14" />
+</svg>칸 빼기</span></div>
+</section>
+<h2>근무 종류</h2><div class="g">
+<div class="r"><span class="bd" style="width:32px;height:32px;font-size:15px;background:#a6c6e2;color:#1c2a31">주</span><div class="l"><div class="n">주간</div></div><span class="tv">07:00 → 19:00<small>12시간</small></span></div>
+<div class="r"><span class="bd" style="width:32px;height:32px;font-size:15px;background:#e0b8a3;color:#2b1f1b">야</span><div class="l"><div class="n">야간</div></div><span class="tv">19:00 → 07:00<small>12시간</small></span></div>
+<div class="r"><span class="bd" style="width:32px;height:32px;font-size:15px;color:#d0607a">휴</span><div class="l"><div class="n">휴무</div></div><span class="v">쉬는 날</span></div>
+<div class="r"><span class="bd" style="width:32px;height:32px;font-size:15px;background:#b9dcb0;color:#22331e">상</span><div class="l"><div class="n">상주</div></div><span class="v acc">시간 정하기<svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div>
+<div class="r"><span class="bd" style="width:32px;height:32px;font-size:15px;background:#f1dc8f;color:#3a3010">교</span><div class="l"><div class="n">교육</div></div><span class="v acc">시간 정하기<svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div>
+<div class="r add"><span class="ti"><svg
+  class="lucide lucide-plus"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 12h14" />
+  <path d="M12 5v14" />
+</svg></span><div class="l"><div class="n">근무 종류 추가</div></div></div>
+<div class="r"><span class="ti"><svg
+  class="lucide lucide-calendar-days"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M8 2v4" />
+  <path d="M16 2v4" />
+  <rect width="18" height="18" x="3" y="4" rx="2" />
+  <path d="M3 10h18" />
+  <path d="M8 14h.01" />
+  <path d="M12 14h.01" />
+  <path d="M16 14h.01" />
+  <path d="M8 18h.01" />
+  <path d="M12 18h.01" />
+  <path d="M16 18h.01" />
+</svg></span><div class="l"><div class="n">바로 보이는 개수</div></div><span class="chip on">자동</span><span class="chip">4</span><span class="chip">8</span></div>
+</div>
+<h2>패턴 설정</h2><div class="g">
+<div class="r"><span class="ti"><svg
+  class="lucide lucide-tag"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+  <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
+</svg></span><div class="l"><div class="n">근무 이름</div></div><span class="v ">4조2교대<svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div>
+<div class="r"><span class="ti"><svg
+  class="lucide lucide-calendar"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M8 2v4" />
+  <path d="M16 2v4" />
+  <rect width="18" height="18" x="3" y="4" rx="2" />
+  <path d="M3 10h18" />
+</svg></span><div class="l"><div class="n">1번째 칸 시작 날</div></div><span class="v ">10월 14일<svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div>
+<div class="r"><span class="ti"><svg
+  class="lucide lucide-calendar-off"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M4.2 4.2A2 2 0 0 0 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 1.82-1.18" />
+  <path d="M21 15.5V6a2 2 0 0 0-2-2H9.5" />
+  <path d="M16 2v4" />
+  <path d="M3 10h7" />
+  <path d="M21 10h-5.5" />
+  <path d="m2 2 20 20" />
+</svg></span><div class="l"><div class="n">공휴일엔 쉬어요</div></div><span class="tg"></span></div>
+<div class="r"><span class="ti"><svg
+  class="lucide lucide-calendar-days"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M8 2v4" />
+  <path d="M16 2v4" />
+  <rect width="18" height="18" x="3" y="4" rx="2" />
+  <path d="M3 10h18" />
+  <path d="M8 14h.01" />
+  <path d="M12 14h.01" />
+  <path d="M16 14h.01" />
+  <path d="M8 18h.01" />
+  <path d="M12 18h.01" />
+  <path d="M16 18h.01" />
+</svg></span><div class="l"><div class="n">요일 보기</div></div><span class="tg"></span></div>
+<div class="r"><span class="ti"><svg
+  class="lucide lucide-paintbrush"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m14.622 17.897-10.68-2.913" />
+  <path d="M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z" />
+  <path d="M9 8c-1.804 2.71-3.97 3.46-6.583 3.948a.507.507 0 0 0-.302.819l7.32 8.883a1 1 0 0 0 1.185.204C12.735 20.405 16 16.792 16 15" />
+</svg></span><div class="l"><div class="n">달력에 칠하기</div></div><span class="v "><svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div>
+<div class="r"><span class="ti"><svg
+  class="lucide lucide-map-pin"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+  <circle cx="12" cy="10" r="3" />
+</svg></span><div class="l"><div class="n">위치</div><div class="d">날씨를 볼 곳</div></div><span class="v ">효곡동 · 제철동<svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div>
+</div>
+<h2>조별 근무</h2><div class="g"><div class="tgrid"><div class="tg-h"><span></span><span class="td"><small>오늘</small>15</span><span class=""><small>월</small>16</span><span class=""><small>화</small>17</span><span class=""><small>수</small>18</span><span class=""><small>목</small>19</span><span class=""><small>금</small>20</span><span class=""><small>토</small>21</span><span class=""><small>일</small>22</span></div><div class="tg-r"><span class="tn">A조</span><span class="td"><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#a6c6e2;color:#1c2a31">주</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#a6c6e2;color:#1c2a31">주</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#e0b8a3;color:#2b1f1b">야</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#e0b8a3;color:#2b1f1b">야</span></span></div><div class="tg-r"><span class="tn">B조</span><span class="td"><span class="bd" style="width:26px;height:26px;font-size:12px;background:#e0b8a3;color:#2b1f1b">야</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#e0b8a3;color:#2b1f1b">야</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#a6c6e2;color:#1c2a31">주</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#a6c6e2;color:#1c2a31">주</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span></div><div class="tg-r me"><span class="tn">C조<small>내 조</small></span><span class="td"><span class="bd" style="width:26px;height:26px;font-size:12px;background:#a6c6e2;color:#1c2a31">주</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#a6c6e2;color:#1c2a31">주</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#e0b8a3;color:#2b1f1b">야</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#e0b8a3;color:#2b1f1b">야</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span></div><div class="tg-r"><span class="tn">D조</span><span class="td"><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#e0b8a3;color:#2b1f1b">야</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#e0b8a3;color:#2b1f1b">야</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;color:#d0607a">휴</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#a6c6e2;color:#1c2a31">주</span></span><span class=""><span class="bd" style="width:26px;height:26px;font-size:12px;background:#a6c6e2;color:#1c2a31">주</span></span></div></div>
+<div class="r"><span class="ti"><svg
+  class="lucide lucide-users"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+  <circle cx="9" cy="7" r="4" />
+  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+</svg></span><div class="l"><div class="n">조 이름 · 개수 고치기</div></div><span class="v "><svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div>
+</div>
+<h2>그 밖</h2><div class="g">
+<div class="r"><span class="ti"><svg
+  class="lucide lucide-user"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+  <circle cx="12" cy="7" r="4" />
+</svg></span><div class="l"><div class="n">개인 캘린더로 쓰기</div><div class="d">근무 표시를 숨겨요 · 근무표는 그대로</div></div><span class="v "><svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div>
+<div class="r"><span class="ti"><svg
+  class="lucide lucide-rotate-ccw"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+  <path d="M3 3v5h5" />
+</svg></span><div class="l"><div class="n">처음 시작 설정 다시 하기</div></div><span class="v "><svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div>
+</div>
+<div class="g" style="margin-top:12px"><div class="danger">수동으로 바꾼 근무 42일 되돌리기</div></div>
+</main>
