@@ -1,0 +1,189 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>
+@font-face{font-family:Pretendard;src:url(PretendardVariable.woff2) format("woff2-variations");font-weight:45 920}
+:root{--sc:#a6c6e2;--sf:#1c2a31;--ink:#191f28;--ink2:#4e5968;--ink3:#8b95a1;--bg:#f4f6f8;--card:#fff;--fill:#f2f4f6;--acc:#3182f6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,sans-serif;letter-spacing:-.2px;-webkit-font-smoothing:antialiased}
+.top{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 12px}.top .b{color:#333d4b;display:flex}.top h1{font-size:17px;font-weight:700;margin:0}.top .s{color:var(--acc);font-weight:600;font-size:15px;padding:6px 8px}
+main{padding:4px 16px 32px}
+.hero{position:relative;overflow:hidden;background:var(--card);border-radius:26px;padding:22px 20px 20px;box-shadow:0 2px 12px rgba(15,23,42,.04)}
+.glow{position:absolute;top:-70px;right:-60px;width:240px;height:240px;border-radius:50%;background:var(--sc);filter:blur(40px);opacity:.75;pointer-events:none}
+.glow2{position:absolute;top:30px;right:40px;width:110px;height:110px;border-radius:50%;background:var(--sc);filter:blur(30px);opacity:.5}
+.hero>*:not(.glow):not(.glow2){position:relative}
+.tm{display:flex;align-items:baseline;gap:8px}.tm small{font-size:20px;font-weight:700;color:var(--ink2)}.tm b{font-size:56px;font-weight:800;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}
+.pills{display:flex;gap:8px;margin-top:18px;overflow:hidden}.p{flex:none;padding:8px 15px;border-radius:999px;background:var(--fill);color:var(--ink2);font-size:14px;font-weight:600}.p.on{background:var(--sc);color:var(--sf);font-weight:700;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--sf) 18%,transparent)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--fill);padding:4px;border-radius:16px;margin-top:16px}.seg span{text-align:center;padding:9px 0;border-radius:12px;font-size:14px;font-weight:600;color:var(--ink3)}.seg span.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+h2{font-size:13px;font-weight:700;color:var(--ink3);margin:24px 6px 8px}
+.g{background:var(--card);border-radius:22px;box-shadow:0 2px 12px rgba(15,23,42,.03),0 1px 2px rgba(15,23,42,.02);overflow:hidden}
+.r{display:flex;align-items:center;gap:12px;padding:16px;position:relative}.r+.r::before,.r+.sd::before{content:'';position:absolute;top:0;left:60px;right:16px;height:1px;background:#f2f4f6}
+.ti{width:32px;height:32px;border-radius:10px;background:var(--fill);color:var(--ink2);display:flex;align-items:center;justify-content:center;flex:none}
+.l{flex:1;min-width:0}.n{font-size:15.5px;font-weight:600}.d{font-size:13px;color:var(--ink3);margin-top:2px}
+.v{display:flex;align-items:center;gap:2px;font-size:14.5px;font-weight:500;color:var(--ink2);flex:none}.v svg{color:#b0b8c1}
+.tg{width:50px;height:30px;border-radius:15px;background:#e5e8eb;position:relative;flex:none}.tg::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.15)}.tg.on{background:var(--acc)}.tg.on::after{left:23px}
+.sd{padding:0 16px 16px 60px;position:relative}
+.mini{display:flex;gap:6px}.mp{padding:6px 11px;border-radius:9px;background:var(--fill);font-size:13px;font-weight:600;color:var(--ink2)}.mp.on{background:var(--ink);color:#fff}
+.sl{display:flex;align-items:center;gap:10px;margin-top:14px}.trk{flex:1;height:6px;border-radius:3px;background:var(--acc);position:relative}.trk::after{content:'';position:absolute;right:-2px;top:-7px;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--acc);box-shadow:0 2px 6px rgba(0,0,0,.15)}.sl b{font-size:13px;width:38px;text-align:right}
+.tone{display:flex;justify-content:space-between;margin-top:14px;font-size:13.5px;color:var(--ink3)}.tone span:last-child{color:var(--acc);font-weight:600}
+.wseg{margin:0 16px 16px 60px}
+.del{margin-top:24px;background:var(--card);border-radius:20px;padding:16px;display:flex;justify-content:center;align-items:center;gap:6px;color:#f04452;font-weight:600;font-size:15px;box-shadow:0 2px 12px rgba(15,23,42,.03)}
+
+.hero{background:radial-gradient(140% 100% at 100% 0%,color-mix(in srgb,var(--sc) 60%,#fff) 0%,color-mix(in srgb,var(--sc) 22%,#fff) 45%,#fff 80%)!important}
+.hero .seg{background:rgba(242,244,246,.85)}
+.pills{position:relative;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent)}
+.p{display:flex;align-items:center;gap:6px;background:rgba(242,244,246,.9)}.p i{width:8px;height:8px;border-radius:50%;flex:none}
+.p.on{background:var(--sf)!important;color:#fff!important;box-shadow:none!important}.p.on i{box-shadow:0 0 0 1.5px rgba(255,255,255,.6)}
+.chev{color:#b0b8c1;display:flex;margin-left:2px}
+
+.hero{background:radial-gradient(140% 100% at 100% 0%,color-mix(in srgb,#a6c6e2 60%,#fff) 0%,color-mix(in srgb,#a6c6e2 22%,#fff) 45%,#fff 80%)!important}
+.bd{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;flex:none}
+.ht{font-size:13px;font-weight:600;color:var(--ink2)}.hn{font-size:26px;font-weight:800;letter-spacing:-.8px;margin-top:2px}.hs{font-size:14px;color:var(--ink2);margin-top:6px;font-weight:500}.hs b{color:var(--ink)}
+.cells{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:16px}.cell{background:rgba(255,255,255,.75);border-radius:12px;padding:8px 0 6px;display:flex;flex-direction:column;align-items:center;gap:4px}.cell small{font-size:11px;color:var(--ink3);font-weight:600}.cell.on{box-shadow:inset 0 0 0 2px var(--ink);background:#fff}
+.hb{display:flex;gap:8px;margin-top:12px}.hb span{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 0;border-radius:12px;background:rgba(242,244,246,.9);font-size:14px;font-weight:600;color:var(--ink2)}
+.tv{font-size:14.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;flex:none}.tv small{color:var(--ink3);font-weight:500;margin-left:4px}.v.acc{color:var(--acc);font-weight:600}.v.acc svg{color:var(--acc)}
+.add{color:var(--acc)!important;font-weight:600}.add .ti{background:#e8f3ff;color:var(--acc)}
+.chip{padding:6px 14px;border-radius:10px;background:var(--fill);font-size:14px;font-weight:600;color:var(--ink2)}.chip.on{background:var(--ink);color:#fff}
+.tgrid{padding:12px 12px 4px}.tg-h,.tg-r{display:grid;grid-template-columns:44px repeat(8,1fr);align-items:center;text-align:center}.tg-h span{font-size:13px;font-weight:700;padding:6px 0;line-height:1.2}.tg-h small{display:block;font-size:11px;color:var(--ink3);font-weight:600}
+.tg-h span.td{background:var(--ink);color:#fff;border-radius:10px 10px 0 0}.tg-h span.td small{color:#fff}.tg-r span.td{background:#f2f4f6}.tg-r:last-child span.td{border-radius:0 0 10px 10px}
+.tg-r{padding:5px 0}.tg-r .tn{font-size:14px;font-weight:700;text-align:left;padding-left:4px;line-height:1.1}.tg-r .tn small{display:block;font-size:10.5px;color:var(--acc);font-weight:600}.tg-r>span{padding:5px 0;display:flex;justify-content:center}.tg-r.me{background:#eef5ff;border-radius:12px}
+.danger{color:#f04452;text-align:center;font-weight:600;padding:16px;font-size:15px}
+.tg-r>span.tn{display:block!important;white-space:nowrap}
+.hero{background:#fff!important;padding-bottom:12px!important}
+.av{width:40px;height:40px;border-radius:50%;color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;flex:none}
+.hero .r{padding:12px 0}.hero .r+.r::before{left:52px;right:0;background:rgba(0,0,0,.05)}
+.me{font-size:12px;font-weight:700;color:var(--acc);background:#e8f3ff;border-radius:6px;padding:2px 6px;margin-left:6px;vertical-align:2px}
+.inv{margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;border-radius:14px;background:var(--acc);color:#fff;font-weight:700;font-size:15px}
+.ok{color:#1fa971;display:flex}.out .n{color:#f04452}.out .ti{background:#fff0f1;color:#f04452}
+.sg{display:flex;background:var(--fill);padding:3px;border-radius:12px;gap:2px;flex:none}.sg span{padding:6px 11px;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--ink3)}.sg span.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.dots{display:flex;gap:8px;flex:none}.dots i{width:22px;height:22px;border-radius:50%;display:block}.dots i.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
+.bh{display:flex;align-items:center;gap:12px}.bh .ti{width:44px;height:44px;border-radius:14px;background:#e8f3ff;color:var(--acc)}.bh b{font-size:17px;font-weight:700}.bh small{display:block;font-size:13.5px;color:var(--ink3);margin-top:2px;font-weight:500}
+.hero .inv{margin-top:16px}.out2 .n{color:#f04452}.out2 .ti{background:#fff0f1;color:#f04452}.av{width:32px;height:32px;border-radius:50%;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none}
+.add .n{color:var(--acc)}.add .ti{background:#e8f3ff;color:var(--acc)}</style><div class="top"><span class="b"><svg
+  class="lucide lucide-chevron-left"
+  xmlns="http://www.w3.org/2000/svg"
+  width="26"
+  height="26"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m15 18-6-6 6-6" />
+</svg></span><h1>가족</h1><span class="s"></span></div><main><h2 style="margin-top:8px">가족 목록</h2><div class="g">
+<div class="r "><span class="av" style="background:#6b7684">남</span><div class="l"><div class="n">남편</div></div><span class="v">교대 · B조<svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div>
+<div class="r "><span class="av" style="background:#f2a93b">유</span><div class="l"><div class="n">유찬</div></div><span class="v">유치원<svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div>
+<div class="r add"><span class="ti"><svg
+  class="lucide lucide-plus"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 12h14" />
+  <path d="M12 5v14" />
+</svg></span><div class="l"><div class="n">가족 추가</div></div></div></div>
+<h2>보기</h2><div class="g"><div class="r "><span class="ti"><svg
+  class="lucide lucide-notebook-text"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M2 6h4" />
+  <path d="M2 10h4" />
+  <path d="M2 14h4" />
+  <path d="M2 18h4" />
+  <rect width="16" height="20" x="4" y="2" rx="2" />
+  <path d="M9.5 8h5" />
+  <path d="M9.5 12H16" />
+  <path d="M9.5 16H14" />
+</svg></span><div class="l"><div class="n">가족 메모 달력에 표시</div></div><span class="tg on"></span></div><div class="r "><span class="ti"><svg
+  class="lucide lucide-eye"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+  <circle cx="12" cy="12" r="3" />
+</svg></span><div class="l"><div class="n">가족 보기 (체험)</div></div><span class="v"><svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div><div class="r "><span class="ti"><svg
+  class="lucide lucide-link"
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+</svg></span><div class="l"><div class="n">가족 연결</div></div><span class="v"><svg
+  class="lucide lucide-chevron-right"
+  xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.9"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m9 18 6-6-6-6" />
+</svg></span></div></div></main>
