@@ -110,8 +110,8 @@ const ONLY=process.env.ONLY||'';
     const has=()=>p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell.today .tglow'));
     const seen=async(ms=700)=>{const t0=Date.now();while(Date.now()-t0<ms){if(await has())return true;await p.waitForTimeout(40);}return false;};
     // (boot 이 0.9초 기다려서 켤 때 빛은 이미 끝났을 수 있음 → 빛이 돌았는지는 따로: 처음 켤 때 빛 표시가 시작됐는지 기록을 봄)
-    await p.waitForTimeout(250);
-    T('켤 때 빛이 돌았음(0.82초 뒤엔 사라짐)',await p.evaluate(()=>window.__glowN>=1)&&!(await has()),await p.evaluate(()=>String(window.__glowN)));
+    await p.waitForTimeout(1200);
+    T('켤 때 빛이 돌았음(v0.145 1.6초 두 바퀴 뒤엔 사라짐)',await p.evaluate(()=>window.__glowN>=1)&&!(await has()),await p.evaluate(()=>String(window.__glowN)));
     const n0=await p.evaluate(()=>window.__glowN);
     await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(500);
     T('다음 달로 가면 빛 없음',!(await seen(500)));

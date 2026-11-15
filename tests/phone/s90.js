@@ -36,9 +36,7 @@ const KST=(y,mo,d,h)=>Date.UTC(y,mo-1,d,h-9);const p2=n=>String(n).padStart(2,'0
     const hh=await p.evaluate(()=>{const pc=document.querySelector('#tnPrev .cell'),rc=document.querySelector('#view #track>.panel:nth-child(2) .cell');return [pc.getBoundingClientRect().height,rc.getBoundingClientRect().height];});
     T('미리보기 칸 높이 ≈ 실제 달력 칸 (안 잘림)',Math.abs(hh[0]-hh[1])<6,JSON.stringify(hh));
     await p.evaluate(()=>{const x=document.querySelector('#page.open [data-act="page-close"]');x&&x.click();});await act(p,'more-look');await p.waitForTimeout(400);
-    T('설정 › 화면에 오늘 표시 색 · 모양',await p.evaluate(()=>!!document.querySelector('#page.open .tdc-row')&&document.querySelectorAll('#page.open [data-act="todaylook"]').length===4));
-    await p.evaluate(()=>document.querySelector('#page.open [data-act="todaylook"][data-v="c"]').click());await p.waitForTimeout(200);
-    T('화면에서 오늘 표시 모양 바꾸기 → 저장 · 화면 그대로',await p.evaluate(()=>__wx.S.todayLook==='c'&&!!document.querySelector('#page.open .tdc-row')));
+    T('설정 › 화면에 오늘 표시 색만 (v0.145 모양 버튼 없음)',await p.evaluate(()=>!!document.querySelector('#page.open .tdc-row')&&document.querySelectorAll('#page.open [data-act="todaylook"]').length===0));
     T('오류 없음 (모양 조정)',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   T.sum();await b.close();})();
