@@ -54,15 +54,11 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   {
     const p=await boot(b,{...base,calLook:'fill'},{w:390,h:844,touch:true});
     const r=await p.evaluate(()=>{const c=document.querySelector('.track .panel:nth-child(2) .cell.today'),a=getComputedStyle(c,'::after'),cs=getComputedStyle(c);return {bw:a.borderRightWidth,rad:a.borderTopRightRadius,bg:cs.backgroundColor,sh:cs.boxShadow,t:document.documentElement.getAttribute('data-today')};});
-    T('기본은 "띠만"(b): 4px 띠 · 둥근 모서리 · 바탕 없음 · 그림자 없음',r.t==='b'&&r.bw==='4px'&&parseFloat(r.rad)>=8&&/rgba\(0, 0, 0, 0\)|transparent/.test(r.bg)&&r.sh==='none',JSON.stringify(r));
-    await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);
-    await p.evaluate(()=>{const b=document.querySelector('[data-act="more-look"]');if(b)b.click();});await p.waitForTimeout(300);await p.waitForTimeout(400);
-    // v0.141 오늘 표시 모양은 설정 › 화면에서 고름 (모양 조정에선 빠짐)
-    const pick=async v=>{await p.evaluate(()=>{const b=document.querySelector('#page.open [data-act="todaylook"]');if(!b){const x=document.createElement('button');x.dataset.act='more-look';document.body.appendChild(x);x.click();x.remove();}});await p.waitForTimeout(300);await p.evaluate(v=>document.querySelector(`[data-act="todaylook"][data-v="${v}"]`).click(),v);await p.waitForTimeout(300);await p.evaluate(()=>{const x=document.querySelector('#page.open [data-act="page-close"]');x&&x.click();});await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(300);return p.evaluate(()=>{const c=document.querySelector('#track .panel:nth-child(2) .cell.today');const a=getComputedStyle(c,'::after'),cs=getComputedStyle(c);return {t:document.documentElement.getAttribute('data-today'),bw:a.borderRightWidth,bg:cs.backgroundColor,sh:cs.boxShadow,saved:JSON.parse(localStorage.getItem('eonjeswieo:v1')).todayLook};});};
-    const A=await pick('a'),C=await pick('c'),D=await pick('d');
-    T('a(바탕+그림자+띠): 바탕과 그림자가 있음',A.t==='a'&&A.saved==='a'&&!/rgba\(0, 0, 0, 0\)/.test(A.bg)&&A.sh!=='none',JSON.stringify(A));
-    T('c(띠 굵고 진하게): 6px',C.bw==='6px'&&C.sh==='none',JSON.stringify(C));
-    T('d(띠+그림자): 4px · 그림자 있음 · 바탕 없음',D.bw==='4px'&&D.sh!=='none'&&/rgba\(0, 0, 0, 0\)|transparent/.test(D.bg),JSON.stringify(D));
+    T('기본(v0.145): 칸 전체 3px 테두리 · 둥근 모서리 · 바탕 없음 · 그림자 없음',r.t==='b'&&r.bw==='3px'&&parseFloat(r.rad)>=8&&/rgba\(0, 0, 0, 0\)|transparent/.test(r.bg)&&r.sh==='none',JSON.stringify(r));
+    // v0.145 오늘 표시 모양 고르기 없앰 (앱 달력은 테두리 하나) — 옛 저장값 a 여도 바탕 · 그림자 없음
+    await p.evaluate(()=>{__wx.S.todayLook='a';__wx.save();__wx.render();});await p.waitForTimeout(300);
+    const A=await p.evaluate(()=>{const c=document.querySelector('.track .panel:nth-child(2) .cell.today'),cs=getComputedStyle(c);return {t:document.documentElement.getAttribute('data-today'),bg:cs.backgroundColor,sh:cs.boxShadow};});
+    T('옛 저장값 a 여도 앱 달력은 테두리 하나(바탕 · 그림자 없음)',A.t==='b'&&A.sh==='none'&&/rgba\(0, 0, 0, 0\)|transparent/.test(A.bg),JSON.stringify(A));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   T.sum();await b.close();

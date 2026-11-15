@@ -338,3 +338,15 @@
 - 쉬는 날 다른 날 왼쪽 칸(wxRestCards): big 글 대신 sk + sk2(오전 → 오후 그림, `.s.two` · `.ar`) · d 한 줄 "구름많음 → 맑음" / "하루 종일 맑음". 그림이 같으면 sk2 없음.
 - 가족 탭 내 카드 날씨(wxOpenFam 'me') → wxOpenDay(오늘) 로 날씨 탭과 같은 팝업(옆으로 밀기). 못 열면 예전 팝업.
 - 시험 s93.
+
+## v0.145 (덧붙임) — 새 모양 1차
+- 공통: 글꼴 Pretendard (assets/fonts/PretendardVariable.woff2 · OFL 라이선스 같은 폴더) — body · button/input 에 적용. 날씨 팝업 제목 등 Jua 는 그대로.
+- 강조색 밝은 파랑: --accent #3182f6 (다크 #4c8dff) · --acc-soft/ink/sw 같이.
+- 새 모양 화면 = `.pg-b.np` 안: .pg-sec 카드(모서리 22 · 옅은 그림자) · .pg-cap 묶음 이름 · .prow 줄 · npRow(icon,name,right,{d,tap,act,cls}) · npVal(v) · npi(이름) = lucide 선 아이콘(NPI) · .nphero 위 칸(--sc 근무 색 빛) · .nppills 근무 칩 · .npseg 세그먼트 · .npsub 펼친 칸. 설명(small)은 .keep 붙인 것만 보임.
+- 알람 고치기(openAlarmPage) · 근무 패턴(openPatternPage · typeListHtml · patLocHtml(row)) 을 새 모양으로. id · data-act 는 그대로(저장 · 시험 그대로).
+- 패턴 제외 초기화: 'pat-reset' → patResetOpen(q: m 이번 달 · n 다음 달 · a 전체) → 'pr-go' 경고 2번 → 그 기간 S.overrides 만 지움. (예전 'clearov' 는 안 씀 · 남겨 둠)
+- 달력 오늘: 칸 전체 3px 테두리(::after · z 2 · 휴일 띠 위 · 메모 띠(3) · 스티커(6) 아래 · 크기 영향 없음) · data-today 는 늘 'b' (todayLook 은 위젯만) · 설정 › 화면 오늘 표시 = 색만. 빛 GLOW_MS 1600 두 바퀴(dasharray 둘레 되풀이) · 진하게 · 다른 앱 갔다 3초 넘게 있다 오면 한 번 더.
+- 달력 머리 · 요일 줄 흰 바탕 · ‹ › 크게 · 메모 띠 모서리 4.
+- AI 티: 보라 그라데이션(.nc.w · .fam-now · .wlrow · .anext) → 회색 바탕 + 테두리 · 자는 중 카드(.nc.slp) 어두운 바탕 없앰 · 🖌 → 선 아이콘 · "⏰ 다음 알람" · 메모 입력칸 🔒 뺌 · 날짜 창 오늘 표 색 = --tdc/--today.
+- v0.144 점검 고침: 쉬는 날 다른 날 그림 두 개는 둘 다 있고 다를 때만 · 가족 탭 내 날씨 = wxOpenDay 만 · 오늘 시간별 줄 지금부터(now) · dsTK 1초 캐시.
+- 시험 s94 · s91 · s77 글자 맞춤. 되돌리기용 브랜치 backup-v0.144.

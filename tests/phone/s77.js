@@ -103,7 +103,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     const dz=await p.evaluate(()=>[...document.querySelectorAll('#pop .wxdz3 .dzc small')].map(e=>e.innerText));
     T('날씨 팝업 미세먼지도 칸으로: 출근 · 퇴근 · 🏊활동',dz.length===3&&dz[0]==='출근'&&dz[1]==='퇴근'&&dz[2]==='🏊활동',JSON.stringify(dz));
     await p.evaluate(()=>{__wx.closePop();__wx.closeSheet();});await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);await p.evaluate(()=>document.querySelector('[data-act="more-pattern"]').click());await p.waitForTimeout(400);
-    T('근무 패턴에 📍 위치 (집 · 직장) 줄',await p.evaluate(()=>{const e=document.querySelector('#page [data-act="pat-loc"]');return !!e&&/📍 위치/.test(e.innerText);}));
+    T('근무 패턴에 📍 위치 (집 · 직장) 줄',await p.evaluate(()=>{const e=document.querySelector('#page [data-act="pat-loc"]');return !!e&&/위치/.test(e.innerText);}));
     await p.evaluate(()=>document.querySelector('#page [data-act="pat-loc"]').click());await p.waitForTimeout(400);
     T('누르면 출퇴근 날씨 설정 · 뒤로 가면 근무 패턴',await p.evaluate(()=>document.querySelector('#page [data-act="wx-pick-home"]')!==null)&&await p.evaluate(()=>{document.querySelector('#page [data-act="page-close"]').click();return !!document.querySelector('#page [data-act="pat-loc"]');}));
     T('오류 없음 (미세먼지 3칸)',p.errs.length===0,p.errs.join('|'));await p.close();
