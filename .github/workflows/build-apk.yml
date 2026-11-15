@@ -8,6 +8,7 @@ on:
       - 'docs/**'
       - 'firebase/**'
       - 'scripts/**'
+      - '.claude/**'
   workflow_dispatch:
 
 permissions:
