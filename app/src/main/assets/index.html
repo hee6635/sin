@@ -1924,6 +1924,20 @@ body:has(.mset) #top,body:has(.famv) #top,body:has(.alw) #top{background:var(--s
 .pi-ghost{position:fixed;z-index:90;pointer-events:none;box-shadow:0 18px 34px rgba(60,40,10,.28)!important;opacity:.95;transition:none}
 .pi.pi-lift{opacity:.25}.pi.pi-over{outline:2.5px dashed color-mix(in srgb,var(--pi-ink) 45%,transparent);outline-offset:4px}
 body.pi-dragging,body.pi-dragging *{user-select:none;-webkit-user-select:none}body.pi-dragging .pg-b{touch-action:none}
+/* v0.160 달력 진하기 (시안 design/cal-look): 기본 = 칸 색 · 글자 조금 진하게 / 또렷하게 = 흰 칸 테두리 없음 · 근무 칸은 같은 색 계열 선 (밝은 화면만) */
+html:not([data-bg]) .cell .num{font-weight:700}html:not([data-bg]) .bwrap .badge.r{font-weight:700}
+@media not (prefers-color-scheme:dark){
+html:not([data-bg])[data-cal="fill"]:not([data-theme="dark"]){--cbm:42%}
+html:not([data-bg]):not([data-theme="dark"]){--restx:#c23a5a}
+html:not([data-bg])[data-cal="fill"]:not([data-theme="dark"]) .bwrap .badge.c{color:color-mix(in srgb,var(--tb) 30%,#000);font-weight:700}
+html[data-bg="vivid"][data-cal="fill"]:not([data-theme="dark"]) .cell:not(.out){box-shadow:none}
+html[data-bg="vivid"][data-cal="fill"]:not([data-theme="dark"]) .cell[style*="--cb"]:not(.out){box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cb) 70%,#000 12%)}
+}
+html:not([data-bg])[data-cal="fill"][data-theme="light"]{--cbm:42%}
+html:not([data-bg])[data-theme="light"]{--restx:#c23a5a}
+html:not([data-bg])[data-cal="fill"][data-theme="light"] .bwrap .badge.c{color:color-mix(in srgb,var(--tb) 30%,#000);font-weight:700}
+html[data-bg="vivid"][data-cal="fill"][data-theme="light"] .cell:not(.out){box-shadow:none}
+html[data-bg="vivid"][data-cal="fill"][data-theme="light"] .cell[style*="--cb"]:not(.out){box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cb) 70%,#000 12%)}
 /* v0.148 빛이 도는 동안: 원래 테두리는 숨기고 빛을 따라 그려지는 선(g-draw)으로 · 끝나면 다시 테두리 */
 .cell.today.glowing::after{opacity:0}
 .tglow .g-draw{stroke-width:3px;opacity:1;stroke:var(--tdc,var(--today))}

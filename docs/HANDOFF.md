@@ -442,3 +442,8 @@
 ## v0.159 (덧붙임) 이럴 땐 이렇게 › 빼기 · 펼치기 모션
 - .tips.np details>summary::after 숨김 (옛 › 표시) · ⌄ 만.
 - 펼치기/접기: 문서 click(capture)에서 .tips.np details>summary 를 가로채 높이 애니메이션(Web Animations · 260/220ms) · 펼칠 때 안쪽 글 살짝 내려오듯 · 접기는 끝난 뒤 open=false · 도중에 다시 누르면 반대로 · reduceMotion 이면 기본 동작. 시험 s98.
+
+## v0.160 (덧붙임) 달력 진하기 (시안 design/cal-look)
+- 기본(data-bg 없음 · 밝은 화면만): --cbm 26% → 42% · --restx #c23a5a · 근무 글자 color-mix(tb 30%, 검정) · 날짜 숫자 · 휴 굵기 700.
+- 또렷하게(밝은 화면만): 흰 칸 box-shadow 없음 · 근무 칸 선 = 칸 색 계열. 어두운 화면은 그대로.
+- 밝은 화면 조건: @media not (prefers-color-scheme:dark) 안의 :not([data-theme="dark"]) + [data-theme="light"] 두 벌. 시험 s99.
