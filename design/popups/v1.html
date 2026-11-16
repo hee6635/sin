@@ -1,0 +1,48 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box}body{margin:0;font-family:P,sans-serif;background:#dfe2e6;display:flex;gap:18px;padding:18px;color:#191f28;flex-wrap:wrap;width:1260px}
+.ph{width:390px;height:760px;background:#f2f4f6;border-radius:26px;overflow:hidden;position:relative}
+.hd{height:54px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;background:#f2f4f6;position:relative}
+.hd:before{content:'‹';position:absolute;left:18px;font-size:26px;font-weight:600}
+.tag{position:absolute;top:60px;right:14px;font-size:11px;background:#191f28;color:#fff;border-radius:8px;padding:3px 8px;opacity:.75}
+.cap{font-size:13px;font-weight:600;color:#6b7684;padding:18px 22px 8px}
+.sec{background:#fff;border-radius:20px;margin:0 14px;padding:4px 0}
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:60px}
+.row+.row{border-top:1px solid #f2f4f6}
+.ic{width:36px;height:36px;border-radius:11px;background:#f2f4f6;display:flex;align-items:center;justify-content:center;color:#4e5968;flex:none}
+.nm{flex:1;font-size:16px;font-weight:600}
+.v{color:#6b7684;font-size:15px;font-weight:500;display:flex;align-items:center;gap:2px}
+.v b{color:#191f28;font-weight:600}
+svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ch{width:16px;height:16px;color:#b0b8c1}
+.sw{width:44px;height:26px;border-radius:13px;background:#d1d6db;position:relative;flex:none}.sw:after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.on{background:#3182f6}.sw.on:after{left:21px}
+.seg{display:flex;gap:6px;background:#f2f4f6;border-radius:14px;padding:4px;margin:4px 16px 12px}
+.seg div{flex:1;text-align:center;font-size:14px;font-weight:600;color:#6b7684;padding:9px 4px;border-radius:11px}
+.seg .on{background:#fff;color:#3182f6;box-shadow:0 0 0 1.5px #3182f6,0 2px 6px rgba(49,130,246,.15)}
+.bdg{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none}
+.btn{margin:18px 14px;height:54px;border-radius:16px;background:#3182f6;color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ok{color:#1fa971;font-weight:700;font-size:14px;background:#e9f8f1;border-radius:20px;padding:5px 10px;display:flex;align-items:center;gap:3px}
+.ok svg{width:14px;height:14px;stroke-width:3}
+.pre{margin:0 14px;background:#fff;border-radius:20px;padding:16px}
+.pre .t{font-size:13px;color:#3182f6;font-weight:600}.pre .s{font-size:22px;font-weight:800;margin:4px 0}
+.pre .chips{display:flex;gap:6px;margin-top:10px}.pre .chips span{font-size:13px;font-weight:600;background:#f2f4f6;border-radius:10px;padding:6px 10px;color:#4e5968}
+.dots{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;padding:14px 16px}
+.dots i{width:36px;height:36px;border-radius:50%;display:block;justify-self:center}
+.dots i.on{box-shadow:0 0 0 3px #fff,0 0 0 5px #191f28}
+.rng{flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#3182f6 80%,#e5e8eb 80%);position:relative}.rng:after{content:'';position:absolute;left:78%;top:-7px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.memo{display:flex;align-items:center;gap:10px;padding:10px 16px}.memo i{width:4px;height:30px;border-radius:2px}.memo b{font-size:15px}
+.lnk{text-align:center;color:#3182f6;font-weight:600;font-size:15px;padding:16px}
+</style><style>body{width:1680px}.ph{height:760px}
+.sh{position:absolute;left:8px;right:8px;bottom:8px;background:#fff;border-radius:26px;padding:10px 18px 16px}
+.grab{width:40px;height:5px;border-radius:3px;background:#e5e8eb;margin:0 auto 14px}
+.tt{font-size:19px;font-weight:700;padding:0 2px}.st{font-size:14px;color:#6b7684;font-weight:500;margin-top:4px;padding:0 2px}
+.sh .row{padding:10px 2px;min-height:54px}.sh .row+.row{border-top:0}
+.gd{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}.gd span{height:44px;border-radius:14px;background:#f2f4f6;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#4e5968}
+.gd .on{background:#fff;color:#3182f6;box-shadow:0 0 0 1.5px #3182f6,0 4px 12px rgba(49,130,246,.18)}
+.b2{display:flex;gap:8px;margin-top:18px}.b2 span{flex:1;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700}.b2 .g{background:#f2f4f6;color:#4e5968}.b2 .p{background:#3182f6;color:#fff}
+.cl{margin-top:14px;height:52px;border-radius:16px;background:#f2f4f6;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#4e5968}
+.dt{display:flex;align-items:center;gap:8px;margin-top:16px}.dt span{flex:1;height:48px;border-radius:14px;background:#f2f4f6;display:flex;align-items:center;padding:0 14px;font-size:16px;font-weight:600}
+.qc{display:flex;gap:8px;margin-top:10px}.qc span{height:36px;padding:0 14px;border-radius:18px;background:#f2f4f6;display:flex;align-items:center;font-size:14px;font-weight:600;color:#4e5968}
+.bd{font-size:15.5px;line-height:1.6;color:#333d4b;margin-top:10px;padding:0 2px}
+</style></head><body><div class="ph" style="background:rgba(0,0,0,.38)"><div class="sh"><div class="grab"></div><div class="tt">집 지역</div><div class="st">시 · 도를 골라요</div><div class="gd"><span class="on">서울</span><span class="">부산</span><span class="">대구</span><span class="">인천</span><span class="">광주</span><span class="">대전</span><span class="">울산</span><span class="">세종</span><span class="">경기</span><span class="">강원</span><span class="">충북</span><span class="">충남</span><span class="">전북</span><span class="">전남</span><span class="">경북</span><span class="">경남</span><span class="">제주</span></div><div class="cl">닫기</div></div><div class="tag">지역 고르기</div></div><div class="ph" style="background:rgba(0,0,0,.38)"><div class="sh"><div class="grab"></div><div class="tt">병원 3시</div><div class="st">11월 16일 (월) · 나만</div><div class="row"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div><div class="nm">고치기</div></div><div class="row"><div class="ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><div class="nm">알림</div><div class="v">오후 2시 30분<svg class="ch" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div></div><div class="row"><div class="ic"><svg viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></div><div class="nm">반복</div><div class="v">없음<svg class="ch" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div></div><div class="row"><div class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M4 16V5a1 1 0 0 1 1-1h11"/></svg></div><div class="nm">복사</div></div><div class="row" style="color:#e5484d"><div class="ic" style="background:#fff0f1;color:#e5484d"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></div><div class="nm" style="color:#e5484d">지우기</div></div><div class="cl">닫기</div></div><div class="tag">메모 메뉴</div></div><div class="ph" style="background:rgba(0,0,0,.38)"><div class="sh"><div class="grab"></div><div class="tt">가족에게 보여 줄까요?</div><div class="bd">내 스티커(운동 등)가 아내의 가족 달력에 보여요.</div><div class="b2"><span class="g">취소</span><span class="p">켜기</span></div></div><div class="tag">확인 창</div></div><div class="ph" style="background:rgba(0,0,0,.38)"><div class="sh"><div class="grab"></div><div class="tt">패턴 제외 초기화</div><div class="st">직접 바꾼 근무를 패턴대로 되돌려요</div><div class="dt"><span>10/1</span>~<span>10/31</span></div><div class="qc"><span>이번 달</span><span>다음 달</span><span>전체</span></div><div class="b2"><span class="g">취소</span><span class="p" style="background:#e5484d">초기화</span></div></div><div class="tag">기간 고르기</div></div></body></html>
