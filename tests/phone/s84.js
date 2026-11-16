@@ -35,11 +35,9 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   await p.evaluate(()=>document.querySelector('#pop [data-act="sp-pick"]').click());await p.waitForTimeout(400);
   await p.evaluate(()=>document.querySelector('#page [data-act="sr-rep"][data-v="daily"]').click());await p.waitForTimeout(300);
   const r0=await p.evaluate(()=>({more:!!document.querySelector('#page .srmore'),hol:!!document.getElementById('srHol'),alarm:!!document.getElementById('srAlarm')}));
-  T('스티커 등록: 기본은 몇 번 · 얼마나 · 알림 / 기간 · 공휴일은 "상세 조건 더보기"에 접힘',r0.more&&!r0.hol&&r0.alarm,JSON.stringify(r0));
-  await p.evaluate(()=>document.querySelector('#page [data-act="sr-more"]').click());await p.waitForTimeout(300);
-  await p.evaluate(()=>{const c=document.getElementById('srHol');c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}));});
-  await p.evaluate(()=>document.querySelector('#page [data-act="sr-more"]').click());await p.waitForTimeout(300);
-  T('펼쳐서 공휴일 빼기 켜고 접으면 요약에 보임',await p.evaluate(()=>/공휴일 빼기/.test(document.querySelector('#page .srmore').innerText)));
+  T('스티커 등록 (v0.151 접기 없음): 반복 고르면 기간 · 공휴일 줄이 바로 보임',!r0.more&&r0.hol&&r0.alarm,JSON.stringify(r0));
+  await p.evaluate(()=>{const c=document.getElementById('srHol');c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(200);
+  T('공휴일 빼기 켜면 그대로 켜져 있음',await p.evaluate(()=>document.getElementById('srHol').checked));
   await p.evaluate(()=>{const b=document.querySelector('#page [data-act="sr-back"]');if(b)b.click();});await p.waitForTimeout(300);
   // 안내 줄: 내 메모 3개 전까지만
   await p.evaluate(()=>{__wx.closePop&&__wx.closePop();__wx.openDay('2026-10-14');});await p.waitForTimeout(400);

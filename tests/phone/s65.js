@@ -43,7 +43,7 @@ const ONLY=process.env.ONLY||'';
     const nt=await p.evaluate(()=>document.querySelector('#pop').textContent.replace(/\s+/g,' '));
     T('처음 한 번 안내: "인수인계는 백업되지 않아요 · 회사 보안 · 설정에서 켜 주세요"',/인수인계는 백업되지 않아요/.test(nt)&&/회사 보안을 위해 폰에만 저장돼요/.test(nt)&&/그래도 백업하시려면 설정에서 켜 주세요/.test(nt),nt);
     await click(p,'[data-act="wl-seen"]');await p.waitForTimeout(300);
-    T('일지 팝업: 제목 "📋 인수인계 ✎" · 칸 4개(메모장) · "쓰는 대로 저장돼요"',await p.evaluate(()=>/인수인계/.test(document.querySelector('.wlp .ttl').textContent)&&document.querySelectorAll('.wls .wlta').length===4&&/쓰는 대로 저장돼요/.test(document.querySelector('.wlp .sub').textContent)));
+    T('일지 팝업: 제목 "📋 인수인계 ✎" · 칸 4개(메모장) · "쓰는 대로 저장돼요"',await p.evaluate(()=>/인수인계/.test(document.querySelector('.wlp .ttl').textContent)&&document.querySelectorAll('.wls .wlta').length===4&&!/쓰는 대로 저장돼요/.test(document.querySelector('.wlp .sub').textContent)));
     await click(p,'#wlT_b');await p.focus('#wlT_b');
     await p.keyboard.type('원료 재고 확인');await p.keyboard.press('Enter');await p.keyboard.type('순찰 2회');await p.waitForTimeout(100);
     await p.focus('#wlT_d');await p.keyboard.type('냉각수 압력 낮음');await p.waitForTimeout(100);
@@ -105,12 +105,12 @@ const ONLY=process.env.ONLY||'';
     // 설정(⚙): 칸 이름 · 숨기기 · 백업
     await click(p,'.wlp [data-act="wl-set"]');await p.waitForTimeout(400);
     await p.fill('#wlsS_c','안전');await p.waitForTimeout(500);
-    await p.evaluate(()=>{const c=document.querySelector('#wlsH_a');c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(200);
+    await p.evaluate(()=>{const c=document.querySelector('#wlsV_a');c.checked=false;c.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(200);
     await p.evaluate(()=>{const c=document.querySelector('#wlsBk');c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(200);
     let s=await ls(p);
     T('⚙ 설정: 칸 이름 "지시 → 안전" · 인수 숨기기 · 백업에 넣기',s.wlog.secs[2].n==='안전'&&s.wlog.secs[0].h===true&&s.wlog.backup===true,JSON.stringify(s.wlog.secs)+s.wlog.backup);
     // 모두 숨기기는 막음
-    await p.evaluate(()=>['b','c','d'].forEach(id=>{const c=document.querySelector('#wlsH_'+id);c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}));}));await p.waitForTimeout(200);
+    await p.evaluate(()=>['b','c','d'].forEach(id=>{const c=document.querySelector('#wlsV_'+id);c.checked=false;c.dispatchEvent(new Event('change',{bubbles:true}));}));await p.waitForTimeout(200);
     s=await ls(p);T('칸을 모두 숨길 수는 없음(하나는 남음)',s.wlog.secs.filter(x=>!x.h).length===1,JSON.stringify(s.wlog.secs));
     await act(p,'backup-export');await p.waitForTimeout(200);
     T('백업에 넣기를 켜면 백업 파일에 일지가 들어감',await p.evaluate(()=>!!window.__bk.wlog&&!!window.__bk.wlog.days['2026-10-12']));
