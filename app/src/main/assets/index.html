@@ -1788,6 +1788,17 @@ html[data-cal="fill"] .cell.today::after,html[data-cal="fill"] .cell.today[style
 .tips.np .ta{font-size:14.5px;line-height:1.55;color:color-mix(in srgb,var(--fg) 80%,var(--bg))}
 .tips.np .tgo{display:block;width:100%;margin:14px 0 16px;height:48px;border-radius:14px;background:var(--acc-soft);color:var(--accent);font-weight:700}
 
+/* v0.156 설정 첫 화면: 회색 바탕 · 흰 칸 · 묶음 제목 · 권한 경고 = 흰 카드 줄 · 이럴 땐 이렇게 = 넓은 한 줄 */
+.mset{background:var(--surface);min-height:100%}
+.mset .srch-entry{background:var(--bg);height:48px;margin:6px 16px 4px;box-shadow:0 2px 12px rgba(15,23,42,.035);font-size:15.5px}
+.mset .pg-cap{padding:18px 22px 8px}
+.mset .stiles{padding:0 16px;grid-template-columns:repeat(auto-fit,minmax(90px,1fr))}.mset .stile{background:var(--bg);border-radius:20px;min-height:100px;padding:16px 6px 12px;gap:5px;box-shadow:0 2px 12px rgba(15,23,42,.035)}
+.mset .stile b{font-size:15px}.mset .stile small{font-size:12.5px;color:var(--muted);opacity:1}
+.mwarn{display:flex;align-items:center;gap:12px;width:calc(100% - 32px);margin:10px 16px 0;padding:12px 16px;border-radius:20px;background:var(--bg);text-align:left;box-shadow:0 2px 12px rgba(15,23,42,.035)}
+.mwarn .npi{width:36px;height:36px;border-radius:11px;background:color-mix(in srgb,#f08a00 12%,var(--bg));color:#f08a00;display:flex;align-items:center;justify-content:center;flex:none}
+.mwarn b{flex:1;font-size:16px;font-weight:600}.mwarn em{font-style:normal;color:#f08a00;font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:2px}
+.mtips{display:flex;align-items:center;gap:12px;width:calc(100% - 32px);margin:10px 16px 0;padding:16px 18px;border-radius:20px;background:var(--bg);text-align:left;box-shadow:0 2px 12px rgba(15,23,42,.035)}
+.mtips b{font-size:16px}.mtips small{margin-left:auto;font-size:13px;color:var(--muted)}.mtips span{display:flex;color:color-mix(in srgb,var(--fg) 80%,var(--bg))}
 /* v0.155 날짜 창 새 모양: 위(날짜 · 날짜 띠)는 흰 바탕 · 아래는 회색 바탕 + 흰 카드 · 근무 알약 하나로 접기 · 펼치기 · 오늘 = 테두리 */
 .dsi.td small{background:none!important;color:var(--tdc,var(--today))!important;font-weight:800;padding:0}
 .dsi.td{box-shadow:inset 0 0 0 2px var(--tdc,var(--today))}
@@ -5125,6 +5136,10 @@ const NPI={"repeat": "<path d=\"m17 2 4 4-4 4\" /> <path d=\"M3 11v-1a4 4 0 0 1 
 Object.assign(NPI,{"sticky-note": "<path d=\"M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z\" /> <path d=\"M15 3v4a2 2 0 0 0 2 2h4\" />", "smile": "<circle cx=\"12\" cy=\"12\" r=\"10\" /> <path d=\"M8 14s1.5 2 4 2 4-2 4-2\" /> <line x1=\"9\" x2=\"9.01\" y1=\"9\" y2=\"9\" /> <line x1=\"15\" x2=\"15.01\" y1=\"9\" y2=\"9\" />", "users": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /> <circle cx=\"9\" cy=\"7\" r=\"4\" /> <path d=\"M22 21v-2a4 4 0 0 0-3-3.87\" /> <path d=\"M16 3.13a4 4 0 0 1 0 7.75\" />", "chart-column": "<path d=\"M3 3v16a2 2 0 0 0 2 2h16\" /> <path d=\"M18 17V9\" /> <path d=\"M13 17V5\" /> <path d=\"M8 17v-3\" />", "smartphone": "<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\" ry=\"2\" /> <path d=\"M12 18h.01\" />", "info": "<circle cx=\"12\" cy=\"12\" r=\"10\" /> <path d=\"M12 16v-4\" /> <path d=\"M12 8h.01\" />", "sparkles": "<path d=\"M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z\" /> <path d=\"M20 3v4\" /> <path d=\"M22 5h-4\" /> <path d=\"M4 17v2\" /> <path d=\"M5 18H3\" />"});
 const npi=(n,sz=18)=>NPI[n]?`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NPI[n]}</svg>`:"";
 const npRow=(icon,name,right,o={})=>`<div class="prow${o.tap?" tap":""}${o.cls?" "+o.cls:""}"${o.act?` data-act="${o.act}"`:""}${o.attrs||""}><span class="npi">${npi(icon)}</span><div class="pl2">${name}${o.d?`<small class="keep">${o.d}</small>`:""}</div>${right||""}</div>`;
+Object.assign(NPI,{   // v0.156 설정 첫 화면
+  'alert':'<path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/>',
+  'bulb':'<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z"/>'
+});
 Object.assign(NPI,{   // v0.155 화면 설정 아이콘
   'grid':'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
   'circle-dot':'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>',
@@ -7114,26 +7129,27 @@ function renderMore(){
   const cap=t=>`<div class="pg-cap">${t}</div>`;
   const linkOk=!guest&&fbCfg();
   const famN=S.link&&S.fam2?(S.fam2.members||[]).length:0;
-  const tiles=[
+  // v0.156 새 모양(A): 묶음 내 근무 · 가족 · 앱 · 3칸씩 · 칸 아래 글 겹치지 않게 · 가족 연결 + 가족 목록 = "가족" 한 칸 · 이럴 땐 이렇게 = 넓은 한 줄
+  const wgN=(()=>{try{return hasBridge('widgetCount')?+window.AndroidBridge.widgetCount()||0:-1;}catch(e){return -1;}})();
+  const g1=[
     !guest&&!persAll()?tile('🔁','근무 패턴',S.noPat?(S.myset?'불규칙':'아직 안 만듦'):`${esc(S.patternName||'')} ${esc(myTeamLabel())}`,'more-pattern'):'',
-    linkOk?tile('🔗','가족 연결',S.link?`${famN}명`:'초대하기','link-open',!!(S.link&&S.fam2&&S.fam2.boardDot)):tile('👪','가족 목록',`${(S.family||[]).length}명`,'fam-set'),
-    tile('💊','스티커',`${slotDefs().length}개`,'stk-board'),
-    hasBridge('setWidgetData')?tile('▣','위젯',(S.widget&&S.widget.look)==='circle'?'동그라미':'칸 채우기','more-widget'):'',
-    tile('☁️','백업',lastB||'안 함','more-backup')].filter(Boolean).join('');
-  const lookSub=`${S.calLook==='fill'?'칸 채우기':'동그라미'}`;
-  const more=[
-    tile('🎨','화면',lookSub,'more-look'),
-    linkOk?tile('👪','가족 목록',`${(S.family||[]).length}명`,'fam-set'):'',
     S.personal?tile('🔁','근무표 쓰기','개인 캘린더 끄기','personal-off'):'',
-    tile('🧩','부가 기능',`${addonCount()}개 켜짐`,'more-addons'),
+    tile('💊','스티커',`${slotDefs().length}개`,'stk-board'),
+    hasBridge('setWidgetData')?tile('▣','위젯',wgN>0?`${wgN}개 사용 중`:wgN===0?'홈 화면에 없음':'홈 화면','more-widget'):''].filter(Boolean);
+  const g2=[
+    linkOk?tile('👪','가족',S.link?`${famN}명 연결`:'초대하기','link-open',!!(S.link&&S.fam2&&S.fam2.boardDot)):tile('👪','가족',`${(S.family||[]).length}명`,'fam-set'),
     tile('🖼','이미지 공유','달력 사진','more-share'),
-    tile('ℹ️','도움 · 정보',appVersion(),'more-info'),
-    tile('💡','이럴 땐 이렇게','상황별 사용법','tips-open')].filter(Boolean).join('');
-  return `<div class="mlist" style="padding-bottom:20px">
-    <button class="srch-entry" data-act="srch-open"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="vertical-align:-3px;margin-right:4px"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>${wlOn()?'메모 · 일지 찾기':'메모 찾기'}</button>
-    ${issues.length?`<div class="pg-sec">${item('⚠️','알람이 잘 울리게 (권한)','more-perm',`<span style="color:var(--danger)">${issues.length}개 꺼짐</span>`)}</div>`:''}
-    <div class="stiles">${tiles}</div>
-    <div class="stiles" style="margin-top:8px">${more}</div>
+    tile('☁️','백업',lastB||'안 함','more-backup')];
+  const g3=[
+    tile('🎨','화면',S.fontScale>100?'글자 크게':'글자 보통','more-look'),
+    tile('🧩','부가 기능',`${addonCount()}개 켜짐`,'more-addons'),
+    tile('ℹ️','도움 · 정보',appVersion(),'more-info')];
+  const grp=(t,a)=>a.length?`${cap(t)}<div class="stiles">${a.join('')}</div>`:'';
+  return `<div class="mlist mset" style="padding-bottom:24px">
+    <button class="srch-entry" data-act="srch-open"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>${wlOn()?'메모 · 일지 찾기':'메모 찾기'}</button>
+    ${issues.length?`<button class="mwarn" data-act="more-perm"><span class="npi">${npi('alert',20)}</span><b>알람이 잘 울리게</b><em>${issues.length}개 꺼짐${npi('chevron-right',16)}</em></button>`:''}
+    ${grp('내 근무',g1)}${grp('가족',g2)}${grp('앱',g3)}
+    <button class="mtips" data-act="tips-open"><span>${npi('bulb',22)}</span><b>이럴 땐 이렇게</b><small>상황별 사용법</small></button>
   </div>`;
 }
 /* ---- v0.118 💡 이럴 땐 이렇게: 상황별 팁 (묶음 접기 · 누르면 펼침 · 바로 가기) — 기능을 바꾸면 여기 글도 같이 고치기 (s79 가 바로 가기를 시험) ---- */
@@ -11719,6 +11735,7 @@ function renderLinkPage(){
     <div class="pg-sec famsec">${u.members.map((m,i)=>`<div class="prow ${m.uid===me?'':'tap'}" ${m.uid===me?'':`data-act="mem-menu" data-u="${esc(m.uid)}"`}>${lav(famAka(m.uid,m.name),i)}<div class="pl2">${esc(famAka(m.uid,m.name))}${m.uid===me?' <span class="me">나</span>':''}${m.uid!==me&&S.famAlias&&S.famAlias[m.uid]?`<span style="font-size:12px;color:var(--muted);font-weight:600"> · ${esc(m.name)}</span>`:''}<small class="keep">${sub(m)}</small></div>${m.uid===me?'':'<span class="muted">›</span>'}</div>`).join('')}
       ${full?'<div class="prow"><div class="pl2 muted" style="text-align:center">가족 자리가 가득 찼어요</div></div>':`<div class="invb"><button class="btn" data-act="link-invite">${npi('plus',18)}가족 초대하기</button></div>`}
     </div>
+    <div class="pg-sec" style="margin-top:12px">${npRow('users','가족 목록',npVal(`${(S.family||[]).length}명`),{tap:1,act:'fam-set'})}</div>   <!-- v0.156 설정 "가족" 한 칸 → 앱 없는 가족(가족 목록)은 여기서 -->
     ${u.invites.length?`<div class="pg-cap">내가 보낸 초대 코드 (쓰면 사라져요)</div><div class="pg-sec" style="margin-top:0">${u.invites.map(v=>`<div class="prow"><div class="pl2"><b class="mono">${famFmt(v.code)}</b><small class="keep">${esc(v.name||'호칭 미정')} · ${daysLeft(v.exp)}일 남음</small></div><button class="btn ghost sm" data-act="inv-share" data-c="${v.code}">보내기</button><button class="xbtn" data-act="inv-del" data-c="${v.code}" aria-label="코드 지우기">✕</button></div>`).join('')}</div>`:''}
     ${host?(S.myset?`<div class="pg-sec" style="margin-top:16px">${stkRow()}</div>`:''):`<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">내 근무표를 가족에게 보여요<small>끄면 가족 근무표만 보고, 달력 탭이 가족 달력으로 바뀌어요</small></div><label class="sw"><input type="checkbox" id="famOwn" ${L.mode==='view'?'':'checked'}><i></i></label></div>${!S.myset&&L.mode!=='view'?'<div class="prow tap" data-act="mk-sched" style="color:var(--accent);font-weight:700"><div class="pl2">내 근무표 만들기<small>만들기 전에는 가족에게 내 근무표가 안 보여요</small></div><span class="muted">›</span></div>':''}${S.myset&&L.mode!=='view'?stkRow():''}</div>`}
     ${pushRow()}

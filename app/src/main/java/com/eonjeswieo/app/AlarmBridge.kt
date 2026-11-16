@@ -159,6 +159,14 @@ class AlarmBridge(private val activity: MainActivity) {
         if (WidgetStore.saveFromApp(context, json)) WidgetRefresher.refreshAll(context)   // v0.127 자료가 같으면 다시 안 그림
     }
 
+    /** v0.156 홈 화면에 놓인 언제쉬어 위젯 개수 (설정 첫 화면 "위젯 · n개 사용 중") */
+    @JavascriptInterface
+    fun widgetCount(): Int = try {
+        val m = android.appwidget.AppWidgetManager.getInstance(context)
+        listOf(MonthWidgetProvider::class.java, TodayWidget1Provider::class.java, TodayWidget2Provider::class.java, WeekWidgetProvider::class.java)
+            .sumOf { m.getAppWidgetIds(android.content.ComponentName(context, it)).size }
+    } catch (e: Exception) { -1 }
+
     /** 위젯을 마지막에 그린 상태 (앱 \"모양 조정\" 화면에서 보여 줌) */
     @JavascriptInterface
     fun widgetDebug(): String = WidgetStore.notes(context)
