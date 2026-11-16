@@ -23,12 +23,12 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(600);
     await p.evaluate(()=>document.querySelector('#vcsl .cell[data-k="2026-10-14"]').click());await p.waitForTimeout(600);
     const d0=await p.evaluate(()=>{const s=document.getElementById('sheet');const y=q=>{const e=s.querySelector(q);return e?Math.round(e.getBoundingClientRect().top):-1;};return {full:s.classList.contains('full'),strip:!!s.querySelector('#dstrip .dsi.on'),pill:(s.querySelector('.vcrq .sh-pill')||{}).innerText||'',rq:!!document.getElementById('rqm2'),yp:y('.vcrq'),yw:y('.wxcard'),ym:y('.vcm'),memo:/9시 지게차 교육/.test(s.innerText),bar:!!document.getElementById('vcmemo'),t:(s.querySelector('.dft')||{}).innerText};});
-    T('날짜 창: 전체 화면 · 날짜 띠 · "야간 · 근무 요청 ▾" (접힘 · 요청 칸 숨김)',d0.full&&d0.strip&&/야간/.test(d0.pill)&&/근무 요청/.test(d0.pill)&&!d0.rq,JSON.stringify(d0));
+    T('날짜 창: 전체 화면 · 날짜 띠 · "야간 · 요청하기 ▾" (접힘 · 요청 칸 숨김) (v0.168)',d0.full&&d0.strip&&/야간/.test(d0.pill)&&/요청하기/.test(d0.pill)&&!d0.rq,JSON.stringify(d0));
     T('순서: 근무 칩 → 날씨 카드 → 가족 메모 (메모 · 쓰는 칸)',d0.yp>0&&d0.yw>d0.yp&&d0.ym>d0.yw&&d0.memo&&d0.bar,JSON.stringify(d0));
-    T('제목 아래: 아빠 · 야간 · 보기만',/아빠 · 야간 · 보기만/.test(d0.t),d0.t);
+    T('제목 아래: 아빠 · 야간 ("보기만" 뺌 · v0.168)',/아빠 · 야간/.test(d0.t)&&!/보기만/.test(d0.t),d0.t);
     await tap(p,'#sheet [data-act="vc-rq"]');await p.waitForTimeout(400);
     const d1=await p.evaluate(()=>({rq:!!document.getElementById('rqm2'),chips:document.querySelectorAll('#sheet .vcrq .tchip').length,send:!!document.querySelector('#sheet [data-act="vc-send"]'),multi:!!document.querySelector('#sheet [data-act="vc-multi-from"]'),t:document.querySelector('#sheet .vcrq').innerText.replace(/\s+/g,' ')}));
-    T('칩 누르면 펼침: 아빠에게 근무 요청 · 근무 동그라미 3개 · 메시지 · 여러 날 · 보내기 · 무료 8건',d1.rq&&d1.chips===3&&d1.send&&d1.multi&&/아빠에게 근무 요청/.test(d1.t)&&/무료 8건/.test(d1.t),JSON.stringify(d1));
+    T('칩 누르면 펼침: 근무 바꿔 달라고 하기 · 근무 동그라미 3개 · "야간 → 휴무" · 여러 날 · 보내기 · 8건 남음 (v0.168)',d1.rq&&d1.chips===3&&d1.send&&d1.multi&&/근무 바꿔 달라고 하기/.test(d1.t)&&/야간 → 휴무/.test(d1.t)&&/8건 남음/.test(d1.t),JSON.stringify(d1));
     await tap(p,'#sheet .vcrq .tchip:nth-child(3)');await p.waitForTimeout(200);
     T('근무 고르기 (휴무)',await p.evaluate(()=>document.querySelector('#sheet .vcrq .tchip.on small').textContent==='휴무'));
     await p.evaluate(()=>{document.getElementById('rqm2').value='같이 가자';document.querySelector('#sheet [data-act="vc-send"]').click();});await p.waitForTimeout(400);

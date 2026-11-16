@@ -1952,6 +1952,20 @@ html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.07}
 .cell.today.glowing::after{opacity:1!important}
 .tglow .g-pb{filter:blur(2px);opacity:var(--pe,0)}.tglow .g-po{stroke-width:11px;opacity:.22}.tglow .g-po2{stroke-width:6px;opacity:.4}
 .tglow .g-pin{stroke:#fff;stroke-width:1.6px;opacity:calc(.9*var(--pe,0))}.tglow .g-pin2{stroke-width:5px;opacity:calc(.25*var(--pe,0))}
+/* v0.168 근무 요청 화면(가족 달력 날짜 창) 새 모양 — 내 날짜 창과 같은 짜임 */
+.vrbody .vrcard{display:block}.vrbody .vrcard .tchips{padding:2px 4px 0}
+.vrask{margin:14px 4px 0;font-size:14px;font-weight:600;color:color-mix(in srgb,var(--fg) 70%,var(--bg))}.vrask b{color:var(--fg)}
+.vrbody #rqm2{display:block;width:100%;border:0;background:var(--surface);border-radius:14px;padding:12px 14px;font-size:15px;min-height:56px;margin-top:12px;resize:none;color:var(--fg)}
+.vrbody .paint-btn{margin-top:10px}
+.vrsend{display:flex;align-items:center;justify-content:center;width:100%;height:50px;margin-top:10px;border-radius:14px;font-size:16px;font-weight:800}.vrsend small{font-size:13px;font-weight:600;opacity:.8;margin-left:2px}
+.vrst{display:flex;align-items:center;gap:12px;padding:4px 4px 6px}.vrst+.vrst{border-top:1px solid var(--line);padding-top:10px}
+.vrst .ic{width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 12%,var(--bg))}
+.vrst .tx{min-width:0}.vrst b{display:block;font-size:15.5px}.vrst span{font-size:13px;color:var(--muted);font-weight:600}.vrst em{display:block;font-style:normal;font-size:13.5px;color:var(--fg);margin-top:2px}
+.vrst .x{margin-left:auto;flex:none;font-size:13.5px;font-weight:700;color:var(--muted);background:var(--surface);border-radius:999px;padding:7px 12px}
+.vrst+.tchips{margin-top:10px}
+.vrbody .vcm .vcmt{color:var(--muted)}
+.vrbody .vcmemo-bar{display:flex;gap:8px;margin-top:8px}.vrbody .vcmemo-bar input{flex:1;height:48px;border:0;border-radius:14px;background:var(--surface);padding:0 14px;font-size:15.5px;box-shadow:none}
+.vrbody .vcmemo-bar .send{flex:none;width:46px!important;height:46px!important;border-radius:13px!important;background:var(--fam)!important;color:#fff!important;display:grid;place-items:center}
 /* v0.148 빛이 도는 동안: 원래 테두리는 숨기고 빛을 따라 그려지는 선(g-draw)으로 · 끝나면 다시 테두리 */
 .cell.today.glowing::after{opacity:0}
 .tglow .g-draw{stroke-width:3px;opacity:1;stroke:var(--tdc,var(--today))}
@@ -10958,7 +10972,7 @@ function vcMemoHtml(k){
     if(mine&&vcMemoEdit===m.id)return `<div class="mcard fam"><div class="mt2" style="width:100%"><input type="text" id="vcmedit" maxlength="200" value="${esc(m.text)}" style="width:100%"><div class="vcm-btns"><button class="btn sm ghost" data-act="vc-memo-cancel" data-k="${k}">취소</button><button class="btn sm" data-act="vc-memo-save" data-k="${k}" data-mid="${m.id}">저장</button></div></div></div>`;
     return `<div class="mcard fam"><div class="mt2"><span class="tx">${linkify(m.text,{click:true,fam:m.by!==role()})}</span><div class="meta"><span class="who ${m.by===role()?'me':''}">${esc(whoName(m.by))}</span> · ${rel(m.t)}</div></div>${mine?`<span class="vcm-act"><button data-act="vc-memo-edit" data-k="${k}" data-mid="${m.id}" aria-label="고치기">✎</button><button data-act="vc-memo-del" data-k="${k}" data-mid="${m.id}" aria-label="지우기">🗑</button></span>`:''}</div>`;
   }).join('');
-  return `<div class="sec-t" style="color:var(--fam)">♥ 가족 메모</div>${list||'<div class="mempty">아직 메모가 없어요</div>'}
+  return `<div class="sec-t vcmt">가족 메모</div>${list}
     <div class="vcmemo-bar"><input type="text" id="vcmemo" maxlength="200" placeholder="가족에게 남길 메모" enterkeyhint="send"><button class="send fam" data-act="vc-memo-send" data-k="${k}" aria-label="보내기">${ICON.send}</button></div>
     ${famRemain()<=3?`<div class="usage-hint" style="margin-top:4px">무료 ${famRemain()}건 남음 · 가족 모두에게 보이고 알림이 가요</div>`:''}`;
 }
@@ -11040,25 +11054,26 @@ function vcDayHtml(k){
   const mine=reqUniq(S.requests.filter(r=>r.srv&&r.dir==='out'&&r.peer===p.uid&&r.date===k).sort((a,b)=>b.t-a.t));
   const open=mine.some(r=>r.st==='pending'||r.st==='accepted');
   const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}${fmt(x)===dsTK()?' td':''}" data-act="vc-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${schBadge(p.sch,schShift(p.sch,x),'sm')}</button>`;}).join('');
-  const tag=open?'요청 중':past?'':'근무 요청',canRq=!past||mine.length,isOpen=vcRqOpen&&canRq;
+  const tag=open?'요청 중':past?'':'요청하기',canRq=!past||mine.length,isOpen=canRq&&(vcRqOpen||open);   // v0.168 새 모양 (시안 design/request): 내 날짜 창과 같은 짜임 · 요청 중이면 상태 카드가 바로 보임
+  const tn=x=>esc(schType(p.sch,x).name||x),ro=x=>josa(schType(p.sch,x).name||x,'으로','로');
+  const RS={pending:['clock','답 기다리는 중','#f08a00'],accepted:['check','수락됐어요','#1fa971'],applied:['check','근무표에 들어갔어요','#1fa971'],rejected:['x','거절됐어요','#e5484d'],cancelled:['x','취소했어요','#8b95a1']};
+  const stCard=r=>{const [ic,lb,c]=RS[r.st]||RS.pending;return `<div class="vrst"><span class="ic" style="--c:${c}">${npi(ic,20)}</span><div class="tx"><b>${tn(r.want)}${ro(r.want)} 요청했어요</b><span>${lb} · ${rel(r.tu||r.t)}</span>${r.reply?`<em>"${esc(r.reply)}"</em>`:''}</div>${r.st==='pending'?`<button class="x" data-act="rqcancel" data-id="${r.id}">취소</button>`:''}</div>`;};
   const chips=(p.sch.types||[]).slice(0,8).map(x=>`<button class="tchip ${want===x.k?'on':''}" data-act="vc-want" data-s="${esc(x.k)}">${schBadge(p.sch,x.k,'tc')}<small>${esc(x.name)}</small></button>`).join('');
-  const body=!isOpen?'':`<div class="sec-t">📩 ${esc(p.name)}에게 근무 요청<button class="sh-fold" data-act="vc-rq">▴ 접기</button></div>
-    ${mine.length?mine.map(r=>reqCard(r)).join(''):''}
-    ${past?'<div class="hint" style="margin:6px 0 0;padding:0">지난 날이에요 · 보기만 돼요</div>':open?'<div class="hint" style="margin:6px 0 0;padding:0">이미 진행 중인 요청이 있어요 · 답을 받은 뒤에 새로 보낼 수 있어요</div>'
-      :`<div class="tchips">${chips}</div>
-        <textarea id="rqm2" placeholder="요청 메시지 (예: 아이 할로윈 파티라 같이 가자)" maxlength="60" style="margin-top:8px;min-height:58px"></textarea>
-        <div class="row" style="margin-top:10px"><div class="usage-hint">무료 ${famRemain()}건 남음</div><span class="grow"></span><button class="btn sm ghost" data-act="vc-multi-from" data-k="${k}">여러 날 고르기</button><button class="btn sm" data-act="vc-send">요청 보내기</button></div>`}`;
+  const form=past||open?'':`<div class="tchips">${chips}</div>
+        ${want!==sh?`<div class="vrask"><b>${esc(ty.name)} → ${tn(want)}</b>${ro(want)} 바꿔 달라고 할게요</div>`:''}
+        <textarea id="rqm2" placeholder="한마디 (예: 아이 학예회라 같이 가자)" maxlength="60"></textarea>
+        <button class="paint-btn" data-act="vc-multi-from" data-k="${k}">${npi('calendar-days',18)}<b>여러 날 고르기</b><i>›</i></button>
+        <button class="btn vrsend" data-act="vc-send">요청 보내기<small> · ${famRemain()}건 남음</small></button>`;
+  const card=!isOpen?'':`<div class="sh-card vrcard">${mine.map(stCard).join('')}${form}</div>`;
   return `<div class="dtop"><button data-act="close">‹ ${esc(p.name)} 달력</button></div>
     <div class="dfh"><button class="ib" data-act="vc-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
-      <div class="dft"${dsTgo(k,'vc-go')}><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${esc(p.name)} · ${esc(ty.name)} · 보기만${hol?` · <span class="hl">${esc(hol)}</span>`:''}${dsTdy(k)}</small>${dsHint(k)}</div>
+      <div class="dft"${dsTgo(k,'vc-go')}><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${esc(p.name)} · ${esc(ty.name)}${hol?` · <span class="hl">${esc(hol)}</span>`:''}${dsTdy(k)}</small>${dsHint(k)}</div>
       <button class="ib" data-act="vc-go" data-k="${fmt(addDays(d,1))}" aria-label="다음날">›</button></div>
     <div class="dstrip" id="dstrip">${strip}</div>
-    <div class="sec shsec vcrq ${isOpen?'open':''}">
-      ${isOpen?'':`<button class="sh-pill" ${canRq?'data-act="vc-rq"':''}>${schBadge(p.sch,sh,'sm')}${esc(ty.name)}${tag?`<small class="vct">· ${tag}</small>`:''}${canRq?'<i>▾</i>':''}</button>`}
-      ${body}
-    </div>
+    <div class="dsbody vrbody">
+    <div class="sec shsec vcrq ${isOpen?'open':''}"><div class="sh-hd"><span>${isOpen&&form?'근무 바꿔 달라고 하기':'근무'}</span><button class="sh-pill" ${canRq?'data-act="vc-rq"':''}>${schBadge(p.sch,sh,'sm')}${esc(ty.name)}${tag?`<small class="vct">· ${tag}</small>`:''}${canRq?'<i class="shc">▾</i>':''}</button></div>${card}</div>
     ${vcDayWx(p,k)}
-    <div class="sec vcm">${vcMemoHtml(k)}</div>`;
+    <div class="sec vcm memsec">${vcMemoHtml(k)}</div></div>`;
 }
 function openVcDay(k){
   const p=famPeers().find(x=>x.uid===vcUid);if(!p)return;
