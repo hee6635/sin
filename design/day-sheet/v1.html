@@ -1,0 +1,60 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box}body{margin:0;font-family:P,sans-serif;background:#dfe2e6;display:flex;gap:18px;padding:18px;color:#191f28;flex-wrap:wrap;width:1260px}
+.ph{width:390px;height:760px;background:#f2f4f6;border-radius:26px;overflow:hidden;position:relative}
+.hd{height:54px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;background:#f2f4f6;position:relative}
+.hd:before{content:'‹';position:absolute;left:18px;font-size:26px;font-weight:600}
+.tag{position:absolute;top:60px;right:14px;font-size:11px;background:#191f28;color:#fff;border-radius:8px;padding:3px 8px;opacity:.75}
+.cap{font-size:13px;font-weight:600;color:#6b7684;padding:18px 22px 8px}
+.sec{background:#fff;border-radius:20px;margin:0 14px;padding:4px 0}
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:60px}
+.row+.row{border-top:1px solid #f2f4f6}
+.ic{width:36px;height:36px;border-radius:11px;background:#f2f4f6;display:flex;align-items:center;justify-content:center;color:#4e5968;flex:none}
+.nm{flex:1;font-size:16px;font-weight:600}
+.v{color:#6b7684;font-size:15px;font-weight:500;display:flex;align-items:center;gap:2px}
+.v b{color:#191f28;font-weight:600}
+svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ch{width:16px;height:16px;color:#b0b8c1}
+.sw{width:44px;height:26px;border-radius:13px;background:#d1d6db;position:relative;flex:none}.sw:after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.on{background:#3182f6}.sw.on:after{left:21px}
+.seg{display:flex;gap:6px;background:#f2f4f6;border-radius:14px;padding:4px;margin:4px 16px 12px}
+.seg div{flex:1;text-align:center;font-size:14px;font-weight:600;color:#6b7684;padding:9px 4px;border-radius:11px}
+.seg .on{background:#fff;color:#3182f6;box-shadow:0 0 0 1.5px #3182f6,0 2px 6px rgba(49,130,246,.15)}
+.bdg{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none}
+.btn{margin:18px 14px;height:54px;border-radius:16px;background:#3182f6;color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ok{color:#1fa971;font-weight:700;font-size:14px;background:#e9f8f1;border-radius:20px;padding:5px 10px;display:flex;align-items:center;gap:3px}
+.ok svg{width:14px;height:14px;stroke-width:3}
+.pre{margin:0 14px;background:#fff;border-radius:20px;padding:16px}
+.pre .t{font-size:13px;color:#3182f6;font-weight:600}.pre .s{font-size:22px;font-weight:800;margin:4px 0}
+.pre .chips{display:flex;gap:6px;margin-top:10px}.pre .chips span{font-size:13px;font-weight:600;background:#f2f4f6;border-radius:10px;padding:6px 10px;color:#4e5968}
+.dots{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;padding:14px 16px}
+.dots i{width:36px;height:36px;border-radius:50%;display:block;justify-self:center}
+.dots i.on{box-shadow:0 0 0 3px #fff,0 0 0 5px #191f28}
+.rng{flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#3182f6 80%,#e5e8eb 80%);position:relative}.rng:after{content:'';position:absolute;left:78%;top:-7px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.memo{display:flex;align-items:center;gap:10px;padding:10px 16px}.memo i{width:4px;height:30px;border-radius:2px}.memo b{font-size:15px}
+.lnk{text-align:center;color:#3182f6;font-weight:600;font-size:15px;padding:16px}
+</style><style>body{width:860px}.ph{height:800px;background:#f2f4f6}
+.top{background:#fff;padding:10px 16px 6px}.bk{font-size:14px;color:#6b7684;font-weight:600}
+.ttl{display:flex;align-items:center;justify-content:space-between;margin-top:2px}.ttl b{display:block;font-size:22px;font-weight:800;text-align:center}.ttl small{display:block;text-align:center;font-size:14px;font-weight:600;margin-top:2px}.ar{font-size:24px;color:#8b95a1;width:30px;text-align:center}
+.strip{display:flex;background:#fff;padding:6px 8px 12px;border-bottom:1px solid #eef0f2}.dc{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 0;border-radius:14px}
+.dc .dn{font-size:13px;font-weight:600;color:#6b7684}.dc .sb{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.dc.td .dn{color:#3182f6;font-weight:800}.dc.td{box-shadow:inset 0 0 0 2px #3182f6}.dc.sel{background:#f2f7ff}.dc.sel .dn{color:#191f28;font-weight:800}
+.cap2{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:#6b7684;padding:18px 22px 8px}.lk{display:flex;gap:4px;align-items:center;color:#3182f6;font-weight:700}.lk2{color:#3182f6;font-weight:700}
+.chs{display:flex;gap:8px;align-items:flex-start}.sc{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}.sc span{flex:none;min-height:52px;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700}
+.sc small{font-size:12.5px;color:#6b7684;font-weight:600}.sc.on span{box-shadow:0 0 0 3px #fff,0 0 0 5px #3182f6}.sc.on small{color:#3182f6;font-weight:800}.sc.more span{background:#f2f4f6;color:#6b7684;font-size:22px}
+.mrow{display:flex;align-items:center;gap:12px;padding:14px 16px}.mrow+.mrow{border-top:1px solid #f2f4f6}.ck{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 2px #d1d6db;flex:none}
+.mt{flex:1}.mt b{display:block;font-size:16px;font-weight:600}.mt small{font-size:13px;color:#8b95a1;font-weight:500}.fam{font-size:13.5px;font-weight:700;color:#7b5cf0}.hb{color:#7b5cf0;font-weight:800}
+.inp{display:flex;align-items:center;gap:8px;margin:6px 12px 12px;background:#f2f4f6;border-radius:16px;height:50px;padding:0 6px 0 16px}.ph2{flex:1;color:#8b95a1;font-size:15.5px;font-weight:500}.snd{width:38px;height:38px;border-radius:12px;background:#3182f6;color:#fff;display:flex;align-items:center;justify-content:center}
+</style></head><body><div class="ph"><div class="top"><div class="bk">‹ 달력</div><div class="ttl"><span class="ar">‹</span><div><b>10월 14일 (수)</b><small style="color:#2c5a8a">주간</small></div><span class="ar">›</span></div></div>
+<div class="strip"><div class="dc "><span class="dn">11</span><span class="sb" style="background:#f3e0d6;color:#8a4a2c">야</span></div><div class="dc td"><span class="dn">12</span><span class="sb" style="background:transparent;color:#e5484d">휴</span></div><div class="dc "><span class="dn">13</span><span class="sb" style="background:transparent;color:#e5484d">휴</span></div><div class="dc sel "><span class="dn">14</span><span class="sb" style="background:#dbe8f6;color:#2c5a8a">주</span></div><div class="dc "><span class="dn">15</span><span class="sb" style="background:#f3e0d6;color:#8a4a2c">야</span></div><div class="dc "><span class="dn">16</span><span class="sb" style="background:transparent;color:#e5484d">휴</span></div><div class="dc "><span class="dn">17</span><span class="sb" style="background:transparent;color:#e5484d">휴</span></div></div>
+<div class="cap2"><span>근무</span><span class="lk"><svg viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M18.4 2.6a2 2 0 0 1 3 3L12 15l-4 1 1-4Z"/><path d="M8 16c-2 0-3 1.5-3 3s-1 2-3 2c3 1 8 1 8-3"/></svg>여러 날 칠하기</span></div>
+<div class="sec" style="padding:14px 10px 10px"><div class="chs"><div class="sc on"><span style="background:#a9c8e8;color:#1f3f63">주</span><small>주간</small></div><div class="sc "><span style="background:#ecc9b8;color:#6b3a22">야</span><small>야간</small></div><div class="sc "><span style="background:#f2f4f6;color:#e5484d">휴</span><small>휴무</small></div><div class="sc "><span style="background:#c9e5c4;color:#2f5a29">상</span><small>상주</small></div><div class="sc more"><span>＋</span><small>더보기</small></div></div></div>
+<div class="cap2"><span>메모</span><span class="lk2">자세히</span></div>
+<div class="sec"><div class="mrow"><i class="ck"></i><div class="mt"><b>아빠 생신 저녁 7시</b><small>엄마 · 어제</small></div><span class="hb">♥</span></div><div class="mrow"><i class="ck"></i><div class="mt"><b>병원 3시</b><small>나만 · 방금 전</small></div><span class="fam">♥ 가족에게</span></div><div class="inp"><span class="ph2">나만 보는 메모</span><span class="snd"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></span></div></div>
+<div class="tag">근무 날</div></div><div class="ph"><div class="top"><div class="bk">‹ 달력</div><div class="ttl"><span class="ar">‹</span><div><b>10월 13일 (화)</b><small style="color:#e5484d">휴무</small></div><span class="ar">›</span></div></div>
+<div class="strip"><div class="dc "><span class="dn">11</span><span class="sb" style="background:#f3e0d6;color:#8a4a2c">야</span></div><div class="dc td"><span class="dn">12</span><span class="sb" style="background:transparent;color:#e5484d">휴</span></div><div class="dc sel "><span class="dn">13</span><span class="sb" style="background:transparent;color:#e5484d">휴</span></div><div class="dc "><span class="dn">14</span><span class="sb" style="background:#dbe8f6;color:#2c5a8a">주</span></div><div class="dc "><span class="dn">15</span><span class="sb" style="background:#f3e0d6;color:#8a4a2c">야</span></div><div class="dc "><span class="dn">16</span><span class="sb" style="background:transparent;color:#e5484d">휴</span></div><div class="dc "><span class="dn">17</span><span class="sb" style="background:transparent;color:#e5484d">휴</span></div></div>
+<div class="cap2"><span>근무</span><span class="lk"><svg viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M18.4 2.6a2 2 0 0 1 3 3L12 15l-4 1 1-4Z"/><path d="M8 16c-2 0-3 1.5-3 3s-1 2-3 2c3 1 8 1 8-3"/></svg>여러 날 칠하기</span></div>
+<div class="sec" style="padding:14px 10px 10px"><div class="chs"><div class="sc "><span style="background:#a9c8e8;color:#1f3f63">주</span><small>주간</small></div><div class="sc "><span style="background:#ecc9b8;color:#6b3a22">야</span><small>야간</small></div><div class="sc on"><span style="background:#f2f4f6;color:#e5484d">휴</span><small>휴무</small></div><div class="sc "><span style="background:#c9e5c4;color:#2f5a29">상</span><small>상주</small></div><div class="sc more"><span>＋</span><small>더보기</small></div></div></div>
+<div class="cap2"><span>메모</span><span class="lk2">자세히</span></div>
+<div class="sec"><div class="inp"><span class="ph2">나만 보는 메모</span><span class="snd"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></span></div></div>
+<div class="tag">쉬는 날 · 메모 없음</div></div></body></html>
