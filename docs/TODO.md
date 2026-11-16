@@ -2551,7 +2551,8 @@
 
 ## 아직 옛 모양인 화면 → 새 모양(.pg-b.np 카드 · 선 아이콘 · 설명 글 없음)으로 (사용자 2026-11-16 "빼먹은 예전 UI 찾아서")
 - 1묶음 · 자주 여는 설정: 알람음 고르기 창(시안 design/alarm-sound/v1.png 확정) · 근무 시간(openTimesPage) · 출퇴근 날씨(openWxPage) · 알림(openNotifPage) · 홈 화면 위젯(openWidgetPage) · 메모 색(openColorsPage — 가족 메모는 보라 고정이라 "나만 보는 메모 색"만(보라 2개는 빼서 헷갈리지 않게) · 저장된 fam 색은 보라로) · 권한(openPermPage)
-- 2묶음 · 스티커 · 할 일: 스티커 등록(renderStampReg) · 스티커판(openStickerBoard) · 할 일 판(openBoard) · 메모 자세히(renderMemoDetail) · 개인 일정(openPersPage) · 업무 일지 설정(openWlSet)
+- 2묶음 · 스티커 · 할 일 (시안 design/np2/v1.png): 스티커 등록(renderStampReg: 위 칸 그림 · 이름 · 날짜 / 하루 몇 번 · 반복 C3 칸 / 시각 알림 · 가족에게 보이기 · 활동 시간 · 날씨 줄 / "상세 조건"은 반복 고르면 기간 · 공휴일 줄이 나옴 / 설명 글 빼기) · 개인 캘린더(openPersPage: 시작 날 줄 + 설명은 팁 줄로) · 업무 일지 설정(openWlSet: 이름 칸 + 추천 이름 칩 · 칸 이름은 줄 + 스위치(켜면 보임) · 백업 · 찾기 줄)
+  - 포스트잇 판(openBoard)은 코르크판 모양이 뜻이 있어서 그대로 · 스티커판 · 메모 자세히는 만들 때 같은 카드 규칙만 맞춤
 - 3묶음 · 부가 기능: 근무 통계(openStatsPage) · 명세서(openSlipPage) · 근무 짝꿍(openCompPage) · 찾기(renderSrch)
 - 4묶음 · 작은 창 제목: 이모지 빼고 한 줄 제목 (🔐 가족방 지키기 · 🔁 반복 · 📝 · 📋 일지 이름 · 📅 이 날부터 새 일정 · 💌 응원 버튼 · 🏭 직장 · ☁️ 백업해 둘까요? · 🗂 뗀 포스트잇)
 - 그대로: 가족 탭 달력 화면들(famcal · mancal · manstk · manpat · famedit — 가족 탭은 그대로 가기로 함) · 개인정보처리방침 · 모양 조정 · 서버 설정(개발용)
