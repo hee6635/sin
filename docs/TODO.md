@@ -2550,7 +2550,7 @@
 - 관리자 폰: 구글 계정 연결(가족 › 구글 계정으로 가족방 지키기) 뒤 도움 · 정보에 "관리자" 줄이 보임.
 
 ## 아직 옛 모양인 화면 → 새 모양(.pg-b.np 카드 · 선 아이콘 · 설명 글 없음)으로 (사용자 2026-11-16 "빼먹은 예전 UI 찾아서")
-- 1묶음 · 자주 여는 설정: 알람음 고르기 창(시안 design/alarm-sound/v1.png 확정) · 근무 시간(openTimesPage) · 출퇴근 날씨(openWxPage) · 알림(openNotifPage) · 홈 화면 위젯(openWidgetPage) · 근무 색(openColorsPage) · 권한(openPermPage)
+- 1묶음 · 자주 여는 설정: 알람음 고르기 창(시안 design/alarm-sound/v1.png 확정) · 근무 시간(openTimesPage) · 출퇴근 날씨(openWxPage) · 알림(openNotifPage) · 홈 화면 위젯(openWidgetPage) · 메모 색(openColorsPage — 가족 메모는 보라 고정이라 "나만 보는 메모 색"만(보라 2개는 빼서 헷갈리지 않게) · 저장된 fam 색은 보라로) · 권한(openPermPage)
 - 2묶음 · 스티커 · 할 일: 스티커 등록(renderStampReg) · 스티커판(openStickerBoard) · 할 일 판(openBoard) · 메모 자세히(renderMemoDetail) · 개인 일정(openPersPage) · 업무 일지 설정(openWlSet)
 - 3묶음 · 부가 기능: 근무 통계(openStatsPage) · 명세서(openSlipPage) · 근무 짝꿍(openCompPage) · 찾기(renderSrch)
 - 4묶음 · 작은 창 제목: 이모지 빼고 한 줄 제목 (🔐 가족방 지키기 · 🔁 반복 · 📝 · 📋 일지 이름 · 📅 이 날부터 새 일정 · 💌 응원 버튼 · 🏭 직장 · ☁️ 백업해 둘까요? · 🗂 뗀 포스트잇)
