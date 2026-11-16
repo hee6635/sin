@@ -1,0 +1,38 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>오늘 빛 시안</title><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+*{box-sizing:border-box}
+body{margin:0;background:#f2f4f6;font-family:P,sans-serif;color:#191f28;padding:20px;display:flex;flex-direction:column;align-items:center;gap:18px}
+h3{margin:0;font-size:17px}h3 em{font-style:normal;color:#3182f6}
+.row{display:grid;grid-template-columns:repeat(7,52px);gap:0;background:#fff;border-radius:18px;padding:10px 8px;box-shadow:0 2px 12px rgba(0,0,0,.05)}
+.c{height:96px;position:relative;display:flex;flex-direction:column;align-items:center;font-weight:700}
+.c .n{align-self:flex-start;padding:4px 6px;font-size:13px}
+.c .s{margin-top:14px;font-size:18px}
+.dy{background:#c7dbee;border-radius:9px;margin:0 1px}.nt{background:#ecd3c5;border-radius:9px;margin:0 1px}.rs .s{color:#c23a5a}
+.today{border-radius:9px}
+.today::after{content:'';position:absolute;inset:1px;border-radius:9px;box-shadow:inset 0 0 0 2.5px #2f5f8f}
+/* 지금: 파란 빛 한 바퀴 */
+.old .today .g{position:absolute;inset:-2px;border-radius:11px;padding:3px;background:conic-gradient(from var(--a),transparent 0 75%,#3182f6 92%,#9cc4ff 97%,transparent 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 1.6s linear 1 forwards;opacity:.95}
+/* 바뀐 뒤: 하얀 빛 + 은은한 보라 · 파랑 번짐 · 긴 꼬리 · 3바퀴 뒤 멈춤 */
+.new .today .g,.new .today .h{position:absolute;inset:-3px;border-radius:12px;padding:3.5px;background:conic-gradient(from var(--a),transparent 0 55%,rgba(150,120,255,.35) 72%,rgba(120,170,255,.75) 86%,#fff 95%,#fff 97%,transparent 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 2.2s cubic-bezier(.45,.1,.55,.9) 3 forwards}
+.new .today .h{inset:-7px;padding:7px;border-radius:15px;filter:blur(6px);opacity:.9}
+@keyframes spin{from{--a:0deg}to{--a:360deg}}
+.done .g,.done .h{animation:none!important;opacity:0;transition:opacity .6s}
+button{border:0;background:#3182f6;color:#fff;font:700 15px P,sans-serif;border-radius:12px;padding:10px 18px}
+.note{font-size:14px;color:#4e5968;line-height:1.6;max-width:420px}
+.dark{background:#17191c;border-radius:18px;padding:12px}.dark .row{background:#22252a;color:#e8eaed}.dark .dy{background:#3e4f60}.dark .nt{background:#5a4a42}.dark .today::after{box-shadow:inset 0 0 0 2.5px #8fb6e0}
+</style></head><body>
+<h3>지금 (파란 빛 한 바퀴)</h3>
+<div class="row old" id="o"></div>
+<h3>바꾼 뒤 <em>(하얀 빛 · 은은한 번짐 · 긴 꼬리 · 3바퀴 뒤 멈춤)</em></h3>
+<div class="row new" id="n"></div>
+<div class="dark"><div class="row new" id="d"></div></div>
+<button onclick="play()">다시 보기</button>
+<div class="note">· 달력을 열 때 · 오늘로 돌아올 때 3바퀴 (약 6초) 돌고 멈춤 → 테두리만 남음<br>· 빛 = 하얀 머리 + 파랑 · 보라 꼬리 + 바깥으로 살짝 번짐 (영상의 검색창 느낌)<br>· 홈 화면 위젯은 계속 돌 수 없어서, 누르거나 달을 넘길 때 잠깐 도는 것만 같은 색으로</div>
+<script>
+const cells=[['15','주','dy'],['16','주','dy today'],['17','교','dy'],['18','휴','rs'],['19','휴','rs'],['20','야','nt'],['21','휴','rs']];
+function row(id){document.getElementById(id).innerHTML=cells.map(([n,s,c])=>`<div class="c ${c}"><span class="n">${n}</span><span class="s">${s}</span>${c.includes('today')?'<i class="h"></i><i class="g"></i>':''}</div>`).join('');}
+function play(){['o','n','d'].forEach(id=>{const e=document.getElementById(id);e.classList.remove('done');row(id);});setTimeout(()=>document.getElementById('o').classList.add('done'),1700);setTimeout(()=>{['n','d'].forEach(i=>document.getElementById(i).classList.add('done'));},6700);}
+play();
+</script></body></html>
