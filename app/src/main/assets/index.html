@@ -68,7 +68,7 @@
 :root{
   --pill-off:#b9bec7;
   --bg:#ffffff;--surface:#f5f6f8;--fg:#1f2328;--muted:#8b919a;--line:#eceef1;--track:#c9ced6;
-  --accent:#3182f6;--acc-soft:#e8f3ff;--acc-ink:#1b64da;--acc-sw:#3182f6;--day:#a6c6e2;--day-fg:#1c2a31;--night:#e0b8a3;--night-fg:#2b1f1b;--band-d:#eef1f3;--band-n:#f3eeeb;--today:#1f8f75;--today-bg:#e3f6f0;--navbar:#ffffff;--navbar-fg:#9aa1ad;--out-bg:#f4f5f7;--head-bg:#f7f7f8;
+  --accent:#3182f6;--acc-soft:#e8f3ff;--acc-ink:#1b64da;--acc-sw:#3182f6;--day:#a6c6e2;--day-fg:#1c2a31;--night:#e0b8a3;--night-fg:#2b1f1b;--band-d:#eef1f3;--band-n:#f3eeeb;--today:#3182f6;--today-bg:#e8f2ff;--navbar:#ffffff;--navbar-fg:#9aa1ad;--out-bg:#f4f5f7;--head-bg:#f7f7f8;
   --rest:#e0455c;--hol-bg:#f8d5d9;--sat:#3b6fd6;--sun:#d64560;--danger:#d64560;
   --icon-on:#7b93cf; --icon-off:#c9ced6;
   --fab-color:#7b93cf;
@@ -82,7 +82,7 @@
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#111318;--surface:#1a1d24;--fg:#e8eaee;--muted:#8a909b;--line:#262a33;--track:#3a3f4a;
-    --accent:#4c8dff;--acc-soft:#1c2c48;--acc-ink:#c6dbff;--acc-sw:#4c8dff;--day:#4d6068;--day-fg:#eef3f5;--night:#65554f;--night-fg:#f6ece9;--band-d:#232c31;--band-n:#2b2523;--today:#35b894;--today-bg:#173229;--navbar:#23252c;--navbar-fg:#8a8d98;--out-bg:#16181e;--head-bg:#15171c;
+    --accent:#4c8dff;--acc-soft:#1c2c48;--acc-ink:#c6dbff;--acc-sw:#4c8dff;--day:#4d6068;--day-fg:#eef3f5;--night:#65554f;--night-fg:#f6ece9;--band-d:#232c31;--band-n:#2b2523;--today:#5a9cf8;--today-bg:#1a2a40;--navbar:#23252c;--navbar-fg:#8a8d98;--out-bg:#16181e;--head-bg:#15171c;
     --rest:#ff6b81;--hol-bg:#4a2129;--sat:#7ea2ff;--sun:#ff7a8c;--danger:#ff7a8c;--chol:#1d2944;--chol-fg:#8fb0ff;--pill-off:#5b616c;
     --icon-on:#93a9e0; --icon-off:#4a4f59; --fab-color:#93a9e0;
     --family-pink:#ff6584;
@@ -91,7 +91,7 @@
 }
 :root[data-theme="dark"]{
   --bg:#111318;--surface:#1a1d24;--fg:#e8eaee;--muted:#8a909b;--line:#262a33;--track:#3a3f4a;
-  --accent:#4c8dff;--acc-soft:#1c2c48;--acc-ink:#c6dbff;--acc-sw:#4c8dff;--day:#4d6068;--day-fg:#eef3f5;--night:#65554f;--night-fg:#f6ece9;--band-d:#232c31;--band-n:#2b2523;--today:#35b894;--today-bg:#173229;--navbar:#23252c;--navbar-fg:#8a8d98;--out-bg:#16181e;--head-bg:#15171c;
+  --accent:#4c8dff;--acc-soft:#1c2c48;--acc-ink:#c6dbff;--acc-sw:#4c8dff;--day:#4d6068;--day-fg:#eef3f5;--night:#65554f;--night-fg:#f6ece9;--band-d:#232c31;--band-n:#2b2523;--today:#5a9cf8;--today-bg:#1a2a40;--navbar:#23252c;--navbar-fg:#8a8d98;--out-bg:#16181e;--head-bg:#15171c;
   --rest:#ff6b81;--hol-bg:#4a2129;--sat:#7ea2ff;--sun:#ff7a8c;--danger:#ff7a8c;--chol:#1d2944;--chol-fg:#8fb0ff;--pill-off:#5b616c;
   --icon-on:#93a9e0; --icon-off:#4a4f59; --fab-color:#93a9e0;
   --family-pink:#ff6584;
@@ -1788,6 +1788,28 @@ html[data-cal="fill"] .cell.today::after,html[data-cal="fill"] .cell.today[style
 .tips.np .ta{font-size:14.5px;line-height:1.55;color:color-mix(in srgb,var(--fg) 80%,var(--bg))}
 .tips.np .tgo{display:block;width:100%;margin:14px 0 16px;height:48px;border-radius:14px;background:var(--acc-soft);color:var(--accent);font-weight:700}
 
+/* v0.155 날짜 창 새 모양: 위(날짜 · 날짜 띠)는 흰 바탕 · 아래는 회색 바탕 + 흰 카드 · 근무 알약 하나로 접기 · 펼치기 · 오늘 = 테두리 */
+.dsi.td small{background:none!important;color:var(--tdc,var(--today))!important;font-weight:800;padding:0}
+.dsi.td{box-shadow:inset 0 0 0 2px var(--tdc,var(--today))}
+.dsi.on{background:color-mix(in srgb,var(--accent) 8%,var(--bg))}.dsi.on .badge::after{display:none}
+.dsbody{background:var(--surface);margin:8px -16px 0;padding:2px 16px 0;min-height:60vh}
+.dsbody .sec{border-top:0;margin:12px 0 0;padding:0;background:transparent}
+.dsbody .sec-t{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);padding:6px 6px 8px;margin:0}
+.shsec .sh-hd{display:flex;align-items:center;justify-content:space-between;padding:6px 6px 8px;font-size:13px;font-weight:700;color:var(--muted)}
+.shsec .sh-hd .sh-pill{background:var(--bg);box-shadow:0 1px 3px rgba(15,23,42,.06)}
+.shsec.open .sh-pill{display:inline-flex}.shsec.open .sh-pill .shc{transform:rotate(180deg)}
+.shsec .sh-card{background:var(--bg);border-radius:22px;padding:14px 10px 12px!important;margin:0!important;box-shadow:0 2px 12px rgba(15,23,42,.035)}
+.shsec:not(.open) .sh-card{padding:0!important}
+.paint-btn{display:flex;align-items:center;gap:8px;width:100%;margin-top:12px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--accent) 8%,var(--bg));color:var(--accent);text-align:left}
+.paint-btn b{font-size:15px;font-weight:700}.paint-btn i{margin-left:auto;font-style:normal;font-size:18px;opacity:.6}
+.dsbody .tchip.on .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent)!important}.dsbody .tchip.on small{color:var(--accent);font-weight:800}
+.memsec .sec-t .mdet2{font-size:13.5px;font-weight:700;color:var(--accent)}
+.dsbody .memsec{background:var(--bg);border-radius:22px;padding:2px 12px 12px!important;box-shadow:0 2px 12px rgba(15,23,42,.035);margin-bottom:16px}.dsbody .memsec>.sec-t{padding:12px 4px 6px}
+.memsec>.mcard,.memsec>.wlrow{margin-left:0;margin-right:0}
+.memsec .ibar{position:sticky;bottom:0;margin:6px 0 0;padding:8px 0 calc(4px + env(safe-area-inset-bottom,0px));border-top:0;background:var(--bg)}
+.memsec .ibar input[type=text]{height:48px!important;border-radius:14px!important;background:var(--surface)!important;border:0!important;padding:0 14px!important;font-size:15.5px}
+.memsec .ibar .send{width:44px!important;height:44px!important;border-radius:13px!important;background:var(--accent)!important;color:#fff!important}
+.memsec .ibar .send.fam{background:var(--fam)!important}
 /* v0.154 작은 창 새 모양: 둥근 아래 창 · 손잡이 · 굵은 한 줄 제목 · 줄 테두리 없음 · 회색 칸 선 아이콘 · 닫기 = 회색 버튼 · 지우기 = 빨강 */
 #pop .menu:not(.wxdpop){width:calc(100% - 16px);margin-bottom:calc(8px + env(safe-area-inset-bottom,0px));border-radius:26px;padding:8px 0 10px;box-shadow:0 10px 40px rgba(0,0,0,.22)}
 #pop .menu:not(.wxdpop)::before{content:'';display:block;width:40px;height:5px;border-radius:3px;background:var(--line);margin:2px auto 8px}
@@ -2726,7 +2748,7 @@ function normalize(o){
   s.alarmMsg=s.alarmMsg!==false;s.chLog=(Array.isArray(o&&o.chLog)?o.chLog:[]).filter(x=>isObj(x)&&+x.t>0&&okDate(x.k)).slice(0,300).map(x=>({t:+x.t,k:x.k,w:cutTxt(x.w,12),a:['chg','req','pending','held','accepted','rejected','applied'].includes(x.a)?x.a:'chg',f:cutTxt(x.f,12),to:cutTxt(x.to,12),...(+x.rcv?{rcv:+x.rcv}:{}),...(x.want?{want:cutTxt(x.want,6)}:{})}));   // v0.135 근무 바뀐 기록s.stzMode=(o&&o.stzMode)==='3'?'3':'m';   // v0.130 스티커 크기 범위: 기본 'm' 그 달만(달마다 최대한 크게) · '3' 앞뒤 3달
   {const a=isObj(s.famAlias)?s.famAlias:{},o={};Object.keys(a).slice(0,20).forEach(k=>{const v=typeof a[k]==='string'?a[k].trim().slice(0,12):'';if(/^[A-Za-z0-9_-]{1,64}$/.test(k)&&v)o[k]=v;});s.famAlias=o;}   // v0.127 부를 이름
   {const h=isObj(s.hints)?s.hints:{},o2={};Object.keys(h).slice(0,30).forEach(k=>{const v=Math.round(+h[k]);if(/^[a-z0-9]{1,12}$/.test(k)&&v>=0&&v<1000)o2[k]=v;});s.hints=o2;}   // v0.126 안내 줄 본 횟수
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.pushBoard=!(o&&o.pushBoard===false);s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'||((o&&o.calLook)!=='circle'&&!(o&&o.onboarded))?'fill':'circle';/* v0.97 새로 설치 = 칸 채우기 · 예전부터 쓰던 사람(고른 적 없음 = 동그라미)은 그대로 */s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.todayColor=(o&&o.todayColor==='shift')?'shift':/^#[0-9a-f]{6}$/i.test((o&&o.todayColor)||'')?o.todayColor.toLowerCase():'';/* 'shift' = 그날 근무 색 */s.linkLost=(o&&isObj(o.linkLost)&&typeof o.linkLost.hid==='string')?{hid:cutTxt(o.linkLost.hid,128),role:o.linkLost.role==='host'?'host':'guest',name:cutTxt(o.linkLost.name,12),at:+o.linkLost.at||0}:null;s.linkMissAt=+(o&&o.linkMissAt)||0;s.hostSeenAt=+(o&&o.hostSeenAt)||0;s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&(o.bg==='paper'||o.bg==='vivid'))?o.bg:(o&&o.onboarded?'':'vivid');/* v0.135 새로 설치 = 또렷하게 */s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.pushBoard=!(o&&o.pushBoard===false);s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'||((o&&o.calLook)!=='circle'&&!(o&&o.onboarded))?'fill':'circle';/* v0.97 새로 설치 = 칸 채우기 · 예전부터 쓰던 사람(고른 적 없음 = 동그라미)은 그대로 */s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.todayColor=(o&&o.todayColor==='shift')?'shift':/^#[0-9a-f]{6}$/i.test((o&&o.todayColor)||'')?o.todayColor.toLowerCase():'';if(!(o&&o.tdcMig)&&!s.todayColor)s.todayColor='shift';s.tdcMig=true;/* v0.155 오늘 표시 기본 = 그날 근무 색 (쉬는 날 회색) · 이미 고른 색은 그대로 */ /* 'shift' = 그날 근무 색 */s.linkLost=(o&&isObj(o.linkLost)&&typeof o.linkLost.hid==='string')?{hid:cutTxt(o.linkLost.hid,128),role:o.linkLost.role==='host'?'host':'guest',name:cutTxt(o.linkLost.name,12),at:+o.linkLost.at||0}:null;s.linkMissAt=+(o&&o.linkMissAt)||0;s.hostSeenAt=+(o&&o.hostSeenAt)||0;s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&(o.bg==='paper'||o.bg==='vivid'))?o.bg:(o&&o.onboarded?'':'vivid');/* v0.135 새로 설치 = 또렷하게 */s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,stkAsked:s.link.stkAsked?1:0,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#5b8fc7'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#5b8fc7'})[k];});s.memoColors.fam='#7b5cf0';   // v0.151 가족 메모는 보라 고정
   if(!(o&&o.memoMig88)&&s.memoColors.my==='#6b7280')s.memoColors.my='#5b8fc7';s.memoMig88=true;   // v0.88: 내 메모 기본색 회색 → 연한 파랑 (옛 기본값 그대로인 사람만 · 한 번만 — 그 뒤에 회색을 고르면 그대로)
@@ -5103,6 +5125,12 @@ const NPI={"repeat": "<path d=\"m17 2 4 4-4 4\" /> <path d=\"M3 11v-1a4 4 0 0 1 
 Object.assign(NPI,{"sticky-note": "<path d=\"M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z\" /> <path d=\"M15 3v4a2 2 0 0 0 2 2h4\" />", "smile": "<circle cx=\"12\" cy=\"12\" r=\"10\" /> <path d=\"M8 14s1.5 2 4 2 4-2 4-2\" /> <line x1=\"9\" x2=\"9.01\" y1=\"9\" y2=\"9\" /> <line x1=\"15\" x2=\"15.01\" y1=\"9\" y2=\"9\" />", "users": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /> <circle cx=\"9\" cy=\"7\" r=\"4\" /> <path d=\"M22 21v-2a4 4 0 0 0-3-3.87\" /> <path d=\"M16 3.13a4 4 0 0 1 0 7.75\" />", "chart-column": "<path d=\"M3 3v16a2 2 0 0 0 2 2h16\" /> <path d=\"M18 17V9\" /> <path d=\"M13 17V5\" /> <path d=\"M8 17v-3\" />", "smartphone": "<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\" ry=\"2\" /> <path d=\"M12 18h.01\" />", "info": "<circle cx=\"12\" cy=\"12\" r=\"10\" /> <path d=\"M12 16v-4\" /> <path d=\"M12 8h.01\" />", "sparkles": "<path d=\"M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z\" /> <path d=\"M20 3v4\" /> <path d=\"M22 5h-4\" /> <path d=\"M4 17v2\" /> <path d=\"M5 18H3\" />"});
 const npi=(n,sz=18)=>NPI[n]?`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NPI[n]}</svg>`:"";
 const npRow=(icon,name,right,o={})=>`<div class="prow${o.tap?" tap":""}${o.cls?" "+o.cls:""}"${o.act?` data-act="${o.act}"`:""}${o.attrs||""}><span class="npi">${npi(icon)}</span><div class="pl2">${name}${o.d?`<small class="keep">${o.d}</small>`:""}</div>${right||""}</div>`;
+Object.assign(NPI,{   // v0.155 화면 설정 아이콘
+  'grid':'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
+  'circle-dot':'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>',
+  'sun-moon':'<path d="M12 8a2.8 2.8 0 0 0 4 4 4 4 0 1 1-4-4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/>',
+  'type':'<path d="M4 7V4h16v3M9 20h6M12 4v16"/>'
+});
 Object.assign(NPI,{   // v0.154 작은 창
   'pencil':'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
   'ban':'<circle cx="12" cy="12" r="9"/><path d="m5.7 5.7 12.6 12.6"/>',
@@ -5694,7 +5722,7 @@ function manChipIco(m,v,d){
 let dsTKc='',dsTKt=0;function dsTK(){const n=Date.now();if(n-dsTKt>1000){dsTKc=fmt(new Date(n));dsTKt=n;}return dsTKc;}   // 그리는 동안 한 번만 계산
 function dsTgo(k,act){const t=dsTK();return k===t?'':` data-act="${act}" data-k="${t}" role="button"`;}
 function dsTdy(k){return k===dsTK()?'<span class="tdy">오늘</span>':'';}
-function dsHint(k){return k===dsTK()?'':`<span class="tgo">날짜를 누르면 오늘(${new Date().getDate()}일)로</span>`;}
+function dsHint(k){return '';}   // v0.155 설명 글 없음 (날짜를 누르면 오늘로 가는 건 그대로)
 function manDayHtml(k){
   const m=manMember();if(!m)return '';
   const d=parse(k),hol=holName(k),on=(m.stk&&m.stk[k])||[],note=(m.notes&&m.notes[k])||'',cur=(m.ov&&m.ov[k])||manBase(m,d),defs=manSdefs(m).filter(x=>!x.retired||on.includes(x.id));
@@ -6448,21 +6476,20 @@ function memoSection(k){
   const tabs='';
   let body=(wlHas(k)?wlRowHtml(k):'')+fam.map(m=>memoCard(m,k)).join('')+mine.map(m=>memoCard(m,k)).join('');
   body+=boardOnDate(k).map(n=>`<div class="mcard ${n.shared?'fam':'my'}" data-act="open-board"><div class="mt2">📝 ${esc(piLabel(n))}<div class="meta">${cur.m+1}월 포스트잇 · 누르면 열려요</div></div></div>`).join('');
-  if(!body)body='<div class="mempty">아직 메모가 없어요 · 아래에서 남겨 보세요</div>';
+  // v0.155 빈 날 안내 글 없음 (입력칸만)
   if(!memoEdit)memoMode=role()==='host'?'my':'fam';   // 입력칸 한 줄 메모는 항상 나만 (가족에게는 "자세히"에서)
   const fm=memoMode==='fam';
   const bar=`<div class="ibar">
       ${memoEdit?`<div class="editing"><span>✏️ 메모 고치는 중</span><span class="ea"><a data-act="memo-copy">복사</a><a data-act="memo-cancel">취소</a></span></div>`:''}
-      ${fm||ownMemoN()<3?`<div class="note ${fm?'fam':''}">${fm?'♥ 가족 모두에게 보여요 · 알림이 가요':(wlOn()?'🔒 나만 볼 수 있어요 · 색 · 시간 · 가족 · 일지는 "자세히"에서':'🔒 나만 볼 수 있어요 · 색 · 할 일 · 시간 · 가족에게는 "자세히"에서')}</div>`:''}
+      ${fm?`<div class="note ${fm?'fam':''}">${fm?'♥ 가족 모두에게 보여요 · 알림이 가요':(wlOn()?'🔒 나만 볼 수 있어요 · 색 · 시간 · 가족 · 일지는 "자세히"에서':'🔒 나만 볼 수 있어요 · 색 · 할 일 · 시간 · 가족에게는 "자세히"에서')}</div>`:''}
       <div class="irow">
         <input type="text" id="memoInput" class="${fm?'fam':'my'}" value="${esc(memoText)}" placeholder="${fm?'가족에게 남길 메모':'나만 보는 메모'}" enterkeyhint="send">
-        <button class="mdet" data-act="memo-detail">자세히 ›</button>
         <button class="send ${fm?'fam':'my'}" data-act="memo-send" aria-label="보내기">${ICON.send}</button>
       </div>
       ${role()==='guest'&&fm?`<div style="margin-top:6px">${usageHint()}</div>`:''}
       ${S.link&&fm&&famRemain()<=3?`<div class="usage-hint" style="margin-top:6px;text-align:center">무료 ${famRemain()}건 남음</div>`:''}
     </div>`;
-  return `<div class="sec"><div class="sec-t">메모</div>${tabs}${body}</div>${bar}`;
+  return `<div class="sec memsec"><div class="sec-t">메모<button class="mdet2" data-act="memo-detail">자세히</button></div>${tabs}${body}${bar}</div>`;   // v0.155 입력칸도 메모 카드 안 · 자세히는 제목 줄 오른쪽
 }
 /* ---- 메모 자세히 (전체 화면): 색 · 할 일 · 시간/알림 · 나만/가족에게 ---- */
 const MEMO_COL=['#fff1c4','#ffd9e4','#ffe0c7','#d6f5df','#d2f1ef','#d9ecff','#e8eaee'];   // 연보라는 가족 메모 색과 닮아서 뺌 (이미 칠한 메모는 그대로)
@@ -6608,18 +6635,18 @@ function dayHtml(k){
         ${badge(x.k,'tc')}<small>${esc(x.name)}</small>${ov&&x.k===base?'<i class="orig">원래</i>':''}</button>`).join('');
     topPart=persOn(k)?'':`
       <div class="sec shsec${shiftOpenNow()?' open':''}">
-        <button class="sh-pill" data-act="shift-tog" aria-label="근무 바꾸기">${badge(c,'sm','')}${esc(shiftLabel(c))}${ov?'<em>· 바뀜</em>':''}${otNote(k,c)}<i>▾</i></button>
-        <div class="sec-t">근무타입<button class="sh-fold" data-act="shift-tog" aria-label="근무타입 접기">▴ 접기</button><button class="paint-lk" data-act="paint-open" data-k="${esc(c)}">${npi('paintbrush',14)}여러 날 칠하기</button></div>
-        <div class="sh-body"><div>
+        <div class="sh-hd"><span>근무</span><button class="sh-pill" data-act="shift-tog" aria-label="근무 접기 · 펼치기">${badge(c,'sm','')}${esc(shiftLabel(c))}${ov?'<em>· 바뀜</em>':''}${otNote(k,c)}<i class="shc">▾</i></button></div>
+        <div class="sh-body"><div class="sh-card">
         <div class="tchips">${shiftBtns}${S.types.length>quick.length?'<button class="tchip add" data-act="type-more"><span class="badge tc add">＋ 더보기</span></button>':''}${otChip(k,c)}</div>
         ${ov?`<div class="hint" style="margin:6px 0 0">원래 근무: ${esc(shiftLabel(base))} · <a data-act="resetshift">되돌리기</a></div>`:''}
+        <button class="paint-btn" data-act="paint-open" data-k="${esc(c)}">${npi('paintbrush',18)}<b>여러 날 칠하기</b><i>›</i></button>
         </div></div>
       </div>${openReqs.length?`<div class="lbl" style="color:var(--accent);margin-top:12px;">📩 이 날의 근무 요청</div>${reqHtml}`:''}`;
     topPart+=`${warn}`;
   }
   // 순서: 근무 타입 → 대기 중인 요청 → 날씨 → (가족 메모 알림) → 메모
   const [tp1,tp2]=topPart.split('');
-  return `${head}${tp1}${wxDayHtml(k)}${tp2||''}${memoSection(k)}`;
+  return `${head}<div class="dsbody">${tp1}${wxDayHtml(k)}${tp2||''}${memoSection(k)}</div>`;   // v0.155 아래쪽 = 회색 바탕 + 흰 카드
 }
 
 /* ⏱ 연장 = 그날 실제 출근 · 퇴근 (근무 통계를 켠 사람 · 근무 날만). 바꾼 시각은 가족 탭 "몇 시 끝" · 가족 폰 · 날씨 · 통계에 쓰임
@@ -7250,18 +7277,18 @@ function openLookPage(){   // v0.146 새 모양
   openPage(`${pageHead('화면')}<div class="pg-b np">
     <div class="pg-cap">달력</div>
     <div class="pg-sec">
-      ${npRow('calendar-days','달력 모양',seg([['circle','동그라미'],['fill','칸 채우기']],S.calLook==='fill'?'fill':'circle','callook'))}
-      <div class="prow pcol tdc-line"><div class="pl2" style="display:flex;align-items:center;gap:12px"><span class="npi">${npi('calendar')}</span>오늘 표시</div>${todayColorRow()}</div>
+      ${npRow('grid','달력 모양',seg([['circle','동그라미'],['fill','칸 채우기']],S.calLook==='fill'?'fill':'circle','callook'))}
+      <div class="prow pcol tdc-line"><div class="pl2" style="display:flex;align-items:center;gap:12px"><span class="npi">${npi('circle-dot')}</span>오늘 표시</div>${todayColorRow()}</div>
       ${npRow('calendar','주 시작',seg([[0,'일'],[1,'월']],S.weekStart===1?1:0,'weekstart'))}
     </div>
     <div class="pg-cap">보기</div>
     <div class="pg-sec">
-      ${npRow('user','화면 모드',seg([['light','라이트'],['dark','다크'],['system','시스템']],S.theme==='light'||S.theme==='dark'?S.theme:'system','thememode'))}
-      ${npRow('tag','글자 크기',seg([[100,'보통'],[120,'크게']],fs>100?120:100,'font'))}
+      ${npRow('sun-moon','화면 모드',seg([['light','라이트'],['dark','다크'],['system','시스템']],S.theme==='light'||S.theme==='dark'?S.theme:'system','thememode'))}
+      ${npRow('type','글자 크기',seg([[100,'보통'],[120,'크게']],fs>100?120:100,'font'))}
       ${npRow('paintbrush','배경',seg([['','기본'],['paper','종이'],['vivid','또렷하게']],S.bg||'','bgmode'))}
     </div>
     <div class="pg-cap">자세히</div>
-    <div class="pg-sec">${npRow('history','모양 세부 조정',npVal(''),{tap:1,act:'tune-open'})}</div>
+    <div class="pg-sec">${npRow('sliders','모양 세부 조정',npVal(''),{tap:1,act:'tune-open'})}</div>
   </div>`,'look');
 }
 // 설정 › 알림: 흩어져 있던 알림 설정을 한 곳에

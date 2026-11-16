@@ -14,7 +14,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     await p.evaluate(()=>__wx.openDay('2026-10-14'));await p.waitForTimeout(300);
     const key=()=>p.evaluate(()=>{const b=document.querySelector('#sheet .dft b');return b?b.textContent:'';});
     T('시작: 10월 14일',/10월 14일/.test(await key()));
-    await swipe(p,'#sheet .mempty',-120);
+    await swipe(p,'#sheet .memsec .sec-t',-120);
     T('날짜 창 가운데(메모 쪽)를 왼쪽으로 밀면 다음날',/10월 15일/.test(await key()),await key());
     await swipe(p,'#sheet .dfh',140);
     T('오른쪽으로 밀면 전날',/10월 14일/.test(await key()),await key());
@@ -24,7 +24,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     T('조금만 밀면 제자리 (날짜 그대로)',/10월 14일/.test(await key()),await key());
     T('미는 동안 손가락을 따라 움직임 (translateX)',/translateX\(-30px\)/.test(await p.evaluate(()=>window.__swT||'')),await p.evaluate(()=>window.__swT||''));
     T('스프링 끝나면 원래 모양 (옆 판 없음 · 판 하나 · v0.136 넘긴 판은 그대로 씀)',await p.evaluate(()=>!document.querySelector('#sheet .swn')&&document.querySelectorAll('#sheet .swc').length<=1&&document.querySelector('#sheet').style.transform===''));
-    await swipe(p,'#sheet .mempty',-120);
+    await swipe(p,'#sheet .memsec .sec-t',-120);
     T('밀 때 옆 날짜 판이 붙어 있음',await p.evaluate(()=>window.__swN===true));
     T('오류 없음 (날짜 창)',p.errs.length===0,p.errs.join('|'));await p.close();
   }

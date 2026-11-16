@@ -53,7 +53,7 @@ const fs=require('fs');
     await act(p,'more-look');await p.waitForTimeout(400);
     T('설정 › 화면: 오늘 표시는 색만 (모양 버튼 없음)',await p.evaluate(()=>!document.querySelector('#page.open [data-act="todaylook"]')&&!!document.querySelector('#page.open .tdc-row')));
     await p.evaluate(()=>{document.querySelector('#page.open [data-act="page-close"]').click();__wx.openDay('2026-10-12');});await p.waitForTimeout(500);
-    T('날짜 창 "오늘" 표 · 띠 오늘 = 달력 오늘 색(초록)',await p.evaluate(()=>{const a=getComputedStyle(document.querySelector('#sheet.open .dft .tdy')).backgroundColor,b=getComputedStyle(document.querySelector('#sheet.open .dsi.td small')).backgroundColor;return a===b&&a!=='rgb(49, 130, 246)';}));
+    T('날짜 창 "오늘" 표 · 띠 오늘 = 테두리 (v0.155)',await p.evaluate(()=>{const a=getComputedStyle(document.querySelector('#sheet.open .dft .tdy')).backgroundColor,b=getComputedStyle(document.querySelector('#sheet.open .dsi.td')).boxShadow;return a!=='rgba(0, 0, 0, 0)'&&/inset/.test(b);}));
     T('dsTgo/dsTdy: 오늘이면 버튼 없음 · 다른 날이면 man-go 로 오늘',await p.evaluate(()=>__wx.dsTgo('2026-10-12','man-go')===''&&/data-act="man-go" data-k="2026-10-12"/.test(__wx.dsTgo('2026-10-20','man-go'))&&/오늘/.test(__wx.dsTdy('2026-10-12'))&&__wx.dsTdy('2026-10-13')===''));
     T('오류 없음 (달력)',p.errs.length===0,p.errs.join('|'));await p.close();
   }

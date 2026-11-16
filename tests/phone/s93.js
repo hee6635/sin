@@ -16,7 +16,7 @@ const KST=(y,mo,d,h)=>Date.UTC(y,mo-1,d,h-9);const p2=n=>String(n).padStart(2,'0
   T('오늘 볼 때: 띠의 12일 색 · "오늘" 표 · 안내 없음 · 눌러도 그대로',a.td.includes('2026-10-12')&&a.tdy&&!a.act&&!a.hint,JSON.stringify(a));
   await p.evaluate(()=>{__wx.closeSheet();__wx.openDay('2026-10-15');});await p.waitForTimeout(500);
   const o=await p.evaluate(()=>{const s=document.querySelector('#sheet.open');return {td:[...s.querySelectorAll('.dsi.td')].map(x=>x.dataset.k),tdy:!!s.querySelector('.dft .tdy'),h:(s.querySelector('.dft .tgo')||{}).textContent||''};});
-  T('다른 날: 띠에 오늘(12일)만 색 · "오늘" 없음 · "날짜를 누르면 오늘(12일)로"',o.td.length===1&&o.td[0]==='2026-10-12'&&!o.tdy&&/오늘\(12일\)로/.test(o.h),JSON.stringify(o));
+  T('다른 날: 띠에 오늘(12일)만 색 · "오늘" 없음 · v0.155 설명 글 없음',o.td.length===1&&o.td[0]==='2026-10-12'&&!o.tdy&&!/오늘\(12일\)로/.test(o.h),JSON.stringify(o));
   await p.click('#sheet.open .dft');await p.waitForTimeout(600);
   T('제목 누르면 오늘 날짜 창',await p.evaluate(()=>/10월 12일/.test(document.querySelector('#sheet.open .dft b').textContent)));
   // 2) 가족 날짜 창도
