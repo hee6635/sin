@@ -426,3 +426,15 @@
 - 이럴 땐 이렇게 글 전체 다듬음: TIPS(43 · 새 팁 4: 패턴 제외 초기화 · 5분 전 미리 알림 · 가족 빼기 · 무료 횟수) · TIPD 27개(첫 블록 11 + Object.assign 16). 제목이 바뀐 것: 조나 회사가… · 휴직이나 퇴사로… · 매달 1일 · 말일에 할 일 띄우기 · 아이 등하교나 학원 날씨 · 아이나 가족 일정… · 유치원에서 학교로 가요 · 가족에게 그날 쉬어 달라고 부탁하기 · 내 달력 없이 가족 것만….
 - 팁 사진: tests/tips/tipshots.js 가 실제 앱을 찍어 assets/tips/*.webp (누를 곳 주황 테두리). 화면 바뀌면 node tests/tips/tipshots.js. 지금 t1_a · t1_b · t11_a · t13_a · t16_a · t16_b.
 - 가족 시험(tests/family/*): #tutx 숨기기 넣음. fam5e 는 link-invite 를 못 찾고 멈춤 — v0.146 코드로도 같아서 이번 변경과 무관(에뮬레이터 쪽 · 따로 보기).
+
+## v0.158 (덧붙임) 남은 옛 화면 정리 · 포스트잇 순서 · 요청 실패 이유
+- 새 모양(.pg-b.np): openFamEdit(.feb · 평소 일정 4칸 .fk2 선 아이콘 · 사진 .fe-cam · 색 .fe-sw · 가족 연결 줄) · famSchedHtml/openManPat(종류 카드 .fpsec · 종류 더하기 .addr · 요일 · 날씨 볼 곳 · 방학 · 이 날부터 새 일정 · 공휴일 스위치 #feHol 은 같은 카드) · openManStkPage(개수 · 더하기 .npadd) · renderMemoDetail(.mdpg · 할 일/시간/알림/반복 npRow · 나만/가족에게 npseg · 가족에게 고르면 "N건 남음").
+- 처음 안내 .choice: 이모지 → npi 아이콘 (--ic 색) · 오른쪽 › · 회색 바탕.
+- NPI 추가: briefcase · book-open · flag · calendar-x · download · list-check · grip.
+- 지움: openStatusPage · openTimesPage · openFamilyPage · openStickerBoard (들어가는 버튼 없던 옛 화면) + 그 case 들(more-status · more-family · sb-prev/next · tt-tab · tt-reset · st-cheer).
+- 가족 탭 시간표 제목의 "+ 가족 추가" 뺌 (설정 › 가족 · 가족이 없을 때 빈 칸 버튼은 그대로). 팁 "아이나 가족 일정 같이 보기" → 설정 › 가족(fam-set).
+- 포스트잇 끌어서 순서: 보드에서 .pi 를 450ms 꾹 → .pi-ghost 가 손가락을 따라감 · 놓은 포스트잇 위/아래 반쪽에 따라 앞/뒤로. S.piOrder['YYYY-MM']=[id…] (이 폰에만 · normalize 가 24달 · 200개로 다듬음) · 정렬 piOrdCmp. touchmove 막기는 #page 에만.
+- 앱 안 소식 띠(showBanner · BAN_KINDS)는 예전부터 있었음 → TODO 체크만.
+- 근무 요청 보내기 실패: famSendReqs 가 commit 약속을 돌려주고, 부르는 쪽이 famReqErr(권한 없음 = 무료 횟수 끝 · 가족방 연결 풀림)로 알림.
+- 작은 창 설명 글 뺌: D-day 고치기 스위치 설명 · 근무타입 편집 "근무 시간 (출근 → …)".
+- 시험 s97.
