@@ -7,6 +7,6 @@ const {chromium,boot}=require('../../tests/phone/lib.js');const {rich}=require('
  s.fam2.scheds={dad:mk({})};s.fam2.memos={};s.fam2.reqIn={};s.fam2.reqOut={};s.fam2.reqCc={};s.requests=[];s.events=[];
  for(const [n,T] of [['rest',Date.UTC(2026,9,12,3)],['work',Date.UTC(2026,9,10,3)]]){
  const p=await boot(b,s,{w:390,h:844,T});await p.waitForTimeout(800);
- await p.evaluate(()=>{const x=document.querySelector('[data-act="stkshare-no"]');x&&x.click();});await p.waitForTimeout(300);
+ await p.waitForTimeout(900);await p.evaluate(()=>{const x=document.querySelector('[data-act="stkshare-no"]');x&&x.click();});await p.waitForTimeout(400);
  await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(800);await p.screenshot({path:__dirname+'/now_'+n+'.png'});await p.close();}
  await b.close();})();
