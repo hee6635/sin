@@ -112,7 +112,7 @@ button{border:0;background:none;padding:0;cursor:pointer}
 button,input,textarea,select{font-family:inherit;letter-spacing:inherit}
 
 #top{display:flex;align-items:center;gap:6px;padding:12px 16px 8px}
-#top.cal-top{display:grid;grid-template-columns:56px 1fr 56px;padding:8px 6px 4px;background:var(--head-bg)}
+#top.cal-top{display:grid;grid-template-columns:56px 1fr 56px;padding:8px 6px 4px;background:var(--head-bg);min-height:56px;box-sizing:border-box}   /* v0.167 "오늘" 버튼이 생겨도 높이 같게 (달력이 2px 밀리던 것) */
 .cal-top .gear{width:44px;height:44px;display:grid;place-items:center;color:var(--fg)}
 .cal-top .gear svg{width:26px;height:26px;fill:currentColor}
 .cal-top .today-btn{font-size:16px;font-weight:700;height:44px}
@@ -1835,6 +1835,7 @@ body:has(.mset) #top,body:has(.famv) #top,body:has(.alw) #top{background:var(--s
 .shsec:not(.open) .sh-card{padding:0!important}
 .paint-btn{display:flex;align-items:center;gap:8px;width:100%;margin-top:12px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--accent) 8%,var(--bg));color:var(--accent);text-align:left}
 .paint-btn b{font-size:15px;font-weight:700}.paint-btn i{margin-left:auto;font-style:normal;font-size:18px;opacity:.6}
+.dsbody .tchip{gap:7px}   /* v0.167 고른 칩 파란 테두리가 이름과 겹치지 않게 */
 .dsbody .tchip.on .badge{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent)!important}.dsbody .tchip.on small{color:var(--accent);font-weight:800}
 .memsec .sec-t .mdet2{font-size:13.5px;font-weight:700;color:var(--accent)}
 .dsbody .memsec{background:var(--bg);border-radius:22px;padding:2px 12px 12px!important;box-shadow:0 2px 12px rgba(15,23,42,.035);margin-bottom:16px}.dsbody .memsec>.sec-t{padding:12px 4px 6px}
@@ -5583,7 +5584,7 @@ function renderFamily(){
     ${famPeers().length?`<div class="fsec">달력 보기 <span class="vsub">· 눌러서 한 달 보기</span></div><div class="vcrow">${famPeers().map(m=>`<button class="vchip" data-act="fam-viewcal" data-u="${esc(m.uid)}">${famAv(m,0)}${esc(m.name)}<em>›</em></button>`).join('')}</div>`:''}
     <div class="fsec">가족 시간표</div>
     <div class="ftt">
-      <div class="fwk"><span id="fwkT" class="fwt"></span><button class="lnk fnow" id="fwkNow" data-act="fam-today" hidden>오늘</button><span class="fmode"><button class="${wkMode==='c'?'on':''}" data-act="fam-mode" data-v="c">오늘 가운데</button><button class="${wkMode==='w'?'on':''}" data-act="fam-mode" data-v="w">주 단위</button></span></div>
+      <div class="fwk"><span id="fwkT" class="fwt"></span><span class="fmode"><button class="${wkMode==='c'?'on':''}" data-act="fam-mode" data-v="c">오늘 가운데</button><button class="${wkMode==='w'?'on':''}" data-act="fam-mode" data-v="w">주 단위</button></span></div>
       <div class="fgw"><div class="fgn">${namesHtml}</div><div class="fgs" id="fgs" data-m="${wkMode}"><div class="fgin" style="--n:${nShow}">${head}${rowsHtml}</div></div></div>
       
       ${fam.length&&ad('together')?`<div class="flg"><span><b style="background:#ffd966"></b>다 같이 쉼</span>${S.famDayToo!==false?'<span><b style="background:#fff0bf"></b>낮엔 같이 (야간 전)</span>':''}</div>`
@@ -7650,7 +7651,7 @@ function wxPastHtml(k){
   wxPastFetch(ym);
   const hs=wxHist()[k];
   if(hs&&hs.c){const ob=wxObsTxt(k);   // v0.127 그날 저장본 (그날 예보 기준) + 실제 관측
-    return `<div id="wxDay" data-k="${k}" class="wxhist"><div class="wxhl">그날 예보 기준</div>${wxCardHtml(hs.c,wxCls(hs.c),`data-act="wx-day" data-v="${k}"`)}${ob?`<div class="wxob">실제 ${esc(ob)}</div>`:''}</div>`;}
+    return `<div id="wxDay" data-k="${k}" class="wxhist"><div class="wxhl">그날 예보 기준</div>${wxCardHtml(wxPastAll(hs.c),wxCls(hs.c),`data-act="wx-day" data-v="${k}"`)}${ob?`<div class="wxob">실제 ${esc(ob)}</div>`:''}</div>`;}
   const v=x&&x.d&&x.d[k.replace(/-/g,'')],l=WX.pastLine(v);
   if(!l){   // 관측이 아직 안 올라왔으면(보통 다음날 오전): 받아 둔 예보로 대신 (누르면 예보 팝업)
     const H=wxRaw(S.wx.home),dd=H&&WX.day(H,k.replace(/-/g,''));
@@ -7826,7 +7827,8 @@ function wxDzList(win,home,work,acts,ls,le){
   return {list:L.filter(x=>wxRaw(x.code)).sort((a,b)=>a.t-b.t)};
 }
 let wxPopK='';   // 날짜에서 연 날씨 팝업의 날짜 (옆으로 밀기)
-function wxHistPop(title,hs,ob,hr){return wxPopHtml(title,'그날 예보 기준'+(hs.s?' · '+hs.s:''),hs.c,ob?`<div class="wxrw obs"><span class="k">실제</span><span class="n">${esc(ob)}</span></div>`:'',null,hr||null);}
+const wxPastAll=c=>c&&Array.isArray(c.c)?{...c,c:c.c.map(x=>({...x,past:true}))}:c;   // v0.167 지난 날: 출근 · 퇴근 칸도 "지남" (오늘과 통일 · 사용자)
+function wxHistPop(title,hs,ob,hr){return wxPopHtml(title,'그날 예보 기준'+(hs.s?' · '+hs.s:''),wxPastAll(hs.c),ob?`<div class="wxrw obs"><span class="k">실제</span><span class="n">${esc(ob)}</span></div>`:'',null,hr||null);}
 function wxDayPopHtml(k){
   if(wxPopFam)return famWxPopHtml(wxPopFam,k);   // v0.135 가족 날씨 팝업을 밀 때
   const d=parse(k);
@@ -7876,7 +7878,7 @@ function wxFarLine(c,attrs){const x=c&&c.day;if(!x)return '';const h=(l,v)=>v?`$
   return `<div class="wxl ${wxCls(c)}" ${attrs}>${wxImg(x.sk,'wi')||`<span class="wi">${c.i||''}</span>`}<span>${esc([h('오전',x.am),h('오후',x.pm)].filter(Boolean).join(' · '))}</span><span class="wt">${esc(c.t||'')}</span></div>`;}
 // v0.127 가족 지난 날 저장본 (카드 · 팝업) — 시간별 줄은 내 것만 저장
 const wxHistOf=(u,k)=>{const h=wxHist()[k],f=h&&h.f&&h.f[u];return f&&f.c?f:null;};
-function wxHistCard(u,k,act){const f=wxHistOf(u,k);if(!f)return '';return `<div class="wxhist"><div class="wxhl">그날 예보 기준</div>${wxCardHtml(f.c,wxCls(f.c),`data-act="${act}" data-k="${k}"`)}</div>`;}
+function wxHistCard(u,k,act){const f=wxHistOf(u,k);if(!f)return '';return `<div class="wxhist"><div class="wxhl">그날 예보 기준</div>${wxCardHtml(wxPastAll(f.c),wxCls(f.c),`data-act="${act}" data-k="${k}"`)}</div>`;}
 function wxHistFamPop(name,u,k){const f=wxHistOf(u,k);if(!f)return false;const d=parse(k);wxOpenPop(wxHistPop(`${name} · ${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`,f,'',null));return true;}
 // v0.135 가족 날씨 팝업도 내 것처럼 옆으로 밀어 날짜 넘기기 (wxPopFam = 지금 팝업이 누구 것인지 · wxDayPopHtml 이 그걸 보고 그림)
 let wxPopFam=null;
@@ -8042,7 +8044,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout
 window.__wx={manPlanned,visibleMemos,famLbl,famTypeAt,famWx,shiftOf,wxMyWin,openStampReg,actAuto,stampPlanned,myActs,manPlanned,famActNow,wxMine,get S(){return S;},get page(){return {pageMode,pageBack};},openDay,closeSheet,closePop,closePage,openAddonPage,render,save,pushAlarmsToNative,pushRemindersToNative,famCleanSched,famPayload,
   newAlarm:o=>{draft=Object.assign(newAlarm(),o||{});alSnd=false;openAlarmPage();},wxOn,wxRaw,wxFam,wxMemWin,wxMemWork,wxMemKey,wxOpenFam,wxOpenDay,wxChipIcon,
   openPatternPage,openStatsPage,openSlipPage:ym=>{slipYM=ym;openSlipPage();},statsCalc,payRates,dayHours,famTimesPayload,memberStatus,otOpen,get stYM(){return stYM;},set stYM(v){stYM=v;}};
-Object.defineProperty(window.__wx,'stDraft',{get:()=>stDraft});Object.assign(window.__wx,{admTest:(codes,log)=>{admOk=true;adm={q:'',sel:null,codes,log,busy:false};},openAdmPage:()=>openAdmPage(),myCode:u=>myCode(u),famRemainT:()=>famRemain(),setBx:(a,b)=>{famBx={me:a,all:b};},stampRegSave:()=>stampRegSave(),dsTgo:(k,a)=>dsTgo(k,a),dsTdy:k=>dsTdy(k),patResetOpen:q=>patResetOpen(q),famWxOpen,stampsOn,openFeed,coachCheck,pushWidgetNow:()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
+Object.defineProperty(window.__wx,'stDraft',{get:()=>stDraft});Object.assign(window.__wx,{wxHistPop:(...a)=>wxHistPop(...a),admTest:(codes,log)=>{admOk=true;adm={q:'',sel:null,codes,log,busy:false};},openAdmPage:()=>openAdmPage(),myCode:u=>myCode(u),famRemainT:()=>famRemain(),setBx:(a,b)=>{famBx={me:a,all:b};},stampRegSave:()=>stampRegSave(),dsTgo:(k,a)=>dsTgo(k,a),dsTdy:k=>dsTdy(k),patResetOpen:q=>patResetOpen(q),famWxOpen,stampsOn,openFeed,coachCheck,pushWidgetNow:()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
 
 /* ================= 부가 기능 (설정 › 부가 기능) =================
  * 기본은 모두 꺼짐. 꺼도 저장된 내용은 그대로이고, 켜면 그 자리에 바로 생겨요. */
@@ -9326,7 +9328,7 @@ document.addEventListener('click',e=>{
     case 'fam-set':openFamSetPage();break;
     case 'fam-mytime':openPatTimes();break;
     case 'fam-mycal':{const n=new Date();tab='cal';paint=null;pageBack=null;if(pageMode)closePage();setCur(n.getFullYear(),n.getMonth());render();openDay(fmt(n));break;}   // 가족 탭 내 카드 위쪽 → 달력 · 오늘 날짜 창
-    case 'fam-mode':S.famWk=t.dataset.v==='w'?'w':'c';famAnchor='';save();render();break;
+    case 'fam-mode':{const v=t.dataset.v==='w'?'w':'c';if((S.famWk==='w'?'w':'c')===v){famGoToday();break;}S.famWk=v;save();render();setTimeout(famGoToday,80);break;}   // v0.167 이미 고른 칸을 눌러도 · 바꿔도 오늘(이번 주)로 부드럽게 (위 "오늘" 링크는 뺌)
     case 'fam-today':famGoToday();break;
     case 'req-go':{const k=t.dataset.k;if(!k)break;const d=parse(k);if(d.getFullYear()*12+d.getMonth()<MIN_M||d.getFullYear()*12+d.getMonth()>MAX_M){toast('달력에서 볼 수 없는 날이에요');break;}tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
     case 'fam-day':{const k=t.dataset.k,d=parse(k);tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
