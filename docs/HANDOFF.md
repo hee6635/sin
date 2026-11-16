@@ -470,3 +470,7 @@
 ## v0.165 (덧붙임) 위젯 오늘 빛 = 숨 쉬듯 · 새로 설치 기본 배경 (design/widget-glow/v1.html)
 - 위젯: drawPulse(오늘 테두리가 0.4초 밝아졌다 0.7초 돌아옴 · 바깥 근무 색 번짐 두 겹 + 안쪽 하얀 줄) · GLOW_MS 1100 · play(step = PULSE_FRAME_MS 80) → 그림 약 13장. drawGlow(도는 빛)는 남겨 둠(안 씀). MonthRun 도 drawPulse.
 - 새로 설치: bg '' (기본) · 칸 채우기는 원래 기본. 시험 s69 줄 추가.
+
+## v0.166 (덧붙임) 오늘 빛 = 숨 쉬듯 두 번 (앱 · 위젯 같음 · design/today-glow/pulse2.gif)
+- 앱: glowSvg 에 g-pb(g-po · g-po2 바깥 근무 색 번짐, blur) · g-pin(안쪽 하얀 줄 2겹) 추가 · glowFrame 이 --pe(두 번: 0.9초씩, 두 번째 0.7배, smoothstep) 설정 · 도는 빛 요소(g-halo · g-dash · g-head · g-bloom · g-soft · g-line · g-draw)는 CSS 로 숨김 · 오늘 테두리(::after)는 그대로 보임.
+- 위젯: drawPulse 두 번 · GLOW_MS 1800 (80ms 프레임 → 약 22장).

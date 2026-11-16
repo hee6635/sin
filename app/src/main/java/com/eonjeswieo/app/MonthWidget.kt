@@ -454,7 +454,7 @@ object MonthRenderer {
     //  · 시간 기준으로 진행: 프레임이 늦으면 건너뛰어도 움직임 속도는 그대로 (느린 화면이 슬로모션이 되지 않게)
     //  · 중간 프레임은 그림만 가볍게 바꿔 끼우고(partiallyUpdateAppWidget), 누르는 자리는 맨 끝에 한 번만 다시 지정
     private const val SLIDE_MS = 260L
-    private const val GLOW_MS = 1100L   // v0.165 오늘 빛 = 숨 쉬듯 한 번 (밝아졌다 0.4초 · 돌아옴 0.7초)
+    private const val GLOW_MS = 1800L   // v0.166 오늘 빛 = 숨 쉬듯 두 번 (0.9초씩 · 두 번째는 조금 약하게 · 앱과 같음)
     private const val PULSE_FRAME_MS = 80L   // 숨 쉬듯은 움직임이 적어서 그림 13장 정도면 충분 (홈 화면이 받아 주는 만큼만 보내서 끊김 줄임)
     private const val FRAME_MS = 28L   // 프레임 사이 최소 간격
     private const val SLIDE_DP = 36f
@@ -613,8 +613,10 @@ object MonthRenderer {
      */
     /** v0.165 오늘 빛(위젯): 숨 쉬듯 한 번 — 오늘 테두리가 은은하게 밝아졌다가(안쪽 하얀 빛 + 바깥 근무 색 번짐) 스르르 돌아옴 (t: 0 → 1) */
     internal fun drawPulse(cv: Canvas, cell: RectF, u: Float, t: Float, color: Int = todayColor) {
-        val k = if (t < 0.36f) t / 0.36f else (1f - t) / 0.64f
-        val e = (k * k * (3f - 2f * k)).coerceIn(0f, 1f)   // 부드럽게 (smoothstep)
+        val h = if (t < 0.5f) t / 0.5f else (t - 0.5f) / 0.5f   // 두 번 숨 쉬기
+        val amp = if (t < 0.5f) 1f else 0.7f
+        val k = (if (h < 0.36f) h / 0.36f else (1f - h) / 0.64f).coerceIn(0f, 1f)
+        val e = amp * k * k * (3f - 2f * k)   // 부드럽게 (smoothstep)
         if (e <= 0.01f) return
         val sw = 3f * u
         val gap = 1.2f * u + sw / 2f
