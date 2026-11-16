@@ -1788,6 +1788,30 @@ html[data-cal="fill"] .cell.today::after,html[data-cal="fill"] .cell.today[style
 .tips.np .ta{font-size:14.5px;line-height:1.55;color:color-mix(in srgb,var(--fg) 80%,var(--bg))}
 .tips.np .tgo{display:block;width:100%;margin:14px 0 16px;height:48px;border-radius:14px;background:var(--acc-soft);color:var(--accent);font-weight:700}
 
+/* v0.157 설정 · 가족 · 알람 탭: 맨 위(제목 줄)도 같은 회색 바탕 → 흰 띠가 끊겨 보이지 않게 · 검색 칸 위아래 여유 */
+body:has(.mset),body:has(.famv),body:has(.alw),body:has(.alempty){background:var(--surface)}
+body:has(.alempty) #top{background:var(--surface)}
+#view:has(.alempty){background:var(--surface)}
+.alempty{margin:8px 16px;border-radius:22px;background:var(--bg)!important;box-shadow:0 2px 12px rgba(15,23,42,.035)}
+#view:has(.mset),#view:has(.alw),#view:has(.mset) *:has(>.mset){background:var(--surface)}
+body:has(.mset) #top{padding-top:18px;padding-bottom:6px}
+body:has(.mset) #top,body:has(.famv) #top,body:has(.alw) #top{background:var(--surface);box-shadow:none;border-bottom:0}
+.mset .srch-entry{margin:10px 16px 6px!important}
+/* v0.157 가족 탭 다듬기: 회색 바탕 · 흰 카드 · 카드 모양 통일 · 시간표 이름 열은 동그라미만 · 가족 추가 = 흰 알약 · 같이 쉬는 날 = 흰 알약 + 노란 점 */
+#view:has(.famv){background:var(--surface)}
+.famv{background:var(--surface)}
+.famv .fsec{font-size:13px;font-weight:700;margin:18px 6px 8px}
+.famv .nc,.famv .nc.w{background:var(--bg)!important;box-shadow:0 2px 12px rgba(15,23,42,.045)!important;border:0!important;border-radius:22px}
+.famv .ftt{background:var(--bg);border-radius:22px;padding:10px 8px 10px;box-shadow:0 2px 12px rgba(15,23,42,.045)}
+.famv .fsec .lnk[data-act="fam-add"]{text-decoration:none;color:var(--accent);background:var(--bg);border-radius:16px;padding:6px 12px;font-size:13px;font-weight:700;box-shadow:0 1px 4px rgba(15,23,42,.06)}
+.famv .fn{font-size:0;gap:0}.famv .fn i{width:28px;height:28px;font-size:11.5px}
+.famv .fmode button.on{background:var(--bg);color:var(--acc-ink);box-shadow:0 0 0 1.5px var(--accent)}
+.famv .tg-row{gap:8px}
+.famv .tg-chip,.famv .tg-chip.all{background:var(--bg);color:var(--fg);border-radius:16px;padding:9px 13px;font-size:14.5px;box-shadow:0 2px 12px rgba(15,23,42,.045)}
+.famv .tg-chip::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#ffd966;box-shadow:inset 0 0 0 1.5px #f2b705;margin-right:6px;vertical-align:1px}
+.famv .tg-chip:not(.all)::before{background:transparent}
+.famv .tg-chip small{color:#a06a00}
+.famv .syncl:empty{display:none}
 /* v0.156 설정 첫 화면: 회색 바탕 · 흰 칸 · 묶음 제목 · 권한 경고 = 흰 카드 줄 · 이럴 땐 이렇게 = 넓은 한 줄 */
 .mset{background:var(--surface);min-height:100%}
 .mset .srch-entry{background:var(--bg);height:48px;margin:6px 16px 4px;box-shadow:0 2px 12px rgba(15,23,42,.035);font-size:15.5px}
@@ -5061,7 +5085,7 @@ function renderAlarm(){
   const sched=buildSchedule(60),n=sched.find(x=>!x.a.wxOnly);
   const nextFire={};
   sched.forEach(x=>{if(!(x.a.id in nextFire))nextFire[x.a.id]=x.at.getTime();});
-  const nextHtml=S.alarms.length?'':`<div class="next"><div class="big">알람이 없어요</div><div class="sub muted">오른쪽 위 + 로 근무에 맞춘 알람을 추가해보세요</div></div>`;
+  const nextHtml=S.alarms.length?'':`<div class="next alempty"><div class="big">알람이 없어요</div><div class="sub muted">오른쪽 위 + 로 근무에 맞춘 알람을 추가해보세요</div></div>`;
   const now0=Date.now();
   const order=[...S.alarms].sort((x,y)=>(nextFire[x.id]??8.64e15)-(nextFire[y.id]??8.64e15));
   // 근무 색(달력과 같은 색): 주간 하늘 · 야간 살구 … / 매일 · 색 없는 근무는 null
@@ -5410,7 +5434,7 @@ function famInit(){
     if(!sc.clientWidth||heads.length<7)return;
     const i=Math.max(0,Math.min(heads.length-7,Math.round(sc.scrollLeft/w())));
     const a=parse(heads[i].dataset.k),b=parse(heads[i+6].dataset.k);
-    const t=document.getElementById('fwkT');if(t)t.textContent=`${a.getMonth()+1}월 ${a.getDate()}일 ~ ${b.getMonth()+1}월 ${b.getDate()}일`;
+    const t=document.getElementById('fwkT');if(t)t.textContent=a.getMonth()===b.getMonth()?`${a.getMonth()+1}월 ${a.getDate()}일 ~ ${b.getDate()}일`:`${a.getMonth()+1}월 ${a.getDate()}일 ~ ${b.getMonth()+1}월 ${b.getDate()}일`;
     famAnchor=heads[mode==='c'?i+3:i].dataset.k;
     const ti=idxOf(todayK),far=mode==='c'?(i+3!==ti):!(ti>=i&&ti<i+7);
     const nb=document.getElementById('fwkNow');if(nb)nb.hidden=!far;
@@ -5568,7 +5592,7 @@ function renderFamily(){
   // 이번 달 남은 같이 쉬는 날
   const end=new Date(t0.getFullYear(),t0.getMonth()+1,0),chips=[];
   for(let d=new Date(today);d<=end;d=addDays(d,1)){const g=togetherOn(d);if(g)chips.push([d,g]);}
-  const chipHtml=chips.map(([d,g])=>`<button class="tg-chip ${g}" data-act="fam-day" data-k="${fmt(d)}">${d.getDate()}(${DOW[d.getDay()]})<small>${g==='all'?'종일':'☀️ 낮'}</small>${wxChipIcon(d)}</button>`).join('');
+  const chipHtml=chips.map(([d,g])=>`<button class="tg-chip ${g}" data-act="fam-day" data-k="${fmt(d)}">${d.getDate()}(${DOW[d.getDay()]})<small>${g==='all'?'종일':'낮'}</small>${wxChipIcon(d)}</button>`).join('');
   // 요청
   const pend=S.requests.filter(r=>r.st==='pending').sort((a,b)=>a.date.localeCompare(b.date));
   const myReq=S.requests.filter(r=>r.st==='pending'||r.st==='accepted'||r.st==='rejected').sort((a,b)=>b.t-a.t).slice(0,3);
@@ -5585,7 +5609,7 @@ function renderFamily(){
       <div class="fwk"><span id="fwkT" class="fwt"></span><button class="lnk fnow" id="fwkNow" data-act="fam-today" hidden>오늘</button><span class="fmode"><button class="${wkMode==='c'?'on':''}" data-act="fam-mode" data-v="c">오늘 가운데</button><button class="${wkMode==='w'?'on':''}" data-act="fam-mode" data-v="w">주 단위</button></span></div>
       <div class="fgw"><div class="fgn">${namesHtml}</div><div class="fgs" id="fgs" data-m="${wkMode}"><div class="fgin" style="--n:${nShow}">${head}${rowsHtml}</div></div></div>
       
-      ${fam.length&&ad('together')?`<div class="flg"><span><b style="background:#ffd966"></b>다 같이 쉼</span>${S.famDayToo!==false?'<span><b style="background:#fff0bf"></b>☀️ 낮엔 같이 (야간 전)</span>':''}</div>`
+      ${fam.length&&ad('together')?`<div class="flg"><span><b style="background:#ffd966"></b>다 같이 쉼</span>${S.famDayToo!==false?'<span><b style="background:#fff0bf"></b>낮엔 같이 (야간 전)</span>':''}</div>`
         :fam.length?'':`<button class="fempty" data-act="fam-add">👪 가족 추가하기${ad('together')?' · 같이 쉬는 날도 찾아요':''} ›</button>`}
     </div>
     ${fam.length&&ad('together')?`<div class="fsec">${t0.getMonth()+1}월에 남은 같이 쉬는 날</div>${chipHtml?`<div class="tg-row">${chipHtml}</div>`:'<div class="mempty">이번 달엔 남은 날이 없어요</div>'}`:''}
@@ -10577,7 +10601,7 @@ function famRefreshUi(){
   if(tab==='fam'||tab==='cal'){render();if(sheetMode==='day'&&sheetKey)markSel(sheetKey);}
 }
 // ---- 동기화 표시 · 근무 변경 알림 · 서버에서 직접 확인
-const famSyncTxt=()=>{if(!S.link)return '';const t=S.fam2&&S.fam2.syncAt;if(!t)return '동기화 전';const m=Math.floor((Date.now()-t)/60000);return m<1?'방금 동기화됨':`${m}분 전 동기화`;};
+const famSyncTxt=()=>{if(!S.link)return '';const t=S.fam2&&S.fam2.syncAt;if(!t)return '동기화 전';const m=Math.floor((Date.now()-t)/60000);return m<30?'':`${m}분 전 동기화`;};   // v0.157 평소엔 안 보임 (30분 넘게 못 받았을 때만)
 const famSyncHtml=()=>S.link?`<div class="syncl" id="syncl">${famSyncTxt()}</div>`:'';
 function famMarkSync(){if(!S.link||!S.fam2)return;S.fam2.syncAt=Date.now();const e=document.getElementById('syncl');if(e)e.textContent=famSyncTxt();}
 setInterval(()=>{const e=document.getElementById('syncl');if(e)e.textContent=famSyncTxt();},30000);
