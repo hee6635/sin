@@ -2595,3 +2595,8 @@
 - 이름 · 사진 카드: 동그라미(+ 카메라 작은 버튼) · 이름 칸 · 색 동그라미
 - 평소 일정 4칸: 이모지 → 회색 칸 선 아이콘 · 설명 글 빼기 · 고른 칸 = 흰 바탕 + 파란 테두리(보라 빼기)
 - 일정 줄: 선 아이콘 · 오른쪽에 지금 값
+
+## 진짜 남은 옛 모양 (2026-11-16 전체 다시 훑음 · 화면 함수 단위)
+- 바꿀 것(쓰는 화면): 가족 추가 · 편집(openFamEdit · 시안 design/fam-add) · 가족 달력 보기(renderFamCalPage) · 직접 추가한 가족 달력(renderManCalPage) · 그 가족 스티커(openManStkPage) · 그 가족 일정 패턴(openManPat) · 메모 자세히(renderMemoDetail) · 스티커판(openStickerBoard) · 처음 설치 안내(#onboard) · 아래 창들(스티커 고르기 창 등 openSheet 16곳)
+- 일부러 그대로: 포스트잇 판(코르크판) · 개인정보처리방침(글 문서) · 모양 조정 · 서버 설정(개발용 숨은 화면)
+- 지울 것(들어가는 버튼 없는 옛 화면): 실시간 상태(openStatusPage) · 옛 근무 시간(openTimesPage) · 옛 가족 화면(openFamilyPage)
