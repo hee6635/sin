@@ -454,7 +454,7 @@ object MonthRenderer {
     //  · 시간 기준으로 진행: 프레임이 늦으면 건너뛰어도 움직임 속도는 그대로 (느린 화면이 슬로모션이 되지 않게)
     //  · 중간 프레임은 그림만 가볍게 바꿔 끼우고(partiallyUpdateAppWidget), 누르는 자리는 맨 끝에 한 번만 다시 지정
     private const val SLIDE_MS = 260L
-    private const val GLOW_MS = 820L
+    private const val GLOW_MS = 1400L   // v0.164 0.82 → 1.4초 (휙 지나가지 않게)
     private const val FRAME_MS = 28L   // 프레임 사이 최소 간격
     private const val SLIDE_DP = 36f
     private const val GLOW_SCALE = 0.5f   // 빛 그림은 반 크기로 (프레임마다 보내는 양이 1/4 · 빛은 부드러워서 티가 거의 안 남)
@@ -634,7 +634,8 @@ object MonthRenderer {
         val hS = Math.max(0f, box.height() - 2f * r)
         val per = 2f * wS + 2f * hS + 2f * Math.PI.toFloat() * r
         val len = per * 0.30f
-        val q = Math.min(1f, t / 0.72f)
+        val q = Math.min(1f, t / 0.92f)
+        val gf = Math.min(1f, t / 0.18f) * (if (t > 0.68f) Math.max(0f, (1f - t) / 0.32f) else 1f)   // v0.164 처음엔 스르르 켜지고 · 끝엔 스르르 사라짐
         val p = if (q < 0.5f) 2f * q * q else 1f - 2f * (1f - q) * (1f - q)   // 천천히 출발 → 빨라졌다 → 부드럽게 끝
         val head = p * (per + len)
         val tail = head - len
@@ -657,11 +658,11 @@ object MonthRenderer {
             val lum = f * f   // 머리 쪽이 가장 진하고 꼬리는 사라짐
             edgePoint(box, r, s0, a)
             edgePoint(box, r, s1, b)
-            halo.color = rgb or (Math.round(0x38 * lum) shl 24)
+            halo.color = rgb or (Math.round(0x38 * lum * gf) shl 24)
             // v0.163 머리(앞 15%): 하얀 빛 (앱 오늘 빛과 같은 느낌)
             val hf = if (f > 0.85f) (f - 0.85f) / 0.15f else 0f
             val cc = if (hf > 0f) mixRgb(0xFFFFFFFF.toInt(), color or 0xFF000000.toInt(), hf) else color   // 머리 = 하양 (밝은 위젯은 아래 진한 번짐이 받침)
-            core.color = (cc and 0x00FFFFFF) or (Math.round(0xC8 * lum) shl 24)
+            core.color = (cc and 0x00FFFFFF) or (Math.round(0xC8 * lum * gf) shl 24)
 
             cv.drawLine(a[0], a[1], b[0], b[1], halo)
             cv.drawLine(a[0], a[1], b[0], b[1], core)
@@ -670,9 +671,9 @@ object MonthRenderer {
             edgePoint(box, r, Math.min(per, head), a)
             val bl = Paint(Paint.ANTI_ALIAS_FLAG)
             val bc = if (glowNight) 0x00FFFFFF else (deepen(color or 0xFF000000.toInt()) and 0x00FFFFFF)   // 밝은 위젯: 진한 근무 색 번짐이 하얀 머리를 받침
-            bl.color = bc or ((if (glowNight) 0x22 else 0x30) shl 24); cv.drawCircle(a[0], a[1], 6.5f * u, bl)
-            bl.color = bc or ((if (glowNight) 0x3A else 0x55) shl 24); cv.drawCircle(a[0], a[1], 3.8f * u, bl)
-            bl.color = 0xEEFFFFFF.toInt(); cv.drawCircle(a[0], a[1], 1.7f * u, bl)
+            bl.color = bc or (Math.round((if (glowNight) 0x22 else 0x30) * gf) shl 24); cv.drawCircle(a[0], a[1], 6.5f * u, bl)
+            bl.color = bc or (Math.round((if (glowNight) 0x3A else 0x55) * gf) shl 24); cv.drawCircle(a[0], a[1], 3.8f * u, bl)
+            bl.color = 0x00FFFFFF or (Math.round(0xEE * gf) shl 24); cv.drawCircle(a[0], a[1], 1.7f * u, bl)
         }
     }
 
