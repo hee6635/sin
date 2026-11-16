@@ -2600,3 +2600,12 @@
 - 바꿀 것(쓰는 화면): 가족 추가 · 편집(openFamEdit · 시안 design/fam-add) · 가족 달력 보기(renderFamCalPage) · 직접 추가한 가족 달력(renderManCalPage) · 그 가족 스티커(openManStkPage) · 그 가족 일정 패턴(openManPat) · 메모 자세히(renderMemoDetail) · 스티커판(openStickerBoard) · 처음 설치 안내(#onboard) · 아래 창들(스티커 고르기 창 등 openSheet 16곳)
 - 일부러 그대로: 포스트잇 판(코르크판) · 개인정보처리방침(글 문서) · 모양 조정 · 서버 설정(개발용 숨은 화면)
 - 지울 것(들어가는 버튼 없는 옛 화면): 실시간 상태(openStatusPage) · 옛 근무 시간(openTimesPage) · 옛 가족 화면(openFamilyPage)
+
+## 남은 화면 시안 (design/remain/v1.png · design/fam-add/v1.png · 사용자 확인 대기)
+- 가족 스티커(openManStkPage): 흰 카드 안 5칸 그리드 · 더하기 = 연파랑 칸
+- 가족 일정 패턴(openManPat): 일정 종류 카드(배지 · 시간 · ›) + "종류 더하기" 파란 줄 · "이 날부터 새 일정" · "공휴일엔 쉬어요" 줄 · 설명 글 빼기
+- 메모 자세히(renderMemoDetail): 글 카드(메모 색 바탕) · 색 동그라미 카드 · 할 일(스위치) · 시간 · 반복 줄 · 나만 / 가족에게 C3 · "입력칸에 쓰는…" 설명 빼기
+- 처음 안내(#onboard): 이모지 → 연한 색 칸 선 아이콘 · 고르기 설명은 그대로(남길 것 목록)
+- 가족 달력 보기 · 직접 추가한 가족 달력: 달력은 이미 같은 모양 → 위쪽 · 아래 줄만 같은 카드 규칙
+- 가족 탭 "+ 가족 추가" 빼기 (사용자: 다른 데서 추가할 때가 많음 · 설정 › 가족 / 가족이 없을 때 빈 칸 버튼은 그대로)
+- 지울 것에 스티커판(openStickerBoard · 들어가는 버튼 없음) 추가
