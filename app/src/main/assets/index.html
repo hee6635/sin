@@ -4097,7 +4097,7 @@ function renderColleague(){
     const cls=hol?'hol':ch?'chol':w===0?'sun':w===6?'sat':'';
     h+=`<div class="crow ${k===tk?'today':''}"><div class="dt ${cls}" data-act="col-day" data-k="${k}">${i}.${DOW[w]}</div>${teamList().map((n,g)=>`<div class="${g===S.myTeam?'me':''}">${badge(teamShift(d,g),'sm')}</div>`).join('')}</div>`;
   }
-  return `<div class="ctbl" style="--tc:${teamCount()}">${h}</div><div class="hint" style="padding:6px 16px 20px">조 이름을 누르면 내 조를 바꿔요</div>`;
+  return `<div class="ctbl" style="--tc:${teamCount()}">${h}</div><div style="height:20px"></div>`;
 }
 
 /* ================= 근무 시간 · 지금 상태 ================= */
@@ -4345,7 +4345,7 @@ function openStatusPage(){
   openPage(`
     ${pageHead('가족에게 보이는 내 상태')}
     <div class="pg-b">
-      <div class="pg-sec"><div class="prow"><div class="pl2">실시간 상태 보여주기<small>끄면 가족에게는 근무 · 휴무만 보여요</small></div><label class="sw"><input type="checkbox" id="st_show" ${st.show?'checked':''}><i></i></label></div></div>
+      <div class="pg-sec"><div class="prow"><div class="pl2">실시간 상태 보여주기</div><label class="sw"><input type="checkbox" id="st_show" ${st.show?'checked':''}><i></i></label></div></div>
       <div class="pg-cap">내 직장</div>
       <div class="pg-sec" style="margin-top:0"><div class="prow tap" data-act="st-work-open"><div class="pl2">근무 중일 때 아이콘</div><div class="pv stwk">${ico(st.work)} ${esc(workName())} ›</div></div></div>
       <div class="pg-cap">지금 가족에게 이렇게 보여요</div>
@@ -4568,7 +4568,7 @@ function stFillSlot(id,e,n,srcId){
 function stPlusRow(o){
   const ex=extraDefs();if(!ex.length)return '';
   const code=s=>s.kind==='pill'?'pill:'+(s.shape||'caps'):s.emoji;
-  return `<div class="mi icn-sec" style="display:block"><div class="icn-lb">＋ 로 붙인 스티커 <small>고르면 칸에 복사해요</small></div><div class="sgrid sg4" style="margin-top:6px">${ex.map(s=>`<button class="${o&&o.srcId===s.id?'on':''}" data-act="icn-pick" data-v="${esc(code(s))}" data-n="${esc(s.name)}" data-mine="1" data-src="${esc(s.id)}"><span class="si">${stIcon(s)}</span><small>${esc(s.name)}</small></button>`).join('')}</div></div>`;
+  return `<div class="mi icn-sec" style="display:block"><div class="icn-lb">＋ 로 붙인 스티커</div><div class="sgrid sg4" style="margin-top:6px">${ex.map(s=>`<button class="${o&&o.srcId===s.id?'on':''}" data-act="icn-pick" data-v="${esc(code(s))}" data-n="${esc(s.name)}" data-mine="1" data-src="${esc(s.id)}"><span class="si">${stIcon(s)}</span><small>${esc(s.name)}</small></button>`).join('')}</div></div>`;
 }
 // 칸 비우기: 칸에서 빼도 이미 붙인 스티커는 그대로 (＋ 로 붙인 스티커 쪽으로 옮김). ＋ 쪽에서 "지우기"는 진짜 지우기 (앞으로 일정은 없어지고 지난 체크 기록만 남음)
 function stSlotClear(id){
@@ -4683,7 +4683,7 @@ function renderStampReg(){
     <div class="pg-cap">알림</div>
     <div class="pg-sec" style="margin-top:0">${sw('srAlarm',d.alarm,`⏰ 시각 알림<small>${d.alarm?'아래 시각에 울려요':'끔 · 달력에서만 봐요'}</small>`)}
       ${d.alarm?d.ats.map((t,i)=>`<div class="prow"><div class="pl2">${d.times>1?`${i+1}번째`:'시각'}</div>${tpick('srAt'+i,t)}</div>`).join('')+`<div class="hint" style="margin:0;padding:8px 16px">${stAlarmHint(d)}</div>`:''}</div>
-    ${om?`<div class="pg-sec"><div class="prow tap" data-act="mstk-swap" data-id="${esc(d.id)}"><div class="pl2">🎨 다른 그림으로</div><div class="pv">›</div></div><div class="prow tap" data-act="mstk-end" data-id="${esc(d.id)}"><div class="pl2">그만하기<small>오늘부터 안 깔려요 · 지난 기록은 남아요</small></div></div><div class="prow danger-row" data-act="mstk-del" data-id="${esc(d.id)}">지우기 (판에서 빼요 · 지난 기록은 남아요)</div></div>`:''}
+    ${om?`<div class="pg-sec"><div class="prow tap" data-act="mstk-swap" data-id="${esc(d.id)}"><div class="pl2">🎨 다른 그림으로</div><div class="pv">›</div></div><div class="prow tap" data-act="mstk-end" data-id="${esc(d.id)}"><div class="pl2">그만하기</div></div><div class="prow danger-row" data-act="mstk-del" data-id="${esc(d.id)}">지우기</div></div>`:''}
     <div style="padding:16px"><button class="btn" style="width:100%" data-act="sr-save">${d.edit?'저장':'등록하기'}</button>
 </div>
     </div>`,'stampadd');
@@ -4755,7 +4755,6 @@ function actRegionDone(code){
   const cb=actPickCb;actPickCb=null;if(!cb)return;
   if(code&&wxOk(S.wx.home)&&wxNear(S.wx.home,code)&&code!==S.wx.home){
     actPickCb=cb;openPop(`<div class="mh">${actPickTitle||'📍 활동 위치'}<b>집과 가까워요. 같은 지역으로 볼까요?</b></div>
-      <div class="hint" style="padding:10px 16px 2px">같게 보면 집 날씨로 알려 줘요 (거의 같아요).</div>
       <button class="mi" data-act="act-near" data-v="" style="justify-content:center;font-weight:800;color:var(--accent)">집과 같게</button>
       <button class="mi" data-act="act-near" data-v="${code}" style="justify-content:center">따로 볼래요</button>`);return;}
   closePop();cb(code);
@@ -5058,7 +5057,7 @@ function icnCats(o){
   const n=o.cats.length,t=Math.min(o.tab||0,n);
   const tabs=o.cats.map((c,i)=>`<button class="${t===i?'on':''}" data-act="icn-tab" data-i="${i}">${esc(c[0])}</button>`).join('')+`<button class="${t===n?'on':''}" data-act="icn-tab" data-i="${n}">내 것</button>`;
   const mine=Array.isArray(S.myEmo)?S.myEmo:[];
-  const body=t===n?`<div class="icn-lb">내 것 <small>길게 누르면 지워요</small></div>${photoGrid(o.icon)}${mine.length?`<div class="sgrid sg4" style="margin-top:12px">${mine.map((x,i)=>`<button class="${o.icon===x.e?'on':''}" data-act="icn-pick" data-mine="1" data-v="${esc(x.e)}" data-n="${esc(x.n||'')}" data-hold="myemo" data-i="${i}"><span class="si">${esc(x.e)}</span><small>${esc(x.n||'')}</small></button>`).join('')}</div>`:''}`
+  const body=t===n?`<div class="icn-lb">내 것</div>${photoGrid(o.icon)}${mine.length?`<div class="sgrid sg4" style="margin-top:12px">${mine.map((x,i)=>`<button class="${o.icon===x.e?'on':''}" data-act="icn-pick" data-mine="1" data-v="${esc(x.e)}" data-n="${esc(x.n||'')}" data-hold="myemo" data-i="${i}"><span class="si">${esc(x.e)}</span><small>${esc(x.n||'')}</small></button>`).join('')}</div>`:''}`
     :`<div class="sgrid sg4">${o.cats[t][1].map(x=>`<button class="${o.icon===x[0]?'on':''}" data-act="icn-pick" data-v="${x[0]}" data-n="${esc(x[1])}"><span class="si">${String(x[0]).startsWith('pill:')?pillSvg(1,1,28,'#ef4d5a',x[0].slice(5)):x[0]}</span><small>${esc(x[1])}</small></button>`).join('')}</div>`;
   const own=t===n?'':`<div class="icn-ownrow"><input type="text" id="icnOwn" class="icn-own" maxlength="8" placeholder="직접 입력" value="${esc(o.own||'')}">${o.name===null?`<input type="text" id="icnOwnName" class="icn-own2" maxlength="12" placeholder="이름 (선택)" value="${esc(o.ownName||'')}">`:''}${o.instant?'<button class="btn sm" data-act="icn-own-ok">붙이기</button>':''}</div>`;
   return `<div class="icn-tabs">${tabs}</div><div class="mi icn-sec" style="display:block">${body}${own}</div>`;
@@ -5069,7 +5068,7 @@ function renderIcn(){
   openPop(`<div class="mh">${esc(o.sub||'')}<b>${esc(o.title)}</b></div>
     <div class="mi icn-top"><span class="icn-cur">${curH}</span>${o.name!==null?`<input type="text" id="icnName" value="${esc(o.name)}" maxlength="${o.maxName}" placeholder="${esc(o.placeholder)}">`:`<span class="icn-hint">${esc(o.hint||'이모티콘을 고르거나 사진을 넣어요')}</span>`}</div>
     ${typeof o.extra==='function'?o.extra(o):(o.extra||'')}
-    ${o.cats?icnCats(o):`<div class="mi icn-sec"><div class="icn-lb">내 사진 <small>길게 누르면 지워요</small></div>${photoGrid(o.icon)}</div>`}
+    ${o.cats?icnCats(o):`<div class="mi icn-sec"><div class="icn-lb">내 사진</div>${photoGrid(o.icon)}</div>`}
     ${!o.cats&&o.emojis.length?`<div class="mi icn-sec"><div class="icn-lb">이모티콘</div><div class="emo">${o.emojis.map(e=>`<button class="${o.icon===e?'on':''}" data-act="icn-pick" data-v="${e}">${e}</button>`).join('')}<input type="text" id="icnOwn" class="icn-own" maxlength="4" placeholder="직접" value="${esc(o.own)}"></div></div>`:''}
     <div class="mi" style="gap:8px">${o.onReset?`<button class="btn ghost grow" data-act="icn-reset">${esc(o.resetLabel)}</button>`:'<button class="btn ghost grow" data-act="icn-cancel">취소</button>'}${o.instant?'':'<button class="btn grow" data-act="icn-save">저장</button>'}</div>`);
 }
@@ -5244,7 +5243,7 @@ function chLogBody(){
   return `<div class="chlog">${L.map(x=>`<div class="ev" data-act="feed-go" data-k="${x.k}"><div class="ic">${x.a==='chg'?'🔁':x.a==='accepted'||x.a==='applied'?'✅':x.a==='rejected'?'✖':x.a==='held'?'⏸':'📩'}</div>
     <div class="tx"><b>${esc(x.w)}</b> · ${mdw(x.k)} ${x.a==='chg'?`근무 ${esc(nm(x.f))} → <b>${esc(nm(x.to))}</b>`:`${x.want?esc(nm(x.want))+' ':''}${AL[x.a]||''}`}
       <small>${tm(x.t)} ${x.a==='chg'?'바꿈':''}${x.rcv&&x.rcv-x.t>600000?` · 내 폰에 ${tm(x.rcv)} 도착`:''}</small></div></div>`).join('')}</div>
-    <div class="hint" style="padding:8px 4px 0">이 폰에서 본 것만 남아요 · 3개월 지나면 지워져요</div>`;
+`;
 }
 // 가족 소식은 이제 "가족" 탭에서 본다
 function openFeed(){
@@ -5445,7 +5444,7 @@ function renderFamily(){
     <div class="ftt">
       <div class="fwk"><span id="fwkT" class="fwt"></span><button class="lnk fnow" id="fwkNow" data-act="fam-today" hidden>오늘</button><span class="fmode"><button class="${wkMode==='c'?'on':''}" data-act="fam-mode" data-v="c">오늘 가운데</button><button class="${wkMode==='w'?'on':''}" data-act="fam-mode" data-v="w">주 단위</button></span></div>
       <div class="fgw"><div class="fgn">${namesHtml}</div><div class="fgs" id="fgs" data-m="${wkMode}"><div class="fgin" style="--n:${nShow}">${head}${rowsHtml}</div></div></div>
-      ${S.famSwiped?'':'<div class="hint fghint" id="fgHint">옆으로 밀어서 날짜를 넘겨요</div>'}
+      
       ${fam.length&&ad('together')?`<div class="flg"><span><b style="background:#ffd966"></b>다 같이 쉼</span>${S.famDayToo!==false?'<span><b style="background:#fff0bf"></b>☀️ 낮엔 같이 (야간 전)</span>':''}</div>`
         :fam.length?'':`<button class="fempty" data-act="fam-add">👪 가족 추가하기${ad('together')?' · 같이 쉬는 날도 찾아요':''} ›</button>`}
     </div>
@@ -5518,7 +5517,6 @@ function openFamEdit(){
       <div class="pg-sec fkind" style="margin-top:0;padding:12px 14px">${Object.entries(FAM_KIND).map(([k,[e,n]])=>`<button class="${m.kind===k?'on':''}" data-act="fe-kind" data-v="${k}"><b>${e} ${n}</b><small>${{shift:'내 교대 · 직접 패턴',office:'요일 · 출퇴근 시간',student:'주말 · 공휴일 · 방학 쉼',free:'항상 같이 가능'}[k]}</small></button>`).join('')}</div>
       ${extra}
       ${m.kind==='office__'?`<div class="pg-sec"><div class="prow"><div class="pl2">공휴일엔 쉬어요</div><label class="sw"><input type="checkbox" id="feHol" ${m.holOff!==false?'checked':''}><i></i></label></div></div>`:''}
-      <div class="hint" style="padding:10px 16px">💡 가족이 앱을 안 깔아도 "같이 쉬는 날"을 바로 계산해요. 나중에 초대하면 그 가족 폰에서도 보여요.</div>
       ${isNew?'':'<div class="pg-sec"><div class="prow danger-row" data-act="fe-del">가족 목록에서 빼기</div></div>'}
     </div>`,'famedit');
 }
@@ -5573,7 +5571,7 @@ function renderManCalPage(){
   openPage(`${pageHead(esc(m.name)+' 달력')}<div class="pg-b" style="display:flex;flex-direction:column;padding:0">
     ${vcNavHtml()}
     <div class="vcbox">${vcTrack(()=>manGrid(m),`vcsl ${manPaint?'sel':''}`)}</div>
-    ${manPaint?manBar(m):'<div class="hint" style="padding:8px 16px">메모 · 스티커는 이 폰에만 저장돼요</div>'}</div>`,'mancal');
+    ${manPaint?manBar(m):''}</div>`,'mancal');
   applyTdc();fitDn($('#page'));vcCenter();glowCheck();
 }
 let manDayK='',manFold=null,manHidAt=0;
@@ -5608,13 +5606,13 @@ function manDayHtml(k){
       <button class="ib" data-act="man-go" data-k="${fmt(addDays(d,1))}" aria-label="다음날">›</button></div>
     <div class="dstrip" id="dstrip">${strip}</div>
     <div class="sec-t" style="margin-top:10px">${m.kind==='shift'?'근무':'일정'}<button class="sh-fold" data-act="man-fold" aria-label="접기">${manFoldOpen()?'▴ 접기':'▾ 펼치기'}</button>${famUsesTypes(m)?'<button class="paint-lk" data-act="man-pat" style="margin-left:14px">⚙️ 일정 패턴</button>':''}<button class="paint-lk" data-act="man-paint">${npi('paintbrush',14)}여러 날 칠하기</button></div>
-    ${manFoldOpen()?`<div class="tchips">${manChoices(m,d).map(c=>`<button class="tchip ${cur===c[0]?'on':''}" data-act="man-ov" data-k="${k}" data-v="${esc(c[0])}"${famUsesTypes(m)?` data-hold="mtype" data-hk="${esc(c[0])}" data-hd="${k}"`:''}>${manChipIco(m,c[0],d)}<small>${esc(c[2])}</small></button>`).join('')}</div>${famUsesTypes(m)?'<div class="hint" style="padding:4px 0 0;margin:0">누르면 이 날만 바뀜 · 길게 누르면 종류 고치기</div>':''}`:''}
+    ${manFoldOpen()?`<div class="tchips">${manChoices(m,d).map(c=>`<button class="tchip ${cur===c[0]?'on':''}" data-act="man-ov" data-k="${k}" data-v="${esc(c[0])}"${famUsesTypes(m)?` data-hold="mtype" data-hk="${esc(c[0])}" data-hd="${k}"`:''}>${manChipIco(m,c[0],d)}<small>${esc(c[2])}</small></button>`).join('')}</div>`:''}
     ${famDayWxHtml(m,k)}
     <div class="lbl" style="margin-top:14px">스티커</div>
     <div class="sgrid sg5 mstk">${defs.filter(x=>on.includes(x.id)||manPlanned(m,x,k)).map(x=>{const n=on.filter(y=>y===x.id).length,N=Math.max(1,x.times||1),pl=manPlanned(m,x,k),cls=n>=N?'on':n>0?'on half':'todo';return `<button class="${cls}" data-act="man-stk" data-k="${k}" data-id="${esc(x.id)}" data-hold="mstk" data-hid="${esc(x.id)}"><span class="si">${ico(x.emoji)}${N>1&&(n||pl)?`<em class="cnt">${n}/${N}</em>`:''}</span><small>${x.act&&(pl||n)?esc(t12(x.act.s,true)):esc(x.name||'')}</small></button>`;}).join('')}<button class="emp" data-act="man-stk-pick" data-k="${k}"><span class="si">＋</span><small>붙이기</small></button></div>
-    <div class="hint" style="padding:4px 0 0;margin:0;display:flex;align-items:center">${hintN('mstk')<5?'누르면 완료 · 길게 누르면 고치기':''}<button class="lnk" data-act="mstk-page" style="margin-left:auto;font-size:13px">설정 ›</button></div>
+    <div class="hint" style="padding:4px 0 0;margin:0;display:flex;align-items:center"><button class="lnk" data-act="mstk-page" style="margin-left:auto;font-size:13px">설정 ›</button></div>
     <div class="lbl" style="margin-top:14px">메모</div>
-    <div class="vcmemo-bar"><input type="text" id="manNote" maxlength="40" value="${esc(note)}" placeholder="이 폰에만 저장돼요" enterkeyhint="done"><button class="send" data-act="man-note" data-k="${k}" aria-label="저장">${ICON.send}</button></div>`;
+    <div class="vcmemo-bar"><input type="text" id="manNote" maxlength="40" value="${esc(note)}" placeholder="메모" enterkeyhint="done"><button class="send" data-act="man-note" data-k="${k}" aria-label="저장">${ICON.send}</button></div>`;
 }
 function openManDay(k){
   const m=manMember();if(!m)return;
@@ -5635,7 +5633,6 @@ function openManStkPage(){
   const btn=x=>`<button data-act="mslot-open" data-id="${esc(x.id)}"><span class="si">${ico(x.emoji)}</span><small>${esc(x.name||'')}</small>${x.act?'<i class="stbell">🎒</i>':''}</button>`;
   pageBack=renderManCalPage;
   openPage(`${pageHead(esc(m.name)+' 스티커')}<div class="pg-b">
-    <div class="hint" style="padding:10px 16px 6px">길게 눌러 끌면 순서가 바뀌어요 · 누르면 고치기 · 빼도 지난 날 기록은 남아요</div>
     <div class="pg-sec sgrid sg5 stgrid mstgrid" style="margin-top:0;padding:10px">${defs.map(btn).join('')}<button class="emp" data-act="mslot-add"><span class="si">＋</span><small>더하기</small></button></div>
   </div>`,'manstk');
 }
@@ -5792,7 +5789,7 @@ function openManPat(){hintBump('fep');
   pageBack=m._own?()=>{famDraft=null;renderManCalPage();}:()=>openFamEdit();
   openPage(`${pageHead(esc(m.name||'가족')+' 일정 패턴',`<button class="ib" data-act="${m._own?'fp-save':'fp-done'}" style="width:auto;font-size:16px;color:var(--accent);font-weight:700;padding-right:8px">${m._own?'저장':'완료'}</button>`)}
     <div class="pg-b">${famSchedHtml(m)}
-    ${m.kind!=='free'?`<div class="pg-sec"><div class="prow"><div class="pl2">공휴일엔 쉬어요<small>명절 · 대체공휴일도 쉬는 날</small></div><label class="sw"><input type="checkbox" id="feHol" ${m.holOff!==false?'checked':''}><i></i></label></div></div>`:''}
+    ${m.kind!=='free'?`<div class="pg-sec"><div class="prow"><div class="pl2">공휴일엔 쉬어요</div><label class="sw"><input type="checkbox" id="feHol" ${m.holOff!==false?'checked':''}><i></i></label></div></div>`:''}
     </div>`,'manpat');
 }
 const famReRender=()=>pageMode==='manpat'?openManPat():openFamEdit();
@@ -6147,7 +6144,7 @@ function openRequests(){
   const list=reqUniq([...(S.link?S.requests.filter(r=>r.srv):S.requests)].sort((a,b)=>(w[a.st]-w[b.st])||(b.t-a.t)||a.date.localeCompare(b.date)));
   openSheet(`
     ${sheetHead(S.link?'📩 근무 요청':guest?'📩 내 요청 내역':'📩 가족 요청함')}
-    <div class="hint">${guest?'달력에서 날짜를 누르면 근무 변경을 요청할 수 있어요.':'달력에서 보기를 누르면 그 달에서 앞뒤 근무를 보며 답할 수 있어요 · 수락하면 근무표가 바로 바뀌어요.'}</div>
+    <div class="hint">${guest?'달력에서 날짜를 누르면 근무 변경을 요청할 수 있어요.':'달력에서 보기를 누르면 그 달에서 앞뒤 근무를 보며 답할 수 있어요.'}</div>
     ${list.length?list.map(r=>reqCard(r,true)).join(''):'<div class="hint">아직 요청이 없어요</div>'}`);
 }
 
@@ -6285,7 +6282,7 @@ function openCfm(c){
   }
   cfm=c;renderCfm();
 }
-const cfmToHtml=(c,others)=>others.length>1?`<div class="hint cfm-h" style="margin-top:8px">받는 사람 <small>(눌러서 빼요)</small></div><div class="chips left" style="margin-top:4px">${others.map(m=>`<button class="${c.to.includes(m.uid)?'on':''}" data-act="cfm-to" data-u="${esc(m.uid)}">${esc(m.name)}</button>`).join('')}</div>`:'';
+const cfmToHtml=(c,others)=>others.length>1?`<div class="hint cfm-h" style="margin-top:8px">받는 사람</div><div class="chips left" style="margin-top:4px">${others.map(m=>`<button class="${c.to.includes(m.uid)?'on':''}" data-act="cfm-to" data-u="${esc(m.uid)}">${esc(m.name)}</button>`).join('')}</div>`:'';
 function renderCfm(){
   const c=cfm;if(!c)return;
   const others=famOthers(),names=others.map(m=>m.name).join(' · ')||'가족',rem=`<div class="cfm-rem">무료 ${famRemain()}건 남음 (처음 ${FAM_FREE}건까지 무료)</div>`;
@@ -6296,15 +6293,15 @@ function renderCfm(){
     body=`<div class="cfm-q">${esc(c.text)}</div><div class="hint cfm-h">${esc(sel)}에게 보여요 · ${md(c.k)} 날짜에 붙어요</div>${cfmToHtml(c,others)}${rem}`;
   }else if(c.type==='stk'){
     head='⭐ 스티커 보여주기<b>가족에게 보여줄까요?</b>';
-    body=`<div class="cfm-q">내 스티커(운동 등)가 ${esc(names)}의 가족 달력에 보여요</div><div class="hint cfm-h">약은 기본으로 안 보여요 · 스티커마다 바꿀 수 있어요 · 언제든 끌 수 있어요</div>`;ok='켜기';
+    body=`<div class="cfm-q">내 스티커(운동 등)가 ${esc(names)}의 가족 달력에 보여요</div>`;ok='켜기';
   }else if(c.type==='status'){
     head='📡 실시간 상태<b>가족에게 보여줄까요?</b>';
-    body=`<div class="cfm-q">지금 하는 일(근무 중 · 자는 중 등)이 ${esc(names)}에게 실시간으로 보여요</div><div class="hint cfm-h">언제든 끌 수 있어요 · 끄면 가족에게는 근무 · 휴무만 보여요</div>`;ok='켜기';
+    body=`<div class="cfm-q">지금 하는 일(근무 중 · 자는 중 등)이 ${esc(names)}에게 실시간으로 보여요</div>`;ok='켜기';
   }else if(c.type==='memo-edit'){
     head='✏️ 가족 메모<b>고쳐서 올릴까요?</b>';
     body=`<div class="cfm-q">${esc(c.text)}</div>
-      <div class="jopt ${c.notify?'':'on'}" data-act="cfm-nt" data-v="0"><b>조용히 고치기</b><small>가족 화면의 메모만 바뀌어요</small></div>
-      <div class="jopt ${c.notify?'on':''}" data-act="cfm-nt" data-v="1"><b>고쳤다고 알리기</b><small>가족에게 "메모를 고쳤어요" 알림이 가요</small></div>
+      <div class="jopt ${c.notify?'':'on'}" data-act="cfm-nt" data-v="0"><b>조용히 고치기</b></div>
+      <div class="jopt ${c.notify?'on':''}" data-act="cfm-nt" data-v="1"><b>고쳤다고 알리기</b></div>
       ${cfmToHtml(c,others)}<div class="cfm-rem">고치는 건 무료 횟수를 쓰지 않아요</div>`;
     ok='올리기';
   }else{
@@ -6545,7 +6542,6 @@ function otOpen(k){
       <div class="prow" style="padding:6px 0"><div class="pl2">실제 퇴근</div>${tpick('otE',o[1])}</div>
       <div class="chips left" style="margin:6px 0 4px">${[1,2,3,4].map(n=>`<button data-act="ot-add" data-v="${n}">+${n}시간</button>`).join('')}</div>
       <div class="otsum">${h.req?`연장 <b>${fmtH(h.req)}</b>${h.reqN?` · 그중 야간 ${fmtH(h.reqN)}`:''}`:'원래 시간 그대로예요'}</div>
-      <div class="hint" style="padding:4px 0 0;margin:0">바꾼 퇴근 시각은 가족 탭 · 가족 폰 · 출퇴근 날씨에도 보여요</div>
     </div>
     <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="ot-clear">없음 (원래대로)</button><button class="btn grow" data-act="pop-close">확인</button></div>`);
 }
@@ -6835,7 +6831,7 @@ ${!t.rest?(()=>{const d=timesOf(t.orig||t.k),s0=t.ts||d.start,e0=t.te||d.end;ret
     <div class="pal">
       <button class="sw0 ${!t.color?'on':''}" data-act="type-color" data-c="" title="색 없음(빨간 글자)">${esc(t.k&&t.k!==NONE_K?t.k:'휴')}</button>
       ${PALETTE.map(c=>`<button class="${t.color===c?'on':''}" data-act="type-color" data-c="${c}" style="background:${c}"></button>`).join('')}
-    </div>${t.rest&&ad('stats')?`<div class="prow" style="padding:14px 0 0"><div class="pl2">무급<small>이 날은 월급이 줄어요 (근무 통계 예상 월급에서 빼요)</small></div><label class="sw"><input type="checkbox" id="tdUnpaid" ${t.unpaid?'checked':''}><i></i></label></div>`:''}`}
+    </div>${t.rest&&ad('stats')?`<div class="prow" style="padding:14px 0 0"><div class="pl2">무급</div><label class="sw"><input type="checkbox" id="tdUnpaid" ${t.unpaid?'checked':''}><i></i></label></div>`:''}`}
     ${t.isNew||BUILTIN.includes(t.orig)?'':`<button class="btn ghost danger" data-act="type-del" style="width:100%;margin-top:18px" ${used?'disabled':''}>${used?'근무표에서 쓰는 중이라 삭제할 수 없어요':'이 근무타입 삭제'}</button>`}`);
 }
 function saveType(){
@@ -7078,6 +7074,7 @@ Object.assign(TIPD,{   // v0.148 글 다듬기 (보통 문장 · 해요체 · �
   '홈 화면에서 근무 바로 보기':{w:'앱을 열지 않고 홈 화면에서 오늘과 이번 달 근무를 보고 싶을 때 써요.',s:[
     ['폰 홈 화면 빈 곳을 꾹 눌러 <b>위젯</b>에서 언제쉬어를 골라요.'],
     ['1칸, 2칸, 7일, 한 달 중에 골라 놓아요.'],
+    ['가족이 있으면 한 달 위젯 왼쪽 위 이름(● 나 ▾)을 눌러 가족 달력으로 바꿔요.'],
     ['모양과 투명도는 설정 › 위젯에서 바꿔요.','t15_a']]},
   '폰을 바꿔도 데이터 지키기':{w:'폰을 바꾸거나 앱을 지웠다 깔아도 근무, 메모, 스티커를 그대로 지켜요.',s:[
     ['설정 › <b>백업</b>을 열어요.'],
@@ -7200,9 +7197,7 @@ function openWidgetPage(){
       <div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${[['light','밝게'],['dark','어둡게'],['system','폰 설정 따라']].map(([v,n])=>`<button class="${w.theme===v?'on':''}" data-act="wg-theme" data-v="${v}">${n}</button>`).join('')}</div>
         <div class="prow" style="padding:12px 0 0"><div class="pl2">진하기 <b id="wgAv">${w.alpha}%</b></div><input type="range" id="wgAlpha" min="0" max="100" step="10" value="${w.alpha}" style="flex:1"></div></div>
       <div class="pg-cap">한 달 위젯 모양</div>
-      <div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${[['fill','칸 채우기'],['circle','동그라미']].map(([v,n])=>`<button class="${w.look===v?'on':''}" data-act="wg-look" data-v="${v}">${n}</button>`).join('')}</div>
-        <div class="hint" style="padding:8px 0 0">칸 채우기는 근무를 연한 칸 색으로, 동그라미는 지금까지처럼 둥근 표시로 보여줘요. 근무 요청은 둥근 링으로 알려줘요.</div></div>
-      <div class="hint" style="padding:12px 16px">홈 화면을 길게 눌러 위젯 › 언제쉬어 1칸 · 2칸 · 7일 · 한 달을 골라요.<br>달력 칸처럼 날짜 · 근무 · 스티커 · 메모가 보여요.${(S.family||[]).length+famPeers().length>0?'<br>한 달 위젯은 왼쪽 위 이름 칩(● 나 ▾)을 누르면 가족 달력으로 바뀌어요.':''}</div>
+      <div class="pg-sec" style="margin-top:0;padding:12px 14px"><div class="chips">${[['fill','칸 채우기'],['circle','동그라미']].map(([v,n])=>`<button class="${w.look===v?'on':''}" data-act="wg-look" data-v="${v}">${n}</button>`).join('')}</div></div>
     </div>`,'widget');
 }
 /* ================= 모양 조정 (숨은 화면: 설정 › 앱 정보를 7번 눌러 나오는 개발자 메뉴 안) =================
@@ -7301,7 +7296,6 @@ function openTunePage(){
   openPage(`${pageHead('모양 조정')}
     <div class="pg-b tn-pg">
       <div class="tn-top"><div class="tn-wk" id="tnWk"></div><div class="tn-prev" id="tnPrev"></div><div class="tn-bar" id="tnBar"></div><div class="tn-warn" id="tnWarn"></div></div>
-      <div class="hint" style="padding:8px 16px 0">움직이면 미리보기에 바로 보여요 · "저장"을 눌러야 앱 · 위젯에 반영 · 잘못 저장했으면 "이전 저장으로"(최근 5번)</div>
       ${order.map(([g,n])=>`<details class="tn-g tn-grp" id="tng_${g}"${(wasOpen?wasOpen.has('tng_'+g):g===me)?' open':''}><summary>${n}${g===me?' <small>← 지금 이 화면</small>':''}</summary>${tuneRows(g)}</details>`).join('')}
       <details class="tn-g tn-grp" id="stzDiagG" hidden${wasOpen&&wasOpen.has('stzDiagG')?' open':''}><summary>스티커 크기 (왜 작아졌나)</summary><div id="stzDiag"></div></details>
       ${dbg?`<details class="tn-g tn-grp"><summary>문제 찾기 정보</summary><div class="hint" style="padding:4px 2px 0;font-size:11.5px">놓인 한 달 위젯 마지막 그림 상태<br>${esc(dbg).replace(/\n/g,'<br>')}</div></details>`:''}
@@ -7558,7 +7552,7 @@ function wxPopHtml(title,sub,c,extra,dz,hr,rs){
     const l1=two?`${w0.pl||w0.p+'길'}(${w0.n}) ${w0.m}`:w0.m,l2=two?`${w1.pl||w1.p+'길'}(${w1.n})은 ${w1.lb}`:'';
     air=`<div class="wxrw dz${w0.g>=3?' bad':''}"${dz?' data-act="wx-dust"':''}>${wxImg(w0.f)}<div><b class="k">미세먼지 ${esc(w0.lb)}</b>${k.dz&&dz?'<small>자세히 보기</small>':`<small>${esc(l1)}</small>${l2?`<small style="opacity:.7">${esc(l2)}</small>`:''}`}</div>${dz?'<span class="go">›</span>':''}</div>`;
   }else if(!w0&&c.a)air=`<div class="wxrw"><b class="k">${esc(c.a)}</b></div>`;
-  else if(!w0&&cs.length&&!(c.day&&c.day.src==='m'))air=`<div class="wxrw dz none">${wxImg('faces/2')}<div><b class="k">미세먼지 · 예보 전이에요</b><small>보통 2~3일 전에 나와요</small></div></div>`;   // v0.130 줄을 빼지 않고 자리 유지 (높이 같게) · 누르지 않음
+  else if(!w0&&cs.length&&!(c.day&&c.day.src==='m'))air=`<div class="wxrw dz none">${wxImg('faces/2')}<div><b class="k">미세먼지 · 예보 전이에요</b></div></div>`;   // v0.130 줄을 빼지 않고 자리 유지 (높이 같게) · 누르지 않음
   const kOther=k.dz&&two?`<small style="opacity:.75">${esc(`${w1.pl||w1.p+'길'}(${w1.n})은 ${w1.lb}`)}</small>`:'';
   const kCls=k.al===2?'al2':k.al===1?'al1':wet?'wet':bad?'bad':cold?'cold':'';
   return `<div class="wxp v2"><div class="wh"><div><b>${esc(title)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div><button class="ib" data-act="pop-close" aria-label="닫기">✕</button></div>
@@ -7765,17 +7759,15 @@ function openWxPage(){
   const row=(e,l,sub,v,act)=>`<div class="prow" data-act="${act}"><div class="pl2"><span class="e e-in">${e}</span>${l}<small>${sub}</small></div><span class="muted">${v?esc(v):'고르기'} ›</span></div>`;
   openPage(`${pageHead('출퇴근 날씨')}
     <div class="pg-b">
-      <div class="hint" style="padding:14px 16px 2px;font-size:15px;font-weight:800;color:var(--fg)">출근 땐 집, 퇴근 땐 직장 날씨</div>
-      <div class="hint" style="padding:2px 16px 8px">동네만 고르면 돼요 (위치 권한 없음). 미세먼지도 같이 알려 줘요.</div>
       <div class="pg-sec" style="margin-top:4px">
         ${row('🏠','집','출근 날씨 · 쉬는 날 날씨',wxFull(W.home),'wx-pick-home')}
         ${row('🏭','직장','퇴근 날씨 (안 고르면 집 날씨)',wxFull(W.work),'wx-pick-work')}
-        ${wxNear(W.home,W.work)?`<div class="prow"><div class="pl2"><span class="e e-in">📍</span>같은 지역으로 보기<small>집과 가까워서 날씨 · 미세먼지를 한 곳으로</small></div><label class="sw"><input type="checkbox" id="wxOne" ${W.one?'checked':''}><span></span></label></div>`:''}
+        ${wxNear(W.home,W.work)?`<div class="prow"><div class="pl2"><span class="e e-in">📍</span>같은 지역으로 보기</div><label class="sw"><input type="checkbox" id="wxOne" ${W.one?'checked':''}><span></span></label></div>`:''}
       </div>
       ${S.myset&&wt.length?`<div class="pg-cap">근무 시간 — 이대로 맞나요?</div>
       <div class="pg-sec" style="margin-top:0">${wt.map(t=>{const x=timesOf(t.k);return `<div class="prow" data-act="wx-times" data-k="${esc(t.k)}"><div class="pl2">${badge(t.k,'sm','')} ${esc(t.name)}</div><span class="muted">${t12(x.start)} → ${tm2m(x.end)<=tm2m(x.start)?'다음날 ':''}${t12(x.end)} ›</span></div>`;}).join('')}</div>`:''}
       <div style="padding:16px"><button class="btn" style="width:100%" data-act="wx-ok">맞아요</button></div>
-      <div class="hint" style="padding:0 16px 16px">시간이 다르면 줄을 눌러 고쳐요. 알람마다 "끈 뒤 날씨 보기" · "☔ 날씨만"도 고를 수 있어요.${S.link?'<br>직장을 고르면 가족 폰에도 내 출퇴근 날씨가 보여요 (지역 이름만 가요).':''}</div>
+      <div style="height:16px"></div>
     </div>`,'wx');
 }
 let wxPickFor='home';
@@ -7818,7 +7810,6 @@ function wxNear(a,b){
 }
 function wxAskOne(){
   openPop(`<div class="mh">🏭 직장<b>집과 가까워요. 같은 지역으로 볼까요?</b></div>
-    <div class="hint" style="padding:10px 16px 2px">같은 지역으로 보면 날씨 · 미세먼지를 한 곳으로 보여 줘요. 나중에 설정에서 바꿀 수 있어요.</div>
     <button class="mi" data-act="wx-one" data-v="1" style="justify-content:center;font-weight:800;color:var(--accent)">같은 지역으로</button>
     <button class="mi" data-act="wx-one" data-v="0" style="justify-content:center">따로 보기 (출근 = 집 · 퇴근 = 직장)</button>`);
 }
@@ -7935,7 +7926,6 @@ function stkAskCheck(){
   if(!famOthers().length||!S.onboarded||ob||pageMode||$('#pop').classList.contains('open')||$('#sheet').classList.contains('open'))return;
   L.stkAsked=1;famSaveLocal();
   openPop(`<div class="mh">가족이 생겼어요<b>내 스티커를 가족에게 보여 줄까요?</b></div>
-    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0;line-height:1.7">💊 약 스티커는 어느 쪽이든 따로 켜야 보여요. 메모는 쓸 때 ♥로 골라서 보내요. 나중에 설정 › 가족 목록에서 바꿀 수 있어요.</div></div>
     <div class="mi" style="flex-direction:column;gap:8px"><button class="btn" style="width:100%" data-act="stkshare-now">지금 있는 스티커도 보여 줘요</button><button class="btn ghost" style="width:100%" data-act="stkshare-new">앞으로 만드는 스티커부터 보여 줘요</button><button class="btn ghost" style="width:100%" data-act="stkshare-no">안 보여 줘요</button></div>`);
 }
 function introNotice(){
@@ -8064,16 +8054,16 @@ function openStatsPage(){
         ${slip&&slip.tot?line('실제 (명세서)',won(slip.tot),`차이 ${slip.tot-total>=0?'+':'−'}${won(Math.abs(slip.tot-total))}`):''}
       </div>
       <div class="hint" style="padding:6px 16px 0">세금 · 4대 보험 전 금액이에요. 명세서와 다르면 아래 명세서로 맞추기에 실제 금액을 적어 주세요.</div>`
-      :`<div class="pg-sec"><div class="prow tap" data-act="st-pay-help"><div class="pl2">💰 예상 월급도 볼까요?<small>아래 고정금과 명세서 한 장만 적으면 돼요</small></div><div class="pv">›</div></div></div>`}
+      :`<div class="pg-sec"><div class="prow tap" data-act="st-pay-help"><div class="pl2">💰 예상 월급도 볼까요?</div><div class="pv">›</div></div></div>`}
       <div class="pg-cap">월급 설정 <span style="font-weight:600">(모두 선택 · 폰에만 저장)</span></div>
       <div class="pg-sec" style="margin-top:0">
-        <div class="prow"><div class="pl2">고정금<small>매달 같은 돈 (기본급 · 고정 수당 · 식비 등 합)</small></div><input type="number" class="inl" id="payFixed" inputmode="numeric" min="0" value="${P.fixed||''}" placeholder="0" style="width:120px"> 원</div>
+        <div class="prow"><div class="pl2">고정금</div><input type="number" class="inl" id="payFixed" inputmode="numeric" min="0" value="${P.fixed||''}" placeholder="0" style="width:120px"> 원</div>
         <div class="prow tap" data-act="slip-open"><div class="pl2">🧾 명세서로 맞추기<small>${Object.keys(P.slips||{}).length?`${Object.keys(P.slips).length}장 적음 · 연장 1시간 ${won(R.ot)} · 야간 1시간 ${won(R.nt)}`:'연장 · 야간 수당이 시간당 얼마인지 거꾸로 계산해요'}</small></div><div class="pv">›</div></div>
         <div class="prow"><div class="pl2">급여 마감일<small>비우면 말일</small></div><input type="number" class="inl" id="payClose" inputmode="numeric" min="0" max="28" value="${P.close||''}" placeholder="말일" style="width:70px"> 일</div>
         <div class="prow"><div class="pl2">1년 연차</div><input type="number" class="inl" id="payLeave" inputmode="numeric" min="0" max="60" value="${P.leaveYear||''}" placeholder="0" style="width:70px"> 일</div>
         ${P.leaveYear?`<div class="prow"><div class="pl2">연차 새로 시작<small>${P.leaveFrom?'입사일마다 새로 세요':'1월 1일마다 새로 세요'}</small></div><div class="chips"><button class="${P.leaveFrom?'':'on'}" data-act="leave-from" data-v="">1월 1일</button><button class="${P.leaveFrom?'on':''}" data-act="leave-from" data-v="in">입사일</button></div></div>${P.leaveFrom?`<div class="prow"><div class="pl2">입사일 (월 · 일)</div>${tpick('payLeaveFrom',`${new Date().getFullYear()}-${P.leaveFrom}`,'','date')}</div>`:''}`:''}
         <div class="prow"><div class="pl2">야간 기준</div><span class="ptm-t">${tpick('payNs',P.night[0])}<em>~</em>${tpick('payNe',P.night[1])}</span></div>
-        ${R.slip?'':`<div class="prow"><div class="pl2">연장 1시간 금액<small>명세서가 없을 때 직접</small></div><input type="number" class="inl" id="payOt" inputmode="numeric" min="0" value="${P.ot||''}" placeholder="0" style="width:100px"> 원</div>
+        ${R.slip?'':`<div class="prow"><div class="pl2">연장 1시간 금액</div><input type="number" class="inl" id="payOt" inputmode="numeric" min="0" value="${P.ot||''}" placeholder="0" style="width:100px"> 원</div>
         <div class="prow"><div class="pl2">야간 1시간 금액</div><input type="number" class="inl" id="payNt" inputmode="numeric" min="0" value="${P.nt||''}" placeholder="0" style="width:100px"> 원</div>`}
       </div>
       <div class="hint" style="padding:8px 16px 16px">무급 휴가는 근무 종류 편집에서 "무급"을 켜면 그 날만큼 빼요. 연차는 빼지 않아요.</div>
@@ -8353,9 +8343,9 @@ function openPatTimes(back){   // v0.109: 근무 시간은 근무타입 편집 �
 function patTimesHtml(){
   const wt=workTypes();if(!wt.length||!S.myset)return '';
   const set=wt.some(t=>timesCustom(t.k));
-  return `<div class="pg-sec ptm"><div class="prow tap" data-act="ptm-tog"><div class="pl2">🕐 근무 시간 <span style="color:var(--muted);font-weight:600">(선택)</span><small>정해 두면 출퇴근 날씨도 알려줘요</small></div><div class="pv">${patTmOpen?'▴':set?'정함 ›':'›'}</div></div>
+  return `<div class="pg-sec ptm"><div class="prow tap" data-act="ptm-tog"><div class="pl2">🕐 근무 시간 <span style="color:var(--muted);font-weight:600">(선택)</span></div><div class="pv">${patTmOpen?'▴':set?'정함 ›':'›'}</div></div>
     ${patTmOpen?wt.map((t,i)=>{const x=timesOf(t.k);return `<div class="prow"><div class="pl2">${badge(t.k,'sm','')} ${esc(t.name)}</div><span class="ptm-t">${tpick('ptS_'+i,x.start)}<em>→</em>${tm2m(x.end)<=tm2m(x.start)?'<small>다음날</small>':''}${tpick('ptE_'+i,x.end)}</span></div>`;}).join('')
-      +`<div class="hint" style="padding:6px 16px 12px">몰라도 괜찮아요 · 안 정하면 대략 시간으로 계산해요</div>`:''}</div>`;
+      :''}</div>`;
 }
 // 패턴 칸 누르면: 어떤 근무로 할까요?
 function openPatCell(i){
@@ -8474,7 +8464,7 @@ function openRem(id){
 function renderRem(){
   const r=remEd;if(!r)return;
   openPop(`<div class="mh">${esc(r.name||'휴무일 · 기념일')}<b>언제 알려드릴까요?</b></div>
-    <div class="mi" style="display:block"><div class="icn-lb">며칠 전 <small>여러 개 골라도 돼요</small></div><div class="remc">${REM_DAYS.map(v=>`<button class="${r.rem.includes(v)?'on':''}" data-act="rem-t" data-v="${v}">${REM_LABEL[v]}</button>`).join('')}</div></div>
+    <div class="mi" style="display:block"><div class="icn-lb">며칠 전</div><div class="remc">${REM_DAYS.map(v=>`<button class="${r.rem.includes(v)?'on':''}" data-act="rem-t" data-v="${v}">${REM_LABEL[v]}</button>`).join('')}</div></div>
     <div class="mi" style="display:block"><div class="icn-lb">시각</div><div class="remc">${REM_AT.map(t=>`<button class="${r.at===t?'on':''}" data-act="rem-at" data-v="${t}">${remAtLabel(t)}</button>`).join('')}</div></div>
     <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="rem-off">알림 끄기</button><button class="btn grow" data-act="rem-save">저장</button></div>`);
 }
@@ -8506,10 +8496,10 @@ function openBackupPage(){
         ${!hasBridge('driveBackup')?`<div class="prow"><div class="pl2 muted">앱에서 쓸 수 있어요 (지금은 브라우저 미리보기)</div></div>`:linked?`
           <div class="prow"><div class="pl2">☁️ 연결됨<small>${esc(S.drive.email||'구글 계정')}</small></div></div>
           <div class="prow"><div class="pl2">마지막 백업<small>${S.drive.last?new Date(S.drive.last).toLocaleString('ko-KR'):'아직 없어요'}</small></div><button class="btn sm" data-act="drive-backup" ${driveBusy?'disabled':''}>${driveBusy?'백업 중…':'지금 백업하기'}</button></div>
-          <div class="prow"><div class="pl2">자동 백업<small>바뀐 게 있으면 하루 한 번</small></div><label class="sw"><input type="checkbox" id="driveAuto" ${S.drive.auto?'checked':''}><i></i></label></div>
+          <div class="prow"><div class="pl2">자동 백업</div><label class="sw"><input type="checkbox" id="driveAuto" ${S.drive.auto?'checked':''}><i></i></label></div>
           ${files.length?files.slice(0,2).map(fileRow).join(''):`<div class="prow"><div class="pl2 muted">${driveFiles?'저장된 백업이 없어요':'백업 목록을 불러오는 중…'}</div></div>`}
           <div class="prow danger-row" data-act="drive-unlink" style="color:var(--muted);font-weight:600">연결 해제</div>`
-        :`<div class="prow"><div class="pl2">구글 드라이브 백업 · 복원<small>연결하면 저장된 백업에서 복원할 수 있어요</small></div></div>
+        :`<div class="prow"><div class="pl2">구글 드라이브 백업 · 복원</div></div>
           <div class="prow"><button class="btn" style="width:100%" data-act="drive-link" ${driveBusy?'disabled':''}>${driveBusy?'연결 중…':'구글 계정 연결하기'}</button></div>`}
       </div>
       <div class="pg-cap">파일</div>
@@ -8793,8 +8783,8 @@ const obTmKeys=()=>[...new Set(obPattern())].filter(obIsWork);
 const obTmOf=k=>(ob.tm&&ob.tm[k])||(()=>{const d=defaultTimes(k);return typeOf(k).k===k&&!typeOf(k).noGuess?[d.start,d.end]:wxDefTimes(shiftNameOf(k)+k);})();
 function obTimesHtml(){
   const ks=obTmKeys();if(!ks.length)return '';
-  return `<div class="obtm"><button class="obtm-h" data-act="obtm-tog">🕐 근무 시간 <span>(선택)</span> ${ob.tmOpen?'▴':'›'}<small>정해 두면 출퇴근 날씨도 알려줘요</small></button>
-    ${ob.tmOpen?ks.map((k,i)=>{const x=obTmOf(k);return `<div class="alrow">${obBadge(k)}<span class="ptm-t">${tpick('obTmS_'+i,x[0])}<em>→</em>${tpick('obTmE_'+i,x[1])}</span><small>${esc(shiftNameOf(k))}</small></div>`;}).join('')+'<div class="ob-sub" style="font-size:12px;margin-top:4px">몰라도 괜찮아요 · 나중에 근무 패턴 화면에서 정할 수 있어요</div>':''}</div>`;
+  return `<div class="obtm"><button class="obtm-h" data-act="obtm-tog">🕐 근무 시간 <span>(선택)</span> ${ob.tmOpen?'▴':'›'}</button>
+    ${ob.tmOpen?ks.map((k,i)=>{const x=obTmOf(k);return `<div class="alrow">${obBadge(k)}<span class="ptm-t">${tpick('obTmS_'+i,x[0])}<em>→</em>${tpick('obTmE_'+i,x[1])}</span><small>${esc(shiftNameOf(k))}</small></div>`;}).join(''):''}</div>`;
 }
 function obPattern(){if(ob.way==='custom')return ob.cpat||[];const p=obPreset();return p.pat||['주','주','휴','휴','야','야','휴','휴'];}
 function obName(){return ob.way==='custom'?`내 근무 (${ob.len}일 반복)`:obPreset().name;}
@@ -8840,7 +8830,7 @@ function renderOb(){
   const s=ob.step,path=obPath(),pi=path.indexOf(s);
   const prog=pi>=0&&path.length>1?`<div class="ob-prog">${path.map((_,i)=>`<i class="${i<=pi?'on':''}"></i>`).join('')}</div>`:'';
   const back=s!=='start'&&s!=='done'&&(ob.hist.length||ob.entry==='later')?`<button class="ob-back" data-act="ob-back">‹</button>`:'';
-  const skip=`<button class="lk" data-act="ob-skip">${ob.entry==='later'?'닫기':'건너뛰기 <small>(설정에서 조정할 수 있어요)</small>'}</button>`;
+  const skip=`<button class="lk" data-act="ob-skip">${ob.entry==='later'?'닫기':'건너뛰기'}</button>`;
   let body='',foot='';
   if(s==='start'){
     body=`<div class="hero">${LOGO}<h1>언제쉬어</h1><p>교대근무 가족이 함께 보는 근무표</p></div>
@@ -9223,7 +9213,7 @@ document.addEventListener('click',e=>{
     case 'fe-loc':{famPull();const c=famEdCfg();actPickRegion(code=>{c.loc=wxOk(code)?code:'';famReRender();},famDraft.kind==='student'?'📍 학교 · 유치원 위치':'📍 회사 위치');break;}
     case 'fe-era':famPull();famDraft._ed=+t.dataset.i;famReRender();break;
     case 'fe-era-add':{famPull();const d0=new Date(),y=d0.getMonth()>=2?d0.getFullYear()+1:d0.getFullYear();
-      openPop(`<div class="mh">📅 이 날부터 새 일정<b>언제부터 바뀌어요?</b></div><div class="hint" style="padding:8px 16px 0">예: 유치원 → 학교 (3월 2일) · 그 전 날짜는 예전 그대로 남아요</div>
+      openPop(`<div class="mh">📅 이 날부터 새 일정<b>언제부터 바뀌어요?</b></div>
         <div class="mi"><div class="pl2">시작 날</div>${tpick('eraD',`${y}-03-02`,'','date')}</div>
         <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">닫기</button><button class="btn grow" data-act="fe-era-ok">만들기</button></div>`);break;}
     case 'fe-era-ok':{const from=($('#eraD')||{}).value||'';if(!okDate(from))break;const m=famDraft;m.eras=m.eras||[];if(m.eras.some(e=>e.from===from)){toast('그 날 시작하는 구간이 이미 있어요');break;}
@@ -11062,7 +11052,7 @@ function wlNamePrompt(k){
   openPop(`<div class="mh">📋 일지 이름<b>이름을 정해 주세요</b></div>
     <div class="mi" style="display:block"><input type="text" id="wlNm" maxlength="12" value="${esc(S.wlog.name||'업무 일지')}" enterkeyhint="done">
       <div class="wlchips">${WL_NAMES.map(n=>`<button data-act="wl-nmchip" data-v="${n}">${n}</button>`).join('')}</div>
-      <div class="hint" style="padding:8px 0 0;margin:0">한 번 정하면 계속 이 이름으로 써요 · 일지 제목을 눌러 언제든 바꿀 수 있어요</div></div>
+</div>
     <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">취소</button><button class="btn grow" data-act="wl-nmok">만들기</button></div>`);
   setTimeout(()=>{const i=$('#wlNm');if(i){i.focus();i.select();}},80);
 }

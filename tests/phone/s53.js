@@ -59,7 +59,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   // 설정 › 홈 화면 위젯 안내문: 한 달 위젯 이름 · (가족이 있을 때만) 이름 칩 안내
   await p.evaluate(()=>document.querySelector('[data-act="more-widget"]').click());await p.waitForTimeout(300);
   const wtxt=await p.evaluate(()=>document.querySelector('#page').innerText);
-  T('위젯 설정 안내문: "7일 · 한 달" 이름 + 가족이 있으니 이름 칩 안내가 같이 나옴',/1칸 · 2칸 · 7일 · 한 달/.test(wtxt)&&/이름 칩/.test(wtxt),wtxt.slice(0,260));
+  T('위젯 설정 안내문은 없음 (v0.149 · 팁으로 옮김)',!/홈 화면을 길게/.test(wtxt),wtxt.slice(0,260));
   T('오류 없음',p.errs.length===0,p.errs.join('|'));
   await p.close();
 
