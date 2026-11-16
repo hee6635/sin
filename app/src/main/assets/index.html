@@ -1675,7 +1675,11 @@ html[data-cal="fill"] .cell.today::after,html[data-cal="fill"] .cell.today[style
 .np .npi{width:32px;height:32px;border-radius:10px;background:var(--surface);color:color-mix(in srgb,var(--fg) 70%,var(--bg));display:flex;align-items:center;justify-content:center;flex:none}
 .np .pl2{font-size:15.5px;font-weight:600;color:var(--fg)}.np .pl2 small{display:none}.np .pl2 small.keep{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-top:2px}
 .np .pv,.np .npv{display:flex;align-items:center;gap:2px;font-size:14.5px;font-weight:500;color:color-mix(in srgb,var(--fg) 60%,var(--bg));margin-left:auto}.np .npv svg{color:color-mix(in srgb,var(--fg) 30%,var(--bg))}
-.np .hint{display:none}
+.np .hint{display:none}.np .hint.keep{display:block}
+.np .famsec .prow{gap:12px}.np .pg-cap .cnt2{display:inline;color:var(--muted);font-weight:600;margin-left:4px}
+.np .stgrid button{background:var(--surface);border-radius:16px}.np .stgrid button.emp{background:var(--bg);box-shadow:inset 0 0 0 1.5px var(--line)}.np .addr .pl2{color:var(--accent)}.np .addr .npi{background:var(--acc-soft);color:var(--accent)}.np .famsec .me{font-size:12px;font-weight:700;color:var(--accent);background:var(--acc-soft);border-radius:6px;padding:2px 6px;margin-left:4px;vertical-align:2px}
+.np .invb{padding:4px 16px 16px}.np .invb .btn{width:100%;display:flex;align-items:center;justify-content:center;gap:6px;height:48px;border-radius:14px;font-size:15.5px}
+.np .danger-row:not(:has(.npi)){color:#f04452;font-weight:600}
 .np .sw{margin-left:auto}
 .np .chips button{height:34px;border-radius:12px;font-weight:600}
 .np .danger-row{color:#f04452;font-weight:600}.np .danger-row .pl2{color:#f04452}.np .danger-row .npi{background:#fff0f1;color:#f04452}
@@ -1717,8 +1721,8 @@ html[data-cal="fill"] .cell.today::after,html[data-cal="fill"] .cell.today[style
 .alw .anext1 .nxi{width:40px;height:40px;border-radius:12px;background:var(--acc-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex:none}
 .alw .anext1 .nxt{display:flex;flex-direction:column;min-width:0}.alw .anext1 .nxt small{font-size:12.5px;color:var(--accent);font-weight:600}.alw .anext1 .nxt b{font-size:16px;font-weight:700}
 .alw .anext1 .r{margin-left:auto;font-size:13px;font-weight:700;color:var(--accent);background:var(--acc-soft);padding:6px 10px;border-radius:999px;flex:none}
-.alw .list-header{padding:16px 22px 10px;font-size:13.5px;font-weight:600}
-.acard.ac2{margin:0 16px 10px;padding:16px 14px 14px 26px;border-radius:22px;background:color-mix(in srgb,var(--ac,var(--accent)) 8%,var(--bg));box-shadow:0 2px 12px rgba(15,23,42,.035);border:0;overflow:visible}
+.alw .list-header{padding:16px 22px 10px;font-size:13.5px;font-weight:600;background:transparent}
+.acard.ac2{margin:0 16px 10px;padding:16px 14px 14px 26px;border-radius:22px;background:color-mix(in srgb,var(--ac,var(--accent)) 16%,var(--bg));box-shadow:0 2px 12px rgba(15,23,42,.035);border:0;overflow:visible}
 .acard.ac2::before{background:var(--ac,var(--accent));left:12px;top:16px;bottom:16px;width:4px;border-radius:2px}
 .acard.ac2.off{opacity:.45;background:var(--bg)}.acard.ac2.off::before{background:var(--line)}
 .acard.ac2 .acard-n b{font-size:15px;font-weight:600;color:color-mix(in srgb,var(--fg) 85%,var(--bg))}
@@ -1743,6 +1747,33 @@ html[data-cal="fill"] .cell.today::after,html[data-cal="fill"] .cell.today[style
 #pop .wxp .wxk{border-radius:20px}
 #pop .wxp .wxweb{display:none}
 #pop .wxp .wsrc{opacity:.7}
+
+/* v0.147 이미지 공유: 아래에서 올라오는 창 · 스위치 두 줄 · 버튼 */
+#share-action-bar{border-radius:24px 24px 0 0;border-top:0;box-shadow:0 -4px 24px rgba(15,23,42,.12);padding:14px 16px 20px}
+#share-action-bar .shtitle{width:100%;font-size:18px;font-weight:700;margin:2px 4px 8px}
+#share-action-bar .shrow{flex-direction:column;gap:0;background:var(--surface);border-radius:18px;overflow:hidden;margin-bottom:6px}
+#share-action-bar .shm{display:flex;align-items:center;gap:12px;padding:12px 14px;width:100%;position:relative}
+#share-action-bar .shm+.shm::before{content:'';position:absolute;top:0;left:58px;right:14px;height:1px;background:var(--line)}
+#share-action-bar .shi{width:32px;height:32px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:color-mix(in srgb,var(--fg) 70%,var(--bg))}
+#share-action-bar .sht{flex:1;font-size:15.5px;font-weight:600}
+#share-action-bar .shnote{display:none}
+#share-action-bar .btn{height:50px;border-radius:14px;font-size:15.5px}
+
+/* v0.147 이럴 땐 이렇게 새 모양 */
+.tips.np .tipg{padding:0}.tips.np .tipg+.tipg{margin-top:10px}
+.tips.np .tipg>summary{display:flex;align-items:center;gap:12px;padding:14px 16px;list-style:none;font-size:15.5px;font-weight:600;cursor:pointer}
+.tips.np summary::-webkit-details-marker{display:none}
+.tips.np .tipg>summary .tgt{flex:1}.tips.np .tipg>summary small{color:var(--muted);font-weight:600;font-size:14px}.tips.np summary>svg{color:color-mix(in srgb,var(--fg) 30%,var(--bg));transition:transform .2s}
+.tips.np details[open]>summary>svg{transform:rotate(180deg)}
+.tips.np .tip{border-top:1px solid var(--line);margin:0 16px}
+.tips.np .tip>summary{display:flex;align-items:center;gap:8px;padding:14px 0;font-size:15px;font-weight:600;list-style:none;cursor:pointer}.tips.np .tip>summary>svg{margin-left:auto;flex:none}
+.tips.np .tip[open]>summary{color:var(--accent)}
+.tips.np .tdw{background:var(--surface);border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.55;color:color-mix(in srgb,var(--fg) 75%,var(--bg))}.tips.np .tdw b{display:block;font-size:12.5px;color:var(--muted);margin-bottom:2px}
+.tips.np .tds{list-style:none;counter-reset:st;padding:0;margin:12px 0 0}.tips.np .tds li{counter-increment:st;position:relative;padding-left:32px;margin-top:12px;font-size:14.5px;line-height:1.5}
+.tips.np .tds li::before{content:counter(st);position:absolute;left:0;top:1px;width:22px;height:22px;border-radius:50%;background:var(--acc-soft);color:var(--accent);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.tips.np .tds img{display:block;width:100%;margin-top:10px;border-radius:14px;box-shadow:inset 0 0 0 1px var(--line)}
+.tips.np .ta{font-size:14.5px;line-height:1.55;color:color-mix(in srgb,var(--fg) 80%,var(--bg))}
+.tips.np .tgo{display:block;width:100%;margin:14px 0 16px;height:48px;border-radius:14px;background:var(--acc-soft);color:var(--accent);font-weight:700}
 </style>
 </head>
 <body>
@@ -1757,8 +1788,8 @@ html[data-cal="fill"] .cell.today::after,html[data-cal="fill"] .cell.today[style
   </nav>
 
   <div id="share-action-bar">
-    <div class="shrow"><label class="shm"><input type="checkbox" id="shareMemo"> 📝 가족 메모 넣기</label><label class="shm"><input type="checkbox" id="shareStk"> ⭐ 스티커 넣기</label></div>
-    <div class="shnote">🔒 나만 보는 메모는 항상 빠져요</div>
+    <div class="shtitle">이미지로 공유</div>
+    <div class="shrow"><label class="shm"><span class="shi"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8M16 13H8M16 17H8"/></svg></span><span class="sht">가족 메모 넣기</span><span class="sw"><input type="checkbox" id="shareMemo"><i></i></span></label><label class="shm"><span class="shi"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14a4 4 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg></span><span class="sht">스티커 넣기</span><span class="sw"><input type="checkbox" id="shareStk"><i></i></span></label></div>
     <button class="btn ghost grow" data-act="cancel-share">취소</button>
     <button class="btn ghost grow" data-act="copy-share">복사하기</button>
     <button class="btn grow" data-act="do-share">공유하기</button>
@@ -4900,11 +4931,11 @@ function openStampPage(){
   const btn=s=>`<button class="${s.empty?'emp':''}" data-act="slot-open" data-id="${s.id}"><span class="si">${stIcon(s)}</span><small>${s.empty?'비어 있음':esc(s.name)}</small>${stAts(s).length?'<i class="stbell" role="img" aria-label="알림 있음">🔔</i>':''}</button>`;
   const ex=extraDefs();
   openPage(`${pageHead('스티커')}
-    <div class="pg-b">
-      <div class="pg-cap">내 스티커 <small style="font-weight:600;color:var(--muted)">눌러서 바꾸고 · 꾹 눌러 끌어서 순서</small></div>
-      <div class="pg-sec sgrid sg5 stgrid" data-grp="slot" style="margin-top:0;padding:10px">${slotDefs().map(btn).join('')}</div>
-      ${ex.length?`<div class="pg-cap">＋ 로 붙인 스티커</div><div class="pg-sec sgrid sg5 stgrid" data-grp="extra" style="margin-top:0;padding:10px">${ex.map(btn).join('')}</div>`:''}
-      ${hasBridge('openSettings')?`<div class="pg-sec"><div class="prow" data-act="remind-sound" style="cursor:pointer"><div class="pl2"><span class="e e-in">${lineIcon('🔔')}</span>알림 소리 바꾸기<small>스티커 · 기념일 알림 소리와 크기는 폰 설정에서 정해요</small></div><span style="color:var(--muted)">›</span></div></div>`:''}
+    <div class="pg-b np">
+      <div class="pg-cap">내 스티커 <span class="cnt2">${slotDefs().filter(x=>!x.empty).length}</span></div>
+      <div class="pg-sec sgrid sg5 stgrid" data-grp="slot" style="padding:12px">${slotDefs().map(btn).join('')}</div>
+      ${ex.length?`<div class="pg-cap">＋ 로 붙인 스티커</div><div class="pg-sec sgrid sg5 stgrid" data-grp="extra" style="padding:12px">${ex.map(btn).join('')}</div>`:''}
+      ${hasBridge('openSettings')?`<div class="pg-cap">알림</div><div class="pg-sec">${npRow('bell','알림 소리 바꾸기',npVal(''),{tap:1,act:'remind-sound'})}</div>`:''}
     </div>`,'stamps');
 }
 
@@ -4986,6 +5017,7 @@ function openPage(html,mode){
 function closePage(){manPaint=null;Object.keys(glowPrev).forEach(k=>{if(/^(fc|mc):/.test(k))delete glowPrev[k];});if(pageMode==='tune'){if(tuneDirty()&&!confirm('저장하지 않은 값이 있어요.\n저장하지 않고 나갈까요?'))return;tuneDraft=null;applyTune();$('#page').innerHTML='';}if(pageMode==='alarm')try{if(hasBridge('stopPreview'))window.AndroidBridge.stopPreview();}catch(e){}$('#page').classList.remove('open');pageMode=null;applyTdc();draft=null;render();}
 // v0.145 새 모양 선 아이콘 (lucide · ISC)
 const NPI={"repeat": "<path d=\"m17 2 4 4-4 4\" /> <path d=\"M3 11v-1a4 4 0 0 1 4-4h14\" /> <path d=\"m7 22-4-4 4-4\" /> <path d=\"M21 13v1a4 4 0 0 1-4 4H3\" />", "calendar-off": "<path d=\"M4.2 4.2A2 2 0 0 0 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 1.82-1.18\" /> <path d=\"M21 15.5V6a2 2 0 0 0-2-2H9.5\" /> <path d=\"M16 2v4\" /> <path d=\"M3 10h7\" /> <path d=\"M21 10h-5.5\" /> <path d=\"m2 2 20 20\" />", "volume-2": "<path d=\"M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z\" /> <path d=\"M16 9a5 5 0 0 1 0 6\" /> <path d=\"M19.364 18.364a9 9 0 0 0 0-12.728\" />", "alarm-clock": "<circle cx=\"12\" cy=\"13\" r=\"8\" /> <path d=\"M12 9v4l2 2\" /> <path d=\"M5 3 2 6\" /> <path d=\"m22 6-3-3\" /> <path d=\"M6.38 18.7 4 21\" /> <path d=\"M17.64 18.67 20 21\" />", "tag": "<path d=\"M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z\" /> <circle cx=\"7.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\" />", "bell-ring": "<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\" /> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\" /> <path d=\"M4 2C2.8 3.7 2 5.7 2 8\" /> <path d=\"M22 8c0-2.3-.8-4.3-2-6\" />", "cloud-sun": "<path d=\"M12 2v2\" /> <path d=\"m4.93 4.93 1.41 1.41\" /> <path d=\"M20 12h2\" /> <path d=\"m19.07 4.93-1.41 1.41\" /> <path d=\"M15.947 12.65a4 4 0 0 0-5.925-4.128\" /> <path d=\"M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z\" />", "file-text": "<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\" /> <path d=\"M14 2v4a2 2 0 0 0 2 2h4\" /> <path d=\"M10 9H8\" /> <path d=\"M16 13H8\" /> <path d=\"M16 17H8\" />", "trash-2": "<path d=\"M3 6h18\" /> <path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\" /> <path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\" /> <line x1=\"10\" x2=\"10\" y1=\"11\" y2=\"17\" /> <line x1=\"14\" x2=\"14\" y1=\"11\" y2=\"17\" />", "calendar": "<path d=\"M8 2v4\" /> <path d=\"M16 2v4\" /> <rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /> <path d=\"M3 10h18\" />", "paintbrush": "<path d=\"m14.622 17.897-10.68-2.913\" /> <path d=\"M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z\" /> <path d=\"M9 8c-1.804 2.71-3.97 3.46-6.583 3.948a.507.507 0 0 0-.302.819l7.32 8.883a1 1 0 0 0 1.185.204C12.735 20.405 16 16.792 16 15\" />", "map-pin": "<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /> <circle cx=\"12\" cy=\"10\" r=\"3\" />", "rotate-ccw": "<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /> <path d=\"M3 3v5h5\" />", "user": "<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /> <circle cx=\"12\" cy=\"7\" r=\"4\" />", "users": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /> <circle cx=\"9\" cy=\"7\" r=\"4\" /> <path d=\"M22 21v-2a4 4 0 0 0-3-3.87\" /> <path d=\"M16 3.13a4 4 0 0 1 0 7.75\" />", "eraser": "<path d=\"m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21\" /> <path d=\"M22 21H7\" /> <path d=\"m5 11 9 9\" />", "calendar-days": "<path d=\"M8 2v4\" /> <path d=\"M16 2v4\" /> <rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /> <path d=\"M3 10h18\" /> <path d=\"M8 14h.01\" /> <path d=\"M12 14h.01\" /> <path d=\"M16 14h.01\" /> <path d=\"M8 18h.01\" /> <path d=\"M12 18h.01\" /> <path d=\"M16 18h.01\" />", "plus": "<path d=\"M5 12h14\" /> <path d=\"M12 5v14\" />", "minus": "<path d=\"M5 12h14\" />", "chevron-right": "<path d=\"m9 18 6-6-6-6\" />", "chevron-down": "<path d=\"m6 9 6 6 6-6\" />", "history": "<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /> <path d=\"M3 3v5h5\" /> <path d=\"M12 7v5l4 2\" />", "music": "<path d=\"M9 18V5l12-2v13\" /> <circle cx=\"6\" cy=\"18\" r=\"3\" /> <circle cx=\"18\" cy=\"16\" r=\"3\" />", "bell": "<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\" /> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\" />"};
+Object.assign(NPI,{"sticky-note": "<path d=\"M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z\" /> <path d=\"M15 3v4a2 2 0 0 0 2 2h4\" />", "smile": "<circle cx=\"12\" cy=\"12\" r=\"10\" /> <path d=\"M8 14s1.5 2 4 2 4-2 4-2\" /> <line x1=\"9\" x2=\"9.01\" y1=\"9\" y2=\"9\" /> <line x1=\"15\" x2=\"15.01\" y1=\"9\" y2=\"9\" />", "users": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /> <circle cx=\"9\" cy=\"7\" r=\"4\" /> <path d=\"M22 21v-2a4 4 0 0 0-3-3.87\" /> <path d=\"M16 3.13a4 4 0 0 1 0 7.75\" />", "chart-column": "<path d=\"M3 3v16a2 2 0 0 0 2 2h16\" /> <path d=\"M18 17V9\" /> <path d=\"M13 17V5\" /> <path d=\"M8 17v-3\" />", "smartphone": "<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\" ry=\"2\" /> <path d=\"M12 18h.01\" />", "info": "<circle cx=\"12\" cy=\"12\" r=\"10\" /> <path d=\"M12 16v-4\" /> <path d=\"M12 8h.01\" />", "sparkles": "<path d=\"M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z\" /> <path d=\"M20 3v4\" /> <path d=\"M22 5h-4\" /> <path d=\"M4 17v2\" /> <path d=\"M5 18H3\" />"});
 const npi=(n,sz=18)=>NPI[n]?`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NPI[n]}</svg>`:"";
 const npRow=(icon,name,right,o={})=>`<div class="prow${o.tap?" tap":""}${o.cls?" "+o.cls:""}"${o.act?` data-act="${o.act}"`:""}${o.attrs||""}><span class="npi">${npi(icon)}</span><div class="pl2">${name}${o.d?`<small class="keep">${o.d}</small>`:""}</div>${right||""}</div>`;
 const npVal=v=>`<div class="pv npv">${v||""}${npi("chevron-right",16)}</div>`;
@@ -5424,21 +5456,21 @@ function persApply(kind,d){
   toast(kind==='on'?(persOn(fmt(new Date()))?'개인 캘린더로 바꿨어요':`${md(d)}부터 개인 캘린더로 바뀌어요`):(S.myset?(persOn(fmt(new Date()))?`${md(d)}부터 근무표를 다시 써요`:'근무표를 다시 써요'):'달력 위 "내 근무표 만들기"로 시작해요'));
 }
 /* ---- 가족 설정 (가족 탭 ⚙️ · 설정 › 가족) ---- */
-function openFamSetPage(){
+function openFamSetPage(){   // v0.147 새 모양
   const fam=S.family||[],g=S.syncSettings.isGuestMode;
+  const tg=(id,on)=>`<label class="sw"><input type="checkbox" id="${id}" ${on?'checked':''}><i></i></label>`;
   openPage(`
     ${pageHead('가족')}
-    <div class="pg-b">
-      <div class="pg-cap">가족 목록 (같이 쉬는 날 계산용)</div>
-      <div class="pg-sec" style="margin-top:0">${fam.map((m,i)=>`<div class="prow" data-act="fam-edit" data-id="${m.id}"><span class="fav">${famAv(m,i)}</span><div class="pl2">${esc(m.name)}<small>${FAM_KIND[m.kind][0]} ${FAM_KIND[m.kind][1]}${m.kind==='shift'?` · ${esc(teamName(m.team??S.myTeam))}`:''}</small></div><span class="muted">›</span></div>`).join('')}
-        <div class="prow" data-act="fam-add" style="color:var(--accent);font-weight:700;justify-content:center">＋ 가족 추가</div></div>
+    <div class="pg-b np">
+      <div class="pg-cap">가족 목록</div>
+      <div class="pg-sec famsec">${fam.map((m,i)=>`<div class="prow tap" data-act="fam-edit" data-id="${m.id}"><span class="fav">${famAv(m,i)}</span><div class="pl2">${esc(m.name)}</div>${npVal(`${FAM_KIND[m.kind][1]}${m.kind==='shift'?` · ${esc(teamName(m.team??S.myTeam))}`:''}`)}</div>`).join('')}
+        ${npRow('plus','가족 추가','',{tap:1,act:'fam-add',cls:'addr'})}</div>
+      <div class="pg-cap">보기</div>
       <div class="pg-sec">
-        ${ad('together')?`<div class="prow"><div class="pl2">☀️ 야간 전 낮도 "같이"로 보기<small>출근 전 낮도 연하게 표시</small></div><label class="sw"><input type="checkbox" id="famDayToo" ${S.famDayToo!==false?'checked':''}><i></i></label></div>`:''}
-        <div class="prow"><div class="pl2">가족 메모 달력에 표시</div><label class="sw"><input type="checkbox" id="receiveFamilyMemo" ${S.syncSettings.receiveFamilyMemo!==false?'checked':''}><i></i></label></div>
-        <div class="prow"><div class="pl2">가족 보기 (체험)</div><label class="sw"><input type="checkbox" id="guestModeToggle" ${g?'checked':''}><i></i></label></div>
-      </div>
-      <div class="pg-sec">
-        <div class="prow" data-act="link-open"><div class="pl2">📨 가족 연결 (폰끼리)${fbCfg()?'':'<small>준비 중이에요</small>'}</div><span class="muted">›</span></div>
+        ${ad('together')?npRow('calendar','야간 전 낮도 같이로 보기',tg('famDayToo',S.famDayToo!==false)):''}
+        ${npRow('file-text','가족 메모 달력에 표시',tg('receiveFamilyMemo',S.syncSettings.receiveFamilyMemo!==false))}
+        ${npRow('user','가족 보기 (체험)',tg('guestModeToggle',g))}
+        ${npRow('users','가족 연결',npVal(fbCfg()?'':'준비 중'),{tap:1,act:'link-open'})}
       </div>
     </div>`,'famset');
 }
@@ -7136,12 +7168,13 @@ Object.assign(TIPD,{
 });
 function tipDetail(q){const D=TIPD[q];if(!D)return '';
   return `<div class="tdw"><b>이럴 때</b>${D.w}</div>${D.pre?`<div class="tdp">${D.pre}</div>`:''}<ol class="tds">${D.s.map(([t,im])=>`<li>${t}${im?`<img src="tips/${im}.webp" alt="" loading="lazy" onerror="this.remove()">`:''}</li>`).join('')}</ol>`;}
-function openTipsPage(){
+function openTipsPage(){   // v0.147 새 모양: 묶음 카드(선 아이콘 · 개수) → 누르면 질문 줄 → 누르면 이럴 때 · 번호 단계 · 사진 · 바로 가기
   closeSheet();
-  openPage(`${pageHead('💡 이럴 땐 이렇게')}<div class="pg-b tips">
-    <div class="hint" style="padding:10px 16px 4px">궁금한 상황을 눌러 보세요 · [바로 가기]로 그 화면이 열려요</div>
-    <button class="btn ghost sm" style="margin:4px 16px 0" data-act="coach-again">👆 처음 안내 다시 보기</button>
-    ${TIPS.map(([e,t,L],g)=>`<details class="pg-sec tipg"><summary>${e} ${esc(t)}<small>${L.length}</small></summary>${L.map(([q,a,go])=>`<details class="tip"><summary>${esc(q)}${TIPD[q]?' <span class="tdn">자세히</span>':''}</summary>${TIPD[q]?tipDetail(q):`<div class="ta">${esc(a)}</div>`}<button class="btn ghost sm" data-act="tip-go" data-a="${esc(go)}">바로 가기 ›</button></details>`).join('')}</details>`).join('')}
+  const TI={'📅':'calendar','📝':'sticky-note','💊':'smile','☔':'cloud-sun','👪':'users','⏰':'alarm-clock','💰':'chart-column','📱':'smartphone'};
+  openPage(`${pageHead('이럴 땐 이렇게')}<div class="pg-b tips np">
+    <div class="pg-sec" style="margin-top:8px">${npRow('info','처음 안내 다시 보기',npVal(''),{tap:1,act:'coach-again'})}</div>
+    <div class="pg-cap">상황별</div>
+    ${TIPS.map(([e,t,L],g)=>`<details class="pg-sec tipg"><summary><span class="npi">${npi(TI[e]||'info')}</span><span class="tgt">${esc(t)}</span><small>${L.length}</small>${npi('chevron-down',16)}</summary>${L.map(([q,a,go])=>`<details class="tip"><summary>${esc(q)}${npi('chevron-down',16)}</summary>${TIPD[q]?tipDetail(q):`<div class="ta">${esc(a)}</div>`}<button class="btn tgo" data-act="tip-go" data-a="${esc(go)}">바로 가기 ›</button></details>`).join('')}</details>`).join('')}
   </div>`,'tips');
 }
 // v0.135 처음 안내 (말풍선 · 한 번만 · 건너뛰기 · 이럴 땐 이렇게에서 다시 보기)
@@ -11548,11 +11581,11 @@ function renderLinkPage(){
   const L=S.link,u=famUi,host=L&&L.role==='host';
   const guests=u.members.filter(m=>m.role==='guest');
   let body='';
-  if(u.st==='loading')body=`<div class="hint" style="padding:30px 16px;text-align:center">불러오는 중…</div>`;
-  else if(u.st==='err')body=`<div class="hint" style="padding:16px;color:var(--danger)">${esc(u.err)}</div><div style="padding:0 16px"><button class="btn" style="width:100%" data-act="link-retry">다시 시도</button></div>`;
+  if(u.st==='loading')body=`<div class="hint keep" style="padding:30px 16px;text-align:center">불러오는 중…</div>`;
+  else if(u.st==='err')body=`<div class="hint keep" style="padding:16px;color:var(--danger)">${esc(u.err)}</div><div style="padding:0 16px"><button class="btn" style="width:100%" data-act="link-retry">다시 시도</button></div>`;
   else if(!L)body=`${lostCard()}<div class="pg-sec" style="margin-top:12px;padding:18px 16px">
       <b style="font-size:16px">가족과 같이 보려면</b>
-      <div class="hint" style="padding:6px 0 14px"><b>초대 코드</b>를 보내면 가족이 코드를 넣고 참여해요 · 가족방은 5명까지예요</div>
+      <div class="hint keep" style="padding:6px 0 14px"><b>초대 코드</b>를 보내면 가족이 코드를 넣고 참여해요 · 가족방은 5명까지예요</div>
       <button class="btn" style="width:100%" data-act="link-invite">가족 초대하기</button>
       <button class="btn ghost" style="width:100%;margin-top:8px" data-act="link-join">초대 코드가 있어요</button>
       ${googleOn()?'<button class="btn ghost" style="width:100%;margin-top:8px" data-act="g-restore">전에 쓰던 폰의 가족방 불러오기 (구글 로그인)</button>':''}
@@ -11562,19 +11595,19 @@ function renderLinkPage(){
     const sub=m=>{const d=Math.floor((Date.now()-(famMs(m.seenAt)||famMs(m.joinedAt)||Date.now()))/864e5),k=m.uid!==me&&famKickLive(m.uid);
       return `${m.role==='host'&&!famView()?'근무자':famModeTxt(m)}${d>=30?' · <b style="color:var(--danger)">30일 넘게 안 들어옴</b>':d>=7?` · ${d}일째 안 들어옴`:''}${k?` · 🗳 내보내기 찬성 ${k.votes.length}/${famKickNeed(m.uid,k.inact||[])}`:''}`;};
     body=`<div class="pg-cap">우리 가족방 · ${u.members.length}/${FAM_MAX+1}명</div>
-    <div class="pg-sec" style="margin-top:0">${u.members.map((m,i)=>`<div class="prow ${m.uid===me?'':'tap'}" ${m.uid===me?'':`data-act="mem-menu" data-u="${esc(m.uid)}"`}>${lav(famAka(m.uid,m.name),i)}<div class="pl2">${esc(famAka(m.uid,m.name))}${m.uid===me?' (나)':''}${m.uid!==me&&S.famAlias&&S.famAlias[m.uid]?`<span style="font-size:12px;color:var(--muted);font-weight:600"> · ${esc(m.name)}</span>`:''}<small>${sub(m)}</small></div>${m.uid===me?'':'<span class="muted">›</span>'}</div>`).join('')}
-      ${full?'<div class="prow"><div class="pl2 muted" style="text-align:center">가족 자리가 가득 찼어요</div></div>':`<div class="prow" data-act="link-invite" style="color:var(--accent);font-weight:700;justify-content:center">＋ 가족 초대하기</div>`}
+    <div class="pg-sec famsec">${u.members.map((m,i)=>`<div class="prow ${m.uid===me?'':'tap'}" ${m.uid===me?'':`data-act="mem-menu" data-u="${esc(m.uid)}"`}>${lav(famAka(m.uid,m.name),i)}<div class="pl2">${esc(famAka(m.uid,m.name))}${m.uid===me?' <span class="me">나</span>':''}${m.uid!==me&&S.famAlias&&S.famAlias[m.uid]?`<span style="font-size:12px;color:var(--muted);font-weight:600"> · ${esc(m.name)}</span>`:''}<small class="keep">${sub(m)}</small></div>${m.uid===me?'':'<span class="muted">›</span>'}</div>`).join('')}
+      ${full?'<div class="prow"><div class="pl2 muted" style="text-align:center">가족 자리가 가득 찼어요</div></div>':`<div class="invb"><button class="btn" data-act="link-invite">${npi('plus',18)}가족 초대하기</button></div>`}
     </div>
-    ${u.invites.length?`<div class="pg-cap">내가 보낸 초대 코드 (쓰면 사라져요)</div><div class="pg-sec" style="margin-top:0">${u.invites.map(v=>`<div class="prow"><div class="pl2"><b class="mono">${famFmt(v.code)}</b><small>${esc(v.name||'호칭 미정')} · ${daysLeft(v.exp)}일 남음</small></div><button class="btn ghost sm" data-act="inv-share" data-c="${v.code}">보내기</button><button class="xbtn" data-act="inv-del" data-c="${v.code}" aria-label="코드 지우기">✕</button></div>`).join('')}</div>`:''}
-    ${host?(S.myset?`<div class="pg-sec" style="margin-top:16px">${stkRow()}</div>${wxOn()?'<div class="hint" style="padding:6px 4px 0;margin:0">☔ 출퇴근 날씨를 켜 두면 집 · 직장 동네(주소 아님)와 근무 시간도 가족 폰에 보여요</div>':''}`:''):`<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">내 근무표를 가족에게 보여요<small>끄면 가족 근무표만 보고, 달력 탭이 가족 달력으로 바뀌어요</small></div><label class="sw"><input type="checkbox" id="famOwn" ${L.mode==='view'?'':'checked'}><i></i></label></div>${!S.myset&&L.mode!=='view'?'<div class="prow tap" data-act="mk-sched" style="color:var(--accent);font-weight:700"><div class="pl2">내 근무표 만들기<small>만들기 전에는 가족에게 내 근무표가 안 보여요</small></div><span class="muted">›</span></div>':''}${S.myset&&L.mode!=='view'?stkRow():''}</div>`}
+    ${u.invites.length?`<div class="pg-cap">내가 보낸 초대 코드 (쓰면 사라져요)</div><div class="pg-sec" style="margin-top:0">${u.invites.map(v=>`<div class="prow"><div class="pl2"><b class="mono">${famFmt(v.code)}</b><small class="keep">${esc(v.name||'호칭 미정')} · ${daysLeft(v.exp)}일 남음</small></div><button class="btn ghost sm" data-act="inv-share" data-c="${v.code}">보내기</button><button class="xbtn" data-act="inv-del" data-c="${v.code}" aria-label="코드 지우기">✕</button></div>`).join('')}</div>`:''}
+    ${host?(S.myset?`<div class="pg-sec" style="margin-top:16px">${stkRow()}</div>`:''):`<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">내 근무표를 가족에게 보여요<small>끄면 가족 근무표만 보고, 달력 탭이 가족 달력으로 바뀌어요</small></div><label class="sw"><input type="checkbox" id="famOwn" ${L.mode==='view'?'':'checked'}><i></i></label></div>${!S.myset&&L.mode!=='view'?'<div class="prow tap" data-act="mk-sched" style="color:var(--accent);font-weight:700"><div class="pl2">내 근무표 만들기<small>만들기 전에는 가족에게 내 근무표가 안 보여요</small></div><span class="muted">›</span></div>':''}${S.myset&&L.mode!=='view'?stkRow():''}</div>`}
     ${pushRow()}
     ${googleRow()}
     <div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="mem-rename" data-u="self"><div class="pl2">내 호칭 고치기</div><span class="muted">${esc(L.name)} ›</span></div>
       <div class="prow tap" data-act="link-move"><div class="pl2">다른 가족방으로 옮기기<small>새 초대 코드로 옮겨요</small></div><span class="muted">›</span></div>
       <div class="prow danger-row" data-act="link-leave">${alone?'가족방에서 나가기 (나 혼자라 방이 없어져요)':'가족방에서 나가기'}</div></div>
-    <div class="hint" style="padding:10px 16px;line-height:1.7">가족방엔 방장이 없어요. 누구나 초대하고 나갈 수 있고, 마지막 사람이 나가면 방이 없어져요. 가족을 빼려면 가족 과반이 찬성해야 해요 (30일 넘게 안 들어온 사람 · 내가 초대한 지 하루가 안 된 사람은 바로 뺄 수 있어요).<br>가족 메모(♥)와 근무 요청은 날짜를 눌러 주고받아요 · 가족 메모 · 근무 요청 · 가족 포스트잇(새로 붙일 때)은 합쳐서 처음 10건 무료예요.</div>`;
+    <div class="hint gone" style="display:none">가족방엔 방장이 없어요. 누구나 초대하고 나갈 수 있고, 마지막 사람이 나가면 방이 없어져요. 가족을 빼려면 가족 과반이 찬성해야 해요 (30일 넘게 안 들어온 사람 · 내가 초대한 지 하루가 안 된 사람은 바로 뺄 수 있어요).<br>가족 메모(♥)와 근무 요청은 날짜를 눌러 주고받아요 · 가족 메모 · 근무 요청 · 가족 포스트잇(새로 붙일 때)은 합쳐서 처음 10건 무료예요.</div>`;
   }
-  openPage(`${pageHead('가족 연결')}<div class="pg-b">${body}</div>`,'link');
+  openPage(`${pageHead('가족 연결')}<div class="pg-b np">${body}</div>`,'link');   // v0.147 새 모양
 }
 /* ----- 초대 코드 만들기 (호스트) ----- */
 let invDraft={perm:'write',name:'',host:''};
