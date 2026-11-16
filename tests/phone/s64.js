@@ -45,8 +45,8 @@ const ONLY=process.env.ONLY||'';
     r=await st();T('6분 만에 돌아오면 다시 접힘',r&&!r.open,JSON.stringify(r));
     await p.evaluate(()=>document.querySelector('.shsec .sh-pill').click());await p.waitForTimeout(300);
     T('다시 열기',await p.evaluate(()=>document.querySelector('.shsec').classList.contains('open')));
-    await p.evaluate(()=>document.querySelector('.shsec .sh-fold').click());await p.waitForTimeout(300);
-    r=await st();T('▴ 접기로 직접 접기',r&&!r.open,JSON.stringify(r));
+    await p.evaluate(()=>document.querySelector('.shsec .sh-pill').click());await p.waitForTimeout(300);
+    r=await st();T('같은 알약 버튼으로 다시 접기 (v0.155)',r&&!r.open,JSON.stringify(r));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
     // 불규칙 근무표는 날마다 근무를 넣으니 처음부터 펼침
     const q=await boot(b,{...base,noPat:true,overrides:{}},{touch:true,fold:true});

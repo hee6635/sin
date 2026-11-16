@@ -15,7 +15,7 @@ const ONLY=process.env.ONLY||'';
   if(want('off')){
     const p=await boot(b,st0,{touch:true});
     await openDay(p,'2026-10-12');await p.waitForTimeout(500);
-    T('꺼짐: 날짜 창 안내 줄은 그대로("가족에게는 자세히에서")',await p.evaluate(()=>/가족에게는 "자세히"에서/.test(document.querySelector('.ibar .note').textContent)&&!document.querySelector('.wlrow')));
+    T('꺼짐 (v0.155): 날짜 창 안내 줄 없음 · 자세히는 메모 제목 줄',await p.evaluate(()=>!document.querySelector('.ibar .note')&&!!document.querySelector('.memsec [data-act="memo-detail"]')&&!document.querySelector('.wlrow')));
     await click(p,'[data-act="memo-detail"]');await p.waitForTimeout(400);
     T('꺼짐: 메모 자세히에 일지 만들기 줄 없음',await p.evaluate(()=>!document.querySelector('[data-act="wl-new"]')));
     await p.evaluate(()=>document.querySelector('[data-act="md-back"]').click());await p.waitForTimeout(300);
@@ -34,7 +34,7 @@ const ONLY=process.env.ONLY||'';
   if(want('first')){
     const p=await boot(b,{...st0,addons:{...base.addons,wlog:true}},{touch:true});
     await openDay(p,'2026-10-12');await p.waitForTimeout(500);
-    T('켜짐: 안내 줄 "일지는 \\"자세히\\"에서"',await p.evaluate(()=>/일지는 "자세히"에서/.test(document.querySelector('.ibar .note').textContent)));
+    T('켜짐 (v0.155): 안내 줄 없음 · 자세히 버튼은 메모 제목 줄',await p.evaluate(()=>!document.querySelector('.ibar .note')&&!!document.querySelector('.memsec [data-act="memo-detail"]')));
     await click(p,'[data-act="memo-detail"]');await p.waitForTimeout(400);
     T('자세히에 "📋 일지 만들기 · 인수 · 인계 · 지시 · 특이를 따로 적어요"',await p.evaluate(()=>{const e=document.querySelector('[data-act="wl-new"]');return !!e&&/일지 만들기/.test(e.textContent)&&/인수 · 인계 · 지시 · 특이를 따로/.test(e.textContent);}));
     await click(p,'[data-act="wl-new"]');await p.waitForTimeout(400);
@@ -51,7 +51,7 @@ const ONLY=process.env.ONLY||'';
     await click(p,'[data-act="wl-close"]');await p.waitForTimeout(500);
     let s=await ls(p);
     T('닫으면 메모장 글 저장(인계 2줄 · 특이 1줄)',s.wlog.name==='인수인계'&&s.wlog.days['2026-10-12'].b==='원료 재고 확인\n순찰 2회'&&s.wlog.days['2026-10-12'].d==='냉각수 압력 낮음'&&s.wlog.seen===true,JSON.stringify(s.wlog.days));
-    const row=await p.evaluate(()=>{const r=document.querySelector('.wlrow'),m=document.querySelector('#sheet .mcard');return r&&{t:r.textContent.replace(/\s+/g,' '),h:r.getBoundingClientRect().height,mh:m.getBoundingClientRect().height,first:r.previousElementSibling&&r.previousElementSibling.textContent.trim()==='메모'};});
+    const row=await p.evaluate(()=>{const r=document.querySelector('.wlrow'),m=document.querySelector('#sheet .mcard');return r&&{t:r.textContent.replace(/\s+/g,' '),h:r.getBoundingClientRect().height,mh:m.getBoundingClientRect().height,first:r.previousElementSibling&&/^메모/.test(r.previousElementSibling.textContent.trim())};});
     T('날짜 창: 메모 맨 위 일지 줄 "인수인계 · 인계 2 · 특이 1" · 메모 줄의 약 1.3배 높이',!!row&&/인수인계/.test(row.t)&&/인계 2 · 특이 1/.test(row.t)&&row.first&&row.h>=row.mh*1.25&&row.h<=row.mh*1.45,JSON.stringify(row));
     await p.evaluate(()=>document.querySelector('#sheet [data-act="close"]').click());await p.waitForTimeout(400);
     const cell=await p.evaluate(()=>{const c=document.querySelector('#track .panel:nth-child(2) .cell[data-k="2026-10-12"]');const pl=[...c.querySelectorAll('.pill-wrap>.pl')];return {cls:pl.map(x=>x.className),hs:pl.map(x=>Math.round(x.getBoundingClientRect().height)),t:pl.map(x=>x.textContent)};});
