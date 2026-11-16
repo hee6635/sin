@@ -1,0 +1,11 @@
+const {chromium,boot,base}=require('../../tests/phone/lib.js');
+(async()=>{const b=await chromium.launch();
+ const log={'2026-10-12':{s_pill:1,s_run:1}};
+ const p=await boot(b,{...base,calLook:'fill',stamps:{log,defs:undefined}},{w:390,h:844});await p.waitForTimeout(1000);
+ const O=__dirname;
+ await p.evaluate(()=>__wx.openDay?0:0);
+ await p.evaluate(()=>{const x=document.createElement('button');x.dataset.act='stamp-dn';x.dataset.k='2026-10-12';document.body.appendChild(x);x.click();x.remove();});await p.waitForTimeout(700);await p.screenshot({path:O+'/now_daypop.png'});
+ await p.evaluate(()=>{const x=document.createElement('button');x.dataset.act='sd-add';x.dataset.k='2026-10-12';document.body.appendChild(x);x.click();x.remove();});await p.waitForTimeout(700);await p.screenshot({path:O+'/now_pick.png'});
+ await p.evaluate(()=>{__wx.closePop();__wx.closeSheet();});
+ await p.evaluate(()=>{__wx.openDay('2026-10-12');});await p.waitForTimeout(800);await p.screenshot({path:O+'/now_day.png'});
+ await b.close();})();
