@@ -462,3 +462,7 @@
 - 앱(glowSvg): 두 바퀴 3.6초(GLOW_MS) · 꼬리 줄 7 → 14 (근무 색 · 매끄럽게) · 빛 머리 = 하얀 줄 14개를 가운데 맞춰 겹침(g-head · data-c · dashoffset = l/2 - head) → 가운데가 가장 밝고 앞뒤로 흐려짐 · g-bloom(blur 5px) 근무 색 번짐(다크 = 하양) · 도는 동안 .cell.today.glowing{overflow:visible} 로 번짐이 칸 밖까지.
 - 위젯(drawGlow): 머리 앞 15% 하양 · 머리 둘레 동그라미 번짐(밝은 위젯 = 진한 근무 색 · 어두운 위젯 = 하양 · glowNight) · 한 바퀴 그대로.
 - 시험 s63 대기 시간 3.6초에 맞춤.
+
+## v0.164 (덧붙임) 오늘 빛 다듬기 2 (design/today-glow/real2.gif)
+- 앱: 한 바퀴 1.8초(GLOW_MS · head = p*per) · svg 의 --gf(처음 0.3초 켜짐 · 끝 0.6초 사라짐)를 halo · dash · head · bloom 불투명도에 곱함 · 번짐 · 밝기 줄임.
+- 위젯: GLOW_MS 820 → 1400 · gf 로 켜짐 · 사라짐.
