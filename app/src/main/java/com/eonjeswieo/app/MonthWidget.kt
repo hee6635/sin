@@ -454,7 +454,8 @@ object MonthRenderer {
     //  · 시간 기준으로 진행: 프레임이 늦으면 건너뛰어도 움직임 속도는 그대로 (느린 화면이 슬로모션이 되지 않게)
     //  · 중간 프레임은 그림만 가볍게 바꿔 끼우고(partiallyUpdateAppWidget), 누르는 자리는 맨 끝에 한 번만 다시 지정
     private const val SLIDE_MS = 260L
-    private const val GLOW_MS = 1400L   // v0.164 0.82 → 1.4초 (휙 지나가지 않게)
+    private const val GLOW_MS = 1100L   // v0.165 오늘 빛 = 숨 쉬듯 한 번 (밝아졌다 0.4초 · 돌아옴 0.7초)
+    private const val PULSE_FRAME_MS = 80L   // 숨 쉬듯은 움직임이 적어서 그림 13장 정도면 충분 (홈 화면이 받아 주는 만큼만 보내서 끊김 줄임)
     private const val FRAME_MS = 28L   // 프레임 사이 최소 간격
     private const val SLIDE_DP = 36f
     private const val GLOW_SCALE = 0.5f   // 빛 그림은 반 크기로 (프레임마다 보내는 양이 1/4 · 빛은 부드러워서 티가 거의 안 남)
@@ -486,7 +487,7 @@ object MonthRenderer {
             nw = layer(ctx, mgr, id, data, to, 0, false)
             base = nw.bmp
         }
-        fun play(ms: Long, bw: Int, bh: Int, view: Int, frame: (Float, Bitmap) -> Unit) {
+        fun play(ms: Long, bw: Int, bh: Int, view: Int, step: Long = FRAME_MS, frame: (Float, Bitmap) -> Unit) {
             val bufs = arrayOf(Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888), Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888))
             var bi = 0
             val start = android.os.SystemClock.uptimeMillis()
@@ -498,7 +499,7 @@ object MonthRenderer {
                 partial(ctx, mgr, id, view, out)
                 if (t >= 1f) return
                 val spent = android.os.SystemClock.uptimeMillis() - f0
-                if (spent < FRAME_MS) try { Thread.sleep(FRAME_MS - spent) } catch (e: InterruptedException) { return }
+                if (spent < step) try { Thread.sleep(step - spent) } catch (e: InterruptedException) { return }
             }
         }
 
@@ -520,11 +521,11 @@ object MonthRenderer {
             // 빛만 그린 반 크기 투명 그림을 위젯 위에 겹쳐 바꿈 (바탕 그림은 그대로)
             val gw = Math.max(1, Math.round(base.width * GLOW_SCALE))
             val gh = Math.max(1, Math.round(base.height * GLOW_SCALE))
-            play(GLOW_MS, gw, gh, R.id.mz_glow) { t, out ->
+            play(GLOW_MS, gw, gh, R.id.mz_glow, PULSE_FRAME_MS) { t, out ->
                 out.eraseColor(0)
                 val cv = Canvas(out)
                 cv.scale(gw.toFloat() / base.width, gh.toFloat() / base.height)
-                drawGlow(cv, box, nw.u, t, nw.color)   // (달을 넘기면 맨 윗줄을 마지막에 그려서 todayColor 가 기본색으로 돌아가 있음 → 오늘 칸을 그린 그림의 색으로)
+                drawPulse(cv, box, nw.u, t, nw.color)   // v0.165 (달을 넘기면 맨 윗줄을 마지막에 그려서 todayColor 가 기본색으로 돌아가 있음 → 오늘 칸을 그린 그림의 색으로)
             }
             if (alive()) send(ctx, mgr, id, data, to, base)   // 마무리: 정상 그림 + 누르는 자리
         } else if (!sliding && alive()) send(ctx, mgr, id, data, to, base)
@@ -610,6 +611,28 @@ object MonthRenderer {
      * 오늘 칸 테두리를 따라 지나가는 은은한 빛 (t: 0 → 1). 꼬리를 끄는 빛 한 줄이 윗변 왼쪽에서 시계 방향으로 한 바퀴 돌고 사라지는 동안
      * 테두리 전체가 살짝 빛났다 옅어짐. 너무 강하지 않게 (가장 진할 때도 반쯤 투명)
      */
+    /** v0.165 오늘 빛(위젯): 숨 쉬듯 한 번 — 오늘 테두리가 은은하게 밝아졌다가(안쪽 하얀 빛 + 바깥 근무 색 번짐) 스르르 돌아옴 (t: 0 → 1) */
+    internal fun drawPulse(cv: Canvas, cell: RectF, u: Float, t: Float, color: Int = todayColor) {
+        val k = if (t < 0.36f) t / 0.36f else (1f - t) / 0.64f
+        val e = (k * k * (3f - 2f * k)).coerceIn(0f, 1f)   // 부드럽게 (smoothstep)
+        if (e <= 0.01f) return
+        val sw = 3f * u
+        val gap = 1.2f * u + sw / 2f
+        val box = RectF(cell.left + gap, cell.top + gap, cell.right - gap, cell.bottom - gap)
+        val r = Math.max(2f * u, 7f * u - sw / 2f)
+        val rgb = (if (glowNight) 0xFFFFFF else (deepen(color or 0xFF000000.toInt()) and 0x00FFFFFF))
+        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        p.style = Paint.Style.STROKE
+        // 바깥 번짐 (두 겹)
+        p.strokeWidth = sw + 7f * u; p.color = rgb or (Math.round(0x1C * e) shl 24); cv.drawRoundRect(box, r, r, p)
+        p.strokeWidth = sw + 3.5f * u; p.color = rgb or (Math.round(0x34 * e) shl 24); cv.drawRoundRect(box, r, r, p)
+        // 테두리 안쪽 하얀 빛
+        val inner = RectF(box.left + sw * 0.5f, box.top + sw * 0.5f, box.right - sw * 0.5f, box.bottom - sw * 0.5f)
+        val ir = Math.max(1f * u, r - sw * 0.5f)
+        p.strokeWidth = 4.5f * u; p.color = 0x00FFFFFF or (Math.round(0x38 * e) shl 24); cv.drawRoundRect(inner, ir, ir, p)
+        p.strokeWidth = 1.5f * u; p.color = 0x00FFFFFF or (Math.round(0xE0 * e) shl 24); cv.drawRoundRect(inner, ir, ir, p)
+    }
+
     internal fun drawGlow(cv: Canvas, cell: RectF, u: Float, t: Float, color: Int = todayColor) {
         val gap = 1.2f * u
         val r = 7f * u

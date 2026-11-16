@@ -32,6 +32,7 @@ const ONLY=process.env.ONLY||'';
     await p.close();
     const p2=await boot(b,null);   // 새로 설치
     T('새로 설치하면 칸 채우기',await p2.evaluate(()=>document.documentElement.getAttribute('data-cal'))==='fill');
+    T('v0.165 새로 설치하면 배경 = 기본 (또렷하게 아님)',!(await p2.evaluate(()=>document.documentElement.hasAttribute('data-bg'))));
     T('근무 띠는 늘 숨김',await p2.evaluate(()=>document.body.classList.contains('noband')));
     await p2.close();
   }
