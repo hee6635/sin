@@ -363,3 +363,11 @@
 - 이미지 공유(#share-action-bar): 아래에서 올라오는 창 · 제목 · 스위치 두 줄(id shareMemo · shareStk 그대로) · 🔒 안내 줄 숨김.
 - 이럴 땐 이렇게(openTipsPage): 한 화면 그대로(시험 구조 유지) · 처음 안내 줄 · 묶음 카드(선 아이콘 TI · 개수 · 펼침 화살표) · 팁 줄 → 이럴 때 회색 칸 · 파란 번호 단계(CSS counter) · 사진 · 넓은 바로 가기. 글 다듬기는 design/tips/new_text.js (사용자 확인 뒤 TIPS · TIPD 에 넣기).
 - 가족 시험 fam5e 는 처음 안내 말풍선(#tutx)이 클릭을 막아 실패 — v0.135 부터의 문제(가족 시험 도구가 #tutx 를 안 숨김) · 이번 변경과 무관.
+
+## v0.148 (덧붙임)
+- 알람 설정 반복: [매번 | 한 번만] 두 칸(data-act drep · 숨긴 #aRepeat 체크박스는 그대로 같이 맞춤) · 줄 이름 "울리기" · 한 번만이면 onceDay(a) "11/22 한 번 울려요". 알람 탭 칩 .cp.once 주황 "한 번만 · 11/22".
+- 두 칸 버튼 .npseg 전부 C3 (둥근 알약 · 고른 칸 흰 바탕 + 파란 테두리 + 옅은 그림자).
+- 오늘 빛: 도는 동안 .cell.glowing 이 ::after 테두리를 숨기고, SVG g-draw 선이 첫 바퀴에 빛을 따라 그려짐(dashoffset per-head) · 두 번째 바퀴는 빛만 · 끝나면 glowStop 이 glowing 빼서 원래 테두리. 빛 예약할 때 바로 glowing(처음엔 테두리 없음) · 예약이 취소되면 glowStop.
+- 이럴 땐 이렇게 글 전체 다듬음: TIPS(43 · 새 팁 4: 패턴 제외 초기화 · 5분 전 미리 알림 · 가족 빼기 · 무료 횟수) · TIPD 27개(첫 블록 11 + Object.assign 16). 제목이 바뀐 것: 조나 회사가… · 휴직이나 퇴사로… · 매달 1일 · 말일에 할 일 띄우기 · 아이 등하교나 학원 날씨 · 아이나 가족 일정… · 유치원에서 학교로 가요 · 가족에게 그날 쉬어 달라고 부탁하기 · 내 달력 없이 가족 것만….
+- 팁 사진: tests/tips/tipshots.js 가 실제 앱을 찍어 assets/tips/*.webp (누를 곳 주황 테두리). 화면 바뀌면 node tests/tips/tipshots.js. 지금 t1_a · t1_b · t11_a · t13_a · t16_a · t16_b.
+- 가족 시험(tests/family/*): #tutx 숨기기 넣음. fam5e 는 link-invite 를 못 찾고 멈춤 — v0.146 코드로도 같아서 이번 변경과 무관(에뮬레이터 쪽 · 따로 보기).

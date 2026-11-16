@@ -30,7 +30,8 @@ async function phone(name, state) {
   await p.addInitScript(([st, T]) => { const D = Date; globalThis.Date = class extends D { constructor(...a) { super(...(a.length ? a : [T])); } static now() { return T; } };
     if (st && !localStorage.getItem('eonjeswieo:v1')) localStorage.setItem('eonjeswieo:v1', JSON.stringify(st));
     window.AndroidBridge = { status: () => '', setAlarms() {}, setReminders() {}, shareText: (t, m) => { window.__shared = m; }, fcmToken: () => 'TOKEN_' + (localStorage.getItem('eonjeswieo:v1') ? 'x'.repeat(30) : '') + Math.random().toString(36).slice(2, 8), notifEnabled: () => window.__notifOff ? false : true, takePush: () => '' }; }, [state, T]);
-  await p.addInitScript(() => { setInterval(() => { const b = document.querySelector('#pop.open [data-act="stkshare-no"]'); if (b) b.click(); }, 300); });   // 가족 스티커 묻는 창이 시험을 가로막지 않게
+  await p.addInitScript(() => { setInterval(() => { const b = document.querySelector('#pop.open [data-act="stkshare-no"]'); if (b) b.click(); }, 300); });
+  await p.addInitScript(() => { document.addEventListener('DOMContentLoaded', () => { const st = document.createElement('style'); st.textContent = '#tutx{display:none!important}'; document.head.appendChild(st); }); });   // 처음 안내 말풍선이 클릭을 막지 않게   // 가족 스티커 묻는 창이 시험을 가로막지 않게
   await p.goto('http://127.0.0.1:8130/index.html'); await p.waitForTimeout(700);
   return p;
 }
