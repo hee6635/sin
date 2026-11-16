@@ -1,0 +1,53 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box}body{margin:0;font-family:P,sans-serif;background:#dfe2e6;display:flex;gap:18px;padding:18px;color:#191f28;flex-wrap:wrap;width:1260px}
+.ph{width:390px;height:760px;background:#f2f4f6;border-radius:26px;overflow:hidden;position:relative}
+.hd{height:54px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;background:#f2f4f6;position:relative}
+.hd:before{content:'‹';position:absolute;left:18px;font-size:26px;font-weight:600}
+.tag{position:absolute;top:60px;right:14px;font-size:11px;background:#191f28;color:#fff;border-radius:8px;padding:3px 8px;opacity:.75}
+.cap{font-size:13px;font-weight:600;color:#6b7684;padding:18px 22px 8px}
+.sec{background:#fff;border-radius:20px;margin:0 14px;padding:4px 0}
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:60px}
+.row+.row{border-top:1px solid #f2f4f6}
+.ic{width:36px;height:36px;border-radius:11px;background:#f2f4f6;display:flex;align-items:center;justify-content:center;color:#4e5968;flex:none}
+.nm{flex:1;font-size:16px;font-weight:600}
+.v{color:#6b7684;font-size:15px;font-weight:500;display:flex;align-items:center;gap:2px}
+.v b{color:#191f28;font-weight:600}
+svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ch{width:16px;height:16px;color:#b0b8c1}
+.sw{width:44px;height:26px;border-radius:13px;background:#d1d6db;position:relative;flex:none}.sw:after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.on{background:#3182f6}.sw.on:after{left:21px}
+.seg{display:flex;gap:6px;background:#f2f4f6;border-radius:14px;padding:4px;margin:4px 16px 12px}
+.seg div{flex:1;text-align:center;font-size:14px;font-weight:600;color:#6b7684;padding:9px 4px;border-radius:11px}
+.seg .on{background:#fff;color:#3182f6;box-shadow:0 0 0 1.5px #3182f6,0 2px 6px rgba(49,130,246,.15)}
+.bdg{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none}
+.btn{margin:18px 14px;height:54px;border-radius:16px;background:#3182f6;color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ok{color:#1fa971;font-weight:700;font-size:14px;background:#e9f8f1;border-radius:20px;padding:5px 10px;display:flex;align-items:center;gap:3px}
+.ok svg{width:14px;height:14px;stroke-width:3}
+.pre{margin:0 14px;background:#fff;border-radius:20px;padding:16px}
+.pre .t{font-size:13px;color:#3182f6;font-weight:600}.pre .s{font-size:22px;font-weight:800;margin:4px 0}
+.pre .chips{display:flex;gap:6px;margin-top:10px}.pre .chips span{font-size:13px;font-weight:600;background:#f2f4f6;border-radius:10px;padding:6px 10px;color:#4e5968}
+.dots{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;padding:14px 16px}
+.dots i{width:36px;height:36px;border-radius:50%;display:block;justify-self:center}
+.dots i.on{box-shadow:0 0 0 3px #fff,0 0 0 5px #191f28}
+.rng{flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#3182f6 80%,#e5e8eb 80%);position:relative}.rng:after{content:'';position:absolute;left:78%;top:-7px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.memo{display:flex;align-items:center;gap:10px;padding:10px 16px}.memo i{width:4px;height:30px;border-radius:2px}.memo b{font-size:15px}
+.lnk{text-align:center;color:#3182f6;font-weight:600;font-size:15px;padding:16px}
+</style><style>body{width:440px}.ph{height:900px}
+.hd2{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;font-size:17px;font-weight:700}.hd2 .sv{color:#3182f6}
+.who{display:flex;align-items:center;gap:14px;padding:16px}.av{position:relative;width:64px;height:64px;border-radius:50%;background:#f39c12;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;flex:none}
+.av .cm{position:absolute;right:-4px;bottom:-4px;width:26px;height:26px;border-radius:50%;background:#fff;color:#4e5968;box-shadow:0 1px 4px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center}.av .cm svg{width:14px;height:14px}
+.inp{flex:1;height:50px;border-radius:14px;background:#f2f4f6;display:flex;align-items:center;padding:0 14px;color:#8b95a1;font-size:16px;font-weight:500}
+.dots{display:flex;gap:14px;padding:0 16px 16px 94px}.dots i{width:26px;height:26px;border-radius:50%}.dots i.on{box-shadow:0 0 0 3px #fff,0 0 0 5px #191f28}
+.ops{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px}.op{background:#fff;border-radius:18px;padding:16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 12px rgba(15,23,42,.035)}
+.op .oi{width:36px;height:36px;border-radius:11px;background:#f2f4f6;color:#4e5968;display:flex;align-items:center;justify-content:center}.op b{font-size:16px}
+.op.on{box-shadow:0 0 0 2px #3182f6,0 4px 14px rgba(49,130,246,.15)}.op.on .oi{background:#e8f1ff;color:#3182f6}.op.on b{color:#3182f6}
+</style></head><body><div class="ph"><div class="hd2"><span style="font-size:24px">‹</span><span>가족 추가</span><span class="sv">저장</span></div>
+<div class="sec" style="margin-top:4px"><div class="row"><div class="ic" style="background:#e8f1ff;color:#3182f6"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></div><div class="nm">앱을 쓰는 가족이면</div><div class="v" style="color:#3182f6;font-weight:600">가족 연결<svg class="ch" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div></div></div>
+<div class="cap">이름 · 사진</div>
+<div class="sec"><div class="who"><div class="av">?<span class="cm"><svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg></span></div><div class="inp">아내, 딸, 엄마</div></div><div class="dots"><i class="" style="background:#e5484d"></i><i class="on" style="background:#f39c12"></i><i class="" style="background:#12b886"></i><i class="" style="background:#3b6fd6"></i><i class="" style="background:#8b5cf6"></i><i class="" style="background:#e64a9a"></i></div></div>
+<div class="cap">평소 일정</div>
+<div class="ops"><div class="op"><span class="oi"><svg viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></span><b>교대 근무</b></div><div class="op on"><span class="oi"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span><b>평일 근무</b></div><div class="op"><span class="oi"><svg viewBox="0 0 24 24"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg></span><b>학생</b></div><div class="op"><span class="oi"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></svg></span><b>일정 없음</b></div></div>
+<div class="cap">일정</div>
+<div class="sec"><div class="row"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div class="nm">일정 패턴</div><div class="v">회사 9:00 ~ 18:00<svg class="ch" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div></div></div>
+<div class="tag">가족 추가</div></div></body></html>

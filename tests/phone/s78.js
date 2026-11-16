@@ -41,7 +41,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   await p.evaluate(()=>__wx.closeSheet());
   // 가족 ✏️: 종류 더하기 · 구간
   await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);await tap(p,'[data-act="fam-edit"][data-id="f1"]');await p.waitForTimeout(400);
-  T('가족 ✏️: "🔁 일정 패턴" 한 줄 (유치원 08:50~15:00 · 위치)',await p.evaluate(()=>{const e=document.querySelector('#page [data-act="fe-pat"]');return !!e&&/유치원 오전 8:50~오후 3시/.test(e.innerText)&&/📍/.test(e.innerText);}));
+  T('가족 ✏️: "일정 패턴" 줄 (유치원 08:50 ~ 15:00) + 아래 위치 (v0.158 새 모양)',await p.evaluate(()=>{const e=document.querySelector('#page [data-act="fe-pat"]'),l=document.querySelector('#page .fe-sub');return !!e&&/유치원 오전 8:50 ~ 오후 3시/.test(e.innerText)&&!!l&&l.innerText.trim().length>0;}));
   await tap(p,'#page [data-act="fe-pat"]');await p.waitForTimeout(400);
   T('일정 패턴: 일정 종류 목록 · 위치 · 이 날부터 새 일정 · 공휴일',await p.evaluate(()=>document.querySelectorAll('#page [data-act="fe-ft"]').length===2&&!!document.querySelector('#page [data-act="fe-loc"]')&&!!document.querySelector('#page [data-act="fe-era-add"]')&&!!document.getElementById('feHol')));
   await tap(p,'#page [data-act="fe-ftadd"]');await p.waitForTimeout(300);
