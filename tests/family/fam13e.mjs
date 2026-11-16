@@ -35,7 +35,8 @@ async function phone(name, state, opts = {}) {
     window.AndroidBridge = { status: () => '', setAlarms() {}, setReminders() {}, shareText: (t, m) => { window.__shared = m; }, fcmToken: () => 'tok-' + nm + '-' + 'x'.repeat(30), notifEnabled: () => true };
     if (g) { window.AndroidBridge.googleAvailable = () => true;
       window.AndroidBridge.googleSignIn = req => { window.__greq = (window.__greq || []).concat(req); setTimeout(() => window.__onGoogle(window.__gmode === 'cancel' && req === 'reauth' ? { req, error: 'cancel' } : { req, idToken: fake, email: 'g1@example.com' }), 60); }; } }, [state, T, name, !!opts.google, JSON.stringify({ sub: opts.gsub || 'g-test-1', email: (opts.gsub || 'g-test-1') + '@example.com', email_verified: true })]);
-  await p.addInitScript(() => { setInterval(() => { const b = document.querySelector('#pop.open [data-act="stkshare-no"]'); if (b) b.click(); }, 300); });   // 가족 스티커 묻는 창이 시험을 가로막지 않게
+  await p.addInitScript(() => { setInterval(() => { const b = document.querySelector('#pop.open [data-act="stkshare-no"]'); if (b) b.click(); }, 300); });
+  await p.addInitScript(() => { document.addEventListener('DOMContentLoaded', () => { const st = document.createElement('style'); st.textContent = '#tutx{display:none!important}'; document.head.appendChild(st); }); });   // 처음 안내 말풍선이 클릭을 막지 않게   // 가족 스티커 묻는 창이 시험을 가로막지 않게
   await p.goto('http://127.0.0.1:8214/index.html'); await p.waitForTimeout(700);
   return p;
 }
