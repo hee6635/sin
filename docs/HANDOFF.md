@@ -364,6 +364,15 @@
 - 이럴 땐 이렇게(openTipsPage): 한 화면 그대로(시험 구조 유지) · 처음 안내 줄 · 묶음 카드(선 아이콘 TI · 개수 · 펼침 화살표) · 팁 줄 → 이럴 때 회색 칸 · 파란 번호 단계(CSS counter) · 사진 · 넓은 바로 가기. 글 다듬기는 design/tips/new_text.js (사용자 확인 뒤 TIPS · TIPD 에 넣기).
 - 가족 시험 fam5e 는 처음 안내 말풍선(#tutx)이 클릭을 막아 실패 — v0.135 부터의 문제(가족 시험 도구가 #tutx 를 안 숨김) · 이번 변경과 무관.
 
+## v0.150
+- 스티커: 날짜에 새로 붙일 땐 횟수 1번부터(stDraftOf). 이미 다른 날 · 반복에서 쓰는 스티커를 다른 횟수로 "이날만" 붙이면 한 번 쓰는 스티커로 따로 저장(stUsedElse · stOneLike) → 지난 기록 · 반복 그대로. 시험 s95.
+- 위젯: 오늘 = 칸 전체 테두리 3dp(drawTodayBand · 동그라미 모양도 같음 · 옛 모양 값 무시) · 파랑 #3182F6 · 글꼴 Pretendard(assets/fonts/w_r · w_m · w_b.ttf = 앱 글꼴에서 400/500/700 고정 + 한글 · 영문만 · WFont) · 요일 줄 아래 선 · 메모 띠 모서리 4dp · ‹ › 26.
+  - run-month-real.sh: WidgetFont.kt 포함 · 가짜 Typeface 가 진짜 글꼴 파일 읽음 · setStrokeCap 가짜 추가. EXTRA="Weather.kt InAppWeb.kt PreAlarmReceiver.kt" 필요.
+- 관리자: 내 번호(myCode = uid 해시 XXX-XXX · 도움 · 정보) · codes/{번호} 하루 한 번(famRegCode) · bonus/{uid} · bonus/_all 읽어 famRemain 에 더함(famBonusLoad) · 관리자 화면(openAdmPage: 번호 · 이름 찾기 · 같은 가족방 · 마지막 접속 · 건수 직접 · 모두에게 · 최근 기록 bonusLog 20개).
+  - 관리자 확인: 앱은 bonusLog 읽기가 되면 관리자(admCheck) — 앱에 메일 없음. 규칙 isAdmin = email_verified + sha256(email) == adminHash(). 규칙 시험 123개(관리자는 가짜 주소로 바꿔 끼움).
+  - 규칙: sent 한도 = 10 + bonus + bonusOf(uid) + bonusOf('_all').
+- 설명문 남은 것 하나 뺌(스티커 가족 보이기 줄).
+
 ## v0.149
 - 앱 곳곳 설명문 빼기 (design/trim-list.md "뺄 것"). 위젯 안내는 팁 "홈 화면에서 근무 바로 보기"로 옮김 (가족 이름 칩 줄 추가).
 - 가족 탭 "옆으로 밀어서" 안내 빠짐 (fgHint 없음 · famSwiped 는 그대로 저장).

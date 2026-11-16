@@ -4549,6 +4549,15 @@ function stampExtra(k,e,name){
   if(!x){x=Object.assign({id:'o_'+uid(),one:true,times:1,rep:'none',days:[],dates:[],skip:[],ats:[]},f);S.stamps.defs.push(x);}
   openStampReg(k,x.id,'','plus');if(stDraft)stDraft.newDef=made?x.id:'';
 }
+// v0.150 이 스티커를 이 날 말고 다른 데서 쓰고 있나 (반복 규칙 · 다른 날짜 · 지난 기록)
+function stUsedElse(s,k){const L=S.stamps.log||{};return (s.rep&&s.rep!=='none')||(s.dates||[]).some(x=>x!==k)||Object.keys(L).some(x=>x!==k&&L[x]&&L[x][s.id]);}
+// 같은 그림 · 같은 횟수의 한 번 쓰는 스티커 (없으면 새로)
+function stOneLike(s,times){
+  const same=y=>y.kind===s.kind&&(s.kind==='pill'?(y.shape||'caps')===(s.shape||'caps')&&(y.color||'')===(s.color||''):y.emoji===s.emoji)&&(y.name||'')===(s.name||'');
+  let x=S.stamps.defs.find(y=>y!==s&&y.one&&!y.retired&&(!y.rep||y.rep==='none')&&stN(y)===times&&same(y));
+  if(!x){x={id:'o_'+uid(),one:true,kind:s.kind,emoji:s.emoji,name:s.name,times,rep:'none',days:[],dates:[],skip:[],ats:[]};if(s.kind==='pill'){x.color=s.color;x.shape=s.shape||'caps';}if(s.fam!==undefined)x.fam=s.fam;S.stamps.defs.push(x);}
+  return x;
+}
 function stRetire(s){Object.assign(s,{retired:true,rep:'none',dates:[],days:[],skip:[],from:'',to:'',ats:[]});}
 // 이미 붙인 곳(날짜 · 반복 · 기록)이 하나라도 있는 스티커인지
 const stUsed=s=>(s.dates||[]).length>0||(!!s.rep&&s.rep!=='none')||Object.keys(S.stamps.log).some(k=>S.stamps.log[k]&&S.stamps.log[k][s.id]);
@@ -4605,7 +4614,7 @@ function wtypesOf(s){
   const work=!!(s&&s.workMode==='work');return S.types.filter(t=>t.k!==NONE_K&&(work?!t.rest:t.rest)).map(t=>t.k);
 }
 function stDraftOf(s,k,edit,back){
-  const kind=s?s.kind:'mark',times=s?stN(s):1;
+  const kind=s?s.kind:'mark',times=s&&edit?stN(s):1;   // v0.150 새로 붙일 땐 언제나 1번부터 (지난번 횟수 기억 안 함)
   const d={k,back:back||'',edit:!!edit,id:s?s.id:'__new',kind,name:s?s.name:'',emoji:(s&&s.emoji)||'🏃',color:(s&&s.color)||STK_COL[0],times,
     alarm:!!(s&&s.ats&&s.ats.length),ats:s&&s.ats?s.ats.slice():[],shape:(s&&s.shape)||'caps',fam:s?stFam(s):true,
     rep:edit?(s.rep||'none'):'once',days:s&&s.days&&s.days.length?s.days.slice():[parse(k).getDay()],workMode:(s&&s.workMode)||'rest',wtypes:wtypesOf(s),
@@ -4766,6 +4775,7 @@ function stampRegSave(){
   const isNewDef=!s;
   if(d.rep==='once'&&s&&stampPlanned(s,d.k)){toast('이 스티커는 이 날에 이미 깔려 있어요 · 새 스티커는 "＋ 새로"');return;}
   if(d.rep==='work'&&!d.wtypes.length){toast('근무를 하나 이상 골라 주세요');return;}
+  if(s&&!d.edit&&d.rep==='once'&&stN(s)!==d.times&&stUsedElse(s,d.k))s=stOneLike(s,d.times);   // v0.150 횟수가 다르면 이 날만 따로 (그 스티커의 지난 날 · 반복 규칙은 그대로)
   const snap=JSON.stringify(S.stamps);   // 한도 때문에 가려지면 "등록 취소"로 돌아가기 위한 사본
   if(!s){
     s=d.kind==='pill'?{id:uid(),kind:'pill',emoji:'💊',name:'약',times:1,color:STK_COL[0],rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]}
@@ -7184,9 +7194,12 @@ function openInfoPage(){   // v0.146 새 모양
       ${npRow('calendar-days','사용 통계 · 오류 보고',`<label class="sw"><input type="checkbox" id="statsOn" ${S.stats!==false?'checked':''}><i></i></label>`)}
       ${npRow('tag','개인정보처리방침',npVal(''),{tap:1,act:'more-privacy'})}
       ${npRow('bell','앱 정보',`<div class="pv npv">${appVersion()}</div>`,{act:'about-tap'})}
+      ${S.link?npRow('user','내 번호',`<div class="pv npv">${myCode(S.link.uid)}</div>`,{tap:1,act:'my-code'}):''}
+      ${admOk?npRow('users','관리자',npVal(''),{tap:1,act:'adm-open'}):''}
     </div>
     <div class="pg-sec" style="margin-top:12px">${npRow('trash-2','내 데이터 모두 지우기','',{cls:'danger-row',act:'more-wipe'})}</div>
   </div>`,'info');
+  admCheck();
 }
 const lookRefresh=()=>{if(pageMode==='look')openLookPage();};
 function openWidgetPage(){
@@ -7854,7 +7867,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout
 window.__wx={manPlanned,visibleMemos,famLbl,famTypeAt,famWx,shiftOf,wxMyWin,openStampReg,actAuto,stampPlanned,myActs,manPlanned,famActNow,wxMine,get S(){return S;},get page(){return {pageMode,pageBack};},openDay,closeSheet,closePop,closePage,openAddonPage,render,save,pushAlarmsToNative,pushRemindersToNative,famCleanSched,famPayload,
   newAlarm:o=>{draft=Object.assign(newAlarm(),o||{});alSnd=false;openAlarmPage();},wxOn,wxRaw,wxFam,wxMemWin,wxMemWork,wxMemKey,wxOpenFam,wxOpenDay,wxChipIcon,
   openPatternPage,openStatsPage,openSlipPage:ym=>{slipYM=ym;openSlipPage();},statsCalc,payRates,dayHours,famTimesPayload,memberStatus,otOpen,get stYM(){return stYM;},set stYM(v){stYM=v;}};
-Object.assign(window.__wx,{dsTgo:(k,a)=>dsTgo(k,a),dsTdy:k=>dsTdy(k),patResetOpen:q=>patResetOpen(q),famWxOpen,stampsOn,openFeed,coachCheck,pushWidgetNow:()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
+Object.defineProperty(window.__wx,'stDraft',{get:()=>stDraft});Object.assign(window.__wx,{admTest:(codes,log)=>{admOk=true;adm={q:'',sel:null,codes,log,busy:false};},openAdmPage:()=>openAdmPage(),myCode:u=>myCode(u),famRemainT:()=>famRemain(),setBx:(a,b)=>{famBx={me:a,all:b};},stampRegSave:()=>stampRegSave(),dsTgo:(k,a)=>dsTgo(k,a),dsTdy:k=>dsTdy(k),patResetOpen:q=>patResetOpen(q),famWxOpen,stampsOn,openFeed,coachCheck,pushWidgetNow:()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
 
 /* ================= 부가 기능 (설정 › 부가 기능) =================
  * 기본은 모두 꺼짐. 꺼도 저장된 내용은 그대로이고, 켜면 그 자리에 바로 생겨요. */
@@ -9673,6 +9686,12 @@ document.addEventListener('click',e=>{
     case 'more-perm':openPermPage();break;
     case 'more-mail':sendInquiry();break;
     case 'more-privacy':openPrivacyPage();break;
+    case 'my-code':if(S.link)copyText(myCode(S.link.uid));break;
+    case 'adm-open':adm=null;openAdmPage();break;
+    case 'adm-find':adm.q=($('#admQ')||{}).value||'';openAdmPage();break;
+    case 'adm-pick':adm.sel=(adm.codes||[]).find(c=>c.code===t.dataset.c)||null;openAdmPage();break;
+    case 'adm-clear':adm.sel=null;openAdmPage();break;
+    case 'adm-give':admGive();break;
     case 'more-wipe':wipeAll();break;
     case 'font':S.fontScale=Number(t.dataset.v);save();applyFont();render();lookRefresh();break;
     case 'thememode':S.theme=t.dataset.v;save();applyTheme();render();lookRefresh();break;
@@ -10574,6 +10593,76 @@ async function famRegUser(force){
   await F.setDoc(F.doc(db,'users',S.link.uid),{hid:S.link.hid,updatedAt:F.serverTimestamp()});
   famUserKey=key;
 }
+// ---- v0.150 내 번호 (관리자가 무료 건수를 줄 때 찾는 번호) · 받은 무료 건수 · 관리자 화면
+const MYC_AB='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+function myCode(uid){uid=String(uid||'');if(!uid)return '';let a=0x811c9dc5,b=0x1234567;for(let i=0;i<uid.length;i++){const c=uid.charCodeAt(i);a=Math.imul(a^c,16777619)>>>0;b=Math.imul(b^c,2246822519)>>>0;}let t='';for(let i=0;i<6;i++)t+=MYC_AB[(i<3?a>>>(i*10):b>>>((i-3)*10))&31];return t.slice(0,3)+'-'+t.slice(3);}
+let famCodeKey='';
+async function famRegCode(){   // codes/{번호} = {uid, 이름, 가족방, 마지막 접속} — 관리자만 읽음 · 하루 한 번
+  if(!S.link||!fbCfg()||wipeBusy)return;
+  const uid=S.link.uid,code=myCode(uid),key=[uid,S.link.hid,S.link.name||'',fmt(new Date())].join('|');
+  if(!code||famCodeKey===key)return;
+  const {F,db}=await famReady();if(!S.link)return;
+  await F.setDoc(F.doc(db,'codes',code),{uid,name:String(S.link.name||'').slice(0,12),hid:String(S.link.hid).slice(0,128),at:F.serverTimestamp()});
+  famCodeKey=key;
+}
+let famBx={me:0,all:0};
+async function famBonusLoad(){   // 관리자가 준 무료 건수: bonus/{내 uid} · bonus/_all (모두에게)
+  if(!S.link||!fbCfg())return;
+  const {F,db}=await famReady();if(!S.link)return;
+  const g=async id=>{try{const d=await F.getDoc(F.doc(db,'bonus',id));return d.exists()?Math.max(0,Math.round(+d.data().n)||0):0;}catch(e){return 0;}};
+  famBx={me:await g(S.link.uid),all:await g('_all')};
+}
+let admOk=null,adm=null;
+async function admCheck(){   // 관리자 계정만 bonusLog 를 읽을 수 있음 → 읽히면 관리자 (앱에 메일 주소를 넣지 않음)
+  if(admOk!==null||!S.gAcct||!fbCfg())return;
+  try{const {F,db}=await famReady();await F.getDocs(F.query(F.collection(db,'bonusLog'),F.limit(1)));admOk=true;}catch(e){admOk=false;}
+  if(admOk&&pageMode==='info')openInfoPage();
+}
+const admDay=t=>{try{const d=t&&t.toDate?t.toDate():null;return d?`${d.getMonth()+1}/${d.getDate()}`:'';}catch(e){return '';}};
+async function admLoad(){
+  const {F,db}=await famReady();
+  const [cs,ls]=await Promise.all([F.getDocs(F.collection(db,'codes')),F.getDocs(F.query(F.collection(db,'bonusLog'),F.orderBy('at','desc'),F.limit(20)))]);
+  adm.codes=cs.docs.map(d=>Object.assign({code:d.id},d.data()));
+  adm.log=ls.docs.map(d=>d.data());
+}
+function admFind(){
+  const q=String(adm.q||'').trim();if(!q||!adm.codes)return [];
+  const qc=q.toUpperCase().replace(/[^0-9A-Z]/g,'');
+  return adm.codes.filter(c=>(qc.length>=3&&c.code.replace('-','').includes(qc))||String(c.name||'').includes(q)).slice(0,30);
+}
+function admRowHtml(c){
+  const fam=adm.codes.filter(x=>x.hid&&x.hid===c.hid&&x.uid!==c.uid).map(x=>x.name||'?');
+  return `<div class="prow tap" data-act="adm-pick" data-c="${esc(c.code)}"><div class="pl2">${esc(c.name||'?')} · ${esc(c.code)}<small class="keep">${[fam.length?esc(fam.join(' · ')):'가족 없음',admDay(c.at)].filter(Boolean).join(' · ')}</small></div></div>`;
+}
+function openAdmPage(){
+  if(!adm)adm={q:'',sel:null,codes:null,log:null,busy:false};
+  pageBack=openInfoPage;
+  const res=adm.sel?[]:admFind();
+  openPage(`${pageHead('관리자')}<div class="pg-b np">
+    <div class="pg-cap">받는 사람</div>
+    <div class="pg-sec">${adm.sel?`<div class="prow"><div class="pl2">${esc(adm.sel.name||'?')} · ${esc(adm.sel.code)}</div><button class="xbtn" data-act="adm-clear" aria-label="다시 고르기">✕</button></div>`
+      :`<div class="prow"><input type="text" id="admQ" class="inl" style="flex:1;text-align:left" placeholder="번호 또는 이름" value="${esc(adm.q)}" enterkeyhint="search"><button class="tbtn" data-act="adm-find">찾기</button></div>${adm.codes===null?'':res.map(admRowHtml).join('')||(adm.q?'<div class="prow"><div class="pl2">찾은 게 없어요</div></div>':'')}`}
+      <div class="prow"><div class="pl2">모두에게</div><label class="sw"><input type="checkbox" id="admAll"><i></i></label></div>
+    </div>
+    <div class="pg-cap">건수</div>
+    <div class="pg-sec"><div class="prow"><input type="number" id="admN" class="inl" inputmode="numeric" min="1" max="10000" placeholder="0" style="flex:1;text-align:left"><button class="btn" data-act="adm-give" style="margin-left:10px">주기</button></div></div>
+    <div class="pg-cap">최근 기록</div>
+    <div class="pg-sec">${adm.log===null?'<div class="prow"><div class="pl2">불러오는 중…</div></div>':adm.log.length?adm.log.map(l=>`<div class="prow"><div class="pl2">+${+l.n||0} · ${l.to==='_all'?'모두':`${esc(l.name||'?')} · ${esc(l.code||'')}`}</div><div class="pv npv">${admDay(l.at)}</div></div>`).join(''):'<div class="prow"><div class="pl2">아직 기록이 없어요</div></div>'}</div>
+  </div>`,'adm');
+  if(adm.codes===null&&!adm.busy){adm.busy=true;admLoad().then(()=>{adm.busy=false;if(pageMode==='adm')openAdmPage();}).catch(e=>{adm.busy=false;adm.log=[];toast(famErr(e));if(pageMode==='adm')openAdmPage();});}
+}
+async function admGive(){
+  const n=Math.round(+($('#admN')||{}).value||0),all=!!($('#admAll')||{}).checked;
+  if(!(n>0&&n<=10000)){toast('건수를 넣어 주세요');return;}
+  if(!all&&!adm.sel){toast('받는 사람을 골라 주세요');return;}
+  if(!confirm(`${all?'모두':`${adm.sel.name||'?'} (${adm.sel.code})`}에게 무료 ${n}건을 줄까요?`))return;
+  try{
+    const {F,db}=await famReady(),id=all?'_all':adm.sel.uid,b=F.writeBatch(db);
+    b.set(F.doc(db,'bonus',id),{n:F.increment(n),at:F.serverTimestamp()},{merge:true});
+    b.set(F.doc(F.collection(db,'bonusLog')),{to:id,name:all?'':String(adm.sel.name||'').slice(0,12),code:all?'':adm.sel.code,n,at:F.serverTimestamp()});
+    await b.commit();toast(`${n}건 줬어요`);adm.sel=all?adm.sel:null;adm.q='';adm.codes=null;adm.log=null;openAdmPage();
+  }catch(e){toast(famErr(e));}
+}
 function googleRow(){
   if(!googleOn())return '';
   if(S.gAcct)return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">구글 계정에 연결됨<small>${esc(S.gAcct)} · 구글 계정 하나는 기기 하나에만 연결돼요</small></div><span class="muted">✓</span></div></div>`;
@@ -10627,7 +10716,7 @@ async function famHostSeen(){
 }
 async function famBoot(){
   if(!fbCfg()||!S.link||famBooting||wipeBusy)return;famBooting=true;
-  try{await famSync();if(S.link){await famListen();if(!famView())famPush().catch(famPushFail);famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});famRegUser().catch(()=>{});famHostSeen().catch(()=>{});}else famClear();}
+  try{await famSync();if(S.link){await famListen();if(!famView())famPush().catch(famPushFail);famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});famRegUser().catch(()=>{});famRegCode().catch(()=>{});famBonusLoad().catch(()=>{});famHostSeen().catch(()=>{});}else famClear();}
   catch(e){}finally{famBooting=false;}
 }
 // 가족이 "내 근무표 올리기 / 가족 것만 볼래요"를 바꿀 때
@@ -10636,7 +10725,7 @@ function famSetStk(on){
   if(on){openCfm({type:'stk'});return;}
   S.link.stk=false;save();toast('스티커는 가족에게 안 보여요');
 }
-const stkRow=()=>`<div class="prow"><div class="pl2">내 스티커도 가족에게 보여요${famOthers().length?'<small>스티커 고치기에서 하나씩 바꿀 수 있어요 · 약은 기본으로 안 보여요</small>':''}</div><label class="sw"><input type="checkbox" id="famStk" ${S.link&&S.link.stk?'checked':''}><i></i></label></div>`;
+const stkRow=()=>`<div class="prow"><div class="pl2">내 스티커도 가족에게 보여요</div><label class="sw"><input type="checkbox" id="famStk" ${S.link&&S.link.stk?'checked':''}><i></i></label></div>`;
 async function famSetMode(mode){
   if(!S.link||S.link.role==='host')return;
   try{
@@ -10938,7 +11027,7 @@ function vcMove(n){let y=vcY,m=vcM+n;if(m<0){m=11;y--;}if(m>11){m=0;y++;}const k
  * 보낼 때마다 내 횟수(sent)가 +1 (처음 10건 무료). 내 폰의 메모 · 요청 화면은 지금 있는 것을 그대로 쓰고
  * 서버에서 받은 것을 같이 보여줘요 (S.requests 에 srv:true 로 복사본, 가족 메모는 visibleMemos 에 합침). */
 const FAM_FREE=10;
-const famRemain=()=>{const m=(S.fam2&&S.fam2.me)||{};return Math.max(0,FAM_FREE+(+m.bonus||0)-(+m.sent||0));};
+const famRemain=()=>{const m=(S.fam2&&S.fam2.me)||{};return Math.max(0,FAM_FREE+(+m.bonus||0)+famBx.me+famBx.all-(+m.sent||0));};   // v0.150 + 관리자가 준 건수
 const iga=w=>{const c=String(w).slice(-1).charCodeAt(0);return c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28!==0?'이':'가';};
 const famOthers=()=>{const me=S.link&&S.link.uid;return ((S.fam2&&S.fam2.members)||[]).filter(m=>m.uid!==me).map(m=>({...m,name:famAka(m.uid,m.name)}));};
 // v0.127 내 폰에서 부를 이름 (상대 폰 · 서버 이름은 그대로)

@@ -1,0 +1,30 @@
+// v0.150: 내 번호 · 관리자 화면 (찾기 · 고르기 · 기록) · 받은 건수가 남은 건수에 더해짐
+const {chromium,boot,mkT,base}=require('./lib.js');
+(async()=>{
+  const T=mkT();const b=await chromium.launch();
+  const p=await boot(b,{...base,link:{hid:'h1',role:'guest',name:'아내',perm:'write',mode:'own',uid:'uidABC123',hash:''}});
+  await p.waitForTimeout(800);
+  const c1=await p.evaluate(()=>[__wx.myCode('uidABC123'),__wx.myCode('uidABC123'),__wx.myCode('uidABC124')]);
+  T('내 번호: 같은 uid 는 같은 번호 · 다른 uid 는 다름 · XXX-XXX',c1[0]===c1[1]&&c1[0]!==c1[2]&&/^[2-9A-HJ-NP-Z]{3}-[2-9A-HJ-NP-Z]{3}$/.test(c1[0]),c1.join());
+  await p.evaluate(()=>{const x=document.createElement('button');x.dataset.act='more-info';document.body.appendChild(x);x.click();x.remove();});
+  await p.waitForTimeout(400);
+  const info=await p.evaluate(()=>document.querySelector('#page').innerText);
+  T('도움 · 정보에 내 번호 · 관리자 줄은 없음',info.includes('내 번호')&&info.includes(c1[0])&&!info.includes('관리자'),info.slice(0,200));
+  const r0=await p.evaluate(()=>{const a=__wx.famRemainT();__wx.setBx(5,2);return [a,__wx.famRemainT()];});
+  T('받은 건수(개인 5 · 모두 2)가 남은 건수에 더해짐',r0[1]===r0[0]+7,r0.join());
+  await p.evaluate(()=>{__wx.admTest([{code:'ABC-DEF',uid:'u1',name:'아내',hid:'h9'},{code:'GHJ-KLM',uid:'u2',name:'남편',hid:'h9'},{code:'NPQ-RST',uid:'u3',name:'남편',hid:'h7'}],[{to:'u1',name:'아내',code:'ABC-DEF',n:5},{to:'_all',n:3}]);__wx.openAdmPage();});
+  await p.waitForTimeout(300);
+  let t=await p.evaluate(()=>document.querySelector('#page').innerText);
+  T('관리자 화면: 받는 사람 · 모두에게 · 건수 · 최근 기록',/받는 사람/.test(t)&&/모두에게/.test(t)&&/건수/.test(t)&&/\+5 · 아내 · ABC-DEF/.test(t)&&/\+3 · 모두/.test(t),t);
+  await p.fill('#admQ','남편');await p.click('[data-act="adm-find"]');await p.waitForTimeout(200);
+  const rows=await p.evaluate(()=>[...document.querySelectorAll('[data-act="adm-pick"]')].map(x=>x.innerText.replace(/\n/g,' / ')));
+  T('이름으로 찾기: 남편 2명 · 같은 가족방 사람 보임',rows.length===2&&rows.some(r=>/아내/.test(r)),JSON.stringify(rows));
+  await p.fill('#admQ','abcdef');await p.click('[data-act="adm-find"]');await p.waitForTimeout(200);
+  const r2=await p.evaluate(()=>document.querySelectorAll('[data-act="adm-pick"]').length);
+  T('번호로 찾기 (소문자 · 줄표 없이도)',r2===1,String(r2));
+  await p.click('[data-act="adm-pick"]');await p.waitForTimeout(200);
+  t=await p.evaluate(()=>document.querySelector('#page').innerText);
+  T('고르면 받는 사람 줄에 이름 · 번호',/아내 · ABC-DEF/.test(t)&&!!(await p.$('[data-act="adm-clear"]')),t.slice(0,100));
+  T('오류 없음',p.errs.length===0,p.errs.join('|'));
+  await b.close();T.sum();
+})();

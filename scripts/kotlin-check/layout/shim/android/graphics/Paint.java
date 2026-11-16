@@ -7,6 +7,10 @@ public class Paint {
     public static final int ANTI_ALIAS_FLAG = 1, FILTER_BITMAP_FLAG = 2, STRIKE_THRU_TEXT_FLAG = 16;
     public enum Style { FILL, STROKE, FILL_AND_STROKE }
     public enum Align { LEFT, CENTER, RIGHT }
+    public enum Cap { BUTT, ROUND, SQUARE }
+    public enum Join { MITER, ROUND, BEVEL }
+    public void setStrokeCap(Cap c) {}
+    public void setStrokeJoin(Join j) {}
     int color = 0xFF000000;
     Style style = Style.FILL;
     float strokeWidth = 0f, textSize = 12f;
@@ -39,7 +43,7 @@ public class Paint {
     public void setStrikeThruText(boolean s) { strike = s; }
     public void setAntiAlias(boolean b) {}
 
-    Font font() { return new Font("SansSerif", typeface != null && typeface.bold ? Font.BOLD : Font.PLAIN, 12).deriveFont(textSize); }
+    Font font() { if (typeface != null && typeface.awt != null) return typeface.awt.deriveFont(textSize); return new Font("SansSerif", typeface != null && typeface.bold ? Font.BOLD : Font.PLAIN, 12).deriveFont(textSize); }
     public float measureText(String s) { return (float) font().getStringBounds(s, FRC).getWidth(); }
     /** 앞에서부터 maxWidth 안에 들어가는 글자 수 (안드로이드 Paint.breakText 와 같은 뜻) */
     public int breakText(String text, boolean measureForwards, float maxWidth, float[] measuredWidth) {
