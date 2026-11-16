@@ -492,3 +492,9 @@
 - "달력 보기 · 눌러서 한 달 보기" 칩 → "달력" 카드 줄(.vcrows .vcr · "남편 달력 ›").
 - 날씨: 보기만 가족도 근무자가 올린 동네(sch.wx)로 이미 가져옴 (wxCodes → wxFamCodes) — 바뀐 것 없음.
 - 시험 s83 고침.
+
+## v0.170 스티커 완료 창 새 모양 (시안 design/stk/v1)
+- stampDayHtml: 스티커마다 한 줄 .sdr2 (그림 .sdi · 이름/언제·알림 시각 .sdn · 체크 .sdck 또는 여러 번은 동그라미 .sddots · ⋯ .sdmore). 줄 누르기 = sd-tap (하나씩 채움 · 다 찬 뒤 누르면 비움 · 되돌리기 토스트). 꾹 = 반복 · 알림 고치기(그대로).
+- ⋯ = sd-more 작은 창: 이날만 건너뛰기/이날 지우기(sd-skip) · 이날부터 그만하기(sd-end, 반복만) · 반복 · 알림 고치기(sd-edit) · 닫기(sd-back). 옛 sd-done/sd-undo 처리는 남겨 둠.
+- 아래 .sdfoot: 스티커 붙이기(sd-add) · 스티커 설정(sd-manage). 고르는 창 "닫기" 버튼 뺌. NPI 에 more 추가. 처음 안내(tipStk) 선택자 .sdr2 로.
+- 시험: s102 새로 · s15 s23 s45 s48 s49 s50 s51 t13 새 줄 모양으로 고침.

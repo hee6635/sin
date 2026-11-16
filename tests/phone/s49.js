@@ -19,7 +19,7 @@ const {mkT,base}=require('./lib.js');
   const toSlots=async p=>{await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);await p.evaluate(()=>document.querySelector('[data-act="stk-board"]').click());await p.waitForTimeout(400);};
   const toCal=async p=>{await p.evaluate(()=>{const b=document.querySelector('#page .pg-h .bk');b&&b.click();});await p.waitForTimeout(250);await p.evaluate(()=>document.querySelector('#nav [data-tab="cal"]').click());await p.waitForTimeout(350);};
   const bells=p=>p.evaluate(()=>[...document.querySelectorAll('#page .stgrid [data-act="slot-open"]')].filter(b=>b.querySelector('.stbell')).map(b=>b.dataset.id).sort());
-  const rowText=(p,name)=>p.evaluate(n=>{const r=[...document.querySelectorAll('#pop .sdr')].find(x=>x.querySelector('.nm').textContent.startsWith(n));return r?r.querySelector('.nm small').textContent:null;},name);
+  const rowText=(p,name)=>p.evaluate(n=>{const r=[...document.querySelectorAll('#pop .sdr2')].find(x=>x.querySelector('.sdn b').textContent.startsWith(n));return r?((r.querySelector('.sdn span')||{}).textContent||''):null;},name);
   const openDay=async(p,k)=>{await p.evaluate(c=>document.querySelector(c+' .stz').click(),cell(k));await p.waitForTimeout(400);};
   const closePop=p=>p.evaluate(()=>{const pp=document.getElementById('pop');pp.className='';pp.innerHTML='';});
 
@@ -36,9 +36,9 @@ const {mkT,base}=require('./lib.js');
   // ===== 날짜 창 =====
   await openDay(p,'2026-10-13');
   const pillT=await rowText(p,'약'),runT=await rowText(p,'조깅'),waterT=await rowText(p,'물');
-  T('날짜 창: 약 줄에 "🔔 8:00 · 20:00"',!!pillT&&pillT.includes('🔔 오전 8:00 · 오후 8:00')&&pillT.includes('하루 2번 · 매일'),pillT);
-  T('날짜 창: 조깅 줄에 "🔔 7:00"',!!runT&&runT.includes('매일 · 🔔 오전 7:00 · 아직'),runT);
-  T('날짜 창: 알림 없는 물 줄에는 🔔 없음',!!waterT&&!waterT.includes('🔔')&&waterT.includes('매일 · 아직'),waterT);
+  T('날짜 창: 약 줄에 알림 시각 "오전 8:00 · 오후 8:00"',!!pillT&&pillT.includes('오전 8:00 · 오후 8:00'),pillT);
+  T('날짜 창: 조깅 줄에 "오전 7:00"',!!runT&&runT.includes('매일')&&runT.includes('오전 7:00'),runT);
+  T('날짜 창: 알림 없는 물 줄에는 시각 없음',waterT!==null&&!/오전|오후/.test(waterT),waterT);
   await p.screenshot({path:'/tmp/s49_day.png',clip:{x:0,y:430,width:390,height:414}});
   await closePop(p);
   // ===== 알림을 켜면 표시가 생기고, 끄면 사라짐 (등록 화면 → 설정) =====
@@ -52,7 +52,7 @@ const {mkT,base}=require('./lib.js');
   const at1=s.stamps.defs.find(x=>x.id==='s_read').ats[0].replace(/^0/,'');
   await openDay(p,'2026-10-17');
   const readT=await rowText(p,'독서');
-  T('날짜 창: 독서 줄에 방금 정한 시각 표시',!!readT&&readT.includes('🔔 '+(([h,m])=>`${h<12?'오전':'오후'} ${h%12||12}:${String(m).padStart(2,'0')}`)(at1.split(':').map(Number))),readT);
+  T('날짜 창: 독서 줄에 방금 정한 시각 표시',!!readT&&readT.includes((([h,m])=>`${h<12?'오전':'오후'} ${h%12||12}:${String(m).padStart(2,'0')}`)(at1.split(':').map(Number))),readT);
   await closePop(p);
   await toSlots(p);
   T('설정: 독서 칸에 🔔 생김',(await bells(p)).includes('s_read'));
@@ -76,7 +76,7 @@ const {mkT,base}=require('./lib.js');
     await toSlots(q);
     T('알림이 하나도 없으면 설정에 🔔이 하나도 없음',(await bells(q)).length===0&&await q.evaluate(()=>!document.querySelector('#page .stbell')));
     await toCal(q);await openDay(q,'2026-10-13');
-    T('알림이 하나도 없으면 날짜 창에도 🔔 없음',await q.evaluate(()=>!document.querySelector('#pop .sdr .nm small').textContent.includes('🔔')&&![...document.querySelectorAll('#pop .sdr .nm small')].some(x=>x.textContent.includes('🔔'))));
+    T('알림이 하나도 없으면 날짜 창에 시각 없음',await q.evaluate(()=>!!document.querySelector('#pop .sdr2')&&![...document.querySelectorAll('#pop .sdr2 .sdn span')].some(x=>/오전|오후/.test(x.textContent))));
     T('오류 없음(2)',q.errs.length===0,q.errs.join('|'));
     await q.close();
   }

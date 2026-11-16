@@ -45,7 +45,7 @@ const {mkT,base}=require('./lib.js');
   const hold=async(pg,sel)=>{const c=await pg.$eval(sel,e=>{const r=e.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2];});await pg.mouse.move(c[0],c[1]);await pg.mouse.down();await pg.waitForTimeout(700);await pg.mouse.up();await pg.waitForTimeout(500);};
   await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(300);
   await p.evaluate(c=>document.querySelector(c+' .stz').click(),cell('2026-10-13'));await p.waitForTimeout(450);
-  await hold(p,'#pop .sdr[data-id="s_run"]');
+  await hold(p,'#pop .sdr2[data-id="s_run"]');
   await wgOn(p);
   await p.evaluate(()=>{const c=document.getElementById('srAlarm');c.checked=false;c.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(250);
   await p.click('#page [data-act="sr-save"]');await p.waitForTimeout(1500);

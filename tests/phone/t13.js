@@ -35,18 +35,18 @@ T_('손 떼면 사라짐',await p.$eval('.track .panel:nth-child(2) .cell[data-k
 // ---- 톡: 완료 누르면 방금 붙인 스티커에 .tok
 await p.click('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] .stz');await p.waitForTimeout(350);
 const popTxt=await p.$eval('#pop',e=>e.innerText.replace(/\s+/g,' '));
-T_('날짜 스티커 창: 조깅 완료 버튼 + "이날부터 끝내기"',popTxt.includes('완료')&&popTxt.includes('그만하기'),popTxt.slice(0,160));
+T_('날짜 스티커 창: 조깅 줄 + ⋯ 버튼',!!(await p.$('#pop .sdr2[data-id="s_run"] [data-act="sd-more"]')),popTxt.slice(0,160));
 
-await p.click('#pop [data-act="sd-done"][data-id="s_run"]');await p.waitForTimeout(60);
+await p.click('#pop .sdr2[data-id="s_run"] .sdn');await p.waitForTimeout(60);
 const tok=await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] [data-sid="s_run"]',e=>e.classList.contains('tok')).catch(()=>false);
 T_('완료 누르는 순간 "톡"(.tok)',tok);
 await p.waitForTimeout(600);
 T_('톡은 잠깐만(0.4초 뒤 사라짐)',!(await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] [data-sid="s_run"]',e=>e.classList.contains('tok')).catch(()=>false)));
 // 떼기는 조용히
-await p.click('#pop [data-act="sd-undo"][data-id="s_run"]');await p.waitForTimeout(60);
+await p.click('#pop .sdr2[data-id="s_run"] .sdn');await p.waitForTimeout(60);
 T_('완료 취소(떼기)는 효과 없음',!(await p.$('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] .tok')));
 // ---- 이날부터 끝내기 + 되돌리기
-await p.click('#pop [data-act="sd-end"][data-id="s_run"]');await p.waitForTimeout(300);
+await p.click('#pop .sdr2[data-id="s_run"] [data-act="sd-more"]');await p.waitForTimeout(250);await p.click('#pop [data-act="sd-end"][data-id="s_run"]');await p.waitForTimeout(300);
 let S=await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')));
 let run=S.stamps.defs.find(x=>x.id==='s_run');
 T_('이날부터 끝내기: 끝 날짜 = 전날(10/19) · 지난 기록은 그대로',run.to==='2026-10-19'&&S.stamps.log['2026-10-16'].s_run===1,JSON.stringify([run.to,S.stamps.log['2026-10-16']]));
@@ -58,6 +58,7 @@ T_('되돌리기: 끝 날짜 없음으로 복원',S.stamps.defs.find(x=>x.id==='
 // ---- 반복 없는 스티커엔 끝내기 없음
 await p.click('.track .panel:nth-child(2) .cell[data-k="2026-10-16"] .stz');await p.waitForTimeout(350);
 const pop14=await p.$eval('#pop',e=>e.innerText.replace(/\s+/g,' '));
+if(await p.$('#pop .sdr2[data-id="s_gym"] [data-act="sd-more"]')){await p.click('#pop .sdr2[data-id="s_gym"] [data-act="sd-more"]');await p.waitForTimeout(250);}
 T_('반복 없는 스티커(운동 등)에는 "끝내기" 없음',!(await p.$('#pop [data-act="sd-end"][data-id="s_gym"]')));
 await p.evaluate(()=>document.getElementById('pop').click());await p.waitForTimeout(250);
 // ---- 활동 알림: 등록 창에 ⏰
@@ -94,7 +95,7 @@ await p.close();
 // ---- 애니메이션 줄이기: 톡 · 진동 없음
 p=await boot(b,st,{rm:true});
 await p.click('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] .stz');await p.waitForTimeout(350);
-await p.click('#pop [data-act="sd-done"][data-id="s_run"]');await p.waitForTimeout(60);
+await p.click('#pop .sdr2[data-id="s_run"] .sdn');await p.waitForTimeout(60);
 T_('애니메이션 줄이기: .tok 없음',!(await p.$('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] .tok')));
 await p.close();
 await b.close();T_.sum();})();

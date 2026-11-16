@@ -19,7 +19,7 @@ const {mkT,base}=require('./lib.js');
   const openDay=async(p,k)=>{await p.evaluate(c=>document.querySelector(c+' .stz').click(),cell(k));await p.waitForTimeout(450);};
   const closePop=p=>p.evaluate(()=>{const pp=document.getElementById('pop');pp.className='';pp.innerHTML='';});
   const hold=async(p,sel)=>{const c=await p.$eval(sel,e=>{const r=e.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2];});await p.mouse.move(c[0],c[1]);await p.mouse.down();await p.waitForTimeout(700);await p.mouse.up();await p.waitForTimeout(500);};
-  const rowSel=id=>`#pop .sdr[data-id="${id}"]`;
+  const rowSel=id=>`#pop .sdr2[data-id="${id}"]`;
   const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 
   let p=await boot(b,state());
@@ -29,10 +29,11 @@ const {mkT,base}=require('./lib.js');
   await closePop(p);await p.waitForTimeout(3000);
   await openDay(p,day(13));
   T('두 번째부터는 안내가 안 뜸',await p.evaluate(()=>!document.querySelector('#toast').classList.contains('show')));
-  T('날짜 창 스티커 줄이 꾹 누르기 대상(data-hold)',await p.evaluate(()=>[...document.querySelectorAll('#pop .sdr')].every(r=>r.dataset.hold==='stk'&&r.dataset.id&&r.dataset.k)));
-  // ===== 짧게 누르면 아무 일 없음 · 버튼은 그대로 =====
-  await p.click(rowSel('s_run')+' .nm');await p.waitForTimeout(350);
-  T('짧게 누르면 고치기 화면이 안 열림',await p.evaluate(()=>!document.querySelector('#page.open')&&!!document.querySelector('#pop .sdr')));
+  T('날짜 창 스티커 줄이 꾹 누르기 대상(data-hold)',await p.evaluate(()=>[...document.querySelectorAll('#pop .sdr2')].every(r=>r.dataset.hold==='stk'&&r.dataset.id&&r.dataset.k)));
+  // ===== 짧게 누르면 완료 표시만 =====
+  await p.click(rowSel('s_run')+' .sdn');await p.waitForTimeout(350);
+  T('짧게 누르면 고치기 화면이 안 열림',await p.evaluate(()=>!document.querySelector('#page.open')&&!!document.querySelector('#pop .sdr2')));
+  await p.click(rowSel('s_run')+' .sdn');await p.waitForTimeout(350);  // 다시 누르면 취소 (원래대로)
   // ===== 꾹 누르면 고치기 화면 =====
   const before=await S(p);
   await hold(p,rowSel('s_run'));
@@ -42,7 +43,7 @@ const {mkT,base}=require('./lib.js');
   T('고치기 화면은 "반복 없음" 선택이 있고 "이날만"은 없음',await p.evaluate(()=>!!document.querySelector('#page [data-act="sr-rep"][data-v="none"]')&&!document.querySelector('#page [data-act="sr-rep"][data-v="once"]')));
   await p.screenshot({path:'/tmp/s50_edit.png'});
   await p.click('#page [data-act="sr-back"]');await p.waitForTimeout(450);
-  T('뒤로 가면 날짜 창으로 돌아오고 아무것도 안 바뀜',await p.evaluate(()=>!document.querySelector('#page.open')&&!!document.querySelector('#pop .sdr'))&&same((await S(p)).stamps,before.stamps));
+  T('뒤로 가면 날짜 창으로 돌아오고 아무것도 안 바뀜',await p.evaluate(()=>!document.querySelector('#page.open')&&!!document.querySelector('#pop .sdr2'))&&same((await S(p)).stamps,before.stamps));
 
   // ===== 반복 규칙 고치기: 매일 → 화·목 (10/13부터). 그 전 날은 그대로 =====
   await hold(p,rowSel('s_run'));
@@ -52,7 +53,7 @@ const {mkT,base}=require('./lib.js');
   let s=await S(p),run=s.stamps.defs.find(x=>x.id==='s_run');
   T('조깅 규칙이 요일(화 · 목)로 바뀜 · 시작일은 그대로',run.rep==='dow'&&same(run.days.slice().sort(),[2,4])&&run.from==='2026-10-01'&&!run.to,JSON.stringify(run));
   T('토스트: 고쳤어요',(await p.innerText('#toast')).includes('고쳤어요'),await p.innerText('#toast'));
-  T('저장하면 날짜 창으로 돌아옴',await p.evaluate(()=>!document.querySelector('#page.open')&&!!document.querySelector('#pop .sdr')));
+  T('저장하면 날짜 창으로 돌아옴',await p.evaluate(()=>!document.querySelector('#page.open')&&!!document.querySelector('#pop .sdr2')));
   const pinned=['02','03','04','05','07','09','10','11','12'].map(x=>day(+x)).sort();
   T('지난 날 중 새 규칙(화·목)에 안 맞는 9일은 날짜로 남음',same(run.dates.slice().sort(),pinned),JSON.stringify(run.dates));
   await closePop(p);
@@ -73,7 +74,7 @@ const {mkT,base}=require('./lib.js');
   s=await S(p);const d1=s.stamps.defs.find(x=>x.id==='s_run');
   T('알림을 끄면 알림 시각이 비워짐',(d1.ats||[]).length===0);
   T('알림만 고쳤으니 날짜 · 건너뛴 날은 그대로(안 늘어남)',same(d1.dates,d0.dates)&&same(d1.skip,d0.skip)&&d1.rep==='dow'&&same(d1.days,d0.days));
-  T('날짜 창 조깅 줄에서 🔔 사라짐',await p.evaluate(()=>{const r=document.querySelector('#pop .sdr[data-id="s_run"] .nm small');return !!r&&!r.textContent.includes('🔔');}));
+  T('날짜 창 조깅 줄에서 알림 시각 사라짐',await p.evaluate(()=>{const r=document.querySelector('#pop .sdr2[data-id="s_run"] .sdn');return !!r&&!/오전|오후/.test(r.textContent);}));
   await closePop(p);
 
   // ===== 반복을 넓히기: 운동 월·수·금 → 매일 (10/14 부터). 그 전에 안 깔렸던 날은 안 생김 =====
