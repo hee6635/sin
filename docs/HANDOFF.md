@@ -356,3 +356,10 @@
 - 스위치 크기 3가지: .sw 44x26(기본) · .sw.big 48x28(알람 카드) · .npsub/#pop 안 40x24 · 누르는 자리는 .sw::before 로 넓힘.
 - 설정: "알림" 칸 없앰(가족 알림 = 가족 연결 · 알림 소리 = 스티커 화면 · openNotifPage 는 남겨 둠). 화면(openLookPage) · 도움 · 정보(openInfoPage) · 부가 기능(openAddonPage · 줄 .adr + 스위치) · 백업(openBackupPage) 을 .np 새 모양으로. id · data-act 그대로.
 - 날씨 팝업: 본문 Pretendard(Jua 제목 · 숫자 그대로) · 구분선 연하게 · 줄 이름 작은 회색 · "칸을 누르면…"(.wxweb) 숨김.
+
+## v0.147 (덧붙임) — 새 모양 2단계 (글 다듬기 · 사진 · 설명문 줄이기 제외)
+- 알람 카드 바탕 근무 색 16% · 목록 머리 흰 띠 없앰.
+- 가족 연결(renderLinkPage) · 가족 목록(openFamSetPage) · 스티커(openStampPage) → .np. 가족 연결: 가족 줄 상태(근무자 · 보기만)는 small.keep · "나" 표 · 파란 넓은 초대 버튼(.invb) · 날씨 안내 줄 · 맨 아래 규칙 글 숨김(→ 팁) · 불러오는 중 · 오류는 .hint.keep.
+- 이미지 공유(#share-action-bar): 아래에서 올라오는 창 · 제목 · 스위치 두 줄(id shareMemo · shareStk 그대로) · 🔒 안내 줄 숨김.
+- 이럴 땐 이렇게(openTipsPage): 한 화면 그대로(시험 구조 유지) · 처음 안내 줄 · 묶음 카드(선 아이콘 TI · 개수 · 펼침 화살표) · 팁 줄 → 이럴 때 회색 칸 · 파란 번호 단계(CSS counter) · 사진 · 넓은 바로 가기. 글 다듬기는 design/tips/new_text.js (사용자 확인 뒤 TIPS · TIPD 에 넣기).
+- 가족 시험 fam5e 는 처음 안내 말풍선(#tutx)이 클릭을 막아 실패 — v0.135 부터의 문제(가족 시험 도구가 #tutx 를 안 숨김) · 이번 변경과 무관.
