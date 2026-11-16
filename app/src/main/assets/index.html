@@ -1946,6 +1946,11 @@ html:not([data-cal="fill"]) .bwrap .badge.r{font-weight:700}
 .tglow .g-bloom{filter:blur(4px);opacity:var(--gf,1)}.tglow .g-hb{stroke-width:9px;opacity:.08;stroke:currentColor}   /* 밝은 화면: 머리 둘레 진한 근무 색 번짐이 하얀 빛을 받침 */
 html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.07}
 @media (prefers-color-scheme:dark){html:not([data-theme="light"]) .tglow .g-hb{stroke:#fff;opacity:.07}}
+/* v0.166 오늘 빛 = 숨 쉬듯 두 번 (사용자): 도는 빛은 숨기고 테두리는 그대로 · 바깥 근무 색 번짐 + 안쪽 하얀 빛이 --pe 만큼 */
+.tglow .g-halo,.tglow .g-dash,.tglow .g-head,.tglow .g-bloom,.tglow .g-soft,.tglow .g-line,.tglow .g-draw{display:none}
+.cell.today.glowing::after{opacity:1!important}
+.tglow .g-pb{filter:blur(2px);opacity:var(--pe,0)}.tglow .g-po{stroke-width:11px;opacity:.22}.tglow .g-po2{stroke-width:6px;opacity:.4}
+.tglow .g-pin{stroke:#fff;stroke-width:1.6px;opacity:calc(.9*var(--pe,0))}.tglow .g-pin2{stroke-width:5px;opacity:calc(.25*var(--pe,0))}
 /* v0.148 빛이 도는 동안: 원래 테두리는 숨기고 빛을 따라 그려지는 선(g-draw)으로 · 끝나면 다시 테두리 */
 .cell.today.glowing::after{opacity:0}
 .tglow .g-draw{stroke-width:3px;opacity:1;stroke:var(--tdc,var(--today))}
@@ -4119,7 +4124,7 @@ let busy=false;
 // 오늘 칸 빛: 어느 달력이든(내 달력 · 내 달력 보기 · 가족 달력 · 직접 추가한 가족 달력) — 앱을 켤 때 · 그 달력을 처음 열 때 · 다른 달에서 이번 달로 돌아올 때 한 바퀴
 let glowHidAt=0;document.addEventListener('visibilitychange',()=>{if(document.hidden){glowHidAt=Date.now();return;}if(glowHidAt&&Date.now()-glowHidAt>3000){glowBoot=true;setTimeout(()=>{try{glowCheck();}catch(e){}},400);}glowHidAt=0;});   // v0.145 다른 앱 갔다 오면 오늘 빛 한 번 더
 let glowPrev={},glowBoot=true,glowStart=0,glowMk=-1,glowId='',glowRaf=0,glowTm=0;
-const GLOW_MS=1800;   // v0.164 한 바퀴 1.8초 (사용자: 두 바퀴는 과함) · 처음 · 끝은 스르르 켜지고 사라짐(--gf)
+const GLOW_MS=1800;   // v0.166 숨 쉬듯 두 번 (0.9초씩 · 두 번째는 조금 약하게 · 위젯과 같음 · --pe)
 function glowCtx(){
   if(pageMode==='famcal')return {id:'fc:'+vcUid,mk:vcY*12+vcM,sel:'#page #vcsl .cell.today'};
   if(pageMode==='mancal')return {id:'mc:'+manId,mk:vcY*12+vcM,sel:'#page #vcsl .cell.today'};
@@ -4146,6 +4151,7 @@ function glowSvg(c){
   const e=document.createElementNS('http://www.w3.org/2000/svg','svg');
   e.setAttribute('class','tglow');e.setAttribute('viewBox',`0 0 ${w} ${h}`);e.setAttribute('aria-hidden','true');
   {const hl=Math.max(24,per*.26),M=14;let hb='',hc='';for(let i=1;i<=M;i++){const l=hl*i/M;hb+=R('g-hb',` data-l="${l}" data-c="1" stroke-dasharray="${l} ${per-l}"`);hc+=R('g-head',` data-l="${l}" data-c="1" stroke-dasharray="${l} ${per-l}"`);}d+=`<g class="g-bloom">${hb}</g>${hc}`;}   // v0.163 빛: 가운데가 가장 밝고 앞뒤로 스르르 흐려지는 긴 빛(겹친 줄의 가운데를 맞춤) + 흐릿한 번짐(g-bloom)
+  const pi=`<rect class="g-pin" x="${g+3}" y="${g+3}" width="${Math.max(1,bw-6)}" height="${Math.max(1,bh-6)}" rx="${Math.max(1,r-3)}" ry="${Math.max(1,r-3)}"/>`;d+=`<g class="g-pb">${R('g-po')}${R('g-po2')}</g>${pi.replace('g-pin','g-pin g-pin2')}${pi}`;   // v0.166 숨 쉬듯: 바깥 근무 색 번짐 · 안쪽 하얀 빛
   e.innerHTML=R('g-draw',` stroke-dasharray="${per} ${per}" stroke-dashoffset="${per}"`)+R('g-soft')+R('g-line')+d;
   e.dataset.per=per;e.dataset.len=len;c.appendChild(e);return e;   // v0.148 g-draw: 첫 바퀴에 빛을 따라 테두리가 그려짐
 }
@@ -4160,6 +4166,7 @@ function glowFrame(){
   const per=+e.dataset.per,len=+e.dataset.len;
   const env=t<.15?t/.15:Math.pow(1-(t-.15)/.85,1.6);
   e.querySelector('.g-soft').style.opacity=(env*.3).toFixed(3);e.querySelector('.g-line').style.opacity=(env*.8).toFixed(3);
+  {const h=t<.5?t/.5:(t-.5)/.5,a=t<.5?1:.7,k=h<.36?h/.36:(1-h)/.64,sm=Math.max(0,Math.min(1,k*k*(3-2*k)));e.style.setProperty('--pe',(a*sm).toFixed(3));}   // v0.166 숨 두 번
   const q=Math.min(1,t/.96),p=q<.5?2*q*q:1-2*(1-q)*(1-q),head=p*per;e.style.setProperty('--gf',(Math.min(1,t/.17)*(t>.68?Math.max(0,(1-t)/.32):1)).toFixed(3));   // 빛: 처음 0.3초 스르르 켜지고 · 끝 0.6초 스르르 사라짐
   e.querySelector('.g-halo').style.strokeDashoffset=len-head;
   e.querySelector('.g-draw').style.strokeDashoffset=Math.max(0,per-head);
