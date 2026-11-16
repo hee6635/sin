@@ -109,7 +109,7 @@ private fun effects(data: JSONObject, dir: File) {
                 val f = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
                 val cv = Canvas(f)
                 cv.drawBitmap(base, 0f, 0f, null)
-                MonthRenderer.drawGlow(cv, box, u, t, baseColor)
+                MonthRenderer.drawPulse(cv, box, u, t, baseColor)
                 save(f, "glow${i + 1}.png")
             }
             println("효과 프레임 저장: 슬라이드 ${es.size}장 · 빛 ${ts.size}장 (top=${"%.0f".format(top)} rr=${"%.0f".format(rr)} 오늘칸=${box})")

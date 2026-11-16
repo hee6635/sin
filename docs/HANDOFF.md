@@ -466,3 +466,7 @@
 ## v0.164 (덧붙임) 오늘 빛 다듬기 2 (design/today-glow/real2.gif)
 - 앱: 한 바퀴 1.8초(GLOW_MS · head = p*per) · svg 의 --gf(처음 0.3초 켜짐 · 끝 0.6초 사라짐)를 halo · dash · head · bloom 불투명도에 곱함 · 번짐 · 밝기 줄임.
 - 위젯: GLOW_MS 820 → 1400 · gf 로 켜짐 · 사라짐.
+
+## v0.165 (덧붙임) 위젯 오늘 빛 = 숨 쉬듯 · 새로 설치 기본 배경 (design/widget-glow/v1.html)
+- 위젯: drawPulse(오늘 테두리가 0.4초 밝아졌다 0.7초 돌아옴 · 바깥 근무 색 번짐 두 겹 + 안쪽 하얀 줄) · GLOW_MS 1100 · play(step = PULSE_FRAME_MS 80) → 그림 약 13장. drawGlow(도는 빛)는 남겨 둠(안 씀). MonthRun 도 drawPulse.
+- 새로 설치: bg '' (기본) · 칸 채우기는 원래 기본. 시험 s69 줄 추가.
