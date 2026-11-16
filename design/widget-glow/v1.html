@@ -1,0 +1,18 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>위젯 오늘 빛 시안</title><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+body{margin:0;background:#3a4048;font-family:P,sans-serif;color:#fff;padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.wrap{position:relative;width:374px}.wrap img{width:100%;display:block;border-radius:22px}
+/* 오늘 칸(16) 위치 = 그림 935px 기준 x146 y470 w121 h133 → 0.4배 */
+.p{position:absolute;left:58.4px;top:188px;width:48.4px;height:53.2px;border-radius:7px;pointer-events:none;opacity:0}
+.p.go{animation:pulse 1.1s steps(13,end) 1}
+@keyframes pulse{0%{opacity:0;box-shadow:0 0 0 0 rgba(67,95,120,0),inset 0 0 0 1px rgba(255,255,255,0)}
+ 35%{opacity:1;box-shadow:0 0 0 2px rgba(67,95,120,.55),0 0 10px 3px rgba(67,95,120,.45),inset 0 0 0 1.6px rgba(255,255,255,.9),inset 0 0 8px rgba(255,255,255,.55)}
+ 100%{opacity:0;box-shadow:0 0 0 0 rgba(67,95,120,0),inset 0 0 0 1px rgba(255,255,255,0)}}
+button{border:0;background:#3182f6;color:#fff;font:700 15px P,sans-serif;border-radius:12px;padding:10px 18px}
+.note{font-size:13.5px;line-height:1.6;max-width:380px;color:#dfe3e8}
+</style></head><body>
+<div class="wrap"><img src="w.png"><i class="p" id="p"></i></div>
+<button onclick="go()">다시 보기</button>
+<div class="note">· 위젯을 누르거나 이번 달로 돌아올 때 한 번: 오늘 테두리가 0.4초 동안 은은하게 밝아졌다가(안쪽 하얀 빛 + 바깥 근무 색 번짐) 0.7초 동안 스르르 돌아옴<br>· 실제 위젯처럼 그림 13장으로 끊어서 보여 줌 (움직임이 거의 없어 끊김이 티 안 남)</div>
+<script>function go(){const p=document.getElementById('p');p.classList.remove('go');void p.offsetWidth;p.classList.add('go');}setTimeout(go,500);setInterval(go,2600);</script>
+</body></html>
