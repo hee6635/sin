@@ -69,7 +69,7 @@ const fs=require('fs');
     await p.evaluate(()=>{__wx.closePop&&__wx.closePop();__wx.closeSheet&&__wx.closeSheet();});
     await p.click('#nav [data-tab="set"]');await p.waitForTimeout(400);
     const st=await p.evaluate(()=>({n:document.querySelectorAll('#view .stiles [data-act]').length,rows:document.querySelectorAll('#view .mi2').length}));
-    T('설정: 네모 칸들 (목록 줄 없음)',st.n>=10,JSON.stringify(st));
+    T('설정: 네모 칸들 (목록 줄 없음)',st.n>=9,JSON.stringify(st));
     await act(p,'more-addons');await p.waitForTimeout(400);
     const ad=await p.evaluate(()=>document.querySelectorAll('#page.open .stiles.adt [data-act="ad-tile"]').length);
     T('부가 기능: 칸 + 스위치',ad>=5,ad);

@@ -30,7 +30,7 @@ const KST=(y,mo,d,h)=>Date.UTC(y,mo-1,d,h-9);const p2=n=>String(n).padStart(2,'0
     const ed=await p.evaluate(()=>({pre:!!document.getElementById('aPre'),t:(document.querySelector('#page.open')||{}).innerText||''}));
     T('반복 알람 고치기: "5분 전 미리 알림" 스위치(켜짐)',ed.pre&&/5분 전/.test(ed.t),ed.t.slice(0,80));
     await p.evaluate(()=>{const x=document.querySelector('#page.open [data-act="page-close"]');x&&x.click();});await p.waitForTimeout(200);
-    await p.evaluate(()=>{const c=[...document.querySelectorAll('#view [data-act="aedit"],#view .acard')].find(x=>/날씨/.test(x.textContent)&&/알림만/.test(x.textContent));c&&c.click();});await p.waitForTimeout(400);
+    await p.evaluate(()=>{const c=[...document.querySelectorAll('#view [data-act="aedit"],#view .acard')].find(x=>/날씨만/.test(x.textContent));c&&c.click();});await p.waitForTimeout(400);
     const wd=await p.evaluate(()=>(document.querySelector('#page.open')||{}).innerText||'');
     T('날씨만 알람 고치기: "🔔 알림 소리 [소리 · 무음]" · 소리 고르기 · 5분 전 없음',/알림 소리/.test(wd)&&/소리 고르기/.test(wd)&&!/5분 전/.test(wd),wd.replace(/\s+/g,' ').slice(0,200));
     T('오류 없음 (날씨 카드 · 알람)',p.errs.filter(x=>!/Failed to load/.test(x)).length===0,p.errs.join('|'));await p.close();

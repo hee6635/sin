@@ -15,7 +15,7 @@ const KST=(y,mo,d,h)=>Date.UTC(y,mo-1,d,h-9);const p2=n=>String(n).padStart(2,'0
   await p.evaluate(()=>{window.__pk=[];window.AndroidBridge.pickTone=(r,c)=>window.__pk.push(r);window.AndroidBridge.pickToneFile=r=>window.__pk.push('file:'+r);});
   await p.click('#nav [data-tab="alarm"]');await p.waitForTimeout(300);
   const open=async re=>{await p.evaluate(re=>{const c=[...document.querySelectorAll('#view .acard,#view [data-act="aedit"]')].find(x=>new RegExp(re).test(x.textContent));c&&c.click();},re);await p.waitForTimeout(400);};
-  await open('알림만');
+  await open('날씨만');
   await p.evaluate(()=>document.querySelector('#page.open [data-act="dtone"]').click());await p.waitForTimeout(200);
   const pk=await p.evaluate(()=>window.__pk.slice());
   T('날씨만 알람 "소리 고르기" → 폰 알림음 목록 (요청 n:…) · 음악 파일 고르기 안 거침',pk.length===1&&pk[0]==='n:al3',JSON.stringify(pk));
