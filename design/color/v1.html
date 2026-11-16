@@ -1,0 +1,61 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box}
+body{margin:0;background:#dfe2e6;font-family:P,sans-serif;color:#191f28;padding:16px;display:flex;gap:16px;width:max-content;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:8px}.col>b{font-size:15px;margin-left:4px}.col>b em{font-style:normal;color:#3182f6}
+.ph{width:390px;height:844px;border-radius:28px;overflow:hidden;position:relative;background:#f2f4f6}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.32)}
+.hd{display:flex;align-items:center;justify-content:center;height:56px;font-weight:800;font-size:18px;position:relative}.hd i{position:absolute;left:18px;font-style:normal;font-size:24px}
+.cap{font-size:14px;font-weight:700;color:#6b7684;padding:14px 22px 8px}
+.card{background:#fff;border-radius:22px;margin:0 14px;padding:4px 16px}
+.row{display:flex;align-items:center;gap:12px;padding:14px 0}.row+.row{border-top:1px solid #eef0f3}
+.ri{width:34px;height:34px;border-radius:10px;background:#f2f4f6}
+.row b{flex:1;font-size:15.5px}
+.dots{display:flex;gap:10px;padding:0 0 14px 46px}.dots i{width:24px;height:24px;border-radius:50%}
+.sheet{position:absolute;left:8px;right:8px;bottom:8px;background:#fff;border-radius:28px;padding:10px 20px 18px}
+.grab{width:36px;height:5px;border-radius:3px;background:#e5e8eb;margin:0 auto 14px}
+.t{display:flex;align-items:center;justify-content:space-between}.t b{font-size:20px;font-weight:800}
+.pv{width:34px;height:34px;border-radius:50%;box-shadow:0 0 0 3px #fff,0 0 0 4.5px #e5e8eb}
+.board{position:relative;height:200px;border-radius:18px;margin-top:14px;
+ background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.92)),linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.knob{position:absolute;width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);transform:translate(-50%,-50%)}
+.bar{position:relative;height:28px;border-radius:14px;margin-top:16px}
+.bar .knob{top:50%}
+.btn{margin-top:18px;height:52px;border-radius:16px;background:#3182f6;color:#fff;font-weight:800;font-size:16px;display:grid;place-items:center}
+.tbl{display:grid;grid-template-columns:60px repeat(4,1fr);row-gap:2px;padding:6px 8px 10px;text-align:center;font-size:13px;font-weight:700;color:#8b95a1}
+.tbl .h{padding:8px 0}.tbl .me{color:#1b64da}
+.tbl .dt{text-align:left;padding-left:8px;display:flex;align-items:center;color:#4e5968}.tbl .su{color:#c23a5a}.tbl .sa{color:#3f6fd8}
+.tbl .td{background:#e8f3ff;border-radius:10px}
+.bd{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;margin:3px auto;font-weight:800;font-size:12.5px}
+.d{background:#a6c6e2;color:#1c2a31}.n{background:#e0b8a3;color:#2b1f1b}.r{color:#c23a5a}
+.mecol{box-shadow:inset 0 0 0 2px #3182f6;border-radius:12px}
+.today{display:flex;gap:8px;padding:14px 16px}.tc{flex:1;border-radius:16px;background:#f4f6f8;padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#6b7684}
+.tc.on{background:#e8f3ff;box-shadow:inset 0 0 0 2px #3182f6;color:#1b64da}.tc .bd{width:34px;height:34px;font-size:14px;margin:0}
+.mn{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0;font-weight:800;font-size:16px}.mn span{color:#b0b8c1;font-size:20px}
+.rowl{display:flex;align-items:center;gap:12px;padding:14px 16px}.rowl b{flex:1;font-size:15.5px}.rowl em{font-style:normal;color:#b0b8c1;font-size:18px}
+</style></head><body>
+<script>
+const hue=['#f00','#ff0','#0f0','#0ff','#00f','#f0f','#f00'];
+const sheet=(x,y,col,br)=>`<div class="sheet"><div class="grab"></div>
+ <div class="t"><b>오늘 표시 색</b><span class="pv" style="background:${col}"></span></div>
+ <div class="board"><span class="knob" style="left:${x}%;top:${y}%;background:${col}"></span></div>
+ <div class="bar" style="background:linear-gradient(to right,#111,${br})"><span class="knob" style="left:78%;background:${col}"></span></div>
+ <div class="btn">이 색으로</div></div>`;
+const bg=`<div class="hd"><i>‹</i>화면</div><div class="cap">달력</div><div class="card"><div class="row"><span class="ri"></span><b>달력 모양</b></div><div class="row" style="border-bottom:0"><span class="ri"></span><b>오늘 표시</b></div>
+ <div class="dots">${['conic-gradient(#a6c6e2 0 33%,#e0b8a3 0 66%,#c23a5a 0)','#2160c4','#1f7a4d','#c2364a','#6b46c1','#d97a00','#3d4450','conic-gradient(red,orange,yellow,lime,cyan,blue,magenta,red)'].map((c,i)=>`<i style="background:${c};${i===7?'box-shadow:0 0 0 2px #fff,0 0 0 4px #3182f6':''}"></i>`).join('')}</div></div><div class="dim"></div>`;
+const S=[['d','주'],['n','야'],['r','휴'],['r','휴']];
+const rot=(g,i)=>S[(i+g*1)%4];
+let rows='';const dw=['일','월','화','수','목','금','토'];
+for(let i=9;i<=22;i++){const w=(i+3)%7,td=i===17;rows+=`<span class="dt ${w===0?'su':w===6?'sa':''} ${td?'td':''}">${i}.${dw[w]}</span>`+[0,1,2,3].map(g=>{const [c,t]=rot(g,i);return `<span class="${td?'td':''}"><span class="bd ${c}">${t}</span></span>`;}).join('');}
+document.write(`
+<div class="col"><b>지금</b><img src="now_android.jpg" style="width:390px;border-radius:28px"></div>
+<div class="col"><b>바꾼 뒤 · <em>색 고르기</em></b><div class="ph">${bg}${sheet(62,22,'#3d6fe8','#3d6fe8')}</div></div>
+<div class="col"><b>바꾼 뒤 · <em>연한 색</em></b><div class="ph">${bg}${sheet(14,70,'#f1b8a4','#f1b8a4')}</div></div>
+<div class="col"><b>동료 근무 · <em>새 화면</em></b><div class="ph"><div class="hd"><i>‹</i>동료 근무</div>
+ <div class="cap">오늘</div><div class="card" style="padding:0"><div class="today">${['A조','B조','C조','D조'].map((n,g)=>{const [c,t]=rot(g,17);return `<div class="tc ${g===2?'on':''}"><span class="bd ${c}">${t}</span>${n}${g===2?' · 나':''}</div>`;}).join('')}</div></div>
+ <div class="cap">한 달</div><div class="card" style="padding:0"><div class="mn"><span>‹</span>10월<span>›</span></div>
+  <div class="tbl"><span></span>${['A조','B조','C조','D조'].map((n,g)=>`<span class="h ${g===2?'me':''}">${n}</span>`).join('')}${rows}</div></div>
+ </div></div>
+<div class="col"><b>동료 근무 · <em>맨 아래</em></b><div class="ph" style="display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:20px"><div class="card" style="padding:0"><div class="rowl"><span class="ri"></span><b>조 이름 · 개수 고치기</b><em>›</em></div><div class="rowl" style="border-top:1px solid #eef0f3"><span class="ri"></span><b>내 조</b><em style="color:#1b64da;font-weight:800;font-size:15px">C조 ›</em></div></div></div></div>
+`);
+</script></body></html>
