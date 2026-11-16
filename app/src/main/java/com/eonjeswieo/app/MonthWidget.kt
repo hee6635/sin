@@ -704,7 +704,7 @@ object MonthRenderer {
 
     /** "근무 색"일 때 오늘 색: 색 있는 근무 = 한 단계 진하게 · 쉬는 날 = 장미 · 색 없음 = 기본 파랑 */
     internal fun shiftToday(hasColor: Boolean, bg: Int, rest: Boolean, night: Boolean): Int =
-        if (hasColor) deepen(bg, night) else if (rest) 0xFF6B7482.toInt() else 0xFF3182F6.toInt()   // v0.135 쉬는 날 = 회색 (앱과 같게 · 빨강은 명절 느낌)
+        if (hasColor) (if (night) deepen(bg, night) else mixRgb(deepen(bg, night), 0xFF000000.toInt(), 0.72f)) else if (rest) 0xFF6B7482.toInt() else 0xFF3182F6.toInt()   // v0.135 쉬는 날 = 회색 (앱과 같게 · 빨강은 명절 느낌)
 
     internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal, profileWDp: Float = -1f, part: Int = 0, moving: Boolean = false) {   // part: 0 = 전부 · 1 = 바깥 틀(바탕 · 맨 윗줄 · 요일 줄)만 · 2 = 날짜 칸들만 (월 넘김 · 오늘 효과가 따로 그려 겹침)
         lastToday = null
@@ -907,15 +907,15 @@ object MonthRenderer {
     /** 또렷하게: 근무 글자를 더 진하게(어두운 화면은 더 밝게) */
     internal fun vividInk(c: Int, night: Boolean): Int = if (!vivid) c else if (night) mixRgb(c, 0xFFFFFFFF.toInt(), 0.55f) else mixRgb(c, 0xFF000000.toInt(), 0.45f)
     /** "휴" 글자 색: 또렷하게면 진한 빨강 */
-    internal fun restInk(fill: Boolean, night: Boolean): Int = if (vivid) (if (night) 0xFFFF7088.toInt() else 0xFFC8102E.toInt()) else if (fill) (if (night) 0xFFF28B9B.toInt() else 0xFFD9677B.toInt()) else REST_COL
+    internal fun restInk(fill: Boolean, night: Boolean): Int = if (vivid) (if (night) 0xFFFF7088.toInt() else 0xFFC8102E.toInt()) else if (night) (if (fill) 0xFFF28B9B.toInt() else REST_COL) else 0xFFC23A5A.toInt()
     /** 또렷하게: 이번 달 칸 테두리 */
-    internal fun vividBorder(cv: Canvas, x0: Float, y0: Float, cw: Float, ch: Float, u: Float, night: Boolean) {
+    internal fun vividBorder(cv: Canvas, x0: Float, y0: Float, cw: Float, ch: Float, u: Float, night: Boolean, col: Int = 0) {
         if (!vivid) return
         val gap = 1.2f * u
         val bp = Paint(Paint.ANTI_ALIAS_FLAG)
         bp.style = Paint.Style.STROKE
         bp.strokeWidth = Math.max(1f, 0.8f * u)
-        bp.color = if (night) 0x2EFFFFFF else 0x1F000000
+        bp.color = if (night) 0x2EFFFFFF else if (col != 0) (deepen(col) and 0x00FFFFFF) or 0x80000000.toInt() else 0x1F000000
         cv.drawRoundRect(RectF(x0 + gap, y0 + gap, x0 + cw - gap, y0 + ch - gap), 7f * u, 7f * u, bp)
     }
 
@@ -1022,7 +1022,7 @@ object MonthRenderer {
         val pad = plan.padX
         val holDay = (d?.optString("hol", "") ?: "").isNotEmpty()
         if (fill) {   // 칸 채우기: 일하는 날은 근무 색을 연하게 칸 전체에 · 쉬는 날은 비움 (명절은 칸 전체가 아니라 윗줄 띠 — 아래)
-            val tint = if (f.shift.isNotEmpty() && f.circle) mixRgb(f.bg, pal.bg, if (vivid) (if (night) 0.62f else 0.58f) else if (night) 0.30f else 0.24f) else 0
+            val tint = if (f.shift.isNotEmpty() && f.circle) mixRgb(f.bg, pal.bg, if (vivid) (if (night) 0.62f else 0.58f) else if (night) 0.30f else 0.40f) else 0   // v0.161 기본 0.24 → 0.40 (앱 달력과 같이 진하게)
             if (tint != 0) {
                 val gap = 1.2f * u
                 val box = RectF(x0 + gap, y0 + gap, x0 + cw - gap, y0 + rowH - gap)
@@ -1043,7 +1043,7 @@ object MonthRenderer {
             cv.drawPath(path, hp)
         }
 
-        if (fill && f.inMonth) vividBorder(cv, x0, y0, cw, rowH, u, night)
+        if (fill && f.inMonth && (night || (f.shift.isNotEmpty() && f.circle))) vividBorder(cv, x0, y0, cw, rowH, u, night, if (night) 0 else f.bg)
         if (fill && isToday) drawTodayBand(cv, x0, y0, cw, rowH, u)   // 오늘: 오른쪽 가장자리 띠(앱 달력과 같음 · 가장 아래층)
 
         // 근무: 일하는 날은 동그라미 · 쉬는 날은 글자만 (줄 안에서 높이가 같음 · 모든 동그라미가 같은 크기)
@@ -1055,14 +1055,14 @@ object MonthRenderer {
             paint.textAlign = Paint.Align.CENTER
             if (f.circle) {
                 if (fill) {   // 칸 채우기: 동그라미 없이 근무 색을 진하게 한 글자
-                    paint.color = vividInk(inkOf(f.bg, night), night)
-                    paint.typeface = if (vivid) WFont.bold else WFont.med
+                    paint.color = if (vivid || night) vividInk(inkOf(f.bg, night), night) else mixRgb(inkOf(f.bg, night), 0xFF000000.toInt(), 0.8f)
+                    paint.typeface = WFont.bold
                     paint.textSize = rad * 1.12f * tn.ink
                     fitText(paint, f.shift, plan.circleD * 0.9f * tn.ink)
                 } else {
                     val cp = Paint(Paint.ANTI_ALIAS_FLAG)
                     cp.color = if (vivid) deepen(f.bg) else f.bg   // 또렷하게: 진한 동그라미 + 흰 글자
-                    val rr2 = Math.min(rad * tn.ink, rad * 1.25f)   // 주야 크기 배율: 동그라미도 같이 (칸에서 넘치지 않게 최대 1.25배)
+                    val rr2 = Math.min(Math.min(rad * 1.12f * tn.ink, rad * 1.25f), cw / 2f - 10f * u)   // v0.161 조금 크게 (빨간 점 자리 남김) · 주야 크기 배율: 동그라미도 같이 (칸에서 넘치지 않게 최대 1.25배)
                     cv.drawCircle(cx, cy, rr2, cp)
                     paint.color = if (vivid) 0xFFFFFFFF.toInt() else f.fg
                     paint.textSize = rr2 * 1.04f
@@ -1070,7 +1070,7 @@ object MonthRenderer {
                 }
             } else {
                 paint.color = restInk(fill, night)
-                if (vivid) paint.typeface = WFont.bold else if (fill) paint.typeface = WFont.med
+                paint.typeface = WFont.bold
                 paint.textSize = (if (fill) rad * 1.12f else rad * 1.24f) * tn.ink   // v0.97 칸 채우기: "휴"도 근무 글자와 같은 크기
                 fitText(paint, f.shift, plan.circleD * (if (fill) 0.9f else 1.1f) * tn.ink)
             }

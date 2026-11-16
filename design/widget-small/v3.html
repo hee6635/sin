@@ -1,0 +1,48 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box}
+body{margin:0;background:#dfe2e6;font-family:P,sans-serif;padding:16px;width:930px;color:#191f28}
+h3{margin:4px 4px 10px;font-size:17px}h3 em{font-style:normal;color:#3182f6}
+.home{position:relative;width:882px;height:480px;border-radius:18px;overflow:hidden;background:url(bg.jpg) center/cover}
+.w{position:absolute;border-radius:22px;box-shadow:0 2px 10px rgba(0,0,0,.12);overflow:hidden;background:rgba(255,255,255,.96)}
+.card{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;height:100%}
+.hd{padding:8px 12px;font-size:14px;font-weight:700}.hd small{font-weight:600;opacity:.8;margin-left:4px}
+.sh{display:flex;align-items:center;gap:6px;font-weight:800;letter-spacing:-1px;padding:0 12px}
+.sh i{width:8px;height:8px;border-radius:50%;background:#e5322d;display:block;flex:none}
+.ms{margin-top:auto;padding:0 7px 7px;display:flex;flex-direction:column;gap:4px}
+.m{font-size:12.5px;font-weight:600;border-radius:7px;padding:4px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m.mw{background:rgba(255,255,255,.8);color:#1c2a31}.m.y{background:#fff1b8;color:#3d3416}.m.f{background:#e6ddff;color:#3b2a7a}
+.dy{background:#cfe0ef;color:#1c3550}.ed{background:#fbe7ac;color:#5a4410}.nt{background:#f1dccf;color:#4a2a1b}.rs{color:#c23a5a}
+.thd{}.nhd{}.today{box-shadow:inset 0 0 0 3px #2f5f8f}
+.one{left:24px;top:24px;width:200px;height:210px}.one .sh{font-size:42px;margin:auto 0 0;justify-content:center}
+.two{left:250px;top:24px;width:608px;height:210px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.two .cs{display:flex;gap:8px;flex:1}.two .card{flex:1}.two .sh{font-size:34px;margin:auto 0 0;justify-content:center}
+.al{text-align:center;font-size:12.5px;color:#6b7684;font-weight:600}
+.week{left:24px;top:258px;width:834px;height:196px;padding:10px 10px 12px}
+.week .h{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:13px;font-weight:700;color:#8b95a1;margin-bottom:6px}
+.week .h span:first-child{color:#e5484d}.week .h span:last-child{color:#3b6fd6}
+.week .g{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;height:146px}
+.week .card{border-radius:14px}.week .n{padding:6px 9px;font-size:15px;font-weight:800}.week .sh{justify-content:center;font-size:26px;margin:auto 0}
+.week .ms{margin-top:0}.sun{color:#e5484d}.sat{color:#3b6fd6}
+.note{font-size:14px;color:#4e5968;margin:10px 4px 0;line-height:1.6}
+</style></head><body>
+<h3>지금</h3><img src="now.jpg" style="width:882px;border-radius:18px;display:block"><h3 style="margin-top:20px">바꾼 뒤 v3 <em>(오늘 = 테두리 진하게 · 앱 · 한 달 위젯과 같은 모양)</em></h3>
+<div class="home">
+  <div class="w one"><div class="card dy"><div class="hd" style="font-size:20px;font-weight:800">16(월)</div><div class="sh">주간</div><div class="ms"><div class="m mw">📋 업무 메모</div><div class="m f">♥ 저녁 같이 먹자</div></div></div></div>
+  <div class="w two"><div class="cs">
+    <div class="card dy today"><div class="hd" style="font-size:20px;font-weight:800">16(월)</div><div class="sh">주간</div><div class="ms"><div class="m mw">📋 업무 메모</div><div class="m f">♥ 저녁 같이 먹자</div></div></div>
+    <div class="card ed"><div class="hd" style="font-size:20px;font-weight:800">17(화)</div><div class="sh"><i></i>교육</div><div class="ms"><div class="m y">교육 확정</div></div></div>
+  </div><div class="al">⏰ 다음 알람 11/22 오전 5:36</div></div>
+  <div class="w week"><div class="h"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+    <div class="g">
+      <div class="card dy"><div class="n sun">15</div><div class="sh">주</div></div>
+      <div class="card dy today"><div class="n">16</div><div class="sh">주</div><div class="ms"><div class="m mw">📋 업무 메모</div></div></div>
+      <div class="card ed"><div class="n">17</div><div class="sh"><i></i>교</div><div class="ms"><div class="m y">교육 확정</div></div></div>
+      <div class="card"><div class="n">18</div><div class="sh rs">휴</div><div class="ms"><div class="m f">바이올린공개…</div></div></div>
+      <div class="card"><div class="n">19</div><div class="sh rs"><i></i>휴</div><div class="ms"><div class="m y">오전 8시까지…</div></div></div>
+      <div class="card nt"><div class="n">20</div><div class="sh">야</div><div class="ms"><div class="m f">오카리나공개…</div></div></div>
+      <div class="card"><div class="n sat">21</div><div class="sh rs">휴</div></div>
+    </div></div>
+</div>
+<div class="note">· 오늘 = 진한 근무 색 테두리 (앱 · 한 달 위젯과 같음 · 쉬는 날이면 회색 테두리)<br>· 칸 색 · 근무 글자 · 휴 = 한 달 위젯과 같은 진하기 · 메모는 메모 색 그대로<br>· 1일 · 2일만: 근무 이름 크고 굵게("주" → "주간") · 빨간 점은 글자 바로 옆</div>
+</body></html>

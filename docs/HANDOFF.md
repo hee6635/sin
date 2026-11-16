@@ -447,3 +447,10 @@
 - 기본(data-bg 없음 · 밝은 화면만): --cbm 26% → 42% · --restx #c23a5a · 근무 글자 color-mix(tb 30%, 검정) · 날짜 숫자 · 휴 굵기 700.
 - 또렷하게(밝은 화면만): 흰 칸 box-shadow 없음 · 근무 칸 선 = 칸 색 계열. 어두운 화면은 그대로.
 - 밝은 화면 조건: @media not (prefers-color-scheme:dark) 안의 :not([data-theme="dark"]) + [data-theme="light"] 두 벌. 시험 s99.
+
+## v0.161 (덧붙임) 종이 테마 뺌 · 동그라미 · 위젯 진하기 · 작은 위젯 (시안 design/circle · design/widget-look · design/widget-small/v4)
+- 종이(paper) 뺌: 설정 › 화면 › 배경 = 기본 · 또렷하게 · normalize 에서 'paper' → '' · 종이 CSS 4줄 지움.
+- 앱 동그라미: html:not([data-cal="fill"]) .cell:not(.pers) --b = min(… *.84, 100cqw - 20px) (좁은 폰은 근무 변경 빨간 점 자리 4px 남김) · 휴 굵게.
+- 한 달 위젯(MonthWidget.kt): 칸 색 0.24 → 0.40 · 근무 글자 굵게 · 조금 진하게 · 휴 #C23A5A 굵게 · 또렷하게 흰 칸 테두리 없음(vividBorder col 인자) · 동그라미 rad*1.12 (cw/2 - 10dp 까지) · 오늘 근무 날 색 = deepen 을 검정과 72% 섞음 (밝은 화면).
+- 작은 위젯(Widgets.kt): 같은 진하기 · 1칸 · 2칸(칸 채우기)은 근무 이름(tn · 위젯 데이터 새 값)을 크고 굵게 · 빨간 점 = 글자 바로 왼쪽 · 2칸 "다음 알람" 줄 뺌 · 1칸 아래 "내일 ○○"(tomText) · 7일 지난 날 흐리게(saveLayerAlpha 115).
+- 위젯 데이터 days[].tn = 근무 이름(5자) · 시험 s100 · s54 고침.
