@@ -97,7 +97,7 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
     const r14=rem.find(x=>x.date==='2026-10-14');
     T('날씨만 알림 예비 제목/글 (☔ 퇴근길 비 · 출근 6° · 퇴근 12°)',!!r14&&/☔ 퇴근길 비 와요/.test(r14.title)&&/출근 6° · 퇴근 12°/.test(r14.text),JSON.stringify(r14||{}).slice(0,200));
     await p.click('#nav [data-tab="alarm"]');await p.waitForTimeout(300);
-    T('알람 목록: "☔ 날씨 알림만" 표시 · 다음 알람 카드는 울리는 알람',await p.evaluate(()=>/☔ 날씨 알림만/.test(document.body.innerText)&&/05:50|5:50/.test(document.querySelector('.anext1').textContent)));
+    T('알람 목록: "날씨만" 칩 · 다음 알람 카드는 울리는 알람',await p.evaluate(()=>/날씨만/.test(document.querySelector(".alw").innerText)&&/05:50|5:50/.test(document.querySelector('.anext1').textContent)));
     // 끄면: 날짜 창 줄 없음 · 날씨만 알림 안 감
     await p.evaluate(()=>{__wx.S.addons.wx=false;__wx.save();__wx.render();__wx.pushRemindersToNative();__wx.openDay('2026-10-14');});await p.waitForTimeout(300);
     T('끄면 날짜 창 날씨 줄 없음',await p.evaluate(()=>document.getElementById('wxDay').hidden));

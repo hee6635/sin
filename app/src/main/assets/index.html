@@ -1694,6 +1694,10 @@ html[data-cal="fill"] .cell.today::after,html[data-cal="fill"] .cell.today[style
 .np .npsub .pl2{font-size:14px;font-weight:500;color:var(--muted)}
 .np .npwx{padding:0 16px 14px 60px}
 .np .inl{text-align:right;font-weight:500}
+.np .npseg.sm{display:inline-grid;margin-left:auto;padding:3px;border-radius:12px;gap:2px}.np .npseg.sm button{padding:6px 11px;font-size:13.5px;border-radius:9px}
+.np .npi svg{width:18px;height:18px}
+.np .stiles.adt{display:block;margin:8px 16px 0;padding:0;gap:0}.np .adr.off .pl2{color:var(--muted)}
+.np .pcol .tdc-row{padding-left:44px}
 .np .nppat .npht{font-size:13px;font-weight:600;color:color-mix(in srgb,var(--fg) 65%,var(--bg))}.np .nppat .nphn{font-size:26px;font-weight:800;letter-spacing:-.8px;margin-top:2px}
 .np .nppat .nphs{font-size:14px;font-weight:500;color:color-mix(in srgb,var(--fg) 65%,var(--bg));margin:6px 0 12px}.np .nppat .nphs b{color:var(--fg)}
 .np .nppat .pc{background:color-mix(in srgb,var(--bg) 75%,transparent);border-radius:12px}
@@ -1705,6 +1709,40 @@ html[data-cal="fill"] .cell.today::after,html[data-cal="fill"] .cell.today[style
 .dow{font-size:12.5px;border-bottom:1px solid var(--line)}
 .cal-mid .ym .ib{font-size:26px;color:color-mix(in srgb,var(--fg) 70%,var(--bg))}   /* 크기(34) · 누르는 자리(44)는 그대로 */
 .pl{border-radius:4px}
+
+/* v0.146 알람 탭 새 모양 */
+.alw{background:var(--surface);min-height:100%;padding:4px 0 24px}
+#top .apl{width:40px;height:40px;border-radius:50%;background:var(--bg);color:var(--accent);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(15,23,42,.06)}
+.alw .anext1{margin:6px 16px 4px;padding:14px 16px;border-radius:20px;background:var(--bg);box-shadow:0 2px 12px rgba(15,23,42,.035);border:0;color:var(--fg);gap:12px}
+.alw .anext1 .nxi{width:40px;height:40px;border-radius:12px;background:var(--acc-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex:none}
+.alw .anext1 .nxt{display:flex;flex-direction:column;min-width:0}.alw .anext1 .nxt small{font-size:12.5px;color:var(--accent);font-weight:600}.alw .anext1 .nxt b{font-size:16px;font-weight:700}
+.alw .anext1 .r{margin-left:auto;font-size:13px;font-weight:700;color:var(--accent);background:var(--acc-soft);padding:6px 10px;border-radius:999px;flex:none}
+.alw .list-header{padding:16px 22px 10px;font-size:13.5px;font-weight:600}
+.acard.ac2{margin:0 16px 10px;padding:16px 14px 14px 26px;border-radius:22px;background:color-mix(in srgb,var(--ac,var(--accent)) 8%,var(--bg));box-shadow:0 2px 12px rgba(15,23,42,.035);border:0;overflow:visible}
+.acard.ac2::before{background:var(--ac,var(--accent));left:12px;top:16px;bottom:16px;width:4px;border-radius:2px}
+.acard.ac2.off{opacity:.45;background:var(--bg)}.acard.ac2.off::before{background:var(--line)}
+.acard.ac2 .acard-n b{font-size:15px;font-weight:600;color:color-mix(in srgb,var(--fg) 85%,var(--bg))}
+.acard.ac2 .ap{font-size:16px;font-weight:700;color:color-mix(in srgb,var(--fg) 70%,var(--bg))}.acard.ac2 .tm{font-size:40px;font-weight:800;letter-spacing:-1.5px;font-variant-numeric:tabular-nums}
+.acard.ac2 .icon-row{gap:6px;margin-top:8px;flex-wrap:wrap}
+.ac2 .cp{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;color:color-mix(in srgb,var(--fg) 60%,var(--bg));background:color-mix(in srgb,var(--surface) 80%,transparent);padding:5px 10px;border-radius:10px}
+.ac2 .cp svg,.ac2 .cs svg{color:var(--muted);width:auto;height:auto}
+.ac2 .cp.w{background:var(--acc-soft);color:var(--accent)}.ac2 .cp.w svg{color:var(--accent)}
+.ac2 .cs{display:inline-flex;align-items:center;gap:6px;padding:5px 2px}.ac2 .vb{display:block;width:46px;height:5px;border-radius:3px;background:var(--line);position:relative;overflow:hidden}.ac2 .vb i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--accent)}
+.ac2 .askip-l{font-size:12.5px}
+/* v0.146 스위치 크기 3가지: 큰 카드 48x28 · 설정 줄 44x26 · 작은 줄 40x24 (누르는 자리는 바깥 여백으로) */
+.sw{width:44px;height:26px}.sw i::after{width:22px;height:22px;top:2px;left:2px}.sw input:checked+i::after{transform:translateX(18px)}
+.sw.big{width:48px;height:28px}.sw.big i::after{width:24px;height:24px}.sw.big input:checked+i::after{transform:translateX(20px)}
+.npsub .sw,#pop .sw{width:40px;height:24px}.npsub .sw i::after,#pop .sw i::after{width:20px;height:20px}.npsub .sw input:checked+i::after,#pop .sw input:checked+i::after{transform:translateX(16px)}
+.sw::before{content:'';position:absolute;inset:-9px -6px}
+
+/* v0.146 날씨 팝업 작은 다듬기: 본문 Pretendard(제목 · 숫자 Jua 그대로) · 출퇴근 이름 진하게 · 구분선 연하게 · 줄 이름 작은 회색 · 설명 줄 뺌 */
+#pop .wxp{font-family:Pretendard,sans-serif}
+#pop .wxp .wxc .l{color:var(--fg)}
+#pop .wxp .wxrw{border-top-color:color-mix(in srgb,var(--line) 70%,transparent);padding-top:16px;padding-bottom:16px}
+#pop .wxp .wxrw .k{font-size:13px;color:var(--muted);font-weight:600}
+#pop .wxp .wxk{border-radius:20px}
+#pop .wxp .wxweb{display:none}
+#pop .wxp .wsrc{opacity:.7}
 </style>
 </head>
 <body>
@@ -3438,7 +3476,7 @@ function render(){
     v.innerHTML=renderColleague();
     requestAnimationFrame(()=>{const r=$('.crow.today');if(r)r.scrollIntoView({block:'center'});});
   }else if(tab==='alarm'){
-    top.innerHTML=`<h1>알람</h1><button class="ib plus" data-act="aadd" style="background:none; color:var(--accent);">+</button>`;
+    top.innerHTML=`<h1>알람</h1><button class="ib plus apl" data-act="aadd" aria-label="알람 추가">${npi('plus',22)}</button>`;
     v.innerHTML=renderAlarm();
   }else if(tab==='fam'){
     const un2=unseenCount();
@@ -4887,39 +4925,38 @@ function renderAlarm(){
     const d0=new Date();d0.setHours(0,0,0,0);const dd=Math.round((new Date(at.getFullYear(),at.getMonth(),at.getDate())-d0)/864e5);
     const day=dd===0?'오늘':dd===1?'내일':dd===2?'모레':`${at.getMonth()+1}월 ${at.getDate()}일 (${DOW[at.getDay()]})`;
     // v0.126 큰 카드 대신 한 줄 (아래 목록이 곧 울리는 순이라 두 번 크게 보일 필요 없음)
-    return `<div class="anext1" data-act="aedit" data-id="${a.id}"${col?` style="--ac:${col}"`:''}>다음 알람 · <b>${day} ${t12(a.time)}</b><span class="r">${remain(at.getTime()-now0)} 후</span></div>`;
+    return `<div class="anext1" data-act="aedit" data-id="${a.id}"><span class="nxi">${npi('bell',20)}</span><span class="nxt"><small>다음 알람</small><b>${day} ${t12(a.time)}</b></span><span class="r">${remain(at.getTime()-now0)} 후</span></div>`;   // v0.146 새 모양
   })();
   const cards=order.map(a=>{
-    const col=shiftCol(a);
-    const t=ampm(a.time),iColor=a.on?'var(--icon-on)':'var(--icon-off)';
-    const vibOn=a.on&&a.vib!==false,sndOn=a.on&&a.sound!==false;
-    const vibSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="${vibOn?iColor:'var(--icon-off)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>${vibOn?'<path d="M1 12h2M21 12h2M3 8h1M20 8h1M3 16h1M20 16h1"></path>':'<line x1="2" y1="2" x2="22" y2="22"></line>'}</svg>`;
-    const sndSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="${sndOn?iColor:'var(--icon-off)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>${sndOn?'<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>':'<line x1="23" y1="1" x2="1" y2="23"></line>'}</svg>`;
-    const vol=sndOn?Math.max(8,Math.round((a.vol??100)*.6)):60;
+    // v0.146 새 모양: 연한 근무 색 바탕 · 왼쪽 띠 · 배지 · 큰 시간(앞 0 없음) · 아래 칩(소리 막대 · 진동 · 날씨 · 한 번만 · 전날/다음날) · 근무 색 없는 알람은 파랑
+    const col=shiftCol(a),t=ampm(a.time);
+    const ch=[];
+    if(OFF_NAME[String(a.offset||0)])ch.push(`<span class="cp">${OFF_NAME[String(a.offset||0)]}</span>`);
+    if(a.once)ch.push(`<span class="cp">${npi('repeat',13)}한 번만</span>`);
+    if(!a.wxOnly){
+      ch.push(a.sound!==false?`<span class="cs">${npi('volume-2',14)}<i class="vb"><i style="width:${Math.max(8,Math.round(a.vol??100))}%"></i></i></span>`:`<span class="cp">${npi('volume-2',13)}무음</span>`);
+      if(a.vib!==false)ch.push(`<span class="cp">진동</span>`);
+    }
+    if(a.wxOnly)ch.push(`<span class="cp w">${npi('cloud-sun',13)}날씨만</span>`);
+    else if(a.wx!==false&&wxOn())ch.push(`<span class="cp w">${npi('cloud-sun',13)}끈 뒤 보기</span>`);
+    const skip=a.on&&a.skipAt>now0?`<span class="askip-l">${(()=>{const x=new Date(a.skipAt);return `${x.getMonth()+1}/${x.getDate()}`;})()} 건너뜀 · <button data-act="askip-undo" data-id="${a.id}">되돌리기</button></span>`
+      :a.on&&nextFire[a.id]&&!a.once&&nextFire[a.id]-now0<24*3600e3?`<button class="askip-l" data-act="askip" data-id="${a.id}">이번만 끄기 ›</button>`:'';
+    const why=[a.on&&a.wxOnly&&!wxOn()?'날씨가 꺼져 있어서 안 와요':a.on&&!nextFire[a.id]?'두 달 안에 울릴 날이 없어요':'',a.noHol?'공휴일 쉼':''].filter(Boolean).join(' · ');
     return `
-    <div class="acard ${a.on?'':'off'}" data-act="aedit" data-id="${a.id}"${col?` style="--ac:${col}"`:''}>
+    <div class="acard ac2 ${a.on?'':'off'}" data-act="aedit" data-id="${a.id}"${col?` style="--ac:${col}"`:''}>
       <div class="acard-left">
         <div class="acard-n">${a.shift==='*'?'<span class="badge sm r">매일</span>':badge(a.shift,'sm','')}<b>${esc(a.label||(a.shift==='*'?'매일 알람':shiftLabel(a.shift)+' 알람'))}</b></div>
-        <div class="acard-top">
-          <span class="ap">${t.ap}</span><span class="tm">${t.tm}</span>
-        </div>
-        <div class="icon-row">
-          ${OFF_NAME[String(a.offset||0)]?`<span style="font-size:13px;font-weight:600;color:${iColor};margin-right:4px;">${OFF_NAME[String(a.offset||0)]}</span>`:''}
-          ${a.once?`<span style="font-size:12px;font-weight:700;color:${iColor};margin-right:4px;">한 번만</span>`:''}
-          ${a.wxOnly?`<span style="font-size:13px;font-weight:700;color:${iColor}">☔ 날씨 알림만</span>`:`${vibSvg}${sndSvg}
-          <div class="vol-bar" style="width:${vol}px;background:${sndOn?'var(--icon-on)':'var(--icon-off)'};"></div>${a.wx!==false&&wxOn()?`<span style="font-size:12px;margin-left:6px;opacity:.8" aria-label="끈 뒤 날씨">☔</span>`:''}`}
-          ${a.on&&a.skipAt>now0?`<span class="askip-l">⏭ ${(()=>{const x=new Date(a.skipAt);return `${x.getMonth()+1}/${x.getDate()}`;})()} 건너뜀 · <button data-act="askip-undo" data-id="${a.id}">되돌리기</button></span>`
-            :a.on&&nextFire[a.id]&&!a.once&&nextFire[a.id]-now0<24*3600e3?`<button class="askip-l" data-act="askip" data-id="${a.id}">이번만 끄기 ›</button>`:''}
-        </div>
-        ${(()=>{const x=!a.on?'꺼짐':a.wxOnly&&!wxOn()?'날씨가 꺼져 있어서 안 와요':!nextFire[a.id]?'두 달 안에 울릴 날이 없어요':'';const y=[x,a.noHol?'공휴일 쉼':''].filter(Boolean).join(' · ');return y?`<div class="aleft">${y}</div>`:'';})()}
+        <div class="acard-top"><span class="ap">${t.ap}</span><span class="tm">${t.tm.replace(/^0(?=\d:)/,'')}</span></div>
+        <div class="icon-row">${ch.join('')}${skip}</div>
+        ${why?`<div class="aleft">${why}</div>`:''}
       </div>
-      <label class="sw"><input type="checkbox" data-act="atoggle" data-id="${a.id}" ${a.on?'checked':''}><i></i></label>
+      <label class="sw big"><input type="checkbox" data-act="atoggle" data-id="${a.id}" ${a.on?'checked':''}><i></i></label>
     </div>`;
   }).join('');
   const issueHtml=nativeIssues().map(k=>`<div class="notice-banner" data-act="nativefix" data-k="${k}" style="margin-top:8px"><span>⚠️ ${ISSUE_TXT[k]||k}</span><b style="font-size:12px;flex:none;margin-left:8px">설정 열기</b></div>`).join('');
-  return `${issueHtml}${nextHtml}${nextCard}
+  return `<div class="alw">${issueHtml}${nextHtml}${nextCard}
     ${S.alarms.length?'<div class="list-header"><span>곧 울리는 순</span><span class="all-off" data-act="alloff">전체 끄기</span></div>':''}
-    <div>${cards}</div>`;
+    <div>${cards}</div></div>`;
 }
 
 /* ================= 시트 · 페이지 · 작은 메뉴 ================= */
@@ -6910,7 +6947,6 @@ function renderMore(){
   const tiles=[
     !guest&&!persAll()?tile('🔁','근무 패턴',S.noPat?(S.myset?'불규칙':'아직 안 만듦'):`${esc(S.patternName||'')} ${esc(myTeamLabel())}`,'more-pattern'):'',
     linkOk?tile('🔗','가족 연결',S.link?`${famN}명`:'초대하기','link-open',!!(S.link&&S.fam2&&S.fam2.boardDot)):tile('👪','가족 목록',`${(S.family||[]).length}명`,'fam-set'),
-    tile('🔔','알림',S.link?'가족 · 스티커':'스티커 · 기념일','more-notif'),
     tile('💊','스티커',`${slotDefs().length}개`,'stk-board'),
     hasBridge('setWidgetData')?tile('▣','위젯',(S.widget&&S.widget.look)==='circle'?'동그라미':'칸 채우기','more-widget'):'',
     tile('☁️','백업',lastB||'안 함','more-backup')].filter(Boolean).join('');
@@ -7158,26 +7194,24 @@ function tipGo(a){
   pageBack=openTipsPage;const b=document.createElement('button');b.dataset.act=a;b.style.display='none';document.body.appendChild(b);b.click();b.remove();
 }
 // 설정 › 화면: 달력 · 보기 · 자세히
-function openLookPage(){
+function openLookPage(){   // v0.146 새 모양
   const fs=S.fontScale||100;
-  const row=(e,t,inner)=>`<div class="prow"><div class="pl2"><span class="e e-in">${lineIcon(e)}</span>${t}</div>${inner}</div>`;
-  openPage(`${pageHead('화면')}<div class="pg-b">
+  const seg=(arr,cur,act)=>`<div class="npseg sm">${arr.map(([v,l])=>`<button class="${String(cur)===String(v)?'on':''}" data-act="${act}" data-v="${v}">${l}</button>`).join('')}</div>`;
+  openPage(`${pageHead('화면')}<div class="pg-b np">
     <div class="pg-cap">달력</div>
-    <div class="pg-sec" style="margin-top:0">
-      ${row('▦','달력 모양',`<div class="chips"><button class="${S.calLook==='fill'?'':'on'}" data-act="callook" data-v="circle">동그라미</button><button class="${S.calLook==='fill'?'on':''}" data-act="callook" data-v="fill">칸 채우기</button></div>`)}
-      <div class="prow pcol tdc-line"><div class="pl2"><span class="e e-in">${lineIcon("▦")}</span>오늘 표시</div>${todayColorRow()}
-</div>
-      ${row('📅','주 시작 요일',`<div class="chips"><button class="${S.weekStart===1?'':'on'}" data-act="weekstart" data-v="0">일요일</button><button class="${S.weekStart===1?'on':''}" data-act="weekstart" data-v="1">월요일</button></div>`)}
+    <div class="pg-sec">
+      ${npRow('calendar-days','달력 모양',seg([['circle','동그라미'],['fill','칸 채우기']],S.calLook==='fill'?'fill':'circle','callook'))}
+      <div class="prow pcol tdc-line"><div class="pl2" style="display:flex;align-items:center;gap:12px"><span class="npi">${npi('calendar')}</span>오늘 표시</div>${todayColorRow()}</div>
+      ${npRow('calendar','주 시작',seg([[0,'일'],[1,'월']],S.weekStart===1?1:0,'weekstart'))}
     </div>
     <div class="pg-cap">보기</div>
-    <div class="pg-sec" style="margin-top:0">
-      ${row('🌓','화면 모드',`<div class="chips"><button class="${S.theme==='light'?'on':''}" data-act="thememode" data-v="light">라이트</button><button class="${S.theme==='dark'?'on':''}" data-act="thememode" data-v="dark">다크</button><button class="${S.theme!=='light'&&S.theme!=='dark'?'on':''}" data-act="thememode" data-v="system">시스템</button></div>`)}
-      ${row('🔤','글자 크기',`<div class="chips"><button class="${fs<=100?'on':''}" data-act="font" data-v="100">보통</button><button class="${fs>100?'on':''}" data-act="font" data-v="120">크게</button></div>`)}
-      ${row('🎨','배경',`<div class="chips"><button class="${!S.bg?'on':''}" data-act="bgmode" data-v="">기본</button><button class="${S.bg==='paper'?'on':''}" data-act="bgmode" data-v="paper">종이</button><button class="${S.bg==='vivid'?'on':''}" data-act="bgmode" data-v="vivid">또렷하게</button></div>`)}
-      <div class="hint" style="padding:2px 16px 10px">또렷하게: 근무 · 휴무 색과 글자를 진하게 (눈이 피곤하거나 잘 안 보일 때) · 위젯도 같이 바뀌어요</div>
+    <div class="pg-sec">
+      ${npRow('user','화면 모드',seg([['light','라이트'],['dark','다크'],['system','시스템']],S.theme==='light'||S.theme==='dark'?S.theme:'system','thememode'))}
+      ${npRow('tag','글자 크기',seg([[100,'보통'],[120,'크게']],fs>100?120:100,'font'))}
+      ${npRow('paintbrush','배경',seg([['','기본'],['paper','종이'],['vivid','또렷하게']],S.bg||'','bgmode'))}
     </div>
     <div class="pg-cap">자세히</div>
-    <div class="pg-sec mlist" style="margin-top:0"><div class="mi2" data-act="tune-open"><span class="e">${lineIcon('🎚')}</span><span class="t2">모양 세부 조정<i>스티커 · 메모 크기와 위치 (앱 · 위젯)</i></span><small>›</small></div></div>
+    <div class="pg-sec">${npRow('history','모양 세부 조정',npVal(''),{tap:1,act:'tune-open'})}</div>
   </div>`,'look');
 }
 // 설정 › 알림: 흩어져 있던 알림 설정을 한 곳에
@@ -7192,15 +7226,16 @@ function openNotifPage(){
   </div></div>`,'notif');
 }
 // 설정 › 도움 · 정보
-function openInfoPage(){
-  openPage(`${pageHead('도움 · 정보')}<div class="pg-b"><div class="mlist">
-    <div class="pg-sec">
-      <div class="mi2" data-act="more-mail"><span class="e">${lineIcon('✉️')}</span><span>문의하기 · 오류 신고</span><small>›</small></div>
-      <div class="prow"><div class="pl2"><span class="e e-in">${lineIcon('📊')}</span>사용 통계 · 오류 보고 <small style="color:var(--muted)">(횟수 · 오류만)</small></div><label class="sw"><input type="checkbox" id="statsOn" ${S.stats!==false?'checked':''}><i></i></label></div>
-      <div class="mi2" data-act="more-privacy"><span class="e">${lineIcon('🔒')}</span><span>개인정보처리방침</span><small>›</small></div>
-      <div class="mi2" data-act="more-wipe"><span class="e">${lineIcon('🗑')}</span><span>내 데이터 모두 지우기</span><small>›</small></div>
-      <div class="mi2" data-act="about-tap" style="cursor:default"><span class="e">${lineIcon('ℹ️')}</span><span>앱 정보</span><small>${appVersion()}</small></div>
-    </div></div></div>`,'info');
+function openInfoPage(){   // v0.146 새 모양
+  openPage(`${pageHead('도움 · 정보')}<div class="pg-b np">
+    <div class="pg-sec" style="margin-top:8px">
+      ${npRow('file-text','문의하기 · 오류 신고',npVal(''),{tap:1,act:'more-mail'})}
+      ${npRow('calendar-days','사용 통계 · 오류 보고',`<label class="sw"><input type="checkbox" id="statsOn" ${S.stats!==false?'checked':''}><i></i></label>`)}
+      ${npRow('tag','개인정보처리방침',npVal(''),{tap:1,act:'more-privacy'})}
+      ${npRow('bell','앱 정보',`<div class="pv npv">${appVersion()}</div>`,{act:'about-tap'})}
+    </div>
+    <div class="pg-sec" style="margin-top:12px">${npRow('trash-2','내 데이터 모두 지우기','',{cls:'danger-row',act:'more-wipe'})}</div>
+  </div>`,'info');
 }
 const lookRefresh=()=>{if(pageMode==='look')openLookPage();};
 function openWidgetPage(){
@@ -7890,11 +7925,10 @@ const adOn=k=>ad(k);
 const addonCount=()=>ADDONS.filter(a=>adOn(a[0])).length;
 const AD_GO={comp:'more-comp',together:'fam-set',colleague:'go-colleague',stats:'more-stats',wlog:'wl-set',wx:'wx-set'};   // 켜진 칸을 누르면 그 설정
 const AD_SHORT={comp:['휴무일·기념일','회사 휴무 · 생일'],together:['같이 쉬는 날','가족 탭에 표시'],colleague:['동료 근무','다른 조 근무표'],stats:['근무 통계','대근 · 연차 · 수당'],wlog:['업무 메모','인수인계 · 나만 봄'],wx:['출퇴근 날씨','알람 · 날짜 창']};
-function openAddonPage(){   // v0.135 칸으로: 꺼진 칸(흐림)은 누르면 켜짐 · 켜진 칸은 누르면 그 설정 · 끌 때는 칸 위 스위치
+function openAddonPage(){   // v0.146 줄 + 스위치 (꺼진 줄을 누르면 켜짐 · 켜진 줄은 그 설정 · 끄기는 스위치)
   openPage(`${pageHead('부가 기능')}
-    <div class="pg-b">
-      <div class="hint" style="padding:12px 16px 4px">필요한 기능만 켜세요. 꺼도 내용은 그대로예요.</div>
-      <div class="stiles adt">${ADDONS.map(a=>{const on=adOn(a[0]),sh=AD_SHORT[a[0]]||[a[2],''];return `<div class="stile ${on?'':'off'}" data-act="ad-tile" data-k="${a[0]}"><label class="sw sm" data-noact="1"><input type="checkbox" id="ad_${a[0]}" ${on?'checked':''}><i></i></label><span class="e">${lineIcon(a[1])}</span><b>${esc(sh[0])}</b><small>${esc(sh[1])}</small></div>`;}).join('')}</div>
+    <div class="pg-b np">
+      <div class="pg-sec stiles adt" style="margin-top:8px">${ADDONS.map(a=>{const on=adOn(a[0]),sh=AD_SHORT[a[0]]||[a[2],''];return `<div class="prow tap adr ${on?'':'off'}" data-act="ad-tile" data-k="${a[0]}"><span class="npi">${lineIcon(a[1])}</span><div class="pl2">${esc(sh[0])}</div><label class="sw" data-noact="1"><input type="checkbox" id="ad_${a[0]}" ${on?'checked':''}><i></i></label></div>`;}).join('')}</div>
     </div>`,'addons');
 }
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
@@ -8512,9 +8546,9 @@ function openBackupPage(){
   };
   openPage(`
     ${pageHead('백업 · 복원')}
-    <div class="pg-b">
+    <div class="pg-b np">
       <div class="pg-cap">구글 드라이브</div>
-      <div class="pg-sec" style="margin-top:0">
+      <div class="pg-sec">
         ${!hasBridge('driveBackup')?`<div class="prow"><div class="pl2 muted">앱에서 쓸 수 있어요 (지금은 브라우저 미리보기)</div></div>`:linked?`
           <div class="prow"><div class="pl2">☁️ 연결됨<small>${esc(S.drive.email||'구글 계정')}</small></div></div>
           <div class="prow"><div class="pl2">마지막 백업<small>${S.drive.last?new Date(S.drive.last).toLocaleString('ko-KR'):'아직 없어요'}</small></div><button class="btn sm" data-act="drive-backup" ${driveBusy?'disabled':''}>${driveBusy?'백업 중…':'지금 백업하기'}</button></div>
@@ -8524,9 +8558,10 @@ function openBackupPage(){
         :`<div class="prow"><div class="pl2">구글 드라이브 백업 · 복원<small>연결하면 저장된 백업에서 복원할 수 있어요</small></div></div>
           <div class="prow"><button class="btn" style="width:100%" data-act="drive-link" ${driveBusy?'disabled':''}>${driveBusy?'연결 중…':'구글 계정 연결하기'}</button></div>`}
       </div>
-      <div class="pg-cap">파일로 백업 (고급)</div>
-      <div class="pg-sec" style="margin-top:0;padding:14px 16px">
-        <div class="row"><button class="btn ghost sm grow" data-act="backup-export">백업 파일 만들기</button><button class="btn ghost sm grow" data-act="backup-import">백업 파일 불러오기</button></div>
+      <div class="pg-cap">파일</div>
+      <div class="pg-sec">
+        ${npRow('file-text','백업 파일 만들기',npVal(''),{tap:1,act:'backup-export'})}
+        ${npRow('history','백업 파일 불러오기',npVal(''),{tap:1,act:'backup-import'})}
         <input type="file" id="backupFile" accept=".json,application/json,text/plain" style="display:none">
       </div>
       ${backupRescueHtml()}
