@@ -1,0 +1,61 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box}
+body{margin:0;background:#dfe2e6;font-family:P,sans-serif;color:#191f28;padding:16px;display:flex;gap:16px;width:max-content}
+.col{display:flex;flex-direction:column;gap:8px}.col>b{font-size:15px;margin-left:4px}.col>b em{font-style:normal;color:#3182f6}
+.ph{width:390px;height:844px;background:#f2f4f6;border-radius:28px;overflow:hidden;position:relative}
+.hd{display:flex;align-items:center;padding:22px 18px 6px}.hd h1{font-size:26px;margin:0;flex:1;letter-spacing:-.6px}
+.hd i{width:36px;height:36px;display:grid;place-items:center;color:#4e5968}.hd svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cap{font-size:14px;font-weight:700;color:#6b7684;padding:16px 22px 8px}
+.card{background:#fff;border-radius:22px;margin:0 14px;padding:16px;box-shadow:0 2px 12px rgba(15,23,42,.035)}
+.who{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#4e5968}
+.av{width:28px;height:28px;border-radius:50%;background:#f59e0b;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800}
+.st{display:flex;align-items:center;gap:12px;margin-top:12px}
+.ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;flex:none}
+.ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.st b{display:block;font-size:22px;letter-spacing:-.5px}.st span{font-size:14px;color:#6b7684;font-weight:600}
+.bar{height:6px;border-radius:3px;background:#eef1f4;margin-top:14px;overflow:hidden}.bar i{display:block;height:100%;border-radius:3px}
+.bl{display:flex;justify-content:space-between;font-size:12.5px;color:#8b95a1;font-weight:600;margin-top:6px}
+.wx{display:flex;gap:8px;margin-top:14px}
+.wc{flex:1;background:#f4f6f8;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:8px}
+.wc img{width:30px;height:30px}.wc small{display:block;font-size:12px;color:#8b95a1;font-weight:700}.wc b{font-size:17px}
+.wl{margin-top:10px;display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;color:#1b64da;background:#e8f3ff;border-radius:10px;padding:8px 10px}
+.row{display:flex;align-items:center;gap:12px;padding:14px 16px}.row .ri{width:34px;height:34px;border-radius:10px;background:#f2f4f6;display:grid;place-items:center;color:#4e5968}
+.row .ri svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.row b{flex:1;font-size:15.5px}.row em{font-style:normal;color:#b0b8c1;font-size:18px}
+.tt{background:#fff;border-radius:22px;margin:0 14px;padding:14px;box-shadow:0 2px 12px rgba(15,23,42,.035)}
+.tt .t{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:15px}.seg{display:flex;gap:6px}.seg span{font-size:12.5px;font-weight:700;padding:6px 10px;border-radius:999px;color:#8b95a1}.seg .on{box-shadow:0 0 0 1.5px #3182f6;color:#1b64da}
+.g{display:grid;grid-template-columns:44px repeat(7,1fr);gap:4px 2px;margin-top:10px;text-align:center;font-weight:700;font-size:12px;color:#8b95a1}
+.g .dn b{display:block;font-size:15px;color:#191f28}.g .td{background:#e8f3ff;border-radius:10px;box-shadow:inset 0 0 0 2px #3182f6}
+.bd{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;margin:4px auto;font-weight:800;font-size:13px}
+.d{background:#a6c6e2;color:#1c2a31}.n{background:#e0b8a3;color:#2b1f1b}.r{color:#c23a5a}
+.note{font-size:13.5px;color:#4e5968;line-height:1.6;max-width:300px}
+</style></head><body>
+<script>
+const S=(p)=>`<svg viewBox="0 0 24 24">${p}</svg>`;
+const I={bell:S('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'),gear:S('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'),
+brief:S('<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>'),home:S('<path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/>'),moon:S('<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>'),cal:S('<path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/>'),umb:S('<path d="M22 12a10 10 0 0 0-20 0Z"/><path d="M12 12v8a2 2 0 0 0 4 0"/>')};
+const head=`<div class="hd"><h1>우리 가족</h1><i>${I.bell}</i><i>${I.gear}</i></div>`;
+const wx=(a,b,ta,tb)=>`<div class="wx"><div class="wc"><img src="../../app/src/main/assets/wx/sky/${a}.webp" onerror="this.remove()"><div><small>출근</small><b>${ta}</b></div></div><div class="wc"><img src="../../app/src/main/assets/wx/sky/${b}.webp" onerror="this.remove()"><div><small>퇴근</small><b>${tb}</b></div></div></div>`;
+const tt=`<div class="cap">가족 시간표</div><div class="tt"><div class="t">10월 9일 ~ 15일<div class="seg"><span class="on">오늘 가운데</span><span>주 단위</span></div></div>
+ <div class="g"><span></span>${['금 9','토 10','일 11','월 12','화 13','수 14','목 15'].map((x,i)=>`<span class="dn ${i===3?'td':''}">${x.split(' ')[0]}<b>${x.split(' ')[1]}</b></span>`).join('')}
+ <span><span class="av" style="margin:4px auto">남</span></span>${[['r','휴'],['d','주'],['d','주'],['r','휴'],['r','휴'],['n','야'],['n','야']].map(([c,t],i)=>`<span class="${i===3?'td':''}"><span class="bd ${c}">${t}</span></span>`).join('')}</div></div>`;
+const cal=`<div class="cap">달력</div><div class="card" style="padding:0"><div class="row"><span class="ri">${I.cal}</span><b>남편 달력</b><em>›</em></div></div>`;
+document.write(`
+<div class="col"><b>지금</b><img src="now_rest.png" style="width:390px;border-radius:28px"></div>
+<div class="col"><b>바꾼 뒤 · <em>쉬는 날</em></b><div class="ph">${head}
+ <div class="cap">지금</div>
+ <div class="card"><div class="who"><span class="av">남</span>남편</div>
+  <div class="st"><span class="ic" style="background:#eaf6ef;color:#1fa971">${I.home}</span><div><b>쉬는 날</b><span>내일 주간 · 오전 7시 출근</span></div></div>
+  <div class="wl">${I.umb.replace('<svg','<svg width="16" height="16"')}내일 출근길에 비 와요</div></div>
+ ${cal}${tt}</div></div>
+<div class="col"><b>바꾼 뒤 · <em>근무 중</em></b><div class="ph">${head}
+ <div class="cap">지금</div>
+ <div class="card"><div class="who"><span class="av">남</span>남편</div>
+  <div class="st"><span class="ic" style="background:#e9f1f9;color:#3f6f9f">${I.brief}</span><div><b>주간 근무 중</b><span>오후 7시 퇴근 · 4시간 남음</span></div></div>
+  <div class="bar"><i style="width:66%;background:#7fa9cf"></i></div><div class="bl"><span>오전 7시</span><span>오후 7시</span></div>
+  ${wx('rain','cloudy','9°','11°')}</div>
+ ${cal}${tt}</div></div>
+<div class="col" style="justify-content:center"><div class="note">· "지금" 카드: 이모지 대신 선 아이콘 칸(근무 중 = 근무 색 · 쉬는 날 = 초록 · 자는 중(야간 뒤) = 남색 달)<br>· 상태 글은 크게 한 줄 + 아래 다음 일(내일 주간 · 오전 7시 출근 / 오후 7시 퇴근 · 4시간 남음)<br>· 근무 중이면 진행 막대(근무 색) + 출근 · 퇴근 날씨 두 칸<br>· 쉬는 날엔 내일 출근길 날씨 한 줄만 (비 · 눈 올 때)<br>· 날씨는 남편이 올린 동네로 — 아내가 날씨를 안 켜도 보임<br>· "달력 보기 · 눌러서 한 달 보기" → "남편 달력 ›" 한 줄 카드<br>· "○분 전 동기화" 글 없음(실패할 때만)</div></div>
+`);
+</script></body></html>

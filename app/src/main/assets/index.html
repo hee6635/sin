@@ -1966,6 +1966,17 @@ html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.07}
 .vrbody .vcm .vcmt{color:var(--muted)}
 .vrbody .vcmemo-bar{display:flex;gap:8px;margin-top:8px}.vrbody .vcmemo-bar input{flex:1;height:48px;border:0;border-radius:14px;background:var(--surface);padding:0 14px;font-size:15.5px;box-shadow:none}
 .vrbody .vcmemo-bar .send{flex:none;width:46px!important;height:46px!important;border-radius:13px!important;background:var(--fam)!important;color:#fff!important;display:grid;place-items:center}
+/* v0.169 가족 "지금" 카드 새 모양 · 달력 줄 (시안 design/viewfam) */
+.nc.fc2 .st2{display:flex;align-items:center;gap:10px;margin-top:10px}
+.nc.fc2 .sic{width:38px;height:38px;border-radius:12px;flex:none;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 12%,var(--bg))}
+.nc.fc2 .sic.sbd{border-radius:50%;font-weight:800;font-size:15px}
+.nc.fc2 .stt{min-width:0}.nc.fc2 .stt b{display:block;font-size:17px;font-weight:800;line-height:1.25;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nc.fc2 .stt span{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now.fams>.nc.fc2:only-child{grid-column:1/-1}.now.one>.nc.fc2:only-child .sic{width:44px;height:44px}.now.one>.nc.fc2:only-child .stt b{font-size:20px}
+.vcrows{background:var(--bg);border-radius:22px;margin:0 0 4px;box-shadow:0 2px 12px rgba(15,23,42,.035);overflow:hidden}
+.vcr{display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;text-align:left}.vcr+.vcr{border-top:1px solid var(--line)}
+.vcr .vci{width:34px;height:34px;border-radius:10px;background:var(--surface);display:grid;place-items:center;color:color-mix(in srgb,var(--fg) 70%,var(--bg))}
+.vcr b{flex:1;font-size:15.5px;font-weight:600}.vcr em{font-style:normal;color:color-mix(in srgb,var(--fg) 30%,var(--bg));display:flex}
 /* v0.148 빛이 도는 동안: 원래 테두리는 숨기고 빛을 따라 그려지는 선(g-draw)으로 · 끝나면 다시 테두리 */
 .cell.today.glowing::after{opacity:0}
 .tglow .g-draw{stroke-width:3px;opacity:1;stroke:var(--tdc,var(--today))}
@@ -5146,6 +5157,7 @@ const npRow=(icon,name,right,o={})=>`<div class="prow${o.tap?" tap":""}${o.cls?"
 Object.assign(NPI,{   // v0.158 남은 화면
   'briefcase':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
   'book-open':'<path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/>',
+  'moon':'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
   'flag':'<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 8 2a6 6 0 0 0 3.6-1.2.5.5 0 0 1 .4.4v11a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a8 8 0 0 0-4 1"/>',
   'calendar-x':'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M10 14l4 4M14 14l-4 4"/>',
   'download':'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
@@ -5540,6 +5552,19 @@ function memberStatus(m,now){
   if(h>=s&&h<e)return [st?'🏫':'💼',ty.name||famLbl(m),`${t12(tt.e,true)} ${st?'하원':'퇴근'}`];
   return ['🏠','집',h<s?`${tt.s} ${ty.name||''} ${st?'등원':'출근'}`.replace(/\s+/g,' '):''];
 }
+// v0.169 가족 "지금" 카드: 이모지 대신 선 아이콘 칸 + 상태 크게 + 아래 다음 일 (시안 design/viewfam)
+function famStRow(m,e,l,sub,now){
+  const L=String(l||''),E=String(e||'');
+  let ic='clock',c='#6b7684',bdg='';
+  if(E==='🔁'&&m.kind==='sched'){const sh=schShift(m.sch,new Date(now)),ty=schType(m.sch,sh),tc=ty&&!ty.rest?tColors(ty):null;bdg=tc?`<span class="sic sbd" style="background:${tc.bg};color:${tc.fg}">${esc(String(sh).slice(0,2))}</span>`:'';if(!bdg){ic='home';c='#1fa971';}}
+  else if(/😴|자는/.test(E+L)){ic='moon';c='#4b5bbd';}
+  else if(/🏭|💼|근무 중/.test(E+L)){ic='briefcase';c='#3f6f9f';if(m.kind==='sched'){const ty=schType(m.sch,schShift(m.sch,new Date(now)));if(ty&&!ty.rest&&ty.color)c=deepHex(cssHex(tColors(ty).bg)||c);}}
+  else if(/🏫|학교|유치원|등원|하원/.test(E+L)){ic='book-open';c='#f08a00';}
+  else if(/🚗|출근 중|퇴근 중/.test(E+L)){ic='map-pin';c='#3182f6';}
+  else if(/🙂|🏖|🏠|쉬는|휴|집|방학/.test(E+L)){ic='home';c='#1fa971';}
+  return `<div class="st2">${bdg?bdg:`<span class="sic" style="--c:${c}">${npi(ic,20)}</span>`}<div class="stt"><b>${esc(L)}</b>${sub?`<span>${esc(sub)}</span>`:''}</div></div>`;
+}
+const deepHex=h=>{try{const n=parseInt(String(h).slice(1),16);const f=x=>Math.round(x*.62).toString(16).padStart(2,'0');return '#'+f(n>>16&255)+f(n>>8&255)+f(n&255);}catch(e){return '#3f6f9f';}};
 function cheerList(){return (Array.isArray(S.famCheer)&&S.famCheer.length?S.famCheer:CHEER_DEF);}
 // 가족 동그라미: 사진이 있으면 사진, 없으면 첫 글자 + 색
 function famAv(m,i){const src=isPhoto(m.photo)&&(S.icons||{})[m.photo.slice(1)];return `<i style="background:${m.color||FAM_COL[i%6]}">${src?`<img src="${src}" alt="">`:esc((m.name||'?').slice(0,1))}</i>`;}
@@ -5566,7 +5591,7 @@ function renderFamily(){
   // v0.121 가족이 있으면 나 · 가족 카드 모두 같은 크기 · 같은 모양: 상태 · 막대 · 작은 날씨 줄 · (비 · 미세먼지면) 결론 한 줄
   const pbar=v=>v!==undefined&&v!==null?`<div class="bar"><i style="width:${Math.round(v*100)}%"></i></div>`:'<div class="bar" style="visibility:hidden"></div>';   // v0.124 막대가 없어도 자리는 남김 → 카드끼리 날씨 칸 높이가 맞음
   const meCard2=`<div class="nc w fc2" ${isHost?'data-act="fam-mycal"':''}><div class="ctop"><i style="background:#1d2330">${isHost?'나':'근'}</i><div class="cst">${isHost?'':'<small>근무자</small>'}<div class="st">${st.e?ico(st.e)+' ':''}${esc(st.t)}</div></div></div><div class="sm">${esc(st.sub||st.left||'')||'&nbsp;'}</div>${pbar(st.prog)}${myWx?wxMiniHtml(myWxM,'data-act="wx-fam" data-u="me"'):''}</div>`;
-  const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);const fw=(wxOn()||(m.kind==='sched'&&famSchedHome(m)))?famNowWx(m,now):null;return `<div class="nc fc2 ${l==='자는 중'?'slp':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-mancal" data-id="${m.id}" data-hold="fam"`}>${m.kind==='sched'?'':`<span class="mced" data-act="fam-edit" data-id="${m.id}" aria-label="고치기">✏️</span>`}<div class="ctop">${famAv(m,i)}<div class="cst"><small>${esc(m.name)}</small><div class="st">${e==='🔁'&&m.kind==='sched'?schBadge(m.sch,schShift(m.sch,new Date(now)),'sm')+' ':e?ico(e)+' ':''}${esc(l)}</div></div></div><div class="sm">${esc(sub)||'&nbsp;'}</div>${pbar(famProg(m,now))}${fw?wxMiniHtml(fw,`data-act="wx-fam" data-u="${esc(wxMemKey(m))}"`):false?'<div class="mwx mwx-off" data-act="wx-set">☔ 날씨도 보기 · 집 지역 고르기 ›</div>':''}</div>`;}).join('');
+  const memCards=fam.map((m,i)=>{const [e,l,sub]=memberStatus(m,now);const fw=(wxOn()||(m.kind==='sched'&&famSchedHome(m)))?famNowWx(m,now):null;return `<div class="nc fc2 ${l==='자는 중'?'slp':''}" ${m.kind==='sched'?`data-act="fam-viewcal" data-u="${esc(m.uid)}"`:`data-act="fam-mancal" data-id="${m.id}" data-hold="fam"`}>${m.kind==='sched'?'':`<span class="mced" data-act="fam-edit" data-id="${m.id}" aria-label="고치기">✏️</span>`}<div class="ctop">${famAv(m,i)}<div class="cst"><small>${esc(m.name)}</small></div></div>${famStRow(m,e,l,sub,now)}${pbar(famProg(m,now))}${fw?wxMiniHtml(fw,`data-act="wx-fam" data-u="${esc(wxMemKey(m))}"`):false?'<div class="mwx mwx-off" data-act="wx-set">☔ 날씨도 보기 · 집 지역 고르기 ›</div>':''}</div>`;}).join('');
   const cheerBtns='';   // v0.106: 응원 버튼 없앰
   // 이번 주 시간표
   // 가족 시간표: 오늘 가운데(앞뒤 30일) 또는 주 단위(앞뒤 4주) · 옆으로 쓸어서 넘김 · 오늘 열은 위에서 아래까지 하나의 네모 박스
@@ -5595,7 +5620,7 @@ function renderFamily(){
     <div class="fsec">지금</div>
     ${isHost&&fam.length?`<div class="nowwrap"><div class="now fams">${famView()?'':meCard2}${memCards}</div></div>`:`<div class="now one">${famView()?'':meCard}${isHost?memCards:''}</div>`}
     ${cheerBtns}
-    ${famPeers().length?`<div class="fsec">달력 보기 <span class="vsub">· 눌러서 한 달 보기</span></div><div class="vcrow">${famPeers().map(m=>`<button class="vchip" data-act="fam-viewcal" data-u="${esc(m.uid)}">${famAv(m,0)}${esc(m.name)}<em>›</em></button>`).join('')}</div>`:''}
+    ${famPeers().length?`<div class="fsec">달력</div><div class="vcrows">${famPeers().map(m=>`<button class="vcr" data-act="fam-viewcal" data-u="${esc(m.uid)}"><span class="vci">${npi('calendar',19)}</span><b>${esc(m.name)} 달력</b><em>${npi('chevron-right',16)}</em></button>`).join('')}</div>`:''}
     <div class="fsec">가족 시간표</div>
     <div class="ftt">
       <div class="fwk"><span id="fwkT" class="fwt"></span><span class="fmode"><button class="${wkMode==='c'?'on':''}" data-act="fam-mode" data-v="c">오늘 가운데</button><button class="${wkMode==='w'?'on':''}" data-act="fam-mode" data-v="w">주 단위</button></span></div>
