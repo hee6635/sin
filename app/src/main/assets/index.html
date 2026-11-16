@@ -1435,7 +1435,7 @@ html[data-cal="fill"] .cell{border:0;border-radius:9px;background:transparent}
 .tglow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:9;overflow:visible;color:var(--tdc,var(--accent))}
 .tglow rect{fill:none;stroke:currentColor;stroke-linecap:round}
 .tglow .g-soft{stroke-width:7px;opacity:0}.tglow .g-line{stroke-width:2.4px;opacity:0}
-.tglow .g-halo{stroke-width:9px;opacity:.28}.tglow .g-dash{stroke-width:3.4px;opacity:.45}
+.tglow .g-halo{stroke-width:9px;opacity:.28}.tglow .g-dash{stroke-width:3.4px;opacity:.24}
 html[data-cal="fill"] .cell.today{background:transparent}
 html:not([data-cal="fill"]) .cell.today{background:transparent!important}   /* v0.152 동그라미 모양: 오늘은 테두리만 (바탕색이 메모 색을 가려서) */
 html[data-cal="fill"] .cell.today .dn{padding-left:5px;padding-top:0}   /* 오늘도 일반 날과 같은 자리 */
@@ -1939,6 +1939,13 @@ html:not([data-cal="fill"]) .cell:not(.pers){--b:min(calc(max(30px,min(84cqw,44p
 html:not([data-cal="fill"]) .cell[class*="rq-"]:not(.pers){--b:min(calc(max(30px,min(84cqw,44px,calc(100cqh - 68px)))*.84),calc((100cqw - 28px) / var(--tink,1)))}   /* 요청 링 칸: 링 바깥에 빨간 점 자리 */
 html:not([data-cal="fill"]) .bwrap .badge{font-size:calc(var(--b)*.42)}
 html:not([data-cal="fill"]) .bwrap .badge.r{font-weight:700}
+/* v0.163 오늘 빛 (사용자 영상: 검색창 테두리 빛): 근무 색 긴 꼬리 + 하얀 머리(밝은 화면은 진한 그림자로 받침) + 바깥으로 은은한 번짐 · 두 바퀴 3.6초 */
+.tglow .g-halo{stroke-width:8px;opacity:.22;filter:blur(3px)}
+.tglow .g-head{stroke-width:2.4px;opacity:.16;stroke:#fff}
+.cell.today.glowing{overflow:visible;z-index:3}   /* 빛 번짐이 칸 바깥으로도 */
+.tglow .g-bloom{filter:blur(5px)}.tglow .g-hb{stroke-width:11px;opacity:.11;stroke:currentColor}   /* 밝은 화면: 머리 둘레 진한 근무 색 번짐이 하얀 빛을 받침 */
+html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.09}
+@media (prefers-color-scheme:dark){html:not([data-theme="light"]) .tglow .g-hb{stroke:#fff;opacity:.09}}
 /* v0.148 빛이 도는 동안: 원래 테두리는 숨기고 빛을 따라 그려지는 선(g-draw)으로 · 끝나면 다시 테두리 */
 .cell.today.glowing::after{opacity:0}
 .tglow .g-draw{stroke-width:3px;opacity:1;stroke:var(--tdc,var(--today))}
@@ -4112,7 +4119,7 @@ let busy=false;
 // 오늘 칸 빛: 어느 달력이든(내 달력 · 내 달력 보기 · 가족 달력 · 직접 추가한 가족 달력) — 앱을 켤 때 · 그 달력을 처음 열 때 · 다른 달에서 이번 달로 돌아올 때 한 바퀴
 let glowHidAt=0;document.addEventListener('visibilitychange',()=>{if(document.hidden){glowHidAt=Date.now();return;}if(glowHidAt&&Date.now()-glowHidAt>3000){glowBoot=true;setTimeout(()=>{try{glowCheck();}catch(e){}},400);}glowHidAt=0;});   // v0.145 다른 앱 갔다 오면 오늘 빛 한 번 더
 let glowPrev={},glowBoot=true,glowStart=0,glowMk=-1,glowId='',glowRaf=0,glowTm=0;
-const GLOW_MS=1600;   // v0.145 두 바퀴
+const GLOW_MS=3600;   // v0.145 두 바퀴 · v0.163 천천히 (바퀴당 1.8초 · 영상 속 검색창 빛 느낌)
 function glowCtx(){
   if(pageMode==='famcal')return {id:'fc:'+vcUid,mk:vcY*12+vcM,sel:'#page #vcsl .cell.today'};
   if(pageMode==='mancal')return {id:'mc:'+manId,mk:vcY*12+vcM,sel:'#page #vcsl .cell.today'};
@@ -4133,11 +4140,12 @@ function glowCheck(){
 function glowSvg(c){
   const w=c.clientWidth,h=c.clientHeight;if(!(w>4&&h>4))return null;
   const ar=parseFloat(getComputedStyle(c,'::after').borderTopLeftRadius),g=1.2,bw=w-2*g,bh=h-2*g,r=Math.max(0,Math.min(bw/2,bh/2,(isNaN(ar)?8:ar)-g));   // v0.153 빛 모서리 = 오늘 테두리 모서리 (동그라미 모양은 각진 테두리라 빛도 각지게)
-  const per=2*Math.max(0,bw-2*r)+2*Math.max(0,bh-2*r)+2*Math.PI*r,len=per*.3,N=7;
+  const per=2*Math.max(0,bw-2*r)+2*Math.max(0,bh-2*r)+2*Math.PI*r,len=per*.3,N=14;   // (v0.163 꼬리 줄 7 → 14: 계단 없이 매끄럽게)
   const R=(cls,x='')=>`<rect class="${cls}" x="${g}" y="${g}" width="${bw}" height="${bh}" rx="${r}" ry="${r}"${x}/>`;
   let d=R('g-halo',` stroke-dasharray="${len} ${per-len}"`);for(let i=1;i<=N;i++)d+=R('g-dash',` data-l="${len*i/N}" stroke-dasharray="${len*i/N} ${per-len*i/N}"`);   // 둘레마다 되풀이 → 두 바퀴
   const e=document.createElementNS('http://www.w3.org/2000/svg','svg');
   e.setAttribute('class','tglow');e.setAttribute('viewBox',`0 0 ${w} ${h}`);e.setAttribute('aria-hidden','true');
+  {const hl=Math.max(24,per*.26),M=14;let hb='',hc='';for(let i=1;i<=M;i++){const l=hl*i/M;hb+=R('g-hb',` data-l="${l}" data-c="1" stroke-dasharray="${l} ${per-l}"`);hc+=R('g-head',` data-l="${l}" data-c="1" stroke-dasharray="${l} ${per-l}"`);}d+=`<g class="g-bloom">${hb}</g>${hc}`;}   // v0.163 빛: 가운데가 가장 밝고 앞뒤로 스르르 흐려지는 긴 빛(겹친 줄의 가운데를 맞춤) + 흐릿한 번짐(g-bloom)
   e.innerHTML=R('g-draw',` stroke-dasharray="${per} ${per}" stroke-dashoffset="${per}"`)+R('g-soft')+R('g-line')+d;
   e.dataset.per=per;e.dataset.len=len;c.appendChild(e);return e;   // v0.148 g-draw: 첫 바퀴에 빛을 따라 테두리가 그려짐
 }
@@ -4155,7 +4163,7 @@ function glowFrame(){
   const q=Math.min(1,t/.86),p=q<.5?2*q*q:1-2*(1-q)*(1-q),head=p*2*per;
   e.querySelector('.g-halo').style.strokeDashoffset=len-head;
   e.querySelector('.g-draw').style.strokeDashoffset=Math.max(0,per-head);
-  e.querySelectorAll('.g-dash').forEach(x=>{x.style.strokeDashoffset=(+x.dataset.l)-head;});
+  e.querySelectorAll('.g-dash').forEach(x=>{x.style.strokeDashoffset=(+x.dataset.l)-head;});e.querySelectorAll('.g-head,.g-hb').forEach(x=>{x.style.strokeDashoffset=(+x.dataset.l)/2-head;});   // 빛 머리 = 줄의 가운데가 head
   glowRaf=requestAnimationFrame(glowFrame);
 }
 // "오늘" 버튼: ‹ › 처럼 이번 달 쪽으로 바로 미끄러지고(옆 칸에 이번 달을 넣고 넘김), 무거운 다시 그리기는 미끄러진 뒤에 → 누르자마자 반응함

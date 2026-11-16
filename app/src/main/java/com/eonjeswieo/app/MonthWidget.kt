@@ -648,6 +648,7 @@ object MonthRenderer {
         val core = Paint(Paint.ANTI_ALIAS_FLAG)
         core.style = Paint.Style.STROKE
         core.strokeWidth = 2.4f * u
+
         for (k in 0 until n) {
             val s0 = Math.max(0f, tail + len * k / n)
             val s1 = Math.min(per, tail + len * (k + 1) / n)
@@ -657,9 +658,21 @@ object MonthRenderer {
             edgePoint(box, r, s0, a)
             edgePoint(box, r, s1, b)
             halo.color = rgb or (Math.round(0x38 * lum) shl 24)
-            core.color = rgb or (Math.round(0xC8 * lum) shl 24)
+            // v0.163 머리(앞 15%): 하얀 빛 (앱 오늘 빛과 같은 느낌)
+            val hf = if (f > 0.85f) (f - 0.85f) / 0.15f else 0f
+            val cc = if (hf > 0f) mixRgb(0xFFFFFFFF.toInt(), color or 0xFF000000.toInt(), hf) else color   // 머리 = 하양 (밝은 위젯은 아래 진한 번짐이 받침)
+            core.color = (cc and 0x00FFFFFF) or (Math.round(0xC8 * lum) shl 24)
+
             cv.drawLine(a[0], a[1], b[0], b[1], halo)
             cv.drawLine(a[0], a[1], b[0], b[1], core)
+        }
+        if (head < per + len * 0.5f) {   // v0.163 머리 둘레 은은한 번짐 (어두운 위젯 = 하양)
+            edgePoint(box, r, Math.min(per, head), a)
+            val bl = Paint(Paint.ANTI_ALIAS_FLAG)
+            val bc = if (glowNight) 0x00FFFFFF else (deepen(color or 0xFF000000.toInt()) and 0x00FFFFFF)   // 밝은 위젯: 진한 근무 색 번짐이 하얀 머리를 받침
+            bl.color = bc or ((if (glowNight) 0x22 else 0x30) shl 24); cv.drawCircle(a[0], a[1], 6.5f * u, bl)
+            bl.color = bc or ((if (glowNight) 0x3A else 0x55) shl 24); cv.drawCircle(a[0], a[1], 3.8f * u, bl)
+            bl.color = 0xEEFFFFFF.toInt(); cv.drawCircle(a[0], a[1], 1.7f * u, bl)
         }
     }
 
@@ -673,6 +686,7 @@ object MonthRenderer {
     @Volatile internal var lastTop = 0f
     @Volatile internal var lastRr = 0f
     @Volatile internal var todayLook = "b"
+    @Volatile internal var glowNight = false   // v0.163 오늘 빛 머리: 어두운 위젯이면 하얀 빛
     @Volatile internal var todayColor = 0xFF3182F6.toInt()   // (앱 강조색과 같게 — v0.92 파스텔 강조색)
     @Volatile internal var vivid = false   // 배경 "또렷하게": 칸 색 · 글자를 진하게 (앱 설정 › 화면 › 배경)
     @Volatile internal var todayShift = false   // "근무 색": 오늘 표시 색을 그날 근무 색(한 단계 진하게)으로
@@ -708,6 +722,7 @@ object MonthRenderer {
 
     internal fun draw(cv: Canvas, w: Float, h: Float, data: JSONObject?, grid: MGrid, ws: Int, offset: Int, ppl: List<JSONObject>, person: JSONObject?, pal: WidgetRenderer.Pal, profileWDp: Float = -1f, part: Int = 0, moving: Boolean = false) {   // part: 0 = 전부 · 1 = 바깥 틀(바탕 · 맨 윗줄 · 요일 줄)만 · 2 = 날짜 칸들만 (월 넘김 · 오늘 효과가 따로 그려 겹침)
         lastToday = null
+        glowNight = pal === WidgetRenderer.DARK
         statMemoHid = 0
         statStkHid = 0
         readToday(data)

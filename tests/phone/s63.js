@@ -110,14 +110,14 @@ const ONLY=process.env.ONLY||'';
     const has=()=>p.evaluate(()=>!!document.querySelector('#track .panel:nth-child(2) .cell.today .tglow'));
     const seen=async(ms=700)=>{const t0=Date.now();while(Date.now()-t0<ms){if(await has())return true;await p.waitForTimeout(40);}return false;};
     // (boot 이 0.9초 기다려서 켤 때 빛은 이미 끝났을 수 있음 → 빛이 돌았는지는 따로: 처음 켤 때 빛 표시가 시작됐는지 기록을 봄)
-    await p.waitForTimeout(1200);
-    T('켤 때 빛이 돌았음(v0.145 1.6초 두 바퀴 뒤엔 사라짐)',await p.evaluate(()=>window.__glowN>=1)&&!(await has()),await p.evaluate(()=>String(window.__glowN)));
+    await p.waitForTimeout(3800);
+    T('켤 때 빛이 돌았음(v0.163 3.6초 두 바퀴 뒤엔 사라짐)',await p.evaluate(()=>window.__glowN>=1)&&!(await has()),await p.evaluate(()=>String(window.__glowN)));
     const n0=await p.evaluate(()=>window.__glowN);
     await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(500);
     T('다음 달로 가면 빛 없음',!(await seen(500)));
     await p.evaluate(()=>document.querySelector('[data-act="prev"]').click());
     T('‹ 로 이번 달에 돌아오면 빛',await seen(900));
-    await p.waitForTimeout(1000);
+    await p.waitForTimeout(3200);
     await p.click('#nav [data-tab="set"]');await p.waitForTimeout(300);await p.click('#nav [data-tab="cal"]');
     T('다른 탭에 갔다 오면 빛 없음',!(await seen(600)));
     await p.evaluate(()=>{const e=new Event('visibilitychange');document.dispatchEvent(e);});
@@ -126,7 +126,7 @@ const ONLY=process.env.ONLY||'';
     await p.evaluate(()=>document.querySelector('[data-act="prev"]').click());await p.waitForTimeout(600);
     await p.evaluate(()=>document.querySelector('[data-act="today"]').click());
     T('두 달 앞에서 "오늘" 버튼 → 빛',await seen(900));
-    await p.waitForTimeout(1000);
+    await p.waitForTimeout(3200);
     // 쓸어서 돌아오기
     await p.evaluate(()=>document.querySelector('[data-act="next"]').click());await p.waitForTimeout(600);
     const sw=async dx=>{const box=await p.evaluate(()=>{const r=document.querySelector('#view').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2];});
