@@ -12,18 +12,16 @@ const {mkT,base}=require('./lib.js');
     const p=await boot(b,{...base},{touch:true});
     T('기본: 배경 표시 없음 · 예전 색 그대로(#ffffff)',await p.evaluate(()=>!document.documentElement.hasAttribute('data-bg'))&&await bgVar(p)==='#ffffff',await bgVar(p));
     await toSet(p);await p.evaluate(()=>document.querySelector('[data-act="more-look"]').click());await p.waitForTimeout(300);
-    T('설정 › 화면에 "배경" 줄(기본 · 종이)이 있음',await p.evaluate(()=>!!document.querySelector('[data-act="bgmode"][data-v="paper"]')&&!!document.querySelector('[data-act="bgmode"][data-v=""]')));
-    await p.evaluate(()=>document.querySelector('[data-act="bgmode"][data-v="paper"]').click());await p.waitForTimeout(300);
-    T('종이를 고르면 바로 바뀜 · 배경 #fbf8f1',await p.evaluate(()=>document.documentElement.getAttribute('data-bg'))==='paper'&&await bgVar(p)==='#fbf8f1',await bgVar(p));
-    T('고른 값이 저장됨',await stored(p,'"bg":"paper"'));
+    T('v0.161 설정 › 화면 "배경" 줄 = 기본 · 또렷하게 (종이 없음)',await p.evaluate(()=>!document.querySelector('[data-act="bgmode"][data-v="paper"]')&&!!document.querySelector('[data-act="bgmode"][data-v=""]')&&!!document.querySelector('[data-act="bgmode"][data-v="vivid"]')));
+    await p.evaluate(()=>document.querySelector('[data-act="bgmode"][data-v="vivid"]').click());await p.waitForTimeout(300);
+    T('또렷하게를 고르면 바로 바뀜 · 저장됨',await p.evaluate(()=>document.documentElement.getAttribute('data-bg'))==='vivid'&&await stored(p,'"bg":"vivid"'));
     await p.evaluate(()=>document.querySelector('[data-act="bgmode"][data-v=""]').click());await p.waitForTimeout(300);
     T('기본으로 되돌리면 예전 색(#ffffff)',await p.evaluate(()=>!document.documentElement.hasAttribute('data-bg'))&&await bgVar(p)==='#ffffff',await bgVar(p));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
-  for(const [th,want] of [['dark','#17150f'],['light','#fbf8f1']]){
-    const p=await boot(b,{...base,bg:'paper',theme:th},{touch:true});
-    T(`종이 + ${th}: 배경 ${want}`,await bgVar(p)===want,await bgVar(p));
-    await p.screenshot({path:`/tmp/s54_paper_${th}.png`,clip:{x:0,y:0,width:390,height:600}});
+  {   // v0.161 예전에 종이를 쓰던 사람 → 기본으로 켜짐
+    const p=await boot(b,{...base,bg:'paper'},{touch:true});
+    T('예전 종이 → 기본 (배경 표시 없음 · #ffffff)',await p.evaluate(()=>!document.documentElement.hasAttribute('data-bg'))&&await bgVar(p)==='#ffffff'&&(await p.evaluate(()=>__wx.S.bg))==='',await bgVar(p));
     await p.close();
   }
   {

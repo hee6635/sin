@@ -449,10 +449,11 @@ object WidgetRenderer {
 
     @Volatile private var fill = true
     @Volatile private var alphaF = 1f
+    @Volatile private var tomText = ""   // v0.161 1칸 위젯: 근무 이름 아래 "내일 ○○"
 
     private fun draw(ctx: Context, cv: Canvas, w: Float, h: Float, count: Int) {
         val data = WidgetStore.load(ctx)
-        drawWith(cv, data, palette(ctx, data), w, h, count, if (count == 2) nextAlarmText(ctx) else "")
+        drawWith(cv, data, palette(ctx, data), w, h, count, "")   // v0.161 2칸 아래 "다음 알람" 줄 뺌 (사용자)
     }
 
     /** 그리기 본체 (Context 없이 — 컴퓨터 그림 확인에서도 씀) */
@@ -489,7 +490,9 @@ object WidgetRenderer {
         if (count == 7) {
             drawWeek(cv, data, iw, ih, pal, icons, memoMax)
         } else if (count == 1) {
-            drawRow(cv, listOf(d0), booleanArrayOf(false), 0f, 0f, iw, ih, pal, icons, memoMax, false)   // 1칸은 오늘 하루뿐이라 "오늘" 초록 칸 표시는 안 함
+            val dt = findDay(data, dateKey(tom))
+            tomText = if (dt == null) "" else { val n = dt.optString("tn", "").ifEmpty { dt.optString("t", "") }; if (n.isEmpty()) "" else "내일 $n" }
+            try { drawRow(cv, listOf(d0), booleanArrayOf(false), 0f, 0f, iw, ih, pal, icons, memoMax, false) } finally { tomText = "" }   // 1칸은 오늘 하루뿐이라 "오늘" 초록 칸 표시는 안 함
         } else {
             val bottom = if (alarm.isEmpty()) 0f else Math.max(ih * 0.13f, 14f * dens)
             val ch = ih - bottom
@@ -562,7 +565,13 @@ object WidgetRenderer {
             val inset = 4f * dens
             for (i in 1 until days.size) cv.drawLine(x0 + cw * i, y0 + inset, x0 + cw * i, y0 + ch - inset, lp)
         }
-        for (i in days.indices) drawCell(cv, days[i], x0 + cw * i, y0, cw, ch, pal, icons, today[i], row, compact)
+        val tk = dateKey(Calendar.getInstance())
+        for (i in days.indices) {
+            val past = compact && days[i] != null && days[i]!!.optString("k", "") < tk   // v0.161 7일: 지난 날은 흐리게 (오늘부터 남은 날이 먼저 보이게)
+            val lay = if (past) cv.saveLayerAlpha(RectF(x0 + cw * i, y0, x0 + cw * (i + 1), y0 + ch), 115) else -1
+            drawCell(cv, days[i], x0 + cw * i, y0, cw, ch, pal, icons, today[i], row, compact)
+            if (lay >= 0) cv.restoreToCount(lay)
+        }
         val ti = today.indexOf(true)   // 오늘 칸 그림자(앱 오늘 모양 a · d) — 옆 칸 위에 그려야 보여서 맨 마지막에
         if (fill && ti >= 0 && days[ti] != null && (MonthRenderer.todayLook == "a" || MonthRenderer.todayLook == "d"))
             MonthRenderer.drawTodayShadow(cv, RectF(x0 + cw * ti, y0, x0 + cw * (ti + 1), y0 + ch), dens, pal === DARK)
@@ -577,12 +586,12 @@ object WidgetRenderer {
         if (fill) {   // 칸 채우기: 일하는 날은 근무 색을 연하게 칸 전체에 · 쉬는 날은 비움 (한 달 위젯과 같음)
             val gap = 1.2f * dens
             if (t.isNotEmpty() && bg.isNotEmpty()) {
-                val tint = MonthRenderer.mixRgb(parseColor(bg, pal.pill), pal.bg, if (MonthRenderer.vivid) (if (night) 0.62f else 0.58f) else if (night) 0.30f else 0.24f)
+                val tint = MonthRenderer.mixRgb(parseColor(bg, pal.pill), pal.bg, if (MonthRenderer.vivid) (if (night) 0.62f else 0.58f) else if (night) 0.30f else 0.40f)   // v0.161 기본 0.24 → 0.40
                 val tp = Paint(Paint.ANTI_ALIAS_FLAG)
                 tp.color = (tint and 0x00FFFFFF) or ((alphaF * 255).toInt() shl 24)
                 cv.drawRoundRect(RectF(x0 + gap, y0 + gap, x0 + cw - gap, y0 + ch - gap), 7f * dens, 7f * dens, tp)
             }
-            MonthRenderer.vividBorder(cv, x0, y0, cw, ch, dens, night)
+            if (night || (t.isNotEmpty() && bg.isNotEmpty())) MonthRenderer.vividBorder(cv, x0, y0, cw, ch, dens, night, if (night) 0 else parseColor(bg, 0))   // v0.161 흰 칸은 테두리 없음
             if (isToday) {   // 오늘: 오른쪽 가장자리 띠 (앱 달력 · 한 달 위젯과 같은 모양 · 색)
                 if (MonthRenderer.todayShift) MonthRenderer.todayColor = MonthRenderer.shiftToday(t.isNotEmpty() && bg.isNotEmpty(), parseColor(bg, 0), t.isNotEmpty() && bg.isEmpty(), night)
                 MonthRenderer.drawTodayBand(cv, x0, y0, cw, ch, dens)
@@ -597,31 +606,47 @@ object WidgetRenderer {
 
         // 근무 동그라미: 위(날짜·스티커)와 아래(메모) 사이 한가운데 — 스티커 줄 아래쪽과 조금 겹칠 수 있어서 스티커보다 먼저 그림 (스티커가 위에 보이게)
         if (t.isNotEmpty() && row.circleD > 0f) {
-            val rad = row.circleD / 2f
+            val big = !compact && fill   // v0.161 1칸 · 2칸(칸 채우기): 근무 이름("주간")을 크고 굵게
+            val label = if (big) d.optString("tn", "").ifEmpty { t } else t
+            val tomH = if (big && tomText.isNotEmpty()) Math.min(row.circleD * 0.3f, 13f * dens) else 0f   // 1칸: 아래 "내일 ○○" 자리
+            val bandD = row.circleD - tomH * 1.3f
+            val rad = (if (big) bandD else row.circleD) / 2f
             val cpaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
             val cx = x0 + cw / 2
-            val cyc = y0 + row.circleCy
+            val cyc = y0 + row.circleCy - tomH * 0.65f
             cpaint.typeface = WFont.bold
             cpaint.textAlign = Paint.Align.CENTER
             cpaint.textSize = rad * 1.0f
             if (fill) {   // 칸 채우기: 동그라미 없이 글자만 (일하는 날 = 근무 색을 진하게 · 쉬는 날 = 장미색)
-                cpaint.typeface = if (MonthRenderer.vivid) WFont.bold else WFont.med
-                cpaint.textSize = rad * 1.12f   // "휴"도 근무 글자와 같은 크기
-                cpaint.color = if (bg.isNotEmpty()) MonthRenderer.vividInk(MonthRenderer.inkOf(parseColor(bg, pal.pill), night), night) else MonthRenderer.restInk(true, night)
-                while (cpaint.measureText(t) > row.circleD * 1.1f && cpaint.textSize > rad * 0.6f) cpaint.textSize = cpaint.textSize * 0.92f
+                cpaint.typeface = WFont.bold
+                cpaint.textSize = if (big) rad * 1.9f else rad * 1.12f   // "휴"도 근무 글자와 같은 크기
+                cpaint.color = if (bg.isNotEmpty()) (if (MonthRenderer.vivid || night) MonthRenderer.vividInk(MonthRenderer.inkOf(parseColor(bg, pal.pill), night), night) else MonthRenderer.mixRgb(MonthRenderer.inkOf(parseColor(bg, pal.pill), night), 0xFF000000.toInt(), 0.8f)) else MonthRenderer.restInk(true, night)
+                val maxW = if (big) cw - row.padX * 2f - 16f * dens else row.circleD * 1.1f
+                while (cpaint.measureText(label) > maxW && cpaint.textSize > rad * 0.5f) cpaint.textSize = cpaint.textSize * 0.92f
             } else if (bg.isNotEmpty()) {
                 val cp = Paint(Paint.ANTI_ALIAS_FLAG)
                 cp.color = if (MonthRenderer.vivid) MonthRenderer.deepen(parseColor(bg, pal.pill)) else parseColor(bg, pal.pill)
                 cv.drawCircle(cx, cyc, rad, cp)
                 cpaint.color = if (MonthRenderer.vivid) 0xFFFFFFFF.toInt() else parseColor(d.optString("fg", ""), pal.fg)
             } else {
-                cpaint.color = if (MonthRenderer.vivid) MonthRenderer.restInk(false, pal === DARK) else 0xFFE5484D.toInt()   // 휴무: 색 없이 붉은 글자
+                cpaint.typeface = WFont.bold
+                cpaint.color = if (MonthRenderer.vivid) MonthRenderer.restInk(false, pal === DARK) else if (night) 0xFFE5484D.toInt() else 0xFFC23A5A.toInt()   // 휴무: 색 없이 붉은 글자
             }
-            cv.drawText(t, cx, cyc + rad * 0.36f, cpaint)
-            if (d.optBoolean("ov", false)) {   // 근무를 바꾼 날: 왼쪽에 붉은 점
+            cv.drawText(label, cx, cyc + cpaint.textSize * 0.36f, cpaint)
+            if (tomH > 0f) {
+                val tp2 = TextPaint(Paint.ANTI_ALIAS_FLAG)
+                tp2.typeface = WFont.med
+                tp2.textAlign = Paint.Align.CENTER
+                tp2.textSize = Math.min(tomH, cpaint.textSize * 0.55f)
+                tp2.color = if (bg.isNotEmpty()) MonthRenderer.inkOf(parseColor(bg, pal.pill), night) else pal.sub
+                cv.drawText(TextUtils.ellipsize(tomText, tp2, cw - row.padX * 2f, TextUtils.TruncateAt.END).toString(), cx, y0 + row.circleCy + row.circleD / 2f - tomH * 0.15f, tp2)
+            }
+            if (d.optBoolean("ov", false)) {   // 근무를 바꾼 날: 붉은 점 — 칸 채우기는 글자 바로 왼쪽 (v0.161) · 동그라미는 동그라미 왼쪽
                 val dp = Paint(Paint.ANTI_ALIAS_FLAG)
                 dp.color = 0xFFE5322D.toInt()
-                cv.drawCircle(x0 + pad * 1.6f, cyc, 3.2f * dens, dp)
+                val half = if (fill) cpaint.measureText(label) / 2f else rad
+                val dx = Math.max(x0 + row.padX * 0.8f + 3.2f * dens, cx - half - 7f * dens)
+                cv.drawCircle(dx, cyc, 3.2f * dens, dp)
             }
         }
 

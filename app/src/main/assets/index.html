@@ -98,10 +98,6 @@
   --st-pending:#f2b53a; --st-accepted:#3fcf94; --st-rejected:#ff7a8c; --st-applied:#7ea2ff; --st-cancelled:#8a909b;
 }
 /* 배경 "종이"(설정 › 화면 › 배경): 색만 바꿈 · 기본은 위 색 그대로 */
-@media (prefers-color-scheme:light){:root[data-bg="paper"]:not([data-theme="dark"]){--bg:#fbf8f1;--surface:#f3eee2;--line:#eae2d0;--track:#d3cab5;--muted:#8d8470;--fg:#2b2418;--navbar:#fffdf8;--out-bg:#f4efe3;--head-bg:#f8f3e8;--today-bg:#e3f4ec;--band-d:#eeede8;--band-n:#f2ece5}}
-:root[data-bg="paper"][data-theme="light"]{--bg:#fbf8f1;--surface:#f3eee2;--line:#eae2d0;--track:#d3cab5;--muted:#8d8470;--fg:#2b2418;--navbar:#fffdf8;--out-bg:#f4efe3;--head-bg:#f8f3e8;--today-bg:#e3f4ec;--band-d:#eeede8;--band-n:#f2ece5}
-@media (prefers-color-scheme:dark){:root[data-bg="paper"]:not([data-theme="light"]){--bg:#17150f;--surface:#211e16;--line:#2f2b20;--track:#4a4434;--fg:#efe9da;--muted:#9a917b;--navbar:#1c1a13;--out-bg:#1b1812;--head-bg:#1a1812;--today-bg:#173a30;--band-d:#25292b;--band-n:#2a2522}}
-:root[data-bg="paper"][data-theme="dark"]{--bg:#17150f;--surface:#211e16;--line:#2f2b20;--track:#4a4434;--fg:#efe9da;--muted:#9a917b;--navbar:#1c1a13;--out-bg:#1b1812;--head-bg:#1a1812;--today-bg:#173a30;--band-d:#25292b;--band-n:#2a2522}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px); background:#e9eef1;}
@@ -1938,6 +1934,10 @@ html:not([data-bg])[data-theme="light"]{--restx:#c23a5a}
 html:not([data-bg])[data-cal="fill"][data-theme="light"] .bwrap .badge.c{color:color-mix(in srgb,var(--tb) 30%,#000);font-weight:700}
 html[data-bg="vivid"][data-cal="fill"][data-theme="light"] .cell:not(.out){box-shadow:none}
 html[data-bg="vivid"][data-cal="fill"][data-theme="light"] .cell[style*="--cb"]:not(.out){box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cb) 70%,#000 12%)}
+/* v0.161 동그라미 모양 (시안 design/circle): 동그라미 조금 크게 · 휴 굵게 · 좁은 폰은 칸 너비 - 20px 까지만 (근무 변경 빨간 점 자리) */
+html:not([data-cal="fill"]) .cell:not(.pers){--b:min(calc(max(30px,min(84cqw,44px,calc(100cqh - 68px)))*.84),calc(100cqw - 20px))}
+html:not([data-cal="fill"]) .bwrap .badge{font-size:calc(var(--b)*.42)}
+html:not([data-cal="fill"]) .bwrap .badge.r{font-weight:700}
 /* v0.148 빛이 도는 동안: 원래 테두리는 숨기고 빛을 따라 그려지는 선(g-draw)으로 · 끝나면 다시 테두리 */
 .cell.today.glowing::after{opacity:0}
 .tglow .g-draw{stroke-width:3px;opacity:1;stroke:var(--tdc,var(--today))}
@@ -2768,7 +2768,7 @@ const defaults=()=>({
   wx:{home:'',work:'',fw:{},nm:{}},
   ot:{},                   // ⏱ 연장: 날짜별 실제 출근 · 퇴근 {'YYYY-MM-DD':['07:00','23:00']}
   salary:{fixed:0,close:0,night:['22:00','06:00'],ot:0,nt:0,leaveYear:0,slips:{}},   // 월급 (근무 통계): 고정금 · 급여 마감일(0=말일) · 야간 기준 · 직접 적은 연장/야간 1시간 금액 · 올해 연차 · 명세서 {'YYYY-MM':{ot,nt,lv,lvd,tot}}   // 출퇴근 날씨 (부가 기능 wx): 집 · 직장 지역 번호, 가족 직장(보는 사람이 정함)
-  bg:'',   // 배경: '' 기본 · 'paper' 종이
+  bg:'',   // 배경: '' 기본 · 'vivid' 또렷하게 (v0.161 종이 뺌)
   theme:'system',   // 화면 모드: system(폰 설정 따라감) · light · dark
   showBand:false,  // 같은 근무가 이어질 때 칸 사이를 잇는 색 띠 (새로 설치하면 꺼짐, 예전 데이터는 켜짐 그대로)
   drive:{last:0,dirty:false,email:'',auto:true},
@@ -2820,7 +2820,7 @@ function normalize(o){
   s.alarmMsg=s.alarmMsg!==false;s.chLog=(Array.isArray(o&&o.chLog)?o.chLog:[]).filter(x=>isObj(x)&&+x.t>0&&okDate(x.k)).slice(0,300).map(x=>({t:+x.t,k:x.k,w:cutTxt(x.w,12),a:['chg','req','pending','held','accepted','rejected','applied'].includes(x.a)?x.a:'chg',f:cutTxt(x.f,12),to:cutTxt(x.to,12),...(+x.rcv?{rcv:+x.rcv}:{}),...(x.want?{want:cutTxt(x.want,6)}:{})}));   // v0.135 근무 바뀐 기록s.stzMode=(o&&o.stzMode)==='3'?'3':'m';   // v0.130 스티커 크기 범위: 기본 'm' 그 달만(달마다 최대한 크게) · '3' 앞뒤 3달
   {const a=isObj(s.famAlias)?s.famAlias:{},o={};Object.keys(a).slice(0,20).forEach(k=>{const v=typeof a[k]==='string'?a[k].trim().slice(0,12):'';if(/^[A-Za-z0-9_-]{1,64}$/.test(k)&&v)o[k]=v;});s.famAlias=o;}   // v0.127 부를 이름
   {const h=isObj(s.hints)?s.hints:{},o2={};Object.keys(h).slice(0,30).forEach(k=>{const v=Math.round(+h[k]);if(/^[a-z0-9]{1,12}$/.test(k)&&v>=0&&v<1000)o2[k]=v;});s.hints=o2;}   // v0.126 안내 줄 본 횟수
-  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.pushBoard=!(o&&o.pushBoard===false);s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'||((o&&o.calLook)!=='circle'&&!(o&&o.onboarded))?'fill':'circle';/* v0.97 새로 설치 = 칸 채우기 · 예전부터 쓰던 사람(고른 적 없음 = 동그라미)은 그대로 */s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.todayColor=(o&&o.todayColor==='shift')?'shift':/^#[0-9a-f]{6}$/i.test((o&&o.todayColor)||'')?o.todayColor.toLowerCase():'';if(!(o&&o.tdcMig)&&!s.todayColor)s.todayColor='shift';s.tdcMig=true;/* v0.155 오늘 표시 기본 = 그날 근무 색 (쉬는 날 회색) · 이미 고른 색은 그대로 */ /* 'shift' = 그날 근무 색 */s.linkLost=(o&&isObj(o.linkLost)&&typeof o.linkLost.hid==='string')?{hid:cutTxt(o.linkLost.hid,128),role:o.linkLost.role==='host'?'host':'guest',name:cutTxt(o.linkLost.name,12),at:+o.linkLost.at||0}:null;s.linkMissAt=+(o&&o.linkMissAt)||0;s.hostSeenAt=+(o&&o.hostSeenAt)||0;s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&(o.bg==='paper'||o.bg==='vivid'))?o.bg:(o&&o.onboarded?'':'vivid');/* v0.135 새로 설치 = 또렷하게 */s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
+  s.pushOn=s.pushOn!==false;s.pushQuiet=s.pushQuiet!==false;s.pushBoard=!(o&&o.pushBoard===false);s.lastMemoColor=/^#[0-9a-f]{6}$/i.test((o&&o.lastMemoColor)||'')?o.lastMemoColor:'';s.widget={theme:['light','dark'].includes(o&&o.widget&&o.widget.theme)?o.widget.theme:'system',alpha:Math.max(0,Math.min(100,Math.round(+((o&&o.widget&&o.widget.alpha)??100)))),look:(o&&o.widget&&o.widget.look)==='circle'?'circle':'fill' };s.tune=tuneAll(o&&o.tune);s.tuneHist=Array.isArray(o&&o.tuneHist)?o.tuneHist.slice(0,5).map(tuneAll):[];s.calLook=(o&&o.calLook)==='fill'||((o&&o.calLook)!=='circle'&&!(o&&o.onboarded))?'fill':'circle';/* v0.97 새로 설치 = 칸 채우기 · 예전부터 쓰던 사람(고른 적 없음 = 동그라미)은 그대로 */s.todayLook=['a','b','c','d'].includes(o&&o.todayLook)?o.todayLook:'b';s.todayColor=(o&&o.todayColor==='shift')?'shift':/^#[0-9a-f]{6}$/i.test((o&&o.todayColor)||'')?o.todayColor.toLowerCase():'';if(!(o&&o.tdcMig)&&!s.todayColor)s.todayColor='shift';s.tdcMig=true;/* v0.155 오늘 표시 기본 = 그날 근무 색 (쉬는 날 회색) · 이미 고른 색은 그대로 */ /* 'shift' = 그날 근무 색 */s.linkLost=(o&&isObj(o.linkLost)&&typeof o.linkLost.hid==='string')?{hid:cutTxt(o.linkLost.hid,128),role:o.linkLost.role==='host'?'host':'guest',name:cutTxt(o.linkLost.name,12),at:+o.linkLost.at||0}:null;s.linkMissAt=+(o&&o.linkMissAt)||0;s.hostSeenAt=+(o&&o.hostSeenAt)||0;s.personal=!!s.personal;s.pers=(Array.isArray(o&&o.pers)?o.pers:[]).filter(p=>p&&/^\d{4}-\d\d-\d\d$/.test(p.f||'')&&(!p.t||/^\d{4}-\d\d-\d\d$/.test(p.t))).map(p=>({f:p.f,t:p.t||''}));if(s.personal&&!s.pers.length)s.pers=[{f:'1900-01-01',t:''}];s.personal=(s.pers||[]).some(p=>p.f<=fmt(new Date())&&(!p.t||fmt(new Date())<p.t));s.fontScale=(+s.fontScale>100)?120:100;s.weekStart=(o&&o.weekStart===1)?1:0;s.memoLines=3;s.quickN=(o&&(o.quickN===4||o.quickN===8))?o.quickN:0;s.famWk=(o&&o.famWk==='w')?'w':'c';s.famSwiped=!!(o&&o.famSwiped);s.myEmo=(o&&Array.isArray(o.myEmo)?o.myEmo:[]).filter(x=>x&&typeof x.e==='string'&&x.e).slice(0,20).map(x=>({e:x.e.slice(0,16),n:String(x.n||'').slice(0,12)}));s.patWeek=!!(o&&o.patWeek);s.seenVer=String((o&&o.seenVer)||'');s.theme=(s.theme==='light'||s.theme==='dark')?s.theme:'system';s.bg=(o&&o.bg==='vivid')?'vivid':(o&&o.onboarded?'':'vivid');/* v0.161 종이(paper) 뺌 → 기본 *//* v0.135 새로 설치 = 또렷하게 */s.stats=!(o&&o.stats===false);s.showBand=(o&&o.showBand!==undefined)?o.showBand!==false:true;s.gAcct=typeof s.gAcct==='string'?s.gAcct.slice(0,80):'';s.holRest=!!s.holRest;s.shareMemo=!!s.shareMemo;s.tipMemo=!!s.tipMemo;s.tipStk=!!s.tipStk;
   s.link=(s.link&&typeof s.link==='object'&&s.link.hid&&['host','guest'].includes(s.link.role))?{hid:String(s.link.hid),role:s.link.role,name:String(s.link.name||'').slice(0,12),perm:s.link.perm==='read'?'read':'write',mode:s.link.mode==='view'?'view':'own',stk:!!s.link.stk,stkAsked:s.link.stkAsked?1:0,uid:String(s.link.uid||'').slice(0,128),hash:String(s.link.hash||'').slice(0,16)}:null;
   s.memoColors=Object.assign({fam:'#7b5cf0',my:'#5b8fc7'},isObj(o.memoColors)?o.memoColors:{});['fam','my'].forEach(k=>{if(!okHex(s.memoColors[k]))s.memoColors[k]=({fam:'#7b5cf0',my:'#5b8fc7'})[k];});s.memoColors.fam='#7b5cf0';   // v0.151 가족 메모는 보라 고정
   if(!(o&&o.memoMig88)&&s.memoColors.my==='#6b7280')s.memoColors.my='#5b8fc7';s.memoMig88=true;   // v0.88: 내 메모 기본색 회색 → 연한 파랑 (옛 기본값 그대로인 사람만 · 한 번만 — 그 뒤에 회색을 고르면 그대로)
@@ -3094,7 +3094,7 @@ function widgetJson(){
     });
     const rq0=rqRing((S.requests||[]).filter(r=>r.date===k&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r)).slice(3),   // 요청 링 (한 달 위젯 · 칸 채우기 모양): ask · hold · ok · no — 달력과 같은 기준(답한 요청은 3일 뒤 사라짐)
       nfm=vm.filter(x=>x.shared&&x.text.trim()).length,   // 메모 줄 맨 앞 nfm 개가 가족 메모(♥) — 위젯이 연보라 칸으로 그림
-      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · '),...(i>=-6&&i<14?{s:wlSecTexts(k)}:{})}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
+      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',...((c||rest)?{tn:String(typeOf(sh).name||sh).slice(0,5)}:{}),bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · '),...(i>=-6&&i<14?{s:wlSecTexts(k)}:{})}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
     if(i<-6||i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({...base,far:i<-6?2:1,stk:stampsOn(k).slice(0,4).map(x=>{const o=mapStk(x);delete o.id;delete o.b;return o;}),ms:ml.slice(0,3).map(x=>String(x||'').slice(0,40)),...(mld.some(i=>i<3)?{msd:mld.filter(i=>i<3)}:{}),
       ...(fm.length?{fm}:{}),...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 먼 날(지난 날 · 2주 뒤부터): 큰 창에는 스티커 · 메모를 안 싣고 앱에서 보게 함
     const sa=stampsOn(k).slice(0,12).map(mapStk);
@@ -3447,7 +3447,7 @@ function applyTheme(){
   st.setProperty('--my-line',`color-mix(in srgb, ${m} 28%, var(--bg))`);
   const de=document.documentElement;
   if(S.theme==='light'||S.theme==='dark')de.setAttribute('data-theme',S.theme);else de.removeAttribute('data-theme');
-  if(S.bg==='paper'||S.bg==='vivid')de.setAttribute('data-bg',S.bg);else de.removeAttribute('data-bg');
+  if(S.bg==='vivid')de.setAttribute('data-bg',S.bg);else de.removeAttribute('data-bg');
   applyTune();
   try{if(window.AndroidBridge&&typeof window.AndroidBridge.setThemeMode==='function')window.AndroidBridge.setThemeMode(S.theme||'system');}catch(e){}
 }
@@ -7328,7 +7328,7 @@ function openLookPage(){   // v0.146 새 모양
     <div class="pg-sec">
       ${npRow('sun-moon','화면 모드',seg([['light','라이트'],['dark','다크'],['system','시스템']],S.theme==='light'||S.theme==='dark'?S.theme:'system','thememode'))}
       ${npRow('type','글자 크기',seg([[100,'보통'],[120,'크게']],fs>100?120:100,'font'))}
-      ${npRow('paintbrush','배경',seg([['','기본'],['paper','종이'],['vivid','또렷하게']],S.bg||'','bgmode'))}
+      ${npRow('paintbrush','배경',seg([['','기본'],['vivid','또렷하게']],S.bg||'','bgmode'))}
     </div>
     <div class="pg-cap">자세히</div>
     <div class="pg-sec">${npRow('sliders','모양 세부 조정',npVal(''),{tap:1,act:'tune-open'})}</div>
@@ -9848,7 +9848,7 @@ document.addEventListener('click',e=>{
     case 'tune-save':if(tuneDirty()){S.tuneHist=[JSON.parse(JSON.stringify(S.tune)),...(S.tuneHist||[])].slice(0,5);S.tune=JSON.parse(JSON.stringify(tuneDraft));save();applyTune();tuneBar();toast('저장했어요');}break;
     case 'tune-undo':if(!(S.tuneHist||[]).length){toast('돌아갈 저장이 없어요');break;}S.tune=S.tuneHist.shift();tuneDraft=JSON.parse(JSON.stringify(S.tune));save();applyTune();openTunePage();toast('이전 저장 값으로 돌렸어요');break;
     case 'tune-copy':copyText(tuneText());break;
-    case 'bgmode':S.bg=['paper','vivid'].includes(t.dataset.v)?t.dataset.v:'';save();applyTheme();render();lookRefresh();break;
+    case 'bgmode':S.bg=t.dataset.v==='vivid'?'vivid':'';save();applyTheme();render();lookRefresh();break;
     case 'more-look':closeSheet();openLookPage();break;
     case 'ad-tile':{if(e.target.closest('label.sw'))break;const k=t.dataset.k,cb=document.getElementById('ad_'+k);if(!cb)break;
       if(!adOn(k)){cb.checked=true;cb.dispatchEvent(new Event('change',{bubbles:true}));break;}   // 꺼진 칸 = 켜기
