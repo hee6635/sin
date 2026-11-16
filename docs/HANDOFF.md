@@ -474,3 +474,10 @@
 ## v0.166 (덧붙임) 오늘 빛 = 숨 쉬듯 두 번 (앱 · 위젯 같음 · design/today-glow/pulse2.gif)
 - 앱: glowSvg 에 g-pb(g-po · g-po2 바깥 근무 색 번짐, blur) · g-pin(안쪽 하얀 줄 2겹) 추가 · glowFrame 이 --pe(두 번: 0.9초씩, 두 번째 0.7배, smoothstep) 설정 · 도는 빛 요소(g-halo · g-dash · g-head · g-bloom · g-soft · g-line · g-draw)는 CSS 로 숨김 · 오늘 테두리(::after)는 그대로 보임.
 - 위젯: drawPulse 두 번 · GLOW_MS 1800 (80ms 프레임 → 약 22장).
+
+## v0.167 (덧붙임) 달력 윗줄 높이 · 칩 간격 · 지난 날 지남 · 가족 시간표 오늘
+- 달마다 높이 어긋남/넘길 때 툭 움직임의 원인 = 이번 달이 아니면 생기는 "오늘" 버튼(44px)이 윗줄을 54 → 56px 로 키움 → #top.cal-top{min-height:56px} 로 고정. (스티커 크기 --stz 는 근무 글자 높이에 영향 없음을 프레임마다 재서 확인)
+- 날짜 창 근무 칩 gap 7px (고른 칩 테두리 5px).
+- 지난 날 날씨: wxPastAll 로 저장본 칸 모두 past (wxHistPop · 날짜 창 카드 · wxHistCard). __wx.wxHistPop 시험용.
+- 가족 시간표: 위 "오늘" 링크(fwkNow) 뺌 · fam-mode 를 이미 고른 칸에 눌러도 famGoToday(부드럽게) · 바꿀 때도 다시 그린 뒤 famGoToday.
+- 시험 s101 · s31 · s76 고침.
