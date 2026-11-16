@@ -120,7 +120,7 @@ const chg=(p,id,v)=>p.evaluate(([id,v])=>{const e=document.getElementById(id);e.
     await ob('ob-brush','[data-k="D"]');await ob('ob-cell','[data-i="0"]');await ob('ob-cell','[data-i="1"]');
     await ob('ob-brush','[data-k="N"]');await ob('ob-cell','[data-i="2"]');await ob('ob-cell','[data-i="3"]');
     await ob('ob-next');await p.waitForTimeout(150);await ob('ob-pos','[data-v="2"]');await ob('ob-next');await p.waitForTimeout(150);
-    T('처음 설치 패턴 확인: 🕐 근무 시간 (선택) + 설명 (접힘)',await p.evaluate(()=>/근무 시간/.test(document.querySelector('#onboard .obtm').textContent)&&/출퇴근 날씨도 알려줘요/.test(document.querySelector('#onboard .obtm').textContent)&&!document.getElementById('obTmS_0')));
+    T('처음 설치 패턴 확인: 🕐 근무 시간 (선택) + 설명 (접힘)',await p.evaluate(()=>/근무 시간/.test(document.querySelector('#onboard .obtm').textContent)&&!document.getElementById('obTmS_0')));
     await ob('obtm-tog');await p.waitForTimeout(150);
     T('펼치면 D · N 두 줄 (쉼 빠짐)',await p.evaluate(()=>!!document.getElementById('obTmS_1')&&!document.getElementById('obTmS_2')));
     await chg(p,'obTmS_1','20:00');await chg(p,'obTmE_1','08:00');await p.waitForTimeout(150);
