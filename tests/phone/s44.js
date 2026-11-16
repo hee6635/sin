@@ -41,8 +41,8 @@ const {mkT}=require('./lib.js');
       if(reg.fam){
         await p.click('#page label.sw:has(#srFam)');await p.waitForTimeout(250);
         await p.click('#page [data-act="sr-save"]');await p.waitForTimeout(450);
-        d=(await S(p)).stamps.defs.find(x=>x.id==='s_gym');
-        T('등록 화면에서 바꾼 값도 저장됨 (운동2: 끔)',d.fam===false,JSON.stringify(d.fam));
+        {const st=(await S(p)).stamps,g=st.defs.find(x=>x.id==='s_gym');d=st.defs.find(x=>x.id==='s_gym'&&(x.dates||[]).includes('2026-10-15'))||st.defs.find(x=>x.one&&x.emoji===g.emoji&&(x.dates||[]).includes('2026-10-15'));
+        T('등록 화면에서 바꾼 값도 저장됨 (운동2: 끔 · v0.153 다른 데서 쓰는 스티커면 이 날만 따로)',!!d&&d.fam===false,JSON.stringify(d&&d.fam));}
       }
     }
     T('오류 없음',p.errs.filter(e=>!/ERR_FILE_NOT_FOUND/.test(e)).length===0,p.errs.join('|'));

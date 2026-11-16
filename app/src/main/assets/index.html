@@ -4020,7 +4020,7 @@ function glowCheck(){
 }
 function glowSvg(c){
   const w=c.clientWidth,h=c.clientHeight;if(!(w>4&&h>4))return null;
-  const g=1.2,bw=w-2*g,bh=h-2*g,r=Math.max(4,Math.min(bw/2,bh/2,(parseFloat(getComputedStyle(c).borderTopLeftRadius)||8)-g));
+  const ar=parseFloat(getComputedStyle(c,'::after').borderTopLeftRadius),g=1.2,bw=w-2*g,bh=h-2*g,r=Math.max(0,Math.min(bw/2,bh/2,(isNaN(ar)?8:ar)-g));   // v0.153 빛 모서리 = 오늘 테두리 모서리 (동그라미 모양은 각진 테두리라 빛도 각지게)
   const per=2*Math.max(0,bw-2*r)+2*Math.max(0,bh-2*r)+2*Math.PI*r,len=per*.3,N=7;
   const R=(cls,x='')=>`<rect class="${cls}" x="${g}" y="${g}" width="${bw}" height="${bh}" rx="${r}" ry="${r}"${x}/>`;
   let d=R('g-halo',` stroke-dasharray="${len} ${per-len}"`);for(let i=1;i<=N;i++)d+=R('g-dash',` data-l="${len*i/N}" stroke-dasharray="${len*i/N} ${per-len*i/N}"`);   // 둘레마다 되풀이 → 두 바퀴
@@ -4599,9 +4599,14 @@ function stampExtra(k,e,name){
 // v0.150 이 스티커를 이 날 말고 다른 데서 쓰고 있나 (반복 규칙 · 다른 날짜 · 지난 기록)
 function stUsedElse(s,k){const L=S.stamps.log||{};return (s.rep&&s.rep!=='none')||(s.dates||[]).some(x=>x!==k)||Object.keys(L).some(x=>x!==k&&L[x]&&L[x][s.id]);}
 // 같은 그림 · 같은 횟수의 한 번 쓰는 스티커 (없으면 새로)
-function stOneLike(s,times){
+// 옵션 묶음(횟수 · 알림 시각 · 활동 · 가족 보이기)을 글자 하나로 — 저장된 스티커(s) 또는 등록 화면 값(d, draft)
+function stOptKey(o,draft){
+  const n=draft?o.times:stN(o),ats=draft?(o.alarm?(stFill(o),o.ats.slice(0,n)):[]):(o.ats||[]).slice(0,n),a=o.act&&o.act.s&&o.act.e?[o.act.s,o.act.e,o.act.r||'']:null;
+  return JSON.stringify([n,ats,a,stFamShow()?(draft?!!o.fam:stFam(o)):0]);
+}
+function stOneLike(s,times,key){
   const same=y=>y.kind===s.kind&&(s.kind==='pill'?(y.shape||'caps')===(s.shape||'caps')&&(y.color||'')===(s.color||''):y.emoji===s.emoji)&&(y.name||'')===(s.name||'');
-  let x=S.stamps.defs.find(y=>y!==s&&y.one&&!y.retired&&(!y.rep||y.rep==='none')&&stN(y)===times&&same(y));
+  let x=S.stamps.defs.find(y=>y!==s&&y.one&&!y.retired&&(!y.rep||y.rep==='none')&&(key?stOptKey(y)===key:stN(y)===times)&&same(y));
   if(!x){x={id:'o_'+uid(),one:true,kind:s.kind,emoji:s.emoji,name:s.name,times,rep:'none',days:[],dates:[],skip:[],ats:[]};if(s.kind==='pill'){x.color=s.color;x.shape=s.shape||'caps';}if(s.fam!==undefined)x.fam=s.fam;S.stamps.defs.push(x);}
   return x;
 }
@@ -4663,10 +4668,10 @@ function wtypesOf(s){
 function stDraftOf(s,k,edit,back){
   const kind=s?s.kind:'mark',times=s&&edit?stN(s):1;   // v0.150 새로 붙일 땐 언제나 1번부터 (지난번 횟수 기억 안 함)
   const d={k,back:back||'',edit:!!edit,id:s?s.id:'__new',kind,name:s?s.name:'',emoji:(s&&s.emoji)||'🏃',color:(s&&s.color)||STK_COL[0],times,
-    alarm:!!(s&&s.ats&&s.ats.length),ats:s&&s.ats?s.ats.slice():[],shape:(s&&s.shape)||'caps',fam:s?stFam(s):true,
+    alarm:!!(edit&&s&&s.ats&&s.ats.length),ats:edit&&s&&s.ats?s.ats.slice():[],shape:(s&&s.shape)||'caps',fam:s&&edit?stFam(s):kind!=='pill',   // v0.153 새로 붙일 땐 알림 · 활동 · 가족 보이기도 기본값
     rep:edit?(s.rep||'none'):'once',days:s&&s.days&&s.days.length?s.days.slice():[parse(k).getDay()],workMode:(s&&s.workMode)||'rest',wtypes:wtypesOf(s),
     from:(edit&&s.from)||k,to:(edit&&s.to)||'',noHol:!!(edit&&s.noHol),noWknd:!!(edit&&s.noWknd),noNight:!!(edit&&s.noNight),
-    act:s&&s.act?Object.assign({},s.act):null,actOpen:!!(s&&s.act)};
+    act:edit&&s&&s.act?Object.assign({},s.act):null,actOpen:!!(edit&&s&&s.act)};
   if(d.alarm)stFill(d);
   return d;
 }
@@ -4812,7 +4817,7 @@ function stampRegSave(){
   const isNewDef=!s;
   if(d.rep==='once'&&s&&stampPlanned(s,d.k)){toast('이 스티커는 이 날에 이미 깔려 있어요 · 새 스티커는 "＋ 새로"');return;}
   if(d.rep==='work'&&!d.wtypes.length){toast('근무를 하나 이상 골라 주세요');return;}
-  if(s&&!d.edit&&d.rep==='once'&&stN(s)!==d.times&&stUsedElse(s,d.k))s=stOneLike(s,d.times);   // v0.150 횟수가 다르면 이 날만 따로 (그 스티커의 지난 날 · 반복 규칙은 그대로)
+  if(s&&!d.edit&&d.rep==='once'){const dk=stOptKey(d,true);if(stOptKey(s)!==dk&&stUsedElse(s,d.k))s=stOneLike(s,d.times,dk);}   // v0.153 횟수 · 알림 · 활동 · 가족 보이기가 다르면 이 날만 따로 (그 스티커의 지난 날 · 반복 규칙은 그대로)
   const snap=JSON.stringify(S.stamps);   // 한도 때문에 가려지면 "등록 취소"로 돌아가기 위한 사본
   if(!s){
     s=d.kind==='pill'?{id:uid(),kind:'pill',emoji:'💊',name:'약',times:1,color:STK_COL[0],rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]}
