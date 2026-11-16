@@ -1440,6 +1440,7 @@ html[data-cal="fill"] .cell{border:0;border-radius:9px;background:transparent}
 .tglow .g-soft{stroke-width:7px;opacity:0}.tglow .g-line{stroke-width:2.4px;opacity:0}
 .tglow .g-halo{stroke-width:9px;opacity:.28}.tglow .g-dash{stroke-width:3.4px;opacity:.45}
 html[data-cal="fill"] .cell.today{background:transparent}
+html:not([data-cal="fill"]) .cell.today{background:transparent!important}   /* v0.152 동그라미 모양: 오늘은 테두리만 (바탕색이 메모 색을 가려서) */
 html[data-cal="fill"] .cell.today .dn{padding-left:5px;padding-top:0}   /* 오늘도 일반 날과 같은 자리 */
 /* 오늘 숫자는 일반 날과 똑같이(알약 · 색 없음): 오늘 표시는 칸 바탕 + 아래 그림자 + 오른쪽 띠가 맡음 */
 html[data-cal="fill"]{--cbm:26%}html[data-cal="fill"][data-theme="dark"]{--cbm:44%}
@@ -10674,7 +10675,7 @@ async function famBonusLoad(){   // 관리자가 준 무료 건수: bonus/{내 u
 }
 let admOk=null,adm=null;
 async function admCheck(){   // 관리자 계정만 bonusLog 를 읽을 수 있음 → 읽히면 관리자 (앱에 메일 주소를 넣지 않음)
-  if(admOk!==null||!S.gAcct||!fbCfg())return;
+  if(admOk!==null||!S.link||!fbCfg())return;   // v0.152 구글 연결이 아니어도 (규칙이 계정 번호로도 관리자 확인)
   try{const {F,db}=await famReady();await F.getDocs(F.query(F.collection(db,'bonusLog'),F.limit(1)));admOk=true;}catch(e){admOk=false;}
   if(admOk&&pageMode==='info')openInfoPage();
 }
@@ -10774,9 +10775,11 @@ async function famHostSeen(){
   if(S.link.role==='host')await F.updateDoc(F.doc(db,'households',S.link.hid),{hostSeen:F.serverTimestamp()}).catch(()=>{});
   S.hostSeenAt=Date.now();save();
 }
+// v0.152 앱에는 "구글 계정에 연결됨"인데 서버 계정은 구글 연결이 없을 때 (예전 계정에 붙어 있던 표시가 남음) → 표시 지우기
+function famGAcctFix(){try{const u=FBX.auth&&FBX.auth.currentUser;if(u&&S.gAcct&&!(u.providerData||[]).some(p=>p&&p.providerId==='google.com')){S.gAcct='';save();}}catch(e){}}
 async function famBoot(){
   if(!fbCfg()||!S.link||famBooting||wipeBusy)return;famBooting=true;
-  try{await famSync();if(S.link){await famListen();if(!famView())famPush().catch(famPushFail);famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});famRegUser().catch(()=>{});famRegCode().catch(()=>{});famBonusLoad().catch(()=>{});famHostSeen().catch(()=>{});}else famClear();}
+  try{await famSync();famGAcctFix();if(S.link){await famListen();if(!famView())famPush().catch(famPushFail);famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});famRegUser().catch(()=>{});famRegCode().catch(()=>{});famBonusLoad().catch(()=>{});famHostSeen().catch(()=>{});}else famClear();}
   catch(e){}finally{famBooting=false;}
 }
 // 가족이 "내 근무표 올리기 / 가족 것만 볼래요"를 바꿀 때
