@@ -1935,7 +1935,8 @@ html:not([data-bg])[data-cal="fill"][data-theme="light"] .bwrap .badge.c{color:c
 html[data-bg="vivid"][data-cal="fill"][data-theme="light"] .cell:not(.out){box-shadow:none}
 html[data-bg="vivid"][data-cal="fill"][data-theme="light"] .cell[style*="--cb"]:not(.out){box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cb) 70%,#000 12%)}
 /* v0.161 동그라미 모양 (시안 design/circle): 동그라미 조금 크게 · 휴 굵게 · 좁은 폰은 칸 너비 - 20px 까지만 (근무 변경 빨간 점 자리) */
-html:not([data-cal="fill"]) .cell:not(.pers){--b:min(calc(max(30px,min(84cqw,44px,calc(100cqh - 68px)))*.84),calc(100cqw - 20px))}
+html:not([data-cal="fill"]) .cell:not(.pers){--b:min(calc(max(30px,min(84cqw,44px,calc(100cqh - 68px)))*.84),calc((100cqw - 22px) / var(--tink,1)))}
+html:not([data-cal="fill"]) .cell[class*="rq-"]:not(.pers){--b:min(calc(max(30px,min(84cqw,44px,calc(100cqh - 68px)))*.84),calc((100cqw - 28px) / var(--tink,1)))}   /* 요청 링 칸: 링 바깥에 빨간 점 자리 */
 html:not([data-cal="fill"]) .bwrap .badge{font-size:calc(var(--b)*.42)}
 html:not([data-cal="fill"]) .bwrap .badge.r{font-weight:700}
 /* v0.148 빛이 도는 동안: 원래 테두리는 숨기고 빛을 따라 그려지는 선(g-draw)으로 · 끝나면 다시 테두리 */
