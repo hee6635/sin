@@ -63,7 +63,10 @@ h2{font-size:13px;font-weight:700;color:var(--ink3);margin:24px 6px 8px}
 .ac .tm{display:flex;align-items:baseline;gap:6px;margin-top:4px}.ac .tm small{font-size:16px;font-weight:700;color:#4e5968}.ac .tm b{font-size:40px;font-weight:800;letter-spacing:-1.5px;line-height:1.05;font-variant-numeric:tabular-nums}
 .chips2{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.chips2 span{display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;color:#4e5968;background:#f2f4f6;padding:5px 9px;border-radius:9px}.chips2 svg{color:#8b95a1}.vb{width:44px;height:4px;border-radius:2px;background:#e5e8eb;position:relative}.vb i{position:absolute;inset:0 auto 0 0;border-radius:2px;background:#3182f6}
 .ac.off{opacity:.45}.ac.off::before{background:#d1d6db}
-.nav{position:fixed;left:0;right:0;bottom:0;height:64px;background:#fff;border-top:1px solid #f2f4f6;display:grid;grid-template-columns:repeat(4,1fr)}.nav span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:#b0b8c1}.nav span.on{color:#191f28}.ac .tg{width:40px;height:24px;border-radius:12px}.ac .tg::after{top:2px;left:2px;width:20px;height:20px;box-shadow:0 1px 2px rgba(0,0,0,.18)}.ac .tg.on::after{left:18px}.ac .tg.on{background:#3182f6}</style>
+.nav{position:fixed;left:0;right:0;bottom:0;height:64px;background:#fff;border-top:1px solid #f2f4f6;display:grid;grid-template-columns:repeat(4,1fr)}.nav span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:#b0b8c1}.nav span.on{color:#191f28}.ac .tg{width:48px;height:28px;border-radius:14px}.ac .tg::after{top:2px;left:2px;width:24px;height:24px;box-shadow:0 1px 3px rgba(0,0,0,.18)}.ac .tg.on::after{left:22px}.ac .tg.on{background:#3182f6}.chips2 span{background:#f5f7fa;color:#6b7684;font-weight:600;border-radius:10px;padding:5px 10px}.chips2 svg{color:#8b95a1}
+.chips2 span.w{background:#eef4ff;color:#3182f6}.chips2 span.w svg{color:#3182f6}
+.chips2 span.s{background:transparent;padding:5px 2px;gap:6px}.vb{width:46px;height:5px;background:#e5e8eb}.vb i{background:#5b8def}
+.chips2 span.vb{display:block;padding:0;width:46px;height:5px;border-radius:3px;background:#e5e8eb!important;position:relative}</style>
 <div class="hd"><h1>알람</h1><span><svg
   class="lucide lucide-plus"
   xmlns="http://www.w3.org/2000/svg"
@@ -111,7 +114,7 @@ h2{font-size:13px;font-weight:700;color:var(--ink3);margin:24px 6px 8px}
   <path d="m3 8 4-4 4 4" />
   <path d="M7 4v16" />
 </svg></span><span>전체 끄기</span></div>
-<div class="ac" style="--c:#e0b8a3;--f:#2b1f1b"><div class="l"><div class="nm"><span class="bd">야</span>야간 날씨 확인</div><div class="tm"><small>오후</small><b>5:00</b></div><div class="chips2"><span><svg
+<div class="ac" style="--c:#e0b8a3;--f:#2b1f1b"><div class="l"><div class="nm"><span class="bd">야</span>야간 날씨 확인</div><div class="tm"><small>오후</small><b>5:00</b></div><div class="chips2"><span class="w"><svg
   class="lucide lucide-cloud-sun"
   xmlns="http://www.w3.org/2000/svg"
   width="14"
@@ -130,7 +133,7 @@ h2{font-size:13px;font-weight:700;color:var(--ink3);margin:24px 6px 8px}
   <path d="M15.947 12.65a4 4 0 0 0-5.925-4.128" />
   <path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z" />
 </svg>날씨만</span></div></div><span class="tg on"></span></div>
-<div class="ac" style="--c:#a6c6e2;--f:#1c2a31"><div class="l"><div class="nm"><span class="bd">주</span>주간 알람</div><div class="tm"><small>오전</small><b>5:36</b></div><div class="chips2"><span><svg
+<div class="ac" style="--c:#a6c6e2;--f:#1c2a31"><div class="l"><div class="nm"><span class="bd">주</span>주간 알람</div><div class="tm"><small>오전</small><b>5:36</b></div><div class="chips2"><span class="s"><svg
   class="lucide lucide-volume-2"
   xmlns="http://www.w3.org/2000/svg"
   width="14"
@@ -160,7 +163,7 @@ h2{font-size:13px;font-weight:700;color:var(--ink3);margin:24px 6px 8px}
   <path d="m2 8 2 2-2 2 2 2-2 2" />
   <path d="m22 8-2 2 2 2-2 2 2 2" />
   <rect width="8" height="14" x="8" y="5" rx="1" />
-</svg>진동</span><span><svg
+</svg>진동</span><span class="w"><svg
   class="lucide lucide-cloud-sun"
   xmlns="http://www.w3.org/2000/svg"
   width="14"
@@ -179,7 +182,7 @@ h2{font-size:13px;font-weight:700;color:var(--ink3);margin:24px 6px 8px}
   <path d="M15.947 12.65a4 4 0 0 0-5.925-4.128" />
   <path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z" />
 </svg>끈 뒤 보기</span></div></div><span class="tg on"></span></div>
-<div class="ac" style="--c:#a6c6e2;--f:#1c2a31"><div class="l"><div class="nm"><span class="bd">주</span>도시락</div><div class="tm"><small>오전</small><b>6:00</b></div><div class="chips2"><span><svg
+<div class="ac" style="--c:#a6c6e2;--f:#1c2a31"><div class="l"><div class="nm"><span class="bd">주</span>도시락</div><div class="tm"><small>오전</small><b>6:00</b></div><div class="chips2"><span class="s"><svg
   class="lucide lucide-volume-2"
   xmlns="http://www.w3.org/2000/svg"
   width="14"
@@ -194,7 +197,7 @@ h2{font-size:13px;font-weight:700;color:var(--ink3);margin:24px 6px 8px}
   <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" />
   <path d="M16 9a5 5 0 0 1 0 6" />
   <path d="M19.364 18.364a9 9 0 0 0 0-12.728" />
-</svg><span class="vb"><i style="width:50%"></i></span></span><span><svg
+</svg><span class="vb"><i style="width:50%"></i></span></span><span class="w"><svg
   class="lucide lucide-cloud-sun"
   xmlns="http://www.w3.org/2000/svg"
   width="14"
@@ -228,7 +231,7 @@ h2{font-size:13px;font-weight:700;color:var(--ink3);margin:24px 6px 8px}
   <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" />
   <line x1="22" x2="16" y1="9" y2="15" />
   <line x1="16" x2="22" y1="9" y2="15" />
-</svg>무음</span><span><svg
+</svg>무음</span><span class="w"><svg
   class="lucide lucide-cloud-sun"
   xmlns="http://www.w3.org/2000/svg"
   width="14"
@@ -263,7 +266,7 @@ h2{font-size:13px;font-weight:700;color:var(--ink3);margin:24px 6px 8px}
   <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
   <path d="m7 22-4-4 4-4" />
   <path d="M21 13v1a4 4 0 0 1-4 4H3" />
-</svg>한 번만</span><span><svg
+</svg>한 번만</span><span class="w"><svg
   class="lucide lucide-cloud-sun"
   xmlns="http://www.w3.org/2000/svg"
   width="14"
