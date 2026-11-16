@@ -7,7 +7,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  const S=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')));
  const cell=k=>`.track .panel:nth-child(2) .cell[data-k="${k}"]`;
  await p.evaluate(c=>document.querySelector(c+' .stz').click(),cell('2026-10-12'));await p.waitForTimeout(300);
- await p.click('#pop [data-act="sd-done"]');await p.waitForTimeout(300);
+ await p.click('#pop .sdr2[data-id="p1"] .sdn');await p.waitForTimeout(300);
  let s=await S();
  T('먹음 표시하면 그날 기록에 색 · 횟수 · 모양 저장',JSON.stringify(s.stamps.snap['2026-10-12'])===JSON.stringify({p1:{c:'#ef4d5a',t:3,h:'caps'}}),JSON.stringify(s.stamps.snap));
  await p.mouse.click(195,60);await p.waitForTimeout(300);

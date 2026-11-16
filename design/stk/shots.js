@@ -1,6 +1,6 @@
 const {chromium,boot,base}=require('../../tests/phone/lib.js');
 (async()=>{const b=await chromium.launch();
- const log={'2026-10-12':{s_pill:1,s_run:1}};
+ const log={'2026-10-12':{s_pill:1,s_run:1,s_read:1}};
  const p=await boot(b,{...base,calLook:'fill',stamps:{log,defs:undefined}},{w:390,h:844});await p.waitForTimeout(1000);
  const O=__dirname;
  await p.evaluate(()=>__wx.openDay?0:0);

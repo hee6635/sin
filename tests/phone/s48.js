@@ -94,9 +94,10 @@ const {mkT,base}=require('./lib.js');
 
     // ===== 4. 날짜 창: 옮겨진 반복 스티커는 "건너뛰기" · 이날만 붙인 ＋ 는 "지우기" =====
     await p.evaluate(c=>document.querySelector(c+' .stz').click(),cell('2026-10-13'));await p.waitForTimeout(350);
-    const lab=await p.evaluate(()=>[...document.querySelectorAll('#pop .sdr')].map(r=>{const bt=r.nextElementSibling;return r.querySelector('.nm').textContent.slice(0,6)+':'+[...bt.querySelectorAll('button')].map(x=>x.textContent.trim()).join('/');}));
-    T('날짜 창: 매일 반복 조깅은 건너뛰기 · 그만하기',lab.some(x=>x.startsWith('조깅')&&x.includes('건너뛰기')&&x.includes('그만하기')&&!x.includes('지우기')),JSON.stringify(lab));
-    await p.evaluate(()=>[...document.querySelectorAll('#pop .sdr')].find(r=>r.textContent.includes('조깅')).nextElementSibling.querySelector('[data-act="sd-skip"]').click());await p.waitForTimeout(400);
+    const more=async(id)=>{await p.click(`#pop .sdr2[data-id="${id}"] [data-act="sd-more"]`);await p.waitForTimeout(300);return p.evaluate(()=>[...document.querySelectorAll('#pop .mi')].map(x=>x.textContent.trim()).join('/'));};
+    const lab=await more('s_run');
+    T('날짜 창: 매일 반복 조깅은 건너뛰기 · 그만하기',lab.includes('건너뛰기')&&lab.includes('그만하기')&&!lab.includes('지우기'),lab);
+    await p.click('#pop [data-act="sd-skip"]');await p.waitForTimeout(400);
     let s4=await S(p);
     T('건너뛰기: 그 날만 skip 에 들어가고 반복은 그대로',(s4.stamps.defs.find(x=>x.id==='s_run').skip||[]).includes('2026-10-13')&&s4.stamps.defs.find(x=>x.id==='s_run').rep==='daily');
     T('달력에서 10/13 의 조깅이 사라지고 10/14 는 그대로',!(await has(p,'2026-10-13','👟'))&&await has(p,'2026-10-14','👟'));
@@ -105,8 +106,8 @@ const {mkT,base}=require('./lib.js');
     T('되돌리기: 다시 깔림',!(s4.stamps.defs.find(x=>x.id==='s_run').skip||[]).includes('2026-10-13')&&await has(p,'2026-10-13','👟'));
     await p.evaluate(()=>{const pp=document.getElementById('pop');pp.className='';pp.innerHTML='';});
     await p.evaluate(c=>document.querySelector(c+' .stz').click(),cell('2026-10-20'));await p.waitForTimeout(350);
-    T('이날만 붙인 ＋ 생일은 "지우기"',await p.evaluate(()=>[...document.querySelectorAll('#pop .sdr')].some(r=>r.textContent.includes('생일')&&/지우기/.test(r.nextElementSibling.textContent))));
-    await p.evaluate(()=>[...document.querySelectorAll('#pop .sdr')].find(r=>r.textContent.includes('생일')).nextElementSibling.querySelector('[data-act="sd-skip"]').click());await p.waitForTimeout(400);
+    {const lb=await more('o_cake');T('이날만 붙인 ＋ 생일은 "지우기"',/지우기/.test(lb)&&!lb.includes('그만하기'),lb);}
+    await p.click('#pop [data-act="sd-skip"]');await p.waitForTimeout(400);
     s4=await S(p);
     T('지우기: 생일 10/20 날짜가 빠짐',!s4.stamps.defs.find(x=>x.id==='o_cake').dates.includes('2026-10-20'));
     await p.evaluate(()=>{const u=document.querySelector('#toast .tu');u&&u.click();});await p.waitForTimeout(350);

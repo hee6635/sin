@@ -28,7 +28,7 @@ const T0=+new Date('2026-10-12T10:00:00');
   p=await boot(b,s,{});
   const cnt=async n=>{
     await p.evaluate(()=>document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-14"] .stz').click());await p.waitForTimeout(300);
-    return p.evaluate(()=>{const sv=document.querySelector('#pop .sdr svg.pillic');return sv?{pr:sv.querySelectorAll('line.pr').length,pd:sv.querySelectorAll('line.pd').length}:null;});
+    return p.evaluate(()=>{const sv=document.querySelector('#pop .sdr2 svg.pillic');return sv?{pr:sv.querySelectorAll('line.pr').length,pd:sv.querySelectorAll('line.pd').length}:null;});
   };
   const c3=await cnt(3);
   T('납작약 3번: 칸 나눔 줄 2개만 (가운데 홈 줄 없음)',c3&&c3.pd===2&&c3.pr===0,JSON.stringify(c3));

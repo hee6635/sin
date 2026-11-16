@@ -5,7 +5,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  const cell=d=>`.track .panel:nth-child(2) .cell[data-k="${d}"]`;
  // 10/19 에서 그만하기
  await p.evaluate(c=>document.querySelector(c+' .stz').click(),cell('2026-10-19'));await p.waitForTimeout(300);
- await p.click('#pop [data-act="sd-end"]');await p.waitForTimeout(300);
+ await p.click('#pop [data-act="sd-more"][data-id="a"]');await p.waitForTimeout(300);await p.click('#pop [data-act="sd-end"]');await p.waitForTimeout(300);
  // 같은 날 다시 등록: 월수금
  await p.evaluate(c=>document.querySelector(c+' .stz').click(),cell('2026-10-19'));await p.waitForTimeout(300);
  await p.click('#pop [data-act="sp-pick"][data-id="a"]');await p.waitForTimeout(300);
