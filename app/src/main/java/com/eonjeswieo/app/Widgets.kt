@@ -335,6 +335,7 @@ object WidgetRenderer {
         val opts = mgr.getAppWidgetOptions(id)
         val density = ctx.resources.displayMetrics.density
         dens = density
+        WFont.init(ctx)
         // 가로로 돌린 화면은 (최대 폭 · 최소 높이), 세로는 (최소 폭 · 최대 높이)가 실제 크기라서 방향에 맞게 골라야 그림이 늘어나지 않음
         val land = ctx.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         val optW = opts.getInt(if (land) AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH else AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
@@ -514,7 +515,7 @@ object WidgetRenderer {
         val hh = head.height
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
         paint.textAlign = Paint.Align.CENTER
-        paint.typeface = Typeface.DEFAULT_BOLD
+        paint.typeface = WFont.bold
         paint.textSize = head.text
         for (i in 0 until 7) {
             val wd = order[i]
@@ -587,18 +588,7 @@ object WidgetRenderer {
                 MonthRenderer.drawTodayBand(cv, x0, y0, cw, ch, dens)
             }
         }
-        if (isToday && !fill) {   // 달력의 오늘 칸처럼: 연한 초록 바탕 + 초록 테두리
-            val inset = 2f * dens
-            val box = RectF(x0 + inset, y0 + inset, x0 + cw - inset, y0 + ch - inset)
-            val f = Paint(Paint.ANTI_ALIAS_FLAG)
-            f.color = if (night) 0xFF1E3A31.toInt() else 0xFFE3F5EF.toInt()
-            cv.drawRoundRect(box, 8f * dens, 8f * dens, f)
-            val st = Paint(Paint.ANTI_ALIAS_FLAG)
-            st.style = Paint.Style.STROKE
-            st.strokeWidth = 2f * dens
-            st.color = 0xFF2A8C6F.toInt()
-            cv.drawRoundRect(box, 8f * dens, 8f * dens, st)
-        }
+        if (isToday && !fill) MonthRenderer.drawTodayBand(cv, x0, y0, cw, ch, dens)   // v0.150 동그라미 모양도 같은 테두리
         val pad = row.padX
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
         val dow = d.optInt("w", 0).coerceIn(0, 6)
@@ -611,11 +601,11 @@ object WidgetRenderer {
             val cpaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
             val cx = x0 + cw / 2
             val cyc = y0 + row.circleCy
-            cpaint.typeface = Typeface.DEFAULT_BOLD
+            cpaint.typeface = WFont.bold
             cpaint.textAlign = Paint.Align.CENTER
             cpaint.textSize = rad * 1.0f
             if (fill) {   // 칸 채우기: 동그라미 없이 글자만 (일하는 날 = 근무 색을 진하게 · 쉬는 날 = 장미색)
-                cpaint.typeface = if (MonthRenderer.vivid) Typeface.DEFAULT_BOLD else Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                cpaint.typeface = if (MonthRenderer.vivid) WFont.bold else WFont.med
                 cpaint.textSize = rad * 1.12f   // "휴"도 근무 글자와 같은 크기
                 cpaint.color = if (bg.isNotEmpty()) MonthRenderer.vividInk(MonthRenderer.inkOf(parseColor(bg, pal.pill), night), night) else MonthRenderer.restInk(true, night)
                 while (cpaint.measureText(t) > row.circleD * 1.1f && cpaint.textSize > rad * 0.6f) cpaint.textSize = cpaint.textSize * 0.92f
@@ -657,7 +647,7 @@ object WidgetRenderer {
         // 날짜 (왼쪽) — 스티커 자리를 빼고 남은 폭에 맞춤
         val dateText = if (compact) d.optInt("d").toString() else d.optInt("d").toString() + "(" + DOW[dow] + ")"
         val availDate = cw - pad * 2 - (if (n1 > 0) w1 + sg else 0f)
-        paint.typeface = Typeface.DEFAULT_BOLD
+        paint.typeface = WFont.bold
         paint.textAlign = Paint.Align.LEFT
         paint.color = dateColor
         paint.textSize = row.dateSize
@@ -666,7 +656,7 @@ object WidgetRenderer {
         if (hol.isNotEmpty() && row.holChars > 0) {   // 공휴일 · 명절: 날짜 숫자 아래 빨간 두 글자 (앱 달력과 같은 줄임말 · 7일 위젯 · 2칸 · 1칸 모두). 자리가 모자라는 크기는 한 글자 · 글자 크기와 글자 수는 WidgetLayout 이 칸 크기로 정함
             val short = d.optString(if (row.holChars >= 2) "h2" else "h1", "")
             val label = (if (short.isNotEmpty()) short else hol).take(row.holChars)   // (h2 · h1 이 없는 옛 위젯 데이터는 이름 앞 글자)
-            paint.typeface = Typeface.DEFAULT
+            paint.typeface = WFont.reg
             paint.color = dateColor
             paint.textSize = row.holLabelSize
             val maxW = row.holChars * row.holLabelSize * 1.06f   // WidgetLayout 이 자리를 잡아 둔 폭 — 글꼴이 더 넓게 그리면 이 안에 들어올 때까지 줄임
@@ -687,8 +677,8 @@ object WidgetRenderer {
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
             pp.color = if (i < wlOff) (if (pal === DARK) 0xFF2C2A48.toInt() else 0xFFEFECFB.toInt())
                 else if (i - wlOff < d.optInt("nf", 0)) (if (pal === DARK) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill   // 가족 메모는 연보라 칸 (한 달 위젯과 같음)
-            cv.drawRoundRect(RectF(x0 + pad, py, x0 + cw - pad, py + row.pillH), row.pillH * 0.3f, row.pillH * 0.3f, pp)
-            paint.typeface = Typeface.DEFAULT
+            cv.drawRoundRect(RectF(x0 + pad, py, x0 + cw - pad, py + row.pillH), Math.min(4f * dens, row.pillH * 0.3f), Math.min(4f * dens, row.pillH * 0.3f), pp)   // v0.150 모서리 4dp (앱 .pl)
+            paint.typeface = WFont.reg
             paint.textAlign = Paint.Align.LEFT
             paint.color = pal.fg
             paint.textSize = Math.min(row.pillH * 0.72f, cw * 0.2f)   // (7일 · 1칸 · 2칸 모두 같은 비율)
@@ -706,7 +696,7 @@ object WidgetRenderer {
         val rect = RectF(right - g[0], py + (pillH - g[1]) / 2f, right, py + (pillH + g[1]) / 2f)
         // 알약 없이 작은 회색 글자 (앱 달력과 같은 표시 · 메모 글자를 덜 가림)
         val tp = TextPaint(Paint.ANTI_ALIAS_FLAG)
-        tp.typeface = Typeface.DEFAULT_BOLD
+        tp.typeface = WFont.bold
         tp.textAlign = Paint.Align.RIGHT
         tp.color = (pal.fg and 0x00FFFFFF) or (0xD9 shl 24)   // 메모 글자 계열 85% (또렷하게)
         tp.textSize = if (memoSize > 0f) memoSize * 0.9f else g[1] * 0.85f   // 메모 글자의 90%
@@ -793,7 +783,7 @@ object WidgetRenderer {
             val col = parseColor(s.optString("c", ""), 0xFF7E57C2.toInt())
             PillDraw.draw(cv, sx + sz / 2, sy + sz / 2, sz * 1.05f, col, s.optString("h", "caps"), s.optInt("N", 1), s.optInt("n", 0))
         } else {
-            paint.typeface = Typeface.DEFAULT
+            paint.typeface = WFont.reg
             paint.textAlign = Paint.Align.CENTER
             paint.textSize = sz * 0.9f
             paint.color = Color.BLACK
@@ -806,7 +796,7 @@ object WidgetRenderer {
 
     /** 스티커 오른쪽 아래의 작은 숫자 배지 (앱 달력의 주황색 "1/2" 와 같은 모양) */
     private fun drawBadge(cv: Canvas, sx: Float, sy: Float, sz: Float, text: String, paint: TextPaint) {
-        paint.typeface = Typeface.DEFAULT_BOLD
+        paint.typeface = WFont.bold
         paint.textAlign = Paint.Align.CENTER
         paint.textSize = Math.max(sz * 0.40f, 4.5f * dens)
         val bh = paint.textSize * 1.15f

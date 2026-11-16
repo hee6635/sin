@@ -133,6 +133,9 @@ private fun small(data: JSONObject, name: String, wDp: Int, hDp: Int, count: Int
 }
 
 fun main(args: Array<String>) {
+    com.eonjeswieo.app.WFont.reg = android.graphics.Typeface.createFromAsset(null, "fonts/w_r.ttf")   // v0.150 위젯 글꼴 Pretendard
+    com.eonjeswieo.app.WFont.med = android.graphics.Typeface.createFromAsset(null, "fonts/w_m.ttf")
+    com.eonjeswieo.app.WFont.bold = android.graphics.Typeface.createFromAsset(null, "fonts/w_b.ttf")
     gridCheck()
     val data = JSONObject(File(args[0]).readText())
     coverCheck(data)

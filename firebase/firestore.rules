@@ -4,6 +4,11 @@ service cloud.firestore {
 
     // ───────── 공통 도우미 ─────────
     function signedIn() { return request.auth != null; }
+    // v0.150 관리자 = 정해 둔 구글 계정으로 로그인한 폰만 (무료 건수 주기). 메일 주소는 적지 않고 SHA-256 값(소문자 hex)만 둠
+    function adminHash() { return 'ADMIN_SHA256'; }
+    function isAdmin() { return signedIn() && request.auth.token.get('email_verified', false) == true
+      && hashing.sha256(request.auth.token.get('email', '')).toHexString().lower() == adminHash(); }
+    function bonusOf(id) { return exists(/databases/$(database)/documents/bonus/$(id)) ? get(/databases/$(database)/documents/bonus/$(id)).data.get('n', 0) : 0; }
     function memberPath(hid, uid) {
       return /databases/$(database)/documents/households/$(hid)/members/$(uid);
     }
@@ -156,7 +161,7 @@ service cloud.firestore {
         allow update: if signedIn() && request.auth.uid == uid
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sent'])
           && request.resource.data.sent == resource.data.get('sent', 0) + 1
-          && request.resource.data.sent <= 10 + resource.data.get('bonus', 0);
+          && request.resource.data.sent <= 10 + resource.data.get('bonus', 0) + bonusOf(uid) + bonusOf('_all');   // v0.150 + 관리자가 준 건수 (개인 · 모두)
 
         // 나가기(가족 본인) · 내보내기(호스트): 같은 묶음에서 가족 수가 하나 줄어야 함.
         // 호스트 문서는 가족방을 없앨 때만 지울 수 있음 (그때는 가족 수를 맞출 필요 없음)
@@ -430,6 +435,35 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['hid', 'updatedAt'])
         && request.resource.data.hid is string && request.resource.data.hid.size() >= 1 && request.resource.data.hid.size() <= 128
         && request.resource.data.updatedAt == request.time;
+    }
+
+    // ───────── v0.150 내 번호: codes/{번호} = {uid, 이름, 가족방, 마지막 접속} ─────────
+    // 본인 uid 로만 쓰기 (다른 사람이 쓴 번호는 못 덮음) · 관리자만 읽기
+    match /codes/{code} {
+      allow read: if isAdmin();
+      allow create, update: if signedIn() && code.size() == 7
+        && request.resource.data.uid == request.auth.uid
+        && (resource == null || resource.data.uid == request.auth.uid)
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'hid', 'at'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 12
+        && request.resource.data.hid is string && request.resource.data.hid.size() <= 128
+        && request.resource.data.at == request.time;
+    }
+
+    // ───────── v0.150 관리자가 준 무료 건수: bonus/{uid} · bonus/_all (모두에게) ─────────
+    match /bonus/{id} {
+      allow read: if isAdmin() || (signedIn() && (id == request.auth.uid || id == '_all'));
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['n', 'at'])
+        && request.resource.data.n is int && request.resource.data.n >= 0 && request.resource.data.n <= 1000000
+        && request.resource.data.at == request.time;
+    }
+    match /bonusLog/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['to', 'name', 'code', 'n', 'at'])
+        && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 10000
+        && request.resource.data.at == request.time;
     }
 
     // ───────── 그 밖의 모든 곳은 막기 ─────────

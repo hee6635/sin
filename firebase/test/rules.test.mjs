@@ -5,10 +5,15 @@ import {
   increment, query, where, Timestamp, deleteField,
 } from 'firebase/firestore';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 
+// 시험에서는 관리자 계정을 가짜 주소(admin@example.com)로 바꿔 끼움 (진짜 값은 규칙 파일의 adminHash)
+const ADM = 'admin@example.com';
+const rulesTxt = readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8')
+  .replace(/function adminHash\(\) \{ return '[^']*'; \}/, `function adminHash() { return '${createHash('sha256').update(ADM).digest('hex')}'; }`);
 const env = await initializeTestEnvironment({
   projectId: 'demo-eonjeswieo',
-  firestore: { rules: readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8') },
+  firestore: { rules: rulesTxt },
 });
 let pass = 0, fail = 0, group = '';
 const t = async (name, fn) => {
@@ -863,6 +868,51 @@ await t('쓴 사람: 할 일 · 완료를 올리고 바꿈 · 가족은 못 바�
   await assertFails(updateDoc(doc(db('g2'), 'households', H, 'memos', 'td1'), { done: false, updatedAt: serverTimestamp() }));
   await assertFails(updateDoc(doc(db('g1'), 'households', H, 'memos', 'td1'), { done: 'yes', updatedAt: serverTimestamp() }));
   await assertFails(sendMemo('g1', 'td2', memo({ todo: 1 }), 1));
+});
+
+await G('v0.150 관리자: 내 번호 · 무료 건수');
+const adb = () => (dbs['__adm'] ||= env.authenticatedContext('adm1', { email: ADM, email_verified: true }).firestore());
+const fakeAdb = () => (dbs['__fake'] ||= env.authenticatedContext('fk1', { email: ADM, email_verified: false }).firestore());
+const otherAdb = () => (dbs['__oth'] ||= env.authenticatedContext('ot1', { email: 'other@example.com', email_verified: true }).firestore());
+const cd = (uid, o = {}) => ({ uid, name: '아내', hid: H, at: serverTimestamp(), ...o });
+await t('내 번호: 본인 uid 로만 쓰기 · 남의 번호 못 덮음 · 관리자만 읽기', async () => {
+  await assertSucceeds(setDoc(doc(db('g1'), 'codes', 'ABC-DEF'), cd('g1')));
+  await assertSucceeds(setDoc(doc(db('g1'), 'codes', 'ABC-DEF'), cd('g1', { name: '엄마' })));
+  await assertFails(setDoc(doc(db('g2'), 'codes', 'ABC-DEF'), cd('g2')));
+  await assertFails(setDoc(doc(db('g2'), 'codes', 'XYZ-234'), cd('g1')));
+  await assertFails(setDoc(doc(db('g2'), 'codes', 'XYZ-234'), cd('g2', { x: 1 })));
+  await assertFails(getDoc(doc(db('g1'), 'codes', 'ABC-DEF')));
+  await assertFails(getDocs(collection(fakeAdb(), 'codes')));
+  await assertFails(getDocs(collection(otherAdb(), 'codes')));
+  await assertSucceeds(getDocs(collection(adb(), 'codes')));
+});
+await t('무료 건수: 관리자만 주기 · 본인 · 모두 문서만 읽기', async () => {
+  await assertFails(setDoc(doc(db('g1'), 'bonus', 'g1'), { n: 5, at: serverTimestamp() }));
+  await assertFails(setDoc(doc(fakeAdb(), 'bonus', 'g1'), { n: 5, at: serverTimestamp() }));
+  await assertSucceeds(setDoc(doc(adb(), 'bonus', 'g1'), { n: increment(5), at: serverTimestamp() }, { merge: true }));
+  await assertSucceeds(setDoc(doc(adb(), 'bonus', '_all'), { n: increment(2), at: serverTimestamp() }, { merge: true }));
+  await assertSucceeds(setDoc(doc(adb(), 'bonusLog', 'l1'), { to: 'g1', name: '아내', code: 'ABC-DEF', n: 5, at: serverTimestamp() }));
+  await assertFails(setDoc(doc(db('g1'), 'bonusLog', 'l2'), { to: 'g1', name: '아내', code: 'ABC-DEF', n: 5, at: serverTimestamp() }));
+  await assertFails(getDocs(collection(db('g1'), 'bonusLog')));
+  await assertSucceeds(getDoc(doc(db('g1'), 'bonus', 'g1')));
+  await assertSucceeds(getDoc(doc(db('g1'), 'bonus', '_all')));
+  await assertFails(getDoc(doc(db('g2'), 'bonus', 'g1')));
+});
+await t('보낸 횟수 한도 = 10 + 개인 건수 + 모두 건수', async () => {
+  await env.clearFirestore(); await seedFamily(1); await seedGuest('g1');
+  const M = doc(db('g1'), 'households', H, 'members', 'g1');
+  await env.withSecurityRulesDisabled(async (c) => updateDoc(doc(c.firestore(), 'households', H, 'members', 'g1'), { sent: 10 }));
+  await assertFails(updateDoc(M, { sent: 11 }));
+  await env.withSecurityRulesDisabled(async (c) => setDoc(doc(c.firestore(), 'bonus', 'g1'), { n: 1 }));
+  await assertSucceeds(updateDoc(M, { sent: 11 }));
+  await assertFails(updateDoc(M, { sent: 12 }));
+  await env.withSecurityRulesDisabled(async (c) => setDoc(doc(c.firestore(), 'bonus', '_all'), { n: 1 }));
+  await assertSucceeds(updateDoc(M, { sent: 12 }));
+  await assertFails(updateDoc(M, { sent: 13 }));
+  await fresh3();
+  await env.withSecurityRulesDisabled(async (c) => { const d = c.firestore(); await updateDoc(doc(d, 'households', H, 'members', 'g1'), { sent: 12 }); await setDoc(doc(d, 'bonus', 'g1'), { n: 1 }); await setDoc(doc(d, 'bonus', '_all'), { n: 2 }); });
+  await assertSucceeds(sendMemo('g1', 'mx', memo(), 12));   // 가족 메모 묶음에서도 (규칙 읽기 수 한도 안)
+  await assertFails(sendMemo('g1', 'my', memo(), 13));
 });
 
 await env.cleanup();
