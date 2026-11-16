@@ -36,7 +36,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     await p.evaluate(()=>document.querySelector('#sheet [data-act="man-stk-pick"]').click());await p.waitForTimeout(300);
     await p.evaluate(()=>document.querySelector('#pop [data-act="man-stk-add"]').click());await p.waitForTimeout(400);
     await p.evaluate(()=>document.querySelector('#pop [data-act="icn-pick"]').click());await p.waitForTimeout(400);
-    T('＋ 만들기 → 그림 고르면 스티커 고치기 화면 (하루 몇 번 · 얼마나 · 일정 맞춤)',await p.evaluate(()=>!!document.querySelector('#page .srpg [data-act="sr-times"]')&&/일정 맞춤/.test(document.querySelector('#page').innerText)&&__wx.S.family[0].sdefs.length>0));
+    T('＋ 만들기 → 그림 고르면 스티커 고치기 화면 (하루 몇 번 · 얼마나 · 일정 맞춤)',await p.evaluate(()=>!!document.querySelector('#page .srpg [data-act="sr-times"]')&&/일정/.test(document.querySelector('#page').innerText)&&__wx.S.family[0].sdefs.length>0));
     await tp('#page [data-act="sr-save"]');await p.waitForTimeout(400);
     const n2=await p.evaluate(()=>({n:__wx.S.family[0].sdefs.filter(x=>!x.retired).length,b:document.querySelectorAll('#sheet .mstk button').length,todo:document.querySelectorAll('#sheet .mstk button.todo').length}));
     T('저장 → 그날 판에 반투명으로 하나 늘어남',n2.b===5&&n2.todo===1&&n2.n===d.n+1,JSON.stringify(n2));

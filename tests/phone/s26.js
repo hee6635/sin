@@ -17,7 +17,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  T('근무 패턴 화면 맨 아래에 "개인 캘린더로 쓰기"',await p.evaluate(()=>!!document.querySelector('#page [data-act="personal-on"]')));
  p.once('dialog',d=>d.accept());
  await p.click('#page [data-act="personal-on"]');await p.waitForTimeout(400);
- T('누르면 "언제부터" 화면',await p.evaluate(()=>document.getElementById('page').innerText.includes('언제부터 개인 캘린더')));
+ T('누르면 "언제부터" 화면',await p.evaluate(()=>document.getElementById('page').innerText.includes('개인 캘린더')&&!!document.getElementById('persD')));
  await p.click('#page [data-act="pers-ok"]');await p.waitForTimeout(400);
  T('확인하면 화면은 닫힘',await p.evaluate(()=>!document.getElementById('page').classList.contains('open')));
  T('개인 캘린더로 바뀜(근무표 데이터는 그대로)',await (async()=>{const s=await S();return s.personal===true&&s.pattern.length>=2;})());

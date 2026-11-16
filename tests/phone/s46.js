@@ -74,12 +74,9 @@ const {mkT}=require('./lib.js');
   // ── 메모 색
   {const p=await boot(b,richA(),{});await toSet(p);
    await p.evaluate(()=>{const e=document.createElement('div');e.dataset.act='more-colors';document.body.appendChild(e);e.click();e.remove();});await p.waitForTimeout(300);
-   const sw=await p.$$eval('#page .swatch',gs=>gs.map(g=>[...g.querySelectorAll('button')].map(x=>x.dataset.v)));
-   T('설정 메모 색: 가족 색 칸에는 나만 보는 색(기본 연한 파랑)이 없음',sw[0].length===14&&!sw[0].includes('#5b8fc7')&&sw[0].includes('#7b5cf0'),JSON.stringify(sw[0]));
-   T('설정 메모 색: 나만 보는 색 칸에는 가족 색(보라)이 없음',sw[1].length===14&&!sw[1].includes('#7b5cf0')&&sw[1].includes('#5b8fc7'),JSON.stringify(sw[1]));
-   await p.evaluate(()=>document.querySelector('#page .swatch:nth-of-type(1) button[data-v="#5b8def"], #page [data-k="fam"][data-v="#5b8def"]').click());await p.waitForTimeout(250);
-   const sw2=await p.$$eval('#page .swatch',gs=>gs.map(g=>[...g.querySelectorAll('button')].map(x=>x.dataset.v)));
-   T('가족 색을 파랑으로 바꾸면 나만 보는 칸에서 파랑이 빠지고 보라가 돌아옴',!sw2[1].includes('#5b8def')&&sw2[1].includes('#7b5cf0'),JSON.stringify(sw2[1]));
+   const sw=await p.$$eval('#page .npdots button',bs=>bs.map(x=>x.dataset.v));
+   T('설정 메모 색 (v0.151): 가족 색 칸 없음 · 나만 보는 색만 · 보라 계열 없음',(sw.length>=10&&!sw.includes('#7b5cf0')&&sw.includes('#5b8fc7')&&!(await p.$('#page [data-k="fam"]'))),JSON.stringify(sw));
+   T('가족 메모 색은 보라 고정',await p.evaluate(()=>__wx.S.memoColors.fam==='#7b5cf0'));
    T('가족 메모 채우기 색이 20% (조금 더 짙게)',await p.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--fam-bg').includes('20%')));
    await p.evaluate(()=>document.querySelector('#page [data-act="page-close"]')?.click());await p.waitForTimeout(150);
    await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(250);

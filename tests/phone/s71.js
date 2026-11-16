@@ -35,7 +35,7 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
     // 켜기 → 날씨 설정 화면 → 집 · 직장 고르기 → 맞아요
     await p.click('#ad_wx');await p.waitForTimeout(300);
     T('켜면 바로 "출퇴근 날씨" 설정 화면',await p.evaluate(()=>__wx.page.pageMode==='wx'));
-    T('근무 시간 확인 줄 (주간 07:00 → 19:00)',await p.evaluate(()=>/오전 7:00 → 오후 7:00/.test(document.querySelector('#page').textContent)&&/오후 7:00 → 다음날 오전 7:00/.test(document.querySelector('#page').textContent)));
+    T('근무 시간 확인 줄 (주간 07:00 → 19:00)',await p.evaluate(()=>/7:00 → 19:00/.test(document.querySelector('#page').textContent)&&/19:00 → 다음날 7:00/.test(document.querySelector('#page').textContent)));
     await p.click('[data-act="wx-pick-home"]');await p.waitForTimeout(150);
     T('시 · 도 고르기 (16곳 · 광주는 전남광주)',await p.evaluate(()=>document.querySelectorAll('#pop [data-act="wx-sido"]').length>=16));
     await p.click('#pop [data-act="wx-sido"][data-v="경기"]');await p.waitForTimeout(150);

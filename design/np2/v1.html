@@ -1,0 +1,78 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box}body{margin:0;font-family:P,sans-serif;background:#dfe2e6;display:flex;gap:18px;padding:18px;color:#191f28;flex-wrap:wrap;width:1260px}
+.ph{width:390px;height:760px;background:#f2f4f6;border-radius:26px;overflow:hidden;position:relative}
+.hd{height:54px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;background:#f2f4f6;position:relative}
+.hd:before{content:'‹';position:absolute;left:18px;font-size:26px;font-weight:600}
+.tag{position:absolute;top:60px;right:14px;font-size:11px;background:#191f28;color:#fff;border-radius:8px;padding:3px 8px;opacity:.75}
+.cap{font-size:13px;font-weight:600;color:#6b7684;padding:18px 22px 8px}
+.sec{background:#fff;border-radius:20px;margin:0 14px;padding:4px 0}
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:60px}
+.row+.row{border-top:1px solid #f2f4f6}
+.ic{width:36px;height:36px;border-radius:11px;background:#f2f4f6;display:flex;align-items:center;justify-content:center;color:#4e5968;flex:none}
+.nm{flex:1;font-size:16px;font-weight:600}
+.v{color:#6b7684;font-size:15px;font-weight:500;display:flex;align-items:center;gap:2px}
+.v b{color:#191f28;font-weight:600}
+svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ch{width:16px;height:16px;color:#b0b8c1}
+.sw{width:44px;height:26px;border-radius:13px;background:#d1d6db;position:relative;flex:none}.sw:after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.on{background:#3182f6}.sw.on:after{left:21px}
+.seg{display:flex;gap:6px;background:#f2f4f6;border-radius:14px;padding:4px;margin:4px 16px 12px}
+.seg div{flex:1;text-align:center;font-size:14px;font-weight:600;color:#6b7684;padding:9px 4px;border-radius:11px}
+.seg .on{background:#fff;color:#3182f6;box-shadow:0 0 0 1.5px #3182f6,0 2px 6px rgba(49,130,246,.15)}
+.bdg{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none}
+.btn{margin:18px 14px;height:54px;border-radius:16px;background:#3182f6;color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ok{color:#1fa971;font-weight:700;font-size:14px;background:#e9f8f1;border-radius:20px;padding:5px 10px;display:flex;align-items:center;gap:3px}
+.ok svg{width:14px;height:14px;stroke-width:3}
+.pre{margin:0 14px;background:#fff;border-radius:20px;padding:16px}
+.pre .t{font-size:13px;color:#3182f6;font-weight:600}.pre .s{font-size:22px;font-weight:800;margin:4px 0}
+.pre .chips{display:flex;gap:6px;margin-top:10px}.pre .chips span{font-size:13px;font-weight:600;background:#f2f4f6;border-radius:10px;padding:6px 10px;color:#4e5968}
+.dots{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;padding:14px 16px}
+.dots i{width:36px;height:36px;border-radius:50%;display:block;justify-self:center}
+.dots i.on{box-shadow:0 0 0 3px #fff,0 0 0 5px #191f28}
+.rng{flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#3182f6 80%,#e5e8eb 80%);position:relative}.rng:after{content:'';position:absolute;left:78%;top:-7px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.memo{display:flex;align-items:center;gap:10px;padding:10px 16px}.memo i{width:4px;height:30px;border-radius:2px}.memo b{font-size:15px}
+.lnk{text-align:center;color:#3182f6;font-weight:600;font-size:15px;padding:16px}
+</style><style>body{width:1260px}.ph{height:780px}.inp{flex:1;height:44px;border-radius:12px;background:#f2f4f6;display:flex;align-items:center;padding:0 14px;font-size:16px;font-weight:600}
+.hero{margin:0 14px;background:#fff;border-radius:20px;padding:18px;display:flex;align-items:center;gap:14px}.hero .e{width:56px;height:56px;border-radius:16px;background:#fff4e5;display:flex;align-items:center;justify-content:center;font-size:30px}
+.hero b{font-size:20px}.hero small{display:block;color:#6b7684;font-size:14px;margin-top:2px}.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.chips2{display:flex;gap:8px;flex-wrap:wrap;padding:6px 16px 14px}.chips2 span{font-size:14px;font-weight:600;padding:8px 14px;border-radius:20px;background:#f2f4f6;color:#4e5968}.chips2 .on{background:#fff;color:#3182f6;box-shadow:0 0 0 1.5px #3182f6}
+.big{font-size:22px;font-weight:800;color:#3182f6}</style></head><body>
+<!-- 스티커 등록 -->
+<div class="ph"><div class="hd">스티커</div>
+<div style="height:6px"></div>
+<div class="hero"><div class="e">🏃</div><div><b>운동</b><small>11월 16일 (월)</small></div></div>
+<div class="cap">하루 몇 번</div>
+<div class="sec" style="padding:12px 0 0"><div class="seg" style="margin-top:0"><div class="on">1번</div><div>2번</div><div>3번</div></div></div>
+<div class="cap">반복</div>
+<div class="sec" style="padding:12px 0 0"><div class="seg" style="margin-top:0"><div class="on">이날만</div><div>요일</div><div>매일</div><div>근무</div><div>매달</div></div></div>
+<div class="sec" style="margin-top:12px">
+<div class="row"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3"/></svg></div><div class="nm">시각 알림</div><div class="sw"></div></div>
+<div class="row"><div class="ic"><svg viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div class="nm">가족에게 보이기</div><div class="sw on"></div></div>
+<div class="row"><div class="ic"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div><div class="nm">활동 시간 · 날씨</div><svg class="ch" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+</div>
+<div class="btn">붙이기</div><div class="tag">스티커 등록</div></div>
+<!-- 개인 캘린더 -->
+<div class="ph"><div class="hd">개인 캘린더</div>
+<div style="height:6px"></div>
+<div class="sec"><div class="row"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div class="nm">시작 날</div><div class="v"><b>10/12</b><svg class="ch" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div></div></div>
+<div class="btn">확인</div>
+<div class="sec"><div class="row"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></div><div class="nm">개인 캘린더로 바꾸면?</div><svg class="ch" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div></div>
+<div class="tag">개인 캘린더</div></div>
+<!-- 업무 일지 설정 -->
+<div class="ph"><div class="hd">업무 일지 설정</div>
+<div class="cap" style="padding-top:8px">이름</div>
+<div class="sec"><div class="row"><div class="inp">업무 일지</div></div>
+<div class="chips2"><span class="on">업무 일지</span><span>인수인계</span><span>근무 일지</span><span>업무 메모</span><span>조업 일지</span></div></div>
+<div class="cap">칸</div>
+<div class="sec">
+<div class="row"><span class="dot" style="background:#9cc1ef"></span><div class="nm">인수</div><div class="sw on"></div></div>
+<div class="row"><span class="dot" style="background:#9fd6a6"></span><div class="nm">인계</div><div class="sw on"></div></div>
+<div class="row"><span class="dot" style="background:#f2a7b0"></span><div class="nm">지시</div><div class="sw on"></div></div>
+<div class="row"><span class="dot" style="background:#f3d27a"></span><div class="nm">특이</div><div class="sw on"></div></div>
+</div>
+<div class="sec" style="margin-top:12px">
+<div class="row"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 13v8M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="m8 17 4-4 4 4"/></svg></div><div class="nm">백업에 넣기</div><div class="sw"></div></div>
+<div class="row"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div><div class="nm">일지 찾기</div><svg class="ch" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></div>
+</div><div class="tag">업무 일지</div></div>
+</body></html>

@@ -8,7 +8,7 @@ const O='/tmp/claude-0/-home-user-sin/78e2bc2a-7f65-5612-9a8c-557939742276/scrat
  T('오류 없음',p.errs.length===0,p.errs.join('|'));
  // 근무표 쓰기: 오늘(10/12)부터 → 이전은 개인, 이후 근무
  await p.evaluate(()=>document.querySelector('[data-act="personal-off"]').click());await p.waitForTimeout(300);
- T('"언제부터" 화면',await p.evaluate(()=>document.getElementById('page').innerText.includes('언제부터 근무표를 다시')));
+ T('"언제부터" 화면',await p.evaluate(()=>document.getElementById('page').innerText.includes('근무표 쓰기')&&!!document.getElementById('persD')));
  await p.evaluate(()=>document.querySelector('[data-act="pers-ok"]').click());await p.waitForTimeout(400);
  T('저장: 1900~오늘 개인',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('eonjeswieo:v1'));return s.pers.length===1&&s.pers[0].t==='2026-10-12'&&s.personal===false;}));
  await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(400);
@@ -20,7 +20,7 @@ const O='/tmp/claude-0/-home-user-sin/78e2bc2a-7f65-5612-9a8c-557939742276/scrat
  await p.click('#nav [data-tab="set"]');await p.waitForTimeout(300);
  await p.evaluate(()=>document.querySelector('[data-act="more-pattern"]').click());await p.waitForTimeout(400);
  await p.evaluate(()=>document.querySelector('[data-act="personal-on"]').click());await p.waitForTimeout(400);
- T('"언제부터 개인 캘린더" 화면',await p.evaluate(()=>document.getElementById('page').innerText.includes('언제부터 개인 캘린더')));
+ T('"언제부터 개인 캘린더" 화면',await p.evaluate(()=>document.getElementById('page').innerText.includes('개인 캘린더')&&!!document.getElementById('persD')));
  await p.evaluate(()=>{document.getElementById('persD').value='2026-10-20';});
  await p.evaluate(()=>document.querySelector('[data-act="pers-ok"]').click());await p.waitForTimeout(400);
  T('저장: 10/20부터 개인(오늘은 근무)',await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('eonjeswieo:v1'));return s.pers.length===2&&s.pers[1].f==='2026-10-20'&&!s.pers[1].t&&s.personal===false;}));
