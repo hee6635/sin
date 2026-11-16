@@ -481,3 +481,8 @@
 - 지난 날 날씨: wxPastAll 로 저장본 칸 모두 past (wxHistPop · 날짜 창 카드 · wxHistCard). __wx.wxHistPop 시험용.
 - 가족 시간표: 위 "오늘" 링크(fwkNow) 뺌 · fam-mode 를 이미 고른 칸에 눌러도 famGoToday(부드럽게) · 바꿀 때도 다시 그린 뒤 famGoToday.
 - 시험 s101 · s31 · s76 고침.
+
+## v0.168 (덧붙임) 근무 요청 화면(가족 달력 날짜 창) 새 모양 (design/request/v1)
+- vcDayHtml: .dsbody.vrbody(회색 바탕) · sh-hd "근무"/"근무 바꿔 달라고 하기" + 오른쪽 sh-pill(· 요청하기 / · 요청 중) · 펼침 카드 .vrcard: 근무 칩 → .vrask "휴무 → 주간으로 바꿔 달라고 할게요" → #rqm2 → paint-btn 여러 날 고르기 → .vrsend 요청 보내기(N건 남음).
+- 요청 중이면(open) 바로 펼침 · 상태 카드 .vrst (아이콘 · "주간으로 요청했어요" · 답 기다리는 중/수락/거절/적용/취소 · 답장 · pending 이면 취소 = rqcancel).
+- 가족 메모 = memsec 흰 카드 · 제목 회색 · 빈 글 뺌 · 입력 줄 새 모양. "보기만" · 📩 뺌. 시험 s83 고침.
