@@ -5,7 +5,7 @@ service cloud.firestore {
     // ───────── 공통 도우미 ─────────
     function signedIn() { return request.auth != null; }
     // v0.150 관리자 = 정해 둔 구글 계정으로 로그인한 폰만 (무료 건수 주기). 메일 주소는 적지 않고 SHA-256 값(소문자 hex)만 둠
-    function adminHash() { return 'ADMIN_SHA256'; }
+    function adminHash() { return 'e8272cb86e15f5fcb33c00ceba5296ab2eb15af3d9be0d024097a1203e8a2558'; }
     function isAdmin() { return signedIn() && request.auth.token.get('email_verified', false) == true
       && hashing.sha256(request.auth.token.get('email', '')).toHexString().lower() == adminHash(); }
     function bonusOf(id) { return exists(/databases/$(database)/documents/bonus/$(id)) ? get(/databases/$(database)/documents/bonus/$(id)).data.get('n', 0) : 0; }
