@@ -1779,6 +1779,7 @@ html[data-cal="fill"] .cell.today::after,html[data-cal="fill"] .cell.today[style
 .tips.np summary::-webkit-details-marker{display:none}
 .tips.np .tipg>summary .tgt{flex:1}.tips.np .tipg>summary small{color:var(--muted);font-weight:600;font-size:14px}.tips.np summary>svg{color:color-mix(in srgb,var(--fg) 30%,var(--bg));transition:transform .2s}
 .tips.np details[open]>summary>svg{transform:rotate(180deg)}
+.tips.np details>summary::after{display:none}.tips.np details.anim{overflow:hidden}   /* v0.159 › 빼기 · 펼치기 모션 */
 .tips.np .tip{border-top:1px solid var(--line);margin:0 16px}
 .tips.np .tip>summary{display:flex;align-items:center;gap:8px;padding:14px 0;font-size:15px;font-weight:600;list-style:none;cursor:pointer}.tips.np .tip>summary>svg{margin-left:auto;flex:none}
 .tips.np .tip[open]>summary{color:var(--accent)}
@@ -6069,6 +6070,20 @@ document.addEventListener('pointerup',()=>{if(piDrag)piDragEnd(true);},true);
 document.addEventListener('touchend',()=>{if(piDrag)piDragEnd(true);},true);
 document.addEventListener('pointercancel',()=>{if(piDrag&&!piDrag.on)piDragEnd(false);},true);
 document.addEventListener('contextmenu',e=>{if(piDrag&&e.target.closest&&e.target.closest('.pi'))e.preventDefault();});
+// v0.159 이럴 땐 이렇게: 펼치기 · 접기를 높이로 스르르 (안쪽 글은 살짝 내려오듯) · 동작 줄이기면 바로
+document.addEventListener('click',e=>{
+  const sm=e.target.closest&&e.target.closest('.tips.np details>summary');if(!sm)return;
+  const d=sm.parentElement;if(reduceMotion()||!d.animate)return;
+  e.preventDefault();const wasClosing=!!(d._an&&d._closing);if(d._an){d._an.cancel();d._an=null;}
+  const h0=d.getBoundingClientRect().height,opening=wasClosing||!d.open,ease='cubic-bezier(.2,.7,.2,1)';
+  if(opening)d.open=true;
+  const h1=opening?d.getBoundingClientRect().height:sm.getBoundingClientRect().height+(parseFloat(getComputedStyle(d).borderTopWidth)||0)*2;
+  d.classList.add('anim');
+  const an=d.animate([{height:h0+'px'},{height:h1+'px'}],{duration:opening?260:220,easing:ease});d._an=an;d._closing=!opening;
+  if(opening)[...d.children].filter(c=>c!==sm).forEach((c,i)=>c.animate([{opacity:0,transform:'translateY(-6px)'},{opacity:1,transform:'none'}],{duration:240,delay:Math.min(i,6)*25,easing:ease,fill:'backwards'}));
+  an.onfinish=()=>{d._an=null;d.classList.remove('anim');if(!opening)d.open=false;};
+  an.oncancel=()=>{d.classList.remove('anim');};
+},true);
 /* ---- 포스트잇 크게 펼치기 · 새로 쓰기 ---- */
 let piEd=null;
 function piTarget(){return !piEd?null:piEd.isNew?piEd.n:piFind(piEd.id);}
