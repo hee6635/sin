@@ -884,6 +884,7 @@ await t('내 번호: 본인 uid 로만 쓰기 · 남의 번호 못 덮음 · 관
   await assertFails(getDoc(doc(db('g1'), 'codes', 'ABC-DEF')));
   await assertFails(getDocs(collection(fakeAdb(), 'codes')));
   await assertFails(getDocs(collection(otherAdb(), 'codes')));
+  await assertSucceeds(getDocs(collection((dbs['__uid'] ||= env.authenticatedContext('9vkojbnlGperMklw7aYbqcPhr1E2').firestore()), 'codes')));   // 정해 둔 계정 번호(메일 없는 익명)도 관리자
   await assertSucceeds(getDocs(collection(adb(), 'codes')));
 });
 await t('무료 건수: 관리자만 주기 · 본인 · 모두 문서만 읽기', async () => {
