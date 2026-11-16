@@ -438,3 +438,7 @@
 - 근무 요청 보내기 실패: famSendReqs 가 commit 약속을 돌려주고, 부르는 쪽이 famReqErr(권한 없음 = 무료 횟수 끝 · 가족방 연결 풀림)로 알림.
 - 작은 창 설명 글 뺌: D-day 고치기 스위치 설명 · 근무타입 편집 "근무 시간 (출근 → …)".
 - 시험 s97.
+
+## v0.159 (덧붙임) 이럴 땐 이렇게 › 빼기 · 펼치기 모션
+- .tips.np details>summary::after 숨김 (옛 › 표시) · ⌄ 만.
+- 펼치기/접기: 문서 click(capture)에서 .tips.np details>summary 를 가로채 높이 애니메이션(Web Animations · 260/220ms) · 펼칠 때 안쪽 글 살짝 내려오듯 · 접기는 끝난 뒤 open=false · 도중에 다시 누르면 반대로 · reduceMotion 이면 기본 동작. 시험 s98.
