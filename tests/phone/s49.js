@@ -60,13 +60,12 @@ const {mkT,base}=require('./lib.js');
   await openDay(p,'2026-10-18');
   await p.click('#pop [data-act="sd-add"]');await p.waitForTimeout(300);
   await p.click('#pop [data-act="sp-pick"][data-id="s_read"]');await p.waitForTimeout(450);
-  T('다시 등록 화면: 알림 스위치가 켜진 채로 열림',await p.evaluate(()=>document.getElementById('srAlarm').checked));
-  await p.evaluate(()=>{const c=document.getElementById('srAlarm');c.checked=false;c.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(250);
+  T('v0.153 날짜에서 다시 붙이면: 알림 꺼진 채로 시작',await p.evaluate(()=>!document.getElementById('srAlarm').checked));
   await p.click('#page [data-act="sr-save"]');await p.waitForTimeout(450);
   s=await S(p);
-  T('알림을 끄면 독서의 알림 시각이 비워짐',(s.stamps.defs.find(x=>x.id==='s_read').ats||[]).length===0);
+  T('원래 독서의 알림 시각은 그대로 (이 날만 따로 저장)',(s.stamps.defs.find(x=>x.id==='s_read').ats||[]).length>0);
   await toSlots(p);
-  T('설정: 독서 칸의 🔔 사라짐 · 나머지는 그대로',JSON.stringify(await bells(p))===JSON.stringify(['o_cake','s_pill','s_run','s_teeth']),JSON.stringify(await bells(p)));
+  T('설정: 독서 칸의 🔔 그대로',(await bells(p)).includes('s_read'),JSON.stringify(await bells(p)));
   T('오류 없음',p.errs.length===0,p.errs.join('|'));
   await p.close();
 
