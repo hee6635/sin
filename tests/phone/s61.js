@@ -24,7 +24,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     await p.evaluate(()=>{window.__wg=[];window.AndroidBridge.setWidgetData=j=>window.__wg.push(JSON.parse(j));});
     await toSet(p);
 await p.evaluate(()=>{const b=document.querySelector('[data-act="more-look"]');if(b)b.click();});await p.waitForTimeout(300);
-    T('설정(칸 채우기)에 "오늘 띠 색" 줄(근무 색 + 동그라미 6개 + 직접 고르기)',await p.evaluate(()=>document.querySelectorAll('.tdc[data-act="todaycolor"]').length===7&&!!document.querySelector('.tdc-shift')&&!!document.querySelector('.tdc-pick input')));
+    T('설정(칸 채우기)에 "오늘 띠 색" 줄(근무 색 + 동그라미 6개 + 직접 고르기)',await p.evaluate(()=>document.querySelectorAll('.tdc[data-act="todaycolor"]').length===7&&!!document.querySelector('.tdc-shift')&&!!document.querySelector('.tdc-pick[data-act="tdc-pick"]')));
     await p.evaluate(()=>document.querySelector('.tdc[data-v="#1fa971"]').click());await p.waitForTimeout(400);
     const c1=await p.evaluate(()=>({v:getComputedStyle(document.documentElement).getPropertyValue('--tdc').trim(),s:JSON.parse(localStorage.getItem('eonjeswieo:v1')).todayColor}));
     T('초록을 고르면 --tdc · 저장됨',c1.v==='#1fa971'&&c1.s==='#1fa971',JSON.stringify(c1));

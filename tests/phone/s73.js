@@ -7,7 +7,7 @@ function raw(code){const h={};for(let d=12;d<=16;d++)for(let x=0;x<24;x++){const
     q:work?{t:'2026-10-12 09:00',p10:92,p25:48,st:'동탄',x:{k:[128,3],o3:[0.041,2],no2:[0.031,2],co:[0.6,1],so2:[0.011,2]}}:{t:'2026-10-12 09:00',p10:20,p25:6,st:'연무동',x:{k:[40,1]}}};}
 const routes=[['https://asia-northeast3-demo-wx.cloudfunctions.net/wx**',r=>{const u=new URL(r.request().url());const codes=(u.searchParams.get('r')||'').split(',');r.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(codes.length>1?{list:codes.map(raw)}:raw(codes[0]))});}]];
 const cfg="window.FIREBASE_CONFIG={projectId:'demo-wx',apiKey:'x',authDomain:'x',appId:'x'};";
-const st={...base,addons:{...base.addons,wx:true},wx:{home:'4111160000',work:'41597',fw:{},nm:{'4111160000':'연무동'}}};
+const st={...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},addons:{...base.addons,wx:true},wx:{home:'4111160000',work:'41597',fw:{},nm:{'4111160000':'연무동'}}};
 (async()=>{
   const T=mkT();const b=await chromium.launch();
   { // 1) 오늘(10/12 쉬는 날 · 지금 값): 출근 동네 좋음 · 직장 동네 상당히 나쁨 → 큰 화면 탭

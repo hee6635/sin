@@ -26,7 +26,7 @@ const fs=require('fs');
     await p.waitForTimeout(800);await act(p,'more-pattern');await p.waitForTimeout(500);
     const g=await p.evaluate(()=>{const pg=document.querySelector('#page.open');return {hero:(pg.querySelector('.nppat')||{}).innerText||'',caps:[...pg.querySelectorAll('.pg-cap')].map(x=>x.textContent.trim()),reset:!!pg.querySelector('[data-act="pat-reset"]'),old:!!pg.querySelector('[data-act="clearov"]'),hint:[...pg.querySelectorAll('.hint')].filter(h=>h.offsetParent).length,pc:pg.querySelectorAll('#pgrid .pc').length,inp:!!pg.querySelector('#patternName')&&!!pg.querySelector('#holRest')&&!!pg.querySelector('#patWeek')};});
     T('근무 패턴: 위 칸 이름 · 반복 · 오늘 칸 · 패턴 칸',/4조2교대/.test(g.hero)&&/일 반복/.test(g.hero)&&/번째 칸/.test(g.hero)&&g.pc>=2,JSON.stringify(g));
-    T('묶음 근무 종류 · 패턴 설정 · 조별 근무 · 기타 · 보이는 설명 줄 없음',g.caps.join()==='근무 종류,패턴 설정,조별 근무,기타'&&g.hint===0&&g.inp,JSON.stringify(g));
+    T('묶음 근무 종류 · 패턴 설정 · 기타 (v0.171 조는 동료 근무로) · 보이는 설명 줄 없음',g.caps.join()==='근무 종류,패턴 설정,기타'&&g.hint===0&&g.inp,JSON.stringify(g));
     T('빨간 "수동 변경 초기화" 대신 "패턴 제외 초기화" 줄',g.reset&&!g.old);
     const msg=[];p.on('dialog',d=>{msg.push(d.message());d.accept();});
     await act(p,'pat-reset');await p.waitForTimeout(300);

@@ -41,7 +41,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.evaluate(()=>history.length);
  await p.click('#page [data-act="pop-close"]').catch(()=>{});
  const tstart=async nm=>{await p.evaluate(()=>{document.getElementById('page').classList.remove('open');window.__wx.closeSheet&&window.__wx.closeSheet();});await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);await p.click('[data-act="more-pattern"]');await p.waitForTimeout(400);   // v0.109~: 근무 시간은 근무타입 편집 창
-   const k=await p.evaluate(nm=>{const r=[...document.querySelectorAll('.tltimes .prow')].find(e=>e.innerText.includes(nm));if(!r)return null;r.click();return 1;},nm);if(!k)return '';await p.waitForTimeout(300);
+   const k=await p.evaluate(nm=>{const r=[...document.querySelectorAll('#tlist [data-act="type-edit-page"]')].find(e=>e.innerText.includes(nm));if(!r)return null;r.click();return 1;},nm);if(!k)return '';await p.waitForTimeout(300);
    return p.evaluate(()=>{const s=document.getElementById('tdS');const v=s?s.value:'';const [h,m]=v.split(':').map(Number);return v?(h<12?'오전 ':'오후 ')+((h%12)||12)+':'+String(m).padStart(2,'0'):'';});};
  const a=await tstart('야간2'),c=await tstart('야간반');
  console.log(a.slice(0,160),'|',c.slice(0,160));

@@ -24,7 +24,7 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
 (async()=>{
   const T=mkT();const b=await chromium.launch();
   { // 1) 꺼져 있을 때: 늘어나는 것 없음
-    const p=await boot(b,{...base},opt({}));
+    const p=await boot(b,{...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}}},opt({}));
     await p.evaluate(()=>__wx.openDay('2026-10-14'));await p.waitForTimeout(300);
     T('꺼져 있으면 날짜 창에 날씨 줄 없음',await p.evaluate(()=>{const e=document.getElementById('wxDay');return !!e&&e.hidden&&!e.textContent;}));
     await p.evaluate(()=>{__wx.closeSheet();__wx.newAlarm();});await p.waitForTimeout(200);
@@ -107,7 +107,7 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
     await p.close();
   }
   { // 2) 가족 탭 카드: 출근 앞뒤 2시간 안이면 "출근 10°" · 누르면 큰 팝업 · 직접 추가한 가족 카드 · 같이 쉬는 날 칩 아이콘
-    const st={...base,anchor:'2026-10-12',shiftTimes:{'주':{start:'09:00',end:'18:00'}},addons:{...base.addons,wx:true,together:true},wx:{home:'41111',work:'41597',fw:{}},
+    const st={...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},anchor:'2026-10-12',shiftTimes:{'주':{start:'09:00',end:'18:00'}},addons:{...base.addons,wx:true,together:true},wx:{home:'41111',work:'41597',fw:{}},
       family:[{id:'f1',name:'남편',kind:'shift',team:1,own:true,pat:['주','휴'],patAnchor:'2026-10-12',days:[]}]};
     const p=await boot(b,st,opt({}));await p.waitForTimeout(2900);
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(500);
@@ -122,27 +122,27 @@ const opt=x=>({tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes,...x});
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 3) 가족 근무표에 실린 날씨(직장 · 시각) 받기 · 이상한 값은 버림 · 근무표 이름으로 시간 짐작
-    const p=await boot(b,{...base,addons:{...base.addons,wx:true},wx:{home:'41111',work:'',fw:{}}},opt({}));
+    const p=await boot(b,{...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},addons:{...base.addons,wx:true},wx:{home:'41111',work:'',fw:{}}},opt({}));
     T('가족 근무표 wx: 직장 5자리 · 시각만 남김',await p.evaluate(()=>{const o=__wx.famCleanSched({anchor:'2026-10-01',pattern:['주'],types:[{k:'주',name:'주간'}],wx:{w:'41597',tm:{'주':['07:00','19:00'],x:['a','b']},gps:1}});return o.wx.w==='41597'&&JSON.stringify(o.wx.tm)==='{"주":["07:00","19:00"]}'&&!('gps' in o.wx);}));
     T('이상한 wx 는 통째로 버림',await p.evaluate(()=>!('wx' in __wx.famCleanSched({anchor:'2026-10-01',pattern:['주'],wx:{w:'<img>'}}))));
-    T('근무표를 올린 가족: 보낸 시각 · 없으면 이름으로 짐작(야간 19→07)',await p.evaluate(()=>{
+    T('근무표를 올린 가족: 보낸 시각 · v0.171 안 보냈으면 짐작 안 함(집 날씨 하루)',await p.evaluate(()=>{
       const sch={pattern:['야'],anchor:'2026-10-01',types:[{k:'야',name:'야간',rest:false}],overrides:{}};
-      const w=__wx.wxMemWin({kind:'sched',sch},new Date(2026,9,14)),a=new Date(w.s),e=new Date(w.e);
+      const w=__wx.wxMemWin({kind:'sched',sch},new Date(2026,9,14));if(w!==null)return false;
       const w2=__wx.wxMemWin({kind:'sched',sch:{...sch,wx:{w:'41597',tm:{'야':['20:00','08:00']}}}},new Date(2026,9,14));
-      return a.getHours()===19&&e.getHours()===7&&e.getDate()===15&&new Date(w2.s).getHours()===20&&__wx.wxMemWork({kind:'sched',sch:{...sch,wx:{w:'41597'}}})==='41597';}));
+      return new Date(w2.s).getHours()===20&&__wx.wxMemWork({kind:'sched',sch:{...sch,wx:{w:'41597'}}})==='41597';}));
     T('내 근무표에 날씨 싣기: 직장이 없으면 집을 직장 자리에 · 집(h)도 같이 (v0.134)',await p.evaluate(()=>{const a=__wx.famPayload().wx;__wx.S.wx.work='41597';const b=__wx.famPayload().wx;return a&&a.w===a.h&&b.w==='41597'&&b.h===__wx.S.wx.home&&Array.isArray(b.tm['주']);}));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 4) 깨진 저장 값 · 보안 잠금(CSP) 켠 채로 서버 부르기
-    const p=await boot(b,{...base,addons:{...base.addons,wx:true},wx:{home:'<x>',work:12345,fw:{a:'41111',b:'x'}}},opt({}));
+    const p=await boot(b,{...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},addons:{...base.addons,wx:true},wx:{home:'<x>',work:12345,fw:{a:'41111',b:'x'}}},opt({}));
     T('깨진 wx 값 정리',await p.evaluate(()=>__wx.S.wx.home===''&&__wx.S.wx.work===''&&JSON.stringify(__wx.S.wx.fw)==='{"a":"41111"}'));
     T('집이 없으면 켜져 있어도 아무것도 안 보임',await p.evaluate(()=>!__wx.wxOn()));
     await p.close();
-    const p3=await boot(b,{...base,addons:{...base.addons,wx:true},wx:{home:'4111160000',work:'51720390001',fw:{},nm:{'4111160000':'연무<동>','abc':'x'}}},opt({}));
+    const p3=await boot(b,{...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},addons:{...base.addons,wx:true},wx:{home:'4111160000',work:'51720390001',fw:{},nm:{'4111160000':'연무<동>','abc':'x'}}},opt({}));
     T('동 번호(10자리)는 남고 이상한 번호 · 동 이름은 정리',await p3.evaluate(()=>{const w=__wx.S.wx;return w.home==='4111160000'&&w.work===''&&JSON.stringify(w.nm)==='{"4111160000":"연무동"}'&&__wx.wxOn();}));
     T('오류 없음 (동)',p3.errs.length===0,p3.errs.join('|'));await p3.close();
     hits=0;
-    const q=await boot(b,{...base,addons:{...base.addons,wx:true},wx:{home:'41111',work:'',fw:{}}},opt({csp:true}));await q.waitForTimeout(2900);
+    const q=await boot(b,{...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},addons:{...base.addons,wx:true},wx:{home:'41111',work:'',fw:{}}},opt({csp:true}));await q.waitForTimeout(2900);
     T('보안 잠금(CSP) 켠 채로도 서버에서 받아 옴',hits>=1&&await q.evaluate(()=>!!__wx.wxRaw('41111')),hits);
     T('CSP 위반 기록 없음',await q.evaluate(()=>!/CSP/.test(localStorage.getItem('eonjeswieo:err')||'')),await q.evaluate(()=>localStorage.getItem('eonjeswieo:err')));
     await q.close();

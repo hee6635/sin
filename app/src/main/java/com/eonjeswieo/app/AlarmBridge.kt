@@ -159,6 +159,10 @@ class AlarmBridge(private val activity: MainActivity) {
         if (WidgetStore.saveFromApp(context, json)) WidgetRefresher.refreshAll(context)   // v0.127 자료가 같으면 다시 안 그림
     }
 
+    /** v0.171 위젯 설정 화면 미리보기 (한 달 위젯 그림 · PNG base64 · 실패하면 빈 글) */
+    @JavascriptInterface
+    fun widgetPreview(json: String, wDp: Int, hDp: Int): String = MonthRenderer.preview(context, json, wDp, hDp)
+
     /** v0.156 홈 화면에 놓인 언제쉬어 위젯 개수 (설정 첫 화면 "위젯 · n개 사용 중") */
     @JavascriptInterface
     fun widgetCount(): Int = try {

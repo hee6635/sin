@@ -9,7 +9,7 @@ function raw(code,o={}){const h={};for(let d=29;d<=31;d++)for(let x=0;x<24;x++){
 let mode={};
 const routes=[['https://asia-northeast3-demo-wx.cloudfunctions.net/wx**',r=>{const u=new URL(r.request().url());const codes=(u.searchParams.get('r')||'').split(',');const one=c=>raw(c,mode);r.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(codes.length>1?{list:codes.map(one)}:one(codes[0]))});}]];
 const cfg="window.FIREBASE_CONFIG={projectId:'demo-wx',apiKey:'x',authDomain:'x',appId:'x'};";
-const st0={...base,addons:{...base.addons,wx:true},wx:{home:'4711158000',work:'4711162000',fw:{},nm:{'4711158000':'효곡동','4711162000':'제철동'}}};
+const st0={...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},addons:{...base.addons,wx:true},wx:{home:'4711158000',work:'4711162000',fw:{},nm:{'4711158000':'효곡동','4711162000':'제철동'}}};
 const SH=process.env.SHOT||'';
 (async()=>{
   const T=mkT();const b=await chromium.launch();

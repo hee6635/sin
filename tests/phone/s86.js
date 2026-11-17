@@ -45,7 +45,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     const st=await p.evaluate(()=>{const P=JSON.parse(localStorage.getItem('eonjeswieo:stz')||'{}'),k=Object.keys(P);const t0=k.length?P[k[0]].t:0;__wx.render();const P2=JSON.parse(localStorage.getItem('eonjeswieo:stz')||'{}');return {n:k.length,same:k.length>0&&P2[k[0]].t===t0};});
     T('스티커 크기를 폰에 기억 · 같은 내용으로 다시 그리면 다시 재지 않음',st.n>0&&st.same,JSON.stringify(st));
     await p.evaluate(()=>document.querySelector('#nav [data-tab="set"]').click());await p.waitForTimeout(250);await p.click('[data-act="more-pattern"]');await p.waitForTimeout(400);
-    await p.evaluate(()=>document.querySelector('.tltimes [data-s="야"]').click());await p.waitForTimeout(300);
+    await p.evaluate(()=>document.querySelector('#tlist [data-s="야"]').click());await p.waitForTimeout(300);
     const set=(id,v)=>p.evaluate(([id,v])=>{const s=document.getElementById(id);s.value=v;s.dispatchEvent(new Event('change',{bubbles:true}));},[id,v]);
     await set('tdS','19:00');await p.waitForTimeout(150);await set('tdE','07:00');await p.waitForTimeout(200);
     const n1=await p.evaluate(()=>({mid:!!document.querySelector('.tdtm>small'),nx:!!document.querySelector('.tdtm .tbtn.nx'),c:getComputedStyle(document.querySelector('.tdtm .tbtn.nx span'),'::before').content}));
