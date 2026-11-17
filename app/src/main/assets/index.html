@@ -2840,6 +2840,14 @@ const pfOn=()=>performance.now()<12000||performance.now()<(PF.until||0);   // v0
 function pf(n,ms){if(pfOn()&&PF.ev.length<400)PF.ev.push([Math.round(performance.now()),n,ms==null?'':Math.round(ms)]);}
 const pfWrap=(name,fn)=>function(...a){if(!pfOn())return fn.apply(this,a);const t=performance.now();try{return fn.apply(this,a);}finally{const d=performance.now()-t;if(d>=8)pf(name,d);}};
 try{new PerformanceObserver(l=>l.getEntries().forEach(e=>pf('긴 작업',e.duration))).observe({type:'longtask',buffered:true});}catch(e){}
+// v0.205 멈춘 이유: 폰 크롬이 알려주는 긴 프레임(50ms 넘음)을 계산(어떤 함수) · 배치 · 그 밖(그리기 등)으로 나눠 적음 (지원 안 하는 폰은 그냥 빠짐)
+try{new PerformanceObserver(l=>l.getEntries().forEach(e=>{if(!(e.startTime<12000||e.startTime<(PF.until||0)))return;
+  const sc=(e.scripts||[]).slice().sort((a,b)=>b.duration-a.duration);const js=sc.reduce((a,x)=>a+x.duration,0);
+  const end=e.startTime+e.duration,lay=e.styleAndLayoutStart?end-e.styleAndLayoutStart:0,etc=Math.max(0,e.duration-js-lay);
+  const top=sc[0]?(sc[0].sourceFunctionName||sc[0].invoker||'').replace(/^.*\./,'').slice(0,24):'';
+  const ps=[];if(js>=5)ps.push('계산 '+Math.round(js)+(top?' ('+top+')':''));if(lay>=5)ps.push('배치 '+Math.round(lay));if(etc>=5)ps.push('그 밖 '+Math.round(etc));
+  if(PF.ev.length<400)PF.ev.push([Math.round(e.startTime),'↳ 멈춘 이유: '+(ps.join(' · ')||'-'),Math.round(e.duration)]);
+})).observe({type:'long-animation-frame',buffered:true});}catch(e){}
 const pfTick=()=>{let last=performance.now();const tick=now=>{const g=now-last;last=now;if(g>40)pf('화면 멈춤',g);if(pfOn())requestAnimationFrame(tick);else PF.tk=0;};PF.tk=1;requestAnimationFrame(tick);};pfTick();
 function pfKick(n){const was=pfOn();PF.until=performance.now()+3000;if(!was||!PF.tk)pfTick();pf(n);}
 document.addEventListener('touchstart',()=>pf('손가락 닿음'),{capture:true,passive:true});
@@ -7327,6 +7335,8 @@ function swAdoptWx(st){
 }
 document.addEventListener('pointerup',swEnd);
 document.addEventListener('pointercancel',swEnd);
+// v0.205 옆으로 넘기는 동안엔 폰 브라우저의 끌기(스크롤 · 튕김)를 막음 — 안 막으면 넘긴 뒤 첫 탭을 '튕김 멈추기'로 먹어서 한 번 더 눌러야 했음
+document.addEventListener('touchmove',e=>{if(dsw&&dsw.on&&e.cancelable)e.preventDefault();},{passive:false,capture:true});
 // 3일 띠: 가운데에 오늘 고른 날 · 옆으로 밀면 따라 움직이고, 멈췄을 때 가운데에 온 날로 이동
 const dsiX=(el,on)=>on.offsetParent===el.offsetParent?on.offsetLeft-el.offsetLeft:on.offsetLeft;   // v0.136 날짜 띠 안에서의 자리 (넘긴 뒤 판(.swc)이 기준이 되어도 같게)
 function dstripCenter(goFn,curK){   // goFn: 가운데 온 날로 이동 (기본 = 내 날짜 창) · curK: 지금 날짜
@@ -10811,7 +10821,7 @@ function openFirebasePage(){
   openPage(`
     ${pageHead('Firebase 연결 시험')}
     <div class="pg-b">
-      <div class="pg-sec" style="padding:12px 14px"><b>시작 기록 (켠 뒤 12초 · ms)</b><div style="font:12px/1.5 monospace;white-space:pre-wrap;margin-top:6px;max-height:60vh;overflow:auto">${esc((window.__perf&&window.__perf.ev||[]).map(e=>`${String(e[0]).padStart(5)}  ${e[1]}${e[2]!==''?'  '+e[2]:''}`).join('\n')||'(기록 없음)')}</div></div>
+      <div class="pg-sec" style="padding:12px 14px"><b>시작 기록 (켠 뒤 12초 · ms)</b><div style="font:12px/1.5 monospace;white-space:pre-wrap;margin-top:6px;max-height:60vh;overflow:auto">${esc((window.__perf&&window.__perf.ev||[]).slice().sort((a,b)=>a[0]-b[0]).map(e=>`${String(e[0]).padStart(5)}  ${e[1]}${e[2]!==''?'  '+e[2]:''}`).join('\n')||'(기록 없음)')}</div></div>
       <div class="pg-sec">
         ${row('설정 파일','firebase/config.js',f.cfg?'있음':'없음',f.cfg?'var(--today)':'var(--muted)')}
         ${row('로그인 (익명)','',f.uid?esc(f.uid.slice(0,8))+'…':'아직',ok?'var(--today)':'')}
