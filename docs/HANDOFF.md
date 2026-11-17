@@ -537,3 +537,6 @@
 - 위젯: 설정 화면에 있는 동안만 AndroidBridge.showWallpaper(true) (MainActivity: FLAG_SHOW_WALLPAPER · 창 · 웹뷰 바탕 투명) + html.wpshow (앱 화면 숨김 · 페이지 투명). 나가면 false. 작은 위젯(Widgets.drawWith)도 bg vivid 를 직접 읽음 (전에는 한 달 위젯을 먼저 그렸을 때만).
 - v0.175 고침: calFitMark 는 보이는 달만 (옆 달 스티커 크기가 안 붙던 것).
 - 시험: s104 새로 · s1 s8 s20 s44 s48(새 규칙으로 다시 씀) s49 s102 고침.
+
+## v0.177 스티커 ⋯ 메뉴 글 · 아이콘 통일
+- 스티커 떼기(🧽 → eraser) · 이날부터 떼기(📆 → calendar-x, 반복만) · 스티커 전부 떼기(🗑, 2개 이상) · 반복 · 알림 고치기 · 닫기. POP_ICO 에 🧽 · 📆 추가 (⏭ · ⏹ 은 아이콘 칸 없이 글자로 보였음).

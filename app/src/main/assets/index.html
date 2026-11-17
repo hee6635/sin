@@ -5254,7 +5254,7 @@ const npVal=v=>`<div class="pv npv">${v||""}${npi("chevron-right",16)}</div>`;
 function pageHead(title,right){return `<div class="pg-h"><button class="bk" data-act="page-close" aria-label="뒤로">‹</button><b>${title}</b>${right||'<span style="min-width:56px"></span>'}</div>`;}
 function openPop(html){$('#pop').innerHTML=`<div class="menu">${html}</div>`;$('#pop').classList.add('open');popIcons($('#pop'));}
 // v0.154 작은 창 새 모양: 줄 맨 앞 이모지를 회색 칸 선 아이콘으로 (♥ · 🔒처럼 가족/나만 뜻이 있는 표시는 그대로)
-const POP_ICO={'✏️':'pencil','✏':'pencil','🗑':'trash-2','🗑️':'trash-2','📋':'copy','📅':'calendar','🗓':'calendar','🚫':'ban','🔔':'bell','🔕':'bell-off','🔁':'repeat','⏰':'alarm-clock','📍':'map-pin','🏠':'home','🏭':'building','📤':'share','🎨':'paintbrush','📷':'camera','🔗':'link','↩️':'rotate-ccw','⚙️':'settings','⚙':'settings','🔍':'search','➕':'plus','＋':'plus'};
+const POP_ICO={'🧽':'eraser','📆':'calendar-x','✏️':'pencil','✏':'pencil','🗑':'trash-2','🗑️':'trash-2','📋':'copy','📅':'calendar','🗓':'calendar','🚫':'ban','🔔':'bell','🔕':'bell-off','🔁':'repeat','⏰':'alarm-clock','📍':'map-pin','🏠':'home','🏭':'building','📤':'share','🎨':'paintbrush','📷':'camera','🔗':'link','↩️':'rotate-ccw','⚙️':'settings','⚙':'settings','🔍':'search','➕':'plus','＋':'plus'};
 function popIcons(root){try{root.querySelectorAll('.menu > .mi, .menu > button.mi').forEach(b=>{const n=b.firstChild;if(!n||n.nodeType!==3)return;const t=n.nodeValue.replace(/^\s+/,'');const k=Object.keys(POP_ICO).find(e=>t.startsWith(e));if(!k||!NPI[POP_ICO[k]])return;n.nodeValue=t.slice(k.length).replace(/^\s+/,'');const sp=document.createElement('span');sp.className='npi';sp.innerHTML=npi(POP_ICO[k],18);b.insertBefore(sp,n);if(b.classList.contains('d'))sp.classList.add('red');});}catch(e){}}
 function closePop(){document.querySelectorAll('.cell.selTop').forEach(c=>c.classList.remove('selTop'));$('#pop').className='';$('#pop').innerHTML='';tpk=null;icn=null;crp=null;}
 const sheetHead=(title,left)=>`<div class="sh-head">${left||''}<b style="flex:1;font-size:17px;">${title}</b><button class="ib" data-act="close" style="width:auto;font-size:16px;">✕</button></div>`;
@@ -9973,9 +9973,9 @@ document.addEventListener('click',e=>{
     case 'sd-more':{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;const id=`data-id="${s.id}" data-k="${k}"`;
       const rep=['daily','dow','work','month'].includes(s.rep)&&(!s.to||s.to>=k);
       openPop(`<div class="mh">${esc(s.name)}<b>${md(k)}</b></div>
-        <button class="mi" data-act="sd-skip" ${id}>⏭ 이날만 떼기</button>
-        ${rep?`<button class="mi" data-act="sd-end" ${id}>⏹ 이날부터 떼기</button>`:''}
-        ${stampsOn(k).length>=2?`<button class="mi" data-act="sd-all" data-k="${k}">🗑 이날 스티커 전부 떼기</button>`:''}
+        <button class="mi" data-act="sd-skip" ${id}>🧽 스티커 떼기</button>
+        ${rep?`<button class="mi" data-act="sd-end" ${id}>📆 이날부터 떼기</button>`:''}
+        ${stampsOn(k).length>=2?`<button class="mi" data-act="sd-all" data-k="${k}">🗑 스티커 전부 떼기</button>`:''}
         <button class="mi" data-act="sd-edit" ${id}>✏️ 반복 · 알림 고치기</button>
         <button class="mi" data-act="sd-back" data-k="${k}" style="justify-content:center;color:var(--muted)">닫기</button>`);break;}
     case 'sd-edit':closePop();openStampReg(t.dataset.k,t.dataset.id,'day');break;
