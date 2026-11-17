@@ -2052,6 +2052,7 @@ html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.07}
 .memsec .ibar input:placeholder-shown+.send,.vrbody .vcmemo-bar input:placeholder-shown+.send{background:var(--track)!important;color:var(--muted)!important}
 .send svg{width:20px;height:20px}
 @media (prefers-reduced-motion:reduce){#sheet{transition:none}}
+.wxph{border-radius:22px;background:var(--bg);opacity:.6;margin-bottom:12px}
 .dshell{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:70;transform-origin:0 0;will-change:transform;pointer-events:none;border-radius:20px}
 /* v0.198 화면 점검 정리 */
 .shbk{width:auto!important;min-width:36px;font-size:24px!important;color:var(--fg)!important;padding:0 6px!important;text-align:left}
@@ -2835,11 +2836,12 @@ const REQ_ST={
 /* ================= 상태 저장 ================= */
 /* v0.186 시작 기록 (켠 뒤 12초): 오래 걸린 일 · 화면이 멈춘 틈 · 손가락 · 달 넘김 → 설정 › 앱 정보 7번 › 개발자 메뉴에서 봄 (저장 안 함 · 화면 영향 없음) */
 const PF={t0:performance.now(),ev:[]};window.__perf=PF;
-const pfOn=()=>performance.now()<12000;
+const pfOn=()=>performance.now()<12000||performance.now()<(PF.until||0);   // v0.202 날짜 창을 열 때도 3초 동안 기록
 function pf(n,ms){if(pfOn()&&PF.ev.length<400)PF.ev.push([Math.round(performance.now()),n,ms==null?'':Math.round(ms)]);}
 const pfWrap=(name,fn)=>function(...a){if(!pfOn())return fn.apply(this,a);const t=performance.now();try{return fn.apply(this,a);}finally{const d=performance.now()-t;if(d>=8)pf(name,d);}};
 try{new PerformanceObserver(l=>l.getEntries().forEach(e=>pf('긴 작업',e.duration))).observe({type:'longtask',buffered:true});}catch(e){}
-(()=>{let last=performance.now();const tick=now=>{const g=now-last;last=now;if(g>40)pf('화면 멈춤',g);if(pfOn())requestAnimationFrame(tick);};requestAnimationFrame(tick);})();
+const pfTick=()=>{let last=performance.now();const tick=now=>{const g=now-last;last=now;if(g>40)pf('화면 멈춤',g);if(pfOn())requestAnimationFrame(tick);else PF.tk=0;};PF.tk=1;requestAnimationFrame(tick);};pfTick();
+function pfKick(n){const was=pfOn();PF.until=performance.now()+3000;if(!was||!PF.tk)pfTick();pf(n);}
 document.addEventListener('touchstart',()=>pf('손가락 닿음'),{capture:true,passive:true});
 document.addEventListener('touchend',()=>pf('손가락 뗌'),{capture:true,passive:true});
 const KEY='eonjeswieo:v1', OLD_KEY='shiftcal:v9';
@@ -5371,8 +5373,9 @@ const MO=(()=>{
     e.stopImmediatePropagation();e.preventDefault();shellDrop();
     const r=c.getBoundingClientRect(),bg=shellBg(),el=shellEl=shellMk(bg);   // v0.201 위치 · 크기(transform)만 움직임 — 색 · 둥글기까지 움직이면 폰이 따로 못 돌려서 진짜 창 만드는 동안 멈춤
     const a=el.animate([{transform:shellTf(r)},{transform:'none'}],{duration:360,easing:EO,fill:'forwards'});
-    setTimeout(()=>{if(shellEl!==el)return;sh.style.transition='none';sh.style.willChange='opacity';sh.style.opacity='0.01';shellPass=true;try{c.click();}finally{shellPass=false;}if(!sh.classList.contains('open'))shellDrop();},16);   // 껍데기가 움직이는 동안 진짜 창을 만들어 아래에 깔아 둠 (0.01 = 안 보이지만 폰이 칠함)
-    a.onfinish=()=>{if(shellEl!==el)return;shellDrop();};
+    try{pfKick('날짜 창 누름');}catch(x){}
+    setTimeout(()=>{if(shellEl!==el)return;sh.style.transition='none';sh.style.willChange='opacity';sh.style.opacity='0.01';const t0=performance.now();shellPass=true;dsLite=true;try{c.click();}finally{shellPass=false;dsLite=false;}try{pf('날짜 창 만들기',performance.now()-t0);}catch(x){}if(!sh.classList.contains('open'))shellDrop();},16);   // 껍데기가 움직이는 동안 진짜 창을 만들어 아래에 깔아 둠 (0.01 = 안 보이지만 폰이 칠함)
+    a.onfinish=()=>{if(shellEl!==el)return;shellDrop();try{pf('껍데기 도착');}catch(x){}setTimeout(()=>{const t1=performance.now();try{dsFill();}catch(x){}try{pf('날짜 띠 · 날씨 채우기',performance.now()-t1);}catch(x){}},30);};
   },true);
   function sheetOpen(sh,was){}   // (작은 칸에서 진짜 창을 키우던 방식은 큰 화면을 그림으로 새로 만드느라 멈칫 → 위 껍데기 방식)
   function sheetClose(sh,k){if(RM()||!sh.classList.contains('open')||!k)return false;
@@ -6096,7 +6099,7 @@ function dsHint(k){return '';}   // v0.155 설명 글 없음 (날짜를 누르�
 function manDayHtml(k){
   const m=manMember();if(!m)return '';
   const d=parse(k),hol=holName(k),on=(m.stk&&m.stk[k])||[],note=(m.notes&&m.notes[k])||'',cur=(m.ov&&m.ov[k])||manBase(m,d),defs=manSdefs(m).filter(x=>!x.retired||on.includes(x.id));
-  const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}${fmt(x)===dsTK()?' td':''}" data-act="man-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${manBadge(m,x,'','sm')}</button>`;}).join('');
+  const strip=dsOffs().filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}${fmt(x)===dsTK()?' td':''}" data-act="man-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${manBadge(m,x,'','sm')}</button>`;}).join('');
   return `<div class="dtop"><button data-act="close">‹ ${esc(m.name)} 달력</button></div>
     <div class="dfh"><button class="ib" data-act="man-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
       <div class="dft"${dsTgo(k,'man-go')}><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${esc(m.name)} · ${esc(manLabel(m,d))}${hol?` · <span class="hl">${esc(hol)}</span>`:''}${dsTdy(k)}</small>${dsHint(k)}</div>
@@ -7024,6 +7027,20 @@ function openDay(k){
   dstripCenter();coachSoon();
 }
 // 날짜 창 내용 (옆으로 밀 때 옆 날짜를 미리 그리는 데도 씀 — 상태는 안 바꿈)
+// v0.202 날짜 창을 가볍게 열기: 껍데기가 움직이는 동안엔 날짜 띠 7칸 · 날씨 카드는 같은 높이 빈 자리 → 도착하면 채움(dsFill)
+let dsLite=false;const wxPhH={};let wxPhLast=0;
+const dsOffs=()=>dsLite?[-3,-2,-1,0,1,2,3]:Array.from({length:61},(_,j)=>j-30);
+function dsFill(){
+  const sh=$('#sheet');if(!sh||!sh.classList.contains('open'))return;
+  const html=sheetMode==='day'&&sheetKey?dayHtml(sheetKey):sheetMode==='vcday'&&rqD.k?vcDayHtml(rqD.k):sheetMode==='mandy'&&manDayK?manDayHtml(manDayK):'';if(!html)return;
+  const tp=document.createElement('template');tp.innerHTML=html;
+  const st=sh.querySelector('#dstrip'),nst=tp.content.querySelector('#dstrip');
+  if(st&&nst&&st.children.length<nst.children.length){st.innerHTML=nst.innerHTML;const on=st.querySelector('.dsi.on');if(on)st.scrollLeft=dsiX(st,on)+on.offsetWidth/2-st.clientWidth/2;}
+  const ph=sh.querySelector('#wxDay.wxph'),nw=tp.content.querySelector('#wxDay')||tp.content.querySelector('.wxcard');
+  if(ph){if(nw){ph.replaceWith(nw);const h=nw.offsetHeight;if(h){wxPhH[sheetKey]=h;wxPhLast=h;}if(nw.animate)nw.animate([{opacity:0},{opacity:1}],{duration:160});}else ph.remove();}
+  setTimeout(()=>{try{if(sheetMode==='day'&&sheetKey&&wxOn()&&!wxPopFam){const k=sheetKey,h=wxDayPopHtml(k);if(h)wxPre={k,h,t:Date.now()};}}catch(e){}},250);   // 다음에 누를 큰 날씨 창은 미리 만들어 둠
+}
+let wxPre=null;
 function dayHtml(k){
   const d=parse(k),base=baseShift(d),c=shiftOf(d),hol=holName(k)||compHol(k),ov=S.overrides[k];
   const isGuest=S.syncSettings.isGuestMode;
@@ -7031,7 +7048,7 @@ function dayHtml(k){
   const openReqs=dayReqs.filter(r=>r.st==='pending'||r.st==='hold');   // 날짜 창엔 답 안 한 요청만 (답한 건 요청함에)
   const reqHtml=openReqs.map(r=>reqCard(r)).join('');
   const dd=ddayHits(k);
-  const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);const rq=rqRing(S.requests.filter(r=>r.date===fmt(x)&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r));return `<button class="dsi ${i===0?'on':''}${fmt(x)===dsTK()?' td':''} ${rq}" data-act="day-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${S.personal?`<span class="dnum">${DOW[x.getDay()]}</span>`:badge(shiftOf(x),'sm')}</button>`;}).join('');
+  const strip=dsOffs().filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);const rq=rqRing(S.requests.filter(r=>r.date===fmt(x)&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r));return `<button class="dsi ${i===0?'on':''}${fmt(x)===dsTK()?' td':''} ${rq}" data-act="day-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${S.personal?`<span class="dnum">${DOW[x.getDay()]}</span>`:badge(shiftOf(x),'sm')}</button>`;}).join('');
   const head=`
       <div class="dtop"><button data-act="close">‹ 달력</button></div>
       <div class="dfh"><button class="ib" data-act="day-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
@@ -7072,7 +7089,7 @@ function dayHtml(k){
   }
   // 순서: 근무 타입 → 대기 중인 요청 → 날씨 → (가족 메모 알림) → 메모
   const [tp1,tp2]=topPart.split('');
-  return `${head}<div class="dsbody">${tp1}${wxDayHtml(k)}${tp2||''}${memoSection(k)}</div>`;   // v0.155 아래쪽 = 회색 바탕 + 흰 카드
+  return `${head}<div class="dsbody">${tp1}${dsLite&&wxOn()?`<div id="wxDay" class="wxph" data-k="${k}" style="height:${wxPhH[k]||wxPhLast||0}px"></div>`:wxDayHtml(k)}${tp2||''}${memoSection(k)}</div>`;   // v0.155 아래쪽 = 회색 바탕 + 흰 카드
 }
 
 /* ⏱ 연장 = 그날 실제 출근 · 퇴근 (근무 통계를 켠 사람 · 근무 날만). 바꾼 시각은 가족 탭 "몇 시 끝" · 가족 폰 · 날씨 · 통계에 쓰임
@@ -8249,7 +8266,7 @@ function wxDayPopHtml(k){
   const w=wxMyWin(d);
   return (wxPopHtml(`${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]}) 날씨`,w?`${shiftLabel(w.k)} · ${wxHm(w.s)} 출근 → ${wxHm(w.e)} 퇴근`:(c.day&&c.day.src==='m'?'하루 요약 (중기예보)':'하루 요약'),c,'',wxDzList(w,S.wx.home,wxWk(),myActs(d)),wxHrOf(d,w,S.wx.home,wxWk(),wxName(S.wx.home),wxWk()?wxName(wxWk()):'',k===fmt(new Date())?Date.now():null,myActs(d)),(!w&&!myActs(d).length)?{today:k===fmt(new Date()),raw:wxRaw(S.wx.home),md:`${d.getMonth()+1}월 ${d.getDate()}일`}:null));
 }
-function wxOpenDay(k){wxPopFam=null;const h=wxDayPopHtml(k);if(!h)return;wxPopK=k;wxOpenPop(`<div class="swc" style="position:relative;transform:translateZ(0)">${h}</div>`);   /* v0.133 처음부터 판으로 감싸 둠 → 밀기 시작할 때 옮기지 않음 */const m=$('#pop .menu');if(m)m.classList.add('wxdpop');}
+function wxOpenDay(k){wxPopFam=null;const pre=wxPre&&wxPre.k===k&&Date.now()-wxPre.t<60000?wxPre.h:null;wxPre=null;const h=pre||wxDayPopHtml(k);if(!h)return;wxPopK=k;wxOpenPop(`<div class="swc" style="position:relative;transform:translateZ(0)">${h}</div>`);   /* v0.133 처음부터 판으로 감싸 둠 → 밀기 시작할 때 옮기지 않음 */const m=$('#pop .menu');if(m)m.classList.add('wxdpop');}
 const wxHm=ms=>{const x=new Date(ms);return t12(`${pad(x.getHours())}:${pad(x.getMinutes())}`,true);};   // v0.126 화면 글자는 12시간제
 // 가족 카드: 출근 · 퇴근 앞뒤 2시간이면 "☔ 퇴근 12° 비" · 그 밖엔 그날 아이콘만 (누르면 자세히)
 function famActWx(m,now){
@@ -11525,7 +11542,7 @@ function vcDayHtml(k){
   const want=rqD.k===k&&rqD.u===p.uid?rqD.want:((p.sch.types||[]).find(x=>x.rest)||{k:'휴'}).k;
   const mine=reqUniq(S.requests.filter(r=>r.srv&&r.dir==='out'&&r.peer===p.uid&&r.date===k).sort((a,b)=>b.t-a.t));
   const open=mine.some(r=>r.st==='pending'||r.st==='accepted');
-  const strip=Array.from({length:61},(_,j)=>j-30).filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}${fmt(x)===dsTK()?' td':''}" data-act="vc-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${schBadge(p.sch,schShift(p.sch,x),'sm')}</button>`;}).join('');
+  const strip=dsOffs().filter(i=>{const x=addDays(d,i),mm=x.getFullYear()*12+x.getMonth();return i===0||(mm>=MIN_M&&mm<=MAX_M);}).map(i=>{const x=addDays(d,i);return `<button class="dsi ${i===0?'on':''}${fmt(x)===dsTK()?' td':''}" data-act="vc-go" data-k="${fmt(x)}"><small>${x.getDate()}일</small>${schBadge(p.sch,schShift(p.sch,x),'sm')}</button>`;}).join('');
   const tag=open?'요청 중':past?'':'요청하기',canRq=!past||mine.length,isOpen=canRq&&(vcRqOpen||open);   // v0.168 새 모양 (시안 design/request): 내 날짜 창과 같은 짜임 · 요청 중이면 상태 카드가 바로 보임
   const tn=x=>esc(schType(p.sch,x).name||x),ro=x=>josa(schType(p.sch,x).name||x,'으로','로');
   const RS={pending:['clock','답 기다리는 중','#f08a00'],accepted:['check','수락됐어요','#1fa971'],applied:['check','근무표에 들어갔어요','#1fa971'],rejected:['x','거절됐어요','#e5484d'],cancelled:['x','취소했어요','#8b95a1']};
