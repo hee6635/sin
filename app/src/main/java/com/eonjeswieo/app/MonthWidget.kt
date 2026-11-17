@@ -642,9 +642,9 @@ object MonthRenderer {
         val e = amp * k * k * (3f - 2f * k)   // 부드럽게 (smoothstep)
         if (e <= 0.01f) return
         val sw = 3f * u
-        val gap = 1.2f * u + sw / 2f
+        val gap = TD_GAP * u
         val box = RectF(cell.left + gap, cell.top + gap, cell.right - gap, cell.bottom - gap)
-        val r = Math.max(2f * u, 7f * u - sw / 2f)
+        val r = TD_R * u
         val rgb = (if (glowNight) 0xFFFFFF else (deepen(color or 0xFF000000.toInt()) and 0x00FFFFFF))
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
         p.style = Paint.Style.STROKE
@@ -1052,15 +1052,17 @@ object MonthRenderer {
     }
 
     /** 오늘: 칸 전체 테두리 3dp (앱 달력 오늘 칸과 같음 · 숫자 · 스티커는 그대로) */
+    private const val TD_GAP = 0.7f   // 오늘 띠 가운데 줄 자리: 1.2(칸 바탕) - 2(바깥) + 1.5(띠 반)
+    private const val TD_R = 8.5f      // 칸 모서리(7) + 바깥으로 나간 만큼
     internal fun drawTodayBand(cv: Canvas, x0: Float, y0: Float, cw: Float, rowH: Float, u: Float) {
         val sw = 3f * u
-        val gap = 1.2f * u + sw / 2f
+        val gap = TD_GAP * u   // v0.171 칸 경계에 걸치기: 칸 바탕 끝(1.2dp)에서 2dp 바깥 · 1dp 안쪽 (메모 · 스티커 자리가 넓어짐)
         val box = RectF(x0 + gap, y0 + gap, x0 + cw - gap, y0 + rowH - gap)
         val bp = Paint(Paint.ANTI_ALIAS_FLAG)
         bp.style = Paint.Style.STROKE
         bp.strokeWidth = sw
         bp.color = todayColor or 0xFF000000.toInt()
-        val r = Math.max(2f * u, 7f * u - sw / 2f)
+        val r = TD_R * u
         cv.drawRoundRect(box, r, r, bp)
     }
 
