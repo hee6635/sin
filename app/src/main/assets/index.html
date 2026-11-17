@@ -5374,8 +5374,11 @@ const MO=(()=>{
     const r=c.getBoundingClientRect(),bg=shellBg(),el=shellEl=shellMk(bg);   // v0.201 위치 · 크기(transform)만 움직임 — 색 · 둥글기까지 움직이면 폰이 따로 못 돌려서 진짜 창 만드는 동안 멈춤
     const a=el.animate([{transform:shellTf(r)},{transform:'none'}],{duration:360,easing:EO,fill:'forwards'});
     try{pfKick('날짜 창 누름');}catch(x){}
-    setTimeout(()=>{if(shellEl!==el)return;sh.style.transition='none';sh.style.willChange='opacity';sh.style.opacity='0.01';const t0=performance.now();shellPass=true;dsLite=true;try{c.click();}finally{shellPass=false;dsLite=false;}try{pf('날짜 창 만들기',performance.now()-t0);}catch(x){}if(!sh.classList.contains('open'))shellDrop();},16);   // 껍데기가 움직이는 동안 진짜 창을 만들어 아래에 깔아 둠 (0.01 = 안 보이지만 폰이 칠함)
-    a.onfinish=()=>{if(shellEl!==el)return;shellDrop();try{pf('껍데기 도착');}catch(x){}setTimeout(()=>{const t1=performance.now();try{dsFill();}catch(x){}try{pf('날짜 띠 · 날씨 채우기',performance.now()-t1);}catch(x){}},30);};
+    a.onfinish=()=>{if(shellEl!==el)return;try{pf('껍데기 도착');}catch(x){}   // v0.204 진짜 창은 껍데기가 다 커져 멈춘 뒤에 만들고 칠함 (폰 기록: 움직이는 도중 처음 칠하기 92ms 가 끼어들어 멈춤) · 껍데기가 덮고 있어 안 보임
+      let cc=c;if(!cc.isConnected&&c.dataset.k)cc=document.querySelector(`.cell[data-act="${c.dataset.act}"][data-k="${c.dataset.k}"]`)||c;   // 그 사이 달력이 다시 그려졌으면 같은 날 칸으로
+      sh.style.transition='none';const t0=performance.now();shellPass=true;dsLite=true;try{cc.click();}finally{shellPass=false;dsLite=false;}try{pf('날짜 창 만들기',performance.now()-t0);}catch(x){}
+      if(!sh.classList.contains('open')){shellDrop();return;}
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{if(shellEl!==el)return;shellDrop();try{pf('껍데기 걷음');}catch(x){}setTimeout(()=>{const t1=performance.now();try{dsFill();}catch(x){}try{pf('날짜 띠 · 날씨 채우기',performance.now()-t1);}catch(x){}},30);}));};
   },true);
   function sheetOpen(sh,was){}   // (작은 칸에서 진짜 창을 키우던 방식은 큰 화면을 그림으로 새로 만드느라 멈칫 → 위 껍데기 방식)
   function sheetClose(sh,k){if(RM()||!sh.classList.contains('open')||!k)return false;

@@ -9,12 +9,12 @@ const O='/tmp/claude-0/-home-user-sin/78e2bc2a-7f65-5612-9a8c-557939742276/scrat
  const txt=k=>p.evaluate(k=>document.querySelector(`#page .cell[data-k="${k}"] .bwrap`).innerText.trim(),k);
  T('수요일(10/14) 학교 (동그라미 "학교" · v0.117 두 글자)',(await txt('2026-10-14'))==='학교',await txt('2026-10-14'));
  // 이 날만 바꾸기 → 쉬는 날
- await p.evaluate(()=>document.querySelector('#page .cell[data-k="2026-10-14"]').click());await p.waitForTimeout(300);
+ await p.evaluate(()=>document.querySelector('#page .cell[data-k="2026-10-14"]').click());await p.waitForTimeout(600);
  await p.evaluate(()=>document.querySelector('[data-act="man-ov"][data-v="off"]').click());await p.waitForTimeout(300);
  T('이 날만 쉬는 날로 바뀜 + 점',await p.evaluate(()=>{const c=document.querySelector('#page .cell[data-k="2026-10-14"]');return c.innerText.includes('휴')&&!!c.querySelector('.dot');}));
  T('저장 형식 ov',await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).family[0].ov['2026-10-14']==='off'));
  // 원래대로
- await p.evaluate(()=>document.querySelector('#page .cell[data-k="2026-10-14"]').click());await p.waitForTimeout(300);
+ await p.evaluate(()=>document.querySelector('#page .cell[data-k="2026-10-14"]').click());await p.waitForTimeout(600);
  await p.evaluate(()=>document.querySelector('[data-act="man-ov"][data-v="on"]').click());await p.waitForTimeout(300);   // v0.113: 원래 칩(학교)을 누르면 원래대로
  T('원래대로 → 학교',(await txt('2026-10-14'))==='학교'&&await p.evaluate(()=>!JSON.parse(localStorage.getItem('eonjeswieo:v1')).family[0].ov));
  // 칠하기: 15·16일을 쉬는 날로, 토요일(17)을 학교로
@@ -39,7 +39,7 @@ const O='/tmp/claude-0/-home-user-sin/78e2bc2a-7f65-5612-9a8c-557939742276/scrat
  // 교대 가족 칸 바꾸기
  await p.evaluate(()=>document.querySelector('#page [data-act="page-close"]').click());await p.waitForTimeout(300);
  await p.evaluate(()=>document.querySelector('.nc[data-id="f2"]').click());await p.waitForTimeout(300);
- await p.evaluate(()=>document.querySelector('#page .cell[data-k="2026-10-13"]').click());await p.waitForTimeout(300);
+ await p.evaluate(()=>document.querySelector('#page .cell[data-k="2026-10-13"]').click());await p.waitForTimeout(600);
  await p.evaluate(()=>document.querySelector('[data-act="man-ov"][data-v="휴"]').click());await p.waitForTimeout(300);
  T('교대 가족 이 날만 휴',(await txt('2026-10-13')).includes('휴'));
  console.log(p.errs);T.sum();await b.close();})();
