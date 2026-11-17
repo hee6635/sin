@@ -590,6 +590,11 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.206 껍데기 도는 동안 render 미룸 · 오늘로 부드럽게 · 기록 복사
+- 폰 기록: 켠 직후 날짜를 열면 widgetSync(1.6초 타이머) 안 render 97ms 가 껍데기 모션 도중 끼어듦 → `render()` 첫 줄: `.dshell` 이 1.5초 안에 만들어진 게 있으면 120ms 뒤로 미룸.
+- 제목 눌러 오늘로(`dftPass`·`dftBusy`): 지금 띠를 오늘까지 굴리며 내용은 밀려 나감 → 멈춘 뒤 진짜 goDay → 내용 밀려 들어옴. 띠에 없는 먼 날은 바로.
+- 개발자 메뉴 시작 기록 '복사' 버튼 (`pf-copy` · `pfText`).
+
 ## v0.205 넘긴 뒤 첫 탭 먹힘 · 멈춘 이유 기록
 - 날짜 창을 옆으로 넘긴 직후 첫 탭에 click 이 안 생김(브라우저가 끌기 멈추기로 씀) → 넘기는 중(`dsw.on`) touchmove 를 preventDefault (passive:false).
 - 시작 기록: `long-animation-frame` 으로 50ms 넘는 프레임마다 '↳ 멈춘 이유: 계산 n (함수) · 배치 n · 그 밖 n'. 기록 화면은 시간순 정렬.

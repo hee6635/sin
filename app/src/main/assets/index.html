@@ -2849,6 +2849,7 @@ try{new PerformanceObserver(l=>l.getEntries().forEach(e=>{if(!(e.startTime<12000
   if(PF.ev.length<400)PF.ev.push([Math.round(e.startTime),'↳ 멈춘 이유: '+(ps.join(' · ')||'-'),Math.round(e.duration)]);
 })).observe({type:'long-animation-frame',buffered:true});}catch(e){}
 const pfTick=()=>{let last=performance.now();const tick=now=>{const g=now-last;last=now;if(g>40)pf('화면 멈춤',g);if(pfOn())requestAnimationFrame(tick);else PF.tk=0;};PF.tk=1;requestAnimationFrame(tick);};pfTick();
+const pfText=()=>PF.ev.slice().sort((a,b)=>a[0]-b[0]).map(e=>`${String(e[0]).padStart(5)}  ${e[1]}${e[2]!==''?'  '+e[2]:''}`).join('\n');   // v0.206 기록 복사
 function pfKick(n){const was=pfOn();PF.until=performance.now()+3000;if(!was||!PF.tk)pfTick();pf(n);}
 document.addEventListener('touchstart',()=>pf('손가락 닿음'),{capture:true,passive:true});
 document.addEventListener('touchend',()=>pf('손가락 뗌'),{capture:true,passive:true});
@@ -3779,8 +3780,10 @@ function stzCheck(force){
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(stzDirty||innerWidth!==stzFitW))setTimeout(()=>stzCheck(false),60);});
 window.__fold=()=>stzCheck(false);   // 안드로이드: 접고 펼 때(화면 설정이 바뀔 때) 조금 뒤에 불러 줌   // 접고 펼 때(커버↔안쪽) 앱 달력 값(스티커·주야)도 그 화면 값으로 먼저 바꿈
-let renderRev=-1;
-function render(){renderRev=dataRev;
+let renderRev=-1,renderWaitT=0;
+function render(){
+  {const sh=document.querySelector('.dshell');if(sh&&performance.now()-(sh._t0||0)<1500){clearTimeout(renderWaitT);renderWaitT=setTimeout(()=>render(),120);return;}}   // v0.206 껍데기가 움직이는 동안엔 다시 그리기를 미룸 (폰 기록: 켠 직후 위젯 자료 읽기 → render 97ms 가 열리는 도중 끼어듦)
+  clearTimeout(renderWaitT);renderRev=dataRev;
   coachSoon();persSync();expireOnceAlarms();actAuto();
   applyTdc();   // (자정이 지나면 그날 근무 색으로 · 보이는 달력 따라)
   const top=$('#top'),v=$('#view');
@@ -5370,7 +5373,7 @@ const MO=(()=>{
   // v0.200 날짜 창 = 껍데기 방식: 칸을 누르면 같은 모양의 빈 판(껍데기)이 먼저 커지고, 그 사이 진짜 창을 껍데기 아래에서 미리 만들어 칠해 둠 → 도착하면 껍데기만 걷어냄
   // 닫을 땐 진짜 창은 바로 치우고 껍데기만 그 칸으로 · 달력은 바뀔 때마다 이미 다시 그려져 있어서 닫을 때 다시 그리지 않음
   let shellEl=null,shellPass=false;
-  const shellMk=(bg)=>{const d=document.createElement('div');d.className='dshell';d.style.background=bg;document.body.appendChild(d);return d;};
+  const shellMk=(bg)=>{const d=document.createElement('div');d.className='dshell';d._t0=performance.now();d.style.background=bg;document.body.appendChild(d);return d;};
   const shellTf=r=>`translate(${r.left.toFixed(1)}px,${r.top.toFixed(1)}px) scale(${Math.max(.02,r.width/innerWidth).toFixed(4)},${Math.max(.02,r.height/innerHeight).toFixed(4)})`;
   const shellBg=()=>getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#f2f4f6';
   function shellDrop(){if(shellEl){shellEl.remove();shellEl=null;}const sh=$('#sheet');if(sh){sh.style.opacity='';sh.style.willChange='';sh.style.transition='';}}
@@ -5446,17 +5449,25 @@ const MO=(()=>{
         const an=g.animate([{transform:`translate(${A.l}px,${A.t}px)`,width:A.w+'px'},{offset:.45,transform:`translate(${ml}px,${(A.t+B.t)/2}px)`,width:(mr-ml)+'px'},{transform:`translate(${B.l}px,${B.t}px)`,width:B.w+'px'}],{duration:400,easing:SP});
         an.onfinish=()=>{g.remove();n.closest('.dsi')&&n.closest('.dsi').classList.remove('dsmv');};setTimeout(()=>{g.remove();document.querySelectorAll('.dsmv').forEach(x=>x.classList.remove('dsmv'));},700);},0);}
   },true);
-  // ---- v0.197 날짜 창 제목 눌러 오늘로: 날짜 띠가 오늘까지 부드럽게 굴러가고 내용은 그쪽에서 밀려 들어옴 ----
-  document.addEventListener('click',e=>{if(RM())return;const t=e.target.closest&&e.target.closest('.dft[data-act]');if(!t)return;
+  // ---- v0.206 날짜 창 제목 눌러 오늘로: 지금 띠를 오늘까지 먼저 굴리고(내용은 밀려 나감) → 멈춘 뒤 오늘 창을 만들고 내용이 밀려 들어옴 (만드는 동안 움직이는 게 없어서 안 끊김) ----
+  let dftPass=false,dftBusy=false;
+  document.addEventListener('click',e=>{if(dftPass||RM())return;const t=e.target.closest&&e.target.closest('.dft[data-act]');if(!t)return;
+    if(dftBusy){e.stopImmediatePropagation();e.preventDefault();return;}
     const box=t.closest('#sheet,#page');const st=box&&box.querySelector('#dstrip'),on=st&&st.querySelector('.dsi.on');if(!on)return;
     const k0=on.dataset.k,k1=t.dataset.k;if(!k0||!k1||k0===k1)return;
-    setTimeout(()=>{const el=document.getElementById('dstrip');if(!el)return;const n=el.querySelector('.dsi.on');if(!n||n.dataset.k!==k1)return;
-      const w=n.offsetWidth||el.clientWidth/7,days=Math.round((parse(k1)-parse(k0))/864e5),dir=Math.sign(days),to=el.scrollLeft,from=to-Math.max(-12,Math.min(12,days))*w;
-      const t0=performance.now(),D=Math.min(700,320+Math.abs(days)*25),ease=x=>1-Math.pow(1-x,3);
-      el.scrollLeft=from;const step=now=>{const x=Math.min(1,(now-t0)/D);el.scrollLeft=from+(to-from)*ease(x);if(x<1&&el.isConnected)requestAnimationFrame(step);};requestAnimationFrame(step);
-      const body=el.parentElement&&[...el.parentElement.children].filter(x=>x!==el&&el.compareDocumentPosition(x)&Node.DOCUMENT_POSITION_FOLLOWING);
-      (body||[]).forEach(x=>x.animate([{transform:`translateX(${dir*60}px)`,opacity:.2},{transform:'none',opacity:1}],{duration:380,easing:'cubic-bezier(.2,.9,.25,1)'}));
-      const hd=el.parentElement&&el.parentElement.querySelector('.dft');if(hd)hd.animate([{transform:`translateX(${dir*30}px)`,opacity:.3},{transform:'none',opacity:1}],{duration:340,easing:'cubic-bezier(.2,.9,.25,1)'});},0);
+    const tg=st.querySelector(`.dsi[data-k="${k1}"]`);if(!tg)return;   // 띠에 없는 먼 날은 그냥 바로
+    e.stopImmediatePropagation();e.preventDefault();dftBusy=true;
+    const days=Math.round((parse(k1)-parse(k0))/864e5),dir=Math.sign(days)||1;
+    const from=st.scrollLeft,to=dsiX(st,tg)+tg.offsetWidth/2-st.clientWidth/2,D=Math.min(560,300+Math.abs(days)*22),ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+    const outs=()=>{const el=document.getElementById('dstrip');if(!el||!el.parentElement)return [];return [...el.parentElement.children].filter(x=>x!==el&&el.compareDocumentPosition(x)&Node.DOCUMENT_POSITION_FOLLOWING).concat([...el.parentElement.querySelectorAll('.dft')]);};
+    outs().forEach(x=>x.animate([{transform:'none',opacity:1},{transform:`translateX(${-dir*44}px)`,opacity:0}],{duration:Math.min(260,D*.6),easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}));
+    const t0=performance.now();
+    const fin=()=>{let ok=false;try{dftPass=true;t.click();ok=true;}catch(x){}finally{dftPass=false;}
+      try{swQuiet=performance.now();}catch(x){}
+      requestAnimationFrame(()=>{dftBusy=false;outs().forEach(x=>{x.getAnimations().forEach(a=>a.cancel());x.animate([{transform:`translateX(${dir*44}px)`,opacity:0},{transform:'none',opacity:1}],{duration:300,easing:'cubic-bezier(.2,.9,.25,1)',fill:'backwards'});});});};
+    const step=now=>{try{swQuiet=now;}catch(x){}const x=Math.min(1,(now-t0)/D);st.scrollLeft=from+(to-from)*ease(x);if(x<1&&st.isConnected)requestAnimationFrame(step);else fin();};
+    requestAnimationFrame(step);
+    setTimeout(()=>{if(dftBusy&&!st.isConnected){dftBusy=false;}},D+800);
   },true);
   // ---- 빨간 숫자 배지: 숫자가 바뀌면 톡 ----
   const bdgLast=new Map();
@@ -9708,6 +9719,7 @@ document.addEventListener('click',e=>{
     case 'nudge-bk':closePop();openBackupPage();break;
     case 'lnk-go':closePop();lnkGo(t.dataset.u);break;
     case 'lnk-open2':closePop();lnkOpen(t.dataset.u,!!t.dataset.fam);break;
+    case 'pf-copy':copyText(pfText()||'(기록 없음)');break;
     case 'lnk-copy':closePop();lnkCopy(t.dataset.u);break;
     /* 시간 · 날짜 고르기 */
     case 'tpk':openTpk(t.dataset.id,t.dataset.type);break;
@@ -10821,7 +10833,7 @@ function openFirebasePage(){
   openPage(`
     ${pageHead('Firebase 연결 시험')}
     <div class="pg-b">
-      <div class="pg-sec" style="padding:12px 14px"><b>시작 기록 (켠 뒤 12초 · ms)</b><div style="font:12px/1.5 monospace;white-space:pre-wrap;margin-top:6px;max-height:60vh;overflow:auto">${esc((window.__perf&&window.__perf.ev||[]).slice().sort((a,b)=>a[0]-b[0]).map(e=>`${String(e[0]).padStart(5)}  ${e[1]}${e[2]!==''?'  '+e[2]:''}`).join('\n')||'(기록 없음)')}</div></div>
+      <div class="pg-sec" style="padding:12px 14px"><div style="display:flex;align-items:center;justify-content:space-between"><b>시작 기록 (켠 뒤 12초 · ms)</b><button class="btn ghost" style="padding:6px 14px;min-height:0" data-act="pf-copy">복사</button></div><div style="font:12px/1.5 monospace;white-space:pre-wrap;margin-top:6px;max-height:60vh;overflow:auto">${esc(pfText()||'(기록 없음)')}</div></div>
       <div class="pg-sec">
         ${row('설정 파일','firebase/config.js',f.cfg?'있음':'없음',f.cfg?'var(--today)':'var(--muted)')}
         ${row('로그인 (익명)','',f.uid?esc(f.uid.slice(0,8))+'…':'아직',ok?'var(--today)':'')}
