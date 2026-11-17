@@ -3742,7 +3742,7 @@ function render(){
     v.innerHTML=renderCal();calCenter();stzPanels(v);
     fitDn(v,true);memoShift(v);
     // 처음 켤 때 · 다른 탭에서 돌아올 때는 그리기 전에는 달력 칸 높이를 잴 수 없어서 어림값으로 메모 줄 수를 정함 → 그린 뒤 실제 높이로 다시 재서 다르면 한 번만 다시 그림
-    if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();calCenter();stzPanels(v);fitDn(v,true);memoShift(v);}finally{renderAgain=false;}}}
+    if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();calCenter();stzPanels(v);fitDn(v,true);memoShift(v);}finally{renderAgain=false;}}else plFit(v);calFitMark(v);}   // v0.175 memoLines 가 메모 글자 크기(--plf)를 실제 칸 높이로 다시 정함 → 그 크기로 메모 글자를 한 번 더 자름 · 보이는 판은 "맞춤 끝" (옆 달 채우기가 다시 재서 글자가 바뀌어 보이던 것)
     }
     glowCheck();calPrefetch();if(tab==='cal')calFillLater();
   }else if(tab==='colleague'){
@@ -8189,7 +8189,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout
 window.__wx={manPlanned,visibleMemos,famLbl,famTypeAt,famWx,shiftOf,wxMyWin,openStampReg,actAuto,stampPlanned,myActs,manPlanned,famActNow,wxMine,get S(){return S;},get page(){return {pageMode,pageBack};},openDay,closeSheet,closePop,closePage,openAddonPage,render,save,pushAlarmsToNative,pushRemindersToNative,famCleanSched,famPayload,
   newAlarm:o=>{draft=Object.assign(newAlarm(),o||{});alSnd=false;openAlarmPage();},wxOn,wxRaw,wxFam,wxMemWin,wxMemWork,wxMemKey,wxOpenFam,wxOpenDay,wxChipIcon,
   openPatternPage,openStatsPage,openSlipPage:ym=>{slipYM=ym;openSlipPage();},statsCalc,payRates,dayHours,famTimesPayload,memberStatus,otOpen,get stYM(){return stYM;},set stYM(v){stYM=v;}};
-Object.defineProperty(window.__wx,'stDraft',{get:()=>stDraft});Object.assign(window.__wx,{wxHistPop:(...a)=>wxHistPop(...a),admTest:(codes,log)=>{admOk=true;adm={q:'',sel:null,codes,log,busy:false};},openAdmPage:()=>openAdmPage(),myCode:u=>myCode(u),famRemainT:()=>famRemain(),setBx:(a,b)=>{famBx={me:a,all:b};},stampRegSave:()=>stampRegSave(),dsTgo:(k,a)=>dsTgo(k,a),dsTdy:k=>dsTdy(k),patResetOpen:q=>patResetOpen(q),famWxOpen,stampsOn,openFeed,coachCheck,pushWidgetNow:()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
+Object.defineProperty(window.__wx,'stDraft',{get:()=>stDraft});Object.assign(window.__wx,{fitDnT:(r,k)=>fitDn(r,k),stzPanelT:(e,m)=>stzPanel(e,m),wxHistPop:(...a)=>wxHistPop(...a),admTest:(codes,log)=>{admOk=true;adm={q:'',sel:null,codes,log,busy:false};},openAdmPage:()=>openAdmPage(),myCode:u=>myCode(u),famRemainT:()=>famRemain(),setBx:(a,b)=>{famBx={me:a,all:b};},stampRegSave:()=>stampRegSave(),dsTgo:(k,a)=>dsTgo(k,a),dsTdy:k=>dsTdy(k),patResetOpen:q=>patResetOpen(q),famWxOpen,stampsOn,openFeed,coachCheck,pushWidgetNow:()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
 
 /* ================= 부가 기능 (설정 › 부가 기능) =================
  * 기본은 모두 꺼짐. 꺼도 저장된 내용은 그대로이고, 켜면 그 자리에 바로 생겨요. */
@@ -9343,6 +9343,7 @@ function calShiftFast(n,keepView){
   if(tab!=='cal'||Math.abs(n)>CAL_R||S.stzMode==='3'||paint||(famView()&&famPeers().length))return false;
   return calReorder(cur.y*12+cur.m+n,keepView);
 }
+function calFitMark(v){v.querySelectorAll('.track .panel').forEach(p=>{if(p.firstElementChild)p.dataset.fit=1;});}
 function calFill(p){const v=+p.dataset.mk;if(v<MIN_M||v>MAX_M){p.innerHTML='';return;}const ll=lastLines;p.style.removeProperty('--stz');p.innerHTML=calPanel(Math.floor(v/12),v%12);lastLines=ll;}
 function calFillLater(ms){clearTimeout(calFarT);calFarT=setTimeout(()=>{try{   // 한 번에 판 하나씩 (가까운 것부터) → 손가락이 와도 바로 받음
   const tr=$('#track');if(!tr||tab!=='cal')return;if(calTouch||busy||performance.now()-calLastS<120){calFillLater(150);return;}   // 손가락 · 움직이는 중엔 미룸
