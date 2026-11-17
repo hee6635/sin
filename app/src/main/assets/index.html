@@ -9999,7 +9999,7 @@ document.addEventListener('click',e=>{
       reqDraft={want:'휴',msg:''};memoTab='all';memoMode=role()==='host'?'my':'fam';memoEdit=null;memoText='';openDay(k);break;}
     case 'req-go':{if(e.target.closest('button'))break;closeSheet();const d=parse(t.dataset.k);tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(t.dataset.k);break;}
     case 'more-addons':closeSheet();openAddonPage();break;
-    case 'more-widget':closeSheet();openWidgetPage();break;
+    case 'more-widget':closeSheet();if(wgStyleOk()){try{window.AndroidBridge.openWidgetStyle(widgetJson());}catch(e){openWidgetPage();}}else openWidgetPage();break;   // v0.192 바로 폰 위젯 설정 화면(배경화면 위)
     case 'wg-theme':S.widget.theme=t.dataset.v;save();openWidgetPage();break;
     case 'wg-bg':S.widget.bg=t.dataset.v==='vivid'?'vivid':'';save();openWidgetPage();break;
     case 'wg-style':if(wgStyleOk())try{window.AndroidBridge.openWidgetStyle(widgetJson());}catch(e){}break;
