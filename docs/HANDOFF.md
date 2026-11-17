@@ -576,3 +576,8 @@
 - window.__perf (PF): longtask · rAF 틈 > 40ms(화면 멈춤) · 손가락 닿음/뗌 · 오래 걸린 함수(pfWrap: render · fitDn · calFill · stzWindow · widgetSync · a11yPass · glowFrame · calShiftFast · plFit · memoShift, 8ms 이상).
 - 보는 곳: 설정 › 앱 정보 7번 → 개발자 메뉴(Firebase 연결 시험) 맨 위 "시작 기록". 저장 안 함.
 - 컴퓨터에서도 켠 뒤 1.5초 동안 옆 달 맞추기(fitDn)가 판마다 60~170ms → 폰에서 첫 넘기기 씹힘의 유력 원인.
+
+## v0.187 켠 직후 넘기기 씹힘 고침 (시작 기록으로 찾음)
+- 원인: 가족 동기화 onSnapshot 8곳이 켠 직후 차례로 들어오며 famRefreshUi → render(달력 통째로 다시 그리기 0.2초)를 0.3초마다 → 넘기는 중 판이 새로 그려짐.
+- famRefreshUi = 0.25초 모아서 한 번(famRefreshUiNow) · 달력 탭에서 손가락 · 넘김 움직임 · 0.3초 안 스크롤이면 끝날 때까지 미룸.
+- 시작 기록(v0.186)은 그대로 둠 (비교용).
