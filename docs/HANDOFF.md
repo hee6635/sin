@@ -553,3 +553,8 @@
 - 1번 · 여러 번 모두 .sdbar 두꺼운 알약(70×26) · 1번은 .one(채움 transition 없음) · 옆 .sdcnt (1번은 빈 칸 → 줄 가지런). 체크 동그라미(.sdck) · 바깥 ✓ 없앰.
 - sd-tap → sdAnim 으로 전 값에서 그리고 sdBarGo: 누르면 .press(줄었다 커짐) · 여러 번은 칸만큼 튕기며 참 → 다 차면 0.48초 뒤 .full(초록 · 약은 약 색 --fc) + 한 번 더 .press + 안에 ✓. 동작 줄이기면 바로.
 - 시험 s102 고침.
+
+## v0.181 스티커 버튼 부드럽게
+- sd-tap: 누른 줄의 .sdbar 만 바로 바꿈(sdBarSet · 숫자 · done) → 창 · 달력 다시 그리기(render · stampReopen · stkPop)는 0.7초 뒤(sdLaterT). 줄이 없으면 예전처럼 바로.
+- 채움은 width 대신 transform(sdTx: 채움 막대 = 바 폭 1.4배 · 왼쪽 -40% → 넘쳤다 돌아올 때 왼쪽이 안 빔) · will-change. sdAnim · sdBarGo 안 씀.
+- 시험 s102 (transform 값) 고침.
