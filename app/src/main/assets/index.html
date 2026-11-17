@@ -2052,6 +2052,7 @@ html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.07}
 .memsec .ibar input:placeholder-shown+.send,.vrbody .vcmemo-bar input:placeholder-shown+.send{background:var(--track)!important;color:var(--muted)!important}
 .send svg{width:20px;height:20px}
 @media (prefers-reduced-motion:reduce){#sheet{transition:none}}
+.dshell{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:70;transform-origin:0 0;will-change:transform;pointer-events:none}
 /* v0.198 화면 점검 정리 */
 .shbk{width:auto!important;min-width:36px;font-size:24px!important;color:var(--fg)!important;padding:0 6px!important;text-align:left}
 .dsbody .mansec{background:var(--bg);border-radius:22px;padding:2px 12px 12px!important;box-shadow:0 2px 12px rgba(15,23,42,.035);margin-top:12px}.dsbody .mansec>.sec-t{padding:12px 4px 8px;display:flex;justify-content:space-between;align-items:center}
@@ -3768,7 +3769,8 @@ function stzCheck(force){
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(stzDirty||innerWidth!==stzFitW))setTimeout(()=>stzCheck(false),60);});
 window.__fold=()=>stzCheck(false);   // 안드로이드: 접고 펼 때(화면 설정이 바뀔 때) 조금 뒤에 불러 줌   // 접고 펼 때(커버↔안쪽) 앱 달력 값(스티커·주야)도 그 화면 값으로 먼저 바꿈
-function render(){
+let renderRev=-1;
+function render(){renderRev=dataRev;
   coachSoon();persSync();expireOnceAlarms();actAuto();
   applyTdc();   // (자정이 지나면 그날 근무 색으로 · 보이는 달력 따라)
   const top=$('#top'),v=$('#view');
@@ -5253,9 +5255,10 @@ function renderAlarm(){
 function openSheet(html,full){const top=!!pageMode,was=$('#sheet').classList.contains('open');$('#sheet').classList.remove('closing');$('#sheet').innerHTML=html;$('#sheet').classList.add('open');$('#sheet').classList.toggle('full',!!full);$('#sheet').classList.toggle('top',top);$('#scrim').classList.add('open');$('#scrim').classList.toggle('top',top);try{MO.sheetOpen($('#sheet'),was);}catch(e){}}
 function closeSheet(){
   const mk=sheetMode==='day'||sheetMode==='vcday'?(sheetMode==='vcday'?rqD.k:sheetKey):null;
-  if(sheetKey){tidyMemos(sheetKey);save();}
-  let fx=false;try{fx=MO.sheetClose($('#sheet'),mk,sheetKey?()=>render():null);}catch(e){}   // v0.196 그 날짜 칸으로 쏙 (칸이 안 보이면 아래로) · v0.197 달력 다시 그리기는 쏙 들어간 뒤 (움직이는 동안 무거운 일 안 함)
-  if(sheetKey&&!fx)render();
+  if(sheetKey){const m0=JSON.stringify(S.memos[sheetKey]||null);tidyMemos(sheetKey);if(JSON.stringify(S.memos[sheetKey]||null)!==m0)save();}
+  const need=sheetKey&&dataRev!==renderRev;   // v0.200 바뀔 때마다 이미 달력을 다시 그려 둠 → 닫을 때는 바뀐 게 남아 있을 때만
+  let fx=false;try{fx=MO.sheetClose($('#sheet'),mk);}catch(e){}   // 껍데기가 그 날짜 칸으로 쏙 (칸이 안 보이면 아래로)
+  if(need)setTimeout(()=>render(),fx?320:0);
   $('#sheet').classList.remove('open');$('#scrim').classList.remove('open');
   sheetKey=null;sheetMode=null;replyDraft=null;typeDraft=null;memoEdit=null;ddDraft=null;markSel(null);
 }
@@ -5354,24 +5357,31 @@ const MO=(()=>{
   const tfOf=(c,b)=>`translate(${(c.left-b.left).toFixed(1)}px,${(c.top-b.top).toFixed(1)}px) scale(${Math.max(.02,c.width/b.width).toFixed(4)},${Math.max(.02,c.height/b.height).toFixed(4)})`;
   const hideKids=box=>[...box.children].forEach(x=>x.style.opacity='0');
   const showKids=(box,d0)=>{[...box.children].forEach((x,i)=>{x.style.opacity='';if(i<8)x.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:220,delay:d0+i*25,easing:'ease-out',fill:'backwards'});});};
-  let shClose=null;
-  function sheetOpen(sh,was){if(shClose){shClose();shClose=null;}if(was||RM())return;
-    const el=src();if(!el||!el.classList.contains('cell'))return;
-    const c=el.getBoundingClientRect(),bg=getComputedStyle(el).backgroundColor;
-    sh.style.transition='none';sh.style.opacity='0';hideKids(sh);
-    requestAnimationFrame(()=>{const b=sh.getBoundingClientRect(),bg2=getComputedStyle(sh).backgroundColor;sh.style.opacity='';sh.style.transformOrigin='0 0';sh.style.willChange='transform';
-      const a=sh.animate([{transform:tfOf(c,b),backgroundColor:bg&&bg!=='rgba(0, 0, 0, 0)'?bg:bg2,borderRadius:'40px',opacity:0},{opacity:1,offset:.35},{transform:'translateY(0)',backgroundColor:bg2,borderRadius:getComputedStyle(sh).borderRadius,opacity:1}],{duration:380,easing:EO});
-      showKids(sh,50);/* v0.199 빈 흰 상자가 커지지 않게: 처음엔 투명 → 칸 위에서 겹쳐 나타나고 내용도 바로 */const end=()=>{sh.style.transition='';sh.style.transformOrigin='';sh.style.willChange='';};a.onfinish=end;a.oncancel=end;});}
-  function sheetClose(sh,k,after){if(RM()||!sh.classList.contains('open'))return false;
-    let cell=null;if(k){cell=[...document.querySelectorAll(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`)].find(x=>{const r=x.getBoundingClientRect();return r.width>4&&r.left>=-2&&r.right<=innerWidth+2&&r.top>=0&&r.bottom<=innerHeight;})||null;}
+  // v0.200 날짜 창 = 껍데기 방식: 칸을 누르면 같은 모양의 빈 판(껍데기)이 먼저 커지고, 그 사이 진짜 창을 껍데기 아래에서 미리 만들어 칠해 둠 → 도착하면 껍데기만 걷어냄
+  // 닫을 땐 진짜 창은 바로 치우고 껍데기만 그 칸으로 · 달력은 바뀔 때마다 이미 다시 그려져 있어서 닫을 때 다시 그리지 않음
+  let shellEl=null,shellPass=false;
+  const shellMk=(bg)=>{const d=document.createElement('div');d.className='dshell';d.style.background=bg;document.body.appendChild(d);return d;};
+  const shellTf=r=>`translate(${r.left.toFixed(1)}px,${r.top.toFixed(1)}px) scale(${Math.max(.02,r.width/innerWidth).toFixed(4)},${Math.max(.02,r.height/innerHeight).toFixed(4)})`;
+  const shellBg=()=>getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#f2f4f6';
+  function shellDrop(){if(shellEl){shellEl.remove();shellEl=null;}const sh=$('#sheet');if(sh){sh.style.opacity='';sh.style.willChange='';sh.style.transition='';}}
+  document.addEventListener('click',e=>{
+    if(shellPass||RM())return;const c=e.target.closest&&e.target.closest('.cell[data-act="day"],.cell[data-act="vc-day"],.cell[data-act="man-day"]');if(!c||c.classList.contains('out')||e.target.closest('[data-act]')!==c)return;   // 칸 안의 스티커 · 메모 같은 다른 버튼은 그대로
+    const act=c.dataset.act;if((act==='day'&&paint)||(act==='vc-day'&&vcSel.on)||(act==='man-day'&&manPaint)||held)return;
+    const sh=$('#sheet');if(!sh||sh.classList.contains('open'))return;
+    e.stopImmediatePropagation();e.preventDefault();shellDrop();
+    const r=c.getBoundingClientRect(),cb=getComputedStyle(c).backgroundColor,bg=shellBg(),el=shellEl=shellMk(bg);
+    const a=el.animate([{transform:shellTf(r),backgroundColor:cb&&cb!=='rgba(0, 0, 0, 0)'?cb:bg,borderRadius:'40px'},{transform:'none',backgroundColor:bg,borderRadius:'0px'}],{duration:360,easing:EO,fill:'forwards'});
+    setTimeout(()=>{if(shellEl!==el)return;sh.style.transition='none';sh.style.willChange='opacity';sh.style.opacity='0.01';shellPass=true;try{c.click();}finally{shellPass=false;}if(!sh.classList.contains('open'))shellDrop();},16);   // 껍데기가 움직이는 동안 진짜 창을 만들어 아래에 깔아 둠 (0.01 = 안 보이지만 폰이 칠함)
+    a.onfinish=()=>{if(shellEl!==el)return;shellDrop();};
+  },true);
+  function sheetOpen(sh,was){}   // (작은 칸에서 진짜 창을 키우던 방식은 큰 화면을 그림으로 새로 만드느라 멈칫 → 위 껍데기 방식)
+  function sheetClose(sh,k){if(RM()||!sh.classList.contains('open')||!k)return false;
+    const cell=[...document.querySelectorAll(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`)].find(x=>{const r=x.getBoundingClientRect();return r.width>4&&r.left>=-2&&r.right<=innerWidth+2&&r.top>=0&&r.bottom<=innerHeight;});
     if(!cell)return false;
-    const b=sh.getBoundingClientRect(),c=cell.getBoundingClientRect(),bg=getComputedStyle(cell).backgroundColor;
-    sh.classList.add('closing');sh.style.transformOrigin='0 0';sh.style.willChange='transform';
-    const kids=[...sh.children].map(x=>x.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'}));
-    const a=sh.animate([{transform:'translateY(0)',borderRadius:getComputedStyle(sh).borderRadius,opacity:1},{opacity:1,offset:.45},{transform:tfOf(c,b),borderRadius:'40px',backgroundColor:bg&&bg!=='rgba(0, 0, 0, 0)'?bg:getComputedStyle(sh).backgroundColor,opacity:0}],{duration:300,easing:EC,fill:'forwards'});
-    let ok=false;const clean=()=>{sh.style.transition='none';sh.classList.remove('closing');a.cancel();kids.forEach(x=>x.cancel());sh.style.transformOrigin='';sh.style.willChange='';void sh.offsetHeight;sh.style.transition='';};
-    shClose=()=>{if(ok)return;ok=true;clean();if(after)after();};
-    a.onfinish=()=>{if(ok)return;ok=true;shClose=null;clean();if(after)after();const n=document.querySelector(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`);if(n)n.animate([{transform:'scale(.92)'},{transform:'scale(1.04)',offset:.6},{transform:'none'}],{duration:300,easing:EO});};
+    shellDrop();const r=cell.getBoundingClientRect(),bg=shellBg(),el=shellEl=shellMk(bg);
+    sh.style.transition='none';setTimeout(()=>{if(!sh.classList.contains('open'))sh.style.transition='';},40);   // 진짜 창은 바로 치움
+    const a=el.animate([{transform:'none',borderRadius:'0px',opacity:1},{opacity:1,offset:.55},{transform:shellTf(r),borderRadius:'40px',opacity:0}],{duration:300,easing:EC,fill:'forwards'});
+    a.onfinish=()=>{if(shellEl===el){el.remove();shellEl=null;}const n=document.querySelector(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`);if(n)n.animate([{transform:'scale(.94)'},{transform:'scale(1.03)',offset:.6},{transform:'none'}],{duration:280,easing:EO});};
     return true;}
   let popSrc=null;
   function popOpen(pop,was){const m=pop.querySelector('.menu');if(!m||RM())return;
