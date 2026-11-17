@@ -1,0 +1,49 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box;margin:0}
+body{font-family:P,sans-serif;background:#f2f4f6;width:390px;height:780px;overflow:hidden;position:relative;color:#191f28;padding:16px}
+.dh{text-align:center;margin:6px 0 16px}.dh b{font-size:22px}.dh small{display:block;font-size:13px;color:#8b95a1;margin-top:2px}
+.cap{font-size:13.5px;font-weight:700;color:#6b7684;margin:14px 6px 8px}
+.card{background:#fff;border-radius:20px;padding:6px 14px}
+.sr{display:flex;align-items:center;gap:12px;height:62px}.sr+.sr{border-top:1px solid #eef0f3}
+.sr .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:#f5f7fa}
+.sr b{flex:1;font-size:15.5px}.sr .bar{width:70px;height:26px;border-radius:13px;background:#e5e8eb}
+.more{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:18px;color:#8b95a1;background:#f2f4f6;border:0}
+.memo{display:flex;align-items:center;gap:10px;height:56px}.memo i{width:10px;height:10px;border-radius:50%;background:#7b5cf0}.memo b{font-weight:600;font-size:15.5px}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none}
+.menu{position:absolute;left:12px;right:12px;bottom:14px;background:#fff;border-radius:18px;display:none;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.mh{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid #eef0f3}.mh .ic{font-size:22px}.mh b{font-size:15px;display:block}.mh small{font-size:12.5px;color:#8b95a1}
+.mi{display:flex;align-items:center;gap:12px;padding:15px 16px;font-size:15.5px;border-bottom:1px solid #eef0f3}.mi:last-child{border-bottom:0}.mi span{width:30px;height:30px;border-radius:9px;background:#f2f4f6}.mi.d{color:#e5484d}
+.tap{position:absolute;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.16);pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(.5);transition:opacity .15s,transform .2s;z-index:9}.tap.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+</style></head><body>
+<div class="dh"><b>11월 14일 (토)</b><small>휴무</small></div>
+<div class="cap">스티커</div>
+<div class="card">
+ <div class="sr"><span class="ic">💊</span><b>비타민</b><span class="bar"></span><button class="more" id="m1">⋯</button></div>
+ <div class="sr"><span class="ic">🏃</span><b>조깅</b><span class="bar"></span><button class="more" id="m2">⋯</button></div>
+</div>
+<div class="cap">메모</div>
+<div class="card"><div class="memo" id="m3"><i></i><b>교육 확정</b></div></div>
+<div class="dim" id="dim"></div>
+<div class="menu" id="menu"></div>
+<div class="tap" id="tap"></div>
+<script>
+const menu=document.getElementById('menu'),dim=document.getElementById('dim');
+const M={m1:['💊','비타민','11월 14일',['스티커 떼기','이날부터 떼기','스티커 전부 떼기']],m2:['🏃','조깅','11월 14일',['스티커 떼기','스티커 전부 떼기']],m3:['📝','교육 확정','나만 보는 메모',['고치기','복사','지우기']]};
+const EO='cubic-bezier(.2,.9,.25,1)',EC='cubic-bezier(.45,0,.75,.35)';let src=null;
+function ins(el){const s=menu.getBoundingClientRect(),r=el.getBoundingClientRect();const rad=el.classList.contains('more')?r.height/2:14;return `inset(${r.top-s.top}px ${s.right-r.right}px ${s.bottom-r.bottom}px ${r.left-s.left}px round ${rad}px)`;}
+function open(el){src=el;const [ic,n,sub,items]=M[el.id];
+  menu.innerHTML=`<div class="mh"><span class="ic">${ic}</span><div><b>${n}</b><small>${sub}</small></div></div>`+items.map((x,i)=>`<div class="mi ${i===items.length-1&&/지우기|전부/.test(x)?'d':''}"><span></span>${x}</div>`).join('');
+  menu.style.display='block';
+  menu.animate([{clipPath:ins(el)},{clipPath:'inset(0px 0px 0px 0px round 18px)'}],{duration:420,easing:EO});
+  dim.animate([{opacity:0},{opacity:1}],{duration:320,fill:'forwards'});
+  [...menu.children].forEach((x,i)=>x.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:260,delay:120+i*45,easing:'ease-out',fill:'backwards'}));}
+function close(){const el=src;[...menu.children].forEach(x=>x.animate([{opacity:1},{opacity:0}],{duration:110,fill:'forwards'}));
+  const a=menu.animate([{clipPath:'inset(0px 0px 0px 0px round 18px)'},{clipPath:ins(el)}],{duration:320,easing:EC,fill:'forwards'});
+  dim.animate([{opacity:1},{opacity:0}],{duration:300,fill:'forwards'});
+  a.onfinish=()=>{menu.style.display='none';menu.getAnimations().forEach(x=>x.cancel());el.animate([{transform:'scale(.9)'},{transform:'scale(1.06)',offset:.6},{transform:'none'}],{duration:300,easing:EO});};}
+function tapEl(el){const r=el.getBoundingClientRect(),t=document.getElementById('tap');t.style.left=(r.left+r.width/2)+'px';t.style.top=(r.top+r.height/2)+'px';t.classList.add('on');setTimeout(()=>t.classList.remove('on'),220);}
+document.querySelectorAll('#m1,#m2,#m3').forEach(e=>e.onclick=()=>open(e));dim.style.pointerEvents='auto';dim.onclick=close;
+if(location.hash==='#auto'){const g=id=>document.getElementById(id),seq=[[500,()=>{tapEl(g('m1'));open(g('m1'));}],[2100,()=>{tapEl(dim);close();}],[3000,()=>{tapEl(g('m3'));open(g('m3'));}],[4600,()=>{tapEl(dim);close();}]];seq.forEach(([t,f])=>setTimeout(f,t));}
+</script></body></html>
