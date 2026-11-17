@@ -548,3 +548,8 @@
 - stampDayHtml: N>1 이면 .sdpg (.sdbar 막대 · .sdcnt "1/3" · .sdok ✓). 약은 막대 색 = 약 색(--dc). 다 차면 .full = 초록 + ✓ 튀어나옴.
 - sd-tap: sdAnim={id,k,from} 로 다시 그릴 때 막대를 전 값에서 시작 → 두 프레임 뒤 data-to 로 (cubic-bezier(.34,1.75,.5,1) 넘쳤다 돌아옴). 동작 줄이기면 transition 없음.
 - 시험 s102 (막대 · 1/2 · full) 고침.
+
+## v0.180 스티커 버튼 통일 (시안 design/stk-bar/v3)
+- 1번 · 여러 번 모두 .sdbar 두꺼운 알약(70×26) · 1번은 .one(채움 transition 없음) · 옆 .sdcnt (1번은 빈 칸 → 줄 가지런). 체크 동그라미(.sdck) · 바깥 ✓ 없앰.
+- sd-tap → sdAnim 으로 전 값에서 그리고 sdBarGo: 누르면 .press(줄었다 커짐) · 여러 번은 칸만큼 튕기며 참 → 다 차면 0.48초 뒤 .full(초록 · 약은 약 색 --fc) + 한 번 더 .press + 안에 ✓. 동작 줄이기면 바로.
+- 시험 s102 고침.
