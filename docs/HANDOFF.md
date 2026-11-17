@@ -543,3 +543,8 @@
 
 ## v0.178 스티커 ⋯ 메뉴 위쪽 = 실제 스티커 그림
 - sd-more 팝업 머리줄 .sdmh: 스티커 그림 칸(.sdi · 약은 pillSvg 색 · 모양) + 이름(굵게) + 날짜(작게).
+
+## v0.179 여러 번 스티커 = 막대 + 튕기는 모션 (시안 design/stk-bar)
+- stampDayHtml: N>1 이면 .sdpg (.sdbar 막대 · .sdcnt "1/3" · .sdok ✓). 약은 막대 색 = 약 색(--dc). 다 차면 .full = 초록 + ✓ 튀어나옴.
+- sd-tap: sdAnim={id,k,from} 로 다시 그릴 때 막대를 전 값에서 시작 → 두 프레임 뒤 data-to 로 (cubic-bezier(.34,1.75,.5,1) 넘쳤다 돌아옴). 동작 줄이기면 transition 없음.
+- 시험 s102 (막대 · 1/2 · full) 고침.
