@@ -4682,10 +4682,11 @@ function openStampDay(k,nav){
 }
 // v0.181 스티커 버튼 움직임 (부드럽게): 채움은 길이 대신 옆으로 밀기(transform · 폰이 가장 부드럽게 그림) · 누르면 줄었다 커짐 · 다 차면 한 번 더 톡 + 초록 · ✓
 let sdLaterT=0;
-const sdTx=p=>`translateX(${((p-100)/1.4).toFixed(2)}%)`;   // 채움 막대는 바 폭의 1.4배 (왼쪽 40% 여유 → 넘쳤다 돌아올 때 왼쪽이 비지 않게)
+const sdTx=p=>`translateX(${((p-100)/1.4).toFixed(2)}%)`;
+const sdPct=(v,N)=>v<=0?0:v>=N?100:Math.round(100*(.25+.75*v/N));   // v0.182 첫 칸을 길게(1/3 = 50% · 2/3 = 75%) → 덜 찬 칸도 동그라미가 아니라 타원   // 채움 막대는 바 폭의 1.4배 (왼쪽 40% 여유 → 넘쳤다 돌아올 때 왼쪽이 비지 않게)
 function sdPress(b){b.classList.remove('press');void b.offsetWidth;b.classList.add('press');}
 function sdBarSet(b,v,N){const i=b.querySelector('i'),f=v>=N,one=b.classList.contains('one');
-  sdPress(b);i.style.transform=sdTx(v/N*100);
+  sdPress(b);i.style.transform=sdTx(sdPct(v,N));
   if(!f){b.classList.remove('full');return;}
   if(one){b.classList.add('full');return;}
   setTimeout(()=>{b.classList.add('full');sdPress(b);},matchMedia('(prefers-reduced-motion: reduce)').matches?0:480);}
@@ -4696,7 +4697,7 @@ function stampDayHtml(k){   // v0.170 새 모양 (시안 design/stk/v1): 한 줄
     const V=stView(s,k),N=V.N,pill=s.kind==='pill',id=`data-id="${s.id}" data-k="${k}"`,done=n>=N;
     const sub=[s.act?`${t12(s.act.s,true)} ~ ${t12(s.act.e,true)}`:'',stampRule(s),stAts(s).length?stAts(s).map(fmtTm12).join(' · '):''].filter(Boolean).join(' · ');
     const an=sdAnim&&sdAnim.id===s.id&&sdAnim.k===k?sdAnim:null,to=Math.round(n/N*100),from=an?Math.round(an.from/N*100):to,full=n>=N,wasFull=an?an.from>=N:full;   // v0.180 버튼 통일 (시안 design/stk-bar/v3): 두꺼운 알약 · 누르면 줄었다 커짐 · 다 차면 한 번 더 톡 + 안에 ✓
-    const mark=`<span class="sdpg"><span class="sdbar${N===1?' one':''}${full?' full':''}"${pill&&V.col?` style="--dc:${esc(V.col)};--fc:${esc(V.col)}"`:''}><i style="transform:${sdTx(to)}"></i>${npi('check',16)}</span><span class="sdcnt">${N>1?`${n}/${N}`:''}</span></span>`;   // (1번짜리도 빈 숫자 칸 → 버튼 줄이 가지런)
+    const mark=`<span class="sdpg"><span class="sdbar${N===1?' one':''}${full?' full':''}"${pill&&V.col?` style="--dc:${esc(V.col)};--fc:${esc(V.col)}"`:''}><i style="transform:${sdTx(sdPct(n,N))}"></i>${npi('check',16)}</span><span class="sdcnt">${N>1?`${n}/${N}`:''}</span></span>`;   // (1번짜리도 빈 숫자 칸 → 버튼 줄이 가지런)
     return `<div class="sdr2 ${done?'done':''}" data-act="sd-tap" ${id}${s.retired?'':` data-hold="stk"`}><span class="sdi">${pill?pillSvg(N,n,26,V.col,V.shape):`<span class="${n?'':'plan'}">${ico(s.emoji)}</span>`}</span><div class="sdn"><b>${esc(s.name)}</b>${sub?`<span>${esc(sub)}</span>`:''}</div>${mark}<button class="sdmore" data-act="sd-more" ${id} aria-label="더보기">${npi('more',18)}</button></div>`;
   };
   const full=list.length>=stampMax();

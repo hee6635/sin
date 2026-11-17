@@ -558,3 +558,6 @@
 - sd-tap: 누른 줄의 .sdbar 만 바로 바꿈(sdBarSet · 숫자 · done) → 창 · 달력 다시 그리기(render · stampReopen · stkPop)는 0.7초 뒤(sdLaterT). 줄이 없으면 예전처럼 바로.
 - 채움은 width 대신 transform(sdTx: 채움 막대 = 바 폭 1.4배 · 왼쪽 -40% → 넘쳤다 돌아올 때 왼쪽이 안 빔) · will-change. sdAnim · sdBarGo 안 씀.
 - 시험 s102 (transform 값) 고침.
+
+## v0.182 덜 찬 칸도 타원
+- sdPct(v,N): 0 → 0 · 다 참 → 100 · 그 사이 25% + 75%×v/N (1/3 = 50% · 2/3 = 75% · 1/2 = 63%). 시험 s102 값 고침.
