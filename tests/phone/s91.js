@@ -51,7 +51,7 @@ const KST=(y,mo,d,h)=>Date.UTC(y,mo-1,d,h-9);const p2=n=>String(n).padStart(2,'0
     T('‹ 버튼 3번 → 다시 2026.10',await p.evaluate(()=>document.querySelector('.vcnav b').textContent)==='2026.10');
     await p.evaluate(()=>{const c=document.querySelector('#vcsl .cell[data-k="2026-10-19"]');c&&c.click();});await p.waitForTimeout(500);
     await p.evaluate(()=>{window.__m=document.querySelector('#sheet .dft');});
-    await sw(1,'#sheet.open');await p.waitForTimeout(800);
+    await sw(1,'#sheet.open .mansec');await p.waitForTimeout(800);
     const s=await p.evaluate(()=>({t:(document.querySelector('#sheet.open .dft b')||{}).textContent,re:!document.querySelector('#sheet').contains(window.__m),ids:!!document.querySelector('#sheet #dstrip'),swn:document.querySelectorAll('#sheet .swn').length,note:/체육복/.test(document.querySelector('#sheet.open').innerText)||[...document.querySelectorAll('#sheet textarea,#sheet input')].some(x=>/체육복/.test(x.value))}));
     T('유찬 날짜 창 밀기 → 10/20 · 그려 둔 판 그대로 · 날짜 띠 id · 그날 메모',/10월 20일/.test(s.t||'')&&s.re&&s.ids&&s.swn===0&&s.note,JSON.stringify(s));
     T('오류 없음 (유찬 달력)',p.errs.length===0,p.errs.join('|'));await p.close();

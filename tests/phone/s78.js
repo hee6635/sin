@@ -10,7 +10,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   const routes=[['https://asia-northeast3-demo-wx.cloudfunctions.net/wx**',r=>r.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({list:[raw,raw2]})})]];
   const tap=(p,sel)=>p.evaluate(sel=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const o=document.querySelector(sel);o.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));o.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));o.click();},sel);
   const st={...base,family:fam,addons:{...base.addons,wx:true},wx:{home:'41111',work:'',fw:{},nm:{}}};
-  const p=await boot(b,st,{tz:'Asia/Seoul',T:KST(2026,10,14,10),cfg,routes,touch:true});await p.waitForTimeout(2500);
+  const p=await boot(b,st,{tz:'Asia/Seoul',T:KST(2026,10,14,10),cfg,routes,touch:true,fold:true});await p.waitForTimeout(2500);
   // 예전 데이터 → 기본 종류
   const r0=await p.evaluate(()=>{const m=__wx.S.family[0];return {lbl:__wx.famLbl(m),wed:__wx.famTypeAt(m,new Date(2026,9,14)).name,thu:__wx.famTypeAt(m,new Date(2026,9,15)).rest,hol:__wx.famTypeAt(m,new Date(2026,9,9)).rest};});
   T('예전 데이터: 가는 곳 이름 · 시간 → 기본 종류 (유치원 · 쉬는 날) · 이 날만 바꾼 것 · 공휴일(한글날) 쉼',r0.lbl==='유치원'&&r0.wed==='유치원'&&r0.thu===true&&r0.hol===true,JSON.stringify(r0));
@@ -27,10 +27,10 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
   const d=await p.evaluate(()=>({chips:[...document.querySelectorAll('#sheet .tchips .tchip')].map(c=>c.innerText.replace(/\s+/g,'')),paint:!!document.querySelector('#sheet [data-act="man-paint"]'),wx:(document.querySelector('#sheet .wxcard')||{}).innerText||''}));
   T('날짜 창: 종류 칩(유치원 · 쉬는 날) · 🖌 여러 날 칠하기',d.chips.length===2&&/유치원/.test(d.chips[0])&&d.paint,JSON.stringify(d));
   T('날짜 창 날씨: 등원 → 하원 · "하원길에 비 와요"',/등원/.test(d.wx)&&/하원/.test(d.wx)&&/하원길에 비 와요/.test(d.wx),d.wx);
-  await tap(p,'#sheet [data-act="man-fold"]');await p.waitForTimeout(300);
-  T('▴ 접기 → 칩 숨김',await p.evaluate(()=>!document.querySelector('#sheet .tchips')));
+  await tap(p,'#sheet [data-act="man-fold"]');await p.waitForTimeout(600);   // v0.198 내 날짜 창처럼 알약 · 카드가 접힘
+  T('▴ 접기 → 칩 숨김',await p.evaluate(()=>!document.querySelector('#sheet .shsec.open')));
   await tap(p,'#sheet [data-act="man-go"][aria-label="다음날"]');await p.waitForTimeout(400);
-  T('다른 날로 가도 접힌 채',await p.evaluate(()=>!document.querySelector('#sheet .tchips')&&/10월 15일/.test(document.querySelector('#sheet .dft').innerText)));
+  T('다른 날로 가도 접힌 채',await p.evaluate(()=>!document.querySelector('#sheet .shsec.open')&&/10월 15일/.test(document.querySelector('#sheet .dft').innerText)));
   await tap(p,'#sheet [data-act="man-fold"]');await p.waitForTimeout(300);
   // 종류 더하기 (길게 누르기 → 고치기 · ＋ 는 가족 ✏️)
   await p.evaluate(()=>{const e=document.querySelector('#sheet .tchips [data-hk="on"]');e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:5,clientY:5}));});await p.waitForTimeout(700);

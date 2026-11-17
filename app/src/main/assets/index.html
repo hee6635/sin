@@ -2052,6 +2052,12 @@ html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.07}
 .memsec .ibar input:placeholder-shown+.send,.vrbody .vcmemo-bar input:placeholder-shown+.send{background:var(--track)!important;color:var(--muted)!important}
 .send svg{width:20px;height:20px}
 @media (prefers-reduced-motion:reduce){#sheet{transition:none}}
+/* v0.198 화면 점검 정리 */
+.shbk{width:auto!important;min-width:36px;font-size:24px!important;color:var(--fg)!important;padding:0 6px!important;text-align:left}
+.dsbody .mansec{background:var(--bg);border-radius:22px;padding:2px 12px 12px!important;box-shadow:0 2px 12px rgba(15,23,42,.035);margin-top:12px}.dsbody .mansec>.sec-t{padding:12px 4px 8px;display:flex;justify-content:space-between;align-items:center}
+#pop .mi .mval{margin-left:auto;color:var(--muted);font-weight:600;font-size:14px}
+.ibar .editing{align-items:center}.ibar .editing a{text-decoration:none!important;color:var(--fg)!important;background:var(--surface);border-radius:14px;padding:5px 12px!important;font-weight:700;font-size:12.5px}
+.ibar .editing .ea{gap:6px!important}
 </style>
 </head>
 <body>
@@ -4548,6 +4554,7 @@ function tpkOk(){
   const t=tpk;tpk=null;closePop();if(!t)return;
   const inp=$('#'+t.id);if(!inp)return;
   const v=t.type==='date'?t.v:`${pad(t.h)}:${pad(t.mi)}`;
+  if(t.id==='mmDateH'){mmMoveTo(v);return;}
   inp.value=v;
   const b=document.querySelector(`.tbtn[data-id="${t.id}"] span`);if(b)b.textContent=t.type==='date'?dfmt(v):tfmt(v);
   inp.dispatchEvent(new Event('change',{bubbles:true}));
@@ -4938,7 +4945,7 @@ function renderStampReg(){
     ${srMoreHtml(d,om,sw)}
     <div class="pg-sec" style="margin-top:12px">${sw('srAlarm',d.alarm,'시각 알림','alarm-clock')}
       ${d.alarm?d.ats.map((t,i)=>`<div class="prow"><div class="pl2">${d.times>1?`${i+1}번째`:'시각'}</div>${tpick('srAt'+i,t)}</div>`).join('')+`<div class="hint" style="margin:0;padding:8px 16px">${stAlarmHint(d)}</div>`:''}</div>
-    ${om?`<div class="pg-sec"><div class="prow tap" data-act="mstk-swap" data-id="${esc(d.id)}"><div class="pl2">다른 그림으로</div><div class="pv">›</div></div><div class="prow tap" data-act="mstk-end" data-id="${esc(d.id)}"><div class="pl2">그만하기</div></div><div class="prow danger-row" data-act="mstk-del" data-id="${esc(d.id)}">지우기</div></div>`:''}
+    ${om?`<div class="pg-sec">${npRow('image','다른 그림으로','<div class="pv">›</div>',{tap:1,act:'mstk-swap',attrs:` data-id="${esc(d.id)}"`})}${npRow('calendar-off','그만하기','',{tap:1,act:'mstk-end',attrs:` data-id="${esc(d.id)}"`})}${npRow('trash-2','지우기','',{tap:1,cls:'danger-row',act:'mstk-del',attrs:` data-id="${esc(d.id)}"`})}</div>`:''}
     <div class="npbtn"><button class="btn" data-act="sr-save">${d.edit?'저장':'붙이기'}</button>
 </div>
     </div>`,'stampadd');
@@ -5277,7 +5284,7 @@ function openPage(html,mode){
 }
 function closePage(){wpShow(false);manPaint=null;Object.keys(glowPrev).forEach(k=>{if(/^(fc|mc):/.test(k))delete glowPrev[k];});if(pageMode==='tune'){if(tuneDirty()&&!confirm('저장하지 않은 값이 있어요.\n저장하지 않고 나갈까요?'))return;tuneDraft=null;applyTune();$('#page').innerHTML='';}if(pageMode==='alarm')try{if(hasBridge('stopPreview'))window.AndroidBridge.stopPreview();}catch(e){}$('#page').classList.remove('open');pageMode=null;applyTdc();draft=null;render();}
 // v0.145 새 모양 선 아이콘 (lucide · ISC)
-const NPI={"repeat": "<path d=\"m17 2 4 4-4 4\" /> <path d=\"M3 11v-1a4 4 0 0 1 4-4h14\" /> <path d=\"m7 22-4-4 4-4\" /> <path d=\"M21 13v1a4 4 0 0 1-4 4H3\" />", "calendar-off": "<path d=\"M4.2 4.2A2 2 0 0 0 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 1.82-1.18\" /> <path d=\"M21 15.5V6a2 2 0 0 0-2-2H9.5\" /> <path d=\"M16 2v4\" /> <path d=\"M3 10h7\" /> <path d=\"M21 10h-5.5\" /> <path d=\"m2 2 20 20\" />", "volume-2": "<path d=\"M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z\" /> <path d=\"M16 9a5 5 0 0 1 0 6\" /> <path d=\"M19.364 18.364a9 9 0 0 0 0-12.728\" />", "alarm-clock": "<circle cx=\"12\" cy=\"13\" r=\"8\" /> <path d=\"M12 9v4l2 2\" /> <path d=\"M5 3 2 6\" /> <path d=\"m22 6-3-3\" /> <path d=\"M6.38 18.7 4 21\" /> <path d=\"M17.64 18.67 20 21\" />", "tag": "<path d=\"M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z\" /> <circle cx=\"7.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\" />", "bell-ring": "<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\" /> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\" /> <path d=\"M4 2C2.8 3.7 2 5.7 2 8\" /> <path d=\"M22 8c0-2.3-.8-4.3-2-6\" />", "cloud-sun": "<path d=\"M12 2v2\" /> <path d=\"m4.93 4.93 1.41 1.41\" /> <path d=\"M20 12h2\" /> <path d=\"m19.07 4.93-1.41 1.41\" /> <path d=\"M15.947 12.65a4 4 0 0 0-5.925-4.128\" /> <path d=\"M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z\" />", "file-text": "<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\" /> <path d=\"M14 2v4a2 2 0 0 0 2 2h4\" /> <path d=\"M10 9H8\" /> <path d=\"M16 13H8\" /> <path d=\"M16 17H8\" />", "trash-2": "<path d=\"M3 6h18\" /> <path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\" /> <path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\" /> <line x1=\"10\" x2=\"10\" y1=\"11\" y2=\"17\" /> <line x1=\"14\" x2=\"14\" y1=\"11\" y2=\"17\" />", "calendar": "<path d=\"M8 2v4\" /> <path d=\"M16 2v4\" /> <rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /> <path d=\"M3 10h18\" />", "paintbrush": "<path d=\"m14.622 17.897-10.68-2.913\" /> <path d=\"M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z\" /> <path d=\"M9 8c-1.804 2.71-3.97 3.46-6.583 3.948a.507.507 0 0 0-.302.819l7.32 8.883a1 1 0 0 0 1.185.204C12.735 20.405 16 16.792 16 15\" />", "map-pin": "<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /> <circle cx=\"12\" cy=\"10\" r=\"3\" />", "rotate-ccw": "<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /> <path d=\"M3 3v5h5\" />", "user": "<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /> <circle cx=\"12\" cy=\"7\" r=\"4\" />", "users": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /> <circle cx=\"9\" cy=\"7\" r=\"4\" /> <path d=\"M22 21v-2a4 4 0 0 0-3-3.87\" /> <path d=\"M16 3.13a4 4 0 0 1 0 7.75\" />", "eraser": "<path d=\"m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21\" /> <path d=\"M22 21H7\" /> <path d=\"m5 11 9 9\" />", "calendar-days": "<path d=\"M8 2v4\" /> <path d=\"M16 2v4\" /> <rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /> <path d=\"M3 10h18\" /> <path d=\"M8 14h.01\" /> <path d=\"M12 14h.01\" /> <path d=\"M16 14h.01\" /> <path d=\"M8 18h.01\" /> <path d=\"M12 18h.01\" /> <path d=\"M16 18h.01\" />", "plus": "<path d=\"M5 12h14\" /> <path d=\"M12 5v14\" />", "minus": "<path d=\"M5 12h14\" />", "chevron-right": "<path d=\"m9 18 6-6-6-6\" />","chevron-left": "<path d=\"m15 18-6-6 6-6\" />", "chevron-down": "<path d=\"m6 9 6 6 6-6\" />", "history": "<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /> <path d=\"M3 3v5h5\" /> <path d=\"M12 7v5l4 2\" />", "music": "<path d=\"M9 18V5l12-2v13\" /> <circle cx=\"6\" cy=\"18\" r=\"3\" /> <circle cx=\"18\" cy=\"16\" r=\"3\" />", "bell": "<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\" /> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\" />", "image": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\" /> <circle cx=\"9\" cy=\"9\" r=\"2\" /> <path d=\"m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\" />"};
+const NPI={"repeat": "<path d=\"m17 2 4 4-4 4\" /> <path d=\"M3 11v-1a4 4 0 0 1 4-4h14\" /> <path d=\"m7 22-4-4 4-4\" /> <path d=\"M21 13v1a4 4 0 0 1-4 4H3\" />", "calendar-off": "<path d=\"M4.2 4.2A2 2 0 0 0 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 1.82-1.18\" /> <path d=\"M21 15.5V6a2 2 0 0 0-2-2H9.5\" /> <path d=\"M16 2v4\" /> <path d=\"M3 10h7\" /> <path d=\"M21 10h-5.5\" /> <path d=\"m2 2 20 20\" />", "volume-2": "<path d=\"M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z\" /> <path d=\"M16 9a5 5 0 0 1 0 6\" /> <path d=\"M19.364 18.364a9 9 0 0 0 0-12.728\" />", "alarm-clock": "<circle cx=\"12\" cy=\"13\" r=\"8\" /> <path d=\"M12 9v4l2 2\" /> <path d=\"M5 3 2 6\" /> <path d=\"m22 6-3-3\" /> <path d=\"M6.38 18.7 4 21\" /> <path d=\"M17.64 18.67 20 21\" />", "tag": "<path d=\"M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z\" /> <circle cx=\"7.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\" />", "bell-ring": "<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\" /> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\" /> <path d=\"M4 2C2.8 3.7 2 5.7 2 8\" /> <path d=\"M22 8c0-2.3-.8-4.3-2-6\" />", "cloud-sun": "<path d=\"M12 2v2\" /> <path d=\"m4.93 4.93 1.41 1.41\" /> <path d=\"M20 12h2\" /> <path d=\"m19.07 4.93-1.41 1.41\" /> <path d=\"M15.947 12.65a4 4 0 0 0-5.925-4.128\" /> <path d=\"M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z\" />", "file-text": "<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\" /> <path d=\"M14 2v4a2 2 0 0 0 2 2h4\" /> <path d=\"M10 9H8\" /> <path d=\"M16 13H8\" /> <path d=\"M16 17H8\" />", "trash-2": "<path d=\"M3 6h18\" /> <path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\" /> <path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\" /> <line x1=\"10\" x2=\"10\" y1=\"11\" y2=\"17\" /> <line x1=\"14\" x2=\"14\" y1=\"11\" y2=\"17\" />", "calendar": "<path d=\"M8 2v4\" /> <path d=\"M16 2v4\" /> <rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /> <path d=\"M3 10h18\" />", "paintbrush": "<path d=\"m14.622 17.897-10.68-2.913\" /> <path d=\"M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z\" /> <path d=\"M9 8c-1.804 2.71-3.97 3.46-6.583 3.948a.507.507 0 0 0-.302.819l7.32 8.883a1 1 0 0 0 1.185.204C12.735 20.405 16 16.792 16 15\" />", "map-pin": "<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /> <circle cx=\"12\" cy=\"10\" r=\"3\" />", "rotate-ccw": "<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /> <path d=\"M3 3v5h5\" />", "user": "<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /> <circle cx=\"12\" cy=\"7\" r=\"4\" />", "users": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /> <circle cx=\"9\" cy=\"7\" r=\"4\" /> <path d=\"M22 21v-2a4 4 0 0 0-3-3.87\" /> <path d=\"M16 3.13a4 4 0 0 1 0 7.75\" />", "eraser": "<path d=\"m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21\" /> <path d=\"M22 21H7\" /> <path d=\"m5 11 9 9\" />", "calendar-days": "<path d=\"M8 2v4\" /> <path d=\"M16 2v4\" /> <rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /> <path d=\"M3 10h18\" /> <path d=\"M8 14h.01\" /> <path d=\"M12 14h.01\" /> <path d=\"M16 14h.01\" /> <path d=\"M8 18h.01\" /> <path d=\"M12 18h.01\" /> <path d=\"M16 18h.01\" />", "plus": "<path d=\"M5 12h14\" /> <path d=\"M12 5v14\" />", "minus": "<path d=\"M5 12h14\" />", "chevron-right": "<path d=\"m9 18 6-6-6-6\" />","chevron-left": "<path d=\"m15 18-6-6 6-6\" />", "chevron-down": "<path d=\"m6 9 6 6 6-6\" />", "history": "<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /> <path d=\"M3 3v5h5\" /> <path d=\"M12 7v5l4 2\" />", "music": "<path d=\"M9 18V5l12-2v13\" /> <circle cx=\"6\" cy=\"18\" r=\"3\" /> <circle cx=\"18\" cy=\"16\" r=\"3\" />", "bell": "<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\" /> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\" />", "image": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\" /> <circle cx=\"9\" cy=\"9\" r=\"2\" /> <path d=\"m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\" />", "settings": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\" /> <circle cx=\"12\" cy=\"12\" r=\"3\" />", "lock": "<rect width=\"18\" height=\"11\" x=\"3\" y=\"11\" rx=\"2\" ry=\"2\" /> <path d=\"M7 11V7a5 5 0 0 1 10 0v4\" />", "heart": "<path d=\"M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z\" />"};
 Object.assign(NPI,{"sticky-note": "<path d=\"M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z\" /> <path d=\"M15 3v4a2 2 0 0 0 2 2h4\" />", "smile": "<circle cx=\"12\" cy=\"12\" r=\"10\" /> <path d=\"M8 14s1.5 2 4 2 4-2 4-2\" /> <line x1=\"9\" x2=\"9.01\" y1=\"9\" y2=\"9\" /> <line x1=\"15\" x2=\"15.01\" y1=\"9\" y2=\"9\" />", "users": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /> <circle cx=\"9\" cy=\"7\" r=\"4\" /> <path d=\"M22 21v-2a4 4 0 0 0-3-3.87\" /> <path d=\"M16 3.13a4 4 0 0 1 0 7.75\" />", "chart-column": "<path d=\"M3 3v16a2 2 0 0 0 2 2h16\" /> <path d=\"M18 17V9\" /> <path d=\"M13 17V5\" /> <path d=\"M8 17v-3\" />", "smartphone": "<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\" ry=\"2\" /> <path d=\"M12 18h.01\" />", "info": "<circle cx=\"12\" cy=\"12\" r=\"10\" /> <path d=\"M12 16v-4\" /> <path d=\"M12 8h.01\" />", "sparkles": "<path d=\"M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z\" /> <path d=\"M20 3v4\" /> <path d=\"M22 5h-4\" /> <path d=\"M4 17v2\" /> <path d=\"M5 18H3\" />"});
 const npi=(n,sz=18)=>NPI[n]?`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NPI[n]}</svg>`:"";
 const npRow=(icon,name,right,o={})=>`<div class="prow${o.tap?" tap":""}${o.cls?" "+o.cls:""}"${o.act?` data-act="${o.act}"`:""}${o.attrs||""}><span class="npi">${npi(icon)}</span><div class="pl2">${name}${o.d?`<small class="keep">${o.d}</small>`:""}</div>${right||""}</div>`;
@@ -5434,7 +5441,12 @@ const MO=(()=>{
   function flip(box,fn){if(RM()||!box){fn();return;}const key=e=>e.className+'|'+((e.querySelector('[data-act]')||{}).dataset||{}).act;
     const old=new Map();box.querySelectorAll('.pg-sec').forEach(e=>old.set(key(e),e.getBoundingClientRect().top));fn();
     const nb=$('#page .pg-b');if(!nb)return;nb.querySelectorAll('.pg-sec').forEach(e=>{const k=key(e),t=e.getBoundingClientRect().top;if(old.has(k)){const d=old.get(k)-t;if(Math.abs(d)>1)e.animate([{transform:`translateY(${d}px)`},{transform:'none'}],{duration:360,easing:EO});}else e.animate([{opacity:0,transform:'scale(.96)'},{opacity:1,transform:'none'}],{duration:300,delay:80,easing:'ease-out',fill:'backwards'});});}
-  return {sheetOpen,sheetClose,popOpen,popClose,navSet,badges,flip};
+  // ---- 탭 바꿀 때: 누른 쪽에서 새 화면이 살짝 밀려 들어오고 카드들이 차례로 (시안 design/tab-motion) ----
+  function tabIn(dir){if(!dir||RM())return;const v=$('#view'),tp=$('#top');
+    [v,tp].forEach(e=>e&&e.animate([{transform:`translateX(${dir*36}px)`,opacity:0},{transform:'none',opacity:1}],{duration:320,easing:EO}));
+    const kids=v?[...(v.children.length===1&&v.firstElementChild.children.length>1?v.firstElementChild.children:v.children)].slice(0,6):[];
+    kids.forEach((x,i)=>x.animate([{transform:'translateY(10px)',opacity:0},{transform:'none',opacity:1}],{duration:280,delay:60+i*40,easing:'ease-out',fill:'backwards'}));}
+  return {sheetOpen,sheetClose,popOpen,popClose,navSet,badges,flip,tabIn};
 })();
 // v0.196 고르기 알약 · 스위치 모션 (시안 design/seg-toggle/v1)
 (function(){
@@ -5467,7 +5479,7 @@ const MO=(()=>{
         i.animate(k,{duration:480,easing:'cubic-bezier(.3,.7,.4,1)',pseudoElement:'::after'});}catch(err){}},0);},true);
   if(document.body)init();else document.addEventListener('DOMContentLoaded',()=>init());
 })();
-const POP_ICO={'🧽':'eraser','📆':'calendar-x','✏️':'pencil','✏':'pencil','🗑':'trash-2','🗑️':'trash-2','📋':'copy','📅':'calendar','🗓':'calendar','🚫':'ban','🔔':'bell','🔕':'bell-off','🔁':'repeat','⏰':'alarm-clock','📍':'map-pin','🏠':'home','🏭':'building','📤':'share','🎨':'paintbrush','📷':'camera','🔗':'link','↩️':'rotate-ccw','⚙️':'settings','⚙':'settings','🔍':'search','➕':'plus','＋':'plus'};
+const POP_ICO={'🔒':'lock','♥':'heart','🧽':'eraser','📆':'calendar-x','✏️':'pencil','✏':'pencil','🗑':'trash-2','🗑️':'trash-2','📋':'copy','📅':'calendar','🗓':'calendar','🚫':'ban','🔔':'bell','🔕':'bell-off','🔁':'repeat','⏰':'alarm-clock','📍':'map-pin','🏠':'home','🏭':'building','📤':'share','🎨':'paintbrush','📷':'camera','🔗':'link','↩️':'rotate-ccw','⚙️':'settings','⚙':'settings','🔍':'search','➕':'plus','＋':'plus'};
 function popIcons(root){try{root.querySelectorAll('.menu > .mi, .menu > button.mi').forEach(b=>{const n=b.firstChild;if(!n||n.nodeType!==3)return;const t=n.nodeValue.replace(/^\s+/,'');const k=Object.keys(POP_ICO).find(e=>t.startsWith(e));if(!k||!NPI[POP_ICO[k]])return;n.nodeValue=t.slice(k.length).replace(/^\s+/,'');const sp=document.createElement('span');sp.className='npi';sp.innerHTML=npi(POP_ICO[k],18);b.insertBefore(sp,n);if(b.classList.contains('d'))sp.classList.add('red');});}catch(e){}}
 function closePop(){document.querySelectorAll('.cell.selTop').forEach(c=>c.classList.remove('selTop'));try{MO.popClose($('#pop'));}catch(e){}$('#pop').className='';$('#pop').innerHTML='';tpk=null;icn=null;crp=null;}
 const sheetHead=(title,left)=>`<div class="sh-head">${left||''}<b style="flex:1;font-size:17px;">${title}</b><button class="ib" data-act="close" style="width:auto;font-size:16px;">✕</button></div>`;
@@ -6079,14 +6091,16 @@ function manDayHtml(k){
       <div class="dft"${dsTgo(k,'man-go')}><b class="${hol?'hl':''}">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})</b><small>${esc(m.name)} · ${esc(manLabel(m,d))}${hol?` · <span class="hl">${esc(hol)}</span>`:''}${dsTdy(k)}</small>${dsHint(k)}</div>
       <button class="ib" data-act="man-go" data-k="${fmt(addDays(d,1))}" aria-label="다음날">›</button></div>
     <div class="dstrip" id="dstrip">${strip}</div>
-    <div class="sec-t" style="margin-top:10px">${m.kind==='shift'?'근무':'일정'}<button class="sh-fold" data-act="man-fold" aria-label="접기">${manFoldOpen()?'▴ 접기':'▾ 펼치기'}</button>${famUsesTypes(m)?'<button class="paint-lk" data-act="man-pat" style="margin-left:14px">⚙️ 일정 패턴</button>':''}<button class="paint-lk" data-act="man-paint">${npi('paintbrush',14)}여러 날 칠하기</button></div>
-    ${manFoldOpen()?`<div class="tchips">${manChoices(m,d).map(c=>`<button class="tchip ${cur===c[0]?'on':''}" data-act="man-ov" data-k="${k}" data-v="${esc(c[0])}"${famUsesTypes(m)?` data-hold="mtype" data-hk="${esc(c[0])}" data-hd="${k}"`:''}>${manChipIco(m,c[0],d)}<small>${esc(c[2])}</small></button>`).join('')}</div>`:''}
+    <div class="dsbody">
+    <div class="sec shsec ${manFoldOpen()?'open':''}"><div class="sh-hd"><span>${m.kind==='shift'?'근무':'일정'}</span><button class="sh-pill" data-act="man-fold" aria-label="접기 · 펼치기">${manChipIco(m,cur,d)}${esc((manChoices(m,d).find(c=>c[0]===cur)||[,,manLabel(m,d)])[2])}<i class="shc">▾</i></button></div>
+      <div class="sh-body"><div class="sh-card"><div class="tchips">${manChoices(m,d).map(c=>`<button class="tchip ${cur===c[0]?'on':''}" data-act="man-ov" data-k="${k}" data-v="${esc(c[0])}"${famUsesTypes(m)?` data-hold="mtype" data-hk="${esc(c[0])}" data-hd="${k}"`:''}>${manChipIco(m,c[0],d)}<small>${esc(c[2])}</small></button>`).join('')}</div>
+        <button class="paint-btn" data-act="man-paint">${npi('paintbrush',18)}<b>여러 날 칠하기</b><i>›</i></button>${famUsesTypes(m)?`<button class="paint-btn" data-act="man-pat" style="margin-top:8px">${npi('settings',18)}<b>일정 패턴</b><i>›</i></button>`:''}</div></div></div>
     ${famDayWxHtml(m,k)}
-    <div class="lbl" style="margin-top:14px">스티커</div>
+    <div class="sec mansec"><div class="sec-t">스티커<button class="mdet2" data-act="mstk-page">설정</button></div>
     <div class="sgrid sg5 mstk">${defs.filter(x=>on.includes(x.id)||manPlanned(m,x,k)).map(x=>{const n=on.filter(y=>y===x.id).length,N=Math.max(1,x.times||1),pl=manPlanned(m,x,k),cls=n>=N?'on':n>0?'on half':'todo';return `<button class="${cls}" data-act="man-stk" data-k="${k}" data-id="${esc(x.id)}" data-hold="mstk" data-hid="${esc(x.id)}"><span class="si">${ico(x.emoji)}${N>1&&(n||pl)?`<em class="cnt">${n}/${N}</em>`:''}</span><small>${x.act&&(pl||n)?esc(t12(x.act.s,true)):esc(x.name||'')}</small></button>`;}).join('')}<button class="emp" data-act="man-stk-pick" data-k="${k}"><span class="si">＋</span><small>붙이기</small></button></div>
-    <div class="hint" style="padding:4px 0 0;margin:0;display:flex;align-items:center"><button class="lnk" data-act="mstk-page" style="margin-left:auto;font-size:13px">설정 ›</button></div>
-    <div class="lbl" style="margin-top:14px">메모</div>
-    <div class="vcmemo-bar"><input type="text" id="manNote" maxlength="40" value="${esc(note)}" placeholder="메모" enterkeyhint="done"><button class="send" data-act="man-note" data-k="${k}" aria-label="저장">${ICON.send}</button></div>`;
+    </div>
+    <div class="sec memsec"><div class="sec-t">메모</div><div class="ibar"><div class="irow"><input type="text" id="manNote" maxlength="40" value="${esc(note)}" placeholder="메모" enterkeyhint="done"><button class="send" data-act="man-note" data-k="${k}" aria-label="저장">${ICON.send}</button></div></div></div>
+    </div>`;
 }
 function openManDay(k){
   const m=manMember();if(!m)return;
@@ -6616,7 +6630,7 @@ function openDdayEdit(){
   sheetMode='dday';
   const x=ddDraft;
   openSheet(`
-    <div class="sh-head"><button class="ib" data-act="open-dday" style="font-size:15px;width:auto;padding:0;color:var(--muted)">뒤로</button><b style="flex:1;text-align:center">${x.isNew?'D-day 추가':'D-day 고치기'}</b><button class="ib ok" data-act="dday-save">저장</button></div>
+    <div class="sh-head"><button class="ib shbk" data-act="open-dday" aria-label="뒤로">‹</button><b style="flex:1;text-align:center">${x.isNew?'D-day 추가':'D-day 고치기'}</b><button class="ib ok" data-act="dday-save">저장</button></div>
     <div class="lbl" style="margin-top:0">이름</div><input type="text" id="ddName" value="${esc(x.name)}" placeholder="예: 장모님 생신" maxlength="20">
     <div class="lbl">날짜</div><input type="date" id="ddDate" value="${x.date}">
     <div class="lbl">아이콘</div><div class="emo">${EMOJI.map(e=>`<button class="${x.emoji===e?'on':''}" data-act="dday-emoji" data-v="${e}">${e}</button>`).join('')}</div>
@@ -6949,10 +6963,22 @@ function openRrPick(){
     <div class="hint" style="padding:4px 16px 8px">${esc(rrText(r))}</div>
     <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="rr-off">반복 안 함</button><button class="btn grow" data-act="rr-ok">확인</button></div>`);
 }
+function compMenu(id){const x=(S.companyHols||[]).find(y=>y.id===id);if(!x)return;
+  openPop(`<div class="mh compm">${x.kind==='memo'?'기념일':'휴무일'}<b>${esc(x.name)}</b></div>
+    <div class="mi np" style="display:block"><div class="npseg"><button class="${x.kind!=='memo'?'on':''}" data-act="comp-kind" data-id="${x.id}" data-v="off">휴무</button><button class="${x.kind==='memo'?'on':''}" data-act="comp-kind" data-id="${x.id}" data-v="memo">메모만</button></div></div>
+    <button class="mi" data-act="comp-ico" data-id="${x.id}">🎨 아이콘 바꾸기</button>
+    <button class="mi" data-act="rem-open" data-id="${x.id}">🔔 알림<span class="mval">${x.rem.length?esc(remShort(x)):'없음'} ›</span></button>
+    <button class="mi d" data-act="comp-del" data-id="${x.id}">🗑 삭제</button>
+    <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);}
+let mmMove=null;
+function mmMoveTo(nk){const mv=mmMove;mmMove=null;if(!mv)return;const k=mv.k;if(!nk||nk===k)return;
+  const m=memosOf(k).find(x=>x.id===mv.mid);if(!m)return;
+  S.memos[k]=memosOf(k).filter(x=>x!==m);tidyMemos(k);(S.memos[nk]=S.memos[nk]||[]).push(m);save();render();if(sheetKey===k&&sheetMode==='day')openDay(k);
+  toastUndo(`${md(nk)}로 옮겼어요`,()=>{S.memos[nk]=memosOf(nk).filter(x=>x!==m);tidyMemos(nk);(S.memos[k]=S.memos[k]||[]).push(m);save();render();if(sheetKey===k&&sheetMode==='day')openDay(k);});}
 function openMemoMenu(mid){
   const rm=rmemoOf(mid);
   if(rm){openPop(`<div class="mh">반복 메모<b>${esc(firstLine(rm.text).slice(0,24))}</b></div><div class="hint" style="padding:6px 16px 0">${esc(rrText(rm))}</div>
-    <button class="mi" data-act="rm-skip" data-id="${esc(rm.id)}">🚫 이 날만 빼기</button><button class="mi" data-act="rm-edit" data-id="${esc(rm.id)}">✏️ 반복 고치기</button><button class="mi" data-act="rm-del" data-id="${esc(rm.id)}" style="color:var(--danger)">반복 그만하기</button>
+    <button class="mi" data-act="rm-skip" data-id="${esc(rm.id)}">🚫 이 날만 빼기</button><button class="mi" data-act="rm-edit" data-id="${esc(rm.id)}">✏️ 반복 고치기</button><button class="mi d" data-act="rm-del" data-id="${esc(rm.id)}">🗑 반복 그만하기</button>
     <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);return;}
   const copyBtn=`<button class="mi" data-act="mm-copy" data-mid="${esc(mid)}">📋 복사</button>`;
   if(String(mid).startsWith('s:')){   // 서버에서 온 가족 메모: 누구나 복사, 방 주인은 지우기도
@@ -6971,10 +6997,10 @@ function openMemoMenu(mid){
       <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);return;
   }
   openPop(`<div class="mh">${m.shared?'♥ 가족 메모':'🔒 나만 보는 메모'}<b>${esc(firstLine(m.text))}</b></div>
-    ${copyBtn}
-    ${own?(m.shared?`<button class="mi" data-act="mm-my" data-mid="${mid}">🔒 나만 보기로 바꾸기</button>`:`<button class="mi f" data-act="mm-fam" data-mid="${mid}">♥ 가족 메모로 바꾸기</button>`):''}
     ${own?`<button class="mi" data-act="mm-edit" data-mid="${mid}">✏️ 고치기</button>`:''}
-    ${own?`<div class="mi">📅 다른 날로 옮기기 <input type="date" id="mmDate" value="${k}"><button class="btn sm" data-act="mm-move" data-mid="${mid}">옮기기</button></div>`:''}
+    ${copyBtn}
+    ${own?`<button class="mi" data-act="mm-movepick" data-mid="${mid}">📅 날짜 옮기기<span class="mval">${md(k)} ›</span></button>`:''}
+    ${own?(m.shared?`<button class="mi" data-act="mm-my" data-mid="${mid}">🔒 나만 보기로 바꾸기</button>`:`<button class="mi f" data-act="mm-fam" data-mid="${mid}">♥ 가족 메모로 바꾸기</button>`):''}
     <button class="mi d" data-act="mm-del" data-mid="${mid}">🗑 삭제</button>
     <button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);
 }
@@ -7326,7 +7352,7 @@ function openTypeEdit(){
   const used=!t.isNew&&(S.pattern.includes(t.orig)||Object.values(S.overrides).includes(t.orig));
   openSheet(`
     <div class="sh-head">
-      <button class="ib" data-act="type-back" style="font-size:15px;width:auto;padding:0;color:var(--muted)">취소</button>
+      <button class="ib shbk" data-act="type-back" aria-label="취소">‹</button>
       <b style="flex:1;text-align:center">${t.isNew?'새 근무타입':'근무타입 편집'}</b>
       <button class="ib ok" data-act="type-save">확인</button>
     </div>
@@ -9000,12 +9026,10 @@ function openCompPage(){
   const list=[...(S.companyHols||[])].sort((a,b)=>holNext(a).localeCompare(holNext(b)));
   const when=x=>x.yearly?`매년 ${+x.date.slice(5,7)}월 ${+x.date.slice(8)}일`:`${x.date.slice(0,4)}년 ${mdw(x.date)}`;
   const left=x=>{const n=dDiff(holNext(x));return n===0?'오늘':n===1?'내일':n>0?`${n}일 뒤`:'지남';};
-  const row=x=>`<div class="prow hrow">
-      <button class="hic" data-act="comp-ico" data-id="${x.id}" aria-label="아이콘 바꾸기">${ico(x.emoji||(x.kind==='memo'?'⭐':'🏢'))}</button>
-      <div class="pl2">${esc(x.name)}<small>${when(x)} · ${left(x)}</small></div>
-      <div class="hseg"><button class="${x.kind!=='memo'?'on off':''}" data-act="comp-kind" data-id="${x.id}" data-v="off">휴무</button><button class="${x.kind==='memo'?'on':''}" data-act="comp-kind" data-id="${x.id}" data-v="memo">메모만</button></div>
-      <button class="rbtn ${x.rem.length?'on':''}" data-act="rem-open" data-id="${x.id}" aria-label="알림">${x.rem.length?`🔔<small>${remShort(x)}</small>`:'🔕'}</button>
-      <button class="xbtn" data-act="comp-del" data-id="${x.id}" aria-label="삭제">✕</button></div>`;
+  const row=x=>`<div class="prow hrow tap" data-act="comp-row" data-id="${x.id}">   <!-- v0.198 줄은 깔끔하게 · 누르면 작은 창에서 휴무/메모만 · 아이콘 · 알림 · 삭제 -->
+      <span class="hic">${ico(x.emoji||(x.kind==='memo'?'⭐':'🏢'))}</span>
+      <div class="pl2">${esc(x.name)}<small class="keep">${when(x)} · ${left(x)} · ${x.kind==='memo'?'메모만':'휴무'}${x.rem.length?` · 알림 ${remShort(x)}`:''}</small></div>
+      <div class="pv">›</div></div>`;
   const d=chDraft,memo=d.kind==='memo';
   openPage(`
     ${pageHead('휴무일 · 기념일')}
@@ -9615,7 +9639,7 @@ function shiftMonth(n,keepView){
 }
 document.addEventListener('click',e=>{
   const nb=e.target.closest('#nav [data-tab]');
-  if(nb){tab=nb.dataset.tab;paint=null;pageBack=null;closeSheet();if(pageMode)closePage();render();if(tab==='fam')wxFetch(false);return;}
+  if(nb){const TB=[...document.querySelectorAll('#nav button')].map(b=>b.dataset.tab),dir=Math.sign(TB.indexOf(nb.dataset.tab)-TB.indexOf(tab));tab=nb.dataset.tab;paint=null;pageBack=null;closeSheet();if(pageMode)closePage();render();try{MO.tabIn(dir);}catch(e){}if(tab==='fam')wxFetch(false);return;}   // v0.198 탭 모션
   if(e.target.id==='pop'){popBack();return;}
   const t=e.target.closest('[data-act]');
   if(!t)return;
@@ -9736,7 +9760,7 @@ document.addEventListener('click',e=>{
     case 'fam-add':{const n=(S.family||[]).length;famDraft={id:uid(),name:'',color:FAM_COL[n%6],kind:'office',days:[1,2,3,4,5],start:'09:00',end:'18:00',holOff:true,vac:[],team:S.myTeam};openFamEdit();break;}
     case 'fam-mancal':{manId=t.dataset.id;const n=new Date();vcY=n.getFullYear();vcM=n.getMonth();renderManCalPage();break;}
     case 'man-ov':{const m=manMember();if(!m)break;const k=t.dataset.k,v=t.dataset.v;if(v)manSetOv(m,k,v);else if(m.ov){delete m.ov[k];if(!Object.keys(m.ov).length)delete m.ov;}save();renderManCalPage();openManDay(k);break;}
-    case 'man-fold':manFold=!manFoldOpen();if(manDayK)openManDay(manDayK);break;
+    case 'man-fold':{manFold=!manFoldOpen();const sec=t.closest('.shsec');if(sec){const o=manFold;shMorph(sec,o,()=>sec.classList.toggle('open',o));}else if(manDayK)openManDay(manDayK);break;}   // v0.198 내 날짜 창처럼 알약이 카드로 커짐
     case 'man-wx':{const m=manMember();if(m)famWxPop(m,t.dataset.k);break;}
     case 'man-paint':{const m=manMember();if(!m)break;manPaint={v:m.kind==='shift'?restKey():famRestType(famEra(m,manDayK?parse(manDayK):new Date())).k};closeSheet();renderManCalPage();toast('날짜를 누르거나 쭉 밀면 바뀌어요');break;}
     case 'man-paint-off':manPaint=null;renderManCalPage();break;
@@ -9935,6 +9959,8 @@ document.addEventListener('click',e=>{
       const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);closePop();if(!m)break;
       memoEdit=m.id;memoText=m.text;memoMode=m.shared?'fam':'my';openDay(sheetKey);
       const i=$('#memoInput');if(i)i.focus();break;}
+    case 'mm-movepick':{   // v0.198 날짜 옮기기: 날짜를 고르면 바로 옮김 (되돌리기)
+      mmMove={mid:t.dataset.mid,k:sheetKey};let h=$('#mmDateH');if(!h){h=document.createElement('input');h.type='hidden';h.id='mmDateH';document.body.appendChild(h);}h.value=sheetKey;openTpk('mmDateH','date');break;}
     case 'mm-move':{
       const nk=($('#mmDate')||{}).value;const k=sheetKey;
       if(!nk||nk===k){toast('옮길 날짜를 골라주세요');break;}
@@ -10366,13 +10392,14 @@ document.addEventListener('click',e=>{
     case 'ch-ico':chPull();openIcn({title:'아이콘',sub:chDraft.name||'',icon:chDraft.emoji,name:null,emojis:chDraft.kind==='memo'?ANNIV_EMOJI:OFF_EMOJI,needIcon:true,onSave:e=>{chDraft.emoji=e;openCompPage();}});break;
     case 'comp-ico':{const x=S.companyHols.find(y=>y.id===t.dataset.id);if(!x)break;
       openIcn({title:'아이콘 바꾸기',sub:x.name,icon:x.emoji||(x.kind==='memo'?'⭐':'🏢'),name:null,emojis:x.kind==='memo'?ANNIV_EMOJI:OFF_EMOJI,needIcon:true,onSave:e=>{x.emoji=e;save();render();openCompPage();}});break;}
-    case 'comp-kind':{const x=S.companyHols.find(y=>y.id===t.dataset.id);if(!x)break;x.kind=t.dataset.v;if(x.kind==='memo'&&!x.emoji)x.emoji='⭐';save();render();openCompPage();break;}
+    case 'comp-row':compMenu(t.dataset.id);break;
+    case 'comp-kind':{const x=S.companyHols.find(y=>y.id===t.dataset.id);if(!x)break;x.kind=t.dataset.v;if(x.kind==='memo'&&!x.emoji)x.emoji='⭐';save();render();openCompPage();if($('#pop.open .compm'))compMenu(x.id);break;}
     case 'rem-open':openRem(t.dataset.id);break;
     case 'rem-t':{const v=Number(t.dataset.v),r=remEd;if(!r)break;r.rem=r.rem.includes(v)?r.rem.filter(y=>y!==v):[...r.rem,v];renderRem();break;}
     case 'rem-at':if(remEd){remEd.at=t.dataset.v;renderRem();}break;
     case 'rem-save':remSave(false);break;
     case 'rem-off':remSave(true);break;
-    case 'comp-del':if(confirm('지울까요?')){S.companyHols=S.companyHols.filter(x=>x.id!==t.dataset.id);save();render();openCompPage();}break;
+    case 'comp-del':closePop();if(confirm('지울까요?')){S.companyHols=S.companyHols.filter(x=>x.id!==t.dataset.id);save();render();openCompPage();}break;
     case 'drive-link':driveBusy=true;driveFiles=null;try{window.AndroidBridge.driveList(false);}catch(err){driveBusy=false;}openBackupPage();break;
     case 'drive-backup':{
       // 새로 깐 폰처럼 데이터가 적은데 백업하면 예전 백업이 밀려 지워질 수 있어서 한 번 더 묻는다
