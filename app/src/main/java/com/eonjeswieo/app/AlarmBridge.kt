@@ -159,6 +159,10 @@ class AlarmBridge(private val activity: MainActivity) {
         if (WidgetStore.saveFromApp(context, json)) WidgetRefresher.refreshAll(context)   // v0.127 자료가 같으면 다시 안 그림
     }
 
+    /** v0.176 위젯 설정 화면에서 실제 배경화면 보이기 / 끄기 */
+    @JavascriptInterface
+    fun showWallpaper(on: Boolean) = activity.showWallpaper(on)
+
     /** v0.171 위젯 설정 화면 미리보기 (한 달 위젯 그림 · PNG base64 · 실패하면 빈 글) */
     @JavascriptInterface
     fun widgetPreview(json: String, wDp: Int, hDp: Int): String = MonthRenderer.preview(context, json, wDp, hDp)

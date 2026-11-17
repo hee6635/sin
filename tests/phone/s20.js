@@ -39,7 +39,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.click('#page .pg-h .bk');await p.waitForTimeout(250);
  await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(300);
  await opn('2026-10-14');
- T('날짜 팝업: 칸 9개 + ＋(글자 "하루만" 없음)',await p.evaluate(()=>document.querySelectorAll('#pop .sgrid [data-act="sp-pick"],#pop .sgrid [data-act="sp-fill"]').length===9&&!!document.querySelector('#pop [data-act="sp-plus"]')&&!document.querySelector('#pop').innerText.includes('하루만')));
+ T('날짜 팝업: 칸 9개 · v0.176 ＋ 없음(글자 "하루만" 없음)',await p.evaluate(()=>document.querySelectorAll('#pop .sgrid [data-act="sp-pick"],#pop .sgrid [data-act="sp-fill"]').length===9&&!document.querySelector('#pop [data-act="sp-plus"]')&&!document.querySelector('#pop').innerText.includes('하루만')));
  await p.screenshot({path:'b2.png'});
  // 빈 칸 → 채우고 → 등록 화면
  await p.click('#pop [data-act="sp-fill"]');await p.waitForTimeout(300);
@@ -54,22 +54,8 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.click('#page [data-act="sr-save"]');await p.waitForTimeout(400);
  s=await S();const pl=s.stamps.defs.find(x=>x.kind==='pill'&&x.shape==='round'&&!x.retired);
  T('둥근 알약 약 등록(14일)',!!pl&&pl.dates.includes('2026-10-14'));
- // ===== ＋ → 등록 화면 (반복 + 알림 가능)
- await opn('2026-10-15');
- await p.click('#pop [data-act="sp-plus"]');await p.waitForTimeout(300);
- await p.click('#pop [data-act="icn-tab"][data-i="9"]');await p.waitForTimeout(200);
- await p.click('#pop [data-act="icn-pick"][data-v="🎂"]');await p.waitForTimeout(450);
- T('＋ 로 고르면 등록 화면(이날만 기본)으로',await p.evaluate(()=>!!document.querySelector('#page .srpg')&&!!document.querySelector('#page [data-act="sr-rep"][data-v="once"].on')));
- await p.click('#page [data-act="sr-rep"][data-v="daily"]');await p.waitForTimeout(150);
- await p.click('#page [data-act="sr-save"]');await p.waitForTimeout(450);
- s=await S();const cake=s.stamps.defs.find(x=>x.one&&x.emoji==='🎂');
- T('＋ 스티커도 매일 규칙 저장',!!cake&&cake.rep==='daily');
- // 설정에 "＋로 붙인 스티커" 줄
+ // ===== v0.176 ＋ 기능 없앰: 설정에 "＋로 붙인 스티커" 줄 없음
  await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);
  await p.click('[data-act="stk-board"]');await p.waitForTimeout(350);
- T('설정: ＋로 붙인 스티커 줄에 🎂 (9칸과 같은 칸 모양)',await p.evaluate(()=>!!document.querySelector('#page .stgrid[data-grp="extra"] [data-act="slot-open"]')));
- await p.click('#page .stgrid[data-grp="extra"] [data-act="slot-open"]');await p.waitForTimeout(250);
- T('칸 창: 이름 · 지우기 (다른 스티커로 없음)',await p.evaluate(()=>!!document.querySelector('#slotName')&&!!document.querySelector('#pop [data-act="slot-clear"]')&&!document.querySelector('#pop [data-act="slot-swap"]')));
- await p.click('#pop [data-act="slot-clear"]');await p.waitForTimeout(400);
- T('지우면 설정에서 사라짐',!(await p.$('#page .stgrid[data-grp="extra"]')));
+ T('설정: ＋로 붙인 스티커 줄 없음',!(await p.$('#page .stgrid[data-grp="extra"]')));
  console.log(p.errs);T.sum();await b.close();})();

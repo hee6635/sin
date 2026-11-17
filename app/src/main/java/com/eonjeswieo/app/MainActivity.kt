@@ -228,6 +228,25 @@ class MainActivity : ComponentActivity() {
         else -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
     }
 
+    /** v0.176 위젯 설정 화면: 앱 뒤에 실제 홈 화면 배경화면을 보이게 (권한 없음 · FLAG_SHOW_WALLPAPER) · 나가면 원래대로 */
+    fun showWallpaper(on: Boolean) {
+        runOnUiThread {
+            try {
+                if (on) {
+                    window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                    window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+                    rootView?.setBackgroundColor(Color.TRANSPARENT)
+                    webView.setBackgroundColor(Color.TRANSPARENT)
+                } else {
+                    window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                    window.setBackgroundDrawableResource(R.color.bg)
+                    webView.setBackgroundColor(if (isNight()) Color.parseColor("#111318") else Color.WHITE)
+                    applyBars()
+                }
+            } catch (e: Exception) { }
+        }
+    }
+
     /** 뒷배경 · 상태바 · 내비게이션바 글자색을 지금 화면 모드에 맞춤 */
     private fun applyBars() {
         val root = rootView ?: return

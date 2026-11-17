@@ -1512,6 +1512,7 @@ html:not([data-cal="fill"]) .track .grid{padding:0 2px}
 .cpl{position:relative;height:28px;border-radius:14px;margin-top:16px;touch-action:none}
 .cpk{position:absolute;width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);transform:translate(-50%,-50%);pointer-events:none}.cpl .cpk{top:50%}
 .cpok{width:100%;margin-top:18px;height:50px;border-radius:14px}
+html.wpshow,html.wpshow body,html.wpshow #page,html.wpshow #page .pg-b{background:transparent!important}html.wpshow #view,html.wpshow #top,html.wpshow #nav{visibility:hidden}html.wpshow #page .pg-cap{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}html.wpshow .wgpv{background:transparent!important}   /* v0.176 실제 배경화면 위 미리보기 */
 .wgpv{margin:12px 14px 4px;border-radius:22px;padding:14px;display:grid;place-items:center;background:repeating-conic-gradient(#d9dde3 0 25%,#f3f5f7 0 50%) 0 0/20px 20px;min-height:120px}.wgpv img{width:100%;max-width:330px;display:block}
 .tdc-row{display:flex;gap:8px;align-items:center;padding:4px 0}.tdc-row .tdc{width:24px;height:24px;border-radius:50%;border:2px solid transparent;padding:0;flex:none;box-shadow:0 0 0 1px var(--line)}.tdc-row .tdc.on{border-color:var(--fg)}.tdc-pick{position:relative;background:conic-gradient(#e0455c,#f08a00,#1fa971,#2f6bf0,#8a65c9,#e0455c);overflow:hidden}.tdc-pick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}.tn-top{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:4px;box-shadow:0 6px 12px rgba(0,0,0,.10)}.tn-bar{display:flex;align-items:center;gap:6px;padding:6px 12px 0}.tn-bar .btn{padding:6px 12px;font-size:13px;flex:none}.tn-bar .btn[disabled]{opacity:.4}.tn-st{flex:1;font-size:12px;color:var(--muted)}.tn-st.dirty{color:#d9534f;font-weight:700}.tn-warn{padding:2px 14px 0;font-size:12px;color:#c0392b}.tn-warn:empty{display:none}.tn-d summary{font-size:13px;font-weight:700;padding:6px 0;cursor:pointer}.tn-d{border-top:1px solid var(--line)}.tn-prev{height:140px;display:flex;flex-direction:column;border-radius:0;overflow:hidden;background:var(--bg);margin:8px 0 0}
 .tn-g{padding:8px 14px 4px}.tn-g h4{margin:10px 0 2px;font-size:14px}
@@ -4703,7 +4704,7 @@ function openStampPick(k){
   if(stampsOn(k).length>=stampMax()){stampFull();return;}
   const d=parse(k);
   openPop(`<div class="mh">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})<b>붙일 스티커</b></div>
-    <div class="mi sgrid sg5">${slotDefs().map(s=>`<button class="${s.empty?'emp':''}" data-act="${s.empty?'sp-fill':'sp-pick'}" data-id="${s.id}" data-k="${k}"><span class="si">${stIcon(s)}</span><small>${s.empty?'비어 있음':esc(s.name)}</small></button>`).join('')}<button class="plus" data-act="sp-plus" data-k="${k}" aria-label="더 많은 스티커"><span class="si">＋</span><small>&nbsp;</small></button></div>
+    <div class="mi sgrid sg5">${slotDefs().map(s=>`<button class="${s.empty?'emp':''}" data-act="${s.empty?'sp-fill':'sp-pick'}" data-id="${s.id}" data-k="${k}"><span class="si">${stIcon(s)}</span><small>${s.empty?'비어 있음':esc(s.name)}</small></button>`).join('')}</div>
     `);   // v0.170 아래 닫기 버튼 뺌 (바깥을 누르면 닫힘)
 }
 // 큰 목록(종류별 탭 · 내 사진 · 약 모양 · 직접 입력)에서 하나 고르기. o.onPick(그림, 이름)
@@ -4750,20 +4751,23 @@ function stFillSlot(id,e,n,srcId){
   if(src){['color','shape','times'].forEach(p=>{if(src[p]!==undefined)f[p]=src[p];});if(src.fam!==undefined)f.fam=src.fam;}
   if(o.empty){Object.assign(o,f,{empty:false});delete o.empty;return o;}
   if(o.kind==='mark'&&f.kind==='mark'&&o.emoji===f.emoji){o.name=f.name;return o;}
-  if(stUsed(o)){o.one=true;stMoved=true;}else stRetire(o);
+  if(stUsed(o)){stEndFromToday(o);stMoved=true;}else stRetire(o);
   const nd=Object.assign({id:uid(),times:1,rep:'none',days:[],dates:[],skip:[],ats:[]},f);defs.splice(i,0,nd);return nd;
 }
 // 칸에 넣을 스티커를 고르는 큰 목록 맨 위의 "＋ 로 붙인 스티커" 줄 (있을 때만) — 누르면 그 그림 · 이름으로 칸에 새로 만들고, ＋ 쪽은 그대로
 function stPlusRow(o){
+  return '';   // v0.176 ＋ 기능 없앰
   const ex=extraDefs();if(!ex.length)return '';
   const code=s=>s.kind==='pill'?'pill:'+(s.shape||'caps'):s.emoji;
   return `<div class="mi icn-sec" style="display:block"><div class="icn-lb">＋ 로 붙인 스티커</div><div class="sgrid sg4" style="margin-top:6px">${ex.map(s=>`<button class="${o&&o.srcId===s.id?'on':''}" data-act="icn-pick" data-v="${esc(code(s))}" data-n="${esc(s.name)}" data-mine="1" data-src="${esc(s.id)}"><span class="si">${stIcon(s)}</span><small>${esc(s.name)}</small></button>`).join('')}</div></div>`;
 }
 // 칸 비우기: 칸에서 빼도 이미 붙인 스티커는 그대로 (＋ 로 붙인 스티커 쪽으로 옮김). ＋ 쪽에서 "지우기"는 진짜 지우기 (앞으로 일정은 없어지고 지난 체크 기록만 남음)
+// v0.176 칸에서 뺀(바꾼 · 비운) 스티커: 지난 날짜 · 기록은 그대로, 오늘부터는 안 깔림 (＋ 목록이 없어져서 숨은 반복이 남지 않게)
+function stEndFromToday(o){const tk=fmt(new Date());o.one=true;if(o.rep&&o.rep!=='none'){const y=addK(tk,-1);if(!o.to||o.to>=tk)o.to=y;if(o.from&&o.from>o.to){o.rep='none';o.to='';}}o.dates=(o.dates||[]).filter(d=>d<tk);o.ats=[];}
 function stSlotClear(id){
   const defs=S.stamps.defs,i=defs.findIndex(x=>x.id===id),o=defs[i];stMoved=false;if(!o)return;
   const slot=!o.one;
-  if(slot&&stUsed(o)){o.one=true;stMoved=true;}else stRetire(o);
+  if(slot&&stUsed(o)){stEndFromToday(o);stMoved=true;}else stRetire(o);
   if(slot)defs.splice(i,0,{id:uid(),kind:'mark',emoji:'',name:'',empty:true,times:1,rep:'none',days:[],dates:[],skip:[],ats:[]});
 }
 function openStampSlot(id){
@@ -4794,12 +4798,13 @@ function wtypesOf(s){
   const work=!!(s&&s.workMode==='work');return S.types.filter(t=>t.k!==NONE_K&&(work?!t.rest:t.rest)).map(t=>t.k);
 }
 function stDraftOf(s,k,edit,back){
-  const kind=s?s.kind:'mark',times=s&&edit?stN(s):1;   // v0.150 새로 붙일 땐 언제나 1번부터 (지난번 횟수 기억 안 함)
+  const own=!!(s&&(edit||stUsed(s)));   // v0.176 이미 쓰는 스티커는 지금 값(횟수 · 알림 · 활동 · 가족)으로 시작 (＋ · 이 날만 따로 없앰 → 스티커는 하나)
+  const kind=s?s.kind:'mark',times=own?stN(s):1;   // v0.150 새로 붙일 땐 언제나 1번부터 (지난번 횟수 기억 안 함)
   const d={k,back:back||'',edit:!!edit,id:s?s.id:'__new',kind,name:s?s.name:'',emoji:(s&&s.emoji)||'🏃',color:(s&&s.color)||STK_COL[0],times,
-    alarm:!!(edit&&s&&s.ats&&s.ats.length),ats:edit&&s&&s.ats?s.ats.slice():[],shape:(s&&s.shape)||'caps',fam:s&&edit?stFam(s):kind!=='pill',   // v0.153 새로 붙일 땐 알림 · 활동 · 가족 보이기도 기본값
+    alarm:!!(own&&s.ats&&s.ats.length),ats:own&&s.ats?s.ats.slice():[],shape:(s&&s.shape)||'caps',fam:own?stFam(s):kind!=='pill',   // v0.153 새로 붙일 땐 알림 · 활동 · 가족 보이기도 기본값
     rep:edit?(s.rep||'none'):'once',days:s&&s.days&&s.days.length?s.days.slice():[parse(k).getDay()],workMode:(s&&s.workMode)||'rest',wtypes:wtypesOf(s),
     from:(edit&&s.from)||k,to:(edit&&s.to)||'',noHol:!!(edit&&s.noHol),noWknd:!!(edit&&s.noWknd),noNight:!!(edit&&s.noNight),
-    act:edit&&s&&s.act?Object.assign({},s.act):null,actOpen:!!(edit&&s&&s.act)};
+    act:own&&s.act?Object.assign({},s.act):null,actOpen:!!(own&&s.act)};
   if(d.alarm)stFill(d);
   return d;
 }
@@ -4943,21 +4948,28 @@ function stampRegSave(){
   if(d.own){manStampSave();return;}
   let s=S.stamps.defs.find(x=>x.id===d.id);
   const isNewDef=!s;
-  if(d.rep==='once'&&s&&stampPlanned(s,d.k)){toast('이 스티커는 이 날에 이미 깔려 있어요 · 새 스티커는 "＋ 새로"');return;}
+  const keep=false;   // v0.176 ＋ · "이 날만 따로" 복사본 없앰: 스티커는 하나 — 이날 붙이면 그 스티커에 날짜를 더하고, 등록 화면에서 바꾼 값(지금 값으로 시작)은 그 스티커에 그대로
+  if(s&&!d.edit&&d.rep==='once'){
+    if(s.kind==='pill'&&d.color&&d.color!==s.color&&(stampPlanned(s,d.k)||stUsedElse(s,d.k))){   // 색이 다른 약 = 다른 약 → 빈 칸에 새 약으로
+      const e=slotDefs().find(x=>x.empty);if(!e){toast('빈 칸이 없어요 · 설정 › 스티커에서 칸 하나를 비워 주세요');return;}
+      delete e.empty;Object.assign(e,{kind:'pill',emoji:'💊',name:(d.name&&d.name!==s.name?d.name:(s.name||'약')+' 2').slice(0,12),color:d.color,shape:s.shape||'caps',times:s.times||1,rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]});s=e;
+    }else if(stampPlanned(s,d.k)){toast('이 스티커는 이 날에 이미 붙어 있어요');return;}
+  }
   if(d.rep==='work'&&!d.wtypes.length){toast('근무를 하나 이상 골라 주세요');return;}
-  if(s&&!d.edit&&d.rep==='once'){const dk=stOptKey(d,true);if(stOptKey(s)!==dk&&stUsedElse(s,d.k))s=stOneLike(s,d.times,dk);}   // v0.153 횟수 · 알림 · 활동 · 가족 보이기가 다르면 이 날만 따로 (그 스티커의 지난 날 · 반복 규칙은 그대로)
   const snap=JSON.stringify(S.stamps);   // 한도 때문에 가려지면 "등록 취소"로 돌아가기 위한 사본
   if(!s){
     s=d.kind==='pill'?{id:uid(),kind:'pill',emoji:'💊',name:'약',times:1,color:STK_COL[0],rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]}
       :{id:uid(),kind:'mark',emoji:d.emoji||'🏃',name:'새 스티커',times:1,rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]};
     track(d.kind==='pill'?'sticker_pill':'sticker_mark');if(d.kind==='pill')S.stamps.defs.unshift(s);else S.stamps.defs.push(s);
   }
+  if(!keep){
   if(d.name)s.name=d.name;else if(!s.name)s.name=d.kind==='pill'?'약':'새 스티커';
   s.times=d.times;
   if(stFamShow())s.fam=!!d.fam;   // 실제 가족이 있어 칸이 보였을 때만 바꿈 (아니면 기본 규칙 그대로)
   if(s.kind==='pill')s.color=d.color||s.color||STK_COL[0];else s.emoji=d.emoji||s.emoji||'🏃';
   if(d.act&&d.act.s&&d.act.e&&s.kind==='mark')s.act={s:d.act.s,e:d.act.e,r:wxOk(d.act.r)?d.act.r:'',since:(s.act&&s.act.since)||fmt(new Date())};else delete s.act;
   if(d.alarm){stFill(d);s.ats=d.ats.slice(0,d.times);s.ats.forEach((t,i)=>{(S.stamps.lastAt=S.stamps.lastAt||[])[i]=t;});}else s.ats=[];   // 마지막에 정한 시각은 다음 새 스티커의 처음 값
+  }
   const k=d.k;
   if(d.rep==='once'){
     const shown=stampsOn(k).map(x=>x.s.id);
@@ -5098,13 +5110,11 @@ function stkStreak(s,from){let d=new Date(from.getFullYear(),from.getMonth(),fro
 function stkBest(s,y,m){let b=0,c=0;const days=new Date(y,m+1,0).getDate();for(let d=1;d<=days;d++){if(stkDone(s,fmt(new Date(y,m,d)))){c++;b=Math.max(b,c);}else c=0;}return b;}
 /* ---- 설정 › 스티커 ---- */
 function openStampPage(){
-  const btn=s=>`<button class="${s.empty?'emp':''}" data-act="slot-open" data-id="${s.id}"><span class="si">${stIcon(s)}</span><small>${s.empty?'비어 있음':esc(s.name)}</small>${stAts(s).length?'<i class="stbell" role="img" aria-label="알림 있음">🔔</i>':''}</button>`;
-  const ex=extraDefs();
+  const btn=s=>`<button class="${s.empty?'emp':''}" data-act="slot-open" data-id="${s.id}"><span class="si">${stIcon(s)}</span><small>${s.empty?'비어 있음':esc(s.name)}</small></button>`;   // v0.176 🔔 뺌 · ＋ 로 붙인 스티커 칸 뺌 (＋ 기능 없앰 · 내 스티커 하나로)
   openPage(`${pageHead('스티커')}
     <div class="pg-b np">
       <div class="pg-cap">내 스티커 <span class="cnt2">${slotDefs().filter(x=>!x.empty).length}</span></div>
       <div class="pg-sec sgrid sg5 stgrid" data-grp="slot" style="padding:12px">${slotDefs().map(btn).join('')}</div>
-      ${ex.length?`<div class="pg-cap">＋ 로 붙인 스티커</div><div class="pg-sec sgrid sg5 stgrid" data-grp="extra" style="padding:12px">${ex.map(btn).join('')}</div>`:''}
       ${hasBridge('openSettings')?`<div class="pg-cap">알림</div><div class="pg-sec">${npRow('bell','알림 소리 바꾸기',npVal(''),{tap:1,act:'remind-sound'})}</div>`:''}
     </div>`,'stamps');
 }
@@ -5178,13 +5188,16 @@ function reopen(){
   else closeSheet();
 }
 let pageMode=null;
+// v0.176 위젯 설정 화면에서만 앱 뒤에 실제 배경화면 (미리보기 바둑판 대신 · 다른 화면은 원래대로)
+let wpOn=false;
+function wpShow(on){on=!!on&&!!(window.AndroidBridge&&typeof window.AndroidBridge.showWallpaper==='function');if(on===wpOn)return;wpOn=on;document.documentElement.classList.toggle('wpshow',on);try{window.AndroidBridge.showWallpaper(on);}catch(e){}}
 function openPage(html,mode){
-  if(mode)pageMode=mode;
+  if(mode)pageMode=mode;wpShow(pageMode==='widget');
   const p=$('#page'),sc=p.querySelector('.pg-b')?p.querySelector('.pg-b').scrollTop:0,same=p.classList.contains('open');
   p.innerHTML=html;p.classList.add('open');
   if(same){const b=p.querySelector('.pg-b');if(b)b.scrollTop=sc;}
 }
-function closePage(){manPaint=null;Object.keys(glowPrev).forEach(k=>{if(/^(fc|mc):/.test(k))delete glowPrev[k];});if(pageMode==='tune'){if(tuneDirty()&&!confirm('저장하지 않은 값이 있어요.\n저장하지 않고 나갈까요?'))return;tuneDraft=null;applyTune();$('#page').innerHTML='';}if(pageMode==='alarm')try{if(hasBridge('stopPreview'))window.AndroidBridge.stopPreview();}catch(e){}$('#page').classList.remove('open');pageMode=null;applyTdc();draft=null;render();}
+function closePage(){wpShow(false);manPaint=null;Object.keys(glowPrev).forEach(k=>{if(/^(fc|mc):/.test(k))delete glowPrev[k];});if(pageMode==='tune'){if(tuneDirty()&&!confirm('저장하지 않은 값이 있어요.\n저장하지 않고 나갈까요?'))return;tuneDraft=null;applyTune();$('#page').innerHTML='';}if(pageMode==='alarm')try{if(hasBridge('stopPreview'))window.AndroidBridge.stopPreview();}catch(e){}$('#page').classList.remove('open');pageMode=null;applyTdc();draft=null;render();}
 // v0.145 새 모양 선 아이콘 (lucide · ISC)
 const NPI={"repeat": "<path d=\"m17 2 4 4-4 4\" /> <path d=\"M3 11v-1a4 4 0 0 1 4-4h14\" /> <path d=\"m7 22-4-4 4-4\" /> <path d=\"M21 13v1a4 4 0 0 1-4 4H3\" />", "calendar-off": "<path d=\"M4.2 4.2A2 2 0 0 0 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 1.82-1.18\" /> <path d=\"M21 15.5V6a2 2 0 0 0-2-2H9.5\" /> <path d=\"M16 2v4\" /> <path d=\"M3 10h7\" /> <path d=\"M21 10h-5.5\" /> <path d=\"m2 2 20 20\" />", "volume-2": "<path d=\"M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z\" /> <path d=\"M16 9a5 5 0 0 1 0 6\" /> <path d=\"M19.364 18.364a9 9 0 0 0 0-12.728\" />", "alarm-clock": "<circle cx=\"12\" cy=\"13\" r=\"8\" /> <path d=\"M12 9v4l2 2\" /> <path d=\"M5 3 2 6\" /> <path d=\"m22 6-3-3\" /> <path d=\"M6.38 18.7 4 21\" /> <path d=\"M17.64 18.67 20 21\" />", "tag": "<path d=\"M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z\" /> <circle cx=\"7.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\" />", "bell-ring": "<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\" /> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\" /> <path d=\"M4 2C2.8 3.7 2 5.7 2 8\" /> <path d=\"M22 8c0-2.3-.8-4.3-2-6\" />", "cloud-sun": "<path d=\"M12 2v2\" /> <path d=\"m4.93 4.93 1.41 1.41\" /> <path d=\"M20 12h2\" /> <path d=\"m19.07 4.93-1.41 1.41\" /> <path d=\"M15.947 12.65a4 4 0 0 0-5.925-4.128\" /> <path d=\"M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z\" />", "file-text": "<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\" /> <path d=\"M14 2v4a2 2 0 0 0 2 2h4\" /> <path d=\"M10 9H8\" /> <path d=\"M16 13H8\" /> <path d=\"M16 17H8\" />", "trash-2": "<path d=\"M3 6h18\" /> <path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\" /> <path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\" /> <line x1=\"10\" x2=\"10\" y1=\"11\" y2=\"17\" /> <line x1=\"14\" x2=\"14\" y1=\"11\" y2=\"17\" />", "calendar": "<path d=\"M8 2v4\" /> <path d=\"M16 2v4\" /> <rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /> <path d=\"M3 10h18\" />", "paintbrush": "<path d=\"m14.622 17.897-10.68-2.913\" /> <path d=\"M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z\" /> <path d=\"M9 8c-1.804 2.71-3.97 3.46-6.583 3.948a.507.507 0 0 0-.302.819l7.32 8.883a1 1 0 0 0 1.185.204C12.735 20.405 16 16.792 16 15\" />", "map-pin": "<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\" /> <circle cx=\"12\" cy=\"10\" r=\"3\" />", "rotate-ccw": "<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /> <path d=\"M3 3v5h5\" />", "user": "<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /> <circle cx=\"12\" cy=\"7\" r=\"4\" />", "users": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /> <circle cx=\"9\" cy=\"7\" r=\"4\" /> <path d=\"M22 21v-2a4 4 0 0 0-3-3.87\" /> <path d=\"M16 3.13a4 4 0 0 1 0 7.75\" />", "eraser": "<path d=\"m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21\" /> <path d=\"M22 21H7\" /> <path d=\"m5 11 9 9\" />", "calendar-days": "<path d=\"M8 2v4\" /> <path d=\"M16 2v4\" /> <rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\" /> <path d=\"M3 10h18\" /> <path d=\"M8 14h.01\" /> <path d=\"M12 14h.01\" /> <path d=\"M16 14h.01\" /> <path d=\"M8 18h.01\" /> <path d=\"M12 18h.01\" /> <path d=\"M16 18h.01\" />", "plus": "<path d=\"M5 12h14\" /> <path d=\"M12 5v14\" />", "minus": "<path d=\"M5 12h14\" />", "chevron-right": "<path d=\"m9 18 6-6-6-6\" />","chevron-left": "<path d=\"m15 18-6-6 6-6\" />", "chevron-down": "<path d=\"m6 9 6 6 6-6\" />", "history": "<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\" /> <path d=\"M3 3v5h5\" /> <path d=\"M12 7v5l4 2\" />", "music": "<path d=\"M9 18V5l12-2v13\" /> <circle cx=\"6\" cy=\"18\" r=\"3\" /> <circle cx=\"18\" cy=\"16\" r=\"3\" />", "bell": "<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\" /> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\" />"};
 Object.assign(NPI,{"sticky-note": "<path d=\"M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z\" /> <path d=\"M15 3v4a2 2 0 0 0 2 2h4\" />", "smile": "<circle cx=\"12\" cy=\"12\" r=\"10\" /> <path d=\"M8 14s1.5 2 4 2 4-2 4-2\" /> <line x1=\"9\" x2=\"9.01\" y1=\"9\" y2=\"9\" /> <line x1=\"15\" x2=\"15.01\" y1=\"9\" y2=\"9\" />", "users": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /> <circle cx=\"9\" cy=\"7\" r=\"4\" /> <path d=\"M22 21v-2a4 4 0 0 0-3-3.87\" /> <path d=\"M16 3.13a4 4 0 0 1 0 7.75\" />", "chart-column": "<path d=\"M3 3v16a2 2 0 0 0 2 2h16\" /> <path d=\"M18 17V9\" /> <path d=\"M13 17V5\" /> <path d=\"M8 17v-3\" />", "smartphone": "<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\" ry=\"2\" /> <path d=\"M12 18h.01\" />", "info": "<circle cx=\"12\" cy=\"12\" r=\"10\" /> <path d=\"M12 16v-4\" /> <path d=\"M12 8h.01\" />", "sparkles": "<path d=\"M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z\" /> <path d=\"M20 3v4\" /> <path d=\"M22 5h-4\" /> <path d=\"M4 17v2\" /> <path d=\"M5 18H3\" />"});
@@ -6805,7 +6818,7 @@ function dayHtml(k){
         <button class="paint-btn" data-act="paint-open" data-k="${esc(c)}">${npi('paintbrush',18)}<b>여러 날 칠하기</b><i>›</i></button>
         </div></div>
       </div>${openReqs.length?`<div class="lbl" style="color:var(--accent);margin-top:12px;">📩 이 날의 근무 요청</div>${reqHtml}`:''}`;
-    topPart+=`${warn}`;
+    topPart+=``;   /* v0.176 가족 메모 띠(warn) 뺌 — 아래 메모 목록에 같은 메모가 "아내" 표시로 있음 (\x01 = 위 · 아래 나눔 표시는 그대로) */
   }
   // 순서: 근무 타입 → 대기 중인 요청 → 날씨 → (가족 메모 알림) → 메모
   const [tp1,tp2]=topPart.split('');
@@ -7301,9 +7314,9 @@ function renderMore(){
   </div>`;
 }
 /* ---- v0.118 💡 이럴 땐 이렇게: 상황별 팁 (묶음 접기 · 누르면 펼침 · 바로 가기) — 기능을 바꾸면 여기 글도 같이 고치기 (s79 가 바로 가기를 시험) ---- */
-const TIPS=[["📅","달력 · 근무",[["근무가 바뀌었을 때 한 번에 고치기","날짜를 누르고 \"여러 날 칠하기\"를 눌러요. 근무를 고른 다음 날짜를 하나씩 누르거나 손가락으로 쭉 그으면 돼요.","tab:cal"],["조나 회사가 바뀌었어요","근무 패턴에서 새 패턴을 만들고 첫 칸 시작 날을 바뀌는 날로 정해요. \"이 날부터 새 패턴\"을 누르면 지난 근무표와 통계는 그대로 남아요.","more-pattern"],["근무표가 불규칙해요","근무 패턴에서 불규칙으로 바꾸고, 날짜마다 근무를 넣어요.","more-pattern"],["빨간 날엔 쉬는 회사예요","근무 패턴에서 \"공휴일엔 쉬어요\"를 켜면 공휴일 근무가 휴무로 바뀌어요.","more-pattern"],["휴직이나 퇴사로 근무 없이 쓰고 싶어요","근무 패턴 맨 아래 \"개인 캘린더로 쓰기\"를 눌러요. 근무표는 지우지 않고 그대로 둬요.","more-pattern"],["직접 바꾼 근무를 되돌리고 싶어요","근무 패턴의 \"패턴 제외 초기화\"에서 기간을 고르면 그 사이 직접 바꾼 근무만 패턴대로 돌아가요.","more-pattern"],["글자가 잘 안 보여요","설정 › 화면에서 배경을 \"또렷하게\"로 바꾸거나 글자 크기를 크게 해요.","more-look"],["이번 달 근무를 사진으로 보내기","설정 › 이미지 공유로 달력 사진을 만들어 메신저로 보내요.","more-share"]]],["📝","포스트잇 · 메모",[["이번 달 내내 기억할 것 붙여 두기","달력 위 포스트잇에 적어 두면 그 달 내내 보여요.","tab:cal"],["매달 1일 · 말일에 할 일 띄우기","메모 \"자세히\"에서 반복을 켜고 1일, 말일, 말일 하루 전 중에 골라요. \"주간인 날만\"처럼 근무에 맞출 수도 있어요.","tab:cal"],["가족에게도 보이는 메모","메모 \"자세히\"에서 \"가족에게\"를 골라요. 한 줄 입력칸에 쓴 메모는 나만 봐요.","tab:cal"],["근무 인수인계 적기","설정 › 부가 기능에서 업무 메모를 켜면 날짜마다 인수, 인계, 지시를 따로 적을 수 있어요.","more-addons"],["지난 메모나 인수인계 찾기","설정 맨 위 찾기 칸에 적어 보세요.","srch-open"]]],["💊","스티커",[["약 먹었는지 체크","스티커에서 약을 고르고 하루 몇 번 먹는지, 알림 시각을 정해요.","stk-board"],["운동이나 물 마시기 같은 습관 기록","스티커를 반복으로 깔아 두고 할 때마다 눌러요. 한 달 통계도 나와요.","stk-board"],["쉬는 날에만 하는 일","스티커 고치기에서 \"근무 맞춤\"을 고르면 쉬는 날에만 깔려요.","stk-board"],["학원 · 동아리 · 운동 날씨까지","스티커 고치기 맨 아래 \"학원 · 취미 · 동아리\"에서 활동 시간과 위치를 정해요. 끝나면 자동으로 완료돼요.","stk-board"],["반복 스티커를 그만하고 싶어요","그만두는 날의 스티커 창에서 \"그만하기\"를 눌러요. 지난 기록은 남아요.","tab:cal"],["스티커가 왜 안 붙지?","스티커는 하루에 4개까지만 보여요. 반복 조건에 안 맞는 날, 근무와 겹치는 활동, \"그만하기\"를 누른 뒤의 날짜에도 안 붙어요.","stk-board"],["아이 얼굴로 스티커 만들기","스티커 고르기에서 \"내 것\"을 누르고 사진을 넣어요.","stk-board"],["그날 기분 남기기","스티커 고르기의 기분 탭에서 골라요. 한 달 통계로 기분을 돌아볼 수 있어요.","stk-board"],["아이 약이나 준비물 챙기기","아이 달력 날짜 창에서 스티커를 더하고 \"아이 · 육아\" 탭에서 골라요. 유치원 가는 날만 깔리게 할 수도 있어요.","tab:fam"]]],["☔","날씨",[["아침 알람 끄고 바로 날씨 보기","알람 설정에서 날씨를 \"끈 뒤 보기\"로 두면 알람을 끌 때 날씨 카드가 떠요.","tab:alarm"],["알람 없이 출근 전 날씨만","알람 설정에서 날씨를 \"날씨만\"으로 두면 알람 대신 날씨 알림만 와요.","tab:alarm"],["아이 등하교나 학원 날씨","아이 달력 날짜 창의 \"일정 패턴\"에서 일정 시간과 위치를 정해요. 학원은 스티커의 활동으로 정해요.","tab:fam"],["날씨 지역 바꾸기","근무 패턴의 \"위치\"에서 집과 직장 동네를 골라요.","more-pattern"]]],["👪","가족",[["아이나 가족 일정 같이 보기","설정 › 가족에서 \"가족 추가\"를 누르고 학교, 회사, 교대 중에 골라요.","fam-set"],["유치원에서 학교로 가요","아이 달력 날짜 창의 \"일정 패턴\"에서 \"이 날부터 새 일정\"을 눌러요. 그 전 날짜는 예전 그대로 남아요.","tab:fam"],["가족과 근무표 주고받기","가족 연결에서 초대 코드를 보내요.","link-open"],["가족에게 그날 쉬어 달라고 부탁하기","가족 근무자 달력에서 날짜를 눌러 쉬는 날로 요청해요. 받는 사람이 확정하면 달력에 바로 들어가요.","link-open"],["내 달력 없이 가족 것만 보고 싶어요","가족 연결에서 \"내 근무표를 가족에게 보여요\"를 끄면 달력 탭이 가족 달력으로 바뀌어요.","link-open"],["가족이 다 같이 쉬는 날 찾기","설정 › 부가 기능에서 \"같이 쉬는 날\"을 켜요.","more-addons"],["폰을 바꿔도 가족방 그대로","가족 연결에서 구글 계정을 연결해 두면 새 폰에서 가족방을 불러올 수 있어요.","link-open"],["가족을 빼고 싶어요","가족방엔 방장이 없어서 가족 과반이 찬성해야 빠져요. 30일 넘게 안 들어온 사람이나 내가 초대한 지 하루가 안 된 사람은 바로 뺄 수 있어요.","link-open"],["가족 메모와 근무 요청 무료 횟수","가족 메모, 근무 요청, 새 가족 포스트잇은 합쳐서 처음 10건까지 무료예요.","link-open"]]],["⏰","알람 · 알림",[["내일 하루만 일찍 일어나야 해요","알람을 하나 더 만들고 울리기를 \"한 번만\"으로 골라요. 원래 알람은 카드의 \"이번만 끄기\"로 하루 쉬게 해요.","tab:alarm"],["먼저 깼는데 알람이 울릴 것 같아요","알람 설정에서 \"5분 전 미리 알림\"을 켜 두면, 울리기 5분 전에 소리 없는 알림이 떠서 이번만 끌 수 있어요.","tab:alarm"],["야간 뒤 낮잠 땐 알림을 조용히","가족 연결의 \"자는 시간엔 소리 없이\"를 켜요.","link-open"]]],["💰","통계 · 수당",[["이번 달 월급이 얼마일지","설정 › 부가 기능의 \"근무 통계 · 수당\"에서 고정급과 명세서 한 장으로 맞춰요.","more-addons"],["연장 근무 기록","근무 통계를 켜면 날짜 창에 연장 칸이 생겨요. 가족에게도 늦게 끝나는 게 보여요.","tab:cal"]]],["📱","그 밖",[["홈 화면에서 근무 바로 보기","위젯을 홈 화면에 놓아요.","more-widget"],["폰을 바꿔도 데이터 지키기","설정 › 백업에서 구글 드라이브 자동 백업을 켜요.","more-backup"],["실수로 옛날 백업을 복원했어요","설정 › 백업의 \"복원 직전으로 되돌리기\"를 눌러요.","more-backup"]]]];
+const TIPS=[["📅","달력 · 근무",[["근무가 바뀌었을 때 한 번에 고치기","날짜를 누르고 \"여러 날 칠하기\"를 눌러요. 근무를 고른 다음 날짜를 하나씩 누르거나 손가락으로 쭉 그으면 돼요.","tab:cal"],["조나 회사가 바뀌었어요","근무 패턴에서 새 패턴을 만들고 첫 칸 시작 날을 바뀌는 날로 정해요. \"이 날부터 새 패턴\"을 누르면 지난 근무표와 통계는 그대로 남아요.","more-pattern"],["근무표가 불규칙해요","근무 패턴에서 불규칙으로 바꾸고, 날짜마다 근무를 넣어요.","more-pattern"],["빨간 날엔 쉬는 회사예요","근무 패턴에서 \"공휴일엔 쉬어요\"를 켜면 공휴일 근무가 휴무로 바뀌어요.","more-pattern"],["휴직이나 퇴사로 근무 없이 쓰고 싶어요","근무 패턴 맨 아래 \"개인 캘린더로 쓰기\"를 눌러요. 근무표는 지우지 않고 그대로 둬요.","more-pattern"],["직접 바꾼 근무를 되돌리고 싶어요","근무 패턴의 \"패턴 제외 초기화\"에서 기간을 고르면 그 사이 직접 바꾼 근무만 패턴대로 돌아가요.","more-pattern"],["글자가 잘 안 보여요","설정 › 화면에서 배경을 \"또렷하게\"로 바꾸거나 글자 크기를 크게 해요.","more-look"],["이번 달 근무를 사진으로 보내기","설정 › 이미지 공유로 달력 사진을 만들어 메신저로 보내요.","more-share"]]],["📝","포스트잇 · 메모",[["이번 달 내내 기억할 것 붙여 두기","달력 위 포스트잇에 적어 두면 그 달 내내 보여요.","tab:cal"],["매달 1일 · 말일에 할 일 띄우기","메모 \"자세히\"에서 반복을 켜고 1일, 말일, 말일 하루 전 중에 골라요. \"주간인 날만\"처럼 근무에 맞출 수도 있어요.","tab:cal"],["가족에게도 보이는 메모","메모 \"자세히\"에서 \"가족에게\"를 골라요. 한 줄 입력칸에 쓴 메모는 나만 봐요.","tab:cal"],["근무 인수인계 적기","설정 › 부가 기능에서 업무 메모를 켜면 날짜마다 인수, 인계, 지시를 따로 적을 수 있어요.","more-addons"],["지난 메모나 인수인계 찾기","설정 맨 위 찾기 칸에 적어 보세요.","srch-open"]]],["💊","스티커",[["약 먹었는지 체크","스티커에서 약을 고르고 하루 몇 번 먹는지, 알림 시각을 정해요.","stk-board"],["운동이나 물 마시기 같은 습관 기록","스티커를 반복으로 깔아 두고 할 때마다 눌러요. 한 달 통계도 나와요.","stk-board"],["쉬는 날에만 하는 일","날짜를 누르고 스티커 붙이기 → 스티커를 고른 뒤 반복에서 \"근무 맞춤\" → 휴무를 고르면 쉬는 날에만 깔려요.","stk-board"],["학원 · 동아리 · 운동 날씨까지","스티커를 붙일 때(등록 화면) 맨 아래 \"학원 · 취미 · 동아리\"에서 활동 시간과 위치를 정해요. 끝나면 자동으로 완료돼요.","stk-board"],["반복 스티커를 그만하고 싶어요","그만두는 날의 스티커 창에서 \"그만하기\"를 눌러요. 지난 기록은 남아요.","tab:cal"],["스티커가 왜 안 붙지?","스티커는 하루에 4개까지만 보여요. 반복 조건에 안 맞는 날, 근무와 겹치는 활동, \"그만하기\"를 누른 뒤의 날짜에도 안 붙어요.","stk-board"],["아이 얼굴로 스티커 만들기","스티커 고르기에서 \"내 것\"을 누르고 사진을 넣어요.","stk-board"],["그날 기분 남기기","스티커 고르기의 기분 탭에서 골라요. 한 달 통계로 기분을 돌아볼 수 있어요.","stk-board"],["아이 약이나 준비물 챙기기","아이 달력 날짜 창에서 스티커를 더하고 \"아이 · 육아\" 탭에서 골라요. 유치원 가는 날만 깔리게 할 수도 있어요.","tab:fam"]]],["☔","날씨",[["아침 알람 끄고 바로 날씨 보기","알람 설정에서 날씨를 \"끈 뒤 보기\"로 두면 알람을 끌 때 날씨 카드가 떠요.","tab:alarm"],["알람 없이 출근 전 날씨만","알람 설정에서 날씨를 \"날씨만\"으로 두면 알람 대신 날씨 알림만 와요.","tab:alarm"],["아이 등하교나 학원 날씨","아이 달력 날짜 창의 \"일정 패턴\"에서 일정 시간과 위치를 정해요. 학원은 스티커의 활동으로 정해요.","tab:fam"],["날씨 지역 바꾸기","근무 패턴의 \"위치\"에서 집과 직장 동네를 골라요.","more-pattern"]]],["👪","가족",[["아이나 가족 일정 같이 보기","설정 › 가족에서 \"가족 추가\"를 누르고 학교, 회사, 교대 중에 골라요.","fam-set"],["유치원에서 학교로 가요","아이 달력 날짜 창의 \"일정 패턴\"에서 \"이 날부터 새 일정\"을 눌러요. 그 전 날짜는 예전 그대로 남아요.","tab:fam"],["가족과 근무표 주고받기","가족 연결에서 초대 코드를 보내요.","link-open"],["가족에게 그날 쉬어 달라고 부탁하기","가족 근무자 달력에서 날짜를 눌러 쉬는 날로 요청해요. 받는 사람이 확정하면 달력에 바로 들어가요.","link-open"],["내 달력 없이 가족 것만 보고 싶어요","가족 연결에서 \"내 근무표를 가족에게 보여요\"를 끄면 달력 탭이 가족 달력으로 바뀌어요.","link-open"],["가족이 다 같이 쉬는 날 찾기","설정 › 부가 기능에서 \"같이 쉬는 날\"을 켜요.","more-addons"],["폰을 바꿔도 가족방 그대로","가족 연결에서 구글 계정을 연결해 두면 새 폰에서 가족방을 불러올 수 있어요.","link-open"],["가족을 빼고 싶어요","가족방엔 방장이 없어서 가족 과반이 찬성해야 빠져요. 30일 넘게 안 들어온 사람이나 내가 초대한 지 하루가 안 된 사람은 바로 뺄 수 있어요.","link-open"],["가족 메모와 근무 요청 무료 횟수","가족 메모, 근무 요청, 새 가족 포스트잇은 합쳐서 처음 10건까지 무료예요.","link-open"]]],["⏰","알람 · 알림",[["내일 하루만 일찍 일어나야 해요","알람을 하나 더 만들고 울리기를 \"한 번만\"으로 골라요. 원래 알람은 카드의 \"이번만 끄기\"로 하루 쉬게 해요.","tab:alarm"],["먼저 깼는데 알람이 울릴 것 같아요","알람 설정에서 \"5분 전 미리 알림\"을 켜 두면, 울리기 5분 전에 소리 없는 알림이 떠서 이번만 끌 수 있어요.","tab:alarm"],["야간 뒤 낮잠 땐 알림을 조용히","가족 연결의 \"자는 시간엔 소리 없이\"를 켜요.","link-open"]]],["💰","통계 · 수당",[["이번 달 월급이 얼마일지","설정 › 부가 기능의 \"근무 통계 · 수당\"에서 고정급과 명세서 한 장으로 맞춰요.","more-addons"],["연장 근무 기록","근무 통계를 켜면 날짜 창에 연장 칸이 생겨요. 가족에게도 늦게 끝나는 게 보여요.","tab:cal"]]],["📱","그 밖",[["홈 화면에서 근무 바로 보기","위젯을 홈 화면에 놓아요.","more-widget"],["폰을 바꿔도 데이터 지키기","설정 › 백업에서 구글 드라이브 자동 백업을 켜요.","more-backup"],["실수로 옛날 백업을 복원했어요","설정 › 백업의 \"복원 직전으로 되돌리기\"를 눌러요.","more-backup"]]]];
 // v0.148 자세히: 이럴 때 · 단계 · 사진 (사진은 tips/ · tests/tipshots.js 가 실제 앱을 찍음)
-const TIPD={"내일 하루만 일찍 일어나야 해요": {"w": "다음 주 수요일만 평소보다 1시간 일찍 나가야 할 때 써요. 원래 알람은 그대로 두고 한 번만 울릴 알람을 하나 더 만들어요.","s": [["아래 <b>알람</b> 탭에서 오른쪽 위 <b>＋</b>를 눌러요.","t1_a"],["그날 근무를 고르고 시간을 정해요. 그날이 주간이면 <b>주간</b>을 고르고 오전 5:00으로 맞춰요."],["울리기에서 <b>한 번만</b>을 골라요. 아래에 울릴 날짜가 보이면 맞게 된 거예요.","t1_b"],["오른쪽 위 <b>저장</b>을 눌러요. 그날 원래 알람도 울리면 \"그날만 건너뛸까요?\"가 떠요. <b>그날만 건너뛰기</b>를 누르면 돼요."],["원래 알람만 하루 쉬고 싶을 땐 알람 카드의 <b>이번만 끄기</b>를 눌러요. 울리기 하루 전부터 보여요."]]},"연장 근무 기록": {"w": "오늘 퇴근이 2시간 늦어졌을 때 써요. 남겨 두면 이번 달 연장 시간과 예상 월급에 들어가고, 가족 폰에도 늦게 끝나는 게 보여요.","pre": "먼저 설정 › 부가 기능에서 <b>근무 통계 · 수당</b>을 켜 주세요.","s": [["달력에서 그 날짜를 눌러요. 근무 줄 끝에 <b>연장</b>이 있어요.","t2_a"],["<b>+2시간</b>을 누르면 퇴근이 늦춰지고 \"연장 2시간\"이 떠요. 한 번 더 누르면 시간이 더 붙어요.","t2_b"],["정확한 시각을 넣고 싶으면 <b>실제 퇴근</b> 칸을 눌러 고쳐요."],["창을 닫으면 저장돼요. 달력 날짜 칸에 \"+2시간\"이 붙어요."]]},"근무가 바뀌었을 때 한 번에 고치기": {"w": "다음 달 근무표가 나왔는데 여러 날이 패턴과 다를 때 써요. 하루씩 열지 않고 붓으로 칠하듯 한 번에 고쳐요.","s": [["달력에서 아무 날짜나 눌러요. 근무 줄 오른쪽에 <b>여러 날 칠하기</b>가 있어요.","t3_a"],["칠할 근무(예: 휴무)를 고르고 달력 날짜를 누르거나 손가락으로 쭉 그어요."],["다 칠했으면 <b>완료</b>를 눌러요. 가족과 연결돼 있으면 가족 폰에도 바뀐 근무가 가요."]]},"약 먹었는지 체크": {"w": "아침, 저녁 약을 먹었는지 헷갈릴 때 써요. 달력 날짜 위에 스티커로 체크하고 시각이 되면 알림도 받아요.","s": [["달력 날짜의 <b>윗부분</b>을 누르면 스티커 창이 열려요.","t4_a"],["<b>＋</b>를 눌러 약을 고르고, 하루 몇 번 먹는지와 알림 시각을 정해요. 반복은 \"매일\"로 둬요."],["먹을 때마다 그 칸을 눌러요. 하루 두 번 먹는 약은 1/2, 2/2로 채워져요."]]},"가족에게도 보이는 메모": {"w": "\"토요일 장모님 생신\"처럼 가족 폰에도 보이게 하고 싶을 때 써요.","pre": "먼저 가족 연결이 돼 있어야 해요.","s": [["날짜를 누르고 메모 줄 오른쪽 <b>자세히</b>를 눌러요. 한 줄 입력칸에 쓴 메모는 나만 봐요.","t5_a"],["<b>가족에게</b>를 고르고 적어요. 시간과 색도 여기서 정해요."],["저장하면 가족 폰에 알림이 가고 달력에 ♥로 보여요."]]},"이번 달 내내 기억할 것 붙여 두기": {"w": "\"이번 달 안에 자동차 보험 갱신\"처럼 날짜는 없지만 한 달 내내 봐야 할 게 있을 때 써요.","s": [["달력 왼쪽 위 <b>노란 포스트잇</b>을 눌러요.","t6_a"],["<b>＋</b>를 눌러 할 일이나 메모를 적어요. 할 일은 줄마다 체크할 수 있어요."],["포스트잇을 누르면 크게 열려요. 줄을 눌러 체크하고, <b>수정하기</b>로 고쳐요. 다 하면 가족에게 \"다 했어요\" 소식이 가요."]]},"학원 · 동아리 · 운동 날씨까지": {"w": "아이 학원이 끝나는 저녁 7시에 비가 오는지, 동호회 시간 날씨는 어떤지 같이 보고 싶을 때 써요.","pre": "먼저 설정 › 부가 기능에서 <b>출퇴근 날씨</b>를 켜 주세요.","s": [["스티커 창에서 그 스티커를 꾹 눌러 <b>고치기</b>로 들어가요."],["맨 아래 <b>학원 · 취미 · 동아리</b>를 펼쳐요."],["활동 시간과 위치를 정하면 날짜 창 날씨에 그 시간 칸이 생기고, 끝나면 자동으로 완료돼요. 근무와 겹치는 날은 빠져요."]]},"반복 스티커를 그만하고 싶어요": {"w": "헬스장을 그만뒀는데 운동 스티커가 매일 계속 깔릴 때 써요. 지난 기록은 남기고 앞으로만 없애요.","s": [["그만두는 날의 스티커 창에서 그 스티커를 꾹 눌러요."],["<b>그만하기</b>를 누르면 그날부터 안 깔려요. 지난 체크와 통계는 그대로예요."],["기록까지 모두 없애려면 스티커 고치기에서 <b>지우기</b>를 눌러요."]]},"가족과 근무표 주고받기": {"w": "남편과 아내 폰에서 서로의 근무를 보고, 바뀌면 바로 알고 싶을 때 써요.","s": [["<b>가족</b> 탭 오른쪽 위 톱니바퀴(또는 설정 › 가족 목록)에서 <b>가족 연결</b>을 눌러요.","t9_a"],["먼저 하는 사람이 가족방을 만들고 <b>초대 코드</b>를 메신저로 보내요."],["받은 사람은 같은 화면에서 코드를 넣어요. 이제 근무가 바뀌면 서로 소식이 오고, 소식의 근무 기록에서 언제 바뀌었는지도 볼 수 있어요."]]},"가족에게 그날 쉬어 달라고 부탁하기": {"w": "\"그날 장모님 생신인데 쉴 수 있어?\"처럼 가족 근무를 바꿔 달라고 부탁할 때 써요.","pre": "먼저 가족 연결이 돼 있어야 해요.","s": [["가족 근무자 달력에서 그 날짜를 눌러요."],["<b>근무 변경 요청</b>에서 원하는 근무(예: 휴무)를 고르고 한마디 적어 <b>요청 보내기</b>를 눌러요."],["받는 사람은 소식에서 <b>수락</b>, <b>보류</b>, <b>거절</b> 중에 골라요. 수락하면 달력에 바로 들어가고 근무 기록에도 남아요."]]},"매달 1일 · 말일에 할 일 띄우기": {"w": "카드값 확인이나 관리비처럼 매달 같은 날 해야 하는 일이 있을 때 써요.","s": [["달력에서 그 날짜를 누르고, 메모 줄의 <b>자세히</b>를 눌러요.","t16_a"],["<b>반복</b>을 눌러 1일, 말일, 말일 하루 전 중에 골라요.","t16_b"],["근무에 맞출 수도 있어요. <b>주간인 날만</b>을 고르면 그날이 주간일 때만 뜨고, 아니면 다음 근무 날로 넘어가요."]]}};
+const TIPD={"내일 하루만 일찍 일어나야 해요": {"w": "다음 주 수요일만 평소보다 1시간 일찍 나가야 할 때 써요. 원래 알람은 그대로 두고 한 번만 울릴 알람을 하나 더 만들어요.","s": [["아래 <b>알람</b> 탭에서 오른쪽 위 <b>＋</b>를 눌러요.","t1_a"],["그날 근무를 고르고 시간을 정해요. 그날이 주간이면 <b>주간</b>을 고르고 오전 5:00으로 맞춰요."],["울리기에서 <b>한 번만</b>을 골라요. 아래에 울릴 날짜가 보이면 맞게 된 거예요.","t1_b"],["오른쪽 위 <b>저장</b>을 눌러요. 그날 원래 알람도 울리면 \"그날만 건너뛸까요?\"가 떠요. <b>그날만 건너뛰기</b>를 누르면 돼요."],["원래 알람만 하루 쉬고 싶을 땐 알람 카드의 <b>이번만 끄기</b>를 눌러요. 울리기 하루 전부터 보여요."]]},"연장 근무 기록": {"w": "오늘 퇴근이 2시간 늦어졌을 때 써요. 남겨 두면 이번 달 연장 시간과 예상 월급에 들어가고, 가족 폰에도 늦게 끝나는 게 보여요.","pre": "먼저 설정 › 부가 기능에서 <b>근무 통계 · 수당</b>을 켜 주세요.","s": [["달력에서 그 날짜를 눌러요. 근무 줄 끝에 <b>연장</b>이 있어요.","t2_a"],["<b>+2시간</b>을 누르면 퇴근이 늦춰지고 \"연장 2시간\"이 떠요. 한 번 더 누르면 시간이 더 붙어요.","t2_b"],["정확한 시각을 넣고 싶으면 <b>실제 퇴근</b> 칸을 눌러 고쳐요."],["창을 닫으면 저장돼요. 달력 날짜 칸에 \"+2시간\"이 붙어요."]]},"근무가 바뀌었을 때 한 번에 고치기": {"w": "다음 달 근무표가 나왔는데 여러 날이 패턴과 다를 때 써요. 하루씩 열지 않고 붓으로 칠하듯 한 번에 고쳐요.","s": [["달력에서 아무 날짜나 눌러요. 근무 줄 오른쪽에 <b>여러 날 칠하기</b>가 있어요.","t3_a"],["칠할 근무(예: 휴무)를 고르고 달력 날짜를 누르거나 손가락으로 쭉 그어요."],["다 칠했으면 <b>완료</b>를 눌러요. 가족과 연결돼 있으면 가족 폰에도 바뀐 근무가 가요."]]},"약 먹었는지 체크": {"w": "아침, 저녁 약을 먹었는지 헷갈릴 때 써요. 달력 날짜 위에 스티커로 체크하고 시각이 되면 알림도 받아요.","s": [["달력 날짜의 <b>윗부분</b>을 누르면 스티커 창이 열려요.","t4_a"],["<b>스티커 붙이기</b>를 눌러 약을 고르고, 하루 몇 번 먹는지와 알림 시각을 정해요. 반복은 \"매일\"로 둬요."],["먹을 때마다 그 칸을 눌러요. 하루 두 번 먹는 약은 1/2, 2/2로 채워져요."]]},"가족에게도 보이는 메모": {"w": "\"토요일 장모님 생신\"처럼 가족 폰에도 보이게 하고 싶을 때 써요.","pre": "먼저 가족 연결이 돼 있어야 해요.","s": [["날짜를 누르고 메모 줄 오른쪽 <b>자세히</b>를 눌러요. 한 줄 입력칸에 쓴 메모는 나만 봐요.","t5_a"],["<b>가족에게</b>를 고르고 적어요. 시간과 색도 여기서 정해요."],["저장하면 가족 폰에 알림이 가고 달력에 ♥로 보여요."]]},"이번 달 내내 기억할 것 붙여 두기": {"w": "\"이번 달 안에 자동차 보험 갱신\"처럼 날짜는 없지만 한 달 내내 봐야 할 게 있을 때 써요.","s": [["달력 왼쪽 위 <b>노란 포스트잇</b>을 눌러요.","t6_a"],["<b>＋</b>를 눌러 할 일이나 메모를 적어요. 할 일은 줄마다 체크할 수 있어요."],["포스트잇을 누르면 크게 열려요. 줄을 눌러 체크하고, <b>수정하기</b>로 고쳐요. 다 하면 가족에게 \"다 했어요\" 소식이 가요."]]},"학원 · 동아리 · 운동 날씨까지": {"w": "아이 학원이 끝나는 저녁 7시에 비가 오는지, 동호회 시간 날씨는 어떤지 같이 보고 싶을 때 써요.","pre": "먼저 설정 › 부가 기능에서 <b>출퇴근 시간 · 날씨</b>를 켜 주세요.","s": [["날짜를 누르고 <b>스티커 붙이기</b>에서 그 스티커를 골라요."],["맨 아래 <b>학원 · 취미 · 동아리</b>를 펼쳐요."],["활동 시간과 위치를 정하면 날짜 창 날씨에 그 시간 칸이 생기고, 끝나면 자동으로 완료돼요. 근무와 겹치는 날은 빠져요."]]},"반복 스티커를 그만하고 싶어요": {"w": "헬스장을 그만뒀는데 운동 스티커가 매일 계속 깔릴 때 써요. 지난 기록은 남기고 앞으로만 없애요.","s": [["그만두는 날의 스티커 창에서 그 스티커 줄 오른쪽 <b>⋯</b>를 눌러요."],["<b>이날부터 떼기</b>를 누르면 그날부터 안 깔려요. 지난 체크와 통계는 그대로예요."],["기록까지 모두 없애려면 설정 › 스티커에서 그 칸을 눌러 <b>지우기</b>를 눌러요."]]},"가족과 근무표 주고받기": {"w": "남편과 아내 폰에서 서로의 근무를 보고, 바뀌면 바로 알고 싶을 때 써요.","s": [["<b>가족</b> 탭 오른쪽 위 톱니바퀴(또는 설정 › 가족 목록)에서 <b>가족 연결</b>을 눌러요.","t9_a"],["먼저 하는 사람이 가족방을 만들고 <b>초대 코드</b>를 메신저로 보내요."],["받은 사람은 같은 화면에서 코드를 넣어요. 이제 근무가 바뀌면 서로 소식이 오고, 소식의 근무 기록에서 언제 바뀌었는지도 볼 수 있어요."]]},"가족에게 그날 쉬어 달라고 부탁하기": {"w": "\"그날 장모님 생신인데 쉴 수 있어?\"처럼 가족 근무를 바꿔 달라고 부탁할 때 써요.","pre": "먼저 가족 연결이 돼 있어야 해요.","s": [["가족 근무자 달력에서 그 날짜를 눌러요."],["<b>근무 변경 요청</b>에서 원하는 근무(예: 휴무)를 고르고 한마디 적어 <b>요청 보내기</b>를 눌러요."],["받는 사람은 소식에서 <b>수락</b>, <b>보류</b>, <b>거절</b> 중에 골라요. 수락하면 달력에 바로 들어가고 근무 기록에도 남아요."]]},"매달 1일 · 말일에 할 일 띄우기": {"w": "카드값 확인이나 관리비처럼 매달 같은 날 해야 하는 일이 있을 때 써요.","s": [["달력에서 그 날짜를 누르고, 메모 줄의 <b>자세히</b>를 눌러요.","t16_a"],["<b>반복</b>을 눌러 1일, 말일, 말일 하루 전 중에 골라요.","t16_b"],["근무에 맞출 수도 있어요. <b>주간인 날만</b>을 고르면 그날이 주간일 때만 뜨고, 아니면 다음 근무 날로 넘어가요."]]}};
 
 // v0.136 나머지 자세히 (단계가 여러 개인 것만 · 한두 번 누르면 끝나는 것은 한 줄 그대로)
 Object.assign(TIPD,{   // v0.148 글 다듬기 (보통 문장 · 해요체 · 이모지 없음)
@@ -7312,7 +7325,7 @@ Object.assign(TIPD,{   // v0.148 글 다듬기 (보통 문장 · 해요체 · �
     ['그날 <b>같은 그림 스티커</b>가 따로 있으면 겹쳐요. 새로 깔 때 뜨는 창에서 어느 쪽을 보일지 골라요.'],
     ['<b>반복 조건</b>에 안 맞는 날이에요. 근무 맞춤, 요일, 공휴일 빼기, 주말 빼기를 스티커 고치기에서 확인해요.'],
     ['<b>학원이나 동아리 활동 시간</b>이 그날 근무와 겹치면 빠져요.'],
-    ['<b>그만하기</b>를 누른 뒤의 날짜와 <b>이 날만 빼기</b> 한 날에는 안 깔려요. 다시 쓰려면 스티커 고치기에서 반복을 켜요.']]},
+    ['<b>이날부터 떼기</b>를 누른 뒤의 날짜와 <b>이날만 떼기</b> 한 날에는 안 깔려요. 다시 쓰려면 스티커 줄 ⋯ › 반복 · 알림 고치기에서 반복을 켜요.']]},
   '조나 회사가 바뀌었어요':{w:'다음 달부터 조가 바뀌거나 회사를 옮겨 근무 순서가 달라질 때 써요. 지난 근무표와 통계는 그대로 두고 그날부터만 바꿔요.',s:[
     ['설정 › <b>근무 패턴</b>을 열어요.','t11_a'],
     ['새 순서로 패턴을 고르거나 만들고, <b>1번째 칸 시작 날</b>을 바뀌는 날로 정해요.'],
@@ -7329,11 +7342,11 @@ Object.assign(TIPD,{   // v0.148 글 다듬기 (보통 문장 · 해요체 · �
     ['설정 › <b>부가 기능</b>에서 업무 메모를 켜요.'],
     ['날짜 창에 업무 메모 줄이 생겨요. 인수, 인계, 지시를 색으로 나눠 적어요.'],
     ['지난 것은 설정 맨 위 찾기 칸에서 글자로 찾아요.']]},
-  '아이 등하교나 학원 날씨':{w:'아이 하교 시간에 비가 오는지, 학원 끝날 때 추운지 미리 알고 싶을 때 써요.',pre:'먼저 가족 탭에 아이를 추가하고, 부가 기능에서 출퇴근 날씨를 켜 주세요.',s:[
+  '아이 등하교나 학원 날씨':{w:'아이 하교 시간에 비가 오는지, 학원 끝날 때 추운지 미리 알고 싶을 때 써요.',pre:'먼저 가족 탭에 아이를 추가하고, 부가 기능에서 출퇴근 시간 · 날씨를 켜 주세요.',s:[
     ['가족 탭에서 아이 달력을 열고 날짜 창의 <b>일정 패턴</b>을 눌러요.'],
     ['유치원, 학교 같은 일정마다 시간과 <b>위치</b>를 넣어요.'],
     ['학원은 아이 달력 스티커를 고쳐 <b>활동</b> 시간과 위치를 넣어요. 날씨 팝업에 그 시간 칸이 생겨요.']]},
-  '아침 알람 끄고 바로 날씨 보기':{w:'알람을 끄자마자 오늘 출퇴근 날씨와 우산이 필요한지 보고 싶을 때 써요.',pre:'먼저 부가 기능에서 출퇴근 날씨를 켜고 집과 직장 동네를 정해 주세요.',s:[
+  '아침 알람 끄고 바로 날씨 보기':{w:'알람을 끄자마자 오늘 출퇴근 날씨와 우산이 필요한지 보고 싶을 때 써요.',pre:'먼저 부가 기능에서 출퇴근 시간 · 날씨를 켜고 집과 직장 동네를 정해 주세요.',s:[
     ['알람 탭에서 알람 카드를 눌러요.'],
     ['날씨를 <b>끈 뒤 보기</b>로 골라요.'],
     ['다음부터 알람을 끄면 날씨 카드가 바로 떠요.']]},
@@ -9343,7 +9356,7 @@ function calShiftFast(n,keepView){
   if(tab!=='cal'||Math.abs(n)>CAL_R||S.stzMode==='3'||paint||(famView()&&famPeers().length))return false;
   return calReorder(cur.y*12+cur.m+n,keepView);
 }
-function calFitMark(v){v.querySelectorAll('.track .panel').forEach(p=>{if(p.firstElementChild)p.dataset.fit=1;});}
+function calFitMark(v){const mk=cur.y*12+cur.m;v.querySelectorAll('.track .panel').forEach(p=>{if(p.firstElementChild&&+p.dataset.mk===mk)p.dataset.fit=1;});}   // 보이는 달만 (옆 달은 calFillLater 가 스티커 크기까지 맞춤)
 function calFill(p){const v=+p.dataset.mk;if(v<MIN_M||v>MAX_M){p.innerHTML='';return;}const ll=lastLines;p.style.removeProperty('--stz');p.innerHTML=calPanel(Math.floor(v/12),v%12);lastLines=ll;}
 function calFillLater(ms){clearTimeout(calFarT);calFarT=setTimeout(()=>{try{   // 한 번에 판 하나씩 (가까운 것부터) → 손가락이 와도 바로 받음
   const tr=$('#track');if(!tr||tab!=='cal')return;if(calTouch||busy||performance.now()-calLastS<120){calFillLater(150);return;}   // 손가락 · 움직이는 중엔 미룸
@@ -9960,8 +9973,9 @@ document.addEventListener('click',e=>{
     case 'sd-more':{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;const id=`data-id="${s.id}" data-k="${k}"`;
       const rep=['daily','dow','work','month'].includes(s.rep)&&(!s.to||s.to>=k);
       openPop(`<div class="mh">${esc(s.name)}<b>${md(k)}</b></div>
-        <button class="mi" data-act="sd-skip" ${id}>${s.one&&(s.dates||[]).includes(k)?'🗑 이날 지우기':'⏭ 이날만 건너뛰기'}</button>
-        ${rep?`<button class="mi" data-act="sd-end" ${id}>⏹ 이날부터 그만하기</button>`:''}
+        <button class="mi" data-act="sd-skip" ${id}>⏭ 이날만 떼기</button>
+        ${rep?`<button class="mi" data-act="sd-end" ${id}>⏹ 이날부터 떼기</button>`:''}
+        ${stampsOn(k).length>=2?`<button class="mi" data-act="sd-all" data-k="${k}">🗑 이날 스티커 전부 떼기</button>`:''}
         <button class="mi" data-act="sd-edit" ${id}>✏️ 반복 · 알림 고치기</button>
         <button class="mi" data-act="sd-back" data-k="${k}" style="justify-content:center;color:var(--muted)">닫기</button>`);break;}
     case 'sd-edit':closePop();openStampReg(t.dataset.k,t.dataset.id,'day');break;
@@ -9978,11 +9992,15 @@ document.addEventListener('click',e=>{
       const back=()=>{if(n0){(S.stamps.log[k]=S.stamps.log[k]||{})[s.id]=n0;if(sn0)((S.stamps.snap=S.stamps.snap||{})[k]=S.stamps.snap[k]||{})[s.id]=sn0;}};
       if(s.one&&(s.dates||[]).includes(k)){   // ＋ 로 이날만 붙인 것: 그 날을 지움 (반복으로도 깔리는 날이면 건너뛴 날로 같이)
         s.dates=s.dates.filter(x=>x!==k);const viaRule=stampPlanned(s,k);if(viaRule)(s.skip=s.skip||[]).push(k);
-        save();render();stampReopen(k);toastUndo(`${icoTxt(s.emoji,'✔')} ${s.name} 지웠어요`,()=>{(s.dates=s.dates||[]).push(k);if(viaRule)s.skip=(s.skip||[]).filter(x=>x!==k);back();save();render();if($('#pop').classList.contains('open'))stampReopen(k);});break;}
-      (s.skip=s.skip||[]).push(k);s.dates=(s.dates||[]).filter(x=>x!==k);save();render();stampReopen(k);toastUndo(`${s.kind==='pill'?'💊':icoTxt(s.emoji,'✔')} ${s.name} 이날은 건너뛰어요`,()=>{s.skip=s.skip.filter(x=>x!==k);back();save();render();if($('#pop').classList.contains('open'))stampReopen(k);});break;}
+        save();render();stampReopen(k);toastUndo(`${icoTxt(s.emoji,'✔')} ${s.name} 이날 뗐어요`,()=>{(s.dates=s.dates||[]).push(k);if(viaRule)s.skip=(s.skip||[]).filter(x=>x!==k);back();save();render();if($('#pop').classList.contains('open'))stampReopen(k);});break;}
+      (s.skip=s.skip||[]).push(k);s.dates=(s.dates||[]).filter(x=>x!==k);save();render();stampReopen(k);toastUndo(`${s.kind==='pill'?'💊':icoTxt(s.emoji,'✔')} ${s.name} 이날 뗐어요`,()=>{s.skip=s.skip.filter(x=>x!==k);back();save();render();if($('#pop').classList.contains('open'))stampReopen(k);});break;}
+    case 'sd-all':{const k=t.dataset.k,list=stampsOn(k);if(!list.length)break;   // v0.176 그날 스티커 전부 떼기 (반복 스티커는 그날만 빠짐 · 되돌리기)
+      const snap=JSON.stringify(S.stamps);
+      list.forEach(({s})=>{if(stampCnt(k,s.id))stampSet(s.id,k,0);if(s.one&&(s.dates||[]).includes(k)){s.dates=s.dates.filter(x=>x!==k);if(stampPlanned(s,k))(s.skip=s.skip||[]).push(k);}else{(s.skip=s.skip||[]).push(k);s.dates=(s.dates||[]).filter(x=>x!==k);}});
+      save();render();stampReopen(k);toastUndo(`이날 스티커 ${list.length}개를 뗐어요`,()=>{S.stamps=JSON.parse(snap);save();render();if($('#pop').classList.contains('open'))stampReopen(k);});break;}
     case 'sd-end':{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;
       const old=s.to||'';s.to=addK(k,-1);save();render();stampReopen(k);
-      toastUndo(`${s.kind==='pill'?'💊':icoTxt(s.emoji,'✔')} ${s.name} 이날부터 그만해요 (지난 기록은 그대로)`,()=>{s.to=old;save();render();});break;}
+      toastUndo(`${s.kind==='pill'?'💊':icoTxt(s.emoji,'✔')} ${s.name} 이날부터 뗐어요 (지난 기록은 그대로)`,()=>{s.to=old;save();render();});break;}
     case 'sd-add':if(t.classList.contains('dis')){stampFull();break;}closePop();openStampPick(t.dataset.k);break;
     case 'sp-pick':closePop();openStampReg(t.dataset.k,t.dataset.id);break;
     case 'sp-fill':{const id=t.dataset.id,k=t.dataset.k;closePop();openStampBig({title:'칸에 넣을 스티커',sub:md(k),extra:stPlusRow,onCancel:()=>openStampPick(k),onPick:(e,n,src)=>{const x=stFillSlot(id,e,n,src);save();render();if(x)openStampReg(k,x.id,'','fill');}});break;}
@@ -9990,10 +10008,10 @@ document.addEventListener('click',e=>{
     case 'slot-open':openStampSlot(t.dataset.id);break;
     case 'slot-col':{slotPullName(t.dataset.id);const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(x){x.color=t.dataset.v;save();render();openStampPage();openStampSlot(x.id);}break;}
     case 'slot-save':{slotPullName(t.dataset.id);closePop();save();render();openStampPage();break;}
-    case 'slot-clear':{slotPullName(t.dataset.id);const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(!x)break;closePop();const ex=!!x.one;stSlotClear(x.id);save();render();openStampPage();toast(ex?'지웠어요 · 지난 체크 기록은 그대로예요':stMoved?'비웠어요 · 달력에 붙인 스티커는 그대로예요':'비웠어요');break;}
+    case 'slot-clear':{slotPullName(t.dataset.id);const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(!x)break;closePop();const ex=!!x.one;stSlotClear(x.id);save();render();openStampPage();toast(ex?'지웠어요 · 지난 체크 기록은 그대로예요':stMoved?'비웠어요 · 지난 기록은 그대로예요':'비웠어요');break;}
     case 'slot-swap':{slotPullName(t.dataset.id);const x=S.stamps.defs.find(y=>y.id===t.dataset.id);if(!x)break;
       openIcn({title:'다른 스티커로 바꾸기',sub:'달력에 붙인 옛 스티커는 그대로 남아요',icon:x.kind==='mark'?x.emoji:'',name:x.name,autoWas:x.name,placeholder:'이름',cats:STAMP_CAT,needIcon:true,extra:stPlusRow,
-        onSave:(e,n,src)=>{stFillSlot(x.id,e,n,src);save();render();openStampPage();toast(stMoved?'바꿨어요 · 달력에 붙인 옛 스티커는 그대로예요':'바꿨어요');}});break;}
+        onSave:(e,n,src)=>{stFillSlot(x.id,e,n,src);save();render();openStampPage();toast(stMoved?'바꿨어요 · 옛 스티커의 지난 기록은 그대로예요':'바꿨어요');}});break;}
     case 'sd-manage':closePop();openStampPage();break;
     case 'sr-back':srBack();break;
     case 'sr-rep':srPull();stDraft.rep=t.dataset.v;renderStampReg();break;
