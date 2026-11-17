@@ -5353,22 +5353,22 @@ const MO=(()=>{
   // ---- 날짜 창 · 작은 창: 누른 자리에서 커지고 그 자리로 (v0.197 transform 만 써서 GPU 로만 움직임 · 잰 다음 프레임에 시작) ----
   const tfOf=(c,b)=>`translate(${(c.left-b.left).toFixed(1)}px,${(c.top-b.top).toFixed(1)}px) scale(${Math.max(.02,c.width/b.width).toFixed(4)},${Math.max(.02,c.height/b.height).toFixed(4)})`;
   const hideKids=box=>[...box.children].forEach(x=>x.style.opacity='0');
-  const showKids=(box,d0)=>{[...box.children].forEach((x,i)=>{x.style.opacity='';if(i<8)x.animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:260,delay:d0+i*35,easing:'ease-out',fill:'backwards'});});};
+  const showKids=(box,d0)=>{[...box.children].forEach((x,i)=>{x.style.opacity='';if(i<8)x.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:220,delay:d0+i*25,easing:'ease-out',fill:'backwards'});});};
   let shClose=null;
   function sheetOpen(sh,was){if(shClose){shClose();shClose=null;}if(was||RM())return;
     const el=src();if(!el||!el.classList.contains('cell'))return;
     const c=el.getBoundingClientRect(),bg=getComputedStyle(el).backgroundColor;
     sh.style.transition='none';sh.style.opacity='0';hideKids(sh);
     requestAnimationFrame(()=>{const b=sh.getBoundingClientRect(),bg2=getComputedStyle(sh).backgroundColor;sh.style.opacity='';sh.style.transformOrigin='0 0';sh.style.willChange='transform';
-      const a=sh.animate([{transform:tfOf(c,b),backgroundColor:bg&&bg!=='rgba(0, 0, 0, 0)'?bg:bg2,borderRadius:'40px'},{transform:'translateY(0)',backgroundColor:bg2,borderRadius:getComputedStyle(sh).borderRadius}],{duration:400,easing:EO});
-      showKids(sh,140);const end=()=>{sh.style.transition='';sh.style.transformOrigin='';sh.style.willChange='';};a.onfinish=end;a.oncancel=end;});}
+      const a=sh.animate([{transform:tfOf(c,b),backgroundColor:bg&&bg!=='rgba(0, 0, 0, 0)'?bg:bg2,borderRadius:'40px',opacity:0},{opacity:1,offset:.35},{transform:'translateY(0)',backgroundColor:bg2,borderRadius:getComputedStyle(sh).borderRadius,opacity:1}],{duration:380,easing:EO});
+      showKids(sh,50);/* v0.199 빈 흰 상자가 커지지 않게: 처음엔 투명 → 칸 위에서 겹쳐 나타나고 내용도 바로 */const end=()=>{sh.style.transition='';sh.style.transformOrigin='';sh.style.willChange='';};a.onfinish=end;a.oncancel=end;});}
   function sheetClose(sh,k,after){if(RM()||!sh.classList.contains('open'))return false;
     let cell=null;if(k){cell=[...document.querySelectorAll(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`)].find(x=>{const r=x.getBoundingClientRect();return r.width>4&&r.left>=-2&&r.right<=innerWidth+2&&r.top>=0&&r.bottom<=innerHeight;})||null;}
     if(!cell)return false;
     const b=sh.getBoundingClientRect(),c=cell.getBoundingClientRect(),bg=getComputedStyle(cell).backgroundColor;
     sh.classList.add('closing');sh.style.transformOrigin='0 0';sh.style.willChange='transform';
-    const kids=[...sh.children].map(x=>x.animate([{opacity:1},{opacity:0}],{duration:110,fill:'forwards'}));
-    const a=sh.animate([{transform:'translateY(0)',borderRadius:getComputedStyle(sh).borderRadius},{transform:tfOf(c,b),borderRadius:'40px',backgroundColor:bg&&bg!=='rgba(0, 0, 0, 0)'?bg:getComputedStyle(sh).backgroundColor}],{duration:320,easing:EC,fill:'forwards'});
+    const kids=[...sh.children].map(x=>x.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'}));
+    const a=sh.animate([{transform:'translateY(0)',borderRadius:getComputedStyle(sh).borderRadius,opacity:1},{opacity:1,offset:.45},{transform:tfOf(c,b),borderRadius:'40px',backgroundColor:bg&&bg!=='rgba(0, 0, 0, 0)'?bg:getComputedStyle(sh).backgroundColor,opacity:0}],{duration:300,easing:EC,fill:'forwards'});
     let ok=false;const clean=()=>{sh.style.transition='none';sh.classList.remove('closing');a.cancel();kids.forEach(x=>x.cancel());sh.style.transformOrigin='';sh.style.willChange='';void sh.offsetHeight;sh.style.transition='';};
     shClose=()=>{if(ok)return;ok=true;clean();if(after)after();};
     a.onfinish=()=>{if(ok)return;ok=true;shClose=null;clean();if(after)after();const n=document.querySelector(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`);if(n)n.animate([{transform:'scale(.92)'},{transform:'scale(1.04)',offset:.6},{transform:'none'}],{duration:300,easing:EO});};
@@ -5380,15 +5380,15 @@ const MO=(()=>{
     m.style.opacity='0';hideKids(m);
     requestAnimationFrame(()=>{if(!m.isConnected)return;m.style.opacity='';const b=m.getBoundingClientRect();m.style.transformOrigin='0 0';m.style.willChange='transform';
       pop.animate([{backgroundColor:'rgba(0,0,0,0)'},{backgroundColor:getComputedStyle(pop).backgroundColor}],{duration:280});
-      const a=c?m.animate([{transform:tfOf(c,b),borderRadius:'30px'},{transform:'none',borderRadius:getComputedStyle(m).borderRadius}],{duration:380,easing:EO})
+      const a=c?m.animate([{transform:tfOf(c,b),borderRadius:'30px',opacity:0},{opacity:1,offset:.35},{transform:'none',borderRadius:getComputedStyle(m).borderRadius,opacity:1}],{duration:360,easing:EO})
                :m.animate([{transform:'translateY(110%)'},{transform:'none'}],{duration:360,easing:EO});
-      showKids(m,c?110:80);a.onfinish=()=>{m.style.transformOrigin='';m.style.willChange='';};});}
+      showKids(m,c?40:60);a.onfinish=()=>{m.style.transformOrigin='';m.style.willChange='';};});}
   function popClose(old){if(RM()||!old.classList.contains('open'))return false;const m=old.querySelector('.menu');if(!m||m.style.opacity==='0')return false;
     const fresh=old.cloneNode(false);fresh.className='';fresh.removeAttribute('style');old.parentNode.insertBefore(fresh,old);old.style.pointerEvents='none';old.classList.remove('open');old.classList.add('ghost');old.setAttribute('aria-hidden','true');old.inert=true;
     const b=m.getBoundingClientRect(),s=popSrc&&popSrc.isConnected?popSrc:null;popSrc=null;m.style.transformOrigin='0 0';m.style.willChange='transform';
-    [...m.children].forEach(x=>x.animate([{opacity:1},{opacity:0}],{duration:110,fill:'forwards'}));
+    [...m.children].forEach(x=>x.animate([{opacity:1},{opacity:0}],{duration:180,fill:'forwards'}));
     old.animate([{backgroundColor:getComputedStyle(old).backgroundColor},{backgroundColor:'rgba(0,0,0,0)'}],{duration:260,fill:'forwards'});
-    let a;if(s){const c=s.getBoundingClientRect();a=m.animate([{transform:'none'},{transform:tfOf(c,b),borderRadius:'30px'}],{duration:300,easing:EC,fill:'forwards'});}
+    let a;if(s){const c=s.getBoundingClientRect();a=m.animate([{transform:'none',opacity:1},{opacity:1,offset:.4},{transform:tfOf(c,b),borderRadius:'30px',opacity:0}],{duration:280,easing:EC,fill:'forwards'});}
     else a=m.animate([{transform:'none'},{transform:'translateY(110%)'}],{duration:250,easing:EC,fill:'forwards'});
     a.onfinish=()=>{old.remove();if(s)s.animate([{transform:'scale(.9)'},{transform:'scale(1.05)',offset:.6},{transform:'none'}],{duration:300,easing:EO});};setTimeout(()=>{if(old.isConnected)old.remove();},700);return fresh;}
   // ---- 하단 탭: 아이콘이 떠오르며 회색으로 차오름 ----
@@ -5442,10 +5442,11 @@ const MO=(()=>{
     const old=new Map();box.querySelectorAll('.pg-sec').forEach(e=>old.set(key(e),e.getBoundingClientRect().top));fn();
     const nb=$('#page .pg-b');if(!nb)return;nb.querySelectorAll('.pg-sec').forEach(e=>{const k=key(e),t=e.getBoundingClientRect().top;if(old.has(k)){const d=old.get(k)-t;if(Math.abs(d)>1)e.animate([{transform:`translateY(${d}px)`},{transform:'none'}],{duration:360,easing:EO});}else e.animate([{opacity:0,transform:'scale(.96)'},{opacity:1,transform:'none'}],{duration:300,delay:80,easing:'ease-out',fill:'backwards'});});}
   // ---- 탭 바꿀 때: 누른 쪽에서 새 화면이 살짝 밀려 들어오고 카드들이 차례로 (시안 design/tab-motion) ----
-  function tabIn(dir){if(!dir||RM())return;const v=$('#view'),tp=$('#top');
-    [v,tp].forEach(e=>e&&e.animate([{transform:`translateX(${dir*36}px)`,opacity:0},{transform:'none',opacity:1}],{duration:320,easing:EO}));
-    const kids=v?[...(v.children.length===1&&v.firstElementChild.children.length>1?v.firstElementChild.children:v.children)].slice(0,6):[];
-    kids.forEach((x,i)=>x.animate([{transform:'translateY(10px)',opacity:0},{transform:'none',opacity:1}],{duration:280,delay:60+i*40,easing:'ease-out',fill:'backwards'}));}
+  function tabIn(dir){if(!dir||RM())return;const v=$('#view'),tp=$('#top');   // v0.199 하얗게 비어 보이지 않게: 완전 투명에서 시작하지 않음 · 달력 탭은 카드 차례 효과 없음 (그리는 동안 비어 보임)
+    [v,tp].forEach(e=>e&&e.animate([{transform:`translateX(${dir*24}px)`,opacity:.55},{transform:'none',opacity:1}],{duration:260,easing:EO}));
+    if(tab==='cal'||!v)return;
+    const kids=[...(v.children.length===1&&v.firstElementChild.children.length>1?v.firstElementChild.children:v.children)].slice(0,6);
+    kids.forEach((x,i)=>x.animate([{transform:'translateY(8px)',opacity:.4},{transform:'none',opacity:1}],{duration:240,delay:i*30,easing:'ease-out',fill:'backwards'}));}
   return {sheetOpen,sheetClose,popOpen,popClose,navSet,badges,flip,tabIn};
 })();
 // v0.196 고르기 알약 · 스위치 모션 (시안 design/seg-toggle/v1)
@@ -12488,8 +12489,9 @@ function a11yPass(){
     const todo=[];
     els.forEach(e=>{
       if(e.classList.contains('stz')||e.closest('.cell')||e.tagName==='INPUT'||e.hasAttribute('aria-hidden'))return;
-      const r=e.getBoundingClientRect();
-      if(r.width>0&&r.height>0&&(r.width<44||r.height<44))todo.push([e,r.width,r.height]);
+      if(e.querySelector('button,[data-act],input,a'))return;   // v0.199 안에 다른 버튼이 있는 줄은 넓히지 않음 (넓힌 판이 안쪽 ⋯ 같은 버튼을 덮음)
+      const w0=e.offsetWidth,h0=e.offsetHeight;   // v0.199 움직이는 중(작게 줄어든 창)에도 실제 크기로 잼
+      if(w0>0&&h0>0&&(w0<44||h0<44))todo.push([e,w0,h0]);
     });
     todo.forEach(([e,w,h])=>{
       const cs=getComputedStyle(e);
