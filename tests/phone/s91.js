@@ -9,7 +9,7 @@ const KST=(y,mo,d,h)=>Date.UTC(y,mo-1,d,h-9);const p2=n=>String(n).padStart(2,'0
   const cfg="window.FIREBASE_CONFIG={projectId:'demo-wx',apiKey:'x',authDomain:'x',appId:'x'};";
   { // 1) 날짜 창 날씨 카드 · 알람
     const alarms=[{id:'al1',on:true,shift:'주',time:'06:00',label:'주간 출근',days:[],sound:true},{id:'al2',on:true,shift:'주',time:'07:30',label:'한 번',once:true,until:0},{id:'al3',on:true,shift:'*',time:'08:00',label:'날씨',wxOnly:true,sound:false,tone:''}];
-    const p=await boot(b,{...base,alarms,addons:{...base.addons,wx:true},wx:{home:'41111',work:'41113',fw:{},nm:{}}},{tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes});
+    const p=await boot(b,{...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},alarms,addons:{...base.addons,wx:true},wx:{home:'41111',work:'41113',fw:{},nm:{}}},{tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes});
     await p.waitForTimeout(2200);
     const card=async k=>{await p.evaluate(k=>{__wx.closeSheet();__wx.openDay(k);},k);await p.waitForTimeout(400);return p.evaluate(()=>[...document.querySelectorAll('#sheet #wxDay .wc')].map(c=>c.innerText.replace(/\s+/g,' ')));};
     const a=await card('2026-10-12');T('쉬는 날 오늘 날짜 창: "지금 12°" 한 칸',a.length===1&&/지금/.test(a[0])&&/12°/.test(a[0]),JSON.stringify(a));
@@ -37,7 +37,7 @@ const KST=(y,mo,d,h)=>Date.UTC(y,mo-1,d,h-9);const p2=n=>String(n).padStart(2,'0
   }
   { // 2) 유찬 달력: 가로 스크롤 · 날짜 창 넘기기
     const fam=[{id:'f1',name:'유찬',kind:'student',label:'유치원',start:'09:00',end:'15:00',vac:[],color:'#ec4899',notes:{'2026-10-20':'체육복'},sdefs:[],stk:{}}];
-    const p=await boot(b,{...base,family:fam},{touch:true});await p.waitForTimeout(500);
+    const p=await boot(b,{...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},family:fam},{touch:true});await p.waitForTimeout(500);
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);
     await p.evaluate(()=>{const x=document.querySelector('[data-act="fam-mancal"]');x&&x.click();});await p.waitForTimeout(600);
     const cdp=await p.context().newCDPSession(p);
@@ -59,7 +59,7 @@ const KST=(y,mo,d,h)=>Date.UTC(y,mo-1,d,h-9);const p2=n=>String(n).padStart(2,'0
   { // 3) 가족(근무표 나눈 사람) 쉬는 날 날씨 = 지금 · 오늘 요약
     const sch={v:1,patternName:'4조2교대',teamName:'B조',pattern:['휴','휴','휴','휴'],anchor:'2026-10-02',types:[{k:'주',name:'주간',color:'v:day',rest:false},{k:'휴',name:'휴무',color:'',rest:true}],overrides:{},holRest:false,wx:{w:'41113',h:'41111',tm:{'주':['07:00','19:00']}}};
     const members=[{uid:'dad',role:'host',name:'아빠',mode:'own'},{uid:'mom',role:'guest',name:'엄마',mode:'view'}];
-    const p=await boot(b,{...base,addons:{...base.addons,wx:true},wx:{home:'41111',work:'',fw:{},nm:{}},link:{hid:'dad',role:'guest',name:'엄마',perm:'write',mode:'view',uid:'mom',hash:'',stkAsked:1},fam2:{members,scheds:{dad:sch},memos:{},reqIn:{},reqOut:{},me:{sent:2,bonus:0},seenMemo:[],init:true},requests:[]},{tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes});
+    const p=await boot(b,{...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},addons:{...base.addons,wx:true},wx:{home:'41111',work:'',fw:{},nm:{}},link:{hid:'dad',role:'guest',name:'엄마',perm:'write',mode:'view',uid:'mom',hash:'',stkAsked:1},fam2:{members,scheds:{dad:sch},memos:{},reqIn:{},reqOut:{},me:{sent:2,bonus:0},seenMemo:[],init:true},requests:[]},{tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes});
     await p.waitForTimeout(2200);
     const c=await p.evaluate(()=>{const m=__wx.famPeers()[0];__wx.famWxOpen?__wx.famWxOpen(m,'2026-10-12'):null;return [...document.querySelectorAll('#pop .wxcs .wxc')].map(x=>x.innerText.replace(/\s+/g,' '));});
     T('가족 쉬는 날 날씨: 왼쪽 지금 · 오른쪽 오늘 요약',c.length===2&&/지금/.test(c[0])&&/오늘 요약/.test(c[1]),JSON.stringify(c));

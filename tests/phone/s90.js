@@ -9,7 +9,7 @@ const KST=(y,mo,d,h)=>Date.UTC(y,mo-1,d,h-9);const p2=n=>String(n).padStart(2,'0
     const mk=r=>{const h={},n={};for(let d=11;d<=18;d++){for(let x=0;x<24;x++)h[`202610${p2(d)}${p2(x)}`]=[TP[x],10,0,1,0,2,50];n[`202610${p2(d)}`]=[4,15];}return {v:1,r,n:'',s:{b:'202610120500',h,n},m:{b:'',d:{}},a:{b:'',d:{}},q:null};};
     const routes=[['https://asia-northeast3-demo-wx.cloudfunctions.net/wx**',r=>{const u=new URL(r.request().url());r.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(u.searchParams.has('past')?{d:{}}:{list:[mk('41111'),mk('41113')]})});}]];
     const cfg="window.FIREBASE_CONFIG={projectId:'demo-wx',apiKey:'x',authDomain:'x',appId:'x'};";
-    const p=await boot(b,{...base,addons:{...base.addons,wx:true},wx:{home:'41111',work:'41113',fw:{},nm:{}}},{tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes});
+    const p=await boot(b,{...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},addons:{...base.addons,wx:true},wx:{home:'41111',work:'41113',fw:{},nm:{}}},{tz:'Asia/Seoul',T:KST(2026,10,12,10),cfg,routes});
     await p.waitForTimeout(2200);
     const cards=async k=>{await p.evaluate(()=>__wx.closePop());await p.evaluate(k=>__wx.wxOpenDay(k),k);await p.waitForTimeout(500);return p.evaluate(()=>[...document.querySelectorAll('#pop .wxcs .wxc')].map(c=>c.innerText.replace(/\s+/g,' ')));};
     const a=await cards('2026-10-12');

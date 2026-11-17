@@ -13,15 +13,15 @@ const chg=(p,id,v)=>p.evaluate(([id,v])=>{const e=document.getElementById(id);e.
 (async()=>{
   const T=mkT();const b=await chromium.launch();
   { // 1) 근무 패턴 화면 맨 아래 "근무 시간 (선택)"
-    const p=await boot(b,{...base});
+    const p=await boot(b,{...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}}});
     await p.evaluate(()=>__wx.openPatternPage());await p.waitForTimeout(200);
-    T('근무 패턴: 근무타입 아래 시간 줄 (따로 시간 칸 없음)',await p.evaluate(()=>!document.querySelector('#page .ptm')&&document.querySelectorAll('#page .tltimes .prow').length>=2));
+    T('v0.171 근무 패턴: 시간 줄 없음 (시간 = 근무 칩 편집 창 · 출퇴근 시간 · 날씨)',await p.evaluate(()=>!document.querySelector('#page .ptm')&&!document.querySelector('#page .tltimes')));
     await p.evaluate(()=>{__wx.S.shiftTimes={...(__wx.S.shiftTimes||{}),'주':{start:'08:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}};});
     T('가족에게 보낼 근무 시간 (주 08:00~19:00 · 야 19:00~07:00)',await p.evaluate(()=>{const x=__wx.famTimesPayload();return x.tm['주'][0]==='08:00'&&x.tm['야'][0]==='19:00'&&!x.ot;}));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }
   { // 2) ⏱ 연장 (근무 통계 켠 사람 · 근무 날만) → 실제 출퇴근 · 가족 · 시간 계산
-    const p=await boot(b,{...base,addons:{...base.addons,stats:true}});
+    const p=await boot(b,{...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},addons:{...base.addons,stats:true}});
     await p.evaluate(()=>__wx.openDay('2026-10-12'));await p.waitForTimeout(250);
     T('쉬는 날엔 ⏱ 연장 칩 없음',await p.evaluate(()=>!document.querySelector('#sheet [data-act="ot-open"]')));
     await p.evaluate(()=>__wx.openDay('2026-10-14'));await p.waitForTimeout(250);
@@ -49,7 +49,7 @@ const chg=(p,id,v)=>p.evaluate(([id,v])=>{const e=document.getElementById(id);e.
   }
   { // 3) 근무 통계: 대근 세 갈래 · 시간 · 연차 · 무급 · 명세서로 맞춘 예상 월급 · 달 넘기기
     const types0=null;
-    const st={...base,addons:{...base.addons,stats:true},overrides:{'2026-10-04':'주','2026-10-09':'야','2026-10-12':'주','2026-10-06':'휴','2026-10-10':'무'},
+    const st={...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},addons:{...base.addons,stats:true},overrides:{'2026-10-04':'주','2026-10-09':'야','2026-10-12':'주','2026-10-06':'휴','2026-10-10':'무'},
       salary:{fixed:2242566,close:0,night:['22:00','06:00'],ot:0,nt:0,leaveYear:15,slips:{'2026-10':{ot:420000,nt:315000,lv:222018,lvd:2,tot:3100000}}}};
     const p=await boot(b,st);
     await p.evaluate(()=>{const S=__wx.S;if(!S.types.some(t=>t.k==='무'))S.types.push({k:'무',name:'무급',color:'',rest:true,unpaid:true});__wx.save();});
@@ -88,13 +88,13 @@ const chg=(p,id,v)=>p.evaluate(([id,v])=>{const e=document.getElementById(id);e.
     await chg(p,'slOt','300000');await p.waitForTimeout(150);
     T('명세서 페이지: 9월 연장 금액 저장',await p.evaluate(()=>__wx.S.salary.slips['2026-09'].ot===300000&&/명세서 기간/.test(document.querySelector('#page').textContent)));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
-    const q=await boot(b,{...base,addons:{...base.addons,stats:true}});
+    const q=await boot(b,{...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},addons:{...base.addons,stats:true}});
     await q.evaluate(()=>__wx.openStatsPage());await q.waitForTimeout(150);
     T('월급을 안 적으면 예상 월급 줄 없음 (안내 한 줄만)',await q.evaluate(()=>!/예상 월급 \(/.test(document.querySelector('#page').innerText)&&/예상 월급도 볼까요/.test(document.querySelector('#page').innerText)));
     T('오류 없음 (빈 월급)',q.errs.length===0,q.errs.join('|'));await q.close();
   }
   { // 4) 날씨: 팝업 줄 → 네이버 날씨 · 지난 날짜 관측 한 줄
-    const st={...base,addons:{...base.addons,wx:true},wx:{home:'4111160000',work:'41597',fw:{},nm:{'4111160000':'연무동'}}};
+    const st={...base,shiftTimes:{'주':{start:'07:00',end:'19:00'},'야':{start:'19:00',end:'07:00'}},addons:{...base.addons,wx:true},wx:{home:'4111160000',work:'41597',fw:{},nm:{'4111160000':'연무동'}}};
     const p=await boot(b,st,{cfg,routes});
     await p.evaluate(()=>{window.__urls=[];window.AndroidBridge.openUrl=u=>window.__urls.push(u);});
     await p.waitForTimeout(2800);

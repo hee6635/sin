@@ -498,3 +498,13 @@
 - ⋯ = sd-more 작은 창: 이날만 건너뛰기/이날 지우기(sd-skip) · 이날부터 그만하기(sd-end, 반복만) · 반복 · 알림 고치기(sd-edit) · 닫기(sd-back). 옛 sd-done/sd-undo 처리는 남겨 둠.
 - 아래 .sdfoot: 스티커 붙이기(sd-add) · 스티커 설정(sd-manage). 고르는 창 "닫기" 버튼 뺌. NPI 에 more 추가. 처음 안내(tipStk) 선택자 .sdr2 로.
 - 시험: s102 새로 · s15 s23 s45 s48 s49 s50 s51 t13 새 줄 모양으로 고침.
+
+## v0.171 묶음 (스티커 지우기 · 가족 탭 상태 · 동료 근무 · 같이 쉬는 날 · 색 고르기 · 위젯 미리보기)
+- 스티커 sd-skip: 완료한 날도 지우기/건너뛰기 되게 그날 log · snap 도 지우고 되돌리기에 같이 돌려놓음.
+- 근무 패턴 화면: 근무마다 시간 줄(.tltimes) · 조별 근무 칸 뺌 · 제목 "근무 패턴". 시간 = 근무 칩 편집 창 · "출퇴근 시간 · 날씨"(부가 기능 이름 · 페이지 제목 바꿈, 근무 시간 칸을 맨 위로 · 안 정한 근무는 "정하기").
+- 시간 안 정한 근무(timesCustom 아님)는 짐작 안 함: wxMyWin · wxMemWin(교대 가족 · 근무표 가족이 시간 안 보냄) = null → 날씨는 집 하루 카드. myStatus/memberStatus: 쉬는 중 = 쉬는 날만 · 출근 전(오전 7시 시작) · 퇴근 후 · 근무 중 · 시간 없는 근무 = 근무 이름만. 내 카드도 famStRow 선 아이콘 칸(출근 전/후 · 근무 이름 = 근무 글자 동그라미).
+- 동료 근무 = 페이지(openColleaguePage, pageMode 'colleague'): 조별 근무 표(teamGridHtml · toff · trow) · 한 달 표(renderColleague(y,m) · col-mon) · 조 이름 · 개수 고치기 · 내 조(col-mine). 부가 기능에서 켜면 바로 열림. 팀 관련 저장 뒤 teamRefresh().
+- 같이 쉬는 날 = 페이지(openTogetherPage): 누구랑 같이(S.togOff = 뺄 가족 id/uid · togFam) + 야간 전 낮도 · 앞으로 3달 목록(togRuns · 이어지면 묶기 · tog-day = 그 날 창). 가족 설정 페이지의 famDayToo 스위치 뺌.
+- 색 고르기: input color 대신 openColorPick (색 판 cpB · 밝기 cpL · cp-ok) · hsv2hex/hex2hsv.
+- 위젯: S.widget.bg ('' | 'vivid', 처음 = 앱 배경) → widgetJson bg. 위젯 설정 페이지 맨 위 미리보기(AndroidBridge.widgetPreview(json,330,350) = MonthRenderer.preview → PNG base64, 바둑판 위) · 진하기 밀면 바로(input).
+- 시험: s103 새로 · s31 s71 s72 s75 s86 s91 고침 (시간 정한 상태로 · 짐작 안 함).
