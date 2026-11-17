@@ -29,7 +29,12 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     await tap(p,'#sheet [data-act="vc-rq"]');await p.waitForTimeout(400);
     const d1=await p.evaluate(()=>({rq:!!document.getElementById('rqm2'),chips:document.querySelectorAll('#sheet .vcrq .tchip').length,send:!!document.querySelector('#sheet [data-act="vc-send"]'),multi:!!document.querySelector('#sheet [data-act="vc-multi-from"]'),t:document.querySelector('#sheet .vcrq').innerText.replace(/\s+/g,' ')}));
     T('칩 누르면 펼침: 근무 바꿔 달라고 하기 · 근무 동그라미 3개 · "야간 → 휴무" · 여러 날 · 보내기 · 8건 남음 (v0.168)',d1.rq&&d1.chips===3&&d1.send&&d1.multi&&/근무 바꿔 달라고 하기/.test(d1.t)&&/야간 → 휴무/.test(d1.t)&&/8건 남음/.test(d1.t),JSON.stringify(d1));
+    await tap(p,'#sheet .vcrq .tchip:nth-child(1)');await p.waitForTimeout(200);
+    T('다른 근무 누르면 글도 바뀜 (v0.194)',await p.evaluate(()=>/야간 → 주간/.test(document.querySelector('#sheet .vrask').innerText)));
+    await tap(p,'#sheet .vcrq .tchip:nth-child(2)');await p.waitForTimeout(200);
+    T('지금 근무와 같으면 줄 숨김',await p.evaluate(()=>!document.querySelector('#sheet .vrask')));
     await tap(p,'#sheet .vcrq .tchip:nth-child(3)');await p.waitForTimeout(200);
+    T('다시 휴무 → "야간 → 휴무"',await p.evaluate(()=>/야간 → 휴무/.test(document.querySelector('#sheet .vrask').innerText)));
     T('근무 고르기 (휴무)',await p.evaluate(()=>document.querySelector('#sheet .vcrq .tchip.on small').textContent==='휴무'));
     await p.evaluate(()=>{document.getElementById('rqm2').value='같이 가자';document.querySelector('#sheet [data-act="vc-send"]').click();});await p.waitForTimeout(400);
     T('보내기 → 확인 창 (요청)',await p.evaluate(()=>/요청/.test((document.querySelector('#pop')||{}).innerText||'')&&!!document.querySelector('#pop [data-act="cfm-ok"]')));
@@ -51,6 +56,14 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(500);
     T('날씨 꺼진 폰: "날씨도 보기" 버튼 없음 (v0.134 가족 날씨는 늘 자동)',await p.evaluate(()=>!document.querySelector('.now.fams .mwx-off')&&!/날씨도 보기/.test(document.querySelector('.now.fams').innerText)));
     T('오류 없음 (날씨 꺼짐)',p.errs.length===0,p.errs.join('|'));await p.close();
+  }
+  { // v0.194 가족 달력(보기만)에도 메모 위치(모양 조정)
+    const st=state(true);st.tune=JSON.parse(JSON.stringify(st.tune));st.tune.appCover.memoY=3;st.tune.appInner.memoY=3;
+    const p=await boot(b,st,{tz:'Asia/Seoul',T:KST(2026,10,14,10),cfg,routes,touch:true,w:412,h:915});await p.waitForTimeout(1500);
+    await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(600);
+    const r=await p.evaluate(()=>{const w=document.querySelector('#vcsl .cell[data-k="2026-10-14"] .pill-wrap');return w?w.style.translate:'none';});
+    T('가족 달력 메모도 아래로 내려감',/^0px [1-9]/.test(r),r);
+    T('오류 없음 (메모 위치)',p.errs.filter(e=>!/status of 400/.test(e)).length===0,p.errs.join('|'));await p.close();
   }
   T.sum();await b.close();
 })();

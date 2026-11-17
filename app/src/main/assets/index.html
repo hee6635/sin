@@ -486,7 +486,7 @@ textarea{resize:none;min-height:84px}
 .shsec .sh-pill em{font-style:normal;font-size:11px;font-weight:700;color:var(--muted)}
 .shsec .sh-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease}
 .shsec .sh-body>div{min-height:0;overflow:hidden;padding:8px 6px 4px;margin:-8px -6px -4px}
-.shsec.open .sh-body{grid-template-rows:1fr}
+.shsec.open .sh-body{grid-template-rows:1fr}.shsec.mrph .sh-body{transition:none}
 .shsec:not(.open) .sh-body>div{padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;visibility:hidden}   /* 접혔을 때 칩 윗부분이 비치지 않게 */
 .shsec.open .sh-pill,.shsec:not(.open) .sec-t{display:none}
 .shsec .sh-fold{float:right;font-size:13px;color:var(--muted);padding:0 2px 0 10px}
@@ -5870,7 +5870,7 @@ function renderManCalPage(){
     ${vcNavHtml()}
     <div class="vcbox">${vcTrack(()=>manGrid(m),`vcsl ${manPaint?'sel':''}`)}</div>
     ${manPaint?manBar(m):''}</div>`,'mancal');
-  applyTdc();fitDn($('#page'));vcCenter();glowCheck();
+  applyTdc();fitDn($('#page'));memoShift($('#page'));vcCenter();glowCheck();
 }
 let manDayK='',manFold=null,manHidAt=0;
 const manFoldOpen=()=>manFold===null?true:manFold;
@@ -9697,7 +9697,10 @@ document.addEventListener('click',e=>{
       const fm=visibleMemos(sheetKey).filter(m=>m.shared&&m.by!=='host');
       if(fm.length&&!confirm(`♥ 가족 메모: "${firstLine(fm[0].text)}"\n\n정말 근무를 바꿀까요?`))return;
       applyShift(t.dataset.s);break;}
-    case 'shift-tog':{shiftOpen=!shiftOpenNow();document.querySelectorAll('.shsec').forEach(e=>e.classList.toggle('open',shiftOpen));break;}
+    case 'shift-tog':{shiftOpen=!shiftOpenNow();const secs=[...document.querySelectorAll('.shsec')],me=t.closest('.shsec');   // v0.194 누른 창은 모션 (옆 날짜 창은 바로)
+      if(shiftOpen){secs.forEach(e=>e.classList.toggle('open',true));if(me)shMorph(me,true);}
+      else{secs.forEach(e=>{if(e!==me)e.classList.remove('open');});if(me)shMorph(me,false,()=>me.classList.remove('open'));}
+      break;}
     case 'resetshift':delete S.overrides[sheetKey];save();openDay(sheetKey);render();break;
 
     /* 날짜 메모 */
@@ -9972,9 +9975,11 @@ document.addEventListener('click',e=>{
       const msg=(document.getElementById('vcmsg')||{}).value||vcSel.msg||'';
       openCfm({type:'req',uid:p.uid,name:p.name,sch:p.sch,k:dates[0],dates,want:vcSel.want,msg,cc:false,others:famOthers().filter(m=>m.uid!==p.uid),multi:true});break;}
     case 'vc-go':vcGo(t.dataset.k);break;
-    case 'vc-rq':vcRqOpen=!vcRqOpen;{const sh=$('#sheet'),y=sh?sh.scrollTop:0;openVcDay(rqD.k);if(sh)sh.scrollTop=y;}break;
+    case 'vc-rq':{const sh=$('#sheet'),sec0=sh&&sh.querySelector('.vcrq'),was=!!(sec0&&sec0.classList.contains('open'));vcRqOpen=!vcRqOpen;
+      const re=()=>{const y=sh?sh.scrollTop:0;openVcDay(rqD.k);if(sh)sh.scrollTop=y;const s2=sh&&sh.querySelector('.vcrq');if(!was&&s2&&s2.classList.contains('open'))shMorph(s2,true);};
+      if(was&&!vcDayHtml(rqD.k).includes('vcrq open'))shMorph(sec0,false,re);else re();break;}   // v0.194 펼치기 · 접기 모션
     case 'vc-wx':vcWxPop(t.dataset.k);break;
-    case 'vc-want':rqD.want=t.dataset.s;t.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===t));break;
+    case 'vc-want':rqD.want=t.dataset.s;t.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===t));vcAskLine(t.parentElement);break;
     case 'vc-send':{
       const p=famPeers().find(x=>x.uid===vcUid),k=rqD.k;if(!p||!k)break;
       const msg=($('#rqm2')||{}).value||'';
@@ -11285,7 +11290,7 @@ function renderViewTab(){   // 달력 탭 (가족 것만 볼래요)
   const pmk=`${vcY}-${pad(vcM+1)}`,todoN=boardLeft(pmk);   // 가족 것만 보는 폰에도 포스트잇 (그 폰에선 가족 포스트잇만)
   top.innerHTML=`<div class="hl"><button class="hb pi-btn" data-act="open-board-vc" aria-label="월 포스트잇"><span class="pi-ic"></span>${todoN?`<span class="bdg pur">${todoN>9?'9+':todoN}</span>`:''}${S.link&&S.fam2&&S.fam2.boardDot?'<i class="pi-dot" aria-label="가족이 포스트잇을 고쳤어요"></i>':''}</button></div><div class="cal-mid"><div class="ym"><button class="ib" data-act="vc-prev">‹</button><h1>${vcY}.${pad(vcM+1)}</h1><button class="ib" data-act="vc-next">›</button></div><div class="sub"><b>${esc(p.name)} 달력</b> · 보기만</div></div><div class="hr">${isCur?'':'<button class="today-btn" data-act="vc-today">오늘</button>'}</div>`;
   v.innerHTML=`${vcTools()}${vcTrack(()=>vcGrid(p),`vcsl ${vcSel.on?'sel':''}`)}${vcSelBar(p)}`;
-  applyTdc();fitDn(v);vcCenter();glowCheck();
+  applyTdc();fitDn(v);memoShift(v);vcCenter();glowCheck();   // v0.194 가족 달력에도 메모 위치(모양 조정)
 }
 // v0.126 가족 · 유찬 달력 위쪽: ‹ 2026.11 › + 다른 달일 때만 [오늘]
 function vcNavHtml(){const n=new Date(),isCur=vcY===n.getFullYear()&&vcM===n.getMonth();return `<div class="vcnav"><span class="vcn-l"></span><button class="ib" data-act="vc-prev">‹</button><b>${vcY}.${pad(vcM+1)}</b><button class="ib" data-act="vc-next">›</button><span class="vcn-r">${isCur?'':'<button class="today-btn" data-act="vc-today">오늘</button>'}</span></div>`;}
@@ -11294,7 +11299,7 @@ function renderFamCalPage(){   // 가족 탭에서 이름을 누르면 (내 달�
   openPage(`${pageHead(esc(p.name)+' 달력')}<div class="pg-b" style="display:flex;flex-direction:column;padding:0">
     ${vcNavHtml()}
     ${vcTools()}<div class="vcbox">${vcTrack(()=>vcGrid(p),`vcsl ${vcSel.on?'sel':''}`)}</div>${vcSelBar(p)}</div>`,'famcal');
-  applyTdc();fitDn($('#page'));vcCenter();glowCheck();
+  applyTdc();fitDn($('#page'));memoShift($('#page'));vcCenter();glowCheck();
 }
 var rqD={k:'',u:'',want:''};
 // v0.125 가족(보기만) 폰에서 그 사람 달력의 날짜를 누르면: 내 날짜 창과 같은 틀 — 날짜 띠 · "주간 · 근무 요청 ▾"(누르면 요청) · 날씨 · 가족 메모 · 옆으로 밀면 다음날
@@ -11326,6 +11331,31 @@ function vcDayHtml(k){
     <div class="sec shsec vcrq ${isOpen?'open':''}"><div class="sh-hd"><span>${isOpen&&form?'근무 바꿔 달라고 하기':'근무'}</span><button class="sh-pill" ${canRq?'data-act="vc-rq"':''}>${schBadge(p.sch,sh,'sm')}${esc(ty.name)}${tag?`<small class="vct">· ${tag}</small>`:''}${canRq?'<i class="shc">▾</i>':''}</button></div>${card}</div>
     ${vcDayWx(p,k)}
     <div class="sec vcm memsec">${vcMemoHtml(k)}</div></div>`;
+}
+// v0.194 근무를 고를 때마다 "교육 → 주간으로 바꿔 달라고 할게요" 줄도 바꿈 (지금 근무와 같으면 숨김)
+function vcAskLine(chips){
+  const p=famPeers().find(x=>x.uid===vcUid);if(!p||!chips||!rqD.k)return;
+  const sh=schShift(p.sch,parse(rqD.k)),w=rqD.want,nm=x=>schType(p.sch,x).name||x;
+  let el=chips.parentElement.querySelector('.vrask');
+  if(w===sh){if(el)el.remove();return;}
+  if(!el){el=document.createElement('div');el.className='vrask';chips.after(el);}
+  el.innerHTML=`<b>${esc(nm(sh))} → ${esc(nm(w))}</b>${josa(nm(w),'으로','로')} 바꿔 달라고 할게요`;
+}
+// v0.194 근무 펼치기 · 접기 모션: 근무 알약 버튼 자리에서 카드가 커지며 내려오고 안의 것들이 차례로 나타남 (접을 땐 반대로)
+function shMorph(sec,open,done){
+  const card=sec&&sec.querySelector('.sh-card'),pill=sec&&sec.querySelector('.sh-pill');
+  if(!card||!pill||!card.animate||!card.offsetWidth||matchMedia('(prefers-reduced-motion: reduce)').matches){if(sec)sec.classList.remove('mrph');if(done)done();return;}
+  sec.classList.add('mrph');
+  const W=card.offsetWidth,H=card.offsetHeight,pw=Math.min(W,pill.offsetWidth);
+  const a0={height:'0px',clipPath:`inset(0px 0px 0px ${W-pw}px round 18px)`,opacity:.5},a1={height:H+'px',clipPath:'inset(0px 0px 0px 0px round 22px)',opacity:1};
+  card.style.overflow='hidden';
+  const an=card.animate(open?[a0,a1]:[a1,a0],{duration:open?340:230,easing:open?'cubic-bezier(.2,.85,.25,1)':'cubic-bezier(.4,0,.7,.4)',fill:open?'none':'forwards'});
+  const kids=[...card.children].map((c,i)=>open?c.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:260,delay:120+i*35,easing:'ease-out',fill:'backwards'}):c.animate([{opacity:1},{opacity:0}],{duration:120,fill:'forwards'}));
+  let ok=false;const end=()=>{if(ok)return;ok=true;
+    if(done)done();   // 접기: 먼저 닫힌 모양으로 바꾼 뒤 모션을 지움 (원래 크기로 한 번 번쩍이지 않게)
+    if(!open){an.cancel();kids.forEach(k=>k.cancel());}
+    card.style.overflow='';requestAnimationFrame(()=>sec.classList.remove('mrph'));};
+  an.onfinish=end;setTimeout(end,520);
 }
 function openVcDay(k){
   const p=famPeers().find(x=>x.uid===vcUid);if(!p)return;
@@ -11374,7 +11404,7 @@ function vcCenter(){
 function vcFillFar(){   // 먼 판은 조금 뒤에 하나씩
   const tr=document.getElementById('vctr');if(!tr)return;if(vcTouch){vcFillT=setTimeout(vcFillFar,200);return;}
   const p=[...tr.children].find(x=>!x.firstElementChild&&+x.dataset.mk>=MIN_M&&+x.dataset.mk<=MAX_M);if(!p)return;
-  p.innerHTML=vcGridAt(+p.dataset.mk);try{fitDn(p);}catch(e){}vcFillT=setTimeout(vcFillFar,60);
+  p.innerHTML=vcGridAt(+p.dataset.mk);try{fitDn(p);memoShift(p);}catch(e){}vcFillT=setTimeout(vcFillFar,60);
 }
 function vcSettle(){
   const tr=document.getElementById('vctr');if(!tr||vcTouch)return;const W=vcW(tr),x=tr.scrollLeft,i=Math.round(x/W);
