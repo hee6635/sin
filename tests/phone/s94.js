@@ -43,8 +43,8 @@ const fs=require('fs');
   { // 3) 달력 오늘 테두리 · 빛 · 설정 오늘 표시 = 색만 · 날짜 창 오늘 색
     for(const look of ['fill','circle']){
       const p=await boot(b,{...base,calLook:look,todayLook:'a'});await p.waitForTimeout(900);
-      const r=await p.evaluate(()=>{const c=document.querySelector('#track .panel:nth-child(2) .cell.today'),af=getComputedStyle(c,'::after'),o=document.querySelector('#track .panel:nth-child(2) .cell[data-k="2026-10-13"]');return {bw:af.borderTopWidth,bt:af.borderTopStyle,z:af.zIndex,dt:document.documentElement.dataset.today,h:c.getBoundingClientRect().height,h2:o.getBoundingClientRect().height,fs:getComputedStyle(c.querySelector('.num')).fontSize,fs2:getComputedStyle(o.querySelector('.num')).fontSize};});
-      T(`${look}: 오늘 칸 전체 3px 테두리 (z 2 · 저장된 모양 a 무시)`,r.bw==='3px'&&r.bt==='solid'&&r.z==='2'&&r.dt==='b',JSON.stringify(r));
+      const r=await p.evaluate(()=>{const c=document.querySelector('#track .panel:nth-child(2) .cell.today'),af=getComputedStyle(c,'::after'),o=document.querySelector('#track .panel:nth-child(2) .cell[data-k="2026-10-13"]');const cs=getComputedStyle(c);return {bw:cs.outlineWidth,bt:cs.outlineStyle,z:cs.zIndex,off:cs.outlineOffset,dt:document.documentElement.dataset.today,h:c.getBoundingClientRect().height,h2:o.getBoundingClientRect().height,fs:getComputedStyle(c.querySelector('.num')).fontSize,fs2:getComputedStyle(o.querySelector('.num')).fontSize};});
+      T(`${look}: 오늘 칸 전체 3px 테두리 (v0.171 경계에 걸치기 · 저장된 모양 a 무시)`,r.bw==='3px'&&r.bt==='solid'&&r.off==='-1px'&&r.z==='3'&&r.dt==='b',JSON.stringify(r));
       T(`${look}: 오늘 칸 크기 · 숫자 크기 = 다른 날`,Math.abs(r.h-r.h2)<.5&&r.fs===r.fs2,JSON.stringify(r));
       await p.close();
     }

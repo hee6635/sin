@@ -1499,6 +1499,13 @@ html[data-cal="fill"][data-today="a"][data-theme="dark"] .cell.today[style*="--c
 @media (prefers-color-scheme:dark){html[data-cal="fill"][data-today="a"]:not([data-theme="light"]) .cell.today{background:color-mix(in srgb,var(--accent) 18%,var(--bg))}html[data-cal="fill"][data-today="a"]:not([data-theme="light"]) .cell.today[style*="--cb"]{background:color-mix(in srgb,var(--accent) 18%,color-mix(in srgb,var(--cb) var(--cbm),var(--bg)))}}
 html[data-cal="fill"] .cell.today .pill-wrap{padding:0 2px;box-sizing:border-box}
 html[data-cal="fill"] .cell.today::after,html[data-cal="fill"] .cell.today[style*="--cb"]::after{border:3px solid var(--tdc,var(--today))!important;border-radius:9px;z-index:2!important}   /* v0.145 오늘 = 칸 전체 테두리 (숫자 · 글자 · 스티커 그대로) */
+/* v0.171 오늘 띠 = 칸 경계에 걸치기 (시안 design/today-ring A): outline 3px 을 1px 안쪽 · 2px 바깥 → 메모 · 스티커 자리가 넓어지고 옆 칸은 안 덮음 (outline 은 칸의 overflow 에 안 잘림) */
+html[data-cal="fill"] .cell.today::after,html[data-cal="fill"] .cell.today[style*="--cb"]::after{border-width:0!important}
+html:not([data-cal="fill"]) .cell.today::after{border-width:0}
+.cell.today{outline:3px solid var(--today);outline-offset:-1px;z-index:3}
+html[data-cal="fill"] .cell.today{outline-color:var(--tdc,var(--today))}
+html[data-tdc]:not([data-cal="fill"]) .cell.today{outline-color:var(--tdc)}
+html:not([data-cal="fill"]) .track .grid{padding:0 2px}
 .cpw{padding:4px 4px 2px}.cph{display:flex;align-items:center;justify-content:space-between;padding:4px 2px 12px}.cph b{font-size:19px;font-weight:800}
 .cpv0{width:34px;height:34px;border-radius:50%;box-shadow:0 0 0 3px var(--bg),0 0 0 4.5px var(--line)}
 .cpb{position:relative;height:190px;border-radius:18px;touch-action:none;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.94)),linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}

@@ -508,3 +508,8 @@
 - 색 고르기: input color 대신 openColorPick (색 판 cpB · 밝기 cpL · cp-ok) · hsv2hex/hex2hsv.
 - 위젯: S.widget.bg ('' | 'vivid', 처음 = 앱 배경) → widgetJson bg. 위젯 설정 페이지 맨 위 미리보기(AndroidBridge.widgetPreview(json,330,350) = MonthRenderer.preview → PNG base64, 바둑판 위) · 진하기 밀면 바로(input).
 - 시험: s103 새로 · s31 s71 s72 s75 s86 s91 고침 (시간 정한 상태로 · 짐작 안 함).
+
+## v0.172 오늘 띠 = 칸 경계에 걸치기 (시안 design/today-ring A)
+- 앱: .cell.today 에 outline 3px · outline-offset -1px (1px 안쪽 · 2px 바깥, outline 은 칸 overflow 에 안 잘림) · z-index 3 · ::after 테두리는 0. 색 = 칸 채우기 --tdc/--today · 동그라미 --today(오늘 색 고르면 --tdc). 동그라미 모양 달력 grid 좌우 2px 여백(가장자리 날 띠 안 잘리게).
+- 위젯: MonthRenderer.drawTodayBand · drawPulse 의 띠 자리 TD_GAP 0.7dp(칸 바탕 끝 1.2dp 에서 2dp 바깥) · 모서리 TD_R 8.5dp.
+- 시험 s28 · s94 (outline 으로) · s100 (동그라미 360px 기준 27.5).

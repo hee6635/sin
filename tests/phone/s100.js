@@ -6,7 +6,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   for(const w of [360,412]){
     const p=await boot(b,st,{w});
     const r=await p.evaluate(()=>{const c=[...document.querySelectorAll('#view .cell')].find(x=>!x.classList.contains('out')&&x.querySelector('.dot')&&(x.querySelector('.num')||{}).textContent==='14');const d=c.querySelector('.dot').getBoundingClientRect(),bd=c.querySelector('.bwrap .badge').getBoundingClientRect(),cc=c.getBoundingClientRect();return {gap:bd.left-d.right,b:bd.width,inCell:d.left>=cc.left-0.5};});
-    T(`${w}px 동그라미 크게 (${r.b.toFixed(1)}px) · 빨간 점 자리 남음 (${r.gap.toFixed(1)}px)`,r.b>(w===360?28:34)&&r.gap>=2.5&&r.inCell,JSON.stringify(r));
+    T(`${w}px 동그라미 크게 (${r.b.toFixed(1)}px) · 빨간 점 자리 남음 (${r.gap.toFixed(1)}px)`,r.b>(w===360?27.5:34)&&r.gap>=2.5&&r.inCell,JSON.stringify(r));
     if(w===412){
       const j=await p.evaluate(()=>{let o='';window.AndroidBridge.setWidgetData=x=>{o=x;};__wx.pushWidgetNow();return JSON.parse(o);});
       const d=j.days.find(x=>x.t==='주'),r2=j.days.find(x=>x.t==='휴');
