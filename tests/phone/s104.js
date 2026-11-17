@@ -34,7 +34,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   await p.evaluate(()=>{const b=document.querySelector('#page [data-act="sr-times"][data-v="2"]');b&&b.click();});await p.waitForTimeout(150);
   await p.click('#page [data-act="sr-save"]');await p.waitForTimeout(400);
   let s=await S(p);const w=s.stamps.defs.filter(x=>x.emoji==='💧');
-  T('다시 붙이면 복사본 없이 같은 스티커에 날짜를 더함 (바꾼 횟수는 그 스티커에)',w.length===1&&w[0].dates.includes('2026-10-20')&&w[0].times===2,JSON.stringify(w));
+  T('다시 붙이면 복사본 없이 같은 스티커에 날짜 · 고른 횟수는 그 날만 (v0.188)',w.length===1&&w[0].dates.includes('2026-10-20')&&w[0].times===1&&w[0].tday&&w[0].tday['2026-10-20']===2,JSON.stringify(w));
   // 색이 다른 약 → 빈 칸에 새 약
   await p.evaluate(()=>{const pp=document.getElementById('pop');pp.className='';pp.innerHTML='';});
   await open(p,'2026-10-20');await p.click('#pop [data-act="sd-add"]');await p.waitForTimeout(300);

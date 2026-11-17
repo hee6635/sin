@@ -1512,7 +1512,7 @@ html:not([data-cal="fill"]) .track .grid{padding:0 2px}
 .cpl{position:relative;height:28px;border-radius:14px;margin-top:16px;touch-action:none}
 .cpk{position:absolute;width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);transform:translate(-50%,-50%);pointer-events:none}.cpl .cpk{top:50%}
 .cpok{width:100%;margin-top:18px;height:50px;border-radius:14px}
-html.wpshow,html.wpshow body,html.wpshow #page,html.wpshow #page .pg-b{background:transparent!important}html.wpshow #view,html.wpshow #top,html.wpshow #nav{visibility:hidden}html.wpshow #page .pg-cap{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}html.wpshow .wgpv{background:transparent!important}   /* v0.176 실제 배경화면 위 미리보기 */
+html.wpshow,html.wpshow body,html.wpshow #app,html.wpshow #page,html.wpshow #page .pg-b{background:transparent!important}html.wpshow #app{box-shadow:none}html.wpshow #view,html.wpshow #top,html.wpshow #nav{visibility:hidden}html.wpshow #page .pg-cap{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}html.wpshow .wgpv{background:transparent!important}   /* v0.176 실제 배경화면 위 미리보기 */
 .wgpv{margin:12px 14px 4px;border-radius:22px;padding:14px;display:grid;place-items:center;background:repeating-conic-gradient(#d9dde3 0 25%,#f3f5f7 0 50%) 0 0/20px 20px;min-height:120px}.wgpv img{width:100%;max-width:330px;display:block}
 .tdc-row{display:flex;gap:8px;align-items:center;padding:4px 0}.tdc-row .tdc{width:24px;height:24px;border-radius:50%;border:2px solid transparent;padding:0;flex:none;box-shadow:0 0 0 1px var(--line)}.tdc-row .tdc.on{border-color:var(--fg)}.tdc-pick{position:relative;background:conic-gradient(#e0455c,#f08a00,#1fa971,#2f6bf0,#8a65c9,#e0455c);overflow:hidden}.tdc-pick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}.tn-top{position:sticky;top:0;z-index:5;background:var(--bg);padding-bottom:4px;box-shadow:0 6px 12px rgba(0,0,0,.10)}.tn-bar{display:flex;align-items:center;gap:6px;padding:6px 12px 0}.tn-bar .btn{padding:6px 12px;font-size:13px;flex:none}.tn-bar .btn[disabled]{opacity:.4}.tn-st{flex:1;font-size:12px;color:var(--muted)}.tn-st.dirty{color:#d9534f;font-weight:700}.tn-warn{padding:2px 14px 0;font-size:12px;color:#c0392b}.tn-warn:empty{display:none}.tn-d summary{font-size:13px;font-weight:700;padding:6px 0;cursor:pointer}.tn-d{border-top:1px solid var(--line)}.tn-prev{height:140px;display:flex;flex-direction:column;border-radius:0;overflow:hidden;background:var(--bg);margin:8px 0 0}
 .tn-g{padding:8px 14px 4px}.tn-g h4{margin:10px 0 2px;font-size:14px}
@@ -2935,7 +2935,7 @@ function normalize(o){
   const stOld=s.stamps&&typeof s.stamps==='object'?s.stamps:null;s.stamps=Object.assign(defaultStamps(),s.stamps||{});(s.stamps.defs||[]).forEach(x=>{if(!x)return;if(x.fam!==undefined)x.fam=!!x.fam;if(x.id==='s_run'&&x.emoji==='🏃')x.emoji='👟';if(!x.rep)x.rep=x.kind==='pill'?'daily':(Array.isArray(x.days)&&x.days.length?'dow':'none');if(!Array.isArray(x.dates))x.dates=[];if(!Array.isArray(x.skip))x.skip=[];if(x.kind==='mark')x.rt=['am','noon','pm'].includes(x.rt)?x.rt:'';if(x.kind==='pill'&&!/^#[0-9a-f]{6}$/i.test(x.color||''))x.color='#ef4d5a';});if(!Array.isArray(s.stamps.defs))s.stamps.defs=defaultStamps().defs;if(!s.stamps.log||typeof s.stamps.log!=='object')s.stamps.log={};if(!['am','noon','pm'].includes(s.stamps.lastRt))s.stamps.lastRt='';
   {const st=s.stamps,okT=v=>/^\d{1,2}:\d\d$/.test(v),pt=(Array.isArray(st.pillTimes)&&st.pillTimes.length>=3?st.pillTimes:['08:00','13:00','20:00']).map(v=>okT(v)?v:'08:00'),ix={am:0,noon:1,pm:2};
    if(!isObj(st.log))st.log={};Object.keys(st.log).forEach(k=>{if(!okDate(k)||!isObj(st.log[k]))delete st.log[k];});
-   st.defs.forEach(x=>{if(!x)return;x.times=Math.max(1,Math.min(3,+x.times||1));
+   st.defs.forEach(x=>{if(!x)return;x.times=Math.max(1,Math.min(3,+x.times||1));if(x.tday!==undefined){const t={};if(isObj(x.tday))Object.keys(x.tday).slice(-400).forEach(k=>{const v=+x.tday[k];if(okDate(k)&&v>=1&&v<=3)t[k]=v;});if(Object.keys(t).length)x.tday=t;else delete x.tday;}if(typeof st.lastActR!=='string')delete st.lastActR;
      if(!Array.isArray(x.ats)){x.ats=[];if(st.remind){if(x.kind==='pill')x.ats=x.times===1?[pt[0]]:x.times===2?[pt[0],pt[2]]:pt.slice(0,3);else if(x.rt)x.ats=[pt[ix[x.rt]]];}}   // 옛 큰 스위치 · 공통 시각 → 스티커별 시각 (스위치가 꺼져 있었으면 모두 끔)
      x.ats=x.ats.filter(okT).slice(0,x.times);delete x.rt;});
    st.v3=1;st.lastAt=Array.isArray(st.lastAt)?st.lastAt.filter(okT).slice(0,3):[];
@@ -3187,7 +3187,7 @@ function widgetJson(){
     });
     const rq0=rqRing((S.requests||[]).filter(r=>r.date===k&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r)).slice(3),   // 요청 링 (한 달 위젯 · 칸 채우기 모양): ask · hold · ok · no — 달력과 같은 기준(답한 요청은 3일 뒤 사라짐)
       nfm=vm.filter(x=>x.shared&&x.text.trim()).length,   // 메모 줄 맨 앞 nfm 개가 가족 메모(♥) — 위젯이 연보라 칸으로 그림
-      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',...((c||rest)?{tn:String(typeOf(sh).name||sh).slice(0,5)}:{}),bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · '),...(i>=-6&&i<14?{s:wlSecTexts(k)}:{})}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
+      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',...((c||rest)?{tn:String(typeOf(sh).name||sh).slice(0,5)}:{}),bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · '),s:wlSecTexts(k)}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
     if(i<-6||i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({...base,far:i<-6?2:1,stk:stampsOn(k).slice(0,4).map(x=>{const o=mapStk(x);delete o.id;delete o.b;return o;}),ms:ml.slice(0,3).map(x=>String(x||'').slice(0,40)),...(mld.some(i=>i<3)?{msd:mld.filter(i=>i<3)}:{}),
       ...(fm.length?{fm}:{}),...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 먼 날(지난 날 · 2주 뒤부터): 큰 창에는 스티커 · 메모를 안 싣고 앱에서 보게 함
     const sa=stampsOn(k).slice(0,12).map(mapStk);
@@ -3282,9 +3282,9 @@ function pushRemindersToNative(){
           x.ats.slice(0,N).forEach((tm,j)=>{const [h,mi]=tm.split(':').map(Number),at=new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,mi).getTime();if(at<=now||done>j)return;
             out.push({id:`f_${m.id}_${x.id}_${k}_${j}`,at,title:`${icoTxt(x.emoji,'✔')} ${m.name} · ${x.name}`,text:N>1?`${j+1}/${N}번째 · ${m.name} 달력에서 눌러 주세요`:`${m.name} 달력에서 눌러 주세요`});});}});});
       S.stamps.defs.filter(x=>x.ats&&x.ats.length).forEach(x=>{
-        const pill=x.kind==='pill',N=stN(x);
+        const pill=x.kind==='pill';
         for(let i=0;i<=14;i++){
-          const d=addDays(new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()),i),k=fmt(d);
+          const d=addDays(new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()),i),k=fmt(d),N=stDayN(x,k);
           if(!stampPlanned(x,k)||!stampsOn(k).some(y=>y.s.id===x.id))continue;   // 하루 한도 때문에 안 보이는 스티커는 알림도 안 보냄 (눌러도 완료할 곳이 없어서)
           x.ats.slice(0,N).forEach((tm,j)=>{
             const [h,mi]=tm.split(':').map(Number),at=new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,mi).getTime();
@@ -3761,9 +3761,10 @@ function render(){
     else{calKeep=false;
     if(!renderAgain){try{stzWindow(v);}catch(err){}}   // 스티커 크기: 앞뒤 3달 기준
     v.innerHTML=renderCal();calCenter();stzPanels(v);
-    fitDn(v,true);memoShift(v);
+    const vp=()=>v.querySelector(`.track .panel[data-mk="${cur.y*12+cur.m}"]`)||v;   // v0.188 보이는 달만 바로 맞춤 (옆 달은 calFillLater 가 하나씩 · 다시 그리기 0.45 → 0.2초)
+    fitDn(vp(),true);memoShift(vp());
     // 처음 켤 때 · 다른 탭에서 돌아올 때는 그리기 전에는 달력 칸 높이를 잴 수 없어서 어림값으로 메모 줄 수를 정함 → 그린 뒤 실제 높이로 다시 재서 다르면 한 번만 다시 그림
-    if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();calCenter();stzPanels(v);fitDn(v,true);memoShift(v);}finally{renderAgain=false;}}else plFit(v);calFitMark(v);}   // v0.175 memoLines 가 메모 글자 크기(--plf)를 실제 칸 높이로 다시 정함 → 그 크기로 메모 글자를 한 번 더 자름 · 보이는 판은 "맞춤 끝" (옆 달 채우기가 다시 재서 글자가 바뀌어 보이던 것)
+    if(!renderAgain){const n=memoLines();if(n!==lastLines){renderAgain=true;try{v.innerHTML=renderCal();calCenter();stzPanels(v);fitDn(vp(),true);memoShift(vp());}finally{renderAgain=false;}}else plFit(vp());calFitMark(v);}   // v0.175 memoLines 가 메모 글자 크기(--plf)를 실제 칸 높이로 다시 정함 → 그 크기로 메모 글자를 한 번 더 자름 · 보이는 판은 "맞춤 끝" (옆 달 채우기가 다시 재서 글자가 바뀌어 보이던 것)
     }
     glowCheck();calPrefetch();if(tab==='cal')calFillLater();
   }else if(tab==='colleague'){
@@ -4720,10 +4721,10 @@ function toastUndo(msg,fn){
 }
 // 약 기록 보존: 먹음 표시를 하는 순간 그날 기록에 그때의 색 · 횟수 · 모양을 같이 저장 → 나중에 약 설정을 바꿔도 이미 표시한 날은 그대로
 const stSnap=(k,id)=>((S.stamps.snap||{})[k]||{})[id];
-const stView=(s,k)=>{const sn=s.kind==='pill'&&k?stSnap(k,s.id):null;return {N:sn?sn.t:stN(s),col:sn?sn.c:s.color,shape:sn?sn.h:(s.shape||'caps')};};
+const stView=(s,k)=>{const sn=s.kind==='pill'&&k?stSnap(k,s.id):null;return {N:sn?sn.t:stDayN(s,k),col:sn?sn.c:s.color,shape:sn?sn.h:(s.shape||'caps')};};
 function stampSet(id,k,v){
   const lg=S.stamps.log[k]||(S.stamps.log[k]={}),sp=S.stamps.snap||(S.stamps.snap={});
-  if(v>0){lg[id]=v;const d=S.stamps.defs.find(x=>x.id===id);if(d&&d.kind==='pill'&&!((sp[k]||{})[id]))(sp[k]=sp[k]||{})[id]={c:d.color,t:stN(d),h:d.shape||'caps'};}
+  if(v>0){lg[id]=v;const d=S.stamps.defs.find(x=>x.id===id);if(d&&d.kind==='pill'&&!((sp[k]||{})[id]))(sp[k]=sp[k]||{})[id]={c:d.color,t:stDayN(d,k),h:d.shape||'caps'};}
   else{delete lg[id];if(sp[k]){delete sp[k][id];if(!Object.keys(sp[k]).length)delete sp[k];}}
   if(!Object.keys(lg).length)delete S.stamps.log[k];
 }
@@ -4819,6 +4820,7 @@ function slotPullName(id){
 /* ---- 스티커 등록 · 고치기 (전체 화면) ---- */
 let stDraft=null;
 const stN=s=>Math.max(1,Math.min(3,(s&&+s.times)||1));
+const stDayN=(s,k)=>{const v=s&&s.tday&&k?+s.tday[k]:0;return v>=1&&v<=3?v:stN(s);};   // v0.188 그 날만 횟수 (s.tday[k]) · 없으면 스티커 횟수
 const stAts=s=>(s&&Array.isArray(s.ats)?s.ats:[]).filter(Boolean).slice(0,stN(s));   // 이 스티커의 알림 시각 (알림이 꺼져 있으면 빈 목록)
 const fmtTm12=t=>t12(String(t));
 // 알림을 처음 켤 때 시각: 마지막에 정한 시각 (없으면 8시), 2·3번째는 6시간씩 뒤
@@ -4831,7 +4833,7 @@ function wtypesOf(s){
 }
 function stDraftOf(s,k,edit,back){
   const own=!!(s&&(edit||stUsed(s)));   // v0.176 이미 쓰는 스티커는 지금 값(횟수 · 알림 · 활동 · 가족)으로 시작 (＋ · 이 날만 따로 없앰 → 스티커는 하나)
-  const kind=s?s.kind:'mark',times=own?stN(s):1;   // v0.150 새로 붙일 땐 언제나 1번부터 (지난번 횟수 기억 안 함)
+  const kind=s?s.kind:'mark',times=edit?stN(s):1;   // v0.188 붙일 땐 늘 1번부터 (고른 횟수는 그 날만 · s.tday)   // v0.150 새로 붙일 땐 언제나 1번부터 (지난번 횟수 기억 안 함)
   const d={k,back:back||'',edit:!!edit,id:s?s.id:'__new',kind,name:s?s.name:'',emoji:(s&&s.emoji)||'🏃',color:(s&&s.color)||STK_COL[0],times,
     alarm:!!(own&&s.ats&&s.ats.length),ats:own&&s.ats?s.ats.slice():[],shape:(s&&s.shape)||'caps',fam:own?stFam(s):kind!=='pill',   // v0.153 새로 붙일 땐 알림 · 활동 · 가족 보이기도 기본값
     rep:edit?(s.rep||'none'):'once',days:s&&s.days&&s.days.length?s.days.slice():[parse(k).getDay()],workMode:(s&&s.workMode)||'rest',wtypes:wtypesOf(s),
@@ -4954,7 +4956,7 @@ function actAuto(){
     const st=S.stamps,ad=st.actDone=isObj(st.actDone)?st.actDone:{};
     (st.defs||[]).forEach(s=>{if(!s.act||s.retired||s.kind!=='mark')return;days(s.act.since).forEach(k=>{
       if((ad[k]||[]).includes(s.id)||!stampPlanned(s,k))return;const x=actSpan(s.act,parse(k));if(!x||now<x.e)return;
-      (ad[k]=ad[k]||[]).push(s.id);const lg=st.log[k]=st.log[k]||{};if(!lg[s.id])lg[s.id]=stN(s);ch=true;});});
+      (ad[k]=ad[k]||[]).push(s.id);const lg=st.log[k]=st.log[k]||{};if(!lg[s.id])lg[s.id]=stDayN(s,k);ch=true;});});
     (S.family||[]).forEach(m=>{if(m.kind==='sched'||!Array.isArray(m.sdefs))return;const md=m.actDone=isObj(m.actDone)?m.actDone:{};
       m.sdefs.forEach(x=>{if(!x.act)return;days(x.act.since).forEach(k=>{
         if((md[k]||[]).includes(x.id)||!manPlanned(m,x,k))return;const sp=actSpan(x.act,parse(k));if(!sp||now<sp.e)return;
@@ -4994,13 +4996,14 @@ function stampRegSave(){
       :{id:uid(),kind:'mark',emoji:d.emoji||'🏃',name:'새 스티커',times:1,rep:'none',from:'',to:'',days:[],dates:[],skip:[],ats:[]};
     track(d.kind==='pill'?'sticker_pill':'sticker_mark');if(d.kind==='pill')S.stamps.defs.unshift(s);else S.stamps.defs.push(s);
   }
+  const dayOnly=!isNewDef&&!d.edit&&d.rep==='once'&&stUsedElse(s,d.k);   // v0.188 이미 쓰는 스티커를 이날 붙임 → 횟수는 그 날만 (s.tday) · 스티커 횟수는 그대로
   if(!keep){
   if(d.name)s.name=d.name;else if(!s.name)s.name=d.kind==='pill'?'약':'새 스티커';
-  s.times=d.times;
+  if(dayOnly){s.tday=s.tday||{};if(d.times!==stN(s))s.tday[d.k]=d.times;else delete s.tday[d.k];if(!Object.keys(s.tday).length)delete s.tday;}else{s.times=d.times;if(s.tday)delete s.tday[d.k];}
   if(stFamShow())s.fam=!!d.fam;   // 실제 가족이 있어 칸이 보였을 때만 바꿈 (아니면 기본 규칙 그대로)
   if(s.kind==='pill')s.color=d.color||s.color||STK_COL[0];else s.emoji=d.emoji||s.emoji||'🏃';
-  if(d.act&&d.act.s&&d.act.e&&s.kind==='mark')s.act={s:d.act.s,e:d.act.e,r:wxOk(d.act.r)?d.act.r:'',since:(s.act&&s.act.since)||fmt(new Date())};else delete s.act;
-  if(d.alarm){stFill(d);s.ats=d.ats.slice(0,d.times);s.ats.forEach((t,i)=>{(S.stamps.lastAt=S.stamps.lastAt||[])[i]=t;});}else s.ats=[];   // 마지막에 정한 시각은 다음 새 스티커의 처음 값
+  if(d.act&&d.act.s&&d.act.e&&s.kind==='mark'){s.act={s:d.act.s,e:d.act.e,r:wxOk(d.act.r)?d.act.r:'',since:(s.act&&s.act.since)||fmt(new Date())};if(s.act.r)S.stamps.lastActR=s.act.r;}else delete s.act;
+  if(d.alarm){stFill(d);s.ats=d.ats.slice(0,dayOnly?Math.max(d.times,stN(s)):d.times);s.ats.forEach((t,i)=>{(S.stamps.lastAt=S.stamps.lastAt||[])[i]=t;});}else s.ats=[];   // 마지막에 정한 시각은 다음 새 스티커의 처음 값
   }
   const k=d.k;
   if(d.rep==='once'){
@@ -5117,7 +5120,7 @@ function stampRow(k){
   const btns=S.stamps.defs.filter(s=>s.kind==='mark'||pillActive(s,k)).map(s=>{
     const n=stampCnt(k,s.id),on=ids.includes(s.id),dis=!on&&used>=stampMax();
     const plan=markPlanned(s,k);
-    const sub=stN(s)>1?`${n}/${stN(s)}`:n?'✓ 완료':plan?'오늘 할 일':'';
+    const sub=stDayN(s,k)>1?`${n}/${stDayN(s,k)}`:n?'✓ 완료':plan?'오늘 할 일':'';
     return `<button class="sbtn ${on&&(s.kind==='mark'||n)?'on':''} ${dis?'dis':''}" data-act="stamp-tap" data-id="${s.id}" data-k="${k}">
       <span class="ic ${s.kind==='mark'&&!n&&plan?'plan':''}">${s.kind==='pill'?pillSvg(stN(s),n,26,s.color,s.shape):ico(s.emoji)}</span>${esc(s.name)}<small>${sub}</small></button>`;
   }).join('');
@@ -5135,7 +5138,7 @@ function stampTap(id,k){
 }
 /* ---- 스티커판: 한 달에 모은 스티커를 한 판에서 ---- */
 let sbY=0,sbM=0;
-const stkDone=(s,k)=>stampCnt(k,s.id)>=stN(s);
+const stkDone=(s,k)=>stampCnt(k,s.id)>=stDayN(s,k);
 const stkPlan=(s,k)=>stampCnt(k,s.id)>0||(s.kind==='pill'?pillActive(s,k):markPlanned(s,k));
 function stkMonth(y,m){const days=new Date(y,m+1,0).getDate();let tot=0;S.stamps.defs.forEach(s=>{for(let d=1;d<=days;d++)if(stkDone(s,fmt(new Date(y,m,d))))tot++;});return tot;}
 function stkStreak(s,from){let d=new Date(from.getFullYear(),from.getMonth(),from.getDate()),n=0;if(!stkDone(s,fmt(d)))d=addDays(d,-1);while(stkDone(s,fmt(d))&&n<400){n++;d=addDays(d,-1);}return n;}
@@ -10063,7 +10066,7 @@ document.addEventListener('click',e=>{
     case 'sr-times':srPull();stDraft.times=+t.dataset.v;if(stDraft.alarm)stFill(stDraft);renderStampReg();break;
     case 'sr-setend':srPull();stDraft.to=fmt(addDays(parse(stDraft.from||stDraft.k),29));renderStampReg();toast('끝 날짜를 눌러 바꿀 수 있어요');break;
     case 'sr-noend':srPull();stDraft.to='';renderStampReg();break;
-    case 'sr-actf':srPull();stDraft.actOpen=!stDraft.actOpen;if(stDraft.actOpen&&!stDraft.act)stDraft.act={s:'',e:'',r:''};renderStampReg();break;
+    case 'sr-actf':srPull();stDraft.actOpen=!stDraft.actOpen;if(stDraft.actOpen&&!stDraft.act)stDraft.act={s:'',e:'',r:wxOk(S.stamps.lastActR)?S.stamps.lastActR:''};   /* v0.188 위치는 직전에 고른 곳으로 */renderStampReg();break;
     case 'sr-actoff':srPull();stDraft.act=null;stDraft.actOpen=false;renderStampReg();break;
     case 'sr-actr':{srPull();const d=stDraft;actPickRegion(code=>{if(stDraft!==d)return;d.act=Object.assign({s:'',e:''},d.act||{},{r:code||''});renderStampReg();});break;}
     case 'act-near':closePop();{const cb=actPickCb;actPickCb=null;if(cb)cb(t.dataset.v||'');}break;
