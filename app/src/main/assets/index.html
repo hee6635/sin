@@ -9631,6 +9631,7 @@ function calFitMark(v){const mk=cur.y*12+cur.m;v.querySelectorAll('.track .panel
 function calFill(p){const v=+p.dataset.mk;if(v<MIN_M||v>MAX_M){p.innerHTML='';return;}const ll=lastLines;p.style.removeProperty('--stz');p.innerHTML=calPanel(Math.floor(v/12),v%12);lastLines=ll;}
 function calFillLater(ms){clearTimeout(calFarT);calFarT=setTimeout(()=>{try{   // 한 번에 판 하나씩 (가까운 것부터) → 손가락이 와도 바로 받음
   const tr=$('#track');if(!tr||tab!=='cal')return;if(calTouch||busy||performance.now()-calLastS<120){calFillLater(150);return;}   // 손가락 · 움직이는 중엔 미룸
+  if(document.querySelector('.dshell')||$('#sheet.open')||$('#pop.open')){calFillLater(400);return;}   // v0.203 날짜 창 · 작은 창이 열리는 중 · 열려 있는 동안엔 옆 달 그리기를 미룸 (폰 기록: 열리는 도중 옆 달 맞추기 111ms 가 끼어들어 멈춤)
   const vi=Math.round(tr.scrollLeft/calW(tr)),P=[...tr.children].sort((a,b)=>Math.abs(+a.style.order-vi)-Math.abs(+b.style.order-vi)).filter(x=>Math.abs(+x.style.order-vi)<=2);   // 보이는 판 앞뒤 2달까지 (더 먼 판은 다가올 때)
   const p=P.find(x=>{const v=+x.dataset.mk;return (v>=MIN_M&&v<=MAX_M)&&(!x.firstElementChild||!x.dataset.fit);});if(!p)return;
   const v=+p.dataset.mk;if(!p.firstElementChild)calFill(p);p.dataset.fit=1;stzPanel(p,v);fitDn(p,true);memoShift(p);calFillLater(60);
