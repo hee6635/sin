@@ -163,6 +163,10 @@ class AlarmBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun showWallpaper(on: Boolean) = activity.showWallpaper(on)
 
+    /** v0.191 위젯 설정 화면(배경화면 위 미리보기) 열기 */
+    @JavascriptInterface
+    fun openWidgetStyle(json: String) = activity.openWidgetStyle(json)
+
     /** v0.171 위젯 설정 화면 미리보기 (한 달 위젯 그림 · PNG base64 · 실패하면 빈 글) */
     @JavascriptInterface
     fun widgetPreview(json: String, wDp: Int, hDp: Int): String = MonthRenderer.preview(context, json, wDp, hDp)
