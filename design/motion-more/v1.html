@@ -1,0 +1,67 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box;margin:0}
+body{font-family:P,sans-serif;background:#f2f4f6;width:390px;height:640px;overflow:hidden;position:relative;color:#191f28;padding:10px 14px}
+.cap{font-size:13px;font-weight:800;color:#3182f6;margin:10px 6px 6px}
+.card{background:#fff;border-radius:20px;padding:12px 14px}
+/* 1 체크 */
+.todo{display:flex;align-items:center;gap:10px;height:40px;font-size:15px}
+.mchk{width:24px;height:24px;border-radius:8px;border:2px solid #b0b8c1;display:grid;place-items:center;flex:none;position:relative}
+.mchk svg{width:16px;height:16px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:20;stroke-dashoffset:20}
+.mchk.on{background:#1f9a76;border-color:#1f9a76}.mchk.on svg{stroke-dashoffset:0;transition:stroke-dashoffset .28s .12s ease-out}
+.todo.done span{color:#8b95a1;text-decoration:line-through;transition:color .3s}
+/* 2 근무 동그라미 */
+.chips{display:flex;gap:12px}.ch{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#8b95a1}
+.ch i{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:16px;font-weight:700;transition:box-shadow .2s}
+.ch.on i{box-shadow:0 0 0 2.5px #fff,0 0 0 4.5px #191f28}.ch.on{color:#191f28;font-weight:800}
+/* 3 색 점 */
+.dots{display:flex;gap:12px}.dots i{width:28px;height:28px;border-radius:50%;transition:box-shadow .2s}.dots i.on{box-shadow:0 0 0 2.5px #fff,0 0 0 4.5px #191f28}
+/* 5 배지 */
+.navb{display:flex;justify-content:space-around;height:46px;align-items:center}.navb span{position:relative;font-size:13px;color:#8b95a1;font-weight:700}
+.bdg{position:absolute;right:-16px;top:-12px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#e5484d;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}
+/* 6 날짜 줄 */
+.strip{position:relative;display:flex;justify-content:space-between}
+.strip b{position:relative;z-index:1;width:44px;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;color:#6b7684}
+.strip b i{width:20px;height:20px;border-radius:50%;font-style:normal;font-size:10px;display:grid;place-items:center}
+.sind{position:absolute;top:0;height:54px;width:44px;border-radius:14px;box-shadow:inset 0 0 0 2px #b8862b;background:#fff}
+/* 4 알림 띠 */
+#toast{position:absolute;left:50%;bottom:24px;transform:translate(-50%,140%);background:#2b3038;color:#fff;font-size:14px;padding:12px 18px;border-radius:14px;white-space:nowrap;opacity:0}
+#toast em{font-style:normal;color:#9fd3ff;margin-left:8px;font-weight:700}
+.tap{position:absolute;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.16);pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(.5);transition:opacity .15s,transform .2s;z-index:9}.tap.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+</style></head><body>
+<div class="cap">1 할 일 체크</div>
+<div class="card"><div class="todo" id="t1"><i class="mchk"><svg viewBox="0 0 16 16"><path d="M3.5 8.5 6.7 11.5 12.5 4.8"/></svg></i><span>9시 지게차 교육</span></div><div class="todo" id="t2"><i class="mchk"><svg viewBox="0 0 16 16"><path d="M3.5 8.5 6.7 11.5 12.5 4.8"/></svg></i><span>보건증 챙기기</span></div></div>
+<div class="cap">2 근무 동그라미 고르기</div>
+<div class="card"><div class="chips" id="chips"><div class="ch on"><i style="background:#c9dbee">주</i>주간</div><div class="ch"><i style="background:#f1d3c6">야</i>야간</div><div class="ch"><i style="background:#fff;color:#e5484d;border:1px solid #eee">휴</i>휴무</div><div class="ch"><i style="background:#d7ecd2">상</i>상주</div><div class="ch"><i style="background:#f5b335">교</i>교육</div></div></div>
+<div class="cap">3 오늘 표시 색 점</div>
+<div class="card"><div class="dots" id="dots"><i class="on" style="background:#3182f6"></i><i style="background:#1fa971"></i><i style="background:#e5484d"></i><i style="background:#8a5cf0"></i><i style="background:#f08a00"></i><i style="background:#5b6472"></i></div></div>
+<div class="cap">5 빨간 숫자 배지</div>
+<div class="card"><div class="navb"><span>달력</span><span>가족<i class="bdg" id="bdg">2</i></span><span>알람</span><span>설정</span></div></div>
+<div class="cap">6 날짜 창 날짜 줄</div>
+<div class="card"><div class="strip" id="strip"><i class="sind" id="sind"></i>${''}</div></div>
+<div class="tap" id="tap"></div>
+<div id="toast">메모를 지웠어요<em>되돌리기</em></div>
+<script>
+const EO='cubic-bezier(.3,.7,.4,1)';
+// 6 strip
+const st=document.getElementById('strip');st.innerHTML='<i class="sind" id="sind"></i>'+[14,15,16,17,18,19,20].map((d,i)=>`<b data-i="${i}">${d}일<i style="background:${['#fff','#c9dbee','#c9dbee','#f5b335','#fff','#fff','#f1d3c6'][i]};color:${[0,4,5].includes(i)?'#e5484d':'#191f28'}">${'휴주주교휴휴야'[i]}</i></b>`).join('');
+const sind=document.getElementById('sind');let si=3;const sx=i=>st.children[i+1].offsetLeft;sind.style.transform=`translateX(${sx(si)}px)`;
+function stripGo(i){const a=sx(si),b=sx(i),w=44,right=b>a,L=right?a+(b-a)*.3:a+(b-a)*.85,R=(right?a+w+(b-a)*.85:a+w+(b-a)*.3);
+  sind.style.transform=`translateX(${b}px)`;sind.animate([{transform:`translateX(${a}px)`,width:w+'px'},{offset:.45,transform:`translateX(${L}px)`,width:(R-L)+'px'},{offset:.8,transform:`translateX(${b+(right?3:-3)}px)`,width:(w-2)+'px'},{transform:`translateX(${b}px)`,width:w+'px'}],{duration:460,easing:EO});si=i;}
+// 1 check
+function check(id){const t=document.getElementById(id),c=t.querySelector('.mchk'),on=!c.classList.contains('on');c.classList.toggle('on',on);t.classList.toggle('done',on);
+  c.animate([{transform:'scale(1)'},{transform:'scale(.78)',offset:.3},{transform:'scale(1.15)',offset:.65},{transform:'scale(1)'}],{duration:440,easing:EO});
+  if(on)c.animate([{boxShadow:'0 0 0 0 rgba(31,154,118,.45)'},{boxShadow:'0 0 0 10px rgba(31,154,118,0)'}],{duration:500});}
+// 2 chips / 3 dots
+function pickIn(box,sel,el){box.querySelectorAll(sel).forEach(x=>x.classList.toggle('on',x===el));const t=el.matches('i')?el:el.querySelector('i');
+  t.animate([{transform:'scale(1)'},{transform:'scale(.85)',offset:.3},{transform:'scale(1.12)',offset:.65},{transform:'scale(1)'}],{duration:440,easing:EO});}
+// 5 badge
+function badge(n){const b=document.getElementById('bdg');b.textContent=n;b.animate([{transform:'scale(.4)'},{transform:'scale(1.3)',offset:.55},{transform:'scale(.92)',offset:.8},{transform:'scale(1)'}],{duration:480,easing:EO});}
+// 4 toast
+function toast(){const t=document.getElementById('toast');t.animate([{transform:'translate(-50%,140%)',opacity:0},{transform:'translate(-50%,-8%)',opacity:1,offset:.6},{transform:'translate(-50%,0)',opacity:1,offset:.8},{transform:'translate(-50%,0)',opacity:1,offset:.95},{transform:'translate(-50%,140%)',opacity:0}],{duration:2600,easing:'ease-out'});}
+function tap(el){const r=el.getBoundingClientRect(),t=document.getElementById('tap');t.style.left=(r.left+r.width/2)+'px';t.style.top=(r.top+r.height/2)+'px';t.classList.add('on');setTimeout(()=>t.classList.remove('on'),200);}
+const q=s=>document.querySelector(s),ch=i=>document.querySelectorAll('#chips .ch')[i],dt=i=>document.querySelectorAll('#dots i')[i],sd=i=>st.children[i+1];
+const steps=[[()=>{tap(q('#t1 .mchk'));check('t1');}],[()=>{tap(q('#t2 .mchk'));check('t2');}],[()=>{tap(ch(2));pickIn(q('#chips'),'.ch',ch(2));}],[()=>{tap(ch(4));pickIn(q('#chips'),'.ch',ch(4));}],
+ [()=>{tap(dt(1));pickIn(q('#dots'),'i',dt(1));}],[()=>{tap(dt(4));pickIn(q('#dots'),'i',dt(4));}],[()=>badge(3)],[()=>badge(4)],[()=>{tap(sd(5));stripGo(5);}],[()=>{tap(sd(1));stripGo(1);}],[()=>toast()]];
+if(location.hash==='#auto')steps.forEach(([f],i)=>setTimeout(f,500+i*800));
+</script></body></html>
