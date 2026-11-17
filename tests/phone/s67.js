@@ -24,7 +24,7 @@ const ONLY=process.env.ONLY||'';
     await p.evaluate(()=>{window.__wg=[];window.AndroidBridge.setWidgetData=j=>window.__wg.push(j);window.__refresh();});await p.waitForTimeout(1200);
     const r=await p.evaluate(()=>{const o=JSON.parse(window.__wg[window.__wg.length-1]);const f=k=>{let r=null;const w=x=>{if(Array.isArray(x))x.forEach(w);else if(x&&typeof x==='object'){if(x.k===k&&x.wlr)r=x;Object.values(x).forEach(w);}};w(o);return r;};return {near:f('2026-10-12'),far:f('2026-12-20')};});
     T('가까운 날: 위젯 날짜 창에서 펼쳐 볼 칸별 글(숨긴 칸 빼고)',!!r.near&&Array.isArray(r.near.wlr.s)&&r.near.wlr.s.map(x=>x.n).join()==='인수,인계,특이사항'&&r.near.wlr.s[0].t==='3번 라인 점검 끝\n필터 교체',JSON.stringify(r.near&&r.near.wlr));
-    T('먼 날: 글은 안 보냄(이름 · 개수만 → 누르면 앱으로)',!!r.far&&!r.far.wlr.s&&r.far.wlr.c==='인수 1',JSON.stringify(r.far&&r.far.wlr));
+    T('v0.188 먼 날도 업무 메모 글을 보냄 (위젯에서 바로 봄)',!!r.far&&Array.isArray(r.far.wlr.s)&&r.far.wlr.s[0].t==='먼 날 글'&&r.far.wlr.c==='인수 1',JSON.stringify(r.far&&r.far.wlr));
     await p.close();
   }
   if(want('memoY')){
