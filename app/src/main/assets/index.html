@@ -1732,6 +1732,7 @@ html:not([data-cal="fill"]) .track .grid{padding:0 2px}
 .np .nppat .npht{font-size:13px;font-weight:600;color:color-mix(in srgb,var(--fg) 65%,var(--bg))}.np .nppat .nphn{font-size:26px;font-weight:800;letter-spacing:-.8px;margin-top:2px}
 .np .nppat .nphs{font-size:14px;font-weight:500;color:color-mix(in srgb,var(--fg) 65%,var(--bg));margin:6px 0 12px}.np .nppat .nphs b{color:var(--fg)}
 .np .nppat .pc{background:color-mix(in srgb,var(--bg) 75%,transparent);border-radius:12px}
+.np .nphero.nppat{background:var(--bg)}.np .nppat .pc{background:var(--surface)}   /* v0.173 근무 패턴 위 칸: 그라데이션 빼고 흰 카드 (칸은 연회색) */
 .np .nphb{display:flex;gap:8px;margin-top:12px}.np .nphb button{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 0;border-radius:12px;background:color-mix(in srgb,var(--surface) 90%,transparent);font-size:14px;font-weight:600;color:color-mix(in srgb,var(--fg) 70%,var(--bg))}
 .np .tchipgrid+.tltimes .prow:first-child::before{content:'';position:absolute;top:0;left:16px;right:16px;height:1px;background:var(--line)}
 
@@ -4201,7 +4202,7 @@ function glowCheck(){
 }
 function glowSvg(c){
   const w=c.clientWidth,h=c.clientHeight;if(!(w>4&&h>4))return null;
-  const ar=parseFloat(getComputedStyle(c,'::after').borderTopLeftRadius),g=1.2,bw=w-2*g,bh=h-2*g,r=Math.max(0,Math.min(bw/2,bh/2,(isNaN(ar)?8:ar)-g));   // v0.153 빛 모서리 = 오늘 테두리 모서리 (동그라미 모양은 각진 테두리라 빛도 각지게)
+  const ar=parseFloat(getComputedStyle(c).borderTopLeftRadius),g=-.5,bw=c.offsetWidth-2*g,bh=c.offsetHeight-2*g,r=Math.max(0,Math.min(bw/2,bh/2,(isNaN(ar)?8:ar)>0?(isNaN(ar)?8:ar)-g:0));   // v0.173 빛 = 오늘 띠 자리 (칸 경계에 걸침: 띠 가운데 줄이 칸 끝에서 0.5px 바깥 · 모서리 = 칸 모서리 + 0.5)   // v0.153 빛 모서리 = 오늘 테두리 모서리 (동그라미 모양은 각진 테두리라 빛도 각지게)
   const per=2*Math.max(0,bw-2*r)+2*Math.max(0,bh-2*r)+2*Math.PI*r,len=per*.3,N=14;   // (v0.163 꼬리 줄 7 → 14: 계단 없이 매끄럽게)
   const R=(cls,x='')=>`<rect class="${cls}" x="${g}" y="${g}" width="${bw}" height="${bh}" rx="${r}" ry="${r}"${x}/>`;
   let d=R('g-halo',` stroke-dasharray="${len} ${per-len}"`);for(let i=1;i<=N;i++)d+=R('g-dash',` data-l="${len*i/N}" stroke-dasharray="${len*i/N} ${per-len*i/N}"`);   // 둘레마다 되풀이 → 두 바퀴

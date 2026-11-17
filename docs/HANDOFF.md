@@ -513,3 +513,7 @@
 - 앱: .cell.today 에 outline 3px · outline-offset -1px (1px 안쪽 · 2px 바깥, outline 은 칸 overflow 에 안 잘림) · z-index 3 · ::after 테두리는 0. 색 = 칸 채우기 --tdc/--today · 동그라미 --today(오늘 색 고르면 --tdc). 동그라미 모양 달력 grid 좌우 2px 여백(가장자리 날 띠 안 잘리게).
 - 위젯: MonthRenderer.drawTodayBand · drawPulse 의 띠 자리 TD_GAP 0.7dp(칸 바탕 끝 1.2dp 에서 2dp 바깥) · 모서리 TD_R 8.5dp.
 - 시험 s28 · s94 (outline 으로) · s100 (동그라미 360px 기준 27.5).
+
+## v0.173 숨쉬기 빛 = 새 오늘 띠 자리 · 근무 패턴 위 칸 그라데이션 뺌
+- glowSvg: g=-0.5 (띠 가운데 줄 = 칸 끝 0.5px 바깥) · 크기 = offsetWidth/Height + 1 · 모서리 = 칸 모서리 + 0.5 (동그라미 모양 0).
+- 근무 패턴 위 칸(.nphero.nppat): 그라데이션 빼고 흰 카드 · 패턴 칸 .pc 는 연회색(--surface).
