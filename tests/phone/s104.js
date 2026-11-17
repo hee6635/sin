@@ -11,7 +11,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   await open(p,'2026-10-13');
   await p.click('#pop .sdr2[data-id="r1"] [data-act="sd-more"]');await p.waitForTimeout(250);
   const m=await p.evaluate(()=>[...document.querySelectorAll('#pop .mi')].map(x=>x.textContent.trim()).join('/'));
-  T('⋯ 메뉴: 이날만 떼기 · 이날부터 떼기 · 전부 떼기(2개 이상)',/이날만 떼기/.test(m)&&/이날부터 떼기/.test(m)&&/전부 떼기/.test(m)&&!/건너뛰기|그만하기/.test(m),m);
+  T('⋯ 메뉴: 스티커 떼기 · 이날부터 떼기 · 스티커 전부 떼기(2개 이상)',/스티커 떼기/.test(m)&&/이날부터 떼기/.test(m)&&/전부 떼기/.test(m)&&!/건너뛰기|그만하기/.test(m),m);
   await p.click('#pop [data-act="sd-all"]');await p.waitForTimeout(350);
   let s=await S(p);
   T('전부 떼기: 그날 스티커가 다 빠짐 (기록도) · 다른 날은 그대로',!(await p.$('#pop .sdr2'))&&!((s.stamps.log['2026-10-13']||{}).r1)&&await p.evaluate(c=>!!document.querySelector(c+' .stp>*'),cell('2026-10-14')));
