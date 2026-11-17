@@ -1,0 +1,75 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=390">
+<style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box;margin:0}
+body{font-family:P,sans-serif;background:#f2f4f6;color:#191f28;width:390px;height:700px;overflow:hidden;padding:18px 16px}
+.top{text-align:center;margin-bottom:14px}.top b{font-size:21px}.top small{display:block;color:#8b95a1;font-size:13px;margin-top:2px}
+.strip{display:flex;justify-content:space-between;margin:0 -4px 18px}.strip i{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:800}
+.sec{position:relative;min-height:44px}
+.lbl{position:absolute;left:6px;top:13px;font-size:13.5px;font-weight:700;color:#6b7684;z-index:3;transition:color .2s}
+.card{position:relative;background:#fff;border-radius:22px;box-shadow:0 2px 12px rgba(15,23,42,.05);padding:58px 14px 14px;display:none}
+.sec.open .card{display:block}
+.pill{position:absolute;right:0;top:0;z-index:4;display:inline-flex;align-items:center;gap:7px;height:42px;padding:0 14px 0 7px;border-radius:21px;background:#fff;font-size:15px;font-weight:800;box-shadow:0 1px 3px rgba(15,23,42,.06);border:0;font-family:P}
+.pill .b{width:28px;height:28px;border-radius:50%;background:#f5b335;display:grid;place-items:center;font-size:13px}
+.pill small{font-size:12.5px;color:#8b95a1;font-weight:700}
+.pill .c{font-style:normal;font-size:10px;color:#8b95a1;transition:transform .3s}
+.sec.open .pill .c{transform:rotate(180deg)}
+.chips{display:flex;gap:12px;flex-wrap:wrap}
+.ch{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;color:#8b95a1}
+.ch i{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:17px;font-weight:700}
+.ch.on i{box-shadow:0 0 0 3px #fff,0 0 0 5px #3182f6}.ch.on{color:#3182f6;font-weight:800}
+.ask{margin:16px 2px 10px;font-size:15px}.ask b{font-weight:800}
+.ta{height:54px;border-radius:14px;background:#f2f4f6;color:#b0b8c1;font-size:14px;padding:16px 14px}
+.send{margin-top:10px;height:48px;border-radius:14px;background:#3182f6;color:#fff;font-weight:800;display:grid;place-items:center;font-size:16px}
+.wx,.memo{background:#fff;border-radius:22px;padding:16px;margin-top:14px}
+.wx b{font-size:17px}.wx p{color:#6b7684;font-size:13px;margin-top:4px}
+.wx .row{margin-top:12px;height:46px;border-radius:14px;background:#f5f7fa}
+.memo b{font-size:13px;color:#6b7684}.memo .in{margin-top:12px;height:44px;border-radius:14px;background:#f2f4f6}
+.tap{position:absolute;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.18);border:2px solid rgba(255,255,255,.9);pointer-events:none;opacity:0;z-index:9;transform:translate(-50%,-50%) scale(.6);transition:opacity .15s,transform .15s}
+.tap.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+</style></head><body>
+<div class="top"><b>11월 17일 (화)</b><small>남편 · 교육</small></div>
+<div class="strip"><i style="color:#e5484d">휴</i><i style="background:#c9dbee">주</i><i style="background:#c9dbee">주</i><i style="background:#f5b335;box-shadow:0 0 0 3px #f2f4f6,0 0 0 5px #b8862b">교</i><i style="color:#e5484d">휴</i><i style="color:#e5484d">휴</i><i style="background:#f1d3c6">야</i></div>
+<div class="sec" id="sec">
+  <span class="lbl" id="lbl">근무</span>
+  <button class="pill" id="pill"><span class="b">교</span>교육<small>· 요청하기</small><i class="c">▼</i></button>
+  <div class="card" id="card">
+    <div class="chips">
+      <div class="ch"><i style="background:#c9dbee">주</i>주간</div><div class="ch"><i style="background:#f1d3c6">야</i>야간</div>
+      <div class="ch on"><i style="background:#fff;color:#e5484d">휴</i>휴무</div><div class="ch"><i style="background:#d7ecd2">상</i>상주</div><div class="ch"><i style="background:#f5b335">교</i>교육</div>
+    </div>
+    <div class="ask"><b>교육 → 휴무</b>로 바꿔 달라고 할게요</div>
+    <div class="ta">한마디 (예: 아이 학예회라 같이 가자)</div>
+    <div class="send">요청 보내기</div>
+  </div>
+</div>
+<div class="wx below"><b>무난한 날씨예요</b><p>자켓 입으세요</p><div class="row"></div></div>
+<div class="memo below"><b>가족 메모</b><div class="in"></div></div>
+<div class="tap" id="tap"></div>
+<script>
+const sec=document.getElementById('sec'),card=document.getElementById('card'),pill=document.getElementById('pill'),lbl=document.getElementById('lbl');
+const EO='cubic-bezier(.2,.9,.25,1)',EC='cubic-bezier(.45,0,.75,.35)';
+function clipFor(){const c=card.getBoundingClientRect(),p=pill.getBoundingClientRect();
+  return `inset(${p.top-c.top}px ${c.right-p.right}px ${c.bottom-p.bottom}px ${p.left-c.left}px round 21px)`;}
+function below(){return [...document.querySelectorAll('.below')];}
+function toggle(){
+  const open=!sec.classList.contains('open');
+  const b0=below().map(e=>e.getBoundingClientRect().top);
+  if(open){
+    sec.classList.add('open');
+    const b1=below().map(e=>e.getBoundingClientRect().top);
+    card.animate([{clipPath:clipFor()},{clipPath:'inset(0px 0px 0px 0px round 22px)'}],{duration:420,easing:EO});
+    below().forEach((e,i)=>e.animate([{transform:`translateY(${b0[i]-b1[i]}px)`},{transform:'none'}],{duration:420,easing:EO}));
+    [...card.children].forEach((c,i)=>c.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:280,delay:150+i*45,easing:'ease-out',fill:'backwards'}));
+  }else{
+    const h=card.offsetHeight-44;
+    [...card.children].forEach(c=>c.animate([{opacity:1},{opacity:0}],{duration:110,fill:'forwards'}));
+    const a=card.animate([{clipPath:'inset(0px 0px 0px 0px round 22px)'},{clipPath:clipFor()}],{duration:320,easing:EC,fill:'forwards'});
+    below().forEach(e=>e.animate([{transform:'none'},{transform:`translateY(${-h}px)`}],{duration:320,easing:EC,fill:'forwards'}));
+    a.onfinish=()=>{sec.classList.remove('open');document.getAnimations().forEach(x=>x.cancel());};
+  }
+}
+function tap(){const r=pill.getBoundingClientRect(),t=document.getElementById('tap');t.style.left=(r.left+r.width-40)+'px';t.style.top=(r.top+r.height/2)+'px';t.classList.add('on');setTimeout(()=>t.classList.remove('on'),220);}
+pill.onclick=toggle;
+if(location.hash==='#auto'){const loop=()=>{setTimeout(()=>{tap();toggle();},500);setTimeout(()=>{tap();toggle();},2300);};loop();setInterval(loop,3800);}
+</script></body></html>
