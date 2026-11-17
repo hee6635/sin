@@ -10843,7 +10843,11 @@ function famPushFail(e){
 function famStop(){famUnsub.forEach(f=>{try{f();}catch(e){}});famUnsub=[];Object.values(famKickSubs).forEach(f=>{try{f();}catch(e){}});famKickSubs={};famKicks={};}
 function famClear(){famStop();clearTimeout(famT);if(S){try{piSrvToLocal();}catch(e){}S.fam2={scheds:{},members:[],memos:{},reqIn:{},reqOut:{},me:{sent:0,bonus:0},seenMemo:[],memoRev:{},reqCc:{},init:false};S.requests=(S.requests||[]).filter(r=>!r.srv);}}
 function famSaveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
-function famRefreshUi(){
+// v0.187 가족 소식이 여러 개 한꺼번에 와도(켠 직후 8곳) 다시 그리기는 한 번 (0.25초 모아서) · 달을 넘기는 중엔 멈춘 뒤에 → 켠 직후 넘기기가 안 씹히게
+let famUiT=0;
+function famRefreshUi(){clearTimeout(famUiT);famUiT=setTimeout(famRefreshUiNow,250);}
+function famRefreshUiNow(){
+  if(tab==='cal'&&(calTouch||busy||performance.now()-calLastS<300)){famUiT=setTimeout(famRefreshUiNow,200);return;}
   try{stkAskCheck();}catch(e){}
   const ae=document.activeElement;if(ae&&ae.id==='vcmsg')return;   // 요청 메시지를 쓰는 중이면 건드리지 않음
   if(pageMode==='famcal'){renderFamCalPage();return;}
