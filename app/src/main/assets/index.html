@@ -2052,7 +2052,7 @@ html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.07}
 .memsec .ibar input:placeholder-shown+.send,.vrbody .vcmemo-bar input:placeholder-shown+.send{background:var(--track)!important;color:var(--muted)!important}
 .send svg{width:20px;height:20px}
 @media (prefers-reduced-motion:reduce){#sheet{transition:none}}
-.dshell{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:70;transform-origin:0 0;will-change:transform;pointer-events:none}
+.dshell{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:70;transform-origin:0 0;will-change:transform;pointer-events:none;border-radius:20px}
 /* v0.198 화면 점검 정리 */
 .shbk{width:auto!important;min-width:36px;font-size:24px!important;color:var(--fg)!important;padding:0 6px!important;text-align:left}
 .dsbody .mansec{background:var(--bg);border-radius:22px;padding:2px 12px 12px!important;box-shadow:0 2px 12px rgba(15,23,42,.035);margin-top:12px}.dsbody .mansec>.sec-t{padding:12px 4px 8px;display:flex;justify-content:space-between;align-items:center}
@@ -5369,8 +5369,8 @@ const MO=(()=>{
     const act=c.dataset.act;if((act==='day'&&paint)||(act==='vc-day'&&vcSel.on)||(act==='man-day'&&manPaint)||held)return;
     const sh=$('#sheet');if(!sh||sh.classList.contains('open'))return;
     e.stopImmediatePropagation();e.preventDefault();shellDrop();
-    const r=c.getBoundingClientRect(),cb=getComputedStyle(c).backgroundColor,bg=shellBg(),el=shellEl=shellMk(bg);
-    const a=el.animate([{transform:shellTf(r),backgroundColor:cb&&cb!=='rgba(0, 0, 0, 0)'?cb:bg,borderRadius:'40px'},{transform:'none',backgroundColor:bg,borderRadius:'0px'}],{duration:360,easing:EO,fill:'forwards'});
+    const r=c.getBoundingClientRect(),bg=shellBg(),el=shellEl=shellMk(bg);   // v0.201 위치 · 크기(transform)만 움직임 — 색 · 둥글기까지 움직이면 폰이 따로 못 돌려서 진짜 창 만드는 동안 멈춤
+    const a=el.animate([{transform:shellTf(r)},{transform:'none'}],{duration:360,easing:EO,fill:'forwards'});
     setTimeout(()=>{if(shellEl!==el)return;sh.style.transition='none';sh.style.willChange='opacity';sh.style.opacity='0.01';shellPass=true;try{c.click();}finally{shellPass=false;}if(!sh.classList.contains('open'))shellDrop();},16);   // 껍데기가 움직이는 동안 진짜 창을 만들어 아래에 깔아 둠 (0.01 = 안 보이지만 폰이 칠함)
     a.onfinish=()=>{if(shellEl!==el)return;shellDrop();};
   },true);
@@ -5380,7 +5380,7 @@ const MO=(()=>{
     if(!cell)return false;
     shellDrop();const r=cell.getBoundingClientRect(),bg=shellBg(),el=shellEl=shellMk(bg);
     sh.style.transition='none';setTimeout(()=>{if(!sh.classList.contains('open'))sh.style.transition='';},40);   // 진짜 창은 바로 치움
-    const a=el.animate([{transform:'none',borderRadius:'0px',opacity:1},{opacity:1,offset:.55},{transform:shellTf(r),borderRadius:'40px',opacity:0}],{duration:300,easing:EC,fill:'forwards'});
+    const a=el.animate([{transform:'none',opacity:1},{opacity:1,offset:.55},{transform:shellTf(r),opacity:0}],{duration:300,easing:EC,fill:'forwards'});
     a.onfinish=()=>{if(shellEl===el){el.remove();shellEl=null;}const n=document.querySelector(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`);if(n)n.animate([{transform:'scale(.94)'},{transform:'scale(1.03)',offset:.6},{transform:'none'}],{duration:280,easing:EO});};
     return true;}
   let popSrc=null;
@@ -5390,7 +5390,7 @@ const MO=(()=>{
     m.style.opacity='0';hideKids(m);
     requestAnimationFrame(()=>{if(!m.isConnected)return;m.style.opacity='';const b=m.getBoundingClientRect();m.style.transformOrigin='0 0';m.style.willChange='transform';
       pop.animate([{backgroundColor:'rgba(0,0,0,0)'},{backgroundColor:getComputedStyle(pop).backgroundColor}],{duration:280});
-      const a=c?m.animate([{transform:tfOf(c,b),borderRadius:'30px',opacity:0},{opacity:1,offset:.35},{transform:'none',borderRadius:getComputedStyle(m).borderRadius,opacity:1}],{duration:360,easing:EO})
+      const a=c?m.animate([{transform:tfOf(c,b),opacity:0},{opacity:1,offset:.35},{transform:'none',opacity:1}],{duration:360,easing:EO})
                :m.animate([{transform:'translateY(110%)'},{transform:'none'}],{duration:360,easing:EO});
       showKids(m,c?40:60);a.onfinish=()=>{m.style.transformOrigin='';m.style.willChange='';};});}
   function popClose(old){if(RM()||!old.classList.contains('open'))return false;const m=old.querySelector('.menu');if(!m||m.style.opacity==='0')return false;
@@ -5398,7 +5398,7 @@ const MO=(()=>{
     const b=m.getBoundingClientRect(),s=popSrc&&popSrc.isConnected?popSrc:null;popSrc=null;m.style.transformOrigin='0 0';m.style.willChange='transform';
     [...m.children].forEach(x=>x.animate([{opacity:1},{opacity:0}],{duration:180,fill:'forwards'}));
     old.animate([{backgroundColor:getComputedStyle(old).backgroundColor},{backgroundColor:'rgba(0,0,0,0)'}],{duration:260,fill:'forwards'});
-    let a;if(s){const c=s.getBoundingClientRect();a=m.animate([{transform:'none',opacity:1},{opacity:1,offset:.4},{transform:tfOf(c,b),borderRadius:'30px',opacity:0}],{duration:280,easing:EC,fill:'forwards'});}
+    let a;if(s){const c=s.getBoundingClientRect();a=m.animate([{transform:'none',opacity:1},{opacity:1,offset:.4},{transform:tfOf(c,b),opacity:0}],{duration:280,easing:EC,fill:'forwards'});}
     else a=m.animate([{transform:'none'},{transform:'translateY(110%)'}],{duration:250,easing:EC,fill:'forwards'});
     a.onfinish=()=>{old.remove();if(s)s.animate([{transform:'scale(.9)'},{transform:'scale(1.05)',offset:.6},{transform:'none'}],{duration:300,easing:EO});};setTimeout(()=>{if(old.isConnected)old.remove();},700);return fresh;}
   // ---- 하단 탭: 아이콘이 떠오르며 회색으로 차오름 ----
