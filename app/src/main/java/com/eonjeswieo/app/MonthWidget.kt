@@ -1119,6 +1119,7 @@ object MonthRenderer {
             val rad = plan.circleD / 2f
             paint.typeface = WFont.bold
             paint.textAlign = Paint.Align.CENTER
+            var circR = 0f   // v0.184 동그라미 모양: 근무 동그라미 반지름 (빨간 점을 그 바로 왼쪽에)
             if (f.circle) {
                 if (fill) {   // 칸 채우기: 동그라미 없이 근무 색을 진하게 한 글자
                     paint.color = if (vivid || night) vividInk(inkOf(f.bg, night), night) else mixRgb(inkOf(f.bg, night), 0xFF000000.toInt(), 0.8f)
@@ -1128,7 +1129,8 @@ object MonthRenderer {
                 } else {
                     val cp = Paint(Paint.ANTI_ALIAS_FLAG)
                     cp.color = if (vivid) deepen(f.bg) else f.bg   // 또렷하게: 진한 동그라미 + 흰 글자
-                    val rr2 = Math.min(Math.min(rad * 1.12f * tn.ink, rad * 1.25f), cw / 2f - 10f * u)   // v0.161 조금 크게 (빨간 점 자리 남김) · 주야 크기 배율: 동그라미도 같이 (칸에서 넘치지 않게 최대 1.25배)
+                    val rr2 = Math.min(Math.min(rad * 1.12f * tn.ink, rad * 1.25f), cw / 2f - 10f * u)
+                    circR = rr2   // v0.161 조금 크게 (빨간 점 자리 남김) · 주야 크기 배율: 동그라미도 같이 (칸에서 넘치지 않게 최대 1.25배)
                     cv.drawCircle(cx, cy, rr2, cp)
                     paint.color = if (vivid) 0xFFFFFFFF.toInt() else f.fg
                     paint.textSize = rr2 * 1.04f
@@ -1156,7 +1158,10 @@ object MonthRenderer {
             if (f.ov) {   // 근무를 바꾼 날: 왼쪽에 붉은 점
                 val op = Paint(Paint.ANTI_ALIAS_FLAG)
                 op.color = 0xFFE5322D.toInt()
-                cv.drawCircle(x0 + pad + 2f * u, cy, 2.2f * u, op)
+                val half = if (circR > 0f) circR else paint.measureText(f.shift) / 2f   // v0.184 앱처럼 근무 글자(동그라미면 동그라미) 바로 왼쪽 · 요청 링이 있으면 링 바깥
+                val ring = if (f.rq.isNotEmpty()) Math.min(rad * tn.ink, rad * 1.25f) * (if (fill) 0.98f else 1.06f) + 1.2f * u else 0f
+                val dx = Math.max(x0 + pad + 2.2f * u, cx - Math.max(half, ring) - 4.2f * u)
+                cv.drawCircle(dx, cy, 2.2f * u, op)
             }
         }
 
