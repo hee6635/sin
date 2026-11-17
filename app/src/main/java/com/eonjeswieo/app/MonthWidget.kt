@@ -849,7 +849,7 @@ object MonthRenderer {
         val plan = WidgetLayout.solveMonth(rowMemos, cw, rowH, u, hasCircle, 3, tn.stk, tn.pill)
         val icons = data?.optJSONObject("ic")
         val fill = data?.optString("look", "fill") != "circle"   // 칸 채우기(기본) · 동그라미(예전 모양) — 앱 설정 › 홈 화면 위젯
-        val alphaF = 0.55f + 0.45f * ((data?.optInt("alpha", 100) ?: 100).coerceIn(0, 100) / 100f)   // 칸 색은 위젯 바탕이 투명해져도 너무 옅어지지 않게
+        val alphaF = 1f   // v0.193 진하기는 위젯 바탕에만 · 칸 색 · 글자 · 메모는 늘 그대로
         var tdBox: RectF? = null
         for (i in cells.indices) {
             val f = cells[i]
