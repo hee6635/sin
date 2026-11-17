@@ -590,6 +590,9 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.201 껍데기 멈춤 고침
+- 껍데기 · 작은 창 모션에 색(backgroundColor) · 둥글기(borderRadius)까지 넣어서 폰이 따로(합성 스레드) 못 돌리고 진짜 창 만드는 동안 같이 멈춤 → transform · opacity 만 (색 · 둥글기는 고정)
+
 ## v0.200 날짜 창 = 껍데기 방식 (비교 design/shell-cmp)
 - 칸을 누르면(.cell day · vc-day · man-day · 칸 안 다른 버튼 말고 칸 자체) 같은 모양의 빈 판(.dshell)이 먼저 커지고, 16ms 뒤 진짜 창을 만들어 그 아래 opacity 0.01 로 깔아 둠(폰이 미리 칠함) → 도착하면 껍데기만 걷어냄
 - 닫을 땐 진짜 창은 바로 치우고 껍데기만 그 칸으로 · 달력은 바뀔 때마다 이미 다시 그려져 있음 → closeSheet 는 dataRev !== renderRev 일 때만 render (tidyMemos 로 바뀐 게 없으면 save 도 안 함)
