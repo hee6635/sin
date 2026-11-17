@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v0.196 앱 확인 창: 아래에서 살짝 튕기며 올라옴 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android" android:duration="340" android:interpolator="@android:anim/overshoot_interpolator">
+    <translate android:fromYDelta="100%" android:toYDelta="0" />
+    <alpha android:fromAlpha="0.6" android:toAlpha="1" />
+</set>

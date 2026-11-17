@@ -751,7 +751,7 @@ textarea{resize:none;min-height:84px}
 .mempty{font-size:13px;color:var(--muted);padding:6px 2px 4px}
 /* 작은 메뉴 */
 #pop{position:fixed;inset:0;z-index:45;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4)}
-#pop.open{display:flex}
+#pop.open,#pop.ghost{display:flex}
 #pop .menu{width:calc(100% - 24px);max-width:520px;margin-bottom:calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 #pop .mh{padding:14px 16px 10px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line)}
 #pop .mh b{display:block;color:var(--fg);font-size:14.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2023,6 +2023,35 @@ html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.07}
 /* v0.148 빛이 도는 동안: 원래 테두리는 숨기고 빛을 따라 그려지는 선(g-draw)으로 · 끝나면 다시 테두리 */
 .cell.today.glowing::after{opacity:0}
 .tglow .g-draw{stroke-width:3px;opacity:1;stroke:var(--tdc,var(--today))}
+/* v0.196 고르기: 모양은 그대로(따로 떨어진 알약 · 고른 칸 = 흰 바탕 + 파란 테두리) · 고르면 흰 알약이 옆 칸으로 늘어나며 미끄러짐 (시안 design/seg-toggle · 6번 모션) · 스위치 = 물방울 (1번) */
+.npseg{position:relative;isolation:isolate}
+.npseg>button{position:relative;z-index:1;transition:color .2s .1s}
+.npseg.ni>button.on{background:transparent!important;box-shadow:none!important}
+.npind{position:absolute;z-index:0;left:0;top:0;width:0;height:0;border-radius:999px;background:var(--bg);box-shadow:0 0 0 1.5px var(--accent),0 4px 12px color-mix(in srgb,var(--accent) 18%,transparent);pointer-events:none}
+.sw i::after{transition:transform .3s cubic-bezier(.3,.7,.4,1)}
+@media (prefers-reduced-motion:reduce){.npseg>button{transition:none}}
+/* v0.196 모션 묶음 */
+#sheet{transition:transform .36s cubic-bezier(.2,.9,.25,1)}#sheet:not(.open){transition-duration:.24s;transition-timing-function:cubic-bezier(.45,0,.75,.35)}
+#sheet.closing{transform:translateY(0)!important;transition:none!important;pointer-events:none}
+.pg-h .ok,.sh-head .ok{min-width:0!important;height:34px!important;padding:0 15px!important;margin-right:6px;border-radius:17px;background:var(--accent);color:#fff!important;font-size:15px!important;font-weight:800;box-shadow:0 3px 10px color-mix(in srgb,var(--accent) 30%,transparent);transition:background .25s,color .25s,box-shadow .25s;flex:none}
+.pg-h .ok.off{background:var(--track);color:var(--muted)!important;box-shadow:none}
+#nav .nvi{position:relative;display:block;width:24px;height:24px}
+#nav .nvi svg{position:absolute;inset:0}
+#nav .nvi svg.fl{fill:color-mix(in srgb,var(--fg) 13%,var(--navbar));stroke:var(--fg);clip-path:inset(100% 0 0 0)}
+#nav button.on .nvi svg.fl{clip-path:inset(0 0 0 0)}
+#nav button.on .nvi{transform:translateY(-2px)}
+#nav .nsh{position:absolute;left:5px;right:5px;bottom:-5px;height:4px;border-radius:50%;background:rgba(15,23,42,.18);filter:blur(1.5px);opacity:0;transform:scaleX(0)}
+#nav button.on .nsh{opacity:1;transform:none}
+.dsghost{position:fixed;left:0;top:0;z-index:80;border:2px solid var(--accent);border-radius:8px;pointer-events:none}
+.dsmv.on .badge::after{opacity:0}
+#toast{transform-origin:50% 0;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:600;box-shadow:0 8px 22px rgba(0,0,0,.18);transform:translate(-50%,0) perspective(600px) rotateX(-90deg);transition:transform .3s ease-in,opacity .25s}
+#toast.show{transform:translate(-50%,0) perspective(600px) rotateX(0deg)}
+.tghost{position:fixed;left:50%;top:calc(66px + env(safe-area-inset-top,0px));background:#25282e;color:#fff;padding:11px 20px;border-radius:999px;font-size:14px;font-weight:600;z-index:59;width:max-content;max-width:90%;text-align:center;pointer-events:none;transform-origin:50% 0}.tghost .tu{color:#9fd3ff;margin-left:6px}
+.memsec .ibar input[type=text],.vrbody .vcmemo-bar input{height:48px!important}
+.memsec .ibar .send,.vrbody .vcmemo-bar .send{width:48px!important;height:48px!important;border-radius:50%!important;transition:background .2s,color .2s}
+.memsec .ibar input:placeholder-shown+.send,.vrbody .vcmemo-bar input:placeholder-shown+.send{background:var(--track)!important;color:var(--muted)!important}
+.send svg{width:20px;height:20px}
+@media (prefers-reduced-motion:reduce){#sheet{transition:none}}
 </style>
 </head>
 <body>
@@ -3498,7 +3527,16 @@ function markSeen(pred){
 }
 
 /* ================= 작은 도우미 ================= */
-function toast(msg){const t=$('#toast');t.classList.remove('act');toast._undo=null;t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2600);}
+function toast(msg){const t=$('#toast');toastStack(t);t.classList.remove('act');toast._undo=null;t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2600);toastIn(t);}
+// v0.196 알림 띠 (시안 design/toast): 위에서 펼쳐지듯 내려오고, 떠 있는 동안 새 알림이 오면 앞을 덮음 (기존 것은 뒤로 작아지며 흐려짐) · 사라질 땐 위로 접힘
+const tGh=[];
+const tRM=()=>matchMedia('(prefers-reduced-motion: reduce)').matches||!document.body.animate;
+function toastStack(t){if(!t||!t.classList.contains('show')||tRM())return;
+  const g=document.createElement('div');g.className='tghost';g.innerHTML=t.innerHTML;document.body.appendChild(g);tGh.push(g);
+  tGh.forEach((o,i)=>{const d=tGh.length-i,tf=`translate(-50%,${8*d}px) scale(${1-.06*d})`,op=d>1?0:.55;o.animate([{transform:o._tf||'translate(-50%,0)',opacity:o._op==null?1:o._op},{transform:tf,opacity:op}],{duration:320,easing:'cubic-bezier(.2,.9,.25,1)',fill:'forwards'});o._tf=tf;o._op=op;});
+  while(tGh.length>2)tGh.shift().remove();}
+function toastIn(t){if(tRM())return;t.animate([{transform:'translate(-50%,0) perspective(600px) rotateX(-92deg)',opacity:0},{transform:'translate(-50%,0) perspective(600px) rotateX(14deg)',opacity:1,offset:.6},{transform:'translate(-50%,0) perspective(600px) rotateX(-5deg)',offset:.82},{transform:'translate(-50%,0) perspective(600px) rotateX(0deg)',opacity:1}],{duration:560,easing:'ease-out'});
+  if(!toastIn._mo){toastIn._mo=new MutationObserver(()=>{if(t.classList.contains('show'))return;tGh.splice(0).forEach((o,i)=>{const a=o.animate([{transform:o._tf,opacity:o._op},{transform:`translate(-50%,0) perspective(600px) rotateX(-90deg)`,opacity:0}],{duration:280,delay:i*40,easing:'ease-in',fill:'forwards'});a.onfinish=()=>o.remove();setTimeout(()=>o.remove(),600);});});toastIn._mo.observe(t,{attributes:true,attributeFilter:['class']});}}
 function remain(ms){
   const min=Math.floor(ms/60000);
   if(min<1)return '1분 미만';
@@ -3636,7 +3674,7 @@ document.addEventListener('pointerdown',e=>{
 ['pointerup','pointercancel','pointermove'].forEach(ev=>document.addEventListener(ev,()=>{if(ev!=='pointermove')clearTimeout(lnkTimer);},true));
 const ICON={
   bell:'<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
-  send:'<svg viewBox="0 0 24 24"><path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z"/></svg>',
+  send:'<svg viewBox="0 0 24 24"><path d="M12 19V5.5M5.8 11.4 12 5.2l6.2 6.2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   lock:'🔒',heart:'♥'
 };
@@ -3729,8 +3767,8 @@ function render(){
   applyTdc();   // (자정이 지나면 그날 근무 색으로 · 보이는 달력 따라)
   const top=$('#top'),v=$('#view');
   const navTab=tab==='colleague'?'set':tab;
-  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===navTab));
-  const un=unseenCount(),fb=$('#famBadge');if(fb){fb.textContent=un?(un>9?'9+':un):'';fb.style.display=un?'':'none';}
+  MO.navSet(navTab);   // v0.196 아이콘이 떠오르며 차오름
+  const un=unseenCount(),fb=$('#famBadge');if(fb){fb.textContent=un?(un>9?'9+':un):'';fb.style.display=un?'':'none';}try{MO.badges();}catch(e){}
   top.className=(tab==='cal'||tab==='colleague')?'cal-top':'';
   $('#app').classList.toggle('paint-on',!!paint&&tab==='cal');
   v.className=tab==='cal'?'calv':'';
@@ -4715,7 +4753,7 @@ function stampDayHtml(k){   // v0.170 새 모양 (시안 design/stk/v1): 한 줄
     <div class="sdfoot"><button class="sdadd ${full?'dis':''}" data-act="sd-add" data-k="${k}">${npi('plus',17)}스티커 붙이기${full?` (${stampMax()}개 다 참)`:''}</button><button class="sdset" data-act="sd-manage">${npi('settings',17)}스티커 설정</button></div>`);
 }
 function toastUndo(msg,fn){
-  const t=$('#toast');t.innerHTML=`${esc(msg)} <b class="tu">되돌리기</b>`;t.classList.add('show','act');
+  const t=$('#toast');toastStack(t);t.innerHTML=`${esc(msg)} <b class="tu">되돌리기</b>`;t.classList.add('show','act');toastIn(t);
   toast._undo=fn;clearTimeout(toast._t);toast._t=setTimeout(()=>{t.classList.remove('show','act');toast._undo=null;},3500);
 }
 // 약 기록 보존: 먹음 표시를 하는 순간 그날 기록에 그때의 색 · 횟수 · 모양을 같이 저장 → 나중에 약 설정을 바꿔도 이미 표시한 날은 그대로
@@ -5205,9 +5243,11 @@ function renderAlarm(){
 }
 
 /* ================= 시트 · 페이지 · 작은 메뉴 ================= */
-function openSheet(html,full){const top=!!pageMode;$('#sheet').innerHTML=html;$('#sheet').classList.add('open');$('#sheet').classList.toggle('full',!!full);$('#sheet').classList.toggle('top',top);$('#scrim').classList.add('open');$('#scrim').classList.toggle('top',top);}
+function openSheet(html,full){const top=!!pageMode,was=$('#sheet').classList.contains('open');$('#sheet').classList.remove('closing');$('#sheet').innerHTML=html;$('#sheet').classList.add('open');$('#sheet').classList.toggle('full',!!full);$('#sheet').classList.toggle('top',top);$('#scrim').classList.add('open');$('#scrim').classList.toggle('top',top);try{MO.sheetOpen($('#sheet'),was);}catch(e){}}
 function closeSheet(){
+  const mk=sheetMode==='day'||sheetMode==='vcday'?(sheetMode==='vcday'?rqD.k:sheetKey):null;
   if(sheetKey){tidyMemos(sheetKey);save();render();}
+  try{MO.sheetClose($('#sheet'),mk);}catch(e){}   // v0.196 그 날짜 칸으로 쏙 (칸이 안 보이면 아래로)
   $('#sheet').classList.remove('open');$('#scrim').classList.remove('open');
   sheetKey=null;sheetMode=null;replyDraft=null;typeDraft=null;memoEdit=null;ddDraft=null;markSel(null);
 }
@@ -5289,11 +5329,129 @@ Object.assign(NPI,{   // v0.151 옛 화면 새 모양에 쓰는 선 아이콘 (l
 });
 const npVal=v=>`<div class="pv npv">${v||""}${npi("chevron-right",16)}</div>`;
 function pageHead(title,right){return `<div class="pg-h"><button class="bk" data-act="page-close" aria-label="뒤로">‹</button><b>${title}</b>${right||'<span style="min-width:56px"></span>'}</div>`;}
-function openPop(html){$('#pop').innerHTML=`<div class="menu">${html}</div>`;$('#pop').classList.add('open');popIcons($('#pop'));}
+function openPop(html){const was=$('#pop').classList.contains('open');$('#pop').innerHTML=`<div class="menu">${html}</div>`;$('#pop').classList.add('open');popIcons($('#pop'));try{MO.popOpen($('#pop'),was);}catch(e){}}
 // v0.154 작은 창 새 모양: 줄 맨 앞 이모지를 회색 칸 선 아이콘으로 (♥ · 🔒처럼 가족/나만 뜻이 있는 표시는 그대로)
+// v0.196 모션 묶음 (시안 design/day-morph · pop-morph · nav-fill · save-btn · motion-more) — 화면 배치는 한 번만 바꾸고 겉모습(clip · transform · opacity)만 움직여서 버벅이지 않게
+const MO=(()=>{
+  const RM=()=>matchMedia('(prefers-reduced-motion: reduce)').matches||!document.body.animate;
+  const EO='cubic-bezier(.2,.9,.25,1)',EC='cubic-bezier(.45,0,.75,.35)',SP='cubic-bezier(.3,.7,.4,1)';
+  let tapEl=null,tapT=0;
+  document.addEventListener('pointerdown',e=>{tapEl=e.target.closest&&e.target.closest('.cell,[data-act],button');tapT=Date.now();},true);
+  document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('.cell,[data-act],button');if(t){tapEl=t;tapT=Date.now();}},true);
+  const src=()=>{if(!tapEl||Date.now()-tapT>600||!tapEl.isConnected)return null;const r=tapEl.getBoundingClientRect();return r.width>4&&r.height>4&&r.bottom>0&&r.top<innerHeight?tapEl:null;};
+  const ins=(r,b,rad)=>`inset(${(r.top-b.top).toFixed(1)}px ${(b.right-r.right).toFixed(1)}px ${(b.bottom-r.bottom).toFixed(1)}px ${(r.left-b.left).toFixed(1)}px round ${rad})`;
+  const stag=(box,d0)=>{[...box.children].slice(0,8).forEach((x,i)=>x.animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:280,delay:d0+i*40,easing:'ease-out',fill:'backwards'}));};
+  const radOf=el=>{const r=getComputedStyle(el).borderRadius;return r&&r!=='0px'?r.split(' ')[0]:'12px';};
+  // ---- 날짜 창: 누른 날짜 칸에서 커지고, 닫으면 그 칸으로 ----
+  let shClose=null;
+  function sheetOpen(sh,was){if(shClose){shClose();shClose=null;}if(was||RM())return;
+    const el=src();if(!el||!el.classList.contains('cell')){return;}
+    const c=el.getBoundingClientRect();sh.style.transition='none';void sh.offsetHeight;const b=sh.getBoundingClientRect();
+    const bg=getComputedStyle(el).backgroundColor,bg2=getComputedStyle(sh).backgroundColor;
+    const a=sh.animate([{clipPath:ins(c,b,radOf(el)),backgroundColor:bg&&bg!=='rgba(0, 0, 0, 0)'?bg:bg2},{clipPath:ins(b,b,'20px'),backgroundColor:bg2}],{duration:440,easing:EO});
+    stag(sh,150);const end=()=>{sh.style.transition='';};a.onfinish=end;a.oncancel=end;}
+  function sheetClose(sh,k){if(RM()||!sh.classList.contains('open'))return false;
+    let cell=null;if(k){const cs=[...document.querySelectorAll(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`)].filter(x=>{const r=x.getBoundingClientRect();return r.width>4&&r.left>=-2&&r.right<=innerWidth+2&&r.top>=0&&r.bottom<=innerHeight;});cell=cs[0]||null;}
+    if(!cell)return false;
+    const b=sh.getBoundingClientRect(),c=cell.getBoundingClientRect();
+    sh.classList.add('closing');
+    const kids=[...sh.children].map(x=>x.animate([{opacity:1},{opacity:0}],{duration:120,fill:'forwards'}));
+    const a=sh.animate([{clipPath:ins(b,b,'20px')},{clipPath:ins(c,b,radOf(cell))}],{duration:330,easing:EC,fill:'forwards'});
+    let ok=false;const fin=()=>{if(ok)return;ok=true;sh.style.transition='none';sh.classList.remove('closing');a.cancel();kids.forEach(x=>x.cancel());void sh.offsetHeight;sh.style.transition='';
+      cell.animate([{transform:'scale(.92)'},{transform:'scale(1.04)',offset:.6},{transform:'none'}],{duration:320,easing:EO});};
+    shClose=()=>{ok=true;sh.classList.remove('closing');a.cancel();kids.forEach(x=>x.cancel());sh.style.transition='';};
+    a.onfinish=()=>{shClose=null;fin();};return true;}
+  // ---- 작은 창: 누른 자리에서 커지고, 닫으면 그 자리로 · 누른 자리가 없으면 아래에서 올라오고 아래로 ----
+  let popSrc=null;
+  function popOpen(pop,was){const m=pop.querySelector('.menu');if(!m||RM())return;
+    if(was){[...m.children].slice(0,8).forEach((x,i)=>x.animate([{opacity:0},{opacity:1}],{duration:180,delay:i*25,fill:'backwards'}));return;}   // 창 → 창: 내용만 바뀜
+    const el=src();popSrc=el&&!el.closest('#pop')?el:null;
+    pop.animate([{backgroundColor:'rgba(0,0,0,0)'},{backgroundColor:getComputedStyle(pop).backgroundColor}],{duration:300});
+    const b=m.getBoundingClientRect();
+    if(popSrc){const c=popSrc.getBoundingClientRect();m.animate([{clipPath:ins(c,b,radOf(popSrc))},{clipPath:ins(b,b,'18px')}],{duration:420,easing:EO});}
+    else m.animate([{transform:'translateY(110%)'},{transform:'none'}],{duration:380,easing:EO});
+    stag(m,popSrc?120:90);}
+  function popClose(old){if(RM()||!old.classList.contains('open'))return false;const m=old.querySelector('.menu');if(!m)return false;
+    const fresh=old.cloneNode(false);fresh.className='';fresh.removeAttribute('style');old.parentNode.insertBefore(fresh,old);old.style.pointerEvents='none';old.classList.remove('open');old.classList.add('ghost');old.setAttribute('aria-hidden','true');
+    const b=m.getBoundingClientRect(),s=popSrc&&popSrc.isConnected?popSrc:null;popSrc=null;
+    [...m.children].forEach(x=>x.animate([{opacity:1},{opacity:0}],{duration:110,fill:'forwards'}));
+    old.animate([{backgroundColor:getComputedStyle(old).backgroundColor},{backgroundColor:'rgba(0,0,0,0)'}],{duration:280,fill:'forwards'});
+    let a;if(s){const c=s.getBoundingClientRect();a=m.animate([{clipPath:ins(b,b,'18px')},{clipPath:ins(c,b,radOf(s))}],{duration:320,easing:EC,fill:'forwards'});}
+    else a=m.animate([{transform:'none'},{transform:'translateY(110%)'}],{duration:260,easing:EC,fill:'forwards'});
+    const fin=()=>{old.remove();if(s)s.animate([{transform:'scale(.9)'},{transform:'scale(1.05)',offset:.6},{transform:'none'}],{duration:300,easing:EO});};a.onfinish=fin;setTimeout(()=>{if(old.isConnected)old.remove();},700);return fresh;}
+  // ---- 하단 탭: 아이콘이 떠오르며 회색으로 차오름 ----
+  let navPrev=null;
+  function navInit(){document.querySelectorAll('#nav button').forEach(b=>{const s=b.querySelector(':scope>svg');if(!s)return;const w=document.createElement('span');w.className='nvi';s.replaceWith(w);w.appendChild(s);const f=s.cloneNode(true);f.classList.add('fl');w.appendChild(f);const h=document.createElement('i');h.className='nsh';w.appendChild(h);});}
+  function navSet(tab){const bs=[...document.querySelectorAll('#nav button')];if(!bs.length)return;if(!document.querySelector('#nav .nvi'))navInit();
+    bs.forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));if(navPrev===tab)return;const was=navPrev;navPrev=tab;if(was==null||RM())return;
+    const nb=bs.find(b=>b.dataset.tab===tab),ob=bs.find(b=>b.dataset.tab===was);
+    if(ob){const i=ob.querySelector('.nvi');if(i){i.animate([{transform:'translateY(-2px)'},{transform:'translateY(1px)',offset:.6},{transform:'none'}],{duration:320,easing:SP});i.querySelector('.fl').animate([{clipPath:'inset(0 0 0 0)'},{clipPath:'inset(0 0 100% 0)'}],{duration:220,easing:'ease-in'});}}
+    if(nb){const i=nb.querySelector('.nvi');if(i){i.animate([{transform:'none'},{transform:'translateY(1.5px) scale(.9)',offset:.25},{transform:'translateY(-4px) scale(1.06)',offset:.65},{transform:'translateY(-2px)'}],{duration:520,easing:SP});
+      i.querySelector('.fl').animate([{clipPath:'inset(100% 0 0 0)'},{clipPath:'inset(100% 0 0 0)',offset:.2},{clipPath:'inset(0 0 0 0)'}],{duration:520,easing:'cubic-bezier(.4,0,.2,1)'});
+      i.querySelector('.nsh').animate([{transform:'scaleX(0)',opacity:0},{transform:'scaleX(0)',opacity:0,offset:.3},{transform:'scaleX(1.15)',opacity:1,offset:.7},{transform:'scaleX(1)',opacity:1}],{duration:520,easing:SP});}}}
+  // ---- 버튼 누름 (Spring Pop): 누르면 살짝 작아지고 떼면 조금 커졌다 제자리 ----
+  const POPSEL='.btn,.send,.pg-h .ok,.sh-head .ok,.cpok,.paint-btn,.vrsend';
+  let pr=null;
+  document.addEventListener('pointerdown',e=>{if(RM())return;const b=e.target.closest&&e.target.closest(POPSEL);if(!b||b.disabled)return;pr={b,x:e.clientX,y:e.clientY,a:b.animate([{transform:'none'},{transform:'scale(.93)'}],{duration:110,easing:'ease-out',fill:'forwards'})};},true);
+  const rel=e=>{if(!pr)return;const {b,a}=pr;pr=null;a.cancel();if(!b.isConnected)return;b.animate([{transform:'scale(.93)'},{transform:'scale(1.06)',offset:.55},{transform:'scale(.98)',offset:.8},{transform:'none'}],{duration:420,easing:SP});};
+  document.addEventListener('pointerup',rel,true);document.addEventListener('pointercancel',rel,true);
+  document.addEventListener('pointermove',e=>{if(pr&&Math.hypot(e.clientX-pr.x,e.clientY-pr.y)>12){pr.a.cancel();pr=null;}},true);
+  // ---- 할 일 체크 · 근무 동그라미 · 색 점 · 날짜 줄: 누른 뒤(새로 그린 화면에서) 톡 튐 ----
+  const pop1=(el,big)=>el&&el.animate([{transform:'scale(1)'},{transform:`scale(${big?.78:.85})`,offset:.3},{transform:'scale(1.13)',offset:.65},{transform:'scale(1)'}],{duration:440,easing:SP});
+  document.addEventListener('click',e=>{if(RM())return;const t=e.target.closest&&e.target.closest('[data-act]');if(!t)return;const act=t.dataset.act;
+    if(t.classList.contains('mchk')&&t.dataset.mid){const mid=t.dataset.mid;setTimeout(()=>{const n=document.querySelector(`.mchk[data-mid="${mid}"]`);if(!n)return;pop1(n,1);if(n.classList.contains('on'))n.animate([{boxShadow:'0 0 0 0 rgba(31,154,118,.45)'},{boxShadow:'0 0 0 10px rgba(31,154,118,0)'}],{duration:500});},0);return;}
+    if(t.classList.contains('tchip')){const s=t.dataset.s;setTimeout(()=>{const n=document.querySelector(`.tchip[data-act="${act}"][data-s="${CSS.escape(s||'')}"]`)||t;pop1(n.querySelector('.badge')||n);},0);return;}
+    if(t.classList.contains('tdc')){const v=t.dataset.v;setTimeout(()=>{pop1(document.querySelector(`.tdc[data-v="${CSS.escape(v||'')}"]`)||t);},0);return;}
+    if(t.classList.contains('dsi')){const o=document.querySelector('#sheet .dsi.on .badge,#page .dsi.on .badge');if(!o)return;const r0=o.getBoundingClientRect();
+      setTimeout(()=>{const n=document.querySelector('#sheet .dsi.on .badge,#page .dsi.on .badge');if(!n)return;const r1=n.getBoundingClientRect();const g=document.createElement('i');g.className='dsghost';document.body.appendChild(g);
+        const box=r=>({l:r.left-5,t:r.top-5,w:r.width+10,h:r.height+10}),A=box(r0),B=box(r1);Object.assign(g.style,{left:'0px',top:'0px',width:B.w+'px',height:B.h+'px'});n.closest('.dsi').classList.add('dsmv');
+        const right=B.l>A.l,ml=right?A.l+(B.l-A.l)*.3:A.l+(B.l-A.l)*.85,mr=right?A.l+A.w+(B.l-A.l)*.85:A.l+A.w+(B.l-A.l)*.3;
+        const an=g.animate([{transform:`translate(${A.l}px,${A.t}px)`,width:A.w+'px'},{offset:.45,transform:`translate(${ml}px,${(A.t+B.t)/2}px)`,width:(mr-ml)+'px'},{transform:`translate(${B.l}px,${B.t}px)`,width:B.w+'px'}],{duration:400,easing:SP});
+        an.onfinish=()=>{g.remove();n.closest('.dsi')&&n.closest('.dsi').classList.remove('dsmv');};setTimeout(()=>{g.remove();document.querySelectorAll('.dsmv').forEach(x=>x.classList.remove('dsmv'));},700);},0);}
+  },true);
+  // ---- 빨간 숫자 배지: 숫자가 바뀌면 톡 ----
+  const bdgLast=new Map();
+  function badges(){document.querySelectorAll('#famBadge,.pi-btn .bdg').forEach(b=>{const k=b.id||'pi',v=b.textContent;const o=bdgLast.get(k);bdgLast.set(k,v);if(o!=null&&o!==v&&v&&!RM())b.animate([{transform:'scale(.4)'},{transform:'scale(1.3)',offset:.55},{transform:'scale(.92)',offset:.8},{transform:'scale(1)'}],{duration:480,easing:SP});});}
+  // ---- 메모 창: 나만 ↔ 가족에게 바꿀 때 줄들이 미끄러져 자리 잡음 (FLIP) ----
+  function flip(box,fn){if(RM()||!box){fn();return;}const key=e=>e.className+'|'+((e.querySelector('[data-act]')||{}).dataset||{}).act;
+    const old=new Map();box.querySelectorAll('.pg-sec').forEach(e=>old.set(key(e),e.getBoundingClientRect().top));fn();
+    const nb=$('#page .pg-b');if(!nb)return;nb.querySelectorAll('.pg-sec').forEach(e=>{const k=key(e),t=e.getBoundingClientRect().top;if(old.has(k)){const d=old.get(k)-t;if(Math.abs(d)>1)e.animate([{transform:`translateY(${d}px)`},{transform:'none'}],{duration:360,easing:EO});}else e.animate([{opacity:0,transform:'scale(.96)'},{opacity:1,transform:'none'}],{duration:300,delay:80,easing:'ease-out',fill:'backwards'});});}
+  return {sheetOpen,sheetClose,popOpen,popClose,navSet,badges,flip};
+})();
+// v0.196 고르기 알약 · 스위치 모션 (시안 design/seg-toggle/v1)
+(function(){
+  const RM=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const pos=seg=>{const b=seg.querySelector(':scope>button.on');return b&&b.offsetWidth?{l:b.offsetLeft,w:b.offsetWidth,t:b.offsetTop,h:b.offsetHeight,r:getComputedStyle(b).borderRadius}:null;};
+  const place=seg=>{let i=seg.querySelector(':scope>.npind');const p=pos(seg);
+    if(!p){seg.classList.remove('ni');return null;}
+    if(!i){i=document.createElement('i');i.className='npind';seg.prepend(i);}
+    i.style.transform=`translateX(${p.l}px)`;i.style.width=p.w+'px';i.style.top=p.t+'px';i.style.height=p.h+'px';i.style.borderRadius=p.r;seg.classList.add('ni');return i;};
+  let ro=null;try{ro=new ResizeObserver(es=>es.forEach(e=>place(e.target)));}catch(e){}
+  const init=root=>{(root||document).querySelectorAll('.npseg').forEach(seg=>{if(!seg.dataset.ni){seg.dataset.ni=1;if(ro)ro.observe(seg);}place(seg);});};
+  let q=0;try{new MutationObserver(()=>{if(q)return;q=requestAnimationFrame(()=>{q=0;init();});}).observe(document.body,{childList:true,subtree:true});}catch(e){}
+  function move(seg,from){const ind=place(seg),to=pos(seg);if(!ind||!from||!to||Math.abs(from.l-to.l)<1||RM()||!ind.animate)return;
+    const L0=from.l,R0=from.l+from.w,L1=to.l,R1=to.l+to.w,right=L1>L0;
+    const ml=right?L0+(L1-L0)*.3:L0+(L1-L0)*.85,mr=right?R0+(R1-R0)*.85:R0+(R1-R0)*.3,ov=right?3:-3;
+    ind.animate([{transform:`translateX(${L0}px)`,width:from.w+'px'},{offset:.45,transform:`translateX(${ml}px)`,width:(mr-ml)+'px'},{offset:.8,transform:`translateX(${L1+ov}px)`,width:Math.max(8,to.w-2)+'px'},{transform:`translateX(${L1}px)`,width:to.w+'px'}],{duration:460,easing:'cubic-bezier(.3,.7,.4,1)'});}
+  // 누르기 전 자리를 적어 두고, 화면을 새로 그린 뒤(같은 data-act 고르기 줄) 그 자리에서 미끄러지게
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.npseg>button');if(!b||b.classList.contains('on'))return;
+    const seg=b.parentElement,o=seg.querySelector(':scope>button.on');if(!o)return;
+    const sr=seg.getBoundingClientRect(),or=o.getBoundingClientRect(),act=b.dataset.act||'',top=sr.top;
+    setTimeout(()=>{let s2=seg.isConnected?seg:null;
+      if(!s2&&act){let best=1e9;document.querySelectorAll('.npseg').forEach(x=>{if(!x.querySelector(`:scope>button[data-act="${act}"]`))return;const d=Math.abs(x.getBoundingClientRect().top-top);if(d<best){best=d;s2=x;}});}
+      if(!s2)return;const r2=s2.getBoundingClientRect();move(s2,{l:or.left-r2.left,w:or.width});},0);},true);
+  // 스위치: 동그라미가 늘어나며 미끄러지고 끝에서 살짝 눌림
+  document.addEventListener('change',e=>{const t=e.target;if(!t||!t.closest||!t.closest('.sw'))return;const id=t.id,on=t.checked;
+    setTimeout(()=>{const el=t.isConnected?t:(id?document.getElementById(id):null);if(!el||RM())return;const i=el.nextElementSibling;if(!i||!i.animate)return;
+      try{const cs=getComputedStyle(i,'::after'),kw=parseFloat(cs.width)||24,kl=parseFloat(cs.left)||3,X=i.offsetWidth-kw-kl*2,st=kw*1.5,top=parseFloat(cs.top)||kl;
+        const k=on?[{transform:'translateX(0px)',width:kw+'px'},{offset:.4,transform:'translateX(0px)',width:st+'px'},{offset:.75,transform:`translateX(${X+1}px)`,width:(kw-1)+'px',height:(kw-2)+'px',top:(top+1)+'px'},{transform:`translateX(${X}px)`,width:kw+'px'}]
+                  :[{transform:`translateX(${X}px)`,width:kw+'px'},{offset:.4,transform:`translateX(${X-(st-kw)}px)`,width:st+'px'},{offset:.75,transform:'translateX(-1px)',width:(kw-1)+'px',height:(kw-2)+'px',top:(top+1)+'px'},{transform:'translateX(0px)',width:kw+'px'}];
+        i.animate(k,{duration:480,easing:'cubic-bezier(.3,.7,.4,1)',pseudoElement:'::after'});}catch(err){}},0);},true);
+  if(document.body)init();else document.addEventListener('DOMContentLoaded',()=>init());
+})();
 const POP_ICO={'🧽':'eraser','📆':'calendar-x','✏️':'pencil','✏':'pencil','🗑':'trash-2','🗑️':'trash-2','📋':'copy','📅':'calendar','🗓':'calendar','🚫':'ban','🔔':'bell','🔕':'bell-off','🔁':'repeat','⏰':'alarm-clock','📍':'map-pin','🏠':'home','🏭':'building','📤':'share','🎨':'paintbrush','📷':'camera','🔗':'link','↩️':'rotate-ccw','⚙️':'settings','⚙':'settings','🔍':'search','➕':'plus','＋':'plus'};
 function popIcons(root){try{root.querySelectorAll('.menu > .mi, .menu > button.mi').forEach(b=>{const n=b.firstChild;if(!n||n.nodeType!==3)return;const t=n.nodeValue.replace(/^\s+/,'');const k=Object.keys(POP_ICO).find(e=>t.startsWith(e));if(!k||!NPI[POP_ICO[k]])return;n.nodeValue=t.slice(k.length).replace(/^\s+/,'');const sp=document.createElement('span');sp.className='npi';sp.innerHTML=npi(POP_ICO[k],18);b.insertBefore(sp,n);if(b.classList.contains('d'))sp.classList.add('red');});}catch(e){}}
-function closePop(){document.querySelectorAll('.cell.selTop').forEach(c=>c.classList.remove('selTop'));$('#pop').className='';$('#pop').innerHTML='';tpk=null;icn=null;crp=null;}
+function closePop(){document.querySelectorAll('.cell.selTop').forEach(c=>c.classList.remove('selTop'));try{MO.popClose($('#pop'));}catch(e){}$('#pop').className='';$('#pop').innerHTML='';tpk=null;icn=null;crp=null;}
 const sheetHead=(title,left)=>`<div class="sh-head">${left||''}<b style="flex:1;font-size:17px;">${title}</b><button class="ib" data-act="close" style="width:auto;font-size:16px;">✕</button></div>`;
 
 /* ================= 아이콘 고르기 창: 이모티콘 · 내 사진 · ＋사진 ================= */
@@ -5806,7 +5964,7 @@ function openFamEdit(){   // v0.158 새 모양 (시안 design/fam-add): 회색 �
   }
   const KI={shift:'repeat',office:'briefcase',student:'book-open',free:'home'};
   openPage(`
-    ${pageHead(isNew?'가족 추가':'가족 고치기','<button class="ib" data-act="fe-save" style="width:auto;font-size:16px;color:var(--accent);font-weight:700;padding-right:8px">저장</button>')}
+    ${pageHead(isNew?'가족 추가':'가족 고치기','<button class="ok" data-act="fe-save">저장</button>')}
     <div class="pg-b np feb">
       ${isNew&&fbCfg()?`<div class="pg-sec" style="margin-top:8px">${npRow('link','앱을 쓰는 가족이면',`<div class="pv npv fe-lk">가족 연결${npi('chevron-right',16)}</div>`,{tap:1,act:'link-open',cls:'fe-link'})}</div>`:''}
       <div class="pg-cap">이름 · 사진</div>
@@ -6082,7 +6240,7 @@ function famSchedHtml(m){   // v0.158 새 모양 (시안 design/remain): 종류 
 function openManPat(){hintBump('fep');
   const m=famDraft;if(!m)return;
   pageBack=m._own?()=>{famDraft=null;renderManCalPage();}:()=>openFamEdit();
-  openPage(`${pageHead(esc(m.name||'가족')+' 일정 패턴',`<button class="ib" data-act="${m._own?'fp-save':'fp-done'}" style="width:auto;font-size:16px;color:var(--accent);font-weight:700;padding-right:8px">${m._own?'저장':'완료'}</button>`)}
+  openPage(`${pageHead(esc(m.name||'가족')+' 일정 패턴',`<button class="ok" data-act="${m._own?'fp-save':'fp-done'}">${m._own?'저장':'완료'}</button>`)}
     <div class="pg-b np">${famSchedHtml(m)}</div>`,'manpat');
 }
 const famReRender=()=>pageMode==='manpat'?openManPat():openFamEdit();
@@ -6312,7 +6470,7 @@ function renderPiEd(focus){
     <div class="pi-tools">
       ${piEd.isNew?`<div class="hseg"><button class="${isList?'on':''}" data-act="pi-type" data-v="list">☑ 할 일</button><button class="${isList?'':'on'}" data-act="pi-type" data-v="note">📝 메모</button></div>`:''}
       ${own&&!famView()?`<div class="hseg"><button class="${n.shared?'':'on'}" data-act="pi-share" data-v="0">🔒 나만</button><button class="${n.shared?'on fam':''}" data-act="pi-share" data-v="1">♥ 가족</button></div>`:''}
-      ${own&&n.shared&&S.link&&!n.srv&&(piEd.isNew||n.cnt)?`<div class="usage-hint" style="width:100%;text-align:center">무료 ${famRemain()}건 남음 · 가족 포스트잇은 새로 붙일 때만 1건</div>`:''}
+      ${own&&n.shared&&S.link&&!n.srv&&(piEd.isNew||n.cnt)?`<div class="usage-hint" style="width:100%;text-align:center">무료 ${famRemN()}건 남음 · 가족 포스트잇은 새로 붙일 때만 1건</div>`:''}
       ${own&&!n.shared?`<div class="pi-cols">${PI_COL.map(c=>`<button class="c-${c} ${n.color===c?'on':''}" data-act="pi-color" data-v="${c}" aria-label="색"></button>`).join('')}</div>`:''}
       ${own?`<button class="pi-tb ${n.repeat?'on':''}" data-act="pi-repeat">🔁 매달 반복</button>`:''}
       ${!piEd.isNew&&piDone(n)?'<button class="pi-tb" data-act="pi-tear">📤 떼기</button>':''}
@@ -6440,7 +6598,7 @@ function openDdayEdit(){
   sheetMode='dday';
   const x=ddDraft;
   openSheet(`
-    <div class="sh-head"><button class="ib" data-act="open-dday" style="font-size:15px;width:auto;padding:0;color:var(--muted)">뒤로</button><b style="flex:1;text-align:center">${x.isNew?'D-day 추가':'D-day 고치기'}</b><button class="ib" data-act="dday-save" style="font-size:15px;color:var(--accent);width:auto;padding:0;font-weight:700">저장</button></div>
+    <div class="sh-head"><button class="ib" data-act="open-dday" style="font-size:15px;width:auto;padding:0;color:var(--muted)">뒤로</button><b style="flex:1;text-align:center">${x.isNew?'D-day 추가':'D-day 고치기'}</b><button class="ib ok" data-act="dday-save">저장</button></div>
     <div class="lbl" style="margin-top:0">이름</div><input type="text" id="ddName" value="${esc(x.name)}" placeholder="예: 장모님 생신" maxlength="20">
     <div class="lbl">날짜</div><input type="date" id="ddDate" value="${x.date}">
     <div class="lbl">아이콘</div><div class="emo">${EMOJI.map(e=>`<button class="${x.emoji===e?'on':''}" data-act="dday-emoji" data-v="${e}">${e}</button>`).join('')}</div>
@@ -6627,7 +6785,7 @@ function openCfm(c){
 const cfmToHtml=(c,others)=>others.length>1?`<div class="hint cfm-h" style="margin-top:8px">받는 사람</div><div class="chips left" style="margin-top:4px">${others.map(m=>`<button class="${c.to.includes(m.uid)?'on':''}" data-act="cfm-to" data-u="${esc(m.uid)}">${esc(m.name)}</button>`).join('')}</div>`:'';
 function renderCfm(){
   const c=cfm;if(!c)return;
-  const others=famOthers(),names=others.map(m=>m.name).join(' · ')||'가족',rem=`<div class="cfm-rem">무료 ${famRemain()}건 남음 (처음 ${FAM_FREE}건까지 무료)</div>`;
+  const others=famOthers(),names=others.map(m=>m.name).join(' · ')||'가족',rem=`<div class="cfm-rem">무료 ${famRemN()}건 남음 (처음 ${FAM_FREE}건까지 무료)</div>`;
   let head='',body='',ok='보내기';
   if(c.type==='memo'){
     head='♥ 가족 메모<b>가족에게 보낼까요?</b>';
@@ -6702,7 +6860,7 @@ function memoSection(k){
         <button class="send ${fm?'fam':'my'}" data-act="memo-send" aria-label="보내기">${ICON.send}</button>
       </div>
       ${role()==='guest'&&fm?`<div style="margin-top:6px">${usageHint()}</div>`:''}
-      ${S.link&&fm&&famRemain()<=3?`<div class="usage-hint" style="margin-top:6px;text-align:center">무료 ${famRemain()}건 남음</div>`:''}
+      ${S.link&&fm&&famRemain()<=3?`<div class="usage-hint" style="margin-top:6px;text-align:center">무료 ${famRemN()}건 남음</div>`:''}
     </div>`;
   return `<div class="sec memsec"><div class="sec-t">메모<button class="mdet2" data-act="memo-detail">자세히</button></div>${tabs}${body}${bar}</div>`;   // v0.155 입력칸도 메모 카드 안 · 자세히는 제목 줄 오른쪽
 }
@@ -6719,9 +6877,10 @@ function openMemoDetail(k,id){
 }
 function renderMemoDetail(){   // v0.158 새 모양 (시안 design/remain): 글 카드(메모 색) · 색 카드 · 줄 카드 · 나만/가족에게 C3
   const d=mdDraft,day=parse(d.k),host=role()==='host';
-  openPage(`<div class="pg-h"><button class="bk" data-act="md-back" aria-label="뒤로">‹</button><b>메모</b><button class="ok" data-act="md-save">저장</button></div>
+  openPage(`<div class="pg-h"><button class="bk" data-act="md-back" aria-label="뒤로">‹</button><b>메모</b><button class="ok${(d.text||'').trim()?'':' off'}" data-act="md-save">저장</button></div>
     <div class="pg-b np mdpg">
     <div class="pg-cap">${d.rep?'반복 메모':`${day.getMonth()+1}월 ${day.getDate()}일 (${DOW[day.getDay()]})`}</div>
+    ${host&&!d.rr?`<div class="pg-sec pad mdshare"><div class="npseg"><button class="${d.shared?'':'on'}" data-act="md-share" data-v="0">나만</button><button class="${d.shared?'on':''}" data-act="md-share" data-v="1">가족에게${d.shared&&S.link?` <em class="mdleft">${famRemN()}건 남음</em>`:''}</button></div></div>`:''}
     <div class="pg-sec pad"><textarea id="mdText" class="mdtx" placeholder="메모를 입력하세요" style="background:${d.shared?'var(--fam-bg)':(d.color||'var(--surface)')}">${esc(d.text)}</textarea>
     <div class="lnkrow" id="mdLinks">${hasLink(d.text)?linkParts(d.text).filter(x=>x.u).map(x=>`<a class="lnk" data-act="lnk" data-u="${esc(linkUrl(x.u))}">🔗 링크</a>`).join(' '):''}</div></div>
     ${d.shared?'':`<div class="pg-sec pad mdcol">${MEMO_COL.map(c=>`<button class="${d.color===c?'on':''}" style="background:${c}" data-act="md-col" data-v="${c}" aria-label="색"></button>`).join('')}</div>`}
@@ -6733,7 +6892,6 @@ function renderMemoDetail(){   // v0.158 새 모양 (시안 design/remain): 글 
     </div>
     ${d.rep?`<div class="pg-sec">${npRow('trash-2','반복 그만하기','',{tap:1,act:'rm-del',cls:'danger-row',attrs:` data-id="${esc(d.rep)}"`})}</div>`:''}
     ${wlOn()&&!d.id&&!wlHas(d.k)?`<div class="pg-sec">${npRow('file-text',esc(S.wlog.name?S.wlog.name+' 만들기':'일지 만들기'),npVal(''),{tap:1,act:'wl-new',attrs:` data-k="${d.k}"`})}</div>`:''}
-    ${host&&!d.rr?`<div class="pg-sec pad mdshare"><div class="npseg"><button class="${d.shared?'':'on'}" data-act="md-share" data-v="0">나만</button><button class="${d.shared?'on':''}" data-act="md-share" data-v="1">가족에게${d.shared&&S.link?` <em class="mdleft">${famRemain()}건 남음</em>`:''}</button></div></div>`:''}
     </div>`,'memodetail');
 }
 function mdSave(){
@@ -7152,7 +7310,7 @@ function openTypeEdit(){
     <div class="sh-head">
       <button class="ib" data-act="type-back" style="font-size:15px;width:auto;padding:0;color:var(--muted)">취소</button>
       <b style="flex:1;text-align:center">${t.isNew?'새 근무타입':'근무타입 편집'}</b>
-      <button class="ib" data-act="type-save" style="font-size:15px;color:var(--accent);width:auto;padding:0;font-weight:700">확인</button>
+      <button class="ib ok" data-act="type-save">확인</button>
     </div>
     <div style="display:flex;justify-content:center;padding:6px 0 16px">${typePreview()}</div>
     <div class="row">
@@ -8242,7 +8400,7 @@ function wxActs(act,t){
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>wxFetch(false),1500);});
 // 시험용 창구 (tests/phone/s71.js) — 날씨 기능 함수만
-window.__wx={manPlanned,visibleMemos,famLbl,famTypeAt,famWx,shiftOf,wxMyWin,openStampReg,actAuto,stampPlanned,myActs,manPlanned,famActNow,wxMine,get S(){return S;},get page(){return {pageMode,pageBack};},openDay,closeSheet,closePop,closePage,openAddonPage,render,save,pushAlarmsToNative,pushRemindersToNative,famCleanSched,famPayload,
+window.__wx={toast,toastUndo,manPlanned,visibleMemos,famLbl,famTypeAt,famWx,shiftOf,wxMyWin,openStampReg,actAuto,stampPlanned,myActs,manPlanned,famActNow,wxMine,get S(){return S;},get page(){return {pageMode,pageBack};},openDay,closeSheet,closePop,closePage,openAddonPage,render,save,pushAlarmsToNative,pushRemindersToNative,famCleanSched,famPayload,
   newAlarm:o=>{draft=Object.assign(newAlarm(),o||{});alSnd=false;openAlarmPage();},wxOn,wxRaw,wxFam,wxMemWin,wxMemWork,wxMemKey,wxOpenFam,wxOpenDay,wxChipIcon,
   openPatternPage,openStatsPage,openSlipPage:ym=>{slipYM=ym;openSlipPage();},statsCalc,payRates,dayHours,famTimesPayload,memberStatus,otOpen,get stYM(){return stYM;},set stYM(v){stYM=v;}};
 Object.defineProperty(window.__wx,'stDraft',{get:()=>stDraft});Object.assign(window.__wx,{fitDnT:(r,k)=>fitDn(r,k),stzPanelT:(e,m)=>stzPanel(e,m),wxHistPop:(...a)=>wxHistPop(...a),admTest:(codes,log)=>{admOk=true;adm={q:'',sel:null,codes,log,busy:false};},openAdmPage:()=>openAdmPage(),myCode:u=>myCode(u),famRemainT:()=>famRemain(),setBx:(a,b)=>{famBx={me:a,all:b};},stampRegSave:()=>stampRegSave(),dsTgo:(k,a)=>dsTgo(k,a),dsTdy:k=>dsTdy(k),patResetOpen:q=>patResetOpen(q),famWxOpen,stampsOn,openFeed,coachCheck,pushWidgetNow:()=>{try{window.AndroidBridge.setWidgetData(widgetJson());}catch(e){}},wxHist,wxHistSave,widgetSync,famNameOf:u=>famNameOf(u),famPeers,applyBackup,backupData,alarmMsg});   // v0.127 시험용
@@ -9711,7 +9869,7 @@ document.addEventListener('click',e=>{
     case 'memo-chk':{const rm=rmemoOf(t.dataset.mid);if(rm){const k=sheetKey,a=rm.done||[];rm.done=a.includes(k)?a.filter(x=>x!==k):[...a,k].slice(-120);if(!rm.done.length)delete rm.done;save();render();openDay(sheetKey);break;}const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);if(m){m.done=!m.done;if(!m.done)delete m.done;save();render();openDay(sheetKey);}break;}
     case 'md-back':mdDraft=null;closePage();break;
     case 'md-col':mdPull();mdDraft.color=mdDraft.color===t.dataset.v?'':t.dataset.v;renderMemoDetail();break;
-    case 'md-share':mdPull();mdDraft.shared=t.dataset.v==='1';renderMemoDetail();break;
+    case 'md-share':mdPull();mdDraft.shared=t.dataset.v==='1';MO.flip($('#page .pg-b'),renderMemoDetail);break;
     case 'md-al':mdPull();mdDraft.al=t.dataset.v;renderMemoDetail();break;
     case 'md-settime':mdPull();mdDraft.time='09:00';renderMemoDetail();break;
     case 'md-notime':mdPull();mdDraft.time='';mdDraft.al='';renderMemoDetail();break;
@@ -10378,7 +10536,7 @@ document.addEventListener('input',e=>{
   else if(t.id==='vcmsg'){vcSel.msg=t.value;}
   else if(t.id==='rpm'&&replyDraft){replyDraft.text=t.value;}
   else if(t.id==='al'&&draft){draft.label=t.value;}
-  else if(t.id==='mdText'){const r=$('#mdLinks');if(r)r.innerHTML=hasLink(t.value)?linkParts(t.value).filter(x=>x.u).map(x=>`<a class="lnk" data-act="lnk" data-u="${esc(linkUrl(x.u))}">🔗 링크</a>`).join(' '):'';}
+  else if(t.id==='mdText'){const sv=$('#page .pg-h .ok');if(sv){const off=!t.value.trim();if(sv.classList.contains('off')&&!off&&sv.animate)sv.animate([{transform:'scale(.9)'},{transform:'scale(1.08)',offset:.6},{transform:'none'}],{duration:380,easing:'cubic-bezier(.3,.7,.4,1)'});sv.classList.toggle('off',off);}const r=$('#mdLinks');if(r)r.innerHTML=hasLink(t.value)?linkParts(t.value).filter(x=>x.u).map(x=>`<a class="lnk" data-act="lnk" data-u="${esc(linkUrl(x.u))}">🔗 링크</a>`).join(' '):'';}
   else if(t.id==='aVol'&&draft){draft.vol=Number(t.value);const s=t.parentElement.querySelector('small');if(s)s.textContent=`알람 볼륨 기준 ${draft.vol}%`;}
   else if(t.id==='chName'){chDraft.name=t.value;}
   else if(t.id==='crpZoom'&&crp){crp.z=+t.value;cropDraw();}
@@ -11232,7 +11390,7 @@ function vcMemoHtml(k){
   }).join('');
   return `<div class="sec-t vcmt">가족 메모</div>${list}
     <div class="vcmemo-bar"><input type="text" id="vcmemo" maxlength="200" placeholder="가족에게 남길 메모" enterkeyhint="send"><button class="send fam" data-act="vc-memo-send" data-k="${k}" aria-label="보내기">${ICON.send}</button></div>
-    ${famRemain()<=3?`<div class="usage-hint" style="margin-top:4px">무료 ${famRemain()}건 남음 · 가족 모두에게 보이고 알림이 가요</div>`:''}`;
+    ${famRemain()<=3?`<div class="usage-hint" style="margin-top:4px">무료 ${famRemN()}건 남음 · 가족 모두에게 보이고 알림이 가요</div>`:''}`;
 }
 function vcGrid(p){
   const sch=p.sch,y=vcY,m=vcM,first=new Date(y,m,1),lead=leadOf(first),days=new Date(y,m+1,0).getDate(),rows=Math.ceil((lead+days)/7),start=addDays(first,-lead),tk=fmt(new Date());
@@ -11321,7 +11479,7 @@ function vcDayHtml(k){
         ${want!==sh?`<div class="vrask"><b>${esc(ty.name)} → ${tn(want)}</b>${ro(want)} 바꿔 달라고 할게요</div>`:''}
         <textarea id="rqm2" placeholder="한마디 (예: 아이 학예회라 같이 가자)" maxlength="60"></textarea>
         <button class="paint-btn" data-act="vc-multi-from" data-k="${k}">${npi('calendar-days',18)}<b>여러 날 고르기</b><i>›</i></button>
-        <button class="btn vrsend" data-act="vc-send">요청 보내기<small> · ${famRemain()}건 남음</small></button>`;
+        <button class="btn vrsend" data-act="vc-send">요청 보내기<small> · ${famRemN()}건 남음</small></button>`;
   const card=!isOpen?'':`<div class="sh-card vrcard">${mine.map(stCard).join('')}${form}</div>`;
   return `<div class="dtop"><button data-act="close">‹ ${esc(p.name)} 달력</button></div>
     <div class="dfh"><button class="ib" data-act="vc-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
@@ -11505,6 +11663,7 @@ function vcMove(n){let y=vcY,m=vcM+n;if(m<0){m=11;y--;}if(m>11){m=0;y++;}const k
  * 보낼 때마다 내 횟수(sent)가 +1 (처음 10건 무료). 내 폰의 메모 · 요청 화면은 지금 있는 것을 그대로 쓰고
  * 서버에서 받은 것을 같이 보여줘요 (S.requests 에 srv:true 로 복사본, 가족 메모는 visibleMemos 에 합침). */
 const FAM_FREE=10;
+const famRemN=()=>{const n=famRemain();return n>99?'99+':n;};   // v0.196 100건 넘으면 99+건
 const famRemain=()=>{const m=(S.fam2&&S.fam2.me)||{};return Math.max(0,FAM_FREE+(+m.bonus||0)+famBx.me+famBx.all-(+m.sent||0));};   // v0.150 + 관리자가 준 건수
 const iga=w=>{const c=String(w).slice(-1).charCodeAt(0);return c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28!==0?'이':'가';};
 const famOthers=()=>{const me=S.link&&S.link.uid;return ((S.fam2&&S.fam2.members)||[]).filter(m=>m.uid!==me).map(m=>({...m,name:famAka(m.uid,m.name)}));};

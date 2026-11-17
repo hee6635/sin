@@ -363,6 +363,51 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** v0.196 확인 · 알림 창을 앱 모양(아래 흰 카드)으로: 아래에서 올라오고 고르면 아래로 내려감 (폰 기본 확인 창 대신 · 44곳 그대로) */
+    private fun sheetAsk(message: String, ask: Boolean, result: JsResult?) {
+        val d = density()
+        fun px(v: Float) = (v * d).toInt()
+        val night = isNight()
+        val bg = if (night) Color.parseColor("#1c1f26") else Color.WHITE
+        val fg = if (night) Color.parseColor("#f2f4f6") else Color.parseColor("#191f28")
+        val sub = if (night) Color.parseColor("#2a2e36") else Color.parseColor("#f2f4f6")
+        val danger = Regex("지울|지우|뺄|빼|나가|내보내|삭제|사라|없어|되돌릴 수 없").containsMatchIn(message)
+        val okBg = if (danger) Color.parseColor("#e5484d") else Color.parseColor("#3182f6")
+        fun round(c: Int, r: Float) = android.graphics.drawable.GradientDrawable().apply { setColor(c); cornerRadius = r * d }
+        var done = false
+        val dlg = android.app.Dialog(this)
+        dlg.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+        val box = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            background = round(bg, 22f)
+            setPadding(px(20f), px(22f), px(20f), px(16f))
+        }
+        box.addView(android.widget.TextView(this).apply { text = message; setTextColor(fg); textSize = 16f; setLineSpacing(0f, 1.3f) })
+        val row = android.widget.LinearLayout(this).apply { setPadding(0, px(18f), 0, 0) }
+        fun btn(t: String, b: Int, c: Int, go: () -> Unit) = android.widget.TextView(this).apply {
+            text = t; setTextColor(c); textSize = 16f; typeface = android.graphics.Typeface.DEFAULT_BOLD
+            gravity = android.view.Gravity.CENTER; background = round(b, 14f); isClickable = true
+            setOnClickListener { done = true; go(); dlg.dismiss() }
+        }
+        val lp = { android.widget.LinearLayout.LayoutParams(0, px(50f), 1f) }
+        if (ask) row.addView(btn("취소", sub, fg) { result?.cancel() }, lp().apply { rightMargin = px(8f) })
+        row.addView(btn("확인", okBg, Color.WHITE) { result?.confirm() }, lp())
+        box.addView(row)
+        dlg.setContentView(box)
+        dlg.setOnDismissListener { if (!done) { done = true; if (ask) result?.cancel() else result?.confirm() } }
+        dlg.window?.let { w ->
+            w.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+            w.setGravity(android.view.Gravity.BOTTOM)
+            w.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+            w.decorView.setPadding(px(12f), 0, px(12f), px(14f))
+            w.setWindowAnimations(R.style.SheetAnim)
+            w.setDimAmount(0.4f)
+        }
+        dlg.show()
+    }
+
+    private fun density(): Float = resources.displayMetrics.density
+
     /** 웹 화면의 자바스크립트 실행 (어느 스레드에서 불러도 됨) */
     fun js(code: String) {
         webView.post { webView.evaluateJavascript(code, null) }
@@ -414,23 +459,14 @@ class MainActivity : ComponentActivity() {
             override fun onJsConfirm(
                 view: WebView?, url: String?, message: String?, result: JsResult?
             ): Boolean {
-                AlertDialog.Builder(this@MainActivity)
-                    .setMessage(message)
-                    .setPositiveButton("확인") { _, _ -> result?.confirm() }
-                    .setNegativeButton("취소") { _, _ -> result?.cancel() }
-                    .setOnCancelListener { result?.cancel() }
-                    .show()
+                sheetAsk(message ?: "", true, result)
                 return true
             }
 
             override fun onJsAlert(
                 view: WebView?, url: String?, message: String?, result: JsResult?
             ): Boolean {
-                AlertDialog.Builder(this@MainActivity)
-                    .setMessage(message)
-                    .setPositiveButton("확인") { _, _ -> result?.confirm() }
-                    .setOnCancelListener { result?.cancel() }
-                    .show()
+                sheetAsk(message ?: "", false, result)
                 return true
             }
 

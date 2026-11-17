@@ -590,6 +590,22 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.196 모션 묶음 (시안 design/seg-toggle · nav-fill · save-btn · memo-scope · day-morph · pop-morph · motion-more · toast)
+- 원칙: 화면 배치는 한 번만 바꾸고 겉모습(clip-path · transform · opacity)만 움직임 → 폰에서 버벅이지 않게 · 동작 줄이기 설정이면 모두 끔
+- 고르기(.npseg): 모양 그대로 · 흰 알약(.npind)이 늘어나며 미끄러짐 (누른 뒤 새로 그려도 같은 data-act 줄을 찾아 이어서) · 스위치(.sw): 물방울 (::after 를 WAAPI pseudoElement)
+- 하단 탭: MO.navSet — 아이콘(.nvi)이 떠오르며 회색으로 차오름(.fl 복사본 clip) · 그림자(.nsh)
+- 버튼 누름: .btn · .send · .pg-h .ok · .sh-head .ok 등 누르면 작아졌다 떼면 튕김
+- 위 오른쪽 저장 = 알약(.pg-h .ok · .sh-head .ok) · 메모 창은 글이 없으면 회색(.off) · 가족 고치기 · 일정 패턴 · D-day · 근무타입도 알약
+- 메모 창: 나만/가족에게를 맨 위로 · 바꾸면 줄들이 FLIP 으로 미끄러져 자리 잡음 (MO.flip)
+- 메모 입력칸 · 전송 버튼 48 · 전송 = ↑ 동그라미 · 글이 없으면 회색(:placeholder-shown)
+- 날짜 창: 누른 날짜 칸에서 clip-path 로 커짐(MO.sheetOpen) · 닫으면 그 칸으로(.closing 동안 보이게 둠) · 칸이 안 보이면 아래로
+- 작은 창(#pop): 누른 자리에서 커지고 그 자리로 · 누른 자리가 없으면 아래에서 올라오고 아래로 · 창→창은 내용만 바뀜 · 닫힐 때 옛 #pop 은 .ghost 로 잠깐 남고 새 빈 #pop 을 앞에 끼움
+- 확인 창(confirm · alert 44곳): MainActivity.sheetAsk — 앱 모양 아래 카드 · 아래에서 올라옴(anim/sheet_up · sheet_down) · 지우기 같은 말이면 빨간 버튼
+- 위젯 날짜 창(WidgetDayActivity): SheetAnim 으로 아래에서 올라옴
+- 할 일 체크 · 근무 동그라미 · 색 점: 톡 튐 · 체크는 초록 물결 · 빨간 배지: 숫자 바뀌면 톡 · 날짜 줄: 고른 날 테두리가 미끄러짐(.dsghost)
+- 알림 띠(#toast): 위에서 펼쳐지듯(Flip Down) · 떠 있는 동안 새 알림이 오면 앞을 덮고 기존 것은 뒤로(.tghost) · 위로 접히며 사라짐
+- 남은 건수: 100건 넘으면 "99+건" (famRemN)
+
 ## v0.195 근무 펼치기 모션 다시 (시안 design/shift-morph/v1)
 - 렉 원인: v0.194 는 카드 높이를 매 순간 바꿔서 화면 배치를 계속 다시 계산 → 이번엔 배치는 한 번만 바꾸고 겉모습만 움직임
 - shMorph(sec,open,apply): 뒤 판(.shghost)이 알약 자리에서 카드 자리로 clip-path 로 커짐 · 카드 바탕은 그동안 투명 · 안의 줄 차례로 나타남 · 아래 카드들은 translateY 로 미끄러짐 · 접기는 반대 (닫힌 자리는 .mrph-m 으로 잠깐 숨겨 잼)
