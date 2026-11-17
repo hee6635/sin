@@ -1,0 +1,25 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box;margin:0}body{font-family:P,sans-serif;background:#f2f4f6;width:390px;height:700px;overflow:hidden;position:relative;color:#191f28}
+.view{position:absolute;inset:0 0 70px;overflow:hidden}
+.scr{position:absolute;inset:0;padding:16px 14px;background:#f2f4f6}
+.scr h2{font-size:22px;margin:6px 4px 14px}.card{background:#fff;border-radius:20px;height:90px;margin-bottom:12px}.card.t{height:200px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;background:#fff;border-radius:16px;padding:8px}.grid i{height:58px;border-radius:10px;background:#eef3f9}.grid i:nth-child(3n){background:#f8ece6}.grid i:nth-child(4n){background:#fff}
+nav{position:absolute;left:0;right:0;bottom:0;height:70px;background:#fff;border-top:1px solid #eef0f3;display:flex}
+nav b{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;color:#9aa1ad;font-weight:600}nav b.on{color:#191f28;font-weight:800}nav b i{width:24px;height:24px;border-radius:7px;border:2px solid currentColor}
+.tap{position:absolute;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.14);pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(.5);transition:opacity .15s,transform .2s;z-index:9}.tap.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+</style></head><body>
+<div class="view" id="view"></div>
+<nav id="nav"><b class="on"><i></i>달력</b><b><i></i>가족</b><b><i></i>알람</b><b><i></i>설정</b></nav><div class="tap" id="tap"></div>
+<script>
+const S=[`<h2>2026.11</h2><div class="grid">${'<i></i>'.repeat(35)}</div>`,`<h2>우리 가족</h2><div class="card"></div><div class="card t"></div>`,`<h2>알람</h2><div class="card"></div><div class="card"></div><div class="card"></div>`,`<h2>설정</h2><div class="card"></div><div class="card t"></div><div class="card"></div>`];
+const view=document.getElementById('view');let cur=0;const mk=i=>{const d=document.createElement('div');d.className='scr';d.innerHTML=S[i];return d;};view.appendChild(mk(0));
+const EO='cubic-bezier(.2,.9,.25,1)';
+function go(i){if(i===cur)return;const dir=i>cur?1:-1,old=view.lastChild,nw=mk(i);view.appendChild(nw);
+  old.animate([{transform:'none',opacity:1},{transform:`translateX(${-dir*40}px)`,opacity:0}],{duration:220,easing:'ease-in',fill:'forwards'}).onfinish=()=>old.remove();
+  nw.animate([{transform:`translateX(${dir*40}px)`,opacity:0},{transform:'none',opacity:1}],{duration:340,delay:60,easing:EO,fill:'backwards'});
+  [...nw.children].forEach((x,k)=>x.animate([{transform:'translateY(10px)',opacity:0},{transform:'none',opacity:1}],{duration:300,delay:100+k*40,easing:'ease-out',fill:'backwards'}));
+  document.querySelectorAll('nav b').forEach((b,k)=>b.classList.toggle('on',k===i));cur=i;}
+function tap(i){const b=document.querySelectorAll('nav b')[i].getBoundingClientRect(),t=document.getElementById('tap');t.style.left=(b.left+b.width/2)+'px';t.style.top=(b.top+b.height/2)+'px';t.classList.add('on');setTimeout(()=>t.classList.remove('on'),200);go(i);}
+if(location.hash==='#auto')[1,2,3,0,3,1].forEach((i,k)=>setTimeout(()=>tap(i),500+k*900));
+</script></body></html>
