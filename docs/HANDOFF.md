@@ -571,3 +571,8 @@
 ## v0.185 켠 직후 첫 달 넘기기 덜 씹히게
 - 켠 직후 타이머를 뒤로: widgetSync 150 → 1600ms · a11yPass 300 → 2200ms · introNotice 800 → 1400ms (날씨 2500ms 그대로).
 - 확인한 것: 앞뒤 한 달은 원래 처음부터 같이 그림(renderCal) · 넘기기 시작하면 오늘 빛은 이미 바로 멈춤. __refresh(앱으로 돌아올 때)는 시험이 바로 결과를 보므로 그대로.
+
+## v0.186 시작 기록 (켠 뒤 12초 · 첫 넘기기 씹힘 찾기용)
+- window.__perf (PF): longtask · rAF 틈 > 40ms(화면 멈춤) · 손가락 닿음/뗌 · 오래 걸린 함수(pfWrap: render · fitDn · calFill · stzWindow · widgetSync · a11yPass · glowFrame · calShiftFast · plFit · memoShift, 8ms 이상).
+- 보는 곳: 설정 › 앱 정보 7번 → 개발자 메뉴(Firebase 연결 시험) 맨 위 "시작 기록". 저장 안 함.
+- 컴퓨터에서도 켠 뒤 1.5초 동안 옆 달 맞추기(fitDn)가 판마다 60~170ms → 폰에서 첫 넘기기 씹힘의 유력 원인.

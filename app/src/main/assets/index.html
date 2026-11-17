@@ -2798,6 +2798,15 @@ const REQ_ST={
 };
 
 /* ================= 상태 저장 ================= */
+/* v0.186 시작 기록 (켠 뒤 12초): 오래 걸린 일 · 화면이 멈춘 틈 · 손가락 · 달 넘김 → 설정 › 앱 정보 7번 › 개발자 메뉴에서 봄 (저장 안 함 · 화면 영향 없음) */
+const PF={t0:performance.now(),ev:[]};window.__perf=PF;
+const pfOn=()=>performance.now()<12000;
+function pf(n,ms){if(pfOn()&&PF.ev.length<400)PF.ev.push([Math.round(performance.now()),n,ms==null?'':Math.round(ms)]);}
+const pfWrap=(name,fn)=>function(...a){if(!pfOn())return fn.apply(this,a);const t=performance.now();try{return fn.apply(this,a);}finally{const d=performance.now()-t;if(d>=8)pf(name,d);}};
+try{new PerformanceObserver(l=>l.getEntries().forEach(e=>pf('긴 작업',e.duration))).observe({type:'longtask',buffered:true});}catch(e){}
+(()=>{let last=performance.now();const tick=now=>{const g=now-last;last=now;if(g>40)pf('화면 멈춤',g);if(pfOn())requestAnimationFrame(tick);};requestAnimationFrame(tick);})();
+document.addEventListener('touchstart',()=>pf('손가락 닿음'),{capture:true,passive:true});
+document.addEventListener('touchend',()=>pf('손가락 뗌'),{capture:true,passive:true});
 const KEY='eonjeswieo:v1', OLD_KEY='shiftcal:v9';
 const defaults=()=>({
   calLook:'fill',          // v0.97 새로 설치하면 칸 채우기 (예전 사용자는 normalize 가 동그라미 그대로)
@@ -10549,6 +10558,7 @@ function openFirebasePage(){
   openPage(`
     ${pageHead('Firebase 연결 시험')}
     <div class="pg-b">
+      <div class="pg-sec" style="padding:12px 14px"><b>시작 기록 (켠 뒤 12초 · ms)</b><div style="font:12px/1.5 monospace;white-space:pre-wrap;margin-top:6px;max-height:60vh;overflow:auto">${esc((window.__perf&&window.__perf.ev||[]).map(e=>`${String(e[0]).padStart(5)}  ${e[1]}${e[2]!==''?'  '+e[2]:''}`).join('\n')||'(기록 없음)')}</div></div>
       <div class="pg-sec">
         ${row('설정 파일','firebase/config.js',f.cfg?'있음':'없음',f.cfg?'var(--today)':'var(--muted)')}
         ${row('로그인 (익명)','',f.uid?esc(f.uid.slice(0,8))+'…':'아직',ok?'var(--today)':'')}
@@ -12233,6 +12243,8 @@ try{new MutationObserver(a11ySoon).observe(document.body,{childList:true,subtree
 const bootStep=f=>{try{f();}catch(e){try{window.__logErr&&window.__logErr(e&&e.message,'boot');}catch(x){}}};
 bootStep(applyTheme);bootStep(applyFont);bootStep(applyBand);
 let bootOk=true;
+try{render=pfWrap('다시 그리기(render)',render);fitDn=pfWrap('글자 · 스티커 맞추기',fitDn);calFill=pfWrap('옆 달 그리기',calFill);stzWindow=pfWrap('스티커 크기 재기',stzWindow);widgetSync=pfWrap('위젯 자료 읽기',widgetSync);a11yPass=pfWrap('접근성 정리',a11yPass);glowFrame=pfWrap('오늘 빛',glowFrame);calShiftFast=pfWrap('달 넘김 정리',calShiftFast);plFit=pfWrap('메모 글자 자르기',plFit);memoShift=pfWrap('메모 위치',memoShift);}catch(e){}
+pf('첫 그리기 시작');
 try{render();}catch(e){bootOk=false;try{window.__logErr&&window.__logErr(e&&e.message,'render');window.__crash&&window.__crash(e&&e.message);}catch(x){}}
 bootStep(pushAlarmsToNative);bootStep(pushRemindersToNative);bootStep(pushWidgetToNative);
 if(!S.onboarded)bootStep(startOnboarding);
