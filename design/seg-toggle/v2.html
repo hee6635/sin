@@ -1,0 +1,70 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=390">
+<style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box;margin:0}
+:root{--accent:#3182f6;--fg:#191f28;--muted:#8b95a1;--bg:#fff;--surface:#f2f4f6}
+body{font-family:P,sans-serif;background:var(--surface);color:var(--fg);width:390px;height:720px;overflow:hidden;padding:18px 14px}
+h1{font-size:19px;text-align:center;margin:4px 0 18px}
+.cap{font-size:13.5px;font-weight:700;color:#6b7684;margin:14px 8px 8px}
+.card{background:#fff;border-radius:22px;padding:14px 16px;box-shadow:0 2px 12px rgba(15,23,42,.035)}
+.row{display:flex;align-items:center;gap:12px;min-height:52px}.row+.row{border-top:1px solid #eef0f3}
+.row b{flex:1;font-size:15.5px}
+.ri{width:34px;height:34px;border-radius:10px;background:#f2f4f6;flex:none}
+/* 6 Segmented: 한 줄 바탕 + 미끄러지는 파란 알약 */
+.npseg{position:relative;display:flex;padding:4px;border-radius:999px;background:color-mix(in srgb,var(--fg) 6%,transparent);isolation:isolate}
+.npseg button{position:relative;z-index:1;flex:1;height:38px;border:0;background:transparent;border-radius:999px;font:600 14.5px P;color:var(--muted);transition:color .2s .1s}
+.npseg button.on{color:#1b64da;font-weight:700}
+.npseg.sm{display:inline-flex;margin-left:auto}.npseg.sm button{flex:none;height:32px;padding:0 13px;font-size:13.5px}
+.npind{position:absolute;z-index:0;top:4px;bottom:4px;left:0;border-radius:999px;background:#fff;box-shadow:0 0 0 1.5px var(--accent),0 4px 12px color-mix(in srgb,var(--accent) 18%,transparent);pointer-events:none}
+.mt{margin-top:10px}
+/* 1 Liquid toggle */
+.sw{position:relative;width:52px;height:30px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;z-index:1}
+.sw i{position:absolute;inset:0;border-radius:15px;background:#d1d6db;transition:background .3s}
+.sw i::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:12px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .3s cubic-bezier(.3,.7,.4,1)}
+.sw input:checked+i{background:var(--accent)}
+.sw input:checked+i::after{transform:translateX(22px)}
+.tap{position:absolute;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.16);border:2px solid rgba(255,255,255,.9);pointer-events:none;opacity:0;z-index:9;transform:translate(-50%,-50%) scale(.6);transition:opacity .15s,transform .15s}
+.tap.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+</style></head><body>
+<h1>홈 화면 위젯</h1>
+<div class="cap">배경</div>
+<div class="card">
+  <div class="npseg" id="a"><button class="on">밝게</button><button>어둡게</button><button>폰 설정 따라</button></div>
+  <div class="npseg mt" id="b"><button class="on">기본</button><button>또렷하게</button></div>
+</div>
+<div class="cap">화면</div>
+<div class="card">
+  <div class="row"><span class="ri"></span><b>달력 모양</b><div class="npseg sm" id="c"><button class="on">동그라미</button><button>칸 채우기</button></div></div>
+  <div class="row"><span class="ri"></span><b>글자 크기</b><div class="npseg sm" id="d"><button class="on">보통</button><button>크게</button></div></div>
+</div>
+<div class="cap">알림</div>
+<div class="card">
+  <div class="row"><span class="ri"></span><b>근무 전날 알림</b><label class="sw"><input type="checkbox" id="t1"><i></i></label></div>
+  <div class="row"><span class="ri"></span><b>가족 메모 알림</b><label class="sw"><input type="checkbox" id="t2" checked><i></i></label></div>
+</div>
+<div class="tap" id="tap"></div>
+<script>
+// ---- 6: 미끄러지는 알약 (가는 쪽 끝이 먼저 늘어났다가 따라붙음) ----
+function segPos(seg){const b=seg.querySelector('button.on');if(!b)return null;return {l:b.offsetLeft,w:b.offsetWidth};}
+function segInit(seg){let i=seg.querySelector('.npind');if(!i){i=document.createElement('i');i.className='npind';seg.prepend(i);}const p=segPos(seg);if(p){i.style.transform=`translateX(${p.l}px)`;i.style.width=p.w+'px';}return i;}
+function segMove(seg,from){const ind=segInit(seg),to=segPos(seg);if(!from||!to||from.l===to.l)return;
+  const L0=from.l,R0=from.l+from.w,L1=to.l,R1=to.l+to.w,right=L1>L0;
+  const ml=right?L0+(L1-L0)*.3:L0+(L1-L0)*.85,mr=right?R0+(R1-R0)*.85:R0+(R1-R0)*.3;
+  const ov=right?3:-3;
+  ind.animate([{transform:`translateX(${L0}px)`,width:from.w+'px'},{offset:.45,transform:`translateX(${ml}px)`,width:(mr-ml)+'px'},{offset:.8,transform:`translateX(${L1+ov}px)`,width:(to.w-2)+'px'},{transform:`translateX(${L1}px)`,width:to.w+'px'}],{duration:460,easing:'cubic-bezier(.3,.7,.4,1)'});}
+document.querySelectorAll('.npseg').forEach(segInit);
+document.addEventListener('click',e=>{const b=e.target.closest('.npseg button');if(!b||b.classList.contains('on'))return;const seg=b.parentElement,from=segPos(seg);seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));segMove(seg,from);});
+// ---- 1: 물방울 토글 (동그라미가 늘어나며 미끄러지고 끝에서 살짝 눌림) ----
+document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('.sw'))return;const i=t.nextElementSibling,on=t.checked,X=22;
+  const k=on?[{transform:'translateX(0px)',width:'24px'},{offset:.4,transform:'translateX(0px)',width:'36px'},{offset:.75,transform:`translateX(${X+1}px)`,width:'23px',height:'22px',top:'4px'},{transform:`translateX(${X}px)`,width:'24px'}]
+            :[{transform:`translateX(${X}px)`,width:'24px'},{offset:.4,transform:`translateX(${X-12}px)`,width:'36px'},{offset:.75,transform:'translateX(-1px)',width:'23px',height:'22px',top:'4px'},{transform:'translateX(0px)',width:'24px'}];
+  i.animate(k,{duration:480,easing:'cubic-bezier(.3,.7,.4,1)',pseudoElement:'::after'});});
+// 자동 재생
+function tap(el){const r=el.getBoundingClientRect(),t=document.getElementById('tap');t.style.left=(r.left+r.width/2)+'px';t.style.top=(r.top+r.height/2)+'px';t.classList.add('on');setTimeout(()=>t.classList.remove('on'),200);el.click();}
+if(location.hash==='#auto'){const q=s=>document.querySelector(s),steps=[
+  ()=>tap(q('#a button:nth-of-type(2)')),()=>tap(q('#a button:nth-of-type(3)')),()=>tap(q('#a button:nth-of-type(1)')),
+  ()=>tap(q('#b button:nth-of-type(2)')),()=>tap(q('#c button:nth-of-type(2)')),()=>tap(q('#d button:nth-of-type(2)')),
+  ()=>tap(q('#t1')),()=>tap(q('#t2')),()=>tap(q('#t1')),()=>tap(q('#c button:nth-of-type(1)')),()=>tap(q('#b button:nth-of-type(1)'))];
+  steps.forEach((f,i)=>setTimeout(f,500+i*750));}
+</script></body></html>

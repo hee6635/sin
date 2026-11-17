@@ -1,0 +1,63 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box;margin:0}
+:root{--accent:#3182f6;--fam:#7b5cf0;--fg:#191f28;--muted:#8b95a1}
+body{font-family:P,sans-serif;background:#dfe2e6;display:flex;gap:16px;padding:14px;width:max-content}
+.col>b{display:block;font-size:15px;margin:0 0 8px 4px}
+.ph{width:390px;height:780px;border-radius:26px;overflow:hidden;background:#f2f4f6;position:relative}
+.hd{height:56px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;position:relative;border-bottom:1px solid #e9ecef}.hd i{position:absolute;left:18px;font-style:normal;font-size:22px}.hd em{position:absolute;right:18px;font-style:normal;color:var(--accent);font-weight:700;font-size:16px}
+.bd{padding:0 16px}
+.cap{font-size:13.5px;font-weight:700;color:#8b95a1;margin:18px 6px 8px}
+.card{background:#fff;border-radius:22px;padding:12px 16px;margin-bottom:12px}
+.ta{height:120px;border-radius:16px;background:#f2f4f6;padding:14px;color:#9aa1ad;font-size:15px;transition:background .35s}
+.fam .ta{background:#e6e0ff}
+.colors{display:flex;justify-content:space-between}.colors i{width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(0,0,0,.08)}
+.row{display:flex;align-items:center;gap:12px;height:52px}.row+.row{border-top:1px solid #eef0f3}.row .ri{width:32px;height:32px;border-radius:10px;background:#f2f4f6}.row b{flex:1;font-size:15.5px;font-weight:600}.row span{color:var(--muted);font-size:14px}
+.sw{width:44px;height:26px;border-radius:13px;background:#d1d6db;position:relative}.sw::after{content:"";position:absolute;left:2px;top:2px;width:22px;height:22px;border-radius:50%;background:#fff}
+/* 접히는 줄 */
+.fold{display:grid;grid-template-rows:1fr;transition:grid-template-rows .35s cubic-bezier(.3,.7,.4,1),opacity .25s}
+.fold>div{min-height:0;overflow:hidden}
+.fam .fold{grid-template-rows:0fr;opacity:0}
+.fold.inner>div>.row{border-top:1px solid #eef0f3}
+/* 고르기 알약 (기본 모양 + 미끄러짐) */
+.seg{position:relative;display:flex;gap:8px;isolation:isolate}
+.seg button{position:relative;z-index:1;flex:1;height:40px;border:0;border-radius:999px;background:color-mix(in srgb,var(--fg) 6%,transparent);font:600 14.5px P;color:var(--muted);transition:color .2s .1s}
+.seg button.on{background:transparent;color:#1b64da;font-weight:700}
+.seg .ind{position:absolute;z-index:0;top:0;height:40px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--accent),0 4px 12px rgba(49,130,246,.18)}
+.seg small{font-size:12.5px;font-weight:600;margin-left:6px;opacity:.8}
+.tap{position:absolute;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.15);pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(.5);transition:opacity .15s,transform .2s;z-index:9}.tap.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+</style></head><body>
+<template id="T">
+ <div class="hd"><i>‹</i>메모<em>저장</em></div>
+ <div class="bd">
+  <div class="cap">11월 17일 (화)</div>
+  <div class="slotTop"></div>
+  <div class="card"><div class="ta">메모를 입력하세요</div></div>
+  <div class="fold"><div><div class="card colors"><i style="background:#fff3c4"></i><i style="background:#ffd9e2"></i><i style="background:#ffe0c7"></i><i style="background:#d6f3dc"></i><i style="background:#d2f0ef"></i><i style="background:#d8e8ff"></i><i style="background:#e8eaed"></i></div></div></div>
+  <div class="card" style="padding-top:4px;padding-bottom:4px">
+   <div class="row"><span class="ri"></span><b>할 일</b><i class="sw"></i></div>
+   <div class="row"><span class="ri"></span><b>시간</b><span>없음 ›</span></div>
+   <div class="fold inner"><div><div class="row"><span class="ri"></span><b>반복</b><span>안 함 ›</span></div></div></div>
+  </div>
+  <div class="card"><div class="row"><span class="ri"></span><b>업무 메모 만들기</b><span>›</span></div></div>
+  <div class="slotBot"></div>
+ </div>
+</template>
+<div class="col"><b>지금 자리 (맨 아래)</b><div class="ph" id="A"></div></div>
+<div class="col"><b>맨 위로 옮김</b><div class="ph" id="B"></div></div>
+<div class="tap" id="tapA"></div><div class="tap" id="tapB"></div>
+<script>
+const segHtml=`<div class="seg"><i class="ind"></i><button class="on" data-v="my">나만</button><button data-v="fam">가족에게<small>9건 남음</small></button></div>`;
+function setup(id,top){const ph=document.getElementById(id);ph.appendChild(document.getElementById('T').content.cloneNode(true));
+  const slot=ph.querySelector(top?'.slotTop':'.slotBot');slot.innerHTML=segHtml;slot.style.margin=top?'0 0 12px':'18px 0 0';place(ph.querySelector('.seg'));}
+function place(seg){const b=seg.querySelector('button.on'),i=seg.querySelector('.ind');i.style.transform=`translateX(${b.offsetLeft}px)`;i.style.width=b.offsetWidth+'px';}
+function pick(ph,v){const seg=ph.querySelector('.seg'),b=seg.querySelector(`[data-v="${v}"]`),o=seg.querySelector('button.on');if(b===o)return;
+  const L0=o.offsetLeft,W0=o.offsetWidth;o.classList.remove('on');b.classList.add('on');ph.classList.toggle('fam',v==='fam');
+  const L1=b.offsetLeft,W1=b.offsetWidth,R0=L0+W0,R1=L1+W1,right=L1>L0,ml=right?L0+(L1-L0)*.3:L0+(L1-L0)*.85,mr=right?R0+(R1-R0)*.85:R0+(R1-R0)*.3,ov=right?3:-3;
+  place(seg);seg.querySelector('.ind').animate([{transform:`translateX(${L0}px)`,width:W0+'px'},{offset:.45,transform:`translateX(${ml}px)`,width:(mr-ml)+'px'},{offset:.8,transform:`translateX(${L1+ov}px)`,width:(W1-2)+'px'},{transform:`translateX(${L1}px)`,width:W1+'px'}],{duration:460,easing:'cubic-bezier(.3,.7,.4,1)'});}
+function tap(id,v){const ph=document.getElementById(id),b=ph.querySelector(`.seg [data-v="${v}"]`),r=b.getBoundingClientRect(),t=document.getElementById('tap'+id);t.style.left=(r.left+r.width/2)+'px';t.style.top=(r.top+r.height/2)+'px';t.classList.add('on');setTimeout(()=>t.classList.remove('on'),220);pick(ph,v);}
+setup('A',false);setup('B',true);
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>pick(b.closest('.ph'),b.dataset.v));
+if(location.hash==='#auto'){['fam','my','fam','my'].forEach((v,i)=>{setTimeout(()=>{tap('A',v);tap('B',v);},600+i*1500);});}
+</script></body></html>

@@ -1,0 +1,61 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box;margin:0}
+body{font-family:P,sans-serif;background:#fff;width:390px;height:780px;overflow:hidden;position:relative;color:#191f28}
+.top{height:64px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:13px;color:#8b95a1;font-weight:700;padding:0 4px 6px}
+.dow span:first-child{color:#e5484d}.dow span:last-child{color:#3b6fd6}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:118px;gap:4px;padding:0 4px}
+.c{border-radius:12px;padding:6px 6px;position:relative;font-size:14px;font-weight:700}
+.c .s{position:absolute;left:0;right:0;top:44px;text-align:center;font-size:17px;font-weight:700}
+.c.d{background:#dce8f5}.c.n{background:#f5e3db}.c.o .s{color:#e5484d}
+.c.sun{color:#e5484d}
+.c .m{position:absolute;left:5px;right:5px;bottom:10px;height:16px;border-radius:4px;background:#ebe6ff;border-left:2px solid #7b5cf0}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.32);opacity:0;pointer-events:none}
+.sheet{position:absolute;left:0;right:0;bottom:0;height:560px;background:#f2f4f6;border-radius:26px 26px 0 0;display:none;overflow:hidden}
+.sheet .in{padding:14px 18px}
+.grab{width:38px;height:5px;border-radius:3px;background:#d1d6db;margin:0 auto 12px}
+.dh{display:flex;align-items:center;justify-content:space-between}.dh b{font-size:22px}.dh i{font-style:normal;font-size:22px;color:#8b95a1;width:28px;text-align:center}
+.dh small{display:block;text-align:center;font-size:13px;color:#8b95a1;margin-top:2px}
+.strip{display:flex;justify-content:space-between;margin:14px -4px 16px}.strip span{width:40px;height:52px;border-radius:12px;display:grid;place-items:center;font-size:12px;color:#6b7684;font-weight:700}.strip span.on{box-shadow:inset 0 0 0 2px #b8862b;background:#fff}
+.cardx{background:#fff;border-radius:20px;padding:14px 16px;margin-bottom:12px}
+.row{display:flex;justify-content:space-between;align-items:center}.row b{font-size:13.5px;color:#6b7684}.pill{height:36px;padding:0 14px 0 6px;border-radius:18px;background:#f2f4f6;display:flex;align-items:center;gap:7px;font-weight:800;font-size:14.5px}.pill i{width:26px;height:26px;border-radius:50%;background:#c9dbee;display:grid;place-items:center;font-style:normal;font-size:12px}
+.wx b{font-size:17px}.wx p{color:#6b7684;font-size:13px;margin-top:4px}.wx .bar{height:46px;border-radius:14px;background:#f5f7fa;margin-top:12px}
+.memo b{font-size:13.5px;color:#6b7684}.memo .l{margin-top:12px;height:18px;width:60%;border-radius:6px;background:#eef0f3}.memo .in2{margin-top:14px;height:48px;border-radius:14px;background:#f2f4f6}
+.tap{position:absolute;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.16);pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(.5);transition:opacity .15s,transform .2s;z-index:9}.tap.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+</style></head><body>
+<div class="top">2026.11</div>
+<div class="dow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+<div class="grid" id="grid"></div>
+<div class="dim" id="dim"></div>
+<div class="sheet" id="sheet"><div class="in" id="sin"></div></div>
+<div class="tap" id="tap"></div>
+<script>
+const P='주야휴휴',grid=document.getElementById('grid'),sheet=document.getElementById('sheet'),sin=document.getElementById('sin'),dim=document.getElementById('dim');
+for(let d=1;d<=35;d++){const n=d<=30?d:d-30,sh=P[(d+1)%4],c=document.createElement('div');c.className='c '+(sh==='주'?'d':sh==='야'?'n':'o')+((d-1)%7===0?' sun':'');c.dataset.d=n;c.innerHTML=`${n}<div class="s">${sh}</div>${[2,9,14,19,23].includes(d)?'<i class="m"></i>':''}`;if(d>30)c.style.opacity=.4;grid.appendChild(c);}
+const DOW='일월화수목금토';
+function fill(c){const d=+c.dataset.d,sh=c.querySelector('.s').textContent,cls=c.classList.contains('d')?'#c9dbee':c.classList.contains('n')?'#f1d3c6':'#fff';
+  sin.innerHTML=`<div class="grab"></div><div class="dh"><i>‹</i><div><b>11월 ${d}일 (${DOW[(d-1)%7]})</b><small>${sh==='주'?'주간':sh==='야'?'야간':'휴무'}</small></div><i>›</i></div>
+  <div class="strip">${[-3,-2,-1,0,1,2,3].map(o=>`<span class="${o?'':'on'}">${d+o}일</span>`).join('')}</div>
+  <div class="cardx row"><b>근무</b><span class="pill"><i style="background:${cls}">${sh}</i>${sh==='주'?'주간':sh==='야'?'야간':'휴무'} ▾</span></div>
+  <div class="cardx wx"><b>무난한 날씨예요</b><p>자켓 입으세요</p><div class="bar"></div></div>
+  <div class="cardx memo"><b>메모</b><div class="l"></div><div class="in2"></div></div>`;}
+const EO='cubic-bezier(.2,.9,.25,1)',EC='cubic-bezier(.45,0,.75,.35)';
+let cur=null;
+function ins(c){const s=sheet.getBoundingClientRect(),r=c.getBoundingClientRect();return `inset(${r.top-s.top}px ${s.right-r.right}px ${s.bottom-r.bottom}px ${r.left-s.left}px round 12px)`;}
+function open(c){cur=c;fill(c);sheet.style.display='block';const bg=getComputedStyle(c).backgroundColor;
+  sheet.animate([{clipPath:ins(c),backgroundColor:bg==='rgba(0, 0, 0, 0)'?'#f2f4f6':bg},{clipPath:'inset(0px 0px 0px 0px round 26px 26px 0 0)',backgroundColor:'#f2f4f6'}],{duration:460,easing:EO});
+  dim.animate([{opacity:0},{opacity:1}],{duration:400,fill:'forwards'});
+  [...sin.children].forEach((x,i)=>x.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],{duration:300,delay:160+i*40,easing:'ease-out',fill:'backwards'}));
+  c.animate([{opacity:1},{opacity:.3}],{duration:200,fill:'forwards'});}
+function close(){const c=cur;[...sin.children].forEach(x=>x.animate([{opacity:1},{opacity:0}],{duration:120,fill:'forwards'}));
+  const a=sheet.animate([{clipPath:'inset(0px 0px 0px 0px round 26px 26px 0 0)'},{clipPath:ins(c)}],{duration:360,easing:EC,fill:'forwards'});
+  dim.animate([{opacity:1},{opacity:0}],{duration:340,fill:'forwards'});
+  a.onfinish=()=>{sheet.style.display='none';sheet.getAnimations().forEach(x=>x.cancel());c.getAnimations().forEach(x=>x.cancel());c.animate([{transform:'scale(.92)'},{transform:'scale(1.04)',offset:.6},{transform:'none'}],{duration:320,easing:EO});};}
+function tapAt(x,y){const t=document.getElementById('tap');t.style.left=x+'px';t.style.top=y+'px';t.classList.add('on');setTimeout(()=>t.classList.remove('on'),220);}
+grid.onclick=e=>{const c=e.target.closest('.c');if(c)open(c);};dim.style.pointerEvents='auto';dim.onclick=close;
+if(location.hash==='#auto'){const q=d=>grid.querySelector(`.c[data-d="${d}"]`),tc=c=>{const r=c.getBoundingClientRect();tapAt(r.left+r.width/2,r.top+r.height/2);};
+  setTimeout(()=>{tc(q(14));open(q(14));},500);setTimeout(()=>{tapAt(195,150);close();},2200);
+  setTimeout(()=>{tc(q(20));open(q(20));},3300);setTimeout(()=>{tapAt(195,150);close();},5000);}
+</script></body></html>
