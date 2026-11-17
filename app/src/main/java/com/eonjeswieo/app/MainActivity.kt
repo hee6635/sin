@@ -228,6 +228,18 @@ class MainActivity : ComponentActivity() {
         else -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
     }
 
+    /** v0.191 위젯 설정 화면(배경화면 위) 열기 · 저장하면 앱에 {theme, alpha, bg, look} 돌려줌 */
+    private val widgetStyle = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
+        val out = r.data?.getStringExtra(WidgetStyleActivity.EXTRA_OUT)
+        if (r.resultCode == RESULT_OK && out != null) js("window.__wgStyle&&window.__wgStyle(" + JSONObject.quote(out) + ")")
+    }
+
+    fun openWidgetStyle(json: String) {
+        runOnUiThread {
+            try { widgetStyle.launch(Intent(this, WidgetStyleActivity::class.java).putExtra(WidgetStyleActivity.EXTRA_JSON, json)) } catch (e: Exception) { }
+        }
+    }
+
     /** v0.176 위젯 설정 화면: 앱 뒤에 실제 홈 화면 배경화면을 보이게 (권한 없음 · FLAG_SHOW_WALLPAPER) · 나가면 원래대로 */
     fun showWallpaper(on: Boolean) {
         runOnUiThread {

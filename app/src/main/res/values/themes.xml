@@ -15,4 +15,12 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:backgroundDimEnabled">true</item>
     </style>
+    <!-- v0.191 위젯 설정 화면: 실제 배경화면 위 -->
+    <style name="Theme.ShiftCal.Wallpaper" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
 </resources>

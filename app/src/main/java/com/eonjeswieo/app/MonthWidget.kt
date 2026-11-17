@@ -392,12 +392,22 @@ object MonthRenderer {
     /** v0.171 앱 위젯 설정 화면 미리보기: 위젯과 같은 그리기로 한 장 그려 PNG(base64) 로 돌려줌 (위젯에는 안 보냄) */
     internal fun preview(ctx: Context, json: String, wDp: Int, hDp: Int): String {
         return try {
-            val data = JSONObject(json)
+            val b = previewBitmap(ctx, JSONObject(json), wDp, hDp, 2f) ?: return ""
+            val out = java.io.ByteArrayOutputStream()
+            b.compress(Bitmap.CompressFormat.PNG, 100, out)
+            b.recycle()
+            android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP)
+        } catch (e: Exception) { "" }
+    }
+
+    /** v0.191 미리보기 그림 한 장 (위젯 설정 화면 · 배경화면 위) · maxD = 밀도 상한 */
+    internal fun previewBitmap(ctx: Context, data: JSONObject, wDp: Int, hDp: Int, maxD: Float): Bitmap? {
+        return try {
             synchronized(WidgetRenderer) {
                 val density = ctx.resources.displayMetrics.density
                 WidgetRenderer.dens = density
                 WFont.init(ctx)
-                val pd = Math.min(density, 2f)   // v0.189 미리보기는 2배까지만 (그림이 작아져 빨리 그려짐)
+                val pd = Math.min(density, maxD)   // v0.189 미리보기는 2배까지만 (그림이 작아져 빨리 그려짐)
                 WidgetRenderer.dens = pd
                 var w = (wDp.coerceIn(200, 600) * pd).toInt()
                 var h = (hDp.coerceIn(200, 700) * pd).toInt()
@@ -406,12 +416,9 @@ object MonthRenderer {
                 val b = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
                 val ws = data.optInt("ws", 0).coerceIn(0, 1)
                 draw(Canvas(b), w.toFloat(), h.toFloat(), data, gridOf(ws, 0), ws, 0, people(data), null, WidgetRenderer.palette(ctx, data), wDp.toFloat(), 0, false)
-                val out = java.io.ByteArrayOutputStream()
-                b.compress(Bitmap.CompressFormat.PNG, 100, out)
-                b.recycle()
-                android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP)
+                b
             }
-        } catch (e: Exception) { "" }
+        } catch (e: Exception) { null }
     }
 
     /** 위젯에 보냄: 그림 + 맨 윗줄 · 날짜 칸을 누르는 자리 (모두 새로 지정) */

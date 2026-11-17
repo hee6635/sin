@@ -101,6 +101,12 @@
             </intent-filter>
         </receiver>
 
+        <!-- v0.191 위젯 설정 (배경화면 위 미리보기) -->
+        <activity
+            android:name=".WidgetStyleActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ShiftCal.Wallpaper" />
+
         <!-- 위젯을 누르면 뜨는 그 날짜의 큰 창 (스티커 · 메모 할 일 체크) -->
         <activity
             android:name=".WidgetDayActivity"
