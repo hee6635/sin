@@ -2001,6 +2001,7 @@ html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.07}
 /* v0.170 스티커 완료 창 새 모양 (시안 design/stk/v1) */
 #pop .sdlist{background:var(--surface);border-radius:20px;padding:2px 0;margin:4px 0 0}
 .sdr2{display:flex;align-items:center;gap:12px;padding:11px 8px 11px 14px;cursor:pointer;-webkit-touch-callout:none}.sdr2+.sdr2{border-top:1px solid var(--line)}
+.sdmh{display:flex;align-items:center;gap:12px;padding:4px 16px 12px}.sdmh .sdi{width:48px;height:48px;border-radius:14px;background:var(--surface);display:grid;place-items:center;font-size:28px;flex:none}.sdmh b{display:block;font-size:19px;font-weight:800}.sdmh span:not(.sdi){font-size:13.5px;color:var(--muted);font-weight:600}
 .sdr2 .sdi{width:42px;height:42px;border-radius:13px;background:var(--bg);display:grid;place-items:center;font-size:24px;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.06)}.sdr2 .sdi .plan{opacity:.45}
 .sdr2 .sdn{flex:1;min-width:0}.sdr2 .sdn b{display:block;font-size:16px;font-weight:700}.sdr2 .sdn span{display:block;font-size:12.5px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sdr2.done .sdn b{color:var(--muted)}
@@ -9972,7 +9973,8 @@ document.addEventListener('click',e=>{
       toastUndo(msg,()=>{stampSet(s.id,k,n);save();render();if($('#pop').classList.contains('open'))stampReopen(k);});break;}
     case 'sd-more':{const s=S.stamps.defs.find(x=>x.id===t.dataset.id),k=t.dataset.k;if(!s)break;const id=`data-id="${s.id}" data-k="${k}"`;
       const rep=['daily','dow','work','month'].includes(s.rep)&&(!s.to||s.to>=k);
-      openPop(`<div class="mh">${esc(s.name)}<b>${md(k)}</b></div>
+      const V=stView(s,k),n=stampCnt(k,s.id),ic=s.kind==='pill'?pillSvg(V.N,n,28,V.col,V.shape):ico(s.emoji);   // v0.178 위쪽에 실제 스티커 그림 + 이름 · 날짜
+      openPop(`<div class="sdmh"><span class="sdi">${ic}</span><div><b>${esc(s.name)}</b><span>${md(k)}</span></div></div>
         <button class="mi" data-act="sd-skip" ${id}>🧽 스티커 떼기</button>
         ${rep?`<button class="mi" data-act="sd-end" ${id}>📆 이날부터 떼기</button>`:''}
         ${stampsOn(k).length>=2?`<button class="mi" data-act="sd-all" data-k="${k}">🗑 스티커 전부 떼기</button>`:''}
