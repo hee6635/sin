@@ -12240,15 +12240,15 @@ bootStep(refreshHolidays);
 bootStep(famBoot);
 setTimeout(()=>{try{wxFetch(false);}catch(e){}},2500);
 setTimeout(()=>{try{if(window.AndroidBridge&&typeof window.AndroidBridge.takePush==='function'){const p=String(window.AndroidBridge.takePush()||'');if(p)window.__onPush(JSON.parse(p));}}catch(e){}},700);
-setTimeout(widgetSync,150);
-setTimeout(introNotice,800);
+setTimeout(widgetSync,1600);   // v0.185 (150 → 1600) 첫 넘기기 뒤로
+setTimeout(introNotice,1400);
 setTimeout(()=>{try{stkAskCheck();}catch(e){}},1800);
 applyStats();track('app_start');
 setTimeout(addonNotice,1200);
 setTimeout(autoBackup,4000);
 setTimeout(backupNudge,6000);
 setTimeout(()=>{if(loadNote==='parse')toast('저장된 데이터를 읽지 못해 새로 시작했어요 · 설정 › 백업 · 복원에서 되살릴 수 있어요');else if(loadNote==='partial')toast('일부 저장 값이 깨져서 그 부분만 기본값으로 돌렸어요');},1600);
-setTimeout(a11yPass,300);
+setTimeout(a11yPass,2200);   // v0.185 (300 → 2200)
 if(bootOk)window.__booted=true;
 })();
 
