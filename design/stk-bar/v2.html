@@ -1,0 +1,45 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box}body{margin:0;background:#dfe2e6;font-family:P,sans-serif;color:#191f28;padding:16px;width:420px}
+.sheet{background:#fff;border-radius:28px;padding:10px 0 16px}
+.grab{width:36px;height:5px;border-radius:3px;background:#e5e8eb;margin:0 auto 12px}
+.mh{padding:0 22px}.mh b{display:block;font-size:20px;font-weight:800}.mh span{font-size:14px;color:#8b95a1;font-weight:600}
+.list{margin:12px 8px 0;background:#f4f6f8;border-radius:22px}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px}.row+.row{border-top:1px solid #e9ecef}
+.sdi{width:42px;height:42px;border-radius:13px;background:#fff;display:grid;place-items:center;font-size:24px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.nm{flex:1;min-width:0}.nm b{display:block;font-size:16px}.nm span{font-size:12.5px;color:#8b95a1;font-weight:600}
+.pg{display:flex;align-items:center;gap:8px}
+.bar{position:relative;width:74px;height:10px;border-radius:5px;background:#e3e7ec;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--c);width:0;transition:width .55s cubic-bezier(.34,1.75,.5,1),background .3s}
+.bar.full i{background:#1fa971}
+.cnt{font-size:13px;font-weight:800;color:#6b7684;min-width:26px;text-align:right;font-variant-numeric:tabular-nums}
+.ck{width:22px;height:22px;border-radius:50%;background:#1fa971;display:grid;place-items:center;transform:scale(0);transition:transform .4s cubic-bezier(.34,1.75,.5,1)}
+.ck svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.full~.ck{transform:scale(1)}
+.more{color:#b0b8c1;font-size:20px;letter-spacing:1px}
+.tap{position:absolute;width:34px;height:34px;border-radius:50%;background:rgba(49,130,246,.25);transform:scale(0);pointer-events:none}
+.tap.go{animation:t .5s ease-out}@keyframes t{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.6);opacity:0}}
+.row{position:relative}
+.ob{position:relative;width:74px;height:26px;border-radius:13px;background:#e3e7ec;display:grid;place-items:center;overflow:hidden;transition:background-color .25s}
+.ob.on{background:var(--c,#1fa971)}
+.ob svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;transform:scale(0);transition:transform .4s cubic-bezier(.34,1.9,.5,1) .08s}
+.ob.on svg{transform:scale(1)}
+.ob.press{animation:pr .42s cubic-bezier(.34,1.6,.5,1)}@keyframes pr{0%{transform:scale(1)}30%{transform:scale(.86)}100%{transform:scale(1)}}
+.obw{display:flex;align-items:center;gap:8px}.obw .sp{min-width:26px}
+.cap{font-size:13px;color:#4e5968;margin:12px 6px 0;line-height:1.6}
+</style></head><body>
+<div class="sheet"><div class="grab"></div><div class="mh"><b>스티커</b><span>11월 17일 (화) · 교육</span></div>
+<div class="list">
+ <div class="row" id="r1"><span class="sdi">💊</span><div class="nm"><b>감기약</b><span>하루 3번 · 이날만</span></div><div class="pg"><div class="bar" style="--c:#3b82f6"><i></i></div><span class="cnt">0/3</span><span class="ck"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span></div><span class="more">⋯</span><span class="tap"></span></div>
+ <div class="row" id="o1"><span class="sdi">👟</span><div class="nm"><b>조깅</b><span>매일</span></div><div class="obw"><span class="ob" style="--c:#1fa971"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="sp"></span><span style="width:22px"></span></div><span class="more">⋯</span><span class="tap"></span></div>
+ <div class="row" id="o2"><span class="sdi">📖</span><div class="nm"><b>독서</b><span>쉬는 날만</span></div><div class="obw"><span class="ob" style="--c:#1fa971"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="sp"></span><span style="width:22px"></span></div><span class="more">⋯</span><span class="tap"></span></div>
+ <div class="row" id="r2"><span class="sdi">💧</span><div class="nm"><b>물</b><span>하루 2번 · 매일</span></div><div class="pg"><div class="bar" style="--c:#ef5a6f"><i></i></div><span class="cnt">0/2</span><span class="ck"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span></div><span class="more">⋯</span><span class="tap"></span></div>
+</div></div>
+<script>
+const st={r1:[0,3],r2:[0,2]};function tapOne(id){const r=document.getElementById(id),b=r.querySelector('.ob'),t=r.querySelector('.tap');t.style.left='170px';t.style.top='16px';t.classList.remove('go');void t.offsetWidth;t.classList.add('go');b.classList.remove('press');void b.offsetWidth;b.classList.add('press');b.classList.toggle('on');}
+function tap(id){const r=document.getElementById(id),[n,N]=st[id],v=n<N?n+1:0;st[id][0]=v;
+ const t=r.querySelector('.tap');t.style.left='170px';t.style.top='16px';t.classList.remove('go');void t.offsetWidth;t.classList.add('go');
+ r.querySelector('.bar i').style.width=(v/N*100)+'%';r.querySelector('.bar').classList.toggle('full',v===N);r.querySelector('.cnt').textContent=v+'/'+N;}
+window.seq=[['o1',300],['o2',1300],['o1',2500]];
+window.play=()=>seq.forEach(([id,t])=>setTimeout(()=>tapOne(id),t));
+</script></body></html>
