@@ -6,7 +6,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  const pick=async id=>{await p.click(`#pop [data-act="sp-pick"][data-id="${id}"]`);await p.waitForTimeout(300);};
  const defs=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).stamps.defs.map(x=>[x.name,x.rep,x.dates.join('/')]));
  await open();
- T('고르기 팝업: 내 스티커 칸 + ＋',await p.evaluate(()=>!!document.querySelector('#pop [data-act="sp-plus"]')&&document.querySelectorAll('#pop [data-act="sp-pick"]').length===2));
+ T('고르기 팝업: 내 스티커 칸 (v0.176 ＋ 없음)',await p.evaluate(()=>!document.querySelector('#pop [data-act="sp-plus"]')&&document.querySelectorAll('#pop [data-act="sp-pick"]').length===2));
  await pick('a');
  T('매일인 요가를 고르면 안내 문구',(await p.$eval('#page',e=>e.innerText)).includes('이미 깔려 있어요'));
  await p.click('#page [data-act="sr-save"]');await p.waitForTimeout(300);

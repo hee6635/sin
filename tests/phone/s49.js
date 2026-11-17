@@ -26,11 +26,11 @@ const {mkT,base}=require('./lib.js');
   const p=await boot(b,state());
   // ===== 설정 › 스티커 =====
   await toSlots(p);
-  T('알림 켠 스티커에만 🔔 (약 · 조깅 · 양치 · ＋ 생일)',JSON.stringify(await bells(p))===JSON.stringify(['o_cake','s_pill','s_run','s_teeth']),JSON.stringify(await bells(p)));
-  T('알림 없는 스티커(운동 · 물 · 독서) · 빈 칸에는 🔔 없음',await p.evaluate(()=>['s_gym','s_water','s_read','s_empty'].every(id=>!document.querySelector(`#page [data-act="slot-open"][data-id="${id}"] .stbell`))));
-  T('🔔은 화면 읽기용 이름이 있음 ("알림 있음")',await p.evaluate(()=>{const e=document.querySelector('#page [data-act="slot-open"][data-id="s_pill"] .stbell');return !!e&&e.getAttribute('role')==='img'&&e.getAttribute('aria-label')==='알림 있음';}));
-  T('🔔은 칸 안쪽 오른쪽 위에 있고 이름 글자와 안 겹침',await p.evaluate(()=>{const bt=document.querySelector('#page [data-act="slot-open"][data-id="s_pill"]'),e=bt.querySelector('.stbell'),sm=bt.querySelector('small'),a=bt.getBoundingClientRect(),r=e.getBoundingClientRect(),t=sm.getBoundingClientRect();return r.right<=a.right&&r.left>=a.left&&r.top>=a.top&&r.bottom<=t.top+1;}));
-  T('칸의 크기 · 개수는 그대로(내 스티커 7칸 + ＋ 1개)',await p.evaluate(()=>document.querySelectorAll('#page .stgrid[data-grp="slot"] [data-act="slot-open"]').length===7&&document.querySelectorAll('#page .stgrid[data-grp="extra"] [data-act="slot-open"]').length===1));
+  T('v0.176 설정 › 스티커에 🔔 표시 없음',(await bells(p)).length===0&&await p.evaluate(()=>!document.querySelector('#page .stbell')));
+
+
+
+  T('내 스티커 7칸 · ＋ 줄 없음',await p.evaluate(()=>document.querySelectorAll('#page .stgrid[data-grp="slot"] [data-act="slot-open"]').length===7&&!document.querySelector('#page .stgrid[data-grp="extra"]')));
   await p.screenshot({path:'/tmp/s49_set.png',clip:{x:0,y:0,width:390,height:420}});
   await toCal(p);
   // ===== 날짜 창 =====
@@ -55,17 +55,17 @@ const {mkT,base}=require('./lib.js');
   T('날짜 창: 독서 줄에 방금 정한 시각 표시',!!readT&&readT.includes((([h,m])=>`${h<12?'오전':'오후'} ${h%12||12}:${String(m).padStart(2,'0')}`)(at1.split(':').map(Number))),readT);
   await closePop(p);
   await toSlots(p);
-  T('설정: 독서 칸에 🔔 생김',(await bells(p)).includes('s_read'));
+  T('설정: 독서 칸에도 🔔 없음 (알림은 저장됨)',!(await bells(p)).includes('s_read')&&((await S(p)).stamps.defs.find(x=>x.id==='s_read').ats||[]).length>0);
   await toCal(p);
   await openDay(p,'2026-10-18');
   await p.click('#pop [data-act="sd-add"]');await p.waitForTimeout(300);
   await p.click('#pop [data-act="sp-pick"][data-id="s_read"]');await p.waitForTimeout(450);
-  T('v0.153 날짜에서 다시 붙이면: 알림 꺼진 채로 시작',await p.evaluate(()=>!document.getElementById('srAlarm').checked));
+  T('v0.176 날짜에서 다시 붙이면: 지금 알림 그대로 켜진 채로 시작',await p.evaluate(()=>document.getElementById('srAlarm').checked));
   await p.click('#page [data-act="sr-save"]');await p.waitForTimeout(450);
   s=await S(p);
-  T('원래 독서의 알림 시각은 그대로 (이 날만 따로 저장)',(s.stamps.defs.find(x=>x.id==='s_read').ats||[]).length>0);
+  T('원래 독서의 알림 시각은 그대로 (같은 스티커)',(s.stamps.defs.find(x=>x.id==='s_read').ats||[]).length>0);
   await toSlots(p);
-  T('설정: 독서 칸의 🔔 그대로',(await bells(p)).includes('s_read'),JSON.stringify(await bells(p)));
+  T('원래 독서 알림 그대로',((await S(p)).stamps.defs.find(x=>x.id==='s_read').ats||[]).length>0);
   T('오류 없음',p.errs.length===0,p.errs.join('|'));
   await p.close();
 

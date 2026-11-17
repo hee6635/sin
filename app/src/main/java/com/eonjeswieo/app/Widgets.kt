@@ -468,6 +468,7 @@ object WidgetRenderer {
         fill = data?.optString("look", "fill") != "circle"   // 칸 채우기(기본) · 동그라미 — 한 달 위젯 · 앱 달력과 같은 설정
         alphaF = 0.55f + 0.45f * ((data?.optInt("alpha", 100) ?: 100).coerceIn(0, 100) / 100f)
         MonthRenderer.readToday(data)
+        MonthRenderer.vivid = data?.optString("bg", "") == "vivid"   // v0.176 기본 · 또렷하게: 한 달 위젯이 없어도 작은 위젯(1 · 2 · 7일)에 같이 (전에는 한 달 위젯을 먼저 그렸을 때만 맞았음)
         val memoMax = (data?.optInt("lines", 3) ?: 3).coerceIn(1, 2)   // 위젯 칸에는 메모를 최대 2개까지만 (그래야 근무 동그라미 · 스티커 자리가 넉넉함)
         val today = Calendar.getInstance()
         val tom = Calendar.getInstance()

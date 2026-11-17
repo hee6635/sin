@@ -1,12 +1,12 @@
-// 스티커 등록 (v0.125 지금 흐름): 칸 위쪽 누르면 "붙일 스티커" 창 → ＋ → 약 탭에서 그림 → 등록 페이지 → 하루 3번 · 알림 시각 3줄 → 매일 → 저장
+// 스티커 등록 (v0.125 지금 흐름): 칸 위쪽 누르면 "붙일 스티커" 창 → 빈 칸 → 약 탭에서 그림 → 등록 페이지 → 하루 3번 · 알림 시각 3줄 → 매일 → 저장
 const {chromium,boot,mkT,base}=require('./lib.js');
 (async()=>{const b=await chromium.launch();const T=mkT();
  const p=await boot(b,base,{touch:true});
  const k='2026-10-14',js=(sel)=>p.evaluate(sel=>{const e=document.querySelector(sel);if(e)e.click();return !!e;},sel);
  await p.evaluate(k=>document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"] .stz`).click(),k);await p.waitForTimeout(400);
- T('칸 위쪽 누르면 붙일 스티커 창 (＋ 있음)',await p.evaluate(()=>!!document.querySelector('#pop.open [data-act="sp-plus"]')));
- await js('#pop [data-act="sp-plus"]');await p.waitForTimeout(400);
- T('＋ → 스티커 고르기 (그림 목록)',await p.evaluate(()=>document.querySelectorAll('#pop [data-act="icn-pick"]').length>5));
+ T('칸 위쪽 누르면 붙일 스티커 창 (v0.176 ＋ 없음 · 빈 칸)',await p.evaluate(()=>!document.querySelector('#pop.open [data-act="sp-plus"]')&&!!document.querySelector('#pop.open [data-act="sp-fill"]')));
+ await js('#pop [data-act="sp-fill"]');await p.waitForTimeout(400);
+ T('빈 칸 → 스티커 고르기 (그림 목록)',await p.evaluate(()=>document.querySelectorAll('#pop [data-act="icn-pick"]').length>5));
  await p.evaluate(()=>{const t=[...document.querySelectorAll('#pop [data-act="icn-tab"]')].find(e=>e.textContent.trim()==='약');t.click();});await p.waitForTimeout(300);
  await js('#pop [data-act="icn-pick"]');await p.waitForTimeout(500);
  T('약 그림 고르면 등록 페이지',await p.evaluate(()=>!!document.querySelector('#page.open .srpg')));
