@@ -57,14 +57,13 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   await p.evaluate(()=>{window.__wp=[];window.__ws=[];window.AndroidBridge=window.AndroidBridge||{};window.AndroidBridge.showWallpaper=v=>window.__wp.push(v);window.AndroidBridge.widgetPreview=()=>'';window.AndroidBridge.openWidgetStyle=j=>window.__ws.push(j);});
   await p.evaluate(()=>{__wx.closeSheet&&__wx.closeSheet();const x=document.createElement('button');x.dataset.act='more-widget';document.body.appendChild(x);x.click();x.remove();});await p.waitForTimeout(500);
   T('위젯 설정: 앱 화면 투명 방식 안 씀',await p.evaluate(()=>window.__wp.indexOf(true)<0&&!document.documentElement.classList.contains('wpshow')));
-  T('미리보기에 "배경화면에서 보기"',await p.evaluate(()=>!!document.querySelector('#wgPv[data-act="wg-style"] .wgpvb')));
-  await p.evaluate(()=>document.querySelector('#wgPv').click());await p.waitForTimeout(200);
-  T('누르면 폰 위젯 설정 화면 (위젯 자료 넘김)',await p.evaluate(()=>window.__ws.length===1&&JSON.parse(window.__ws[0]).days!=null));
+  T('누르면 바로 폰 위젯 설정 화면 (위젯 자료 넘김 · 앱 페이지 안 열림)',await p.evaluate(()=>window.__ws.length===1&&JSON.parse(window.__ws[0]).days!=null&&!document.querySelector('#page.open #wgPv')));
   await p.evaluate(()=>window.__wgStyle(JSON.stringify({theme:'dark',alpha:40,bg:'vivid',look:'circle'})));await p.waitForTimeout(300);
   const w=(await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).widget));
   T('저장하면 앱 설정에 반영',w.theme==='dark'&&w.alpha===40&&w.bg==='vivid'&&w.look==='circle',JSON.stringify(w));
-  T('화면도 새 값',await p.evaluate(()=>document.getElementById('wgAv').textContent==='40%'));
   await p.evaluate(()=>window.__wgStyle('{"theme":"x","alpha":"abc"}'));
   T('이상한 값은 무시',(await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).widget)).theme==='dark');
+  await p.evaluate(()=>{delete window.AndroidBridge.openWidgetStyle;const x=document.createElement('button');x.dataset.act='more-widget';document.body.appendChild(x);x.click();x.remove();});await p.waitForTimeout(400);
+  T('폰 화면 없으면 앱 페이지 (새 값)',await p.evaluate(()=>!!document.getElementById('wgPv')&&!document.querySelector('.wgpvb')&&document.getElementById('wgAv').textContent==='40%'));
   T('오류 없음(3)',p.errs.length===0,p.errs.join('|'));await p.close();}
  T.sum();await b.close();})();

@@ -590,6 +590,9 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.192 설정 › 위젯 = 바로 폰 위젯 설정 화면
+- more-widget: openWidgetStyle 있으면 앱 페이지 없이 바로 엶 · 없으면(옛 앱 · 시험) 앱 페이지
+
 ## v0.191 위젯 설정 = 삼성식 폰 화면 (WidgetStyleActivity)
 - 앱 위젯 설정 미리보기 "배경화면에서 보기" 누르면 → 폰 화면(테마 Theme.ShiftCal.Wallpaper = windowShowWallpaper) · 위: 실제 배경화면 위 한 달 위젯(홈에 놓인 위젯 크기 · MonthRenderer.previewBitmap) · 아래 카드: 진하기 · 밝게/어둡게/폰 설정 · 기본/또렷하게 · 칸 채우기/동그라미 · 취소 / 저장
 - 저장 → MainActivity widgetStyle(결과) → JS window.__wgStyle({theme,alpha,bg,look}) → S.widget 저장 · 위젯 새로 그림
