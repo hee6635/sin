@@ -589,3 +589,8 @@
 - 위젯 설정 배경화면: #app 바탕도 투명 (빠져 있었음).
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
+
+## v0.189 위젯 설정 배경화면 잔상 · 렉
+- MainActivity.showWallpaper: 켤 때 window.setFormat(TRANSLUCENT) (불투명 형식이면 매번 안 지워서 지나간 화면이 겹쳐 남음) · 끌 때 OPAQUE · 켠 뒤 invalidate.
+- wpShow: 화면이 다 들어온 뒤(0.26초) 켬 · 끌 땐 바로.
+- 미리보기: MonthRenderer.preview 밀도 2배까지만(그림 작게) · wgPrev 는 밀고 있는 동안 0.15초에 한 번(throttle) + 끝난 뒤 한 번.
