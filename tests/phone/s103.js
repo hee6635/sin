@@ -68,6 +68,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   T('색 판 · 밝기 막대 · 이 색으로',await p.evaluate(()=>!!document.getElementById('cpB')&&!!document.getElementById('cpL')&&!!document.querySelector('#pop [data-act="cp-ok"]')));
   const r=await p.evaluate(()=>{const e=document.getElementById('cpB').getBoundingClientRect();return [e.x,e.y,e.width,e.height];});
   await p.mouse.move(r[0]+r[2]*.34,r[1]+r[3]*.1);await p.mouse.down();await p.mouse.up();await p.waitForTimeout(150);
+  T('버튼 = 고른 색',await p.evaluate(()=>{const o=document.getElementById('cpOk');const m=getComputedStyle(o).backgroundColor.match(/\d+/g).map(Number);return m[1]>m[0]&&!document.getElementById('cpPv');}));
   await p.click('#pop [data-act="cp-ok"]');await p.waitForTimeout(300);
   const c=(await S(p)).todayColor;T('고른 색(초록 쪽)이 저장됨',/^#[0-9a-f]{6}$/.test(c)&&parseInt(c.slice(3,5),16)>parseInt(c.slice(1,3),16),c);
   await p.evaluate(()=>{window.AndroidBridge=window.AndroidBridge||{};window.__pv=0;window.AndroidBridge.widgetPreview=()=>{window.__pv++;return '';};});
