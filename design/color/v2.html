@@ -1,0 +1,52 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(../../app/src/main/assets/fonts/PretendardVariable.woff2)}
+*{box-sizing:border-box}
+body{margin:0;background:#dfe2e6;font-family:P,sans-serif;color:#191f28;padding:16px;display:flex;gap:16px;width:max-content;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:8px}.col>b{font-size:15px;margin-left:4px}
+.ph{width:390px;height:520px;border-radius:28px;overflow:hidden;position:relative;background:#8a8d91}
+.sheet{position:absolute;left:8px;right:8px;bottom:8px;background:#fff;border-radius:28px}
+.grab{width:36px;height:5px;border-radius:3px;background:#e5e8eb;margin:0 auto 14px}
+.box{position:relative;border-radius:18px;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.94)),linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.bar{position:relative}
+.k{position:absolute;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);transform:translate(-50%,-50%)}
+.btn{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#fff}
+/* 지금 */
+.a{padding:10px 4px 6px}
+.a .t{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 12px}
+.a .t b{font-size:19px}.a .pv{width:34px;height:34px;border-radius:50%;background:#2f6bf0;box-shadow:0 0 0 3px #fff,0 0 0 4.5px #e5e8eb;margin-right:-10px}
+.a .box{height:190px}.a .bar{height:28px;border-radius:14px;margin-top:16px;background:linear-gradient(to right,#07122e,#3d7bff)}
+.a .k{width:30px;height:30px}.a .bar .k{top:50%}
+.a .btn{margin-top:18px;height:50px;border-radius:14px;background:#3182f6}
+/* 개선 */
+.b{padding:10px 20px 20px}
+.b .t{display:flex;align-items:center;gap:10px;padding:2px 0 14px}
+.b .t b{font-size:19px}
+.b .box{height:130px;border-radius:16px}
+.b .bar{height:14px;border-radius:7px;margin-top:18px}
+.b .k{width:24px;height:24px}.b .bar .k{top:50%;width:22px;height:22px}
+.b .btn{margin-top:18px;height:44px;border-radius:14px;font-size:16px;transition:background .15s}
+</style></head><body>
+<div class="col"><b>지금</b><div class="ph"><div class="sheet a"><div class="grab"></div>
+<div class="t"><b>오늘 표시 색</b><i class="pv"></i></div>
+<div class="box"><i class="k" style="left:61%;top:20%;background:#3d7bff"></i></div>
+<div class="bar"><i class="k" style="left:88%;background:#2f6bf0"></i></div>
+<div class="btn">이 색으로</div></div></div></div>
+
+<div class="col"><b>개선 · 파랑</b><div class="ph"><div class="sheet b"><div class="grab"></div>
+<div class="t"><b>오늘 표시 색</b></div>
+<div class="box"><i class="k" style="left:61%;top:20%;background:#3d7bff"></i></div>
+<div class="bar" style="background:linear-gradient(to right,#07122e,#3d7bff)"><i class="k" style="left:88%;background:#2f6bf0"></i></div>
+<div class="btn" style="background:#2f6bf0">이 색으로</div></div></div></div>
+
+<div class="col"><b>개선 · 초록</b><div class="ph"><div class="sheet b"><div class="grab"></div>
+<div class="t"><b>오늘 표시 색</b></div>
+<div class="box"><i class="k" style="left:33%;top:25%;background:#2fd060"></i></div>
+<div class="bar" style="background:linear-gradient(to right,#062a12,#2fd060)"><i class="k" style="left:75%;background:#22a84c"></i></div>
+<div class="btn" style="background:#22a84c">이 색으로</div></div></div></div>
+
+<div class="col"><b>개선 · 밝은 노랑</b><div class="ph"><div class="sheet b"><div class="grab"></div>
+<div class="t"><b>오늘 표시 색</b></div>
+<div class="box"><i class="k" style="left:16%;top:55%;background:#fff27a"></i></div>
+<div class="bar" style="background:linear-gradient(to right,#2a280a,#fff27a)"><i class="k" style="left:96%;background:#fbee70"></i></div>
+<div class="btn" style="background:#fbee70;color:#191f28">이 색으로</div></div></div></div>
+</body></html>

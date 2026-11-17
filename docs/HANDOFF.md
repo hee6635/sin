@@ -590,6 +590,10 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.190 색 고르기 창 다듬기 (시안 design/color/v2)
+- 미리보기 동그라미 뺌 → "이 색으로" 버튼(#cpOk)이 고른 색 · 밝으면(휘도>150) 글자 검정(.lt) · 높이 44
+- 여백 12px 통일 · 색판 130px · 밝기 막대 14px · 손잡이 24/22px · 시험 s103 "버튼 = 고른 색"
+
 ## v0.189 위젯 설정 배경화면 잔상 · 렉
 - MainActivity.showWallpaper: 켤 때 window.setFormat(TRANSLUCENT) (불투명 형식이면 매번 안 지워서 지나간 화면이 겹쳐 남음) · 끌 때 OPAQUE · 켠 뒤 invalidate.
 - wpShow: 화면이 다 들어온 뒤(0.26초) 켬 · 끌 땐 바로.
