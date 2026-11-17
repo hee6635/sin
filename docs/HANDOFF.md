@@ -590,6 +590,14 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.197 모션 버벅임 고침 · 오늘로 부드럽게 · 요일 톡
+- 창 모션은 transform 만 (clip-path 는 큰 화면을 매 프레임 다시 그려서 버벅) · 잰 다음 프레임에 시작(부르는 쪽이 class 를 더 붙여 크기가 바뀌는 창: 날씨 창) · 첫 프레임은 opacity 0 (visibility 숨김은 글자 읽기 시험 깨짐)
+- 날짜 창 닫기: 쏙 들어간 뒤 render (닫는 순간 달력 전체를 다시 그려 하얀 달력 · 버벅)
+- 닫히는 작은 창(#pop.ghost)은 inert + pointer-events none (그 사이 누른 게 옛 창에 걸리던 것)
+- 날짜 창 제목 눌러 오늘로: 날짜 띠가 오늘까지 굴러가고 내용이 그쪽에서 밀려 들어옴
+- 요일 · 색 고르기(sr-day · sr-wt · md-col 등) 누르면 톡
+- 위 창 머리 저장/확인 알약 찌그러짐 고침 (white-space nowrap)
+
 ## v0.196 모션 묶음 (시안 design/seg-toggle · nav-fill · save-btn · memo-scope · day-morph · pop-morph · motion-more · toast)
 - 원칙: 화면 배치는 한 번만 바꾸고 겉모습(clip-path · transform · opacity)만 움직임 → 폰에서 버벅이지 않게 · 동작 줄이기 설정이면 모두 끔
 - 고르기(.npseg): 모양 그대로 · 흰 알약(.npind)이 늘어나며 미끄러짐 (누른 뒤 새로 그려도 같은 data-act 줄을 찾아 이어서) · 스위치(.sw): 물방울 (::after 를 WAAPI pseudoElement)

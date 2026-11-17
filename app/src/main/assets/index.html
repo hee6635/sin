@@ -751,7 +751,7 @@ textarea{resize:none;min-height:84px}
 .mempty{font-size:13px;color:var(--muted);padding:6px 2px 4px}
 /* 작은 메뉴 */
 #pop{position:fixed;inset:0;z-index:45;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4)}
-#pop.open,#pop.ghost{display:flex}
+#pop.open,#pop.ghost{display:flex}#pop.ghost,#pop.ghost *{pointer-events:none!important}
 #pop .menu{width:calc(100% - 24px);max-width:520px;margin-bottom:calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 #pop .mh{padding:14px 16px 10px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line)}
 #pop .mh b{display:block;color:var(--fg);font-size:14.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2033,7 +2033,7 @@ html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.07}
 /* v0.196 모션 묶음 */
 #sheet{transition:transform .36s cubic-bezier(.2,.9,.25,1)}#sheet:not(.open){transition-duration:.24s;transition-timing-function:cubic-bezier(.45,0,.75,.35)}
 #sheet.closing{transform:translateY(0)!important;transition:none!important;pointer-events:none}
-.pg-h .ok,.sh-head .ok{min-width:0!important;height:34px!important;padding:0 15px!important;margin-right:6px;border-radius:17px;background:var(--accent);color:#fff!important;font-size:15px!important;font-weight:800;box-shadow:0 3px 10px color-mix(in srgb,var(--accent) 30%,transparent);transition:background .25s,color .25s,box-shadow .25s;flex:none}
+.pg-h .ok,.sh-head .ok{min-width:0!important;width:auto!important;white-space:nowrap;line-height:34px;height:34px!important;padding:0 15px!important;margin-right:6px;border-radius:17px;background:var(--accent);color:#fff!important;font-size:15px!important;font-weight:800;box-shadow:0 3px 10px color-mix(in srgb,var(--accent) 30%,transparent);transition:background .25s,color .25s,box-shadow .25s;flex:none}
 .pg-h .ok.off{background:var(--track);color:var(--muted)!important;box-shadow:none}
 #nav .nvi{position:relative;display:block;width:24px;height:24px}
 #nav .nvi svg{position:absolute;inset:0}
@@ -5246,8 +5246,9 @@ function renderAlarm(){
 function openSheet(html,full){const top=!!pageMode,was=$('#sheet').classList.contains('open');$('#sheet').classList.remove('closing');$('#sheet').innerHTML=html;$('#sheet').classList.add('open');$('#sheet').classList.toggle('full',!!full);$('#sheet').classList.toggle('top',top);$('#scrim').classList.add('open');$('#scrim').classList.toggle('top',top);try{MO.sheetOpen($('#sheet'),was);}catch(e){}}
 function closeSheet(){
   const mk=sheetMode==='day'||sheetMode==='vcday'?(sheetMode==='vcday'?rqD.k:sheetKey):null;
-  if(sheetKey){tidyMemos(sheetKey);save();render();}
-  try{MO.sheetClose($('#sheet'),mk);}catch(e){}   // v0.196 그 날짜 칸으로 쏙 (칸이 안 보이면 아래로)
+  if(sheetKey){tidyMemos(sheetKey);save();}
+  let fx=false;try{fx=MO.sheetClose($('#sheet'),mk,sheetKey?()=>render():null);}catch(e){}   // v0.196 그 날짜 칸으로 쏙 (칸이 안 보이면 아래로) · v0.197 달력 다시 그리기는 쏙 들어간 뒤 (움직이는 동안 무거운 일 안 함)
+  if(sheetKey&&!fx)render();
   $('#sheet').classList.remove('open');$('#scrim').classList.remove('open');
   sheetKey=null;sheetMode=null;replyDraft=null;typeDraft=null;memoEdit=null;ddDraft=null;markSel(null);
 }
@@ -5342,43 +5343,47 @@ const MO=(()=>{
   const ins=(r,b,rad)=>`inset(${(r.top-b.top).toFixed(1)}px ${(b.right-r.right).toFixed(1)}px ${(b.bottom-r.bottom).toFixed(1)}px ${(r.left-b.left).toFixed(1)}px round ${rad})`;
   const stag=(box,d0)=>{[...box.children].slice(0,8).forEach((x,i)=>x.animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:280,delay:d0+i*40,easing:'ease-out',fill:'backwards'}));};
   const radOf=el=>{const r=getComputedStyle(el).borderRadius;return r&&r!=='0px'?r.split(' ')[0]:'12px';};
-  // ---- 날짜 창: 누른 날짜 칸에서 커지고, 닫으면 그 칸으로 ----
+  // ---- 날짜 창 · 작은 창: 누른 자리에서 커지고 그 자리로 (v0.197 transform 만 써서 GPU 로만 움직임 · 잰 다음 프레임에 시작) ----
+  const tfOf=(c,b)=>`translate(${(c.left-b.left).toFixed(1)}px,${(c.top-b.top).toFixed(1)}px) scale(${Math.max(.02,c.width/b.width).toFixed(4)},${Math.max(.02,c.height/b.height).toFixed(4)})`;
+  const hideKids=box=>[...box.children].forEach(x=>x.style.opacity='0');
+  const showKids=(box,d0)=>{[...box.children].forEach((x,i)=>{x.style.opacity='';if(i<8)x.animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:260,delay:d0+i*35,easing:'ease-out',fill:'backwards'});});};
   let shClose=null;
   function sheetOpen(sh,was){if(shClose){shClose();shClose=null;}if(was||RM())return;
-    const el=src();if(!el||!el.classList.contains('cell')){return;}
-    const c=el.getBoundingClientRect();sh.style.transition='none';void sh.offsetHeight;const b=sh.getBoundingClientRect();
-    const bg=getComputedStyle(el).backgroundColor,bg2=getComputedStyle(sh).backgroundColor;
-    const a=sh.animate([{clipPath:ins(c,b,radOf(el)),backgroundColor:bg&&bg!=='rgba(0, 0, 0, 0)'?bg:bg2},{clipPath:ins(b,b,'20px'),backgroundColor:bg2}],{duration:440,easing:EO});
-    stag(sh,150);const end=()=>{sh.style.transition='';};a.onfinish=end;a.oncancel=end;}
-  function sheetClose(sh,k){if(RM()||!sh.classList.contains('open'))return false;
-    let cell=null;if(k){const cs=[...document.querySelectorAll(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`)].filter(x=>{const r=x.getBoundingClientRect();return r.width>4&&r.left>=-2&&r.right<=innerWidth+2&&r.top>=0&&r.bottom<=innerHeight;});cell=cs[0]||null;}
+    const el=src();if(!el||!el.classList.contains('cell'))return;
+    const c=el.getBoundingClientRect(),bg=getComputedStyle(el).backgroundColor;
+    sh.style.transition='none';sh.style.opacity='0';hideKids(sh);
+    requestAnimationFrame(()=>{const b=sh.getBoundingClientRect(),bg2=getComputedStyle(sh).backgroundColor;sh.style.opacity='';sh.style.transformOrigin='0 0';sh.style.willChange='transform';
+      const a=sh.animate([{transform:tfOf(c,b),backgroundColor:bg&&bg!=='rgba(0, 0, 0, 0)'?bg:bg2,borderRadius:'40px'},{transform:'translateY(0)',backgroundColor:bg2,borderRadius:getComputedStyle(sh).borderRadius}],{duration:400,easing:EO});
+      showKids(sh,140);const end=()=>{sh.style.transition='';sh.style.transformOrigin='';sh.style.willChange='';};a.onfinish=end;a.oncancel=end;});}
+  function sheetClose(sh,k,after){if(RM()||!sh.classList.contains('open'))return false;
+    let cell=null;if(k){cell=[...document.querySelectorAll(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`)].find(x=>{const r=x.getBoundingClientRect();return r.width>4&&r.left>=-2&&r.right<=innerWidth+2&&r.top>=0&&r.bottom<=innerHeight;})||null;}
     if(!cell)return false;
-    const b=sh.getBoundingClientRect(),c=cell.getBoundingClientRect();
-    sh.classList.add('closing');
-    const kids=[...sh.children].map(x=>x.animate([{opacity:1},{opacity:0}],{duration:120,fill:'forwards'}));
-    const a=sh.animate([{clipPath:ins(b,b,'20px')},{clipPath:ins(c,b,radOf(cell))}],{duration:330,easing:EC,fill:'forwards'});
-    let ok=false;const fin=()=>{if(ok)return;ok=true;sh.style.transition='none';sh.classList.remove('closing');a.cancel();kids.forEach(x=>x.cancel());void sh.offsetHeight;sh.style.transition='';
-      cell.animate([{transform:'scale(.92)'},{transform:'scale(1.04)',offset:.6},{transform:'none'}],{duration:320,easing:EO});};
-    shClose=()=>{ok=true;sh.classList.remove('closing');a.cancel();kids.forEach(x=>x.cancel());sh.style.transition='';};
-    a.onfinish=()=>{shClose=null;fin();};return true;}
-  // ---- 작은 창: 누른 자리에서 커지고, 닫으면 그 자리로 · 누른 자리가 없으면 아래에서 올라오고 아래로 ----
+    const b=sh.getBoundingClientRect(),c=cell.getBoundingClientRect(),bg=getComputedStyle(cell).backgroundColor;
+    sh.classList.add('closing');sh.style.transformOrigin='0 0';sh.style.willChange='transform';
+    const kids=[...sh.children].map(x=>x.animate([{opacity:1},{opacity:0}],{duration:110,fill:'forwards'}));
+    const a=sh.animate([{transform:'translateY(0)',borderRadius:getComputedStyle(sh).borderRadius},{transform:tfOf(c,b),borderRadius:'40px',backgroundColor:bg&&bg!=='rgba(0, 0, 0, 0)'?bg:getComputedStyle(sh).backgroundColor}],{duration:320,easing:EC,fill:'forwards'});
+    let ok=false;const clean=()=>{sh.style.transition='none';sh.classList.remove('closing');a.cancel();kids.forEach(x=>x.cancel());sh.style.transformOrigin='';sh.style.willChange='';void sh.offsetHeight;sh.style.transition='';};
+    shClose=()=>{if(ok)return;ok=true;clean();if(after)after();};
+    a.onfinish=()=>{if(ok)return;ok=true;shClose=null;clean();if(after)after();const n=document.querySelector(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`);if(n)n.animate([{transform:'scale(.92)'},{transform:'scale(1.04)',offset:.6},{transform:'none'}],{duration:300,easing:EO});};
+    return true;}
   let popSrc=null;
   function popOpen(pop,was){const m=pop.querySelector('.menu');if(!m||RM())return;
     if(was){[...m.children].slice(0,8).forEach((x,i)=>x.animate([{opacity:0},{opacity:1}],{duration:180,delay:i*25,fill:'backwards'}));return;}   // 창 → 창: 내용만 바뀜
-    const el=src();popSrc=el&&!el.closest('#pop')?el:null;
-    pop.animate([{backgroundColor:'rgba(0,0,0,0)'},{backgroundColor:getComputedStyle(pop).backgroundColor}],{duration:300});
-    const b=m.getBoundingClientRect();
-    if(popSrc){const c=popSrc.getBoundingClientRect();m.animate([{clipPath:ins(c,b,radOf(popSrc))},{clipPath:ins(b,b,'18px')}],{duration:420,easing:EO});}
-    else m.animate([{transform:'translateY(110%)'},{transform:'none'}],{duration:380,easing:EO});
-    stag(m,popSrc?120:90);}
-  function popClose(old){if(RM()||!old.classList.contains('open'))return false;const m=old.querySelector('.menu');if(!m)return false;
-    const fresh=old.cloneNode(false);fresh.className='';fresh.removeAttribute('style');old.parentNode.insertBefore(fresh,old);old.style.pointerEvents='none';old.classList.remove('open');old.classList.add('ghost');old.setAttribute('aria-hidden','true');
-    const b=m.getBoundingClientRect(),s=popSrc&&popSrc.isConnected?popSrc:null;popSrc=null;
+    const el=src();popSrc=el&&!el.closest('#pop')?el:null;const c=popSrc&&popSrc.getBoundingClientRect();
+    m.style.opacity='0';hideKids(m);
+    requestAnimationFrame(()=>{if(!m.isConnected)return;m.style.opacity='';const b=m.getBoundingClientRect();m.style.transformOrigin='0 0';m.style.willChange='transform';
+      pop.animate([{backgroundColor:'rgba(0,0,0,0)'},{backgroundColor:getComputedStyle(pop).backgroundColor}],{duration:280});
+      const a=c?m.animate([{transform:tfOf(c,b),borderRadius:'30px'},{transform:'none',borderRadius:getComputedStyle(m).borderRadius}],{duration:380,easing:EO})
+               :m.animate([{transform:'translateY(110%)'},{transform:'none'}],{duration:360,easing:EO});
+      showKids(m,c?110:80);a.onfinish=()=>{m.style.transformOrigin='';m.style.willChange='';};});}
+  function popClose(old){if(RM()||!old.classList.contains('open'))return false;const m=old.querySelector('.menu');if(!m||m.style.opacity==='0')return false;
+    const fresh=old.cloneNode(false);fresh.className='';fresh.removeAttribute('style');old.parentNode.insertBefore(fresh,old);old.style.pointerEvents='none';old.classList.remove('open');old.classList.add('ghost');old.setAttribute('aria-hidden','true');old.inert=true;
+    const b=m.getBoundingClientRect(),s=popSrc&&popSrc.isConnected?popSrc:null;popSrc=null;m.style.transformOrigin='0 0';m.style.willChange='transform';
     [...m.children].forEach(x=>x.animate([{opacity:1},{opacity:0}],{duration:110,fill:'forwards'}));
-    old.animate([{backgroundColor:getComputedStyle(old).backgroundColor},{backgroundColor:'rgba(0,0,0,0)'}],{duration:280,fill:'forwards'});
-    let a;if(s){const c=s.getBoundingClientRect();a=m.animate([{clipPath:ins(b,b,'18px')},{clipPath:ins(c,b,radOf(s))}],{duration:320,easing:EC,fill:'forwards'});}
-    else a=m.animate([{transform:'none'},{transform:'translateY(110%)'}],{duration:260,easing:EC,fill:'forwards'});
-    const fin=()=>{old.remove();if(s)s.animate([{transform:'scale(.9)'},{transform:'scale(1.05)',offset:.6},{transform:'none'}],{duration:300,easing:EO});};a.onfinish=fin;setTimeout(()=>{if(old.isConnected)old.remove();},700);return fresh;}
+    old.animate([{backgroundColor:getComputedStyle(old).backgroundColor},{backgroundColor:'rgba(0,0,0,0)'}],{duration:260,fill:'forwards'});
+    let a;if(s){const c=s.getBoundingClientRect();a=m.animate([{transform:'none'},{transform:tfOf(c,b),borderRadius:'30px'}],{duration:300,easing:EC,fill:'forwards'});}
+    else a=m.animate([{transform:'none'},{transform:'translateY(110%)'}],{duration:250,easing:EC,fill:'forwards'});
+    a.onfinish=()=>{old.remove();if(s)s.animate([{transform:'scale(.9)'},{transform:'scale(1.05)',offset:.6},{transform:'none'}],{duration:300,easing:EO});};setTimeout(()=>{if(old.isConnected)old.remove();},700);return fresh;}
   // ---- 하단 탭: 아이콘이 떠오르며 회색으로 차오름 ----
   let navPrev=null;
   function navInit(){document.querySelectorAll('#nav button').forEach(b=>{const s=b.querySelector(':scope>svg');if(!s)return;const w=document.createElement('span');w.className='nvi';s.replaceWith(w);w.appendChild(s);const f=s.cloneNode(true);f.classList.add('fl');w.appendChild(f);const h=document.createElement('i');h.className='nsh';w.appendChild(h);});}
@@ -5401,6 +5406,7 @@ const MO=(()=>{
   document.addEventListener('click',e=>{if(RM())return;const t=e.target.closest&&e.target.closest('[data-act]');if(!t)return;const act=t.dataset.act;
     if(t.classList.contains('mchk')&&t.dataset.mid){const mid=t.dataset.mid;setTimeout(()=>{const n=document.querySelector(`.mchk[data-mid="${mid}"]`);if(!n)return;pop1(n,1);if(n.classList.contains('on'))n.animate([{boxShadow:'0 0 0 0 rgba(31,154,118,.45)'},{boxShadow:'0 0 0 10px rgba(31,154,118,0)'}],{duration:500});},0);return;}
     if(t.classList.contains('tchip')){const s=t.dataset.s;setTimeout(()=>{const n=document.querySelector(`.tchip[data-act="${act}"][data-s="${CSS.escape(s||'')}"]`)||t;pop1(n.querySelector('.badge')||n);},0);return;}
+    if(/^(sr-day|sr-wt|md-col|sr-col|slot-col|ft-col|fe-color|pi-color|type-color)$/.test(act)){const v=t.dataset.v;setTimeout(()=>{pop1(document.querySelector(`[data-act="${act}"][data-v="${CSS.escape(v||'')}"]`)||(t.isConnected?t:null));},0);return;}   // v0.197 요일 · 색 고르기도 톡
     if(t.classList.contains('tdc')){const v=t.dataset.v;setTimeout(()=>{pop1(document.querySelector(`.tdc[data-v="${CSS.escape(v||'')}"]`)||t);},0);return;}
     if(t.classList.contains('dsi')){const o=document.querySelector('#sheet .dsi.on .badge,#page .dsi.on .badge');if(!o)return;const r0=o.getBoundingClientRect();
       setTimeout(()=>{const n=document.querySelector('#sheet .dsi.on .badge,#page .dsi.on .badge');if(!n)return;const r1=n.getBoundingClientRect();const g=document.createElement('i');g.className='dsghost';document.body.appendChild(g);
@@ -5408,6 +5414,18 @@ const MO=(()=>{
         const right=B.l>A.l,ml=right?A.l+(B.l-A.l)*.3:A.l+(B.l-A.l)*.85,mr=right?A.l+A.w+(B.l-A.l)*.85:A.l+A.w+(B.l-A.l)*.3;
         const an=g.animate([{transform:`translate(${A.l}px,${A.t}px)`,width:A.w+'px'},{offset:.45,transform:`translate(${ml}px,${(A.t+B.t)/2}px)`,width:(mr-ml)+'px'},{transform:`translate(${B.l}px,${B.t}px)`,width:B.w+'px'}],{duration:400,easing:SP});
         an.onfinish=()=>{g.remove();n.closest('.dsi')&&n.closest('.dsi').classList.remove('dsmv');};setTimeout(()=>{g.remove();document.querySelectorAll('.dsmv').forEach(x=>x.classList.remove('dsmv'));},700);},0);}
+  },true);
+  // ---- v0.197 날짜 창 제목 눌러 오늘로: 날짜 띠가 오늘까지 부드럽게 굴러가고 내용은 그쪽에서 밀려 들어옴 ----
+  document.addEventListener('click',e=>{if(RM())return;const t=e.target.closest&&e.target.closest('.dft[data-act]');if(!t)return;
+    const box=t.closest('#sheet,#page');const st=box&&box.querySelector('#dstrip'),on=st&&st.querySelector('.dsi.on');if(!on)return;
+    const k0=on.dataset.k,k1=t.dataset.k;if(!k0||!k1||k0===k1)return;
+    setTimeout(()=>{const el=document.getElementById('dstrip');if(!el)return;const n=el.querySelector('.dsi.on');if(!n||n.dataset.k!==k1)return;
+      const w=n.offsetWidth||el.clientWidth/7,days=Math.round((parse(k1)-parse(k0))/864e5),dir=Math.sign(days),to=el.scrollLeft,from=to-Math.max(-12,Math.min(12,days))*w;
+      const t0=performance.now(),D=Math.min(700,320+Math.abs(days)*25),ease=x=>1-Math.pow(1-x,3);
+      el.scrollLeft=from;const step=now=>{const x=Math.min(1,(now-t0)/D);el.scrollLeft=from+(to-from)*ease(x);if(x<1&&el.isConnected)requestAnimationFrame(step);};requestAnimationFrame(step);
+      const body=el.parentElement&&[...el.parentElement.children].filter(x=>x!==el&&el.compareDocumentPosition(x)&Node.DOCUMENT_POSITION_FOLLOWING);
+      (body||[]).forEach(x=>x.animate([{transform:`translateX(${dir*60}px)`,opacity:.2},{transform:'none',opacity:1}],{duration:380,easing:'cubic-bezier(.2,.9,.25,1)'}));
+      const hd=el.parentElement&&el.parentElement.querySelector('.dft');if(hd)hd.animate([{transform:`translateX(${dir*30}px)`,opacity:.3},{transform:'none',opacity:1}],{duration:340,easing:'cubic-bezier(.2,.9,.25,1)'});},0);
   },true);
   // ---- 빨간 숫자 배지: 숫자가 바뀌면 톡 ----
   const bdgLast=new Map();
