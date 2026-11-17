@@ -521,3 +521,7 @@
 ## v0.174 가족 탭 "지금" 카드 통일
 - 둘째 줄: 다음 근무 뺌 (쉬는 중 · 퇴근 후 · 시간 없는 근무 = 한 줄) · 출근 전 = "오전 7시 시작" · 근무 중 = "오후 7시 끝" (myStatus · memberStatus · 근무표 가족 같게). myStatus.next 에 다음 근무는 남겨 둠.
 - 근무 글자 아이콘 .sic.sbd = 둥근 네모(12px). 카드 .nc.fc2 = 세로 flex · 날씨 상자 .mwx 아래 맞춤 · 내 카드 날씨도 회색 상자.
+
+## v0.175 탭을 오갈 때 메모 글자가 다시 잘려 보이던 것
+- 원인: render 에서 fitDn(메모 자르기) 다음에 memoLines() 가 실제 칸 높이로 메모 글자 크기(--plf 9→10px)를 다시 정함 → 줄 수가 같으면 다시 안 잘랐고, 0.3초 뒤 calFillLater 가 "맞춤 안 됨"인 보이는 판을 다시 재서 글자가 바뀌어 보였음.
+- 고침: memoLines 뒤 줄 수가 같으면 plFit(v) 한 번 더 · calFitMark(v) 로 그린 판에 data-fit=1. 시험용 __wx.fitDnT · stzPanelT. s60 오늘 테두리 검사를 outline 으로.

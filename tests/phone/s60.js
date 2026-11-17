@@ -53,8 +53,8 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   // 오늘 표시(칸 채우기): 모양 조정 화면에서 4가지 중 고름 · 띠는 오른쪽 둥근 선을 따라 휨
   {
     const p=await boot(b,{...base,calLook:'fill'},{w:390,h:844,touch:true});
-    const r=await p.evaluate(()=>{const c=document.querySelector('.track .panel:nth-child(2) .cell.today'),a=getComputedStyle(c,'::after'),cs=getComputedStyle(c);return {bw:a.borderRightWidth,rad:a.borderTopRightRadius,bg:cs.backgroundColor,sh:cs.boxShadow,t:document.documentElement.getAttribute('data-today')};});
-    T('기본(v0.145): 칸 전체 3px 테두리 · 둥근 모서리 · 바탕 없음 · 그림자 없음',r.t==='b'&&r.bw==='3px'&&parseFloat(r.rad)>=8&&/rgba\(0, 0, 0, 0\)|transparent/.test(r.bg)&&r.sh==='none',JSON.stringify(r));
+    const r=await p.evaluate(()=>{const c=document.querySelector('.track .panel:nth-child(2) .cell.today'),a=getComputedStyle(c,'::after'),cs=getComputedStyle(c);return {bw:cs.outlineWidth,rad:cs.borderTopRightRadius,bg:cs.backgroundColor,sh:cs.boxShadow,t:document.documentElement.getAttribute('data-today')};});
+    T('기본(v0.145 · v0.172 경계에 걸침): 칸 전체 3px 테두리 · 둥근 모서리 · 바탕 없음 · 그림자 없음',r.t==='b'&&r.bw==='3px'&&parseFloat(r.rad)>=8&&/rgba\(0, 0, 0, 0\)|transparent/.test(r.bg)&&r.sh==='none',JSON.stringify(r));
     // v0.145 오늘 표시 모양 고르기 없앰 (앱 달력은 테두리 하나) — 옛 저장값 a 여도 바탕 · 그림자 없음
     await p.evaluate(()=>{__wx.S.todayLook='a';__wx.save();__wx.render();});await p.waitForTimeout(300);
     const A=await p.evaluate(()=>{const c=document.querySelector('.track .panel:nth-child(2) .cell.today'),cs=getComputedStyle(c);return {t:document.documentElement.getAttribute('data-today'),bg:cs.backgroundColor,sh:cs.boxShadow};});
