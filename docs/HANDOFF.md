@@ -590,6 +590,10 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.195 근무 펼치기 모션 다시 (시안 design/shift-morph/v1)
+- 렉 원인: v0.194 는 카드 높이를 매 순간 바꿔서 화면 배치를 계속 다시 계산 → 이번엔 배치는 한 번만 바꾸고 겉모습만 움직임
+- shMorph(sec,open,apply): 뒤 판(.shghost)이 알약 자리에서 카드 자리로 clip-path 로 커짐 · 카드 바탕은 그동안 투명 · 안의 줄 차례로 나타남 · 아래 카드들은 translateY 로 미끄러짐 · 접기는 반대 (닫힌 자리는 .mrph-m 으로 잠깐 숨겨 잼)
+
 ## v0.194 근무 펼치기 모션 · 요청 글 · 가족 달력 메모 위치
 - shMorph(sec,open,done): 알약 버튼 자리(오른쪽 위)에서 카드가 높이 · clip-path 로 커지며 내려오고 안의 줄이 차례로 나타남 · 접기는 반대 (.mrph 동안 grid 전환 끔) · 내 날짜 창 shift-tog(누른 창만) · 가족 날짜 창 vc-rq
 - vc-want: vcAskLine 으로 "교육 → 주간으로 바꿔 달라고 할게요" 줄도 바뀜 (같은 근무면 숨김) · 시험 s83

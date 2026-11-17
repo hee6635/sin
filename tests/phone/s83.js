@@ -39,7 +39,7 @@ const KST=(y,mo,d,h,mi=0)=>Date.UTC(y,mo-1,d,h-9,mi);const p2=n=>String(n).padSt
     await p.evaluate(()=>{document.getElementById('rqm2').value='같이 가자';document.querySelector('#sheet [data-act="vc-send"]').click();});await p.waitForTimeout(400);
     T('보내기 → 확인 창 (요청)',await p.evaluate(()=>/요청/.test((document.querySelector('#pop')||{}).innerText||'')&&!!document.querySelector('#pop [data-act="cfm-ok"]')));
     await p.evaluate(()=>__wx.closePop());await p.waitForTimeout(200);
-    await tap(p,'#sheet [data-act="vc-rq"]');await p.waitForTimeout(300);
+    await tap(p,'#sheet [data-act="vc-rq"]');await p.waitForTimeout(600);   // (v0.195 접기 모션 0.32초 뒤 닫힘)
     T('▴ 접기',await p.evaluate(()=>!document.getElementById('rqm2')));
     // 옆으로 밀기 → 다음날
     await p.evaluate(()=>{document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));const bx=document.getElementById('sheet').getBoundingClientRect();const x=bx.left+bx.width/2,y=bx.top+60,t=document.elementFromPoint(x,y);const ev=(ty,xx)=>t.dispatchEvent(new PointerEvent(ty,{bubbles:true,clientX:xx,clientY:y,pointerId:3}));ev('pointerdown',x);for(let i=1;i<=6;i++)ev('pointermove',x-130*i/6);ev('pointerup',x-130);});await p.waitForTimeout(800);
