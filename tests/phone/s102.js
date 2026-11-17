@@ -19,7 +19,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  T('한 번 더 누르면 취소',!((await S()).log['2026-10-13']||{}).r1);
  await p.click(row('p1')+' .sdn');await p.waitForTimeout(300);
  await p.waitForTimeout(700);
- T('약 한 번 → 막대 반 · 1/2',((await S()).log['2026-10-13']||{}).p1===1&&await p.evaluate(()=>{const i=document.querySelector('#pop .sdr2[data-id="p1"] .sdbar i');return /translateX\(-35\.71%\)/.test(i.style.transform)&&document.querySelector('#pop .sdr2[data-id="p1"] .sdcnt').textContent==='1/2';}));
+ T('약 한 번 → 막대 반 · 1/2',((await S()).log['2026-10-13']||{}).p1===1&&await p.evaluate(()=>{const i=document.querySelector('#pop .sdr2[data-id="p1"] .sdbar i');return /translateX\(-26\.43%\)/.test(i.style.transform)&&document.querySelector('#pop .sdr2[data-id="p1"] .sdcnt').textContent==='1/2';}));
  await p.click(row('p1')+' .sdn');await p.waitForTimeout(300);
  await p.waitForTimeout(700);
  T('두 번 → 다 채움 · 초록 막대 + ✓',(await S()).log['2026-10-13'].p1===2&&await p.evaluate(()=>document.querySelector('#pop .sdr2[data-id="p1"] .sdbar').classList.contains('full')));
