@@ -397,10 +397,12 @@ object MonthRenderer {
                 val density = ctx.resources.displayMetrics.density
                 WidgetRenderer.dens = density
                 WFont.init(ctx)
-                var w = (wDp.coerceIn(200, 600) * density).toInt()
-                var h = (hDp.coerceIn(200, 700) * density).toInt()
+                val pd = Math.min(density, 2f)   // v0.189 미리보기는 2배까지만 (그림이 작아져 빨리 그려짐)
+                WidgetRenderer.dens = pd
+                var w = (wDp.coerceIn(200, 600) * pd).toInt()
+                var h = (hDp.coerceIn(200, 700) * pd).toInt()
                 val maxPx = 700_000
-                if (w * h > maxPx) { val f = Math.sqrt(maxPx.toDouble() / (w * h)); w = (w * f).toInt(); h = (h * f).toInt(); WidgetRenderer.dens = density * f.toFloat() }
+                if (w * h > maxPx) { val f = Math.sqrt(maxPx.toDouble() / (w * h)); w = (w * f).toInt(); h = (h * f).toInt(); WidgetRenderer.dens = pd * f.toFloat() }
                 val b = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
                 val ws = data.optInt("ws", 0).coerceIn(0, 1)
                 draw(Canvas(b), w.toFloat(), h.toFloat(), data, gridOf(ws, 0), ws, 0, people(data), null, WidgetRenderer.palette(ctx, data), wDp.toFloat(), 0, false)

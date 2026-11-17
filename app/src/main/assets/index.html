@@ -5225,7 +5225,10 @@ function reopen(){
 let pageMode=null;
 // v0.176 위젯 설정 화면에서만 앱 뒤에 실제 배경화면 (미리보기 바둑판 대신 · 다른 화면은 원래대로)
 let wpOn=false;
-function wpShow(on){on=!!on&&!!(window.AndroidBridge&&typeof window.AndroidBridge.showWallpaper==='function');if(on===wpOn)return;wpOn=on;document.documentElement.classList.toggle('wpshow',on);try{window.AndroidBridge.showWallpaper(on);}catch(e){}}
+let wpT=0;
+function wpShow(on){on=!!on&&!!(window.AndroidBridge&&typeof window.AndroidBridge.showWallpaper==='function');clearTimeout(wpT);
+  if(on&&!wpOn){wpT=setTimeout(()=>{if(pageMode!=='widget'||wpOn)return;wpOn=true;try{window.AndroidBridge.showWallpaper(true);}catch(e){}document.documentElement.classList.add('wpshow');},260);return;}   // v0.189 화면이 다 들어온 뒤 켬 (미끄러지는 중에 켜면 잔상)
+  if(!on&&wpOn){wpOn=false;document.documentElement.classList.remove('wpshow');try{window.AndroidBridge.showWallpaper(false);}catch(e){}}}
 function openPage(html,mode){
   if(mode)pageMode=mode;wpShow(pageMode==='widget');
   const p=$('#page'),sc=p.querySelector('.pg-b')?p.querySelector('.pg-b').scrollTop:0,same=p.classList.contains('open');
@@ -7534,10 +7537,10 @@ const lookRefresh=()=>{if(pageMode==='look')openLookPage();};
 // v0.171 위젯 설정 미리보기: 위젯과 같은 코틀린 그리기(AndroidBridge.widgetPreview)로 그린 한 달 위젯 한 장 · 바둑판 위 (투명 정도가 보이게)
 function wgBg(){return S.widget.bg==='app'||S.widget.bg==null?(S.bg==='vivid'?'vivid':''):S.widget.bg==='vivid'?'vivid':'';}
 const wgPrevOk=()=>!!(window.AndroidBridge&&typeof window.AndroidBridge.widgetPreview==='function');
-let wgPvT=0;
+let wgPvT=0,wgPvWant=false;
 function wgPrev(){
-  if(!wgPrevOk())return;clearTimeout(wgPvT);
-  wgPvT=setTimeout(()=>{try{const im=$('#wgPvImg');if(!im)return;const b64=window.AndroidBridge.widgetPreview(widgetJson(),330,350);if(b64)im.src='data:image/png;base64,'+b64;}catch(e){}},60);
+  if(!wgPrevOk())return;wgPvWant=true;if(wgPvT)return;   // v0.189 밀고 있는 동안엔 0.15초에 한 번만 (끝난 뒤 한 번 더)
+  wgPvT=setTimeout(()=>{wgPvT=0;if(!wgPvWant)return;wgPvWant=false;try{const im=$('#wgPvImg');if(!im)return;const b64=window.AndroidBridge.widgetPreview(widgetJson(),330,350);if(b64)im.src='data:image/png;base64,'+b64;}catch(e){}if(wgPvWant)wgPrev();},150);
 }
 function openWidgetPage(){
   const w=S.widget;

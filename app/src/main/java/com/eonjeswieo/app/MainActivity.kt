@@ -233,12 +233,15 @@ class MainActivity : ComponentActivity() {
         runOnUiThread {
             try {
                 if (on) {
+                    window.setFormat(android.graphics.PixelFormat.TRANSLUCENT)   // v0.189 투명 형식: 매번 지우고 그려서 지나간 화면이 겹쳐 남지 않게
                     window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
                     window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
                     rootView?.setBackgroundColor(Color.TRANSPARENT)
                     webView.setBackgroundColor(Color.TRANSPARENT)
+                    webView.invalidate()
                 } else {
                     window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                    window.setFormat(android.graphics.PixelFormat.OPAQUE)
                     window.setBackgroundDrawableResource(R.color.bg)
                     webView.setBackgroundColor(if (isNight()) Color.parseColor("#111318") else Color.WHITE)
                     applyBars()
