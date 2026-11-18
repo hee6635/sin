@@ -3780,9 +3780,11 @@ function stzCheck(force){
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(stzDirty||innerWidth!==stzFitW))setTimeout(()=>stzCheck(false),60);});
 window.__fold=()=>stzCheck(false);   // 안드로이드: 접고 펼 때(화면 설정이 바뀔 때) 조금 뒤에 불러 줌   // 접고 펼 때(커버↔안쪽) 앱 달력 값(스티커·주야)도 그 화면 값으로 먼저 바꿈
-let renderRev=-1,renderWaitT=0;
+let renderRev=-1,renderWaitT=0,shellArriveT=-1e9;
+// v0.207 뒤에서 하는 일(가족 새로 받기 · 켤 때 위젯 자료)은 날짜 창이 열리는 중 · 열린 직후 1.2초 동안 미룸 (폰 기록: 도착 직후 가족 새로 받기 render 103ms 로 첫 화면이 늦게 뜸)
+function uiQuiet(){if(document.querySelector('.dshell:not(.cls)'))return 200;const d=performance.now()-shellArriveT;return d<1200?Math.ceil(1200-d):0;}
 function render(){
-  {const sh=document.querySelector('.dshell');if(sh&&performance.now()-(sh._t0||0)<1500){clearTimeout(renderWaitT);renderWaitT=setTimeout(()=>render(),120);return;}}   // v0.206 껍데기가 움직이는 동안엔 다시 그리기를 미룸 (폰 기록: 켠 직후 위젯 자료 읽기 → render 97ms 가 열리는 도중 끼어듦)
+  {const sh=document.querySelector('.dshell:not(.cls)');if(sh&&performance.now()-(sh._t0||0)<1500){clearTimeout(renderWaitT);renderWaitT=setTimeout(()=>render(),120);return;}}   // v0.206 껍데기가 움직이는 동안엔 다시 그리기를 미룸 (폰 기록: 켠 직후 위젯 자료 읽기 → render 97ms 가 열리는 도중 끼어듦)
   clearTimeout(renderWaitT);renderRev=dataRev;
   coachSoon();persSync();expireOnceAlarms();actAuto();
   applyTdc();   // (자정이 지나면 그날 근무 색으로 · 보이는 달력 따라)
@@ -5385,7 +5387,7 @@ const MO=(()=>{
     const r=c.getBoundingClientRect(),bg=shellBg(),el=shellEl=shellMk(bg);   // v0.201 위치 · 크기(transform)만 움직임 — 색 · 둥글기까지 움직이면 폰이 따로 못 돌려서 진짜 창 만드는 동안 멈춤
     const a=el.animate([{transform:shellTf(r)},{transform:'none'}],{duration:360,easing:EO,fill:'forwards'});
     try{pfKick('날짜 창 누름');}catch(x){}
-    a.onfinish=()=>{if(shellEl!==el)return;try{pf('껍데기 도착');}catch(x){}   // v0.204 진짜 창은 껍데기가 다 커져 멈춘 뒤에 만들고 칠함 (폰 기록: 움직이는 도중 처음 칠하기 92ms 가 끼어들어 멈춤) · 껍데기가 덮고 있어 안 보임
+    a.onfinish=()=>{if(shellEl!==el)return;shellArriveT=performance.now();try{pf('껍데기 도착');}catch(x){}   // v0.204 진짜 창은 껍데기가 다 커져 멈춘 뒤에 만들고 칠함 (폰 기록: 움직이는 도중 처음 칠하기 92ms 가 끼어들어 멈춤) · 껍데기가 덮고 있어 안 보임
       let cc=c;if(!cc.isConnected&&c.dataset.k)cc=document.querySelector(`.cell[data-act="${c.dataset.act}"][data-k="${c.dataset.k}"]`)||c;   // 그 사이 달력이 다시 그려졌으면 같은 날 칸으로
       sh.style.transition='none';const t0=performance.now();shellPass=true;dsLite=true;try{cc.click();}finally{shellPass=false;dsLite=false;}try{pf('날짜 창 만들기',performance.now()-t0);}catch(x){}
       if(!sh.classList.contains('open')){shellDrop();return;}
@@ -5395,7 +5397,7 @@ const MO=(()=>{
   function sheetClose(sh,k){if(RM()||!sh.classList.contains('open')||!k)return false;
     const cell=[...document.querySelectorAll(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`)].find(x=>{const r=x.getBoundingClientRect();return r.width>4&&r.left>=-2&&r.right<=innerWidth+2&&r.top>=0&&r.bottom<=innerHeight;});
     if(!cell)return false;
-    shellDrop();const r=cell.getBoundingClientRect(),bg=shellBg(),el=shellEl=shellMk(bg);
+    shellDrop();const r=cell.getBoundingClientRect(),bg=shellBg(),el=shellEl=shellMk(bg);el.classList.add('cls');   // 닫는 껍데기 (다시 그리기는 안 미룸)
     sh.style.transition='none';setTimeout(()=>{if(!sh.classList.contains('open'))sh.style.transition='';},40);   // 진짜 창은 바로 치움
     const a=el.animate([{transform:'none',opacity:1},{opacity:1,offset:.55},{transform:shellTf(r),opacity:0}],{duration:300,easing:EC,fill:'forwards'});
     a.onfinish=()=>{if(shellEl===el){el.remove();shellEl=null;}const n=document.querySelector(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`);if(n)n.animate([{transform:'scale(.94)'},{transform:'scale(1.03)',offset:.6},{transform:'none'}],{duration:280,easing:EO});};
@@ -9655,7 +9657,7 @@ function calFitMark(v){const mk=cur.y*12+cur.m;v.querySelectorAll('.track .panel
 function calFill(p){const v=+p.dataset.mk;if(v<MIN_M||v>MAX_M){p.innerHTML='';return;}const ll=lastLines;p.style.removeProperty('--stz');p.innerHTML=calPanel(Math.floor(v/12),v%12);lastLines=ll;}
 function calFillLater(ms){clearTimeout(calFarT);calFarT=setTimeout(()=>{try{   // 한 번에 판 하나씩 (가까운 것부터) → 손가락이 와도 바로 받음
   const tr=$('#track');if(!tr||tab!=='cal')return;if(calTouch||busy||performance.now()-calLastS<120){calFillLater(150);return;}   // 손가락 · 움직이는 중엔 미룸
-  if(document.querySelector('.dshell')||$('#sheet.open')||$('#pop.open')){calFillLater(400);return;}   // v0.203 날짜 창 · 작은 창이 열리는 중 · 열려 있는 동안엔 옆 달 그리기를 미룸 (폰 기록: 열리는 도중 옆 달 맞추기 111ms 가 끼어들어 멈춤)
+  if(uiQuiet()||$('#sheet.open')||$('#pop.open')){calFillLater(400);return;}   // v0.203 날짜 창 · 작은 창이 열리는 중 · 열려 있는 동안엔 옆 달 그리기를 미룸 (폰 기록: 열리는 도중 옆 달 맞추기 111ms 가 끼어들어 멈춤)
   const vi=Math.round(tr.scrollLeft/calW(tr)),P=[...tr.children].sort((a,b)=>Math.abs(+a.style.order-vi)-Math.abs(+b.style.order-vi)).filter(x=>Math.abs(+x.style.order-vi)<=2);   // 보이는 판 앞뒤 2달까지 (더 먼 판은 다가올 때)
   const p=P.find(x=>{const v=+x.dataset.mk;return (v>=MIN_M&&v<=MAX_M)&&(!x.firstElementChild||!x.dataset.fit);});if(!p)return;
   const v=+p.dataset.mk;if(!p.firstElementChild)calFill(p);p.dataset.fit=1;stzPanel(p,v);fitDn(p,true);memoShift(p);calFillLater(60);
@@ -11122,6 +11124,7 @@ function famSaveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e
 let famUiT=0;
 function famRefreshUi(){clearTimeout(famUiT);famUiT=setTimeout(famRefreshUiNow,250);}
 function famRefreshUiNow(){
+  {const q=uiQuiet();if(q>0){clearTimeout(famUiT);famUiT=setTimeout(famRefreshUiNow,q);return;}}
   if(tab==='cal'&&(calTouch||busy||performance.now()-calLastS<300)){famUiT=setTimeout(famRefreshUiNow,200);return;}
   try{stkAskCheck();}catch(e){}
   const ae=document.activeElement;if(ae&&ae.id==='vcmsg')return;   // 요청 메시지를 쓰는 중이면 건드리지 않음
@@ -12574,7 +12577,7 @@ bootStep(refreshHolidays);
 bootStep(famBoot);
 setTimeout(()=>{try{wxFetch(false);}catch(e){}},2500);
 setTimeout(()=>{try{if(window.AndroidBridge&&typeof window.AndroidBridge.takePush==='function'){const p=String(window.AndroidBridge.takePush()||'');if(p)window.__onPush(JSON.parse(p));}}catch(e){}},700);
-setTimeout(widgetSync,1600);   // v0.185 (150 → 1600) 첫 넘기기 뒤로
+{const wsBoot=()=>{const q=uiQuiet();if(q>0){setTimeout(wsBoot,q);return;}widgetSync();};setTimeout(wsBoot,1600);}   // v0.185 (150 → 1600) 첫 넘기기 뒤로
 setTimeout(introNotice,1400);
 setTimeout(()=>{try{stkAskCheck();}catch(e){}},1800);
 applyStats();track('app_start');

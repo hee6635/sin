@@ -590,6 +590,11 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.207 날짜 창 도착 직후 뒤 작업 미룸
+- 폰 기록: 껍데기 모션 중 멈춤은 없어짐. 도착 직후 가족 새로 받기(famRefreshUiNow → render 103ms)가 끼어 첫 화면이 158ms 늦게 뜸.
+- `uiQuiet()`: 여는 껍데기가 있거나 도착(`shellArriveT`) 뒤 1.2초 안이면 남은 ms. famRefreshUiNow · 켤 때 widgetSync(1.6초) · calFillLater 가 이걸 보고 미룸.
+- render 미룸은 여는 껍데기만(`.dshell:not(.cls)`) — 닫는 껍데기(.cls)는 안 미룸 (칠하기 버튼 등 바로 그려야 함 · s6 · s77 · t11).
+
 ## v0.206 껍데기 도는 동안 render 미룸 · 오늘로 부드럽게 · 기록 복사
 - 폰 기록: 켠 직후 날짜를 열면 widgetSync(1.6초 타이머) 안 render 97ms 가 껍데기 모션 도중 끼어듦 → `render()` 첫 줄: `.dshell` 이 1.5초 안에 만들어진 게 있으면 120ms 뒤로 미룸.
 - 제목 눌러 오늘로(`dftPass`·`dftBusy`): 지금 띠를 오늘까지 굴리며 내용은 밀려 나감 → 멈춘 뒤 진짜 goDay → 내용 밀려 들어옴. 띠에 없는 먼 날은 바로.
