@@ -590,6 +590,9 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## 백업: 정리 전 마지막 버전 = v0.213 (커밋 5449252 · claude/continue-sin-app-dev-x8ou0c)
+- 되돌리려면: `git checkout 5449252 -- app/src/main/assets/index.html` (앱 화면 전체가 이 파일 하나)
+
 ## v0.213 폭 · 자리 옮김 · 줄 이름 스르르 · 이름 칸
 - `wSnap`/`wPlay`(hmSnap/hmPlay 안): `.sh-pill,.npv,.pv,.tbtn,.mval` 글자가 바뀌면 폭 옛→새 · 글자 살짝 바뀜 (짝 = 첫 클래스+data-act · tapx 무시). 늘어나는 동안 두 줄 되지 않게 nowrap.
 - hmPlay: 옛 높이로 잠근 뒤 한 박자(rAF) 뒤 재서 애니메이션 · 자리가 옮겨진 칸은 translateY 로 미끄러짐(위 칸이 없어질 때) · 알람 탭(`.alw>*`)에도 적용.
