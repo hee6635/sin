@@ -481,7 +481,7 @@ textarea{resize:none;min-height:84px}
 .tchips{display:flex;flex-wrap:wrap;gap:10px 8px}
 /* 근무타입 접기: 평소엔 알약 하나(지금 근무 ▾) → 누르면 칩 줄. 앱을 쓰는 동안은 열린 채, 앱을 나가고 5분 지나면 다시 접힘 */
 .shsec .sh-pill{display:inline-flex;align-items:center;gap:7px;padding:6px 13px 6px 7px;border-radius:18px;background:var(--surface);font-size:14.5px;font-weight:800;color:var(--fg)}
-.shsec .sh-pill .badge{opacity:1}
+.shsec .sh-pill .badge{opacity:1}.shsec .sh-pill,.npv,.pv,.tbtn,.mval{white-space:nowrap}
 .shsec .sh-pill i{font-style:normal;font-size:11px;color:var(--muted);margin-left:1px}
 .shsec .sh-pill i.shc{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--bg);color:var(--fg);margin-left:2px}.shsec .sh-pill i.shc svg{transition:transform .32s cubic-bezier(.3,1.3,.5,1)}.shsec.open .sh-pill i.shc svg{transform:rotate(180deg)}   /* v0.212 ⌄ 화살표가 펼치면 180° 돌아 ⌃ */
 .shsec .sh-pill em{font-style:normal;font-size:11px;font-weight:700;color:var(--muted)}
@@ -1912,6 +1912,7 @@ body:has(.mset) #top,body:has(.famv) #top,body:has(.alw) #top{background:var(--s
 .np .npmc{padding:8px 16px 4px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.np .npmc button{flex:none;background:var(--bg)}
 .np .un{font-size:14px;color:var(--muted);width:16px}
 .np .prow .inl{background:var(--surface);border:0;border-radius:10px;height:40px;font-weight:600}
+.np .prow input.inl{width:auto;flex:0 1 190px;min-width:0;padding:0 14px;border-radius:12px;text-align:right;font-size:15px}.np .prow input.inl:focus{box-shadow:inset 0 0 0 2px var(--accent);outline:0}   /* v0.213 이름 칸: 글자가 칸 끝에 붙지 않게 안쪽 여백 · 누르면 파란 테두리 */
 /* v0.148 두 칸 버튼 C3: 둥근 알약 · 안 고른 칸 연회색 · 고른 칸 흰 바탕 + 파란 테두리 + 옅은 그림자 */
 .np .npseg{display:flex;background:transparent;gap:8px;padding:0;border-radius:0}
 .np .npseg button{flex:1;height:40px;padding:0 14px;border-radius:999px;font-weight:600;font-size:14.5px;background:color-mix(in srgb,var(--fg) 5%,transparent);color:color-mix(in srgb,var(--fg) 55%,var(--bg));box-shadow:none}
@@ -3855,7 +3856,7 @@ function render(){
     requestAnimationFrame(()=>{const r=$('.crow.today');if(r)r.scrollIntoView({block:'center'});});
   }else if(tab==='alarm'){
     top.innerHTML=`<h1>알람</h1><button class="ib plus apl" data-act="aadd" aria-label="알람 추가">${npi('plus',22)}</button>`;
-    v.innerHTML=renderAlarm();
+    {const ok=!!v.querySelector('.alw'),m=ok?hmSnap(v,'.alw>*'):null;v.innerHTML=renderAlarm();if(m)hmPlay(v,'.alw>*',m);}   // v0.213 알람을 끄고 켜서 '다음 알람' 칸이 생기고 없어질 때 툭 말고 스르르
   }else if(tab==='fam'){
     const un2=unseenCount();
     top.innerHTML=`<h1>우리 가족</h1>${S.link?'<button class="hb" data-act="fam-refresh" id="famRef" aria-label="새로고침">↻</button>':''}<button class="hb" data-act="feed-sheet" aria-label="가족 소식">${ICON.bell}${un2?`<span class="bdg">${un2>9?'9+':un2}</span>`:''}</button><button class="hb" data-act="fam-set" aria-label="가족 설정">${ICON.gear}</button>`;
@@ -5289,11 +5290,27 @@ function renderAlarm(){
 }
 
 /* ================= 시트 · 페이지 · 작은 메뉴 ================= */
+// v0.213 알약 · 값 글자가 바뀌어 폭이 달라지면(근무 휴무 → 야간 · 바뀜 등) 폭은 옛 폭 → 새 폭으로 늘고 줄며 글자는 살짝 바뀜
+const W_SEL='.sh-pill,.npv,.pv,.tbtn,.mval';
+function wSnap(root){const m={},c={};m.__pl={};root.querySelectorAll('.prow .pl2').forEach(e=>{const k=(e.firstChild&&e.firstChild.textContent||'').trim();if(k&&!m.__pl[k])m.__pl[k]=[e.getBoundingClientRect().top,e.querySelectorAll('small').length];});root.querySelectorAll(W_SEL).forEach(e=>{const k=(e.classList[0]||'')+'|'+(e.dataset.act||'');c[k]=(c[k]||0)+1;m[k+'#'+c[k]]=[e.getBoundingClientRect().width,e.textContent];});return m;}
+function wPlay(root,m){if(!m)return;const c={};
+  // v0.213 줄 이름 아래 작은 글(예: 11/20 한 번 울려요)이 생기거나 없어져 이름이 위아래로 옮겨지면 툭 말고 스르르 · 새 작은 글은 살짝 나타남
+  if(m.__pl){root.querySelectorAll('.prow .pl2').forEach(e=>{const k=(e.firstChild&&e.firstChild.textContent||'').trim(),o=k&&m.__pl[k];if(!o)return;const [t0,s0]=o,dy=t0-e.getBoundingClientRect().top,sm=e.querySelectorAll('small').length;
+    if(Math.abs(dy)>=2&&Math.abs(dy)<40)e.animate([{transform:`translateY(${dy}px)`},{transform:'none'}],{duration:300,easing:'cubic-bezier(.2,.9,.25,1)'});
+    if(sm>s0)e.querySelectorAll('small').forEach(x=>x.animate([{opacity:0,transform:'translateY(-4px)'},{opacity:1,transform:'none'}],{duration:280,delay:60,fill:'backwards'}));});}
+root.querySelectorAll(W_SEL).forEach(e=>{const k=(e.classList[0]||'')+'|'+(e.dataset.act||'');c[k]=(c[k]||0)+1;const o=m[k+'#'+c[k]];if(!o||o[1]===e.textContent)return;
+  const w1=e.getBoundingClientRect().width,E='cubic-bezier(.2,.9,.25,1)';
+  if(Math.abs(w1-o[0])>2){e.style.overflow='hidden';const an=e.animate([{width:o[0]+'px'},{width:w1+'px'}],{duration:340,easing:E});an.onfinish=an.oncancel=()=>{e.style.overflow='';};}
+  [...e.children].forEach(x=>x.animate([{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'none'}],{duration:280,delay:60,easing:E,fill:'backwards'}));
+  if(!e.children.length)e.animate([{color:'transparent'},{}],{duration:240});});}
 // v0.212 다시 그릴 때 높이 스르르: 그리기 전 칸 높이를 (종류+순번)으로 적어 두고, 그린 뒤 같은 칸은 옛 높이 → 새 높이 · 새로 생긴 칸은 0 → 높이로 펼침
-function hmSnap(root,sel){const m={},c={};root.querySelectorAll(sel).forEach(e=>{const k=e.className;c[k]=(c[k]||0)+1;m[k+'#'+c[k]]=e.offsetHeight;});return m;}
-function hmPlay(root,sel,m){try{if(RMq())return;const c={},E='cubic-bezier(.2,.9,.25,1)';root.querySelectorAll(sel).forEach(e=>{const k=e.className;c[k]=(c[k]||0)+1;const a0=m[k+'#'+c[k]],a1=e.offsetHeight;
-  if(a0==null){if(a1<4)return;e.style.overflow='hidden';const an=e.animate([{height:'0px',opacity:0,marginTop:'0px',marginBottom:'0px'},{height:a1+'px',opacity:1}],{duration:320,easing:E});an.onfinish=an.oncancel=()=>{e.style.overflow='';};return;}
-  if(Math.abs(a1-a0)<4)return;e.style.overflow='hidden';const an=e.animate([{height:a0+'px'},{height:a1+'px'}],{duration:320,easing:E});an.onfinish=an.oncancel=()=>{e.style.overflow='';};});}catch(e){}}
+function hmSnap(root,sel){const m={},c={},rt=root.getBoundingClientRect().top;m.__w=wSnap(root);root.querySelectorAll(sel).forEach(e=>{const k=e.className.replace(/ ?tapx/g,'');c[k]=(c[k]||0)+1;m[k+'#'+c[k]]=e.offsetHeight;m['@'+k+'#'+c[k]]=e.getBoundingClientRect().top-rt;});return m;}
+function hmPlay(root,sel,m){try{if(RMq())return;wPlay(root,m.__w);const c={},E='cubic-bezier(.2,.9,.25,1)',L=[];root.querySelectorAll(sel).forEach(e=>{const k=e.className.replace(/ ?tapx/g,'');c[k]=(c[k]||0)+1;const a0=m[k+'#'+c[k]];
+  L.push([e,a0==null?0:a0,a0==null,m['@'+k+'#'+c[k]]]);e.style.overflow='hidden';e.style.height=(a0==null?0:a0)+'px';});   // 옛 높이로 잠가 두고
+  requestAnimationFrame(()=>{const rt=root.getBoundingClientRect().top;L.forEach(([e,a0,nw,y0])=>{e.style.height='';
+    if(!nw&&y0!=null){const dy=y0-(e.getBoundingClientRect().top-rt);if(Math.abs(dy)>=4)e.animate([{transform:`translateY(${dy}px)`},{transform:'none'}],{duration:320,easing:E,composite:'add'});}   /* 위 칸이 없어져 자리가 옮겨진 칸은 미끄러져 옴 */
+    const a1=e.offsetHeight;if(Math.abs(a1-a0)<4||(nw&&a1<4)){e.style.overflow='';return;}   // 한 박자 뒤 다 그려진 높이로 (바로 재면 아직 덜 그려져 끝에 툭)
+    const an=e.animate(nw?[{height:'0px',opacity:0},{height:a1+'px',opacity:1}]:[{height:a0+'px'},{height:a1+'px'}],{duration:320,easing:E});an.onfinish=an.oncancel=()=>{e.style.overflow='';};});});}catch(e){}}
 function openSheet(html,full){const top=!!pageMode,was=$('#sheet').classList.contains('open');$('#sheet').classList.remove('closing');
   // v0.212 같은 날짜 창을 다시 그릴 때(근무 바꿈 · 메모 · 스티커 …) 카드 높이가 바뀌면 툭 말고 스르르
   const rk=sheetMode+'|'+(sheetMode==='day'?sheetKey:sheetMode==='mandy'?manDayK:sheetMode==='vcday'?rqD.k:''),sh0=$('#sheet'),same=was&&sh0.dataset.rk===rk,h0=same?hmSnap(sh0,'.dsbody>*'):null;
@@ -7166,7 +7183,7 @@ function dayHtml(k){
         ${badge(x.k,'tc')}<small>${esc(x.name)}</small>${ov&&x.k===base?'<i class="orig">원래</i>':''}</button>`).join('');
     topPart=persOn(k)?'':`
       <div class="sec shsec${shiftOpenNow()?' open':''}">
-        <div class="sh-hd"><span>근무</span><button class="sh-pill" data-act="shift-tog" aria-label="근무 접기 · 펼치기">${badge(c,'sm','')}${esc(shiftLabel(c))}${ov?'<em>· 바뀜</em>':''}${otNote(k,c)}<i class="shc"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></i></button></div>
+        <div class="sh-hd"><span>근무</span><button class="sh-pill" data-act="shift-tog" aria-label="근무 접기 · 펼치기">${badge(c,'sm','')}<span class="shl">${esc(shiftLabel(c))}</span>${ov?'<em>· 바뀜</em>':''}${otNote(k,c)}<i class="shc"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></i></button></div>
         <div class="sh-body"><div class="sh-card">
         <div class="tchips">${shiftBtns}${S.types.length>quick.length?'<button class="tchip add" data-act="type-more"><span class="badge tc add">＋ 더보기</span></button>':''}${otChip(k,c)}</div>
         ${ov?`<div class="hint" style="margin:6px 0 0">원래 근무: ${esc(shiftLabel(base))} · <a data-act="resetshift">되돌리기</a></div>`:''}

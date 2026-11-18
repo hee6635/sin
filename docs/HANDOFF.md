@@ -590,6 +590,13 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.213 폭 · 자리 옮김 · 줄 이름 스르르 · 이름 칸
+- `wSnap`/`wPlay`(hmSnap/hmPlay 안): `.sh-pill,.npv,.pv,.tbtn,.mval` 글자가 바뀌면 폭 옛→새 · 글자 살짝 바뀜 (짝 = 첫 클래스+data-act · tapx 무시). 늘어나는 동안 두 줄 되지 않게 nowrap.
+- hmPlay: 옛 높이로 잠근 뒤 한 박자(rAF) 뒤 재서 애니메이션 · 자리가 옮겨진 칸은 translateY 로 미끄러짐(위 칸이 없어질 때) · 알람 탭(`.alw>*`)에도 적용.
+- 줄 이름(`.prow .pl2`)이 아래 작은 글이 생겨 위아래로 옮겨지면 스르르 · 짝은 줄 이름 글자.
+- 이름 칸(`.np .prow input.inl` — 알람 이름 · 근무 이름): 안쪽 여백 · 포커스 파란 테두리.
+- 조사 도구 3: 위치 · 높이 · 좌우 폭까지 프레임마다 (scratch mj.js · mj2.js).
+
 ## v0.212 뒤로가기 · 날짜 창 높이 스르르 · 근무 화살표
 - `__onBack`: 날짜 창 위에 페이지(자세히 등)가 떠 있으면(가운데 점의 elementFromPoint 가 #page) 페이지부터 닫음.
 - `hmSnap`/`hmPlay`: 다시 그리기 전 칸 높이를 (className+순번)으로 적고 그린 뒤 같은 칸은 높이 이어 붙이고 새 칸은 0에서 펼침 · openSheet(같은 날짜 다시 그릴 때 `.dsbody>*`) · openPage(`.pg-b>*`).
