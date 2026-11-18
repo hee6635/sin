@@ -1,4 +1,4 @@
-const {chromium,boot,base}=require('./lib.js');
+const {chromium,boot,base}=require('../lib.js');
 (async()=>{const b=await chromium.launch();const p=await boot(b,base,{touch:true});
  await p.evaluate(()=>{document.querySelector('#nav [data-tab="set"]').click();});await p.waitForTimeout(200);
  await p.evaluate(()=>document.querySelector('[data-act="more-share"]').click());await p.waitForTimeout(400);

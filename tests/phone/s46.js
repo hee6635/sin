@@ -34,7 +34,7 @@ const {mkT}=require('./lib.js');
    T('웹: 바깥 스크립트 · 바깥 이미지 없음 (보안 헤더와 맞음)',[pv,dl,ix].every(h=>!/<script|src="http|<img|<iframe/i.test(h)));
    T('웹: 시행일이 앱 안 방침과 같음',pv.includes('2026년 10월 29일')&&app.includes("PRIVACY_DATE='2026년 10월 29일'"));
    T('웹: 문의 메일이 앱과 같음',pv.includes('eonjeswieo.app@gmail.com')&&dl.includes('eonjeswieo.app@gmail.com')&&app.includes("SUPPORT_MAIL='eonjeswieo.app@gmail.com'"));
-   T('웹: 삭제 안내가 앱의 실제 메뉴 이름을 가리킴',dl.includes('내 데이터 모두 지우기')&&app.includes('<span>내 데이터 모두 지우기</span>')&&dl.includes('도움 · 정보')&&app.includes("'도움 · 정보'")&&dl.includes('설정')&&!dl.includes('더 보기'));
+   T('웹: 삭제 안내가 앱의 실제 메뉴 이름을 가리킴',dl.includes('내 데이터 모두 지우기')&&app.includes("'내 데이터 모두 지우기'")&&dl.includes('도움 · 정보')&&app.includes("'도움 · 정보'")&&dl.includes('설정')&&!dl.includes('더 보기'));
    T('웹: 방침이 삭제 안내 페이지로 이어짐 · 목록 페이지가 둘 다 걸려 있음',pv.includes('href="/delete"')&&ix.includes('href="/privacy"')&&ix.includes('href="/delete"'));
    const fj=JSON.parse(fs.readFileSync('/home/user/sin/firebase/firebase.json','utf8')).hosting;
    T('hosting 설정: 사이트 eonjeswieo · hosting 폴더 · 보안 헤더',fj&&fj.site==='eonjeswieo'&&fj.public==='hosting'&&JSON.stringify(fj.headers).includes('Content-Security-Policy')&&fs.existsSync('/home/user/sin/firebase/hosting/privacy.html'));}

@@ -43,9 +43,9 @@ const ONLY=process.env.ONLY||'';
     await away(6*60e3);await p.evaluate(()=>{document.querySelector('#sheet [data-act="close"]').click();});await p.waitForTimeout(300);
     await openDay('2026-10-15');await p.waitForTimeout(600);
     r=await st();T('6분 만에 돌아오면 다시 접힘',r&&!r.open,JSON.stringify(r));
-    await p.evaluate(()=>document.querySelector('.shsec .sh-pill').click());await p.waitForTimeout(300);
+    await p.evaluate(()=>document.querySelector('.shsec .sh-pill').click());await p.waitForTimeout(700);
     T('다시 열기',await p.evaluate(()=>document.querySelector('.shsec').classList.contains('open')));
-    await p.evaluate(()=>document.querySelector('.shsec .sh-pill').click());await p.waitForTimeout(300);
+    await p.evaluate(()=>document.querySelector('.shsec .sh-pill').click());await p.waitForTimeout(700);   // (v0.210 이후 다시 그릴 때 높이 모션이 끝날 때까지)
     r=await st();T('같은 알약 버튼으로 다시 접기 (v0.155)',r&&!r.open,JSON.stringify(r));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
     // 불규칙 근무표는 날마다 근무를 넣으니 처음부터 펼침
@@ -58,7 +58,7 @@ const ONLY=process.env.ONLY||'';
   if(want('acc')){
     const p=await boot(b,{...base},{touch:true});
     await p.evaluate(()=>document.querySelector('#nav [data-tab="set"]').click());await p.waitForTimeout(400);await p.evaluate(()=>{const b=document.querySelector('[data-act="more-look"]');if(b)b.click();});await p.waitForTimeout(300);
-    const r=await p.evaluate(()=>{const e=document.querySelector('#page .chips button.on');const cs=getComputedStyle(e);return {bg:cs.backgroundColor,fg:cs.color};});
+    const r=await p.evaluate(()=>{const e=document.querySelector('#page .npseg button.on,#page .chips button.on');const ind=e.parentElement.querySelector('.npind')||e;return {bg:getComputedStyle(ind).backgroundColor,fg:getComputedStyle(e).color};});   // (v0.196 고르기 알약: 흰 판(.npind)이 미끄러짐)
     T('설정 "보통" 같은 고른 버튼: 연한 바탕(밝기 높음) · 흰 글자 아님',(()=>{const m=r.bg.match(/\d+/g).map(Number);return m[0]+m[1]+m[2]>600&&r.fg!=='rgb(255, 255, 255)';})(),JSON.stringify(r));
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();
   }

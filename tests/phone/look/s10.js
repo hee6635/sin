@@ -1,4 +1,4 @@
-const {chromium,boot,base}=require('./lib.js');
+const {chromium,boot,base}=require('../lib.js');
 (async()=>{const b=await chromium.launch();
  const mk=(e,i)=>({id:'a'+i,kind:'mark',emoji:e,name:'x'+i,rep:'daily',from:'2026-09-01',times:1,ats:[],days:[],dates:[],skip:[]});
  for(const [w,more] of [[360,false],[412,false],[360,true]]){

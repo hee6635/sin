@@ -1,4 +1,4 @@
-const {chromium,boot,base}=require('./lib.js');
+const {chromium,boot,base}=require('../lib.js');
 (async()=>{const b=await chromium.launch();
  const mk=(e,i,x={})=>({id:'a'+i,kind:'mark',emoji:e,name:'스티커'+i,rep:'daily',from:'2026-10-13',times:1,ats:[],days:[],dates:[],skip:[],...x});
  const defs=[mk('🧘',1),mk('🏃',2),mk('💧',3),mk('💪',4),mk('📖',5,{from:'2026-10-01',ats:['20:00']})];

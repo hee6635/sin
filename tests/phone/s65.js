@@ -36,7 +36,7 @@ const ONLY=process.env.ONLY||'';
     await openDay(p,'2026-10-12');await p.waitForTimeout(500);
     T('켜짐 (v0.155): 안내 줄 없음 · 자세히 버튼은 메모 제목 줄',await p.evaluate(()=>!document.querySelector('.ibar .note')&&!!document.querySelector('.memsec [data-act="memo-detail"]')));
     await click(p,'[data-act="memo-detail"]');await p.waitForTimeout(400);
-    T('자세히에 "📋 일지 만들기 · 인수 · 인계 · 지시 · 특이를 따로 적어요"',await p.evaluate(()=>{const e=document.querySelector('[data-act="wl-new"]');return !!e&&/일지 만들기/.test(e.textContent)&&/인수 · 인계 · 지시 · 특이를 따로/.test(e.textContent);}));
+    T('자세히에 "일지 만들기" 줄 (v0.158 이후 설명 글 없음)',await p.evaluate(()=>{const e=document.querySelector('[data-act="wl-new"]');return !!e&&/일지 만들기/.test(e.textContent);}));
     await click(p,'[data-act="wl-new"]');await p.waitForTimeout(400);
     T('처음엔 이름 정하기 창(미리 "업무 일지" · 빠른 칩 5개)',await p.evaluate(()=>document.querySelector('#wlNm').value==='업무 일지'&&document.querySelectorAll('[data-act="wl-nmchip"]').length===5));
     await click(p,'[data-act="wl-nmchip"][data-v="인수인계"]');await click(p,'[data-act="wl-nmok"]');await p.waitForTimeout(300);

@@ -1,4 +1,4 @@
-const {chromium,boot,base}=require('./lib.js');
+const {chromium,boot,base}=require('../lib.js');
 (async()=>{const b=await chromium.launch();const p=await boot(b,base,{touch:true});
  await p.evaluate(()=>document.querySelector('[data-act="prev"]').click());await p.waitForTimeout(500);
  await p.evaluate(()=>document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-03"]')||0);
