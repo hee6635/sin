@@ -2880,7 +2880,7 @@ const MO=(()=>{
     shellDrop();const r=cell.getBoundingClientRect(),bg=shellBg(),el=shellEl=shellMk(bg);el.classList.add('cls');   // 닫는 껍데기 (다시 그리기는 안 미룸)
     sh.style.transition='none';setTimeout(()=>{if(!sh.classList.contains('open'))sh.style.transition='';},40);   // 진짜 창은 바로 치움
     const a=el.animate([{transform:'none',opacity:1},{opacity:1,offset:.55},{transform:shellTf(r),opacity:0}],{duration:300,easing:EC,fill:'forwards'});
-    a.onfinish=()=>{if(shellEl===el){el.remove();shellEl=null;}const n=document.querySelector(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`);if(n)n.animate([{transform:'scale(.94)'},{transform:'scale(1.03)',offset:.6},{transform:'none'}],{duration:280,easing:EO});};
+    a.onfinish=()=>{if(shellEl===el){el.remove();shellEl=null;}const vis=x=>{const r=x.getBoundingClientRect();return r.width>4&&r.left>=-2&&r.right<=innerWidth+2&&r.top>=0&&r.bottom<=innerHeight;},n=[...document.querySelectorAll(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`)].find(vis);if(n)n.animate(   /* v0.218 1~7일 · 말일 근처는 옆 달 판에도 같은 날짜 칸(흐린 칸)이 있어서 첫 번째를 고르면 안 보이는 칸이 톡 했음 → 보이는 칸 */[{transform:'scale(.94)'},{transform:'scale(1.03)',offset:.6},{transform:'none'}],{duration:280,easing:EO});};
     return true;}
   let popSrc=null;
   function popOpen(pop,was){const m=pop.querySelector(':scope>.menu,:scope>.pi-ed,:scope>.pi-view,:scope>.wlp');if(!m||RM())return;   // v0.210 포스트잇 · 일지 창도
