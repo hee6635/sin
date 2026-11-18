@@ -19,7 +19,7 @@ const memo=(id,text,x={})=>({id,text,shared:false,by:'host',t:1760000000000,...x
   // 고치다가 글을 바꾼 뒤 복사하면 바뀐 글
   await p.fill('#memoInput','바꾼 글');await p.click('[data-act="memo-copy"]');await p.waitForTimeout(150);
   T('입력칸 글을 고쳤으면 고친 글이 복사됨',(await copied(p)).pop()==='바꾼 글');
-  await p.click('[data-act="memo-cancel"]');await p.waitForTimeout(450);
+  await p.click('[data-act="memo-cancel"]');await p.waitForTimeout(900);
   // 2) 길게 누르기 메뉴
   await press(p,'[data-act="memo-tap"][data-mid="m2"]');
   T('길게 누르면 메뉴에 📋 복사 (고치기 · 삭제와 함께)',await p.evaluate(()=>{const m=document.querySelector('#pop');return !!m.querySelector('[data-act="mm-copy"]')&&!!m.querySelector('[data-act="mm-edit"]')&&!!m.querySelector('[data-act="mm-del"]');}));

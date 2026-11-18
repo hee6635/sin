@@ -590,6 +590,13 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.212 뒤로가기 · 날짜 창 높이 스르르 · 근무 화살표
+- `__onBack`: 날짜 창 위에 페이지(자세히 등)가 떠 있으면(가운데 점의 elementFromPoint 가 #page) 페이지부터 닫음.
+- `hmSnap`/`hmPlay`: 다시 그리기 전 칸 높이를 (className+순번)으로 적고 그린 뒤 같은 칸은 높이 이어 붙이고 새 칸은 0에서 펼침 · openSheet(같은 날짜 다시 그릴 때 `.dsbody>*`) · openPage(`.pg-b>*`).
+- 근무 알약 화살표: ▾ → 동그라미 안 ⌄ (svg) · 펼치면 180° 돌아 ⌃.
+- 조사 도구 2(scratch mj.js): 프레임마다 칸 위치 · 높이를 재서 중간 값 없이 바뀐 것(툭)을 잡음. 다크 모드 12화면 확인.
+- 시험: s43 취소 뒤 기다림 900ms.
+
 ## v0.211 포스트잇 모션
 - 포스트잇 창(`.pi-view` · `.pi-ed`)은 openPop 을 안 거쳐 모션이 없었음 → MO.popOpen/popClose 가 `.menu,.pi-ed,.pi-view,.wlp` 를 다 받음 · openPiView · renderPiEd(처음) 에서 popOpen · piClose 는 closePop 으로 (누른 자리로 들어감).
 - renderPiEd 다시 그릴 때: 높이 바뀌면 스르르 · 나만/가족 표시 톡 · 색 바뀌면 살짝 흔들림. 포스트잇 벽 ‹ › 는 그 쪽에서 밀려 옴.
