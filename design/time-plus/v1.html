@@ -1,0 +1,42 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=390">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Pretendard,-apple-system,"Noto Sans KR",sans-serif;background:#f2f4f6;width:390px;height:520px;padding:40px 12px;color:#191f28}
+h3{font-size:13px;color:#8b95a1;font-weight:600;margin:0 6px 10px}
+.card{background:#fff;border-radius:22px;padding:2px 18px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.row{display:flex;align-items:center;gap:14px;height:62px;border-bottom:1px solid #eef0f2}
+.row:last-child{border-bottom:0}
+.ic{width:34px;height:34px;border-radius:10px;background:#f2f4f6;display:flex;align-items:center;justify-content:center;flex:none}
+.ic svg{width:18px;height:18px;stroke:#4e5968;fill:none;stroke-width:1.8;stroke-linecap:round}
+.lb{flex:1;font-size:16px;font-weight:600}
+.sw{width:50px;height:30px;border-radius:15px;background:#d1d6db;position:relative}.sw:after{content:'';position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff}
+.tm{font-size:15px;font-weight:800;background:#f2f4f6;border-radius:12px;padding:8px 12px;opacity:0;transform:scale(.8);transition:opacity .22s,transform .3s cubic-bezier(.3,1.5,.5,1);pointer-events:none}
+.on .tm{opacity:1;transform:none}
+.pm{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#e8f3ff;transition:background .3s,transform .4s cubic-bezier(.3,1.4,.5,1)}
+.pm svg{width:18px;height:18px;stroke:#3182f6;stroke-width:2.2;stroke-linecap:round;transition:stroke .3s}
+.on .pm{background:#f2f4f6;transform:rotate(135deg)}
+.on .pm svg{stroke:#8b95a1}
+.fold{display:grid;grid-template-rows:0fr;transition:grid-template-rows .36s cubic-bezier(.2,.9,.25,1)}
+.fold>div{overflow:hidden}
+.on+.fold{grid-template-rows:1fr}
+.fold .row{opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .3s}
+.on+.fold .row{opacity:1;transform:none;transition-delay:.08s}
+.chips{display:flex;gap:6px}.chips b{font-size:14px;font-weight:600;padding:9px 12px;border-radius:12px;background:#f2f4f6;color:#8b95a1}.chips b.s{background:#fff;border:2px solid #3182f6;color:#3182f6;padding:7px 10px}
+.rp{font-size:15px;color:#8b95a1}
+.tap{position:fixed;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.18);pointer-events:none;opacity:0;transform:scale(.6);transition:opacity .15s,transform .2s}
+.tap.go{opacity:1;transform:scale(1)}
+</style></head><body>
+<h3>메모 자세히 · 시간 줄</h3>
+<div class="card">
+ <div class="row"><div class="ic"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></div><div class="lb">할 일</div><div class="sw"></div></div>
+ <div class="row" id="tr"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></div><div class="lb">시간</div><div class="tm">오전 9:00</div><div class="pm" id="pm"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div></div>
+ <div class="fold"><div><div class="row"><div class="ic"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20h4"/></svg></div><div class="lb">알림</div><div class="chips"><b class="s">없음</b><b>정시</b><b>10분 전</b></div></div></div></div>
+ <div class="row"><div class="ic"><svg viewBox="0 0 24 24"><path d="M5 9h12l-3-3M19 15H7l3 3"/></svg></div><div class="lb">반복</div><div class="rp">안 함 ›</div></div>
+</div>
+<div class="tap" id="tap"></div>
+<script>
+const tr=document.getElementById('tr'),pm=document.getElementById('pm'),tap=document.getElementById('tap');
+function press(){const r=pm.getBoundingClientRect();tap.style.left=(r.left-4)+'px';tap.style.top=(r.top-4)+'px';tap.classList.add('go');setTimeout(()=>tap.classList.remove('go'),260);
+ pm.animate([{scale:1},{scale:.86},{scale:1}],{duration:260,composite:'add'});setTimeout(()=>tr.classList.toggle('on'),90);}
+setTimeout(press,700);setTimeout(press,2600);setTimeout(press,4300);setTimeout(press,6000);
+</script></body></html>
