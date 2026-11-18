@@ -2746,8 +2746,8 @@ function closeSheet(){
   const mk=sheetMode==='day'||sheetMode==='vcday'?(sheetMode==='vcday'?rqD.k:sheetKey):null;
   if(sheetKey){const m0=JSON.stringify(S.memos[sheetKey]||null);tidyMemos(sheetKey);if(JSON.stringify(S.memos[sheetKey]||null)!==m0)save();}
   const need=sheetKey&&dataRev!==renderRev;   // v0.200 바뀔 때마다 이미 달력을 다시 그려 둠 → 닫을 때는 바뀐 게 남아 있을 때만
-  let fx=false;try{fx=MO.sheetClose($('#sheet'),mk);}catch(e){}   // 껍데기가 그 날짜 칸으로 쏙 (칸이 안 보이면 아래로)
-  if(need)setTimeout(()=>render(),fx?320:0);
+  let fx=false;try{fx=MO.sheetClose($('#sheet'),mk,need);}catch(e){}   // 껍데기가 그 날짜 칸으로 쏙 (칸이 안 보이면 아래로)
+  if(need)setTimeout(()=>{render();if(fx)try{MO.cellPop(mk);}catch(e){}},fx?300:0);   // v0.217 달력을 다시 그린 뒤 칸이 톡 (전엔 톡 하는 도중 다시 그려져 끊겨서, 톡이 있을 때 · 없을 때가 있었음)
   $('#sheet').classList.remove('open');$('#scrim').classList.remove('open');
   sheetKey=null;sheetMode=null;replyDraft=null;typeDraft=null;memoEdit=null;ddDraft=null;markSel(null);
 }
@@ -2874,13 +2874,14 @@ const MO=(()=>{
       requestAnimationFrame(()=>requestAnimationFrame(()=>{if(shellEl!==el)return;shellDrop();try{pf('껍데기 걷음');}catch(x){}setTimeout(()=>{const t1=performance.now();try{dsFill();}catch(x){}try{pf('날짜 띠 · 날씨 채우기',performance.now()-t1);}catch(x){}},30);}));};
   },true);
   function sheetOpen(sh,was){}   // (작은 칸에서 진짜 창을 키우던 방식은 큰 화면을 그림으로 새로 만드느라 멈칫 → 위 껍데기 방식)
-  function sheetClose(sh,k){if(RM()||!sh.classList.contains('open')||!k)return false;
+  function cellPop(k){const n=k&&document.querySelector(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`);if(n&&!RM())n.animate([{transform:'scale(.94)'},{transform:'scale(1.03)',offset:.6},{transform:'none'}],{duration:280,easing:EO});}
+  function sheetClose(sh,k,later){if(RM()||!sh.classList.contains('open')||!k)return false;
     const cell=[...document.querySelectorAll(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`)].find(x=>{const r=x.getBoundingClientRect();return r.width>4&&r.left>=-2&&r.right<=innerWidth+2&&r.top>=0&&r.bottom<=innerHeight;});
     if(!cell)return false;
     shellDrop();const r=cell.getBoundingClientRect(),bg=shellBg(),el=shellEl=shellMk(bg);el.classList.add('cls');   // 닫는 껍데기 (다시 그리기는 안 미룸)
     sh.style.transition='none';setTimeout(()=>{if(!sh.classList.contains('open'))sh.style.transition='';},40);   // 진짜 창은 바로 치움
     const a=el.animate([{transform:'none',opacity:1},{opacity:1,offset:.55},{transform:shellTf(r),opacity:0}],{duration:300,easing:EC,fill:'forwards'});
-    a.onfinish=()=>{if(shellEl===el){el.remove();shellEl=null;}const n=document.querySelector(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`);if(n)n.animate([{transform:'scale(.94)'},{transform:'scale(1.03)',offset:.6},{transform:'none'}],{duration:280,easing:EO});};
+    a.onfinish=()=>{if(shellEl===el){el.remove();shellEl=null;}if(!later)cellPop(k);};
     return true;}
   let popSrc=null;
   function popOpen(pop,was){const m=pop.querySelector(':scope>.menu,:scope>.pi-ed,:scope>.pi-view,:scope>.wlp');if(!m||RM())return;   // v0.210 포스트잇 · 일지 창도
@@ -2971,7 +2972,7 @@ const MO=(()=>{
     if(tab==='cal'||!v)return;
     const kids=[...(v.children.length===1&&v.firstElementChild.children.length>1?v.firstElementChild.children:v.children)].slice(0,6);
     kids.forEach((x,i)=>x.animate([{transform:'translateY(8px)',opacity:.4},{transform:'none',opacity:1}],{duration:240,delay:i*30,easing:'ease-out',fill:'backwards'}));}
-  return {sheetOpen,sheetClose,popOpen,popClose,navSet,badges,flip,tabIn};
+  return {sheetOpen,sheetClose,cellPop,popOpen,popClose,navSet,badges,flip,tabIn};
 })();
 // v0.196 고르기 알약 · 스위치 모션 (시안 design/seg-toggle/v1)
 (function(){

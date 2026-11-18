@@ -590,6 +590,9 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.217 날짜 창 닫을 때 칸 톡 항상
+- 바꾼 게 있으면 닫은 뒤 render 가 칸 톡(0.28초) 도중 칸을 새로 그려 톡이 끊겼음 → `sheetClose(sh,k,later)` 는 톡을 미루고, closeSheet 가 render 뒤 `MO.cellPop(k)`.
+
 ## v0.216 삼성 줄은 배터리 제한 없음이 꺼져 있을 때만
 - 배터리 제한 없음(배터리 최적화 제외)이 켜진 앱은 삼성 "자동 절전 예외 앱" 고르기 목록에 아예 안 나옴(이미 절전 대상 아님 · 사용자 폰에서 확인) → `issues.includes('batt')` 일 때만 줄을 보임.
 
