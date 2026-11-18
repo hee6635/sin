@@ -6771,7 +6771,7 @@ function openPermPage(){
     <div class="pg-b np"><div class="pg-sec" style="margin-top:8px">
       ${PERM_KEYS.map(k=>npRow(PERM_ICON[k],PERM_NAME[k],issues.includes(k)?`<span class="warnp">켜 주세요${npi('chevron-right',16)}</span>`:`<span class="okp">${npi('check',14)}켜짐</span>`,issues.includes(k)?{tap:1,act:'nativefix',attrs:` data-k="${k}"`}:{})).join('')}
     </div>
-    ${isSamsung()?`<div class="pg-sec">${npRow('battery','삼성: 자동 절전 예외 앱에 넣기',npVal(''),{tap:1,act:'perm-samsung'})}</div>`:''}</div>`,'perm');   // v0.214 삼성 폰에서만 · 누르면 삼성 배터리 화면으로 바로
+    ${isSamsung()&&issues.includes('batt')?`<div class="pg-sec">${npRow('battery','삼성: 자동 절전 예외 앱에 넣기',npVal(''),{tap:1,act:'perm-samsung'})}</div>`:''}</div>`,'perm');   // v0.214 삼성 폰에서만 · 누르면 삼성 배터리 화면으로 바로 · v0.216 배터리 제한 없음이 꺼져 있을 때만 (켜져 있으면 삼성 자동 절전 대상이 아니라 할 일 없음 · 사용자 폰 확인)
 }
 function sendInquiry(){
   let info={};try{if(hasBridge('appInfo'))info=JSON.parse(window.AndroidBridge.appInfo());}catch(e){}
