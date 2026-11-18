@@ -7334,6 +7334,7 @@ document.addEventListener('click',e=>{
     case 'wl-close':wlClose();break;
     case 'wl-copy':{if(!wlEd)break;wlCommitInputs();const tx=wlCopyText(wlEd.k);if(!tx){toast('복사할 내용이 없어요');break;}copyText(tx);break;}
     case 'wls-nm':{S.wlog.name=t.dataset.v;save();openWlSet();break;}
+    case 'wls-own':{const own=!WL_NAMES.includes(wlName()),i=document.createElement('input');i.type='text';i.id='wlsName';i.className='wlsown';i.maxLength=12;i.placeholder='이름 쓰기';i.value=own?wlName():'';i.setAttribute('enterkeyhint','done');t.replaceWith(i);i.focus();break;}   // v0.225 직접 쓰기: 그 자리에서 입력칸
     case 'srch-open':pageBack=pageMode==='wlset'?openWlSet:null;srchOpen(t.dataset.v);break;
     case 'srch-kind':srch.kind=t.dataset.v==='wl'?'wl':'memo';S.srchKind=srch.kind;save();renderSrch(false);break;
     case 'srch-q':srchSetQ(t.dataset.v||'');break;
@@ -8163,6 +8164,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='holRest'){S.holRest=t.checked;save();toast(t.checked?'공휴일 근무 칸을 휴무로 보여요':'공휴일도 패턴대로 보여요');}
   else if(t.id==='receiveFamilyMemo'){S.syncSettings.receiveFamilyMemo=t.checked;save();if(tab==='cal')render();toast(t.checked?'가족 메모를 달력에 표시해요':'가족 메모를 달력에서 숨겨요');}
   else if(t.id==='patWeek'){S.patWeek=!!t.checked;save();openPatternPage();}
+  else if(t.id==='wlsName'){save();openWlSet();}
   else if(t.id==='patternName'){S.patternName=t.value.trim().slice(0,20);save();toast('근무 이름을 저장했어요');}
   else if(t.id==='payFixed'||t.id==='payOt'||t.id==='payNt'){S.salary[{payFixed:'fixed',payOt:'ot',payNt:'nt'}[t.id]]=Math.max(0,Math.round(Number(t.value)||0));save();openStatsPage();}
   else if(t.id==='payClose'){S.salary.close=Math.max(0,Math.min(28,Math.round(Number(t.value)||0)));save();openStatsPage();}
@@ -8209,7 +8211,7 @@ document.addEventListener('input',e=>{
   else if(t.classList&&t.classList.contains('wlta')&&wlEd&&!t.closest('.swn')){wlGrow(t);const n=wlLines(t.value).length,c=$('#wlN_'+t.dataset.s);if(c)c.textContent=n?n+'줄':'';
     clearTimeout(wlSaveT);const k=t.dataset.k||wlEd.k;wlSaveT=setTimeout(()=>{wlTas(k).forEach(x=>wlSetText(k,x.dataset.s,x.value));save();},350);}   // (칸 여러 개를 빨리 고쳐도 모두 저장)
   else if(t.id==='srchQ'){srch.q=t.value;{const fd=document.querySelector('.srfield');if(fd)fd.classList.toggle('has',!!t.value);}clearTimeout(srchT);srchT=setTimeout(()=>{const r=$('#srchRes');if(!r)return;const kOf=x=>x.dataset.k+'|'+x.dataset.kind+'|'+x.textContent.slice(0,40),old=new Set([...r.querySelectorAll('.srow')].map(kOf));srchRefresh();try{if(!RMq()){let n=0;r.querySelectorAll('.srow').forEach(x=>{if(n>=10||old.has(kOf(x)))return;x.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:260,delay:n*30,easing:'cubic-bezier(.2,.9,.25,1)',fill:'backwards'});n++;});}}catch(err){}},150);}   // v0.209 새로 찾은 줄만 위에서부터 차례로
-  else if(t.id==='wlsName'||(t.id&&t.id.startsWith('wlsS_'))){if(t.id==='wlsName')S.wlog.name=cutTxt(t.value,12).trim();else{const sc=S.wlog.secs.find(x=>x.id===t.id.slice(5));if(sc)sc.n=cutTxt(t.value,8).trim()||sc.n;}clearTimeout(wlsT);wlsT=setTimeout(()=>save(),400);}
+  else if(t.id==='wlsName'||(t.id&&t.id.startsWith('wlsS_'))){if(t.id==='wlsName'){S.wlog.name=cutTxt(t.value,12).trim();const h=document.querySelector('#page.open .pg-h b');if(h)h.textContent=`${wlName()} 설정`;document.querySelectorAll('#page [data-act="wls-nm"]').forEach(b=>b.classList.toggle('on',b.dataset.v===wlName()));}   /* v0.225 직접 쓴 이름이 제목에 바로 */else{const sc=S.wlog.secs.find(x=>x.id===t.id.slice(5));if(sc)sc.n=cutTxt(t.value,8).trim()||sc.n;}clearTimeout(wlsT);wlsT=setTimeout(()=>save(),400);}
 });
 /* 엔터로 보내기 */
 document.addEventListener('keydown',e=>{
@@ -8219,6 +8221,7 @@ document.addEventListener('keydown',e=>{
   else if(e.target.id==='piLine'){e.preventDefault();piAddLine();}
   else if(e.target.id==='wlRen'){e.preventDefault();wlCommitInputs();if(wlEd)renderWl(false);}
   else if(e.target.id==='wlNm'){e.preventDefault();const b=document.querySelector('[data-act="wl-nmok"]');if(b)b.click();}
+  else if(e.target.id==='wlsName'){e.preventDefault();e.target.blur();}
   else if(e.target.id==='srchQ'){e.preventDefault();e.target.blur();if(srchRun(srch.q,srch.kind).length)srchRecentAdd(srch.q);}
 });
 /* 입력칸을 누르면 키보드 위로 보이게 (시트·페이지 안에서만 스크롤, 화면 전체는 움직이지 않음) */
@@ -9545,8 +9548,7 @@ function openWlSet(){
   const w=S.wlog;
   openPage(`${pageHead(esc(wlName())+' 설정')}<div class="pg-b np">
     <div class="pg-cap">이름</div>
-    <div class="pg-sec pad"><input type="text" id="wlsName" class="wlsn" maxlength="12" value="${esc(wlName())}">
-      <div class="wlchips">${WL_NAMES.map(n=>`<button class="${wlName()===n?'on':''}" data-act="wls-nm" data-v="${n}">${n}</button>`).join('')}</div></div>
+    <div class="pg-sec pad"><div class="wlchips" style="margin-top:0">${WL_NAMES.map(n=>`<button class="${wlName()===n?'on':''}" data-act="wls-nm" data-v="${n}">${n}</button>`).join('')}${WL_NAMES.includes(wlName())?'<button class="own" data-act="wls-own">✏️ 직접 쓰기</button>':`<button class="own on" data-act="wls-own">✏️ ${esc(wlName())}</button>`}</div></div>
     <div class="pg-cap">칸</div>
     <div class="pg-sec">${w.secs.map(sc=>`<div class="prow"><span class="wdot wk-${sc.id}"></span><input type="text" class="wls-in" id="wlsS_${sc.id}" maxlength="8" value="${esc(sc.n)}" aria-label="칸 이름"><label class="sw"><input type="checkbox" id="wlsV_${sc.id}" ${sc.h?'':'checked'} aria-label="보이기"><i></i></label></div>`).join('')}</div>
     <div class="pg-sec">${npRow('cloud-up','백업에 넣기',`<label class="sw"><input type="checkbox" id="wlsBk" ${w.backup?'checked':''}><i></i></label>`)}${npRow('search',esc(wlName())+' 찾기',npVal(''),{tap:1,act:'srch-open',attrs:' data-v="wl"'})}</div>
