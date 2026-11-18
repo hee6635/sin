@@ -1,0 +1,39 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Pretendard,-apple-system,"Noto Sans KR",sans-serif;background:#f2f4f6;width:390px;height:420px;padding:30px 12px;color:#191f28;overflow:hidden}
+h3{font-size:13px;color:#8b95a1;font-weight:600;margin:0 6px 10px}
+.card{background:#fff;border-radius:22px;padding:14px 16px 16px}
+.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.hd span{font-size:13px;color:#8b95a1;font-weight:600}
+.hd svg{width:24px;height:24px;stroke:#8b95a1;stroke-width:1.7;fill:none;stroke-linecap:round}
+.m{position:relative;border-radius:14px;margin:0 -8px;padding:8px;transition:background .3s}
+.m .vw{display:flex;gap:10px;align-items:flex-start}.dot{width:9px;height:9px;border-radius:50%;background:#7b5cf0;margin-top:7px;flex:none}
+.m b{font-size:15.5px;font-weight:600;display:block}.m small{font-size:12px;color:#8b95a1}
+.ed{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s cubic-bezier(.2,.9,.25,1)}.ed>div{overflow:hidden}
+.m.on{background:#f2f8ff}.m.on .ed{grid-template-rows:1fr}.m.on .vw{display:none}
+.erow{display:flex;gap:8px;align-items:center}
+.ein{flex:1;height:46px;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 2px #3182f6;display:flex;align-items:center;padding:0 14px;font-size:15.5px}
+.cur{display:inline-block;width:2px;height:19px;background:#3182f6;margin-left:1px;animation:bl 1s steps(1) infinite}@keyframes bl{50%{opacity:0}}
+.ok{width:46px;height:46px;border-radius:50%;background:#3182f6;display:flex;align-items:center;justify-content:center;flex:none}
+.ok svg{width:20px;height:20px;stroke:#fff;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.acts{display:flex;gap:6px;margin-top:8px;justify-content:flex-end}.acts span{font-size:13px;font-weight:700;background:#f2f4f6;border-radius:12px;padding:6px 12px;color:#4e5968}
+.sep{border-top:1.5px dotted #e5e8eb;margin:8px 0 10px}
+.bar{display:flex;gap:10px;transition:opacity .3s}.bar.dim{opacity:.35}.in{flex:1;height:48px;border-radius:15px;background:#f2f4f6;color:#b0b8c1;font-size:15.5px;display:flex;align-items:center;padding:0 14px}.sd{width:48px;height:48px;border-radius:50%;background:#d1d6db}
+.cap{margin-top:16px;font-size:13px;color:#6b7684;text-align:center;height:18px}
+.tap{position:fixed;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.16);pointer-events:none;opacity:0;transform:scale(.6);transition:.18s}.tap.go{opacity:1;transform:scale(1)}
+</style></head><body>
+<h3>날짜 창 · 메모 그 자리에서 고치기</h3>
+<div class="card"><div class="hd"><span>메모</span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v9M7.5 12h9"/></svg></div>
+<div class="m" id="m1"><div class="vw"><span class="dot"></span><div><b id="t1">수시 30대 종합 2시30분</b><small>나만 · 오늘</small></div></div>
+ <div class="ed"><div><div class="erow"><div class="ein"><span id="et"></span><span class="cur"></span></div><div class="ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div></div><div class="acts"><span>복사</span><span>취소</span></div></div></div></div>
+<div class="m"><div class="vw"><span class="dot" style="background:#e5484d"></span><div><b>병원 예약</b><small>나만 · 오후 2:00</small></div></div></div>
+<div class="sep"></div><div class="bar" id="bar"><div class="in">나만 보는 메모</div><div class="sd"></div></div></div>
+<div class="cap" id="cap"></div><div class="tap" id="tap"></div>
+<script>
+const $=id=>document.getElementById(id),W=ms=>new Promise(r=>setTimeout(r,ms));
+const tap=async(el)=>{const r=el.getBoundingClientRect();$('tap').style.left=(r.left+r.width/2-22)+'px';$('tap').style.top=(r.top+r.height/2-22)+'px';$('tap').classList.add('go');await W(200);$('tap').classList.remove('go');};
+(async()=>{let txt=$('t1').textContent;await W(800);$('cap').textContent='메모를 누르면 그 줄이 바로 입력칸이 됨';
+ await tap($('m1'));$('et').textContent=txt;$('m1').classList.add('on');$('bar').classList.add('dim');await W(1400);
+ $('cap').textContent='고쳐 쓰고 ✓ 누르면 저장';for(const c of ' 체육관'){txt+=c;$('et').textContent=txt;await W(180);}await W(500);
+ await tap(document.querySelector('.ok'));$('t1').textContent=txt;$('m1').classList.remove('on');$('bar').classList.remove('dim');
+ $('m1').animate([{background:'#e8f3ff'},{background:'transparent'}],{duration:900});$('cap').textContent='제자리로 돌아오며 살짝 반짝';await W(1600);document.title='done';})();
+</script></body></html>
