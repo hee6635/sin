@@ -2051,6 +2051,21 @@ html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.07}
 .memsec .ibar .send,.vrbody .vcmemo-bar .send{width:48px!important;height:48px!important;border-radius:50%!important;transition:background .2s,color .2s}
 .memsec .ibar input:placeholder-shown+.send,.vrbody .vcmemo-bar input:placeholder-shown+.send{background:var(--track)!important;color:var(--muted)!important}
 .send svg{width:20px;height:20px}
+/* v0.209 메모 칸: 전송 버튼은 글을 쓰면 색이 아래에서 차오름 · 쓰는 중에도 "나만 보는 메모 / 가족에게" 글씨가 칸 위에 작게 남음 · 자세히 = ⊕ */
+.memsec .ibar .irow,.vrbody .vcmemo-bar{position:relative}
+.memsec .ibar .send,.vrbody .vcmemo-bar .send{position:relative;overflow:hidden;isolation:isolate;background:var(--track)!important}
+.memsec .ibar .send::before,.vrbody .vcmemo-bar .send::before{content:'';position:absolute;inset:0;border-radius:50%;background:var(--accent);transform:translateY(101%);transition:transform .4s cubic-bezier(.25,1,.5,1);z-index:-1}
+.memsec .ibar .send.fam::before,.vrbody .vcmemo-bar .send::before{background:var(--fam)}
+.memsec .ibar input:not(:placeholder-shown)~.send::before,.vrbody .vcmemo-bar input:not(:placeholder-shown)~.send::before{transform:none}
+.memsec .ibar input:placeholder-shown~.send,.vrbody .vcmemo-bar input:placeholder-shown~.send{color:var(--muted)!important}
+.mdtrow .xbtn{width:34px;height:34px;border-radius:50%;background:var(--surface);margin-left:8px}
+.xbtn.tplus{transform:rotate(45deg);background:var(--acc-soft)!important;color:var(--accent)!important}
+.flab{position:absolute;left:15px;top:50%;font-size:15.5px;color:var(--muted);pointer-events:none;opacity:0;transform:translateY(-50%);transform-origin:0 50%;transition:transform .28s cubic-bezier(.2,.9,.25,1),opacity .2s;white-space:nowrap}
+input:not(:placeholder-shown)~.flab{opacity:1;transform:translateY(-21px) scale(.68)}
+.memsec .ibar input[type=text]:not(:placeholder-shown),.vrbody .vcmemo-bar input:not(:placeholder-shown){padding-top:13px!important}
+.memsec .ibar input[type=text],.vrbody .vcmemo-bar input{transition:padding .25s cubic-bezier(.2,.9,.25,1)}
+.memsec .sec-t .mdet2.mplus{width:34px;height:34px;margin:-6px -6px -6px auto;display:grid;place-items:center;color:var(--muted);border-radius:50%}
+.memsec .sec-t .mdet2.mplus svg{width:24px;height:24px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round}
 @media (prefers-reduced-motion:reduce){#sheet{transition:none}}
 .wxph{border-radius:22px;background:var(--bg);opacity:.6;margin-bottom:12px}
 .dshell{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:70;transform-origin:0 0;will-change:transform;pointer-events:none;border-radius:20px}
@@ -3687,7 +3702,7 @@ function lnkMenu(url,fam){
 }
 document.addEventListener('pointerdown',e=>{
   clearTimeout(lnkTimer);const a=e.target.closest&&e.target.closest('a.lnk[data-u]');if(!a)return;
-  lnkHeld=false;lnkTimer=setTimeout(()=>{lnkHeld=true;clearTimeout(holdTimer);held=true;try{navigator.vibrate&&navigator.vibrate(20);}catch(err){}lnkMenu(a.dataset.u,!!a.dataset.fam);},450);
+  lnkHeld=false;lnkTimer=setTimeout(()=>{lnkHeld=true;clearTimeout(holdTimer);held=true;lnkMenu(a.dataset.u,!!a.dataset.fam);},450);
 },true);
 ['pointerup','pointercancel','pointermove'].forEach(ev=>document.addEventListener(ev,()=>{if(ev!=='pointermove')clearTimeout(lnkTimer);},true));
 const ICON={
@@ -4184,7 +4199,7 @@ function paintStart(k){
 let pdrag=null,pghost=null,lastBuzz=0;
 const reduceMotion=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}};
 // 아주 짧은 진동 (애니메이션 줄이기를 켠 폰에서는 안 함)
-function buzz(ms){if(reduceMotion())return;const t=performance.now();if(t-lastBuzz<40)return;lastBuzz=t;try{navigator.vibrate&&navigator.vibrate(ms);}catch(e){}}
+function buzz(ms){}   // v0.209 앱 안 진동은 모두 뺌 (알람 · 알림 진동은 폰 쪽에서 그대로)
 const cellOf=k=>document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"]`);
 function paintSet(k){const base=baseShift(parse(k));if(paint.k===base)delete S.overrides[k];else S.overrides[k]=paint.k;}
 // 바뀐 칸과 양옆 칸(이어지는 띠)만 다시 그리기 → 달력 전체를 다시 그리지 않아 부드러움
@@ -5294,11 +5309,14 @@ let wpT=0;
 function wpShow(on){on=!!on&&!!(window.AndroidBridge&&typeof window.AndroidBridge.showWallpaper==='function');clearTimeout(wpT);
   if(on&&!wpOn){wpT=setTimeout(()=>{if(pageMode!=='widget'||wpOn)return;wpOn=true;try{window.AndroidBridge.showWallpaper(true);}catch(e){}document.documentElement.classList.add('wpshow');},260);return;}   // v0.189 화면이 다 들어온 뒤 켬 (미끄러지는 중에 켜면 잔상)
   if(!on&&wpOn){wpOn=false;document.documentElement.classList.remove('wpshow');try{window.AndroidBridge.showWallpaper(false);}catch(e){}}}
+let pgBackNav=false;
 function openPage(html,mode){
-  if(mode)pageMode=mode;   // v0.191 배경화면 보기는 따로 된 폰 화면(WidgetStyleActivity)으로 옮김
+  const pm0=pageMode;if(mode)pageMode=mode;   // v0.191 배경화면 보기는 따로 된 폰 화면(WidgetStyleActivity)으로 옮김
   const p=$('#page'),sc=p.querySelector('.pg-b')?p.querySelector('.pg-b').scrollTop:0,same=p.classList.contains('open');
   p.innerHTML=html;p.classList.add('open');
-  if(same){const b=p.querySelector('.pg-b');if(b)b.scrollTop=sc;}
+  if(same&&!(mode&&mode!==pm0)){const b=p.querySelector('.pg-b');if(b)b.scrollTop=sc;}
+  // v0.209 페이지 안에서 다른 페이지로 갈 때(같은 판에 내용만 바뀜) 툭 말고 옆에서 밀려 들어옴 · 뒤로(‹)는 반대쪽에서
+  if((same&&mode&&mode!==pm0)||pgBackNav){const dir=pgBackNav?-1:1;pgBackNav=false;try{if(!RMq())[...p.children].forEach(x=>x.animate([{transform:`translateX(${dir*48}px)`,opacity:0},{transform:'none',opacity:1}],{duration:300,easing:'cubic-bezier(.2,.9,.25,1)'}));}catch(e){}}
 }
 function closePage(){wpShow(false);manPaint=null;Object.keys(glowPrev).forEach(k=>{if(/^(fc|mc):/.test(k))delete glowPrev[k];});if(pageMode==='tune'){if(tuneDirty()&&!confirm('저장하지 않은 값이 있어요.\n저장하지 않고 나갈까요?'))return;tuneDraft=null;applyTune();$('#page').innerHTML='';}if(pageMode==='alarm')try{if(hasBridge('stopPreview'))window.AndroidBridge.stopPreview();}catch(e){}$('#page').classList.remove('open');pageMode=null;applyTdc();draft=null;render();}
 // v0.145 새 모양 선 아이콘 (lucide · ISC)
@@ -5471,6 +5489,13 @@ const MO=(()=>{
     requestAnimationFrame(step);
     setTimeout(()=>{if(dftBusy&&!st.isConnected){dftBusy=false;}},D+800);
   },true);
+  // ---- v0.209 날짜 창 위 ‹ ›: 옆 날짜 내용이 그 쪽에서 밀려 들어옴 (내 · 유찬 · 가족 날짜 창 모두) ----
+  document.addEventListener('click',e=>{if(RM())return;const b=e.target.closest&&e.target.closest('.dfh>.ib[data-k]');if(!b)return;
+    const dir=b===b.parentElement.firstElementChild?-1:1;
+    setTimeout(()=>{const el=document.getElementById('dstrip');if(!el||!el.parentElement)return;
+      [...el.parentElement.children].filter(x=>x!==el&&el.compareDocumentPosition(x)&Node.DOCUMENT_POSITION_FOLLOWING).concat([...el.parentElement.querySelectorAll('.dft')])
+        .forEach(x=>x.animate([{transform:`translateX(${dir*56}px)`,opacity:.15},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.2,.9,.25,1)'}));},0);
+  },true);
   // ---- 빨간 숫자 배지: 숫자가 바뀌면 톡 ----
   const bdgLast=new Map();
   function badges(){document.querySelectorAll('#famBadge,.pi-btn .bdg').forEach(b=>{const k=b.id||'pi',v=b.textContent;const o=bdgLast.get(k);bdgLast.set(k,v);if(o!=null&&o!==v&&v&&!RM())b.animate([{transform:'scale(.4)'},{transform:'scale(1.3)',offset:.55},{transform:'scale(.92)',offset:.8},{transform:'scale(1)'}],{duration:480,easing:SP});});}
@@ -5509,17 +5534,23 @@ const MO=(()=>{
       if(!s2&&act){let best=1e9;document.querySelectorAll('.npseg').forEach(x=>{if(!x.querySelector(`:scope>button[data-act="${act}"]`))return;const d=Math.abs(x.getBoundingClientRect().top-top);if(d<best){best=d;s2=x;}});}
       if(!s2)return;const r2=s2.getBoundingClientRect();move(s2,{l:or.left-r2.left,w:or.width});},0);},true);
   // 스위치: 동그라미가 늘어나며 미끄러지고 끝에서 살짝 눌림
-  document.addEventListener('change',e=>{const t=e.target;if(!t||!t.closest||!t.closest('.sw'))return;const id=t.id,on=t.checked;
-    setTimeout(()=>{const el=t.isConnected?t:(id?document.getElementById(id):null);if(!el||RM())return;const i=el.nextElementSibling;if(!i||!i.animate)return;
+  // v0.209 누르는 순간 화면을 다시 그리는 스위치(알람 켜기 등)는 change 가 떨어져 나간 칸에서 생겨 못 받음 → click 에서 받고, 새로 그려진 같은 스위치(data-act · data-id)에 모션
+  let swDone=null;
+  const swFind=(t,id)=>{if(t.isConnected)return t;if(id)return document.getElementById(id);const a=t.dataset&&t.dataset.act;if(!a)return null;return document.querySelector(`.sw input[data-act="${a}"]${t.dataset.id?`[data-id="${t.dataset.id}"]`:''}`);};
+  document.addEventListener('click',e=>{const t=e.target;if(!t||!t.matches||!t.matches('.sw input[type=checkbox]'))return;swDone=t;swRun(t,t.id,t.checked);},true);
+  document.addEventListener('change',e=>{const t=e.target;if(!t||!t.closest||!t.closest('.sw'))return;if(swDone===t){swDone=null;return;}swRun(t,t.id,t.checked);},true);
+  function swRun(t,id,on){
+    setTimeout(()=>{const el=swFind(t,id);if(!el||RM())return;const i=el.nextElementSibling;if(!i||!i.animate)return;
       try{const cs=getComputedStyle(i,'::after'),kw=parseFloat(cs.width)||24,kl=parseFloat(cs.left)||3,X=i.offsetWidth-kw-kl*2,st=kw*1.5,top=parseFloat(cs.top)||kl;
         const k=on?[{transform:'translateX(0px)',width:kw+'px'},{offset:.4,transform:'translateX(0px)',width:st+'px'},{offset:.75,transform:`translateX(${X+1}px)`,width:(kw-1)+'px',height:(kw-2)+'px',top:(top+1)+'px'},{transform:`translateX(${X}px)`,width:kw+'px'}]
                   :[{transform:`translateX(${X}px)`,width:kw+'px'},{offset:.4,transform:`translateX(${X-(st-kw)}px)`,width:st+'px'},{offset:.75,transform:'translateX(-1px)',width:(kw-1)+'px',height:(kw-2)+'px',top:(top+1)+'px'},{transform:'translateX(0px)',width:kw+'px'}];
-        i.animate(k,{duration:480,easing:'cubic-bezier(.3,.7,.4,1)',pseudoElement:'::after'});}catch(err){}},0);},true);
+        i.animate(k,{duration:480,easing:'cubic-bezier(.3,.7,.4,1)',pseudoElement:'::after'});}catch(err){}},0);}
   if(document.body)init();else document.addEventListener('DOMContentLoaded',()=>init());
 })();
 const POP_ICO={'🔒':'lock','♥':'heart','🧽':'eraser','📆':'calendar-x','✏️':'pencil','✏':'pencil','🗑':'trash-2','🗑️':'trash-2','📋':'copy','📅':'calendar','🗓':'calendar','🚫':'ban','🔔':'bell','🔕':'bell-off','🔁':'repeat','⏰':'alarm-clock','📍':'map-pin','🏠':'home','🏭':'building','📤':'share','🎨':'paintbrush','📷':'camera','🔗':'link','↩️':'rotate-ccw','⚙️':'settings','⚙':'settings','🔍':'search','➕':'plus','＋':'plus'};
 function popIcons(root){try{root.querySelectorAll('.menu > .mi, .menu > button.mi').forEach(b=>{const n=b.firstChild;if(!n||n.nodeType!==3)return;const t=n.nodeValue.replace(/^\s+/,'');const k=Object.keys(POP_ICO).find(e=>t.startsWith(e));if(!k||!NPI[POP_ICO[k]])return;n.nodeValue=t.slice(k.length).replace(/^\s+/,'');const sp=document.createElement('span');sp.className='npi';sp.innerHTML=npi(POP_ICO[k],18);b.insertBefore(sp,n);if(b.classList.contains('d'))sp.classList.add('red');});}catch(e){}}
-function closePop(){document.querySelectorAll('.cell.selTop').forEach(c=>c.classList.remove('selTop'));try{MO.popClose($('#pop'));}catch(e){}$('#pop').className='';$('#pop').innerHTML='';tpk=null;icn=null;crp=null;}
+let wlFromMd=false;
+function closePop(){if(wlFromMd){if(pageMode==='memodetail'&&mdDraft)setTimeout(()=>{if(pageMode==='memodetail'&&mdDraft&&!$('#pop').classList.contains('open'))renderMemoDetail();},0);else wlFromMd=false;}document.querySelectorAll('.cell.selTop').forEach(c=>c.classList.remove('selTop'));try{MO.popClose($('#pop'));}catch(e){}$('#pop').className='';$('#pop').innerHTML='';tpk=null;icn=null;crp=null;}
 const sheetHead=(title,left)=>`<div class="sh-head">${left||''}<b style="flex:1;font-size:17px;">${title}</b><button class="ib" data-act="close" style="width:auto;font-size:16px;">✕</button></div>`;
 
 /* ================= 아이콘 고르기 창: 이모티콘 · 내 사진 · ＋사진 ================= */
@@ -6473,7 +6504,7 @@ document.addEventListener('pointerdown',e=>{
   const el=pageMode==='board'&&e.target.closest&&e.target.closest('#page .pi[data-id]');if(!el)return;
   const r=el.getBoundingClientRect();
   piDrag={el,id:el.dataset.id,x:e.clientX,y:e.clientY,ox:e.clientX-r.left,oy:e.clientY-r.top,on:false};
-  piDrag.tm=setTimeout(()=>{const D=piDrag;if(!D)return;D.on=true;try{navigator.vibrate&&navigator.vibrate(20);}catch(err){}
+  piDrag.tm=setTimeout(()=>{const D=piDrag;if(!D)return;D.on=true;
     const gh=el.cloneNode(true);gh.classList.add('pi-ghost');gh.style.width=r.width+'px';gh.style.left='0';gh.style.top='0';document.body.appendChild(gh);D.gh=gh;
     el.classList.add('pi-lift');document.body.classList.add('pi-dragging');piDragMove(D.x,D.y);},450);
 },true);
@@ -6927,12 +6958,12 @@ function memoSection(k){
       ${fm?`<div class="note ${fm?'fam':''}">${fm?'♥ 가족 모두에게 보여요 · 알림이 가요':(wlOn()?'🔒 나만 볼 수 있어요 · 색 · 시간 · 가족 · 일지는 "자세히"에서':'🔒 나만 볼 수 있어요 · 색 · 할 일 · 시간 · 가족에게는 "자세히"에서')}</div>`:''}
       <div class="irow">
         <input type="text" id="memoInput" class="${fm?'fam':'my'}" value="${esc(memoText)}" placeholder="${fm?'가족에게 남길 메모':'나만 보는 메모'}" enterkeyhint="send">
-        <button class="send ${fm?'fam':'my'}" data-act="memo-send" aria-label="보내기">${ICON.send}</button>
+        <button class="send ${fm?'fam':'my'}" data-act="memo-send" aria-label="보내기">${ICON.send}</button><span class="flab">${fm?'가족에게 남길 메모':'나만 보는 메모'}</span>
       </div>
       ${role()==='guest'&&fm?`<div style="margin-top:6px">${usageHint()}</div>`:''}
       ${S.link&&fm&&famRemain()<=3?`<div class="usage-hint" style="margin-top:6px;text-align:center">무료 ${famRemN()}건 남음</div>`:''}
     </div>`;
-  return `<div class="sec memsec"><div class="sec-t">메모<button class="mdet2" data-act="memo-detail">자세히</button></div>${tabs}${body}${bar}</div>`;   // v0.155 입력칸도 메모 카드 안 · 자세히는 제목 줄 오른쪽
+  return `<div class="sec memsec"><div class="sec-t">메모<button class="mdet2 mplus" data-act="memo-detail" aria-label="자세히 쓰기"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v9M7.5 12h9"/></svg></button></div>${tabs}${body}${bar}</div>`;   // v0.155 입력칸도 메모 카드 안 · 자세히는 제목 줄 오른쪽
 }
 /* ---- 메모 자세히 (전체 화면): 색 · 할 일 · 시간/알림 · 나만/가족에게 ---- */
 const MEMO_COL=['#fff1c4','#ffd9e4','#ffe0c7','#d6f5df','#d2f1ef','#d9ecff','#e8eaee'];   // 연보라는 가족 메모 색과 닮아서 뺌 (이미 칠한 메모는 그대로)
@@ -6956,7 +6987,7 @@ function renderMemoDetail(){   // v0.158 새 모양 (시안 design/remain): 글 
     ${d.shared?'':`<div class="pg-sec pad mdcol">${MEMO_COL.map(c=>`<button class="${d.color===c?'on':''}" style="background:${c}" data-act="md-col" data-v="${c}" aria-label="색"></button>`).join('')}</div>`}
     <div class="pg-sec">
       ${npRow('check','할 일',`<label class="sw"><input type="checkbox" id="mdTodo" ${d.todo?'checked':''}><i></i></label>`)}
-      ${npRow('clock','시간',d.time?`${tpick('mdTime',d.time)}<button class="xbtn" data-act="md-notime" aria-label="시간 없애기">${npi('x',16)}</button>`:npVal('없음'),d.time?{}:{tap:1,act:'md-settime'})}
+      ${npRow('clock','시간',d.time?`${tpick('mdTime',d.time)}<button class="xbtn" data-act="md-notime" aria-label="시간 없애기">${npi('x',16)}</button>`:`<button class="xbtn tplus" data-act="md-settime" aria-label="시간 정하기">${npi('x',16)}</button>`,d.time?{cls:'mdtrow'}:{tap:1,act:'md-settime',cls:'mdtrow'})}
       ${d.time?npRow('bell','알림',`<div class="npseg sm">${[['','없음'],['0','정시'],['10','10분 전']].map(([v,l])=>`<button class="${d.al===v?'on':''}" data-act="md-al" data-v="${v}">${l}</button>`).join('')}</div>`):''}
       ${host&&!d.shared&&!d.wl?npRow('repeat','반복',npVal(d.rr?esc(rrText(d.rr)):'안 함'),{tap:1,act:'md-rep'}):''}
     </div>
@@ -7468,7 +7499,7 @@ document.addEventListener('pointerdown',e=>{
   const b=e.target.closest('[data-hold]');if(!b)return;
   holdTimer=setTimeout(()=>{
     held=true;
-    try{navigator.vibrate&&navigator.vibrate(20);}catch(err){}
+    
     if(b.dataset.hold==='type-edit'){
       const x=typeOf(b.dataset.s);
       typeReturn=b.dataset.ret||'day';
@@ -8805,7 +8836,7 @@ function typeListHtml(){
     <div class="pg-sec">
       <div class="tchipgrid" id="tlist" style="padding:14px 12px 6px">${S.types.map((x,i)=>`<div class="tl2 tl ${i<quickN()?'top4':''}" data-i="${i}" data-act="type-edit-page" data-s="${esc(x.k)}">${badge(x.k,'sm')}<small>${esc(x.name)}</small></div>`).join('')}<button class="tl2 add" data-act="type-pick-page"><i>＋</i><small>추가</small></button></div>
       <!-- v0.171 근무마다 시간 줄 뺌 (시간 = 근무 칩 → 편집 창 · 출퇴근 시간 · 날씨) -->
-      ${npRow('calendar-days','바로 보이는 개수',`<div class="chips"><button class="${S.quickN?'':'on'}" data-act="quickn" data-v="0">자동</button><button class="${S.quickN===4?'on':''}" data-act="quickn" data-v="4">4개</button><button class="${S.quickN===8?'on':''}" data-act="quickn" data-v="8">8개</button></div>`)}
+      ${npRow('calendar-days','바로 보이는 개수',`<div class="npseg sm"><button class="${S.quickN?'':'on'}" data-act="quickn" data-v="0">자동</button><button class="${S.quickN===4?'on':''}" data-act="quickn" data-v="4">4개</button><button class="${S.quickN===8?'on':''}" data-act="quickn" data-v="8">8개</button></div>`)}
     </div>`;
 }
 // 근무타입 칩 · 패턴 칸을 꾹 눌러 끌어서 순서 바꾸기 (S.types · S.pattern 순서가 그대로 저장됨 · 바로 반영)
@@ -9715,7 +9746,7 @@ document.addEventListener('click',e=>{
     case 'ot-open':otOpen(t.dataset.k);break;
     case 'ot-add':otAdd(+t.dataset.v);break;
     case 'ot-clear':if(otKey){delete S.ot[otKey];save();otAfter();closePop();}break;
-    case 'page-close':{const b=pageBack;pageBack=null;closePage();if(b&&!pageMode)b();break;}
+    case 'page-close':{const b=pageBack;pageBack=null;closePage();if(b&&!pageMode){pgBackNav=true;b();pgBackNav=false;}break;}
     case 'pop-close':closePop();gAskPop();break;   // (가족방을 새로 만들고 코드 창을 닫으면 → 구글 연결 안내)
     case 'lnk':if(lnkHeld){lnkHeld=false;break;}e.stopPropagation();lnkOpen(t.dataset.u,!!t.dataset.fam);break;
     case 'nudge-bk':closePop();openBackupPage();break;
@@ -9780,7 +9811,7 @@ document.addEventListener('click',e=>{
     case 'stz-go':{const k=t.dataset.k,d=parse(k);closePage();tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
     case 'stz-mode':S.stzMode=t.dataset.v==='3'?'3':'m';save();render();openTunePage();break;
     case 'wl-open':wlOpen(t.dataset.k);break;
-    case 'wl-new':{const k=t.dataset.k;mdDraft=null;closePage();if(!S.wlog.name)wlNamePrompt(k);else wlOpen(k);break;}
+    case 'wl-new':{const k=t.dataset.k;if(pageMode==='memodetail'){mdPull();wlFromMd=true;}else{mdDraft=null;closePage();}if(!S.wlog.name)wlNamePrompt(k);else wlOpen(k);break;}   // v0.209 메모 자세히에서는 그 자리 위에 일지 창 (날짜 창으로 돌아가지 않음)
     case 'wl-nmchip':{const i=$('#wlNm');if(i)i.value=t.dataset.v;break;}
     case 'wl-nmok':{const i=$('#wlNm');S.wlog.name=cutTxt(i?i.value:'',12).trim()||'업무 일지';save();closePop();wlOpen(wlNameK);break;}
     case 'wl-seen':S.wlog.seen=true;save();closePop();wlOpen(wlNoticeK);break;
@@ -9809,7 +9840,7 @@ document.addEventListener('click',e=>{
     case 'tog-day':{const k=t.dataset.k,d=parse(k);pageBack=null;closePage();tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
     case 'fam-mytime':openPatTimes();break;
     case 'fam-mycal':{const n=new Date();tab='cal';paint=null;pageBack=null;if(pageMode)closePage();setCur(n.getFullYear(),n.getMonth());render();openDay(fmt(n));break;}   // 가족 탭 내 카드 위쪽 → 달력 · 오늘 날짜 창
-    case 'fam-mode':{const v=t.dataset.v==='w'?'w':'c';if((S.famWk==='w'?'w':'c')===v){famGoToday();break;}S.famWk=v;save();render();setTimeout(famGoToday,80);break;}   // v0.167 이미 고른 칸을 눌러도 · 바꿔도 오늘(이번 주)로 부드럽게 (위 "오늘" 링크는 뺌)
+    case 'fam-mode':{const v=t.dataset.v==='w'?'w':'c';if((S.famWk==='w'?'w':'c')===v){famGoToday();break;}S.famWk=v;save();render();setTimeout(famGoToday,80);try{if(!RMq()){const g=document.querySelector('.ftt .fgw'),b=document.querySelector(`.fmode [data-v="${v}"]`);if(g)g.animate([{opacity:.15,transform:`translateX(${v==='w'?24:-24}px)`},{opacity:1,transform:'none'}],{duration:320,easing:'cubic-bezier(.2,.9,.25,1)'});if(b)b.animate([{transform:'scale(.9)'},{transform:'scale(1.05)',offset:.6},{transform:'none'}],{duration:300});}}catch(err){}break;}   // v0.209 표가 그 쪽에서 살짝 넘어옴   // v0.167 이미 고른 칸을 눌러도 · 바꿔도 오늘(이번 주)로 부드럽게 (위 "오늘" 링크는 뺌)
     case 'fam-today':famGoToday();break;
     case 'req-go':{const k=t.dataset.k;if(!k)break;const d=parse(k);if(d.getFullYear()*12+d.getMonth()<MIN_M||d.getFullYear()*12+d.getMonth()>MAX_M){toast('달력에서 볼 수 없는 날이에요');break;}tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
     case 'fam-day':{const k=t.dataset.k,d=parse(k);tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
@@ -9969,8 +10000,20 @@ document.addEventListener('click',e=>{
     case 'md-col':mdPull();mdDraft.color=mdDraft.color===t.dataset.v?'':t.dataset.v;renderMemoDetail();break;
     case 'md-share':mdPull();mdDraft.shared=t.dataset.v==='1';MO.flip($('#page .pg-b'),renderMemoDetail);break;
     case 'md-al':mdPull();mdDraft.al=t.dataset.v;renderMemoDetail();break;
-    case 'md-settime':mdPull();mdDraft.time='09:00';renderMemoDetail();break;
-    case 'md-notime':mdPull();mdDraft.time='';mdDraft.al='';renderMemoDetail();break;
+    case 'md-settime':{mdPull();mdDraft.time='09:00';const pb=$('#page');const st0=pb&&pb.querySelector('.pg-b')?pb.querySelector('.pg-b').scrollTop:0;renderMemoDetail();   // v0.209 ＋가 돌며 ✕ · 시간 톡 · 알림 줄 스르르
+      try{const pg=$('#page .pg-b');if(pg)pg.scrollTop=st0;if(!RMq()){const r=$('#page .mdtrow'),x=r&&r.querySelector('.xbtn'),tp=r&&r.querySelector('.tbtn'),al=r&&r.nextElementSibling;
+        if(x)x.animate([{transform:'rotate(-135deg)',background:'var(--acc-soft)'},{transform:'none'}],{duration:420,easing:'cubic-bezier(.3,1.4,.5,1)'});
+        if(tp)tp.animate([{opacity:0,transform:'scale(.8)'},{opacity:1,transform:'none'}],{duration:300,easing:'cubic-bezier(.3,1.4,.5,1)'});
+        if(al&&al.querySelector('.npseg')){const h=al.offsetHeight;al.style.overflow='hidden';const a=al.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:340,easing:'cubic-bezier(.2,.9,.25,1)'});a.onfinish=()=>{al.style.overflow='';};}}}catch(e){}
+      break;}
+    case 'md-notime':{mdPull();mdDraft.time='';mdDraft.al='';const pg=$('#page .pg-b'),st0=pg?pg.scrollTop:0;
+      const go=()=>{renderMemoDetail();const p2=$('#page .pg-b');if(p2)p2.scrollTop=st0;};
+      try{const r=t.closest('.mdtrow'),al=r&&r.nextElementSibling;if(!RMq()&&r){   // v0.209 ✕가 반대로 돌며 ＋ · 알림 줄 스르르 접힘 → 다 접힌 뒤 다시 그림
+        t.animate([{transform:'none'},{transform:'rotate(135deg)'}],{duration:300,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
+        const tp=r.querySelector('.tbtn');if(tp)tp.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.8)'}],{duration:220,fill:'forwards'});
+        if(al&&al.querySelector('.npseg')){al.style.overflow='hidden';al.animate([{height:al.offsetHeight+'px',opacity:1},{height:'0px',opacity:0,paddingTop:'0px',paddingBottom:'0px'}],{duration:280,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});}
+        setTimeout(go,290);break;}}catch(e){}
+      go();break;}
     case 'md-save':mdSave();break;
     case 'md-rep':mdPull();mdDraft.rrDraft=null;openRrPick();break;
     case 'rr-md':mdDraft.rrDraft.md=+t.dataset.v;openRrPick();break;
@@ -9997,6 +10040,8 @@ document.addEventListener('click',e=>{
       const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);if(!m)break;
       if(m.by!==role()){toast(role()==='host'?'가족이 쓴 메모예요 · 길게 누르면 복사하거나 지울 수 있어요':'근무자가 쓴 메모는 고칠 수 없어요 · 길게 누르면 복사할 수 있어요');break;}
       memoEdit=m.id;memoText=m.text;memoMode=m.shared?'fam':'my';openDay(sheetKey);
+      try{if(!RMq()){const ed=document.querySelector('#sheet .ibar .editing');if(ed){const h=ed.offsetHeight;ed.style.overflow='hidden';const a=ed.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:300,easing:'cubic-bezier(.2,.9,.25,1)'});a.onfinish=()=>{ed.style.overflow='';};}   // v0.209 고치는 중 줄 스르르 · 고르는 메모 톡
+        const c=document.querySelector(`#sheet [data-act="memo-tap"][data-mid="${m.id}"]`);if(c)c.animate([{transform:'scale(.97)'},{transform:'scale(1.01)',offset:.6},{transform:'none'}],{duration:300,easing:'cubic-bezier(.2,.9,.25,1)'});}}catch(err){}
       const i=$('#memoInput');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}
       break;}
     case 'memo-conv':{
@@ -10413,8 +10458,8 @@ document.addEventListener('click',e=>{
     case 'fb-out':fbSignOut().then(()=>{if(pageMode==='fb')openFirebasePage();});break;
     case 'pcell':openPatCell(Number(t.dataset.i));break;
     case 'pset':{const i=Number(t.dataset.i);if(i<S.pattern.length){S.pattern[i]=t.dataset.s;save();}closePop();openPatternPage();break;}
-    case 'padd':if(S.pattern.length<PAT_MAX){S.pattern.push(restKey());save();openPatternPage();}break;
-    case 'pdel':if(S.pattern.length>2){S.pattern.pop();save();openPatternPage();}break;
+    case 'padd':if(S.pattern.length<PAT_MAX){S.pattern.push(restKey());save();openPatternPage();try{const l=[...document.querySelectorAll('#pgrid .pc')].pop();if(l&&!RMq())l.animate([{transform:'scale(.3)',opacity:0},{transform:'scale(1.12)',opacity:1,offset:.7},{transform:'none',opacity:1}],{duration:380,easing:'cubic-bezier(.2,.9,.25,1)'});}catch(e){}}break;   // v0.209 새 칸 톡
+    case 'pdel':if(S.pattern.length>2){const l=[...document.querySelectorAll('#pgrid .pc')].pop(),go=()=>{S.pattern.pop();save();openPatternPage();};if(l&&!RMq()){l.style.pointerEvents='none';l.animate([{transform:'none',opacity:1},{transform:'scale(.3)',opacity:0}],{duration:200,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'});setTimeout(go,190);}else go();}break;   // v0.209 마지막 칸 쏙
     case 'drep':if(draft){draft.once=t.dataset.v==='1';const c=document.getElementById('aRepeat');if(c)c.checked=!draft.once;openAlarmPage();}break;   // v0.148 매번 / 한 번만
     case 'pat-reset':patResetOpen('m');break;   // v0.145 패턴 제외 초기화: 기간 고르기 → 경고 2번
     case 'pr-q':patResetOpen(t.dataset.v);break;
@@ -10643,7 +10688,7 @@ document.addEventListener('input',e=>{
   else if(t.id==='crpZoom'&&crp){crp.z=+t.value;cropDraw();}
   else if(t.classList&&t.classList.contains('wlta')&&wlEd&&!t.closest('.swn')){wlGrow(t);const n=wlLines(t.value).length,c=$('#wlN_'+t.dataset.s);if(c)c.textContent=n?n+'줄':'';
     clearTimeout(wlSaveT);const k=t.dataset.k||wlEd.k;wlSaveT=setTimeout(()=>{wlTas(k).forEach(x=>wlSetText(k,x.dataset.s,x.value));save();},350);}   // (칸 여러 개를 빨리 고쳐도 모두 저장)
-  else if(t.id==='srchQ'){srch.q=t.value;clearTimeout(srchT);srchT=setTimeout(()=>{const r=$('#srchRes');if(r)r.innerHTML=srchResHtml();},150);}
+  else if(t.id==='srchQ'){srch.q=t.value;clearTimeout(srchT);srchT=setTimeout(()=>{const r=$('#srchRes');if(!r)return;const kOf=x=>x.dataset.k+'|'+x.dataset.kind+'|'+x.textContent.slice(0,40),old=new Set([...r.querySelectorAll('.srow')].map(kOf));r.innerHTML=srchResHtml();try{if(!RMq()){let n=0;r.querySelectorAll('.srow').forEach(x=>{if(n>=10||old.has(kOf(x)))return;x.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:260,delay:n*30,easing:'cubic-bezier(.2,.9,.25,1)',fill:'backwards'});n++;});}}catch(err){}},150);}   // v0.209 새로 찾은 줄만 위에서부터 차례로
   else if(t.id==='wlsName'||(t.id&&t.id.startsWith('wlsS_'))){if(t.id==='wlsName')S.wlog.name=cutTxt(t.value,12).trim();else{const sc=S.wlog.secs.find(x=>x.id===t.id.slice(5));if(sc)sc.n=cutTxt(t.value,8).trim()||sc.n;}clearTimeout(wlsT);wlsT=setTimeout(()=>save(),400);}
 });
 /* 엔터로 보내기 */
@@ -10671,8 +10716,16 @@ document.addEventListener('focusin',e=>{
   if(!t.matches||!t.matches('input,textarea'))return;
   setTimeout(()=>ensureVisible(t),300);
 });
+// v0.209 키보드가 올라와 날짜 창이 위로 밀릴 때 툭 말고 스르르: 누르기 전 스크롤 자리를 기억 → 화면이 줄며 밀린 만큼 내용을 되돌려 놓고 0 으로 미끄러뜨림 (transform 만)
+let kbTop=null,kbT=0;
+document.addEventListener('focusin',e=>{const t=e.target,sh=$('#sheet');if(t&&t.matches&&t.matches('input[type=text],textarea')&&sh&&sh.classList.contains('open')&&sh.contains(t)){kbTop=sh.scrollTop;kbT=performance.now();}},true);
+function kbSmooth(){const sh=$('#sheet');if(kbTop==null||!sh||performance.now()-kbT>1500)return;const d=sh.scrollTop-kbTop;if(Math.abs(d)<24)return;kbTop=null;if(RMq())return;
+  [...sh.children].forEach(x=>{if(x.offsetParent===null)return;x.animate([{transform:`translateY(${d}px)`},{transform:'none'}],{duration:300,easing:'cubic-bezier(.2,.9,.25,1)'});});}
+const RMq=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}};
+document.addEventListener('scroll',e=>{if(e.target&&e.target.id==='sheet'&&kbTop!=null&&performance.now()-kbT<1500)kbSmooth();},true);
 window.addEventListener('resize',()=>{
   $('#app').scrollTop=0;document.documentElement.scrollTop=0;
+  kbSmooth();
   const a=document.activeElement;
   if(a&&a.matches&&a.matches('input,textarea'))setTimeout(()=>ensureVisible(a),80);
 });
@@ -11491,7 +11544,7 @@ function vcMemoHtml(k){
     return `<div class="mcard fam"><div class="mt2"><span class="tx">${linkify(m.text,{click:true,fam:m.by!==role()})}</span><div class="meta"><span class="who ${m.by===role()?'me':''}">${esc(whoName(m.by))}</span> · ${rel(m.t)}</div></div>${mine?`<span class="vcm-act"><button data-act="vc-memo-edit" data-k="${k}" data-mid="${m.id}" aria-label="고치기">✎</button><button data-act="vc-memo-del" data-k="${k}" data-mid="${m.id}" aria-label="지우기">🗑</button></span>`:''}</div>`;
   }).join('');
   return `<div class="sec-t vcmt">가족 메모</div>${list}
-    <div class="vcmemo-bar"><input type="text" id="vcmemo" maxlength="200" placeholder="가족에게 남길 메모" enterkeyhint="send"><button class="send fam" data-act="vc-memo-send" data-k="${k}" aria-label="보내기">${ICON.send}</button></div>
+    <div class="vcmemo-bar"><input type="text" id="vcmemo" maxlength="200" placeholder="가족에게 남길 메모" enterkeyhint="send"><button class="send fam" data-act="vc-memo-send" data-k="${k}" aria-label="보내기">${ICON.send}</button><span class="flab">가족에게 남길 메모</span></div>
     ${famRemain()<=3?`<div class="usage-hint" style="margin-top:4px">무료 ${famRemN()}건 남음 · 가족 모두에게 보이고 알림이 가요</div>`:''}`;
 }
 function vcGrid(p){
@@ -11683,9 +11736,10 @@ function vcFillFar(){   // 먼 판은 조금 뒤에 하나씩
   const p=[...tr.children].find(x=>!x.firstElementChild&&+x.dataset.mk>=MIN_M&&+x.dataset.mk<=MAX_M);if(!p)return;
   p.innerHTML=vcGridAt(+p.dataset.mk);try{fitDn(p);memoShift(p);}catch(e){}vcFillT=setTimeout(vcFillFar,60);
 }
+let vcPend=0;
 function vcSettle(){
   const tr=document.getElementById('vctr');if(!tr||vcTouch)return;const W=vcW(tr),x=tr.scrollLeft,i=Math.round(x/W);
-  if(Math.abs(x-i*W)>3)return;const d=i-VC_R;if(!d)return;
+  if(Math.abs(x-i*W)>3)return;if(vcPend&&i-VC_R!==vcPend)return;vcPend=0;const d=i-VC_R;if(!d)return;
   const v=vcY*12+vcM+d;if(v<MIN_M||v>MAX_M){tr.scrollTo({left:VC_R*W,behavior:'smooth'});return;}
   vcY=Math.floor(v/12);vcM=v%12;vcRerender();
 }
@@ -11700,7 +11754,7 @@ document.addEventListener('scroll',e=>{
   clearTimeout(vcSetT);vcSetT=setTimeout(vcSettle,90);
 },true);
 document.addEventListener('scrollend',e=>{if(e.target&&e.target.id==='vctr'){clearTimeout(vcSetT);vcSettle();}},true);
-document.addEventListener('touchstart',e=>{if(e.target.closest&&e.target.closest('#vctr'))vcTouch=true;},{passive:true,capture:true});
+document.addEventListener('touchstart',e=>{if(e.target.closest&&e.target.closest('#vctr')){vcTouch=true;vcPend=0;}},{passive:true,capture:true});
 ['touchend','touchcancel'].forEach(ev=>document.addEventListener(ev,e=>{if(!vcTouch||(e.touches&&e.touches.length))return;vcTouch=false;clearTimeout(vcSetT);vcSetT=setTimeout(vcSettle,140);},{passive:true,capture:true}));
 function vcEnter(){   // 달이 넘어간 뒤 새 달이 옆에서 들어오는 효과
   if(!vcAnim)return;const d=vcAnim;vcAnim=0;const el=document.getElementById('vcsl');if(!el||reduceMotion())return;
@@ -11759,7 +11813,11 @@ document.addEventListener('pointermove',e=>{
   if(!c||c.dataset.k===mpDrag.last)return;
   mpDrag.last=c.dataset.k;manApply(c.dataset.k);
 });
-function vcMove(n){let y=vcY,m=vcM+n;if(m<0){m=11;y--;}if(m>11){m=0;y++;}const k=y*12+m;if(k<MIN_M||k>MAX_M)return;vcY=y;vcM=m;vcRerender();}
+function vcMove(n){   // v0.209 ‹ › · 회색 다른 달 칸: 손으로 넘길 때처럼 옆 판으로 미끄러짐 (멈추면 vcSettle 이 그 달로)
+  {const tr=document.getElementById('vctr'),W=tr&&vcW(tr);if(tr&&W&&Math.abs(n)===1&&!RMq()&&!tr.classList.contains('lock')){const t2=vcPend+n,nb=[...tr.children].find(x=>+x.style.order===VC_R+t2);const v=vcY*12+vcM+t2;
+    if(Math.abs(t2)<=1&&(t2===0||(nb&&nb.firstElementChild))&&v>=MIN_M&&v<=MAX_M){vcPend=t2;tr.scrollTo({left:(VC_R+t2)*W,behavior:'smooth'});return;}
+    if(vcPend){n=t2;vcPend=0;}}}   // 넘어가는 중에 또 누르면 목표만 바꿈 (두 칸 넘으면 바로)
+  let y=vcY,m=vcM+n;if(m<0){m=11;y--;}if(m>11){m=0;y++;}const k=y*12+m;if(k<MIN_M||k>MAX_M)return;vcY=y;vcM=m;vcRerender();}
 /* ================= 가족 메모 · 근무 요청 (3단계) =================
  * 가족 메모(♥) 는 households/{hid}/memos, 근무 요청은 households/{hid}/requests 에 두고,
  * 보낼 때마다 내 횟수(sent)가 +1 (처음 10건 무료). 내 폰의 메모 · 요청 화면은 지금 있는 것을 그대로 쓰고

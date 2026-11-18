@@ -31,7 +31,7 @@ const ONLY=process.env.ONLY||'';
       fam2:{members,scheds:{dad:dadSch},memos:{},reqIn:{},reqOut:{},me:{sent:0,bonus:0},seenMemo:[],init:true},requests:[]};
     const p=await boot(b,st,{fold:true});
     await p.waitForSelector('#vcsl',{timeout:5000});
-    await p.evaluate(()=>document.querySelector('[data-act="vc-prev"]').click());await p.waitForTimeout(300);
+    await p.evaluate(()=>document.querySelector('[data-act="vc-prev"]').click());await p.waitForTimeout(900);
     await p.evaluate(()=>document.querySelector('[data-act="vc-next"]').click());
     let g=false;for(let i=0;i<24&&!g;i++){g=await p.evaluate(()=>!!document.querySelector('#view #vcsl .cell.today .tglow'));if(!g)await p.waitForTimeout(50);}
     T('내 달력 보기: 다른 달에서 이번 달로 오면 오늘 칸 빛',g);

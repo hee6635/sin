@@ -11,7 +11,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);
   await p.evaluate(()=>document.querySelector('[data-act="fam-mancal"]').click());await p.waitForTimeout(400);
   T('유찬 달력: 이번 달엔 [오늘] 없음',await p.evaluate(()=>!document.querySelector('#page .vcnav [data-act="vc-today"]')));
-  await p.evaluate(()=>document.querySelector('#page [data-act="vc-next"]').click());await p.waitForTimeout(300);
+  await p.evaluate(()=>document.querySelector('#page [data-act="vc-next"]').click());await p.waitForTimeout(900);
   T('다른 달이면 [오늘] → 누르면 이번 달',await p.evaluate(()=>{const e=document.querySelector('#page .vcnav [data-act="vc-today"]');if(!e)return false;e.click();return true;})&&await p.evaluate(()=>/2026\.10/.test(document.querySelector('#page .vcnav b').textContent)));
   await p.evaluate(()=>__wx.closePop&&__wx.closePop());await p.evaluate(()=>{const b=document.querySelector('#page [data-act="back"],#page .bk');if(b)b.click();});await p.waitForTimeout(300);
   // 오늘 색 (동그라미 모양)
