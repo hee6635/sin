@@ -9548,7 +9548,7 @@ function openWlSet(){
   const w=S.wlog;
   openPage(`${pageHead(esc(wlName())+' 설정')}<div class="pg-b np">
     <div class="pg-cap">이름</div>
-    <div class="pg-sec pad"><div class="wlchips" style="margin-top:0">${WL_NAMES.map(n=>`<button class="${wlName()===n?'on':''}" data-act="wls-nm" data-v="${n}">${n}</button>`).join('')}${WL_NAMES.includes(wlName())?'<button class="own" data-act="wls-own">✏️ 직접 쓰기</button>':`<button class="own on" data-act="wls-own">✏️ ${esc(wlName())}</button>`}</div></div>
+    <div class="pg-sec pad"><div class="wlchips" style="margin-top:0">${WL_NAMES.map(n=>`<button class="${wlName()===n?'on':''}" data-act="wls-nm" data-v="${n}">${n}</button>`).join('')}${WL_NAMES.includes(wlName())?`<button class="own" data-act="wls-own">${npi('pencil',14)}직접 쓰기</button>`:`<button class="own on" data-act="wls-own">${npi('pencil',14)}${esc(wlName())}</button>`}</div></div>
     <div class="pg-cap">칸</div>
     <div class="pg-sec">${w.secs.map(sc=>`<div class="prow"><span class="wdot wk-${sc.id}"></span><input type="text" class="wls-in" id="wlsS_${sc.id}" maxlength="8" value="${esc(sc.n)}" aria-label="칸 이름"><label class="sw"><input type="checkbox" id="wlsV_${sc.id}" ${sc.h?'':'checked'} aria-label="보이기"><i></i></label></div>`).join('')}</div>
     <div class="pg-sec">${npRow('cloud-up','백업에 넣기',`<label class="sw"><input type="checkbox" id="wlsBk" ${w.backup?'checked':''}><i></i></label>`)}${npRow('search',esc(wlName())+' 찾기',npVal(''),{tap:1,act:'srch-open',attrs:' data-v="wl"'})}</div>

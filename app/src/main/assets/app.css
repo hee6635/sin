@@ -2046,3 +2046,4 @@ body{word-break:keep-all;overflow-wrap:break-word}
 /* v0.224 통계 "이번 달": 밑줄 링크 대신 연한 파란 알약 */
 .stnav .sttoday{font-size:13px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--bg));padding:6px 12px;border-radius:999px;text-decoration:none}
 .wlchips .wlsown{font-size:14px;font-weight:700;padding:8px 14px;border-radius:20px;border:1.5px solid var(--accent);background:var(--bg);color:var(--fg);width:150px;outline:0}   /* v0.225 업무 일지 이름 직접 쓰기 */
+.wlchips button.own{display:inline-flex;align-items:center;gap:5px}
