@@ -590,6 +590,14 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.214 정리: 파일 나누기 · 시험 정리 · 팁 · 삼성 바로가기
+- **앱 화면 파일 구조가 바뀜**: `assets/index.html`(101줄 · 뼈대 + 맨 앞 오류 안전망 스크립트) · `assets/app.css`(모양) · `assets/js/wxcore.js`(날씨 계산 · 서버 `firebase/functions/lib/wxcore.js` 와 같아야 함 · 첫 줄 `/*WXCORE*/`) · `assets/js/app.js`(앱 동작 전부).
+  - 순서: config.js → js/wxcore.js → js/app.js (같은 전역 · 순서 바꾸면 안 됨). 문법 검사는 `node --check app/src/main/assets/js/*.js`.
+  - 서버 시험(wx.test.mjs) · s46 · 가족 E2E(.css 형식 추가)가 새 파일을 읽게 고침.
+- 시험: 옛 화면 이름에 맞춰 t9 · t14 · t13 · s46 · s64 · s65 · s12 고침 · 판정 없는 보기용 9개(s4 s5 s9 s10 s11 s13 s16 s17 t6)는 `tests/phone/look/` · s89 기다림. 지금 전체 시험(99개) 다 통과.
+- 이럴 땐 이렇게: "메모 · 포스트잇 · 업무 메모는 뭐가 달라요?" 팁.
+- 알람이 잘 울리게: 삼성 폰에서만 "삼성: 자동 절전 예외 앱에 넣기" · 누르면 `openSettings('samsung_sleep')`(삼성 배터리 화면 → 안 되면 배터리 최적화 목록).
+
 ## 백업: 정리 전 마지막 버전 = v0.213 (커밋 5449252 · claude/continue-sin-app-dev-x8ou0c)
 - 되돌리려면: `git checkout 5449252 -- app/src/main/assets/index.html` (앱 화면 전체가 이 파일 하나)
 

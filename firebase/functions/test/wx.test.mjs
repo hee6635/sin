@@ -65,14 +65,14 @@ await ok('지역표: 256곳 · 번호 겹침 없음 · 격자 범위 · 구역 �
   assert.equal(g('51110')[5], '11D10000');               // 춘천 = 강원영서
 });
 await ok('앱 안 지역표(WX_REG)가 서버 지역표와 같음', () => {
-  const html = readFileSync(new URL('../../../app/src/main/assets/index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../../../app/src/main/assets/js/app.js', import.meta.url), 'utf8');   // (v0.214 앱 화면을 index.html · app.css · js/ 로 나눔)
   const m = html.match(/const WX_REG=(\[.*?\]);/s); assert.ok(m, 'WX_REG 없음');
   const app = JSON.parse(m[1]);
   assert.deepEqual(app, REG.map(r => [r[0], r[1], r[2]]));
 });
 await ok('앱 안 날씨 계산(WXCORE)이 서버 파일과 똑같음', () => {
-  const html = readFileSync(new URL('../../../app/src/main/assets/index.html', import.meta.url), 'utf8');
-  const m = html.match(/<script>\/\*WXCORE\*\/\n([\s\S]*?)\n<\/script>/); assert.ok(m, 'WXCORE 블록 없음');
+  const js = readFileSync(new URL('../../../app/src/main/assets/js/wxcore.js', import.meta.url), 'utf8');
+  const m = js.match(/^\/\*WXCORE\*\/\n([\s\S]*?)\n$/); assert.ok(m, 'WXCORE 블록 없음');
   assert.equal(m[1], readFileSync(new URL('../lib/wxcore.js', import.meta.url), 'utf8').trimEnd());
 });
 await ok('발표 시각 계산 (한국 시간)', () => {
