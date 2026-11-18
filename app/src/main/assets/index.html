@@ -5431,7 +5431,7 @@ const MO=(()=>{
     a.onfinish=()=>{if(shellEl===el){el.remove();shellEl=null;}const n=document.querySelector(`#view .cell[data-k="${k}"],#page .cell[data-k="${k}"]`);if(n)n.animate([{transform:'scale(.94)'},{transform:'scale(1.03)',offset:.6},{transform:'none'}],{duration:280,easing:EO});};
     return true;}
   let popSrc=null;
-  function popOpen(pop,was){const m=pop.querySelector('.menu');if(!m||RM())return;
+  function popOpen(pop,was){const m=pop.querySelector(':scope>.menu,:scope>.pi-ed,:scope>.pi-view,:scope>.wlp');if(!m||RM())return;   // v0.210 포스트잇 · 일지 창도
     if(was){[...m.children].slice(0,8).forEach((x,i)=>x.animate([{opacity:0},{opacity:1}],{duration:180,delay:i*25,fill:'backwards'}));return;}   // 창 → 창: 내용만 바뀜
     const el=src();popSrc=el&&!el.closest('#pop')?el:null;const c=popSrc&&popSrc.getBoundingClientRect();
     m.style.opacity='0';hideKids(m);
@@ -5440,7 +5440,7 @@ const MO=(()=>{
       const a=c?m.animate([{transform:tfOf(c,b),opacity:0},{opacity:1,offset:.1},{transform:'none',opacity:1}],{duration:360,easing:EO})   // v0.208 흰 판은 바로 불투명하게 (반투명한 판 너머로 뒤 글자가 겹쳐 번쩍이던 것) → 내용은 판이 거의 다 커진 뒤
                :m.animate([{transform:'translateY(110%)'},{transform:'none'}],{duration:360,easing:EO});
       showKids(m,c?230:60);a.onfinish=()=>{m.style.transformOrigin='';m.style.willChange='';};});}
-  function popClose(old){if(RM()||!old.classList.contains('open'))return false;const m=old.querySelector('.menu');if(!m||m.style.opacity==='0')return false;
+  function popClose(old){if(RM()||!old.classList.contains('open'))return false;const m=old.querySelector(':scope>.menu,:scope>.pi-ed,:scope>.pi-view,:scope>.wlp');if(!m||m.style.opacity==='0')return false;
     const fresh=old.cloneNode(false);fresh.className='';fresh.removeAttribute('style');old.parentNode.insertBefore(fresh,old);old.style.pointerEvents='none';old.classList.remove('open');old.classList.add('ghost');old.setAttribute('aria-hidden','true');old.inert=true;
     const b=m.getBoundingClientRect(),s=popSrc&&popSrc.isConnected?popSrc:null;popSrc=null;m.style.transformOrigin='0 0';m.style.willChange='transform';
     [...m.children].forEach(x=>x.animate([{opacity:1},{opacity:0}],{duration:180,fill:'forwards'}));
@@ -6460,6 +6460,7 @@ const piDate=n=>{const d=new Date(n.t||Date.now());return `${d.getMonth()+1}/${d
 // v0.135 할 일 포스트잇 큰 보기: 벽에서 누르면 위젯 날짜 창처럼 커지며 뜸 · 줄 아무 데나 누르면 체크 · 아래 [수정하기]
 function openPiView(id){
   const n=piFind(id);if(!n)return;const r=role(),dn=n.lines.filter(l=>l.done).length,col=piCol(n);
+  const wasV=$('#pop').classList.contains('open')&&!!$('#pop .pi-view');
   $('#pop').className='open pi-vpop';
   $('#pop').innerHTML=`<div class="pi-view c-${col}" role="dialog">
     <div class="pvh"><b>☑ ${esc(n.title||'할 일')}</b><em>${dn}/${n.lines.length}</em><button class="ib" data-act="pop-close" aria-label="닫기">✕</button></div>
@@ -6468,6 +6469,7 @@ function openPiView(id){
     ${piDone(n)?'<div class="pvdone">모두 끝났어요 ✓</div>':''}
     <div class="pvf"><button class="btn ghost grow" data-act="pop-close">닫기</button><button class="btn grow" data-act="pi-vedit" data-id="${n.id}">수정하기</button></div>
   </div>`;
+  try{if(!wasV)MO.popOpen($('#pop'),false);}catch(e){}   // v0.210 벽의 포스트잇 자리에서 커지며 뜸
 }
 // 다 끝났을 때만 가족에게 한 번 (줄마다 알리지 않음)
 function piAllDoneNote(n,was){if(!was&&piDone(n)&&n.shared&&!n.srv)pushEvent(other(),'board',boardKey(),`☑ "${(n.title||'할 일').slice(0,20)}" 할 일을 모두 끝냈어요`);}
@@ -6561,6 +6563,7 @@ function piSug(n){
 }
 function renderPiEd(focus){
   const n=piTarget();if(!n){closePop();return;}
+  const pv=$('#pop'),was=pv.classList.contains('open')&&!!pv.querySelector('.pi-ed'),ob=was?pv.querySelector('.pi-ed').offsetHeight:0,otg=was&&pv.querySelector('.pi-ed .tg')?pv.querySelector('.pi-ed .tg').textContent:'',ocl=was&&pv.querySelector('.pi-ed .pi.big')?pv.querySelector('.pi-ed .pi.big').className:'';
   const r=role(),own=piEd.isNew||n.by===r,col=piCol(n),isList=n.type==='list';
   const lineRow=l=>`<div class="ck ${l.done?'d':''}"><i data-act="pi-check" data-id="${n.id}" data-l="${l.id}">${l.done?'✓':''}</i>${own||n.shared?`<input class="pi-lt" data-l="${l.id}" value="${esc(l.text)}" maxlength="60" enterkeyhint="done" aria-label="할 일 고치기">`:`<span>${esc(l.text)}</span>`}${own||n.shared?`<button class="x" data-act="pi-ldel" data-l="${l.id}" aria-label="지우기">✕</button>`:''}</div>`;
   const body=isList?`
@@ -6588,6 +6591,9 @@ function renderPiEd(focus){
       ${!piEd.isNew&&(own||(r==='host'&&!n.srv))?'<button class="pi-tb del" data-act="pi-del">🗑</button>':''}
       <button class="pi-go" data-act="pi-save">${piEd.isNew?'붙이기':'완료'}</button>
     </div></div>`;
+  try{if(!was)MO.popOpen(pv,false);else if(!RMq()){const e=pv.querySelector('.pi-ed'),h=e&&e.offsetHeight;if(e&&Math.abs(h-ob)>3){e.style.overflow='hidden';const a=e.animate([{height:ob+'px'},{height:h+'px'}],{duration:300,easing:'cubic-bezier(.2,.9,.25,1)'});a.onfinish=a.oncancel=()=>{e.style.overflow='';};}
+    const tg=pv.querySelector('.pi-ed .tg');if(tg&&otg&&tg.textContent!==otg)tg.animate([{transform:'scale(.6)',opacity:0},{transform:'scale(1.12)',opacity:1,offset:.65},{transform:'none'}],{duration:340,easing:'cubic-bezier(.2,.9,.25,1)'});   // 나만 ↔ 가족 표시 톡
+    const pb=pv.querySelector('.pi-ed .pi.big');if(pb&&ocl&&pb.className!==ocl)pb.animate([{transform:'rotate(-1.5deg) scale(.98)'},{transform:'none'}],{duration:300,easing:'cubic-bezier(.3,1.4,.5,1)'});}}catch(e){}   // v0.210 처음엔 누른 자리에서 커지고 · 할 일/메모 · 줄 추가로 크기가 바뀌면 스르르
   if(focus&&piEd.isNew){const f=$(isList?'#piTitle':'#piText');if(f)setTimeout(()=>f.focus(),60);}
 }
 function piCommit(){
@@ -6621,7 +6627,7 @@ function piClose(commit){
     if(has){if(!piCommit())return;const mk=boardKey();
       toastUndo('📌 저장했어요',()=>{if(n.srv)piSrvDelete(n);else S.board[mk]=(S.board[mk]||[]).filter(x=>x.id!==n.id);save();if(pageMode==='board'){render();openBoard();}});}
   }
-  piEd=null;$('#pop').className='';$('#pop').innerHTML='';
+  piEd=null;closePop();   // v0.210 닫을 때도 누른 자리로 (다른 작은 창과 같게)
   if(pageMode==='board'){render();openBoard();}
 }
 function piTear(n){n.torn=true;n.tornAt=Date.now();piSave(n);toast('📤 떼어서 "지난 메모"에 보관했어요');}
@@ -9795,7 +9801,7 @@ document.addEventListener('click',e=>{
     case 'open-board':closeSheet();openBoard();break;
     case 'open-board-vc':closeSheet();setCur(vcY,vcM);openBoard();break;   // 내 달력 보기: 보고 있는 달의 포스트잇
     /* 포스트잇 */
-    case 'pi-prev':case 'pi-next':{const v=Math.min(MAX_M,Math.max(MIN_M,cur.y*12+cur.m+(a==='pi-next'?1:-1)));setCur(Math.floor(v/12),v%12);render();openBoard();break;}
+    case 'pi-prev':case 'pi-next':{const dir=a==='pi-next'?1:-1,v=Math.min(MAX_M,Math.max(MIN_M,cur.y*12+cur.m+dir));setCur(Math.floor(v/12),v%12);render();openBoard();try{if(!RMq()){const b=document.querySelector('#page .pg-b');if(b)b.animate([{transform:`translateX(${dir*56}px)`,opacity:.15},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.2,.9,.25,1)'});}}catch(e){}break;}   // v0.210 달 넘기면 그 쪽에서 밀려 옴
     case 'pi-new':piOpen(null);break;
     case 'pi-open':{if(piSwiped){piSwiped=false;break;}const n=piFind(t.dataset.id);if(n&&n.type==='list'&&!n.torn)openPiView(n.id);else piOpen(t.dataset.id);break;}
     case 'pi-check':{

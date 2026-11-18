@@ -590,6 +590,10 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.211 포스트잇 모션
+- 포스트잇 창(`.pi-view` · `.pi-ed`)은 openPop 을 안 거쳐 모션이 없었음 → MO.popOpen/popClose 가 `.menu,.pi-ed,.pi-view,.wlp` 를 다 받음 · openPiView · renderPiEd(처음) 에서 popOpen · piClose 는 closePop 으로 (누른 자리로 들어감).
+- renderPiEd 다시 그릴 때: 높이 바뀌면 스르르 · 나만/가족 표시 톡 · 색 바뀌면 살짝 흔들림. 포스트잇 벽 ‹ › 는 그 쪽에서 밀려 옴.
+
 ## v0.210 페이지 카드 높이 스르르 · 메모 그 자리에서 고치기
 - `openPage` 같은 페이지 다시 그리기: `.pg-b>*` 높이를 재 두고 바뀐 카드는 height 애니메이션 (요일 보기 · 시간 줄 알림 · 칸 추가 …). 전수 조사 도구는 '모션이 하나도 없는 곳'만 잡아서 이런 높이 점프를 놓쳤음.
 - 날짜 창 메모를 누르면 그 줄이 입력칸(`.mcard.medit` · `#memoInput` 이 그 안으로 · ✓ = memo-send · 복사 · 취소) · 아래 새 메모 칸은 흐리게(disabled). 펼침 `medOpenFx` · 접힘 `medCloseFx` · 끝나면 그 줄 반짝 `medDoneFx`.
