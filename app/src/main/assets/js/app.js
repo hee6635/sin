@@ -5284,6 +5284,7 @@ function openNotifPage(){
 function openInfoPage(){   // v0.146 새 모양
   openPage(`${pageHead('도움 · 정보')}<div class="pg-b np">
     <div class="pg-sec" style="margin-top:8px">
+      ${npRow('clock','알람이 잘 울리게',npVal(''),{tap:1,act:'info-perm'})}   <!-- v0.215 다 켜져 있어도 들어갈 수 있게 (삼성 자동 절전 예외 앱 바로가기) -->
       ${npRow('file-text','문의하기 · 오류 신고',npVal(''),{tap:1,act:'more-mail'})}
       ${npRow('calendar-days','사용 통계 · 오류 보고',`<label class="sw"><input type="checkbox" id="statsOn" ${S.stats!==false?'checked':''}><i></i></label>`)}
       ${npRow('tag','개인정보처리방침',npVal(''),{tap:1,act:'more-privacy'})}
@@ -7886,6 +7887,7 @@ document.addEventListener('click',e=>{
     case 'st-edit':openStatusEdit(t.dataset.k);break;
     case 'more-backup':driveFiles=null;openBackupPage();break;
     case 'more-perm':openPermPage();break;
+    case 'info-perm':pageBack=openInfoPage;openPermPage();break;
     case 'slip-help':openPop(`<div class="mh">명세서로 맞추기<b>이렇게 적어요</b></div><div class="mi" style="display:block;line-height:1.7">· 급여 명세서 한 장의 금액을 그대로 적어요. 그 기간 달력의 연장 · 야간 시간으로 나눠 1시간 금액을 계산해요.<br>· 연장 수당: 특별 · 가산 수당은 빼요.<br>· 연차 수당: 연차를 안 쓰고 받은 돈 · 며칠치인지도 적어요.<br>· 지급 총액: 세전 · 상여 빼고 (예상과 비교용).<br>· 여러 장 적을수록 더 맞아요.</div><button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);break;
     case 'pers-help':openPop(`<div class="mh">${persKind==='on'?'개인 캘린더':'근무표'}<b>${persKind==='on'?'바꾸면 이렇게 돼요':'다시 쓰면 이렇게 돼요'}</b></div><div class="mi" style="display:block;line-height:1.6">${persHelp}</div><button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);break;
     case 'perm-samsung':try{window.AndroidBridge.openSettings('samsung_sleep');}catch(e){}toast('백그라운드 앱 사용 제한 › 자동 절전 예외 앱에서 언제쉬어를 더해 주세요');break;

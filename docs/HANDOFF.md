@@ -590,6 +590,9 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.215 도움 · 정보에 "알람이 잘 울리게" 줄
+- 전엔 꺼진 권한이 있을 때(설정 첫 화면 경고)만 들어갈 수 있어서, 다 켜지면 삼성 바로가기를 못 찾았음 → 도움 · 정보 맨 위에 늘 둠(`info-perm` · 뒤로 = 도움 · 정보).
+
 ## v0.214 정리: 파일 나누기 · 시험 정리 · 팁 · 삼성 바로가기
 - **앱 화면 파일 구조가 바뀜**: `assets/index.html`(101줄 · 뼈대 + 맨 앞 오류 안전망 스크립트) · `assets/app.css`(모양) · `assets/js/wxcore.js`(날씨 계산 · 서버 `firebase/functions/lib/wxcore.js` 와 같아야 함 · 첫 줄 `/*WXCORE*/`) · `assets/js/app.js`(앱 동작 전부).
   - 순서: config.js → js/wxcore.js → js/app.js (같은 전역 · 순서 바꾸면 안 됨). 문법 검사는 `node --check app/src/main/assets/js/*.js`.
