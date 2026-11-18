@@ -3383,9 +3383,9 @@ function memberStatus(m,now){
     return vac?['🏫','방학',`~${+vac.to.slice(5,7)}/${+vac.to.slice(8)}`]:['🏠','쉬는 날',''];
   }
   const ty=famTypeAt(m,d),tt=famTimes(m,d);if(!tt)return [m.kind==='student'?'🏫':'💼',ty.name||famLbl(m),''];
-  const st=m.kind==='student',s=tm2m(tt.s),e=tm2m(tt.e);
-  if(h>=s&&h<e)return [st?'🏫':'💼',ty.name||famLbl(m),`${t12(tt.e,true)} ${st?'하원':'퇴근'}`];
-  return ['🏠','집',h<s?`${tt.s} ${ty.name||''} ${st?'등원':'출근'}`.replace(/\s+/g,' '):''];
+  const st=m.kind==='student',sch=st&&famSchool(ty.name),s=tm2m(tt.s),e=tm2m(tt.e);
+  if(h>=s&&h<e)return [st?'🏫':'💼',ty.name||famLbl(m),`${t12(tt.e,true)} ${st?(sch?'하교':'하원'):'퇴근'}`];
+  return ['🏠','집',h<s?`${tt.s} ${ty.name||''} ${st?(sch?'등교':'등원'):'출근'}`.replace(/\s+/g,' '):''];
 }
 // v0.169 가족 "지금" 카드: 이모지 대신 선 아이콘 칸 + 상태 크게 + 아래 다음 일 (시안 design/viewfam)
 function famStRow(m,e,l,sub,now,sk){
@@ -3729,7 +3729,7 @@ function openManStkPick(k){
   const m=manMember();if(!m)return;const d=parse(k),on=(m.stk&&m.stk[k])||[];
   const defs=manSdefs(m).filter(x=>!x.retired&&!on.includes(x.id)&&!manPlanned(m,x,k));
   openPop(`<div class="mh">${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})<b>${esc(m.name)} · 붙일 스티커</b></div>
-    <div class="mi sgrid sg5">${defs.map(x=>`<button data-act="man-stk-place" data-id="${esc(x.id)}" data-k="${k}"><span class="si">${ico(x.emoji)}</span><small>${esc(x.name||'')}</small></button>`).join('')}<button class="plus" data-act="man-stk-add" data-k="${k}" aria-label="새 스티커"><span class="si">＋</span><small>새로</small></button></div>
+    <div class="mi sgrid sg5">${defs.map(x=>`<button data-act="man-stk-place" data-id="${esc(x.id)}" data-k="${k}"><span class="si">${ico(x.emoji)}</span><small>${esc(x.name||'')}</small></button>`).join('')}${manSdefs(m).filter(x=>!x.retired).length>=MAN_STK_MAX?'':`<button class="plus" data-act="man-stk-add" data-k="${k}" aria-label="새 스티커"><span class="si">＋</span><small>새로</small></button>`}</div>
     <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">닫기</button></div>`);
 }
 function openManStampReg(id,k,back,place){
@@ -3927,7 +3927,7 @@ function piCard(n){
 // v0.135 벽 배치: 줄마다 높이가 달라도 빈틈 없게 — 칸들을 키 작은 줄에 차례로 쌓음 (넓은 메모는 한 줄 전체)
 function piMasonry(){
   const g=document.querySelector('#page .pi-grid');if(!g||g.dataset.mz)return;
-  const items=[...g.children],n=(getComputedStyle(g).gridTemplateColumns||'').split(' ').filter(Boolean).length||2,hs=items.map(e=>e.getBoundingClientRect().height);
+  const items=[...g.children];items.forEach((e,i)=>{e.dataset.ord=i;});const n=(getComputedStyle(g).gridTemplateColumns||'').split(' ').filter(Boolean).length||2,hs=items.map(e=>e.getBoundingClientRect().height);
   const segs=[];let cur=null;
   items.forEach((e,i)=>{if(e.classList.contains('wide')){segs.push({w:e});cur=null;return;}if(!cur){cur=Array.from({length:n},()=>({h:0,l:[]}));segs.push({c:cur});}const c=cur.reduce((a,b)=>b.h<a.h?b:a);c.l.push(e);c.h+=hs[i]+18;});
   const fr=document.createDocumentFragment();
@@ -3974,21 +3974,26 @@ const piOrdCmp=mk=>{const O=((S.piOrder||{})[mk])||[],ix=x=>{const i=O.indexOf(x
 let piDrag=null;
 function piDragEnd(drop){
   const D=piDrag;piDrag=null;clearTimeout(D&&D.tm);if(!D||!D.on)return;
-  D.gh.remove();D.el.classList.remove('pi-lift');document.querySelectorAll('.pi-over').forEach(x=>x.classList.remove('pi-over'));document.body.classList.remove('pi-dragging');
+  D.gh.remove();D.el.classList.remove('pi-lift');document.body.classList.remove('pi-dragging');
+  (D.items||[]).forEach(e=>{e.style.transition='';e.style.transform='';});
   held=true;setTimeout(()=>{held=false;},400);   // 끌기 뒤 손을 뗄 때 열리지 않게
-  if(!drop||!D.tg||D.tg===D.el)return;
-  const ids=[...document.querySelectorAll('#page .pi[data-id]')].map(x=>x.dataset.id).filter(id=>id!==D.id),ti=ids.indexOf(D.tg.dataset.id);if(ti<0)return;
-  ids.splice(D.after?ti+1:ti,0,D.id);
+  const from=D.items?D.items.indexOf(D.el):-1;
+  if(!drop||D.ti==null||D.ti===from||from<0)return;
+  const ids=D.items.map(x=>x.dataset.id);ids.splice(D.ti,0,ids.splice(from,1)[0]);
   S.piOrder=isObj(S.piOrder)?S.piOrder:{};S.piOrder[boardKey()]=ids;save();openBoard();
 }
+// v0.223 끄는 동안 다른 포스트잇이 들어갈 자리로 비켜 줌 (처음 자리로 맞춰 봄 · 제자리로 오면 그대로)
 function piDragMove(x,y){
   const D=piDrag;if(!D)return;
   if(!D.on){if(Math.abs(x-D.x)+Math.abs(y-D.y)>10){clearTimeout(D.tm);piDrag=null;}return;}
   D.gh.style.transform=`translate(${x-D.ox}px,${y-D.oy}px) rotate(-3deg) scale(1.04)`;
-  const t=document.elementFromPoint(x,y),p=t&&t.closest&&t.closest('#page .pi[data-id]');
-  document.querySelectorAll('.pi-over').forEach(q=>{if(q!==p)q.classList.remove('pi-over');});
-  if(p&&p!==D.el){const r=p.getBoundingClientRect();D.tg=p;D.after=y>r.top+r.height/2;p.classList.add('pi-over');}else D.tg=null;
-  const sc=document.querySelector('#page .pg-b');if(sc){if(y<90)sc.scrollTop-=12;else if(y>innerHeight-90)sc.scrollTop+=12;}
+  const sc=document.querySelector('#page .pg-b');
+  if(!D.items){D.items=[...document.querySelectorAll('#page .pi[data-id]')].sort((a,b)=>(+a.dataset.ord||0)-(+b.dataset.ord||0));   /* 2줄로 쌓기 전 순서 */D.R=D.items.map(e=>e.getBoundingClientRect());D.st0=sc?sc.scrollTop:0;D.ti=D.items.indexOf(D.el);D.items.forEach(e=>{e.style.transition='transform .2s cubic-bezier(.2,.9,.25,1)';});}
+  const dy=(sc?sc.scrollTop:0)-D.st0;let ti=D.ti;
+  D.R.forEach((b,i)=>{if(x>=b.left&&x<=b.right&&y>=b.top-dy&&y<=b.bottom-dy)ti=i;});
+  if(ti!==D.ti){D.ti=ti;const from=D.items.indexOf(D.el),ord=D.items.map((e,i)=>i);ord.splice(ti,0,ord.splice(from,1)[0]);
+    D.items.forEach((e,i)=>{const j=ord.indexOf(i);e.style.transform=j===i?'':`translate(${D.R[j].left-D.R[i].left}px,${D.R[j].top-D.R[i].top}px)`;});}
+  if(sc){if(y<90)sc.scrollTop-=12;else if(y>innerHeight-90)sc.scrollTop+=12;}
 }
 document.addEventListener('pointerdown',e=>{
   const el=pageMode==='board'&&e.target.closest&&e.target.closest('#page .pi[data-id]');if(!el)return;
@@ -4359,12 +4364,12 @@ function memoSubmit(){
     addMemo(k,text,fam,fam&&isGuest);
   }
   memoText='';
-  memoFinish(k,fam?'♥ 가족 메모를 남겼어요':'나만 보는 메모를 남겼어요');
+  memoFinish(k,fam?'♥ 가족 메모를 남겼어요':isSolo()?'메모를 남겼어요':'나만 보는 메모를 남겼어요');
 }
 function memoFinish(k,msg){
   render();openDay(k);
   const i=$('#memoInput');if(i)i.focus();
-  if(!S.tipMemo){S.tipMemo=true;save();toast('보라색은 가족에게 보이는 메모, 회색은 나만 보는 메모예요');}
+  if(!S.tipMemo&&!isSolo()){S.tipMemo=true;save();toast('보라색은 가족에게 보이는 메모, 회색은 나만 보는 메모예요');}
   else toast(msg);
 }
 /* ----- 서버(가족방)로 나가는 행동은 보내기 전에 확인창 한 번 (개인 메모 · 스티커 · 내 근무표는 바로) ----- */
@@ -4443,8 +4448,8 @@ function memoCard(m,k){
   const ex=m.time?` · 🕐 ${tfmt(m.time)}${m.al!==undefined&&m.al!==''?` · 🔔 ${m.al==='10'?'10분 전':'정시'}`:''}`:'';
   return `<div class="mcard ${cls} ${m.color?'cl':''} ${m.todo&&m.done?'done':''} ${memoEdit===m.id?'sel':''}" ${m.color?`style="background:${esc(m.color)} !important"`:''} data-act="memo-tap" data-mid="${m.id}" data-hold="memo">
     ${m.todo?(m.srv?`<span class="mchk ro ${m.done?'on':''}" aria-label="${m.done?'가족이 완료함':'가족 할 일'}">${m.done?'✓':''}</span>`:`<button class="mchk ${m.done?'on':''}" data-act="memo-chk" data-mid="${m.id}" aria-label="완료">${m.done?'✓':''}</button>`):''}
-    <div class="mt2"><span class="tx">${linkify(m.text,{click:true,fam:!!(m.shared&&m.by!==role())})}</span><div class="meta">${m.rep?'🔁 반복 · ':''}${m.shared?(isSolo()?'♥ 가족 메모':`<span class="who ${own?'me':''}">${esc(whoName(m.by))}</span>`):'나만'} · ${rel(m.t)}${ex}</div></div>
-    ${own&&!m.shared&&!m.rep?`<button class="conv" data-act="memo-conv" data-mid="${m.id}">♡ 가족에게</button>`:''}
+    <div class="mt2"><span class="tx">${linkify(m.text,{click:true,fam:!!(m.shared&&m.by!==role())})}</span><div class="meta">${m.rep?'🔁 반복 · ':''}${m.shared?(isSolo()?'♥ 가족 메모':`<span class="who ${own?'me':''}">${esc(whoName(m.by))}</span>`)+' · ':(isSolo()?'':'나만 · ')}${rel(m.t)}${ex}</div></div>
+ ${own&&!m.shared&&!m.rep&&!isSolo()?`<button class="conv" data-act="memo-conv" data-mid="${m.id}">♡ 가족에게</button>`:''}
   </div>`;
 }
 function memoSection(k){
@@ -4459,8 +4464,8 @@ function memoSection(k){
 
       ${fm?`<div class="note ${fm?'fam':''}">${fm?'♥ 가족 모두에게 보여요 · 알림이 가요':(wlOn()?'🔒 나만 볼 수 있어요 · 색 · 시간 · 가족 · 일지는 "자세히"에서':'🔒 나만 볼 수 있어요 · 색 · 할 일 · 시간 · 가족에게는 "자세히"에서')}</div>`:''}
       <div class="irow${memoEdit?' medim':''}">
-        <input type="text" ${memoEdit?'disabled':'id="memoInput"'} class="${fm?'fam':'my'}" value="${memoEdit?'':esc(memoText)}" placeholder="${fm?'가족에게 남길 메모':'나만 보는 메모'}" enterkeyhint="send">
-        <button class="send ${fm?'fam':'my'}" ${memoEdit?'disabled':'data-act="memo-send"'} aria-label="보내기">${ICON.send}</button><span class="flab">${fm?'가족에게 남길 메모':'나만 보는 메모'}</span>
+        <input type="text" ${memoEdit?'disabled':'id="memoInput"'} class="${fm?'fam':'my'}" value="${memoEdit?'':esc(memoText)}" placeholder="${fm?'가족에게 남길 메모':isSolo()?'메모':'나만 보는 메모'}" enterkeyhint="send">
+        <button class="send ${fm?'fam':'my'}" ${memoEdit?'disabled':'data-act="memo-send"'} aria-label="보내기">${ICON.send}</button><span class="flab">${fm?'가족에게 남길 메모':isSolo()?'메모':'나만 보는 메모'}</span>
       </div>
       ${role()==='guest'&&fm?`<div style="margin-top:6px">${usageHint()}</div>`:''}
       ${S.link&&fm&&famRemain()<=3?`<div class="usage-hint" style="margin-top:6px;text-align:center">무료 ${famRemN()}건 남음</div>`:''}
@@ -5121,7 +5126,7 @@ function renderMore(){
   const g1=[
     !guest&&!persAll()?tile('🔁','근무 패턴',S.noPat?(S.myset?'불규칙':'아직 안 만듦'):`${esc(S.patternName||'')} ${esc(myTeamLabel())}`,'more-pattern'):'',
     S.personal?tile('🔁','근무표 쓰기','개인 캘린더 끄기','personal-off'):'',
-    tile('💊','스티커',`${slotDefs().length}개`,'stk-board'),
+    tile('💊','스티커',`${slotDefs().filter(x=>!x.empty).length}개`,'stk-board'),
     hasBridge('setWidgetData')?tile('▣','위젯',wgN>0?`${wgN}개 사용 중`:wgN===0?'홈 화면에 없음':'홈 화면','more-widget'):''].filter(Boolean);
   const g2=[
     linkOk?tile('👪','가족',S.link?`${famN}명 연결`:'초대하기','link-open',!!(S.link&&S.fam2&&S.fam2.boardDot)):tile('👪','가족',`${(S.family||[]).length}명`,'fam-set'),
@@ -5133,14 +5138,14 @@ function renderMore(){
     tile('ℹ️','도움 · 정보',appVersion(),'more-info')];
   const grp=(t,a)=>a.length?`${cap(t)}<div class="stiles">${a.join('')}</div>`:'';
   return `<div class="mlist mset" style="padding-bottom:24px">
-    <button class="srch-entry" data-act="srch-open"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>${wlOn()?'메모 · 일지 찾기':'메모 찾기'}</button>
+    <button class="srch-entry" data-act="srch-open"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>${wlOn()?`메모 · ${esc(wlName())} 찾기`:'메모 찾기'}</button>
     ${issues.length?`<button class="mwarn" data-act="more-perm"><span class="npi">${npi('alert',20)}</span><b>알람이 잘 울리게</b><em>${issues.length}개 꺼짐${npi('chevron-right',16)}</em></button>`:''}
     ${grp('내 근무',g1)}${grp('가족',g2)}${grp('앱',g3)}
     <button class="mtips" data-act="tips-open"><span>${npi('bulb',22)}</span><b>이럴 땐 이렇게</b><small>상황별 사용법</small></button>
   </div>`;
 }
 /* ---- v0.118 💡 이럴 땐 이렇게: 상황별 팁 (묶음 접기 · 누르면 펼침 · 바로 가기) — 기능을 바꾸면 여기 글도 같이 고치기 (s79 가 바로 가기를 시험) ---- */
-const TIPS=[["📅","달력 · 근무",[["근무가 바뀌었을 때 한 번에 고치기","날짜를 누르고 \"여러 날 칠하기\"를 눌러요. 근무를 고른 다음 날짜를 하나씩 누르거나 손가락으로 쭉 그으면 돼요.","tab:cal"],["조나 회사가 바뀌었어요","근무 패턴에서 새 패턴을 만들고 첫 칸 시작 날을 바뀌는 날로 정해요. \"이 날부터 새 패턴\"을 누르면 지난 근무표와 통계는 그대로 남아요.","more-pattern"],["근무표가 불규칙해요","근무 패턴에서 불규칙으로 바꾸고, 날짜마다 근무를 넣어요.","more-pattern"],["빨간 날엔 쉬는 회사예요","근무 패턴에서 \"공휴일엔 쉬어요\"를 켜면 공휴일 근무가 휴무로 바뀌어요.","more-pattern"],["휴직이나 퇴사로 근무 없이 쓰고 싶어요","근무 패턴 맨 아래 \"개인 캘린더로 쓰기\"를 눌러요. 근무표는 지우지 않고 그대로 둬요.","more-pattern"],["직접 바꾼 근무를 되돌리고 싶어요","근무 패턴의 \"패턴 제외 초기화\"에서 기간을 고르면 그 사이 직접 바꾼 근무만 패턴대로 돌아가요.","more-pattern"],["글자가 잘 안 보여요","설정 › 화면에서 배경을 \"또렷하게\"로 바꾸거나 글자 크기를 크게 해요.","more-look"],["이번 달 근무를 사진으로 보내기","설정 › 이미지 공유로 달력 사진을 만들어 메신저로 보내요.","more-share"]]],["📝","포스트잇 · 메모",[["메모 · 포스트잇 · 업무 메모는 뭐가 달라요?","메모는 그날 하루에 붙어요. 포스트잇은 그 달 내내 달력 위에 보이고, 할 일 줄을 체크할 수 있어요. 업무 메모는 근무 인수인계용이라 나만 보고 백업에서 빠져요.","tab:cal"],["이번 달 내내 기억할 것 붙여 두기","달력 위 포스트잇에 적어 두면 그 달 내내 보여요.","tab:cal"],["매달 1일 · 말일에 할 일 띄우기","메모 \"자세히\"에서 반복을 켜고 1일, 말일, 말일 하루 전 중에 골라요. \"주간인 날만\"처럼 근무에 맞출 수도 있어요.","tab:cal"],["가족에게도 보이는 메모","메모 \"자세히\"에서 \"가족에게\"를 골라요. 한 줄 입력칸에 쓴 메모는 나만 봐요.","tab:cal"],["근무 인수인계 적기","설정 › 부가 기능에서 업무 메모를 켜면 날짜마다 인수, 인계, 지시를 따로 적을 수 있어요.","more-addons"],["지난 메모나 인수인계 찾기","설정 맨 위 찾기 칸에 적어 보세요.","srch-open"]]],["💊","스티커",[["약 먹었는지 체크","스티커에서 약을 고르고 하루 몇 번 먹는지, 알림 시각을 정해요.","stk-board"],["운동이나 물 마시기 같은 습관 기록","스티커를 반복으로 깔아 두고 할 때마다 눌러요. 한 달 통계도 나와요.","stk-board"],["쉬는 날에만 하는 일","날짜를 누르고 스티커 붙이기 → 스티커를 고른 뒤 반복에서 \"근무 맞춤\" → 휴무를 고르면 쉬는 날에만 깔려요.","stk-board"],["학원 · 동아리 · 운동 날씨까지","스티커를 붙일 때(등록 화면) 맨 아래 \"학원 · 취미 · 동아리\"에서 활동 시간과 위치를 정해요. 끝나면 자동으로 완료돼요.","stk-board"],["반복 스티커를 그만하고 싶어요","그만두는 날의 스티커 창에서 \"그만하기\"를 눌러요. 지난 기록은 남아요.","tab:cal"],["스티커가 왜 안 붙지?","스티커는 하루에 4개까지만 보여요. 반복 조건에 안 맞는 날, 근무와 겹치는 활동, \"그만하기\"를 누른 뒤의 날짜에도 안 붙어요.","stk-board"],["아이 얼굴로 스티커 만들기","스티커 고르기에서 \"내 것\"을 누르고 사진을 넣어요.","stk-board"],["그날 기분 남기기","스티커 고르기의 기분 탭에서 골라요. 한 달 통계로 기분을 돌아볼 수 있어요.","stk-board"],["아이 약이나 준비물 챙기기","아이 달력 날짜 창에서 스티커를 더하고 \"아이 · 육아\" 탭에서 골라요. 유치원 가는 날만 깔리게 할 수도 있어요.","tab:fam"]]],["☔","날씨",[["아침 알람 끄고 바로 날씨 보기","알람 설정에서 날씨를 \"끈 뒤 보기\"로 두면 알람을 끌 때 날씨 카드가 떠요.","tab:alarm"],["알람 없이 출근 전 날씨만","알람 설정에서 날씨를 \"날씨만\"으로 두면 알람 대신 날씨 알림만 와요.","tab:alarm"],["아이 등하교나 학원 날씨","아이 달력 날짜 창의 \"일정 패턴\"에서 일정 시간과 위치를 정해요. 학원은 스티커의 활동으로 정해요.","tab:fam"],["날씨 지역 바꾸기","근무 패턴의 \"위치\"에서 집과 직장 동네를 골라요.","more-pattern"]]],["👪","가족",[["아이나 가족 일정 같이 보기","설정 › 가족에서 \"가족 추가\"를 누르고 학교, 회사, 교대 중에 골라요.","fam-set"],["유치원에서 학교로 가요","아이 달력 날짜 창의 \"일정 패턴\"에서 \"이 날부터 새 일정\"을 눌러요. 그 전 날짜는 예전 그대로 남아요.","tab:fam"],["가족과 근무표 주고받기","가족 연결에서 초대 코드를 보내요.","link-open"],["가족에게 그날 쉬어 달라고 부탁하기","가족 근무자 달력에서 날짜를 눌러 쉬는 날로 요청해요. 받는 사람이 확정하면 달력에 바로 들어가요.","link-open"],["내 달력 없이 가족 것만 보고 싶어요","가족 연결에서 \"내 근무표를 가족에게 보여요\"를 끄면 달력 탭이 가족 달력으로 바뀌어요.","link-open"],["가족이 다 같이 쉬는 날 찾기","설정 › 부가 기능에서 \"같이 쉬는 날\"을 켜요.","more-addons"],["폰을 바꿔도 가족방 그대로","가족 연결에서 구글 계정을 연결해 두면 새 폰에서 가족방을 불러올 수 있어요.","link-open"],["구글 계정이 이미 다른 기기에 연결돼 있대요","앱을 다시 깔았거나 옛 폰에 연결했던 거예요. 가족 연결에서 [연결하기]를 누르고 \"예전 연결 풀고 이 폰에 연결\"을 고르면 돼요. 방장이면 꼭 해 두세요. 안 하면 폰을 바꿀 때 방장 권한을 못 찾아요.","link-open"],["가족을 빼고 싶어요","가족방엔 방장이 없어서 가족 과반이 찬성해야 빠져요. 30일 넘게 안 들어온 사람이나 내가 초대한 지 하루가 안 된 사람은 바로 뺄 수 있어요.","link-open"],["가족 메모와 근무 요청 무료 횟수","가족 메모, 근무 요청, 새 가족 포스트잇은 합쳐서 처음 10건까지 무료예요.","link-open"]]],["⏰","알람 · 알림",[["내일 하루만 일찍 일어나야 해요","알람을 하나 더 만들고 울리기를 \"한 번만\"으로 골라요. 원래 알람은 카드의 \"이번만 끄기\"로 하루 쉬게 해요.","tab:alarm"],["먼저 깼는데 알람이 울릴 것 같아요","알람 설정에서 \"5분 전 미리 알림\"을 켜 두면, 울리기 5분 전에 소리 없는 알림이 떠서 이번만 끌 수 있어요.","tab:alarm"],["야간 뒤 낮잠 땐 알림을 조용히","가족 연결의 \"자는 시간엔 소리 없이\"를 켜요.","link-open"]]],["💰","통계 · 수당",[["이번 달 월급이 얼마일지","설정 › 부가 기능의 \"근무 통계 · 수당\"에서 고정급과 명세서 한 장으로 맞춰요.","more-addons"],["연장 근무 기록","근무 통계를 켜면 날짜 창에 연장 칸이 생겨요. 가족에게도 늦게 끝나는 게 보여요.","tab:cal"]]],["📱","그 밖",[["홈 화면에서 근무 바로 보기","위젯을 홈 화면에 놓아요.","more-widget"],["폰을 바꿔도 데이터 지키기","설정 › 백업에서 구글 드라이브 자동 백업을 켜요.","more-backup"],["실수로 옛날 백업을 복원했어요","설정 › 백업의 \"복원 직전으로 되돌리기\"를 눌러요.","more-backup"]]]];
+const TIPS=[["📅","달력 · 근무",[["근무가 바뀌었을 때 한 번에 고치기","날짜를 누르고 \"여러 날 칠하기\"를 눌러요. 근무를 고른 다음 날짜를 하나씩 누르거나 손가락으로 쭉 그으면 돼요.","tab:cal"],["조나 회사가 바뀌었어요","근무 패턴에서 새 패턴을 만들고 첫 칸 시작 날을 바뀌는 날로 정해요. \"이 날부터 새 패턴\"을 누르면 지난 근무표와 통계는 그대로 남아요.","more-pattern"],["근무표가 불규칙해요","근무 패턴에서 불규칙으로 바꾸고, 날짜마다 근무를 넣어요.","more-pattern"],["빨간 날엔 쉬는 회사예요","근무 패턴에서 \"공휴일엔 쉬어요\"를 켜면 공휴일 근무가 휴무로 바뀌어요.","more-pattern"],["휴직이나 퇴사로 근무 없이 쓰고 싶어요","근무 패턴 맨 아래 \"개인 캘린더로 쓰기\"를 눌러요. 근무표는 지우지 않고 그대로 둬요.","more-pattern"],["직접 바꾼 근무를 되돌리고 싶어요","근무 패턴의 \"패턴 제외 초기화\"에서 기간을 고르면 그 사이 직접 바꾼 근무만 패턴대로 돌아가요.","more-pattern"],["글자가 잘 안 보여요","설정 › 화면에서 배경을 \"또렷하게\"로 바꾸거나 글자 크기를 크게 해요.","more-look"],["이번 달 근무를 사진으로 보내기","설정 › 이미지 공유로 달력 사진을 만들어 메신저로 보내요.","more-share"]]],["📝","포스트잇 · 메모",[["메모 · 포스트잇 · 업무 메모는 뭐가 달라요?","메모는 그날 하루에 붙어요. 포스트잇은 그 달 내내 달력 위에 보이고, 할 일 줄을 체크할 수 있어요. 업무 메모는 근무 인수인계용이라 나만 보고 백업에서 빠져요.","tab:cal"],["이번 달 내내 기억할 것 붙여 두기","달력 위 포스트잇에 적어 두면 그 달 내내 보여요.","tab:cal"],["매달 1일 · 말일에 할 일 띄우기","메모 \"자세히\"에서 반복을 켜고 1일, 말일, 말일 하루 전 중에 골라요. \"주간인 날만\"처럼 근무에 맞출 수도 있어요.","tab:cal"],["가족에게도 보이는 메모","메모 \"자세히\"에서 \"가족에게\"를 골라요. 한 줄 입력칸에 쓴 메모는 나만 봐요.","tab:cal"],["근무 인수인계 적기","설정 › 부가 기능에서 업무 메모를 켜면 날짜마다 인수, 인계, 지시를 따로 적을 수 있어요.","more-addons"],["지난 메모나 인수인계 찾기","설정 맨 위 찾기 칸에 적어 보세요.","srch-open"]]],["💊","스티커",[["약 먹었는지 체크","스티커에서 약을 고르고 하루 몇 번 먹는지, 알림 시각을 정해요.","stk-board"],["운동이나 물 마시기 같은 습관 기록","스티커를 반복으로 깔아 두고 할 때마다 눌러요. 한 달 통계도 나와요.","stk-board"],["쉬는 날에만 하는 일","날짜를 누르고 스티커 붙이기 → 스티커를 고른 뒤 반복에서 \"근무 맞춤\" → 휴무를 고르면 쉬는 날에만 깔려요.","stk-board"],["학원 · 동아리 · 운동 날씨까지","스티커를 붙일 때(등록 화면) 맨 아래 \"학원 · 취미 · 동아리\"에서 활동 시간과 위치를 정해요. 끝나면 자동으로 완료돼요.","stk-board"],["반복 스티커를 그만하고 싶어요","그만두는 날의 스티커 창에서 \"그만하기\"를 눌러요. 지난 기록은 남아요.","tab:cal"],["스티커가 왜 안 붙지?","스티커는 하루에 4개까지만 보여요. 반복 조건에 안 맞는 날, 근무와 겹치는 활동, \"그만하기\"를 누른 뒤의 날짜에도 안 붙어요.","stk-board"],["아이 얼굴로 스티커 만들기","스티커 고르기에서 \"내 것\"을 누르고 사진을 넣어요.","stk-board"],["그날 기분 남기기","스티커 고르기의 기분 탭에서 골라요. 한 달 통계로 기분을 돌아볼 수 있어요.","stk-board"],["아이 약이나 준비물 챙기기","아이 달력 날짜 창에서 스티커를 더하고 \"아이 · 육아\" 탭에서 골라요. 유치원 가는 날만 깔리게 할 수도 있어요.","tab:fam"]]],["☔","날씨",[["아침 알람 끄고 바로 날씨 보기","알람 설정에서 날씨를 \"끈 뒤 보기\"로 두면 알람을 끌 때 날씨 카드가 떠요.","tab:alarm"],["알람 없이 출근 전 날씨만","알람 설정에서 날씨를 \"날씨만\"으로 두면 알람 대신 날씨 알림만 와요.","tab:alarm"],["아이 등하교나 학원 날씨","아이 달력 날짜 창의 \"일정 패턴\"에서 일정 시간과 위치를 정해요. 학원은 스티커의 활동으로 정해요.","tab:fam"],["날씨 지역 바꾸기","근무 패턴의 \"위치\"에서 집과 직장 동네를 골라요.","more-pattern"]]],["👪","가족",[["아이나 가족 일정 같이 보기","설정 › 가족에서 \"가족 추가\"를 누르고 학교, 회사, 교대 중에 골라요.","fam-set"],["유치원에서 학교로 가요","아이 달력 날짜 창의 \"일정 패턴\"에서 \"이 날부터 새 일정\"을 눌러요. 그 전 날짜는 예전 그대로 남아요.","tab:fam"],["가족과 근무표 주고받기","가족 연결에서 초대 코드를 보내요.","link-open"],["가족에게 그날 쉬어 달라고 부탁하기","가족 근무자 달력에서 날짜를 눌러 쉬는 날로 요청해요. 받는 사람이 확정하면 달력에 바로 들어가요.","link-open"],["내 달력 없이 가족 것만 보고 싶어요","가족 연결에서 \"내 근무표를 가족에게 보여요\"를 끄면 달력 탭이 가족 달력으로 바뀌어요.","link-open"],["가족이 다 같이 쉬는 날 찾기","설정 › 부가 기능에서 \"같이 쉬는 날\"을 켜요.","more-addons"],["폰을 바꿔도 가족방 그대로","가족 연결에서 구글 계정을 연결해 두면 새 폰에서 가족방을 불러올 수 있어요.","link-open"],["구글 계정이 이미 다른 기기에 연결돼 있대요","앱을 다시 깔았거나 옛 폰에 연결했던 거예요. 가족 연결에서 [연결하기]를 누르고 \"예전 연결 풀고 이 폰에 연결\"을 고르면 돼요. 방장이면 꼭 해 두세요. 안 하면 폰을 바꿀 때 방장 권한을 못 찾아요.","link-open"],["가족을 빼고 싶어요","가족방엔 방장이 없어서 가족 과반이 찬성해야 빠져요. 30일 넘게 안 들어온 사람이나 내가 초대한 지 하루가 안 된 사람은 바로 뺄 수 있어요.","link-open"],["가족 메모와 근무 요청 무료 횟수","가족 메모, 근무 요청, 새 가족 포스트잇은 합쳐서 처음 10건까지 무료예요.","link-open"]]],["⏰","알람 · 알림",[["내일 하루만 일찍 일어나야 해요","알람을 하나 더 만들고 울리기를 \"한 번만\"으로 골라요. 원래 알람은 카드의 \"이번만 끄기\"로 하루 쉬게 해요.","tab:alarm"],["먼저 깼는데 알람이 울릴 것 같아요","알람 설정에서 \"5분 전 미리 알림\"을 켜 두면, 울리기 5분 전에 소리 없는 알림이 떠서 이번만 끌 수 있어요.","tab:alarm"],["야간 뒤 낮잠 땐 알림을 조용히","가족 연결의 \"자는 시간엔 소리 없이\"를 켜요.","link-open"]]],["💰","통계 · 수당",[["무급 휴가는 월급에서 빼고 싶어요","근무 종류 편집에서 \"무급\"을 켜면 그 날만큼 빼요. 연차는 빼지 않아요.","more-addons"],["이번 달 월급이 얼마일지","설정 › 부가 기능의 \"근무 통계 · 수당\"에서 고정급과 명세서 한 장으로 맞춰요.","more-addons"],["연장 근무 기록","근무 통계를 켜면 날짜 창에 연장 칸이 생겨요. 가족에게도 늦게 끝나는 게 보여요.","tab:cal"]]],["📱","그 밖",[["홈 화면에서 근무 바로 보기","위젯을 홈 화면에 놓아요.","more-widget"],["폰을 바꿔도 데이터 지키기","설정 › 백업에서 구글 드라이브 자동 백업을 켜요.","more-backup"],["실수로 옛날 백업을 복원했어요","설정 › 백업의 \"복원 직전으로 되돌리기\"를 눌러요.","more-backup"]]]];
 // v0.148 자세히: 이럴 때 · 단계 · 사진 (사진은 tips/ · tests/tipshots.js 가 실제 앱을 찍음)
 const TIPD={"내일 하루만 일찍 일어나야 해요": {"w": "다음 주 수요일만 평소보다 1시간 일찍 나가야 할 때 써요. 원래 알람은 그대로 두고 한 번만 울릴 알람을 하나 더 만들어요.","s": [["아래 <b>알람</b> 탭에서 오른쪽 위 <b>＋</b>를 눌러요.","t1_a"],["그날 근무를 고르고 시간을 정해요. 그날이 주간이면 <b>주간</b>을 고르고 오전 5:00으로 맞춰요."],["울리기에서 <b>한 번만</b>을 골라요. 아래에 울릴 날짜가 보이면 맞게 된 거예요.","t1_b"],["오른쪽 위 <b>저장</b>을 눌러요. 그날 원래 알람도 울리면 \"그날만 건너뛸까요?\"가 떠요. <b>그날만 건너뛰기</b>를 누르면 돼요."],["원래 알람만 하루 쉬고 싶을 땐 알람 카드의 <b>이번만 끄기</b>를 눌러요. 울리기 하루 전부터 보여요."]]},"연장 근무 기록": {"w": "오늘 퇴근이 2시간 늦어졌을 때 써요. 남겨 두면 이번 달 연장 시간과 예상 월급에 들어가고, 가족 폰에도 늦게 끝나는 게 보여요.","pre": "먼저 설정 › 부가 기능에서 <b>근무 통계 · 수당</b>을 켜 주세요.","s": [["달력에서 그 날짜를 눌러요. 근무 줄 끝에 <b>연장</b>이 있어요.","t2_a"],["<b>+2시간</b>을 누르면 퇴근이 늦춰지고 \"연장 2시간\"이 떠요. 한 번 더 누르면 시간이 더 붙어요.","t2_b"],["정확한 시각을 넣고 싶으면 <b>실제 퇴근</b> 칸을 눌러 고쳐요."],["창을 닫으면 저장돼요. 달력 날짜 칸에 \"+2시간\"이 붙어요."]]},"근무가 바뀌었을 때 한 번에 고치기": {"w": "다음 달 근무표가 나왔는데 여러 날이 패턴과 다를 때 써요. 하루씩 열지 않고 붓으로 칠하듯 한 번에 고쳐요.","s": [["달력에서 아무 날짜나 눌러요. 근무 줄 오른쪽에 <b>여러 날 칠하기</b>가 있어요.","t3_a"],["칠할 근무(예: 휴무)를 고르고 달력 날짜를 누르거나 손가락으로 쭉 그어요."],["다 칠했으면 <b>완료</b>를 눌러요. 가족과 연결돼 있으면 가족 폰에도 바뀐 근무가 가요."]]},"약 먹었는지 체크": {"w": "아침, 저녁 약을 먹었는지 헷갈릴 때 써요. 달력 날짜 위에 스티커로 체크하고 시각이 되면 알림도 받아요.","s": [["달력 날짜의 <b>윗부분</b>을 누르면 스티커 창이 열려요.","t4_a"],["<b>스티커 붙이기</b>를 눌러 약을 고르고, 하루 몇 번 먹는지와 알림 시각을 정해요. 반복은 \"매일\"로 둬요."],["먹을 때마다 그 칸을 눌러요. 하루 두 번 먹는 약은 1/2, 2/2로 채워져요."]]},"가족에게도 보이는 메모": {"w": "\"토요일 장모님 생신\"처럼 가족 폰에도 보이게 하고 싶을 때 써요.","pre": "먼저 가족 연결이 돼 있어야 해요.","s": [["날짜를 누르고 메모 줄 오른쪽 <b>자세히</b>를 눌러요. 한 줄 입력칸에 쓴 메모는 나만 봐요.","t5_a"],["<b>가족에게</b>를 고르고 적어요. 시간과 색도 여기서 정해요."],["저장하면 가족 폰에 알림이 가고 달력에 ♥로 보여요."]]},"이번 달 내내 기억할 것 붙여 두기": {"w": "\"이번 달 안에 자동차 보험 갱신\"처럼 날짜는 없지만 한 달 내내 봐야 할 게 있을 때 써요.","s": [["달력 왼쪽 위 <b>노란 포스트잇</b>을 눌러요.","t6_a"],["<b>＋</b>를 눌러 할 일이나 메모를 적어요. 할 일은 줄마다 체크할 수 있어요."],["포스트잇을 누르면 크게 열려요. 줄을 눌러 체크하고, <b>수정하기</b>로 고쳐요. 다 하면 가족에게 \"다 했어요\" 소식이 가요."]]},"학원 · 동아리 · 운동 날씨까지": {"w": "아이 학원이 끝나는 저녁 7시에 비가 오는지, 동호회 시간 날씨는 어떤지 같이 보고 싶을 때 써요.","pre": "먼저 설정 › 부가 기능에서 <b>출퇴근 시간 · 날씨</b>를 켜 주세요.","s": [["날짜를 누르고 <b>스티커 붙이기</b>에서 그 스티커를 골라요."],["맨 아래 <b>학원 · 취미 · 동아리</b>를 펼쳐요."],["활동 시간과 위치를 정하면 날짜 창 날씨에 그 시간 칸이 생기고, 끝나면 자동으로 완료돼요. 근무와 겹치는 날은 빠져요."]]},"반복 스티커를 그만하고 싶어요": {"w": "헬스장을 그만뒀는데 운동 스티커가 매일 계속 깔릴 때 써요. 지난 기록은 남기고 앞으로만 없애요.","s": [["그만두는 날의 스티커 창에서 그 스티커 줄 오른쪽 <b>⋯</b>를 눌러요."],["<b>이날부터 떼기</b>를 누르면 그날부터 안 깔려요. 지난 체크와 통계는 그대로예요."],["기록까지 모두 없애려면 설정 › 스티커에서 그 칸을 눌러 <b>지우기</b>를 눌러요."]]},"가족과 근무표 주고받기": {"w": "남편과 아내 폰에서 서로의 근무를 보고, 바뀌면 바로 알고 싶을 때 써요.","s": [["<b>가족</b> 탭 오른쪽 위 톱니바퀴(또는 설정 › 가족 목록)에서 <b>가족 연결</b>을 눌러요.","t9_a"],["먼저 하는 사람이 가족방을 만들고 <b>초대 코드</b>를 메신저로 보내요."],["받은 사람은 같은 화면에서 코드를 넣어요. 이제 근무가 바뀌면 서로 소식이 오고, 소식의 근무 기록에서 언제 바뀌었는지도 볼 수 있어요."]]},"가족에게 그날 쉬어 달라고 부탁하기": {"w": "\"그날 장모님 생신인데 쉴 수 있어?\"처럼 가족 근무를 바꿔 달라고 부탁할 때 써요.","pre": "먼저 가족 연결이 돼 있어야 해요.","s": [["가족 근무자 달력에서 그 날짜를 눌러요."],["<b>근무 변경 요청</b>에서 원하는 근무(예: 휴무)를 고르고 한마디 적어 <b>요청 보내기</b>를 눌러요."],["받는 사람은 소식에서 <b>수락</b>, <b>보류</b>, <b>거절</b> 중에 골라요. 수락하면 달력에 바로 들어가고 근무 기록에도 남아요."]]},"매달 1일 · 말일에 할 일 띄우기": {"w": "카드값 확인이나 관리비처럼 매달 같은 날 해야 하는 일이 있을 때 써요.","s": [["달력에서 그 날짜를 누르고, 메모 줄의 <b>자세히</b>를 눌러요.","t16_a"],["<b>반복</b>을 눌러 1일, 말일, 말일 하루 전 중에 골라요.","t16_b"],["근무에 맞출 수도 있어요. <b>주간인 날만</b>을 고르면 그날이 주간일 때만 뜨고, 아니면 다음 근무 날로 넘어가요."]]}};
 
@@ -5837,7 +5842,8 @@ function famActWx(m,now){
     return `<span class="wxb wet">${wxImg(k.i)||'☔'} ${esc(k.t.replace(/ 와요$/,''))} · ${/눈/.test(k.t)?'조심':'우산'}</span>`;
   }catch(e){return '';}
 }
-const famWxL=m=>m&&m.kind==='student'?{ls:'등원',le:'하원',lb:'등하원'}:{};
+const famSchool=n=>/학교/.test(String(n||''))&&!/유치원|어린이집/.test(String(n||''));   // v0.223 학교면 등교 · 하교 (유치원 · 어린이집은 등원 · 하원)
+const famWxL=(m,d)=>{if(!m||m.kind!=='student')return {};let n='';try{n=famTypeAt(m,d||new Date()).name;}catch(e){}return famSchool(n)?{ls:'등교',le:'하교',lb:'등하교'}:{ls:'등원',le:'하원',lb:'등하원'};};
 function wxFamChip(who,now){
   if(!wxOn())return '';
   if(who!=='me'&&famUsesTypes(who)){   // v0.117 직접 추가한 가족: 다음 칸(등원 · 하원 · 활동) 날씨 늘 한 줄 · 앞으로 비 · 눈이면 그걸로
@@ -5856,7 +5862,7 @@ function wxFamChip(who,now){
 function famWx(m,d,now){
   try{
     if(!wxOn())return null;const hm=famHome(m),H=wxRaw(hm);if(!H)return null;now=now||Date.now();
-    const win=wxMemWin(m,d),l0=wxMemWork(m,d),loc=l0&&l0!==hm?l0:'',W=loc?wxRaw(loc):null,L=famWxL(m),hq=wxFull(hm);
+    const win=wxMemWin(m,d),l0=wxMemWork(m,d),loc=l0&&l0!==hm?l0:'',W=loc?wxRaw(loc):null,L=famWxL(m,d),hq=wxFull(hm);
     const acts=famActs(m,d).map(z=>actWx(z.x.act,z.sp,z.x.emoji,hm)),ty=famTypeAt(m,d);
     const c=win?WX.commute(H,W,{s:win.s,e:win.e,hn:`집 · ${wxName(hm)}`,wn:W?`${ty.name||famLbl(m)} · ${wxName(loc)}`:`집 · ${wxName(hm)}`,hq,wq:loc?wxFull(loc):hq,now,acts,...L}):null;
     return {c:c||WX.dayCard(H,WX.keyD(new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime()),{now,hq,hp:wxName(hm),acts}),win,loc,L,hm,acts};
@@ -6054,7 +6060,7 @@ const AD_SHORT={comp:['휴무일·기념일','회사 휴무 · 생일'],together
 function openAddonPage(){   // v0.146 줄 + 스위치 (꺼진 줄을 누르면 켜짐 · 켜진 줄은 그 설정 · 끄기는 스위치)
   openPage(`${pageHead('부가 기능')}
     <div class="pg-b np">
-      <div class="pg-sec stiles adt" style="margin-top:8px">${ADDONS.map(a=>{const on=adOn(a[0]),sh=AD_SHORT[a[0]]||[a[2],''];return `<div class="prow tap adr ${on?'':'off'}" data-act="ad-tile" data-k="${a[0]}"><span class="npi">${lineIcon(a[1])}</span><div class="pl2">${esc(sh[0])}</div><label class="sw" data-noact="1"><input type="checkbox" id="ad_${a[0]}" ${on?'checked':''}><i></i></label></div>`;}).join('')}</div>
+      <div class="pg-sec stiles adt" style="margin-top:8px">${ADDONS.map(a=>{const on=adOn(a[0]),sh=a[0]==='wlog'?[wlName(),AD_SHORT.wlog[1]]:AD_SHORT[a[0]]||[a[2],''];return `<div class="prow tap adr ${on?'':'off'}" data-act="ad-tile" data-k="${a[0]}"><span class="npi">${lineIcon(a[1])}</span><div class="pl2">${esc(sh[0])}</div><label class="sw" data-noact="1"><input type="checkbox" id="ad_${a[0]}" ${on?'checked':''}><i></i></label></div>`;}).join('')}</div>
     </div>`,'addons');
 }
 // 처음 한 번만: 부가 기능이 있다는 안내 (쓰던 사람 · 처음 쓰는 사람)
@@ -6249,7 +6255,7 @@ function openStatsPage(){
         ${R.slip?'':`<div class="prow"><div class="pl2">연장 1시간 금액</div><input type="number" class="inl" id="payOt" inputmode="numeric" min="0" value="${P.ot||''}" placeholder="0" style="width:100px"> 원</div>
         <div class="prow"><div class="pl2">야간 1시간 금액</div><input type="number" class="inl" id="payNt" inputmode="numeric" min="0" value="${P.nt||''}" placeholder="0" style="width:100px"> 원</div>`}
       </div>
-      <div class="hint keep" style="padding:10px 22px 16px">무급 휴가는 근무 종류 편집에서 "무급"을 켜면 그 날만큼 빼요. 연차는 빼지 않아요.</div>`:''}
+`:''}
     </div>`,'stats');
 }
 // 대근 칸: 큰 숫자 = 전체 · 아래 줄 = 평일 · 주말 · 명절 (이번 달은 누르면 날짜 목록)
@@ -6339,7 +6345,7 @@ function typeListHtml(){
     <div class="pg-sec">
       <div class="tchipgrid" id="tlist" style="padding:14px 12px 6px">${S.types.map((x,i)=>`<div class="tl2 tl ${i<quickN()?'top4':''}" data-i="${i}" data-act="type-edit-page" data-s="${esc(x.k)}">${badge(x.k,'sm')}<small>${esc(x.name)}</small></div>`).join('')}<button class="tl2 add" data-act="type-pick-page"><i>＋</i><small>추가</small></button></div>
       <!-- v0.171 근무마다 시간 줄 뺌 (시간 = 근무 칩 → 편집 창 · 출퇴근 시간 · 날씨) -->
-      ${npRow('calendar-days','바로 보이는 개수',`<div class="npseg sm"><button class="${S.quickN?'':'on'}" data-act="quickn" data-v="0">자동</button><button class="${S.quickN===4?'on':''}" data-act="quickn" data-v="4">4개</button><button class="${S.quickN===8?'on':''}" data-act="quickn" data-v="8">8개</button></div>`)}
+      ${npRow('calendar-days','보이는 개수',`<div class="npseg sm"><button class="${S.quickN?'':'on'}" data-act="quickn" data-v="0">자동</button><button class="${S.quickN===4?'on':''}" data-act="quickn" data-v="4">4개</button><button class="${S.quickN===8?'on':''}" data-act="quickn" data-v="8">8개</button></div>`)}
     </div>`;
 }
 // 근무타입 칩 · 패턴 칸을 꾹 눌러 끌어서 순서 바꾸기 (S.types · S.pattern 순서가 그대로 저장됨 · 바로 반영)
@@ -7084,11 +7090,11 @@ function renderOb(){
       ${obAlarms().map(([k,a],i)=>{const tt=ampm(a.t);return `<div class="alrow">${obBadge(k)}<button type="button" class="tx" data-act="tpk" data-id="obT_${i}" data-type="time"><b><small style="display:inline;font-size:13px;margin-right:4px">${tt.ap}</small>${tt.tm}</b><small>${esc(shiftNameOf(k))} 근무 날</small></button><input type="hidden" id="obT_${i}" value="${a.t}"><label class="sw"><input type="checkbox" id="obOn_${i}" ${a.on?'checked':''}><i></i></label></div>`;}).join('')}
       ${hasBridge('status')?`<div class="lbl">알람이 꼭 울리게 하려면</div>
       ${PERM_KEYS.map(k=>`<div class="perm"><div class="ck ${issues.includes(k)?'no':''}">${issues.includes(k)?'!':'✓'}</div><span>${PERM_NAME[k]}</span>${issues.includes(k)?`<button data-act="nativefix" data-k="${k}">켜기 ›</button>`:''}</div>`).join('')}
-      <div class="ob-sub" style="font-size:12px">${SAMSUNG_TIP}</div>`:''}`;
+      ${isSamsung()&&issues.includes('batt')?`<div class="ob-sub" style="font-size:12px">${SAMSUNG_TIP}</div>`:''}`:''}`;
     foot=`<button class="btn" data-act="ob-finish" data-v="1">시작하기</button><button class="lk" data-act="ob-finish" data-v="0">알람은 나중에</button>`;
   }else{
     const t=new Date(),a=shiftOf(t),b=shiftOf(addDays(t,1));
-    const msg=S.noPat?'달력에서 날짜를 눌러 근무를 넣어 보세요':`오늘은 <b style="color:var(--fg)">${esc(shiftLabel(a))}</b>, 내일은 <b style="color:${isRest(b)?'var(--rest)':'var(--fg)'}">${esc(shiftLabel(b))}</b>이에요`;
+    const msg=S.noPat?'달력에서 날짜를 눌러 근무를 넣어 보세요':`오늘은 <b style="color:var(--fg)">${esc(shiftLabel(a))}</b>, 내일은 <b style="color:${isRest(b)?'var(--rest)':'var(--fg)'}">${esc(shiftLabel(b))}</b>${iyeyo(shiftLabel(b))}`;
     body=`<div style="text-align:center;padding-top:40px"><div style="font-size:52px">🎉</div><h2 style="margin-top:10px">준비 끝!</h2>
       <div class="ob-sub">${msg}</div></div>
       <div style="margin-top:30px">
@@ -7328,7 +7334,7 @@ document.addEventListener('click',e=>{
     case 'wl-close':wlClose();break;
     case 'wl-copy':{if(!wlEd)break;wlCommitInputs();const tx=wlCopyText(wlEd.k);if(!tx){toast('복사할 내용이 없어요');break;}copyText(tx);break;}
     case 'wls-nm':{S.wlog.name=t.dataset.v;save();openWlSet();break;}
-    case 'srch-open':srchOpen(t.dataset.v);break;
+    case 'srch-open':pageBack=pageMode==='wlset'?openWlSet:null;srchOpen(t.dataset.v);break;
     case 'srch-kind':srch.kind=t.dataset.v==='wl'?'wl':'memo';S.srchKind=srch.kind;save();renderSrch(false);break;
     case 'srch-q':srchSetQ(t.dataset.v||'');break;
     case 'srch-clear':srchSetQ('');{const f=$('#srchQ');if(f)f.focus();}break;
@@ -7355,7 +7361,7 @@ document.addEventListener('click',e=>{
     case 'fam-today':famGoToday();break;
     case 'req-go':{const k=t.dataset.k;if(!k)break;const d=parse(k);if(d.getFullYear()*12+d.getMonth()<MIN_M||d.getFullYear()*12+d.getMonth()>MAX_M){toast('달력에서 볼 수 없는 날이에요');break;}tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
     case 'fam-day':{const k=t.dataset.k,d=parse(k);tab='cal';setCur(d.getFullYear(),d.getMonth());render();openDay(k);break;}
-    case 'fam-add':{const n=(S.family||[]).length;famDraft={id:uid(),name:'',color:FAM_COL[n%6],kind:'office',days:[1,2,3,4,5],start:'09:00',end:'18:00',holOff:true,vac:[],team:S.myTeam};openFamEdit();break;}
+    case 'fam-add':{const n=(S.family||[]).length;famDraft={id:uid(),name:'',color:FAM_COL[n%6],kind:'office',days:[1,2,3,4,5],start:'09:00',end:'18:00',holOff:true,vac:[],team:S.myTeam};pageBack=pageMode==='famset'?openFamSetPage:null;openFamEdit();break;}
     case 'fam-mancal':{manId=t.dataset.id;const n=new Date();vcY=n.getFullYear();vcM=n.getMonth();renderManCalPage();break;}
     case 'man-ov':{const m=manMember();if(!m)break;const k=t.dataset.k,v=t.dataset.v;if(v)manSetOv(m,k,v);else if(m.ov){delete m.ov[k];if(!Object.keys(m.ov).length)delete m.ov;}save();renderManCalPage();openManDay(k);break;}
     case 'man-fold':{manFold=!manFoldOpen();const sec=t.closest('.shsec');if(sec){const o=manFold;shMorph(sec,o,()=>sec.classList.toggle('open',o));}else if(manDayK)openManDay(manDayK);break;}   // v0.198 내 날짜 창처럼 알약이 카드로 커짐
@@ -7388,7 +7394,7 @@ document.addEventListener('click',e=>{
       save();renderManCalPage();openManDay(k);break;}
     case 'man-note':{const m=manMember();if(!m)break;const k=t.dataset.k,v=($('#manNote')||{value:''}).value.trim().slice(0,40);m.notes=m.notes||{};if(v)m.notes[k]=v;else delete m.notes[k];save();closeSheet();renderManCalPage();break;}
     case 'man-edit':{const m=manMember();if(!m)break;famDraft=JSON.parse(JSON.stringify(m));openFamEdit();break;}
-    case 'fam-edit':{const m=S.family.find(x=>x.id===t.dataset.id);if(!m)break;famDraft=JSON.parse(JSON.stringify(m));openFamEdit();break;}
+    case 'fam-edit':{const m=S.family.find(x=>x.id===t.dataset.id);if(!m)break;famDraft=JSON.parse(JSON.stringify(m));pageBack=pageMode==='famset'?openFamSetPage:null;openFamEdit();break;}
     case 'fe-kind':famPull();famDraft.kind=t.dataset.v;if(famDraft.kind==='student'&&famDraft.start==='09:00'){famDraft.start='08:30';famDraft.end='15:00';}if(famDraft.kind==='office'&&famDraft.start==='08:30'){famDraft.start='09:00';famDraft.end='18:00';}openFamEdit();break;
     case 'fe-color':famPull();famDraft.color=t.dataset.v;openFamEdit();break;
     case 'fe-photo':famPull();openIcn({title:'가족 사진',sub:famDraft.name||'',icon:isPhoto(famDraft.photo)?famDraft.photo:'',letter:(famDraft.name||'?').slice(0,1),color:famDraft.color,name:null,hint:'사진을 넣으면 가족 탭에 얼굴이 보여요',emojis:[],resetLabel:'글자로',
@@ -7430,8 +7436,8 @@ document.addEventListener('click',e=>{
       famPull();const m=famDraft;if(!m.name){toast('이름을 넣어주세요');break;}delete m._ed;delete m._own;
       m.vac=(m.vac||[]).filter(v=>v.from&&v.to).map(v=>v.from>v.to?{from:v.to,to:v.from}:v);
       const i=S.family.findIndex(x=>x.id===m.id);if(i>=0)S.family[i]=m;else S.family.push(m);
-      famDraft=null;save();closePage();tab='fam';render();toast(i>=0?'고쳤어요':`👪 ${m.name}을(를) 추가했어요`);break;}
-    case 'fe-del':if(famDraft&&confirm(`${famDraft.name||'이 가족'}을(를) 목록에서 뺄까요?`)){S.family=S.family.filter(x=>x.id!==famDraft.id);famDraft=null;save();closePage();render();}break;
+      famDraft=null;save();{const b=pageBack;pageBack=null;closePage();if(b)b();else{tab='fam';render();}}toast(i>=0?'고쳤어요':`👪 ${m.name}을(를) 추가했어요`);break;}
+    case 'fe-del':if(famDraft&&confirm(`${famDraft.name||'이 가족'}을(를) 목록에서 뺄까요?`)){S.family=S.family.filter(x=>x.id!==famDraft.id);famDraft=null;save();{const b=pageBack;pageBack=null;closePage();render();if(b)b();}}break;
     case 'fam-cheer':{
       const c=cheerList()[+t.dataset.i];if(!c)break;
       const today=fmt(new Date());
@@ -7927,7 +7933,7 @@ document.addEventListener('click',e=>{
     case 'pers-help':openPop(`<div class="mh">${persKind==='on'?'개인 캘린더':'근무표'}<b>${persKind==='on'?'바꾸면 이렇게 돼요':'다시 쓰면 이렇게 돼요'}</b></div><div class="mi" style="display:block;line-height:1.6">${persHelp}</div><button class="mi" data-act="pop-close" style="justify-content:center;color:var(--muted)">닫기</button>`);break;
     case 'perm-samsung':try{window.AndroidBridge.openSettings('samsung_sleep');}catch(e){}toast('백그라운드 앱 사용 제한 › 자동 절전 예외 앱에서 언제쉬어를 더해 주세요');break;
     case 'more-mail':sendInquiry();break;
-    case 'more-privacy':openPrivacyPage();break;
+    case 'more-privacy':pageBack=pageMode==='info'?openInfoPage:null;openPrivacyPage();break;
     case 'my-code':if(S.link)copyText(myCode(S.link.uid));break;
     case 'adm-open':adm=null;openAdmPage();break;
     case 'adm-find':adm.q=($('#admQ')||{}).value||'';openAdmPage();break;
@@ -7944,7 +7950,7 @@ document.addEventListener('click',e=>{
     case 'todaylook':S.todayLook=['a','b','c','d'].includes(t.dataset.v)?t.dataset.v:'b';save();applyTune();if(pageMode==='tune')openTunePage();else lookRefresh();break;
     case 'tn-wk':tnWeek=Math.max(0,Math.min(tnRows-1,(tnWeek==null?tnBest:tnWeek)+(+t.dataset.d||0)));tunePrev();break;
     case 'callook':S.calLook=t.dataset.v==='fill'?'fill':'circle';save();applyTune();if(pageMode==='tune')openTunePage();else{render();lookRefresh();}break;
-    case 'tune-open':openTunePage();break;
+    case 'tune-open':pageBack=pageMode==='look'?openLookPage:null;openTunePage();break;
     case 'tune-reset':tuneDraft=tuneAll(null);applyTune();openTunePage();toast('처음 값으로 돌렸어요 · 저장해야 반영돼요');break;
     case 'tune-save':if(tuneDirty()){S.tuneHist=[JSON.parse(JSON.stringify(S.tune)),...(S.tuneHist||[])].slice(0,5);S.tune=JSON.parse(JSON.stringify(tuneDraft));save();applyTune();tuneBar();toast('저장했어요');}break;
     case 'tune-undo':if(!(S.tuneHist||[]).length){toast('돌아갈 저장이 없어요');break;}S.tune=S.tuneHist.shift();tuneDraft=JSON.parse(JSON.stringify(S.tune));save();applyTune();openTunePage();toast('이전 저장 값으로 돌렸어요');break;
@@ -8489,6 +8495,9 @@ let gAskAfter=false;
 function gWarnPop(){
   if(!googleOn()||S.gAcct||!S.link||S.link.role!=='host'||gAskAfter||Date.now()<(S.gWarnAt||0))return;
   if($('#pop').classList.contains('open')||document.querySelector('.dshell,#sheet.open,#page.open'))return;
+  gWarnShow();
+}
+function gWarnShow(){   // v0.223 가족방을 만든 뒤 안내와 앱 켤 때 경고를 하나로 (보여 주면 7일 쉼)
   S.gWarnAt=Date.now()+7*864e5;save();
   openPop(`<div class="mh gwpop"><b>⚠️ 구글 계정 연결 안 됨</b></div>
     <div class="mi gwpop-t">방장 권한을 잃을 수 있어요</div>
@@ -8496,9 +8505,7 @@ function gWarnPop(){
 }
 function gAskPop(){
   if(!gAskAfter||!googleOn()||S.gAcct||!S.link||S.link.role!=='host')return;gAskAfter=false;
-  openPop(`<div class="mh">가족방 지키기<b>이 폰(방장)에 구글 계정을 연결해 둘까요?</b></div>
-    <div class="mi" style="display:block"><div class="hint" style="padding:0;margin:0;line-height:1.7">가족방 번호는 방장 폰에 묶여 있어요. 폰을 바꾸거나 로그인이 바뀌면 가족방에서 튕길 수 있는데, 구글 계정을 연결해 두면 같은 방으로 돌아와요.<br>구글 계정 하나는 기기 하나에만 연결돼요 · 태블릿보다 방장 폰에 먼저 연결하세요.</div></div>
-    <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="pop-close">나중에</button><button class="btn grow" data-act="g-link-pop">연결하기</button></div>`);
+  gWarnShow();
 }
 async function famCreateInvite(perm,name){
   const {F,db,uid}=await famReady();
@@ -8986,7 +8993,7 @@ window.__onPush=o=>{
 function pushRow(){
   if(!S.link||!pushBridge())return '';
   const off=typeof window.AndroidBridge.notifEnabled==='function'&&!window.AndroidBridge.notifEnabled();
-  return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">가족 알림 받기<small>내용은 빼고 이름 · 날짜(포스트잇은 제목)만 알려줘요</small></div><label class="sw"><input type="checkbox" id="famPushOn" ${S.pushOn!==false?'checked':''}><i></i></label></div>${S.pushOn!==false?`<div class="prow"><div class="pl2">포스트잇 알림<small>가족이 새로 붙이거나 · 줄을 더하거나 · 할 일이 다 끝나면</small></div><label class="sw"><input type="checkbox" id="famPushBoard" ${S.pushBoard!==false?'checked':''}><i></i></label></div>`:''}${S.pushOn!==false?`<div class="prow"><div class="pl2">자는 시간엔 소리 없이<small>자는 시간 알림은 소리 없이 쌓여요</small></div><label class="sw"><input type="checkbox" id="famPushQuiet" ${S.pushQuiet!==false?'checked':''}><i></i></label></div>`:''}${off?'<div class="hint" style="padding:6px 16px 10px;color:#e5484d">폰 설정에서 이 앱의 알림이 꺼져 있어요. 폰 설정 › 앱 › 언제쉬어 › 알림을 켜 주세요.</div>':''}</div>`;
+  return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">가족 알림 받기<small>내용은 빼고 이름 · 날짜(포스트잇은 제목)만 알려줘요</small></div><label class="sw"><input type="checkbox" id="famPushOn" ${S.pushOn!==false?'checked':''}><i></i></label></div>${S.pushOn!==false?`<div class="prow"><div class="pl2">포스트잇 알림<small>가족이 새로 붙이거나 · 줄을 더하거나 · 할 일이 다 끝나면</small></div><label class="sw"><input type="checkbox" id="famPushBoard" ${S.pushBoard!==false?'checked':''}><i></i></label></div>`:''}${S.pushOn!==false?`<div class="prow"><div class="pl2">자는 시간엔 소리 없이<small>자는 시간 알림은 소리 없이 쌓여요</small></div><label class="sw"><input type="checkbox" id="famPushQuiet" ${S.pushQuiet!==false?'checked':''}><i></i></label></div>`:''}${off?'<div class="hint keep" style="padding:6px 16px 10px;color:#e5484d">폰 설정에서 이 앱의 알림이 꺼져 있어요. 폰 설정 › 앱 › 언제쉬어 › 알림을 켜 주세요.</div>':''}</div>`;
 }
 // 하루에 한 번 "나 여기 있어요": 내 구성원 문서 seenAt (30일 넘게 안 온 사람 정리 · 다수결 계산) · 처음 만든 사람은 옛 앱 가족을 위해 hostSeen 도
 async function famHostSeen(){
@@ -9603,7 +9610,7 @@ function srchResHtml(){
 function renderSrch(focus){
   const q=srch.q.trim();
   const chips=wlOn()?`<div class="npseg">${[['memo','메모'],['wl',wlName()]].map(([v,l])=>`<button class="${srch.kind===v?'on':''}" data-act="srch-kind" data-v="${v}">${esc(l)} <span class="srn">${q?srchRun(q,v).length:''}</span></button>`).join('')}</div>`:'';
-  openPage(`${pageHead(wlOn()?'메모 · 일지 찾기':'메모 찾기')}<div class="pg-b np"><div class="srbox"><div class="srfield ${srch.q?'has':''}">${npi('search',20)}<input type="search" id="srchQ" placeholder="찾을 글자" value="${esc(srch.q)}" enterkeyhint="search" aria-label="찾을 글자"><button class="srx" data-act="srch-clear" aria-label="지우기">✕</button></div>${chips}</div><div id="srchRes">${srchResHtml()}</div></div>`,'search');
+  openPage(`${pageHead(wlOn()?`메모 · ${esc(wlName())} 찾기`:'메모 찾기')}<div class="pg-b np"><div class="srbox"><div class="srfield ${srch.q?'has':''}">${npi('search',20)}<input type="search" id="srchQ" placeholder="찾을 글자" value="${esc(srch.q)}" enterkeyhint="search" aria-label="찾을 글자"><button class="srx" data-act="srch-clear" aria-label="지우기">✕</button></div>${chips}</div><div id="srchRes">${srchResHtml()}</div></div>`,'search');
   if(focus)setTimeout(()=>{const f=$('#srchQ');if(f)f.focus();},80);
 }
 /* ================= 포스트잇 가족 공유: households/{hid}/board/{내uid_포스트잇id} =================
@@ -10107,7 +10114,7 @@ window.__onBack=()=>{
     if(pageMode==='memodetail'){mdDraft=null;closePage();return true;}
   }
   if(pageMode==='stampadd'&&stDraft){srBack();return true;}
-  if(pageMode){closePage();return true;}
+  if(pageMode){const bk=document.querySelector('#page.open .pg-h .bk');if(bk){bk.click();return true;}closePage();return true;}   // v0.223 화면 위 ‹ 와 같게 (바깥 화면으로 한 단계씩)
   if(tab==='colleague'){tab='set';render();return true;}
   if(tab!=='cal'){tab='cal';render();return true;}
   openExitAsk();return true;

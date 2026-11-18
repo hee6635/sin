@@ -43,6 +43,6 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   await p.evaluate(()=>{__wx.closePop&&__wx.closePop();__wx.openDay('2026-10-14');});await p.waitForTimeout(400);
   T('내 메모 (v0.155): 안내 줄 없음',await p.evaluate(()=>!document.querySelector('#sheet .ibar .note')));
   await p.evaluate(()=>{__wx.S.memos['2026-10-16']=[{id:'a2',text:'x',t:2},{id:'a3',text:'y',t:3}];__wx.closeSheet();__wx.openDay('2026-10-14');});await p.waitForTimeout(400);
-  T('내 메모 3개부터: 안내 줄 없음 · 입력칸 "나만 보는 메모"',await p.evaluate(()=>!document.querySelector('#sheet .ibar .note')&&document.getElementById('memoInput').placeholder==='나만 보는 메모'));
+  T('내 메모 3개부터: 안내 줄 없음 · 입력칸 "메모"(가족방 없으면 · v0.223)',await p.evaluate(()=>!document.querySelector('#sheet .ibar .note')&&document.getElementById('memoInput').placeholder==='메모'));
   T('오류 없음',p.errs.length===0,p.errs.join('|'));
   T.sum();await b.close();})();

@@ -2037,3 +2037,9 @@ input:not(:placeholder-shown)~.flab{opacity:1;transform:translateY(-21px) scale(
 .srnone{display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:70px}.srnone b{font-size:16px}
 .srmag{position:relative;width:84px;height:84px;border-radius:24px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:color-mix(in srgb,var(--fg) 35%,var(--bg));box-shadow:0 2px 12px rgba(15,23,42,.035)}
 .srmag svg{transform-origin:50% 60%}.srmag i{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-style:normal;font-weight:900;display:flex;align-items:center;justify-content:center}
+/* v0.223 날짜 창: 회색 바탕이 아래 끝까지 (흰 경계 없게) · 긴 메모는 4줄까지 (눌러 고치면 다 보임) */
+.dsbody{min-height:max(60vh,calc(100vh - 170px))}
+#sheet .mcard .mt2 .tx{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+/* v0.223 낱말 가운데서 줄 바뀌지 않게 (아주 긴 낱말만 어쩔 수 없을 때 나눔) */
+body{word-break:keep-all;overflow-wrap:break-word}
+.fillchips .tchip{gap:8px}   /* v0.223 처음 설정: 고른 동그라미 테두리가 아래 글자에 닿지 않게 */

@@ -89,7 +89,7 @@ const ONLY=process.env.ONLY||'';
     await act(p,'backup-export');await p.waitForTimeout(200);
     T('백업 파일: 기본은 업무 일지가 빠짐',await p.evaluate(()=>!!window.__bk&&!('wlog' in window.__bk)&&!!window.__bk.memos));
     await click(p,'#nav [data-tab="set"]');await p.waitForTimeout(300);
-    T('켜짐: 설정 맨 위 "🔍 메모 · 일지 찾기"',await p.evaluate(()=>/메모 · 일지 찾기/.test(document.querySelector('.srch-entry').textContent)));
+    T('켜짐: 설정 맨 위 "🔍 메모 · (일지 이름) 찾기"',await p.evaluate(()=>/메모 · .*찾기/.test(document.querySelector('.srch-entry').textContent)));
     await click(p,'.srch-entry');await p.waitForTimeout(300);
     await click(p,'[data-act="srch-kind"][data-v="wl"]');await p.waitForTimeout(200);
     await p.fill('#srchQ','순찰');await p.waitForTimeout(400);
