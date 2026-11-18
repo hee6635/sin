@@ -1,0 +1,55 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0}body{font-family:Pretendard,'Noto Sans KR',sans-serif;background:#e5e7eb;display:flex;gap:24px;padding:24px;align-items:flex-start}
+.ph{width:390px;height:780px;background:#f3f4f6;border-radius:28px;overflow:hidden;position:relative;box-shadow:0 8px 30px rgba(0,0,0,.12)}
+.cap{position:absolute;top:-22px;left:0;font:700 13px sans-serif;color:#6b7280}
+.wrap{position:relative;margin-top:22px}
+.hd{height:56px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#111;border-bottom:1px solid #e9ebef;background:#f7f7f8;position:relative}.hd i{position:absolute;left:18px;font-style:normal;font-size:22px}
+.sb{margin:14px 16px 0;height:50px;border-radius:16px;background:#fff;display:flex;align-items:center;gap:10px;padding:0 14px;box-shadow:0 1px 3px rgba(15,23,42,.06);border:1.5px solid transparent;transition:border-color .25s,box-shadow .25s}
+.sb.f{border-color:#3182f6;box-shadow:0 0 0 4px rgba(49,130,246,.14)}
+.sb svg{flex:none}.sb .t{flex:1;font-size:16px;color:#111}.sb .t.ph0{color:#9ca3af}.sb .x{width:20px;height:20px;border-radius:50%;background:#d1d5db;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center}
+.cur{display:inline-block;width:1.5px;height:18px;background:#3182f6;vertical-align:-3px;margin-left:1px;animation:bl 1s steps(2) infinite}@keyframes bl{50%{opacity:0}}
+.seg{display:flex;gap:8px;margin:12px 16px 0;background:#e9ebef;border-radius:12px;padding:3px}.seg b{flex:1;text-align:center;padding:8px 0;border-radius:10px;font-size:14px;color:#6b7280;font-weight:600}.seg b.on{background:#fff;color:#111;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.lb{display:flex;justify-content:space-between;margin:22px 22px 10px;font-size:13px;font-weight:700;color:#6b7280}.lb span{font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 16px}
+.chip{background:#fff;border-radius:999px;padding:8px 12px;font-size:14px;color:#333;display:flex;align-items:center;gap:6px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.chip s{text-decoration:none;color:#b0b6bf;font-size:12px}
+.chip.w{background:color-mix(in srgb,#3182f6 9%,#fff);color:#1b64da}.chip.w em{font-style:normal;font-size:12px;color:#7aa7ee}
+.card{margin:0 16px;background:#fff;border-radius:20px;overflow:hidden}
+.row{padding:13px 16px;display:flex;gap:12px;align-items:center;position:relative}.row+.row:before{content:'';position:absolute;top:0;left:16px;right:16px;height:1px;background:#f0f1f3}
+.d{width:44px;text-align:center;flex:none}.d b{display:block;font-size:17px;color:#111}.d small{font-size:11px;color:#9ca3af}
+.m{font-size:15px;color:#222}.m mark{background:#fff1b8;color:#111;border-radius:4px;padding:0 2px}.m small{display:block;font-size:12px;color:#9ca3af;margin-top:2px}
+.nr{display:flex;flex-direction:column;align-items:center;margin-top:90px;gap:14px}
+.mag{position:relative;width:88px;height:88px;border-radius:26px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.mag svg{animation:shake 1.6s ease-in-out infinite;transform-origin:50% 60%}
+@keyframes shake{0%,40%,100%{transform:rotate(0)}8%{transform:rotate(-14deg)}16%{transform:rotate(12deg)}24%{transform:rotate(-8deg)}32%{transform:rotate(5deg)}}
+.q{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;background:#3182f6;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;animation:pop 1.6s infinite}
+@keyframes pop{0%,30%{transform:scale(0)}42%{transform:scale(1.25)}50%,100%{transform:scale(1)}}
+.nr b{font-size:16px;color:#111}.nr .chip{margin-top:6px}
+</style></head><body>
+<div class="wrap"><div class="cap">① 처음 (최근 찾은 글자 · 자주 쓴 낱말)</div><div class="ph">
+ <div class="hd"><i>‹</i>메모 · 일지 찾기</div>
+ <div class="sb f"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3182f6" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><span class="t ph0"><span class="cur"></span>찾을 글자</span></div>
+ <div class="seg"><b class="on">메모</b><b>업무 메모</b></div>
+ <div class="lb">최근 찾은 글자<span>모두 지우기</span></div>
+ <div class="chips"><div class="chip">🕘 병원 <s>✕</s></div><div class="chip">🕘 회식 <s>✕</s></div><div class="chip">🕘 택배 <s>✕</s></div></div>
+ <div class="lb">내 메모에 자주 나와요</div>
+ <div class="chips"><div class="chip w">유치원 <em>12</em></div><div class="chip w">병원 <em>9</em></div><div class="chip w">장보기 <em>7</em></div><div class="chip w">회식 <em>5</em></div><div class="chip w">생일 <em>4</em></div><div class="chip w">택배 <em>3</em></div><div class="chip w">세차 <em>3</em></div></div>
+</div></div>
+<div class="wrap"><div class="cap">② 찾는 중 (찾은 글자 노랗게)</div><div class="ph">
+ <div class="hd"><i>‹</i>메모 · 일지 찾기</div>
+ <div class="sb f"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3182f6" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><span class="t">병원<span class="cur"></span></span><span class="x">✕</span></div>
+ <div class="seg"><b class="on">메모 3</b><b>업무 메모 1</b></div>
+ <div class="lb">3개</div>
+ <div class="card">
+  <div class="row"><div class="d"><b>11.24</b><small>화</small></div><div class="m">유찬 소아과 <mark>병원</mark> 10시<small>2026</small></div></div>
+  <div class="row"><div class="d"><b>11.03</b><small>월</small></div><div class="m">치과 <mark>병원</mark> 예약 확인<small>2026</small></div></div>
+  <div class="row"><div class="d"><b>10.15</b><small>수</small></div><div class="m">엄마 <mark>병원</mark> 같이 가기<small>2026</small></div></div>
+ </div>
+</div></div>
+<div class="wrap"><div class="cap">③ 없을 때 (돋보기 고개 젓고 ? 톡)</div><div class="ph">
+ <div class="hd"><i>‹</i>메모 · 일지 찾기</div>
+ <div class="sb f"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3182f6" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><span class="t">수영장<span class="cur"></span></span><span class="x">✕</span></div>
+ <div class="seg"><b class="on">메모 0</b><b>업무 메모 0</b></div>
+ <div class="nr"><div class="mag"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><div class="q">?</div></div>
+ <b>'수영장' 없어요</b></div>
+</div></div>
+</body></html>
