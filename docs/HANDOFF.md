@@ -590,6 +590,10 @@
 - render: 보이는 달만 바로 fitDn · memoShift · plFit (옆 달은 calFillLater). 컴퓨터 기준 다시 그리기 300 → 150ms.
 - 시험 s95 s104 s67 고침.
 
+## v0.208 작은 창 판 불투명 · 날씨 카드 처음부터
+- 작은 창(팝업) 모핑: 판(.menu)이 처음 10% 안에 불투명 · 내용(showKids)은 230ms 뒤 (반투명 판 너머 뒤 글자가 겹쳐 번쩍이던 것 · 날씨 큰 창에서 보임).
+- 날짜 창 가볍게 열기(dsLite)는 날짜 띠 7칸만 — 날씨 카드는 처음부터 넣음 (빈 자리 .wxph 였다가 나중에 뜨며 메모 카드가 밀리던 것).
+
 ## v0.207 날짜 창 도착 직후 뒤 작업 미룸
 - 폰 기록: 껍데기 모션 중 멈춤은 없어짐. 도착 직후 가족 새로 받기(famRefreshUiNow → render 103ms)가 끼어 첫 화면이 158ms 늦게 뜸.
 - `uiQuiet()`: 여는 껍데기가 있거나 도착(`shellArriveT`) 뒤 1.2초 안이면 남은 ms. famRefreshUiNow · 켤 때 widgetSync(1.6초) · calFillLater 가 이걸 보고 미룸.

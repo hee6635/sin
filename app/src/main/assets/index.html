@@ -5409,9 +5409,9 @@ const MO=(()=>{
     m.style.opacity='0';hideKids(m);
     requestAnimationFrame(()=>{if(!m.isConnected)return;m.style.opacity='';const b=m.getBoundingClientRect();m.style.transformOrigin='0 0';m.style.willChange='transform';
       pop.animate([{backgroundColor:'rgba(0,0,0,0)'},{backgroundColor:getComputedStyle(pop).backgroundColor}],{duration:280});
-      const a=c?m.animate([{transform:tfOf(c,b),opacity:0},{opacity:1,offset:.35},{transform:'none',opacity:1}],{duration:360,easing:EO})
+      const a=c?m.animate([{transform:tfOf(c,b),opacity:0},{opacity:1,offset:.1},{transform:'none',opacity:1}],{duration:360,easing:EO})   // v0.208 흰 판은 바로 불투명하게 (반투명한 판 너머로 뒤 글자가 겹쳐 번쩍이던 것) → 내용은 판이 거의 다 커진 뒤
                :m.animate([{transform:'translateY(110%)'},{transform:'none'}],{duration:360,easing:EO});
-      showKids(m,c?40:60);a.onfinish=()=>{m.style.transformOrigin='';m.style.willChange='';};});}
+      showKids(m,c?230:60);a.onfinish=()=>{m.style.transformOrigin='';m.style.willChange='';};});}
   function popClose(old){if(RM()||!old.classList.contains('open'))return false;const m=old.querySelector('.menu');if(!m||m.style.opacity==='0')return false;
     const fresh=old.cloneNode(false);fresh.className='';fresh.removeAttribute('style');old.parentNode.insertBefore(fresh,old);old.style.pointerEvents='none';old.classList.remove('open');old.classList.add('ghost');old.setAttribute('aria-hidden','true');old.inert=true;
     const b=m.getBoundingClientRect(),s=popSrc&&popSrc.isConnected?popSrc:null;popSrc=null;m.style.transformOrigin='0 0';m.style.willChange='transform';
@@ -7052,7 +7052,7 @@ function openDay(k){
 }
 // 날짜 창 내용 (옆으로 밀 때 옆 날짜를 미리 그리는 데도 씀 — 상태는 안 바꿈)
 // v0.202 날짜 창을 가볍게 열기: 껍데기가 움직이는 동안엔 날짜 띠 7칸 · 날씨 카드는 같은 높이 빈 자리 → 도착하면 채움(dsFill)
-let dsLite=false;const wxPhH={};let wxPhLast=0;
+let dsLite=false;   // v0.208 가볍게 열기 = 날짜 띠 7칸만 (날씨 카드는 처음부터 넣음 — 빈 자리였다가 나중에 뜨면 늦고 번쩍여 보였음)
 const dsOffs=()=>dsLite?[-3,-2,-1,0,1,2,3]:Array.from({length:61},(_,j)=>j-30);
 function dsFill(){
   const sh=$('#sheet');if(!sh||!sh.classList.contains('open'))return;
@@ -7061,7 +7061,7 @@ function dsFill(){
   const st=sh.querySelector('#dstrip'),nst=tp.content.querySelector('#dstrip');
   if(st&&nst&&st.children.length<nst.children.length){st.innerHTML=nst.innerHTML;const on=st.querySelector('.dsi.on');if(on)st.scrollLeft=dsiX(st,on)+on.offsetWidth/2-st.clientWidth/2;}
   const ph=sh.querySelector('#wxDay.wxph'),nw=tp.content.querySelector('#wxDay')||tp.content.querySelector('.wxcard');
-  if(ph){if(nw){ph.replaceWith(nw);const h=nw.offsetHeight;if(h){wxPhH[sheetKey]=h;wxPhLast=h;}if(nw.animate)nw.animate([{opacity:0},{opacity:1}],{duration:160});}else ph.remove();}
+  if(ph){if(nw)ph.replaceWith(nw);else ph.remove();}
   setTimeout(()=>{try{if(sheetMode==='day'&&sheetKey&&wxOn()&&!wxPopFam){const k=sheetKey,h=wxDayPopHtml(k);if(h)wxPre={k,h,t:Date.now()};}}catch(e){}},250);   // 다음에 누를 큰 날씨 창은 미리 만들어 둠
 }
 let wxPre=null;
@@ -7113,7 +7113,7 @@ function dayHtml(k){
   }
   // 순서: 근무 타입 → 대기 중인 요청 → 날씨 → (가족 메모 알림) → 메모
   const [tp1,tp2]=topPart.split('');
-  return `${head}<div class="dsbody">${tp1}${dsLite&&wxOn()?`<div id="wxDay" class="wxph" data-k="${k}" style="height:${wxPhH[k]||wxPhLast||0}px"></div>`:wxDayHtml(k)}${tp2||''}${memoSection(k)}</div>`;   // v0.155 아래쪽 = 회색 바탕 + 흰 카드
+  return `${head}<div class="dsbody">${tp1}${wxDayHtml(k)}${tp2||''}${memoSection(k)}</div>`;   // v0.155 아래쪽 = 회색 바탕 + 흰 카드
 }
 
 /* ⏱ 연장 = 그날 실제 출근 · 퇴근 (근무 통계를 켠 사람 · 근무 날만). 바꾼 시각은 가족 탭 "몇 시 끝" · 가족 폰 · 날씨 · 통계에 쓰임
