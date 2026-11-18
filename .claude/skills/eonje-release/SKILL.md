@@ -1,6 +1,6 @@
 ---
 name: eonje-release
-description: 언제쉬어 앱을 "만들어 / 만들고 올려" 한 뒤 올리기 전 점검과 올리기 순서. 관련 시험 · 옛 저장 데이터 시험 · 코틀린 확인 · 버전 · 문서 · 두 브랜치에 올리기 · 5분 뒤 빌드 확인. 앱 코드(app/)를 고쳐서 올릴 때마다 쓴다.
+description: 언제쉬어 앱을 "만들어 / 만들고 올려" 한 뒤 올리기 전 점검과 올리기 순서. 관련 시험 · 옛 저장 데이터 시험 · 코틀린 확인 · 버전 · 문서 · 작업 브랜치에 올리기 · 5분 뒤 빌드 확인. 앱 코드(app/)를 고쳐서 올릴 때마다 쓴다.
 ---
 
 # 언제쉬어 올리기 전 점검
@@ -35,15 +35,15 @@ description: 언제쉬어 앱을 "만들어 / 만들고 올려" 한 뒤 올리�
 
 ## 5. 올리기
 - 커밋 제목: `v0.xxx: 바뀐 것 · 바뀐 것` (쉬운 한국어), 본문에 `- ` 줄로 요약 + 시험 번호.
-- 두 브랜치 모두:
-  `git push -u origin HEAD:claude/continue-sin-app-dev-x8ou0c`
-  `git push origin HEAD:claude/continue-app-development-o1v8wg`
-  - 두 번째가 rejected(다른 세션이 먼저 올림)면: 그 브랜치를 받아 임시 브랜치에서 merge 하고 그 브랜치에만 올린다. 강제 푸시 금지.
+- 평소엔 **작업 브랜치 하나에만** 올린다 (사용자 결정 2026-11-18 · 빌드 한 번 · APK 도 여기서):
+  `git push -u origin HEAD:<이번 대화의 작업 브랜치>`
+- **본 브랜치(claude/continue-app-development-o1v8wg)에는 대화를 마칠 때 · 크게 정리할 때만** 한 번 합친다 (다음 대화가 여기서 이어받음).
+  - 받아서 임시 브랜치에서 merge 하고 그 브랜치에만 올린다. 강제 푸시 금지.
 - design/ · docs/ · data/ · firebase/ · scripts/ · .claude/ 만 바뀐 커밋은 빌드가 안 돈다. 그 밖은 APK 빌드가 돈다.
 
 ## 6. 빌드 확인
 - `send_later` 로 5분 뒤 "v0.xxx 빌드 결과 확인하고 사용자에게 한국어로 알려주기".
-- 깨어나면 `mcp__github__actions_list` (list_workflow_runs, hee6635/sin, per_page 3) 로 두 브랜치 "APK 빌드" 결과 확인.
+- 깨어나면 `mcp__github__actions_list` (list_workflow_runs, hee6635/sin, per_page 3) 로 "APK 빌드" 결과 확인.
 - 실패면 `get_job_logs` 로 원인을 보고 고친 뒤 다시 1번부터.
 
 ## 7. 사용자에게 알리기
