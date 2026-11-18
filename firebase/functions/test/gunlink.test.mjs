@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const { handle } = createRequire(import.meta.url)('../lib/gunlink.js');
 const base = (o = {}) => ({ projectNumber: '123', verifyFb: async t => { if (t !== 'fb') throw 0; return { uid: 'me' }; },
-  tokenInfo: async () => ({ aud: '123-x.apps', sub: 'g1', email_verified: 'true' }), userByGoogle: async () => ({ uid: 'old' }),
+  tokenInfo: async () => ({ aud: '123-x.apps', sub: 'g1', email: 'a@b.c', email_verified: 'true' }), userByGoogle: async () => ({ uid: 'old' }), userByEmail: async () => null,
   roomOf: async () => null, unlinked: [], unlink(u) { this.unlinked.push(u); }, ...o });
 let d = base(); assert.equal((await handle(d, { fbToken: 'x', gToken: 'g' })).status, 401);
 d = base(); assert.equal((await handle(d, { fbToken: 'fb' })).status, 400);
@@ -11,4 +11,6 @@ d = base({ userByGoogle: async () => ({ uid: 'me' }) }); assert.deepEqual((await
 d = base({ roomOf: async () => ({ name: '태블릿', role: 'member' }) }); assert.equal((await handle(d, { fbToken: 'fb', gToken: 'g' })).body.busy, true); assert.equal(d.unlinked.length, 0);
 await handle(d, { fbToken: 'fb', gToken: 'g', force: true }); assert.deepEqual(d.unlinked, ['old']);
 d = base(); assert.deepEqual((await handle(d, { fbToken: 'fb', gToken: 'g' })).body, { ok: true }); assert.deepEqual(d.unlinked, ['old']);
+d = base({ userByGoogle: async () => null, userByEmail: async () => ({ uid: 'old2' }) }); await handle(d, { fbToken: 'fb', gToken: 'g' }); assert.deepEqual(d.unlinked, ['old2']);
+d = base({ userByEmail: async () => ({ uid: 'old2' }) }); await handle(d, { fbToken: 'fb', gToken: 'g' }); assert.deepEqual(d.unlinked, ['old', 'old2']);
 console.log('gunlink ok');

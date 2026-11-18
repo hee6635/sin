@@ -157,13 +157,19 @@ exports.gunlink = onRequest({ region: REGION, cors: true, invoker: 'public', max
       verifyFb: t => admin.auth().verifyIdToken(t),
       tokenInfo: async t => { const r = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(t)); return r.ok ? r.json() : null; },
       userByGoogle: async sub => { try { return await admin.auth().getUserByProviderUid('google.com', sub); } catch (e) { return null; } },
+      userByEmail: async em => { try { return await admin.auth().getUserByEmail(em); } catch (e) { return null; } },
       roomOf: async uid => {
         const u = await db.collection('users').doc(uid).get(); const hid = u.exists ? String(u.data().hid || '') : '';
         if (!hid) return null;
         const m = await db.collection('households').doc(hid).collection('members').doc(uid).get();
         return m.exists ? { hid, name: m.data().name || '', role: m.data().role || '' } : null;
       },
-      unlink: uid => admin.auth().updateUser(uid, { providersToUnlink: ['google.com'] }),
+      unlink: async (uid, em) => {   // 구글을 떼고, 같은 이메일이 남아 있으면 바꿔 둠 (이메일 하나 = 계정 하나 설정 때문)
+        const u = await admin.auth().getUser(uid);
+        const ch = { providersToUnlink: (u.providerData || []).some(p => p.providerId === 'google.com') ? ['google.com'] : [] };
+        if (u.email && em && u.email.toLowerCase() === em.toLowerCase()) ch.email = `unlinked-${uid.toLowerCase()}@eonjeswieo.invalid`;
+        if (ch.providersToUnlink.length || ch.email) await admin.auth().updateUser(uid, ch);
+      },
     }, { fbToken: auth.startsWith('Bearer ') ? auth.slice(7) : '', gToken: b.g, force: !!b.force });
     res.status(out.status).json(out.body);
   } catch (e) { console.warn('gunlink', e && e.message); res.status(500).json({ err: 'server' }); }

@@ -8792,7 +8792,7 @@ window.__onGoogle=async o=>{
       try{await A.linkWithCredential(FBX.auth.currentUser,cred);}
       catch(e){
         const c=String((e&&e.code)||'');
-        if(c.includes('credential-already-in-use')){if(!await gUnlinkOld(o.idToken))return;await A.linkWithCredential(FBX.auth.currentUser,cred);}
+        if(c.includes('credential-already-in-use')||c.includes('email-already-in-use')){if(!await gUnlinkOld(o.idToken))return;await A.linkWithCredential(FBX.auth.currentUser,cred);}
         else if(!c.includes('provider-already-linked'))throw e;
       }
       S.gAcct=String(o.email||'').slice(0,80)||'연결됨';famRegUser(true).catch(()=>{});save();toast('구글 계정에 연결했어요');
@@ -8904,9 +8904,9 @@ async function admGive(){
 }
 function googleRow(){
   if(!googleOn())return '';
-  if(S.gAcct)return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">구글 계정에 연결됨<small>${esc(S.gAcct)} · 구글 계정 하나는 기기 하나에만 연결돼요</small></div><span class="muted">✓</span></div></div>`;
+  if(S.gAcct)return `<div class="pg-sec" style="margin-top:16px"><div class="prow"><div class="pl2">구글 계정에 연결됨<small class="keep">${esc(S.gAcct)}</small></div><span class="muted">✓</span></div></div>`;
   const host=!!(S.link&&S.link.role==='host');
-  if(host)return `<div class="pg-sec gwarn" style="margin-top:16px"><div class="prow tap" data-act="g-link"><div class="pl2">🔐 방장 폰은 구글 계정 연결을 꼭 해 두세요<small>이 폰을 바꾸거나 로그인이 바뀌어도 같은 가족방으로 돌아와요 · 구글 계정 하나는 기기 하나에만 연결돼요(태블릿 · 가족 폰에 먼저 연결하면 방장은 못 써요)</small></div><span class="muted">›</span></div></div>`;
+  if(host)return `<div class="pg-sec gwarn" style="margin-top:16px"><div class="prow tap" data-act="g-link"><div class="pl2">⚠️ 구글 계정 연결 안 됨<small class="keep">방장 권한을 잃을 수 있어요</small></div><span class="gwbtn">연결하기</span></div></div>`;
   return `<div class="pg-sec" style="margin-top:16px"><div class="prow tap" data-act="g-link"><div class="pl2">구글 계정으로 가족방 지키기<small>방장 폰에 먼저 연결하세요 · 구글 계정 하나는 기기 하나에만 연결돼요</small></div><span class="muted">›</span></div></div>`;
 }
 // ---- 푸시 알림: 이 폰의 알림 주소를 서버(devices/내uid)에 등록 → 서버 함수가 가족 일이 생기면 알려 줌

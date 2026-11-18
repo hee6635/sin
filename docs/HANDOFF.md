@@ -756,3 +756,9 @@
 - `famGAcctFix`: 실제로 구글이 붙어 있는데 S.gAcct 가 비어 있으면 이메일 채움 → "구글 계정에 연결됨" 보임.
 - **배포 필요: Cloud Shell `deploy --only functions`** (안 하면 버튼을 눌러도 "예전 연결을 풀지 못했어요").
 - 참고: tests/family/fam13e 는 이 작업 전에도 `link-invite` 를 못 찾아 실패(옛 시험, 화면이 바뀜).
+
+## v0.220 구글 연결: 이메일 남은 경우 · 방장 노란 경고
+- 폰에서 `auth/email-already-in-use` 가 남(예전 번호에 같은 이메일이 남음). 앱: 이 오류도 `gUnlinkOld` 로. 서버 `gunlink`: 구글 sub 로 찾은 예전 번호 + 같은 이메일 가진 예전 번호 둘 다 → 구글 떼고 이메일은 `unlinked-<uid>@eonjeswieo.invalid` 로 바꿈. 시험 추가.
+- 방장 · 미연결 줄: "⚠️ 구글 계정 연결 안 됨 / 방장 권한을 잃을 수 있어요" 노란 줄 + 노란 [연결하기](`.gwbtn`). 연결됨 줄은 이메일만(small.keep).
+- **배포 필요: Cloud Shell `deploy --only functions`** (v0.219 를 올렸어도 다시).
+- tests/family fam8e · fam13e: `link-invite` 못 찾아 실패 (이 작업 전부터 · 옛 시험).
