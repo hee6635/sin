@@ -144,3 +144,27 @@ exports.wx = onRequest({ region: REGION, secrets: [DATA_KEY], cors: true, invoke
     res.status(500).json({ error: 'server' });
   }
 });
+
+// 구글 예전 연결 풀기 (앱: 구글 연결 → "이미 다른 기기에 연결돼 있어요" → 예전 연결 풀고 이 폰에 연결)
+const GU = require('./lib/gunlink');
+const PROJECT_NUMBER = process.env.G_PROJECT_NUMBER || '516160617216';
+exports.gunlink = onRequest({ region: REGION, cors: true, invoker: 'public', maxInstances: 2, memory: '256MiB', timeoutSeconds: 20 }, async (req, res) => {
+  if (req.method !== 'POST') { res.status(405).send(''); return; }
+  const b = req.body || {}, auth = String(req.get('Authorization') || '');
+  try {
+    const out = await GU.handle({
+      projectNumber: PROJECT_NUMBER,
+      verifyFb: t => admin.auth().verifyIdToken(t),
+      tokenInfo: async t => { const r = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(t)); return r.ok ? r.json() : null; },
+      userByGoogle: async sub => { try { return await admin.auth().getUserByProviderUid('google.com', sub); } catch (e) { return null; } },
+      roomOf: async uid => {
+        const u = await db.collection('users').doc(uid).get(); const hid = u.exists ? String(u.data().hid || '') : '';
+        if (!hid) return null;
+        const m = await db.collection('households').doc(hid).collection('members').doc(uid).get();
+        return m.exists ? { hid, name: m.data().name || '', role: m.data().role || '' } : null;
+      },
+      unlink: uid => admin.auth().updateUser(uid, { providersToUnlink: ['google.com'] }),
+    }, { fbToken: auth.startsWith('Bearer ') ? auth.slice(7) : '', gToken: b.g, force: !!b.force });
+    res.status(out.status).json(out.body);
+  } catch (e) { console.warn('gunlink', e && e.message); res.status(500).json({ err: 'server' }); }
+});

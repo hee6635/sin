@@ -8764,6 +8764,19 @@ async function googleBackToAnon(){   // 구글 로그인으로 바뀐 로그인�
   try{await window.FB.auth.signOut(FBX.auth);}catch(e){}
   FBX.uid=null;FBX.st='idle';try{await fbConnect();}catch(e){}
 }
+// 구글 계정이 예전 번호(옛 폰 · 지운 앱 · 태블릿)에 붙어 있을 때: 서버가 본인 확인 뒤 예전 번호에서 구글만 뗌 (예전 데이터는 그대로)
+const GUNLINK_URL=(()=>{try{const p=window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.projectId;return p?`https://asia-northeast3-${p}.cloudfunctions.net/gunlink`:'';}catch(e){return '';}})();
+async function gUnlinkOld(gTok){
+  if(!confirm('이 구글 계정은 이미 다른 기기(옛 폰 · 지운 앱 · 태블릿)에 연결돼 있어요.\n\n예전 연결을 풀고 이 폰에 연결할까요?'))return false;
+  const call=async force=>{const t=await FBX.auth.currentUser.getIdToken();const r=await fetch(GUNLINK_URL,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t},body:JSON.stringify({g:gTok,force})});return r.json().catch(()=>({err:'server'}));};
+  try{
+    let r=await call(false);
+    if(r&&r.busy){if(!confirm(`예전 연결은 아직 가족방에 "${r.name||'?'}"(${r.role==='host'?'방장':'가족'})로 들어가 있어요.\n그 기기는 구글 복원을 못 하게 돼요. 그래도 풀까요?`))return false;r=await call(true);}
+    if(r&&r.ok)return true;
+    toast(r&&r.err==='google'?'구글 확인을 못 했어요. 다시 해 주세요':'예전 연결을 풀지 못했어요');
+  }catch(e){toast('인터넷 연결을 확인해 주세요');}
+  return false;
+}
 window.__onGoogle=async o=>{
   if(!o||!gBusy)return;
   try{
@@ -8779,8 +8792,8 @@ window.__onGoogle=async o=>{
       try{await A.linkWithCredential(FBX.auth.currentUser,cred);}
       catch(e){
         const c=String((e&&e.code)||'');
-        if(c.includes('credential-already-in-use')){alert(`이 구글 계정은 이미 다른 기기(예: 태블릿 · 옛 폰)에 연결돼 있어요.\n\n구글 계정 하나는 기기 하나에만 연결돼요.${S.link&&S.link.role==='host'?'\n이 폰이 방장이면 다른 구글 계정으로 연결해 주세요.':''}`);return;}
-        if(!c.includes('provider-already-linked'))throw e;
+        if(c.includes('credential-already-in-use')){if(!await gUnlinkOld(o.idToken))return;await A.linkWithCredential(FBX.auth.currentUser,cred);}
+        else if(!c.includes('provider-already-linked'))throw e;
       }
       S.gAcct=String(o.email||'').slice(0,80)||'연결됨';famRegUser(true).catch(()=>{});save();toast('구글 계정에 연결했어요');
       if(pageMode==='link')renderLinkPage();
@@ -8941,7 +8954,8 @@ async function famHostSeen(){
   S.hostSeenAt=Date.now();save();
 }
 // v0.152 앱에는 "구글 계정에 연결됨"인데 서버 계정은 구글 연결이 없을 때 (예전 계정에 붙어 있던 표시가 남음) → 표시 지우기
-function famGAcctFix(){try{const u=FBX.auth&&FBX.auth.currentUser;if(u&&S.gAcct&&!(u.providerData||[]).some(p=>p&&p.providerId==='google.com')){S.gAcct='';save();}}catch(e){}}
+function famGAcctFix(){try{const u=FBX.auth&&FBX.auth.currentUser;if(!u)return;const g=(u.providerData||[]).find(p=>p&&p.providerId==='google.com');   // 앱 상태를 실제 연결에 맞춤 (연결돼 있으면 이메일 보이기)
+  if(S.gAcct&&!g){S.gAcct='';save();}else if(!S.gAcct&&g){S.gAcct=String(g.email||u.email||'').slice(0,80)||'연결됨';save();}}catch(e){}}
 async function famBoot(){
   if(!fbCfg()||!S.link||famBooting||wipeBusy)return;famBooting=true;
   try{await famSync();famGAcctFix();if(S.link){await famListen();if(!famView())famPush().catch(famPushFail);famSyncMemos().catch(()=>{});famRegDevice().catch(()=>{});famRegUser().catch(()=>{});famRegCode().catch(()=>{});famBonusLoad().catch(()=>{});famHostSeen().catch(()=>{});}else famClear();}

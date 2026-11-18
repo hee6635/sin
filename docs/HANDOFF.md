@@ -749,3 +749,10 @@
 - MainActivity.showWallpaper: 켤 때 window.setFormat(TRANSLUCENT) (불투명 형식이면 매번 안 지워서 지나간 화면이 겹쳐 남음) · 끌 때 OPAQUE · 켠 뒤 invalidate.
 - wpShow: 화면이 다 들어온 뒤(0.26초) 켬 · 끌 땐 바로.
 - 미리보기: MonthRenderer.preview 밀도 2배까지만(그림 작게) · wgPrev 는 밀고 있는 동안 0.15초에 한 번(throttle) + 끝난 뒤 한 번.
+
+## v0.219 구글 예전 연결 풀기
+- 구글 연결에서 `credential-already-in-use` → `gUnlinkOld` 확인 창 → 서버 함수 `gunlink`(POST · Authorization: Bearer 파이어베이스 토큰 · body {g: 구글 idToken, force}) → 다시 linkWithCredential.
+- 서버(`firebase/functions/lib/gunlink.js`): 부른 사람 확인 · 구글 토큰 tokeninfo 로 확인(aud 가 프로젝트 번호 516160617216- 로 시작 · 이메일 확인됨) · 예전 번호에서 구글만 뗌(`providersToUnlink`, 지우지 않음). 예전 번호가 가족방에 들어가 있으면 {busy} → 앱이 한 번 더 묻고 force. 시험 `test/gunlink.test.mjs`.
+- `famGAcctFix`: 실제로 구글이 붙어 있는데 S.gAcct 가 비어 있으면 이메일 채움 → "구글 계정에 연결됨" 보임.
+- **배포 필요: Cloud Shell `deploy --only functions`** (안 하면 버튼을 눌러도 "예전 연결을 풀지 못했어요").
+- 참고: tests/family/fam13e 는 이 작업 전에도 `link-invite` 를 못 찾아 실패(옛 시험, 화면이 바뀜).
