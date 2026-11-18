@@ -12,14 +12,14 @@ const memo=(id,text,x={})=>({id,text,shared:false,by:'host',t:1760000000000,...x
   let p=await boot(b,s,{});
   await p.evaluate(k=>document.querySelector(`.track .panel:nth-child(2) .cell[data-k="${k}"]`).click(),K);await p.waitForTimeout(500);
   await p.click('[data-act="memo-tap"][data-mid="m1"] .tx');await p.waitForTimeout(300);
-  T('고치는 중 막대에 [복사] 와 [취소]가 나란히',await p.evaluate(()=>{const e=document.querySelector('.ibar .editing');return !!e&&!!e.querySelector('[data-act="memo-copy"]')&&!!e.querySelector('[data-act="memo-cancel"]');}));
+  T('(v0.210 그 자리에서 고치기) 고치는 메모 칸에 [복사] 와 [취소]가 나란히',await p.evaluate(()=>{const e=document.querySelector('.mcard.medit .meacts');return !!e&&!!e.querySelector('[data-act="memo-copy"]')&&!!e.querySelector('[data-act="memo-cancel"]');}));
   await p.click('[data-act="memo-copy"]');await p.waitForTimeout(200);
   T('[복사] → 입력칸의 글이 복사됨',JSON.stringify(await copied(p))===JSON.stringify(['병원 예약 확인 https://example.com/a']),JSON.stringify(await copied(p)));
-  T('복사해도 고치는 중 상태는 그대로',await p.evaluate(()=>!!document.querySelector('.ibar .editing')));
+  T('복사해도 고치는 중 상태는 그대로',await p.evaluate(()=>!!document.querySelector('.mcard.medit .meacts')));
   // 고치다가 글을 바꾼 뒤 복사하면 바뀐 글
   await p.fill('#memoInput','바꾼 글');await p.click('[data-act="memo-copy"]');await p.waitForTimeout(150);
   T('입력칸 글을 고쳤으면 고친 글이 복사됨',(await copied(p)).pop()==='바꾼 글');
-  await p.click('[data-act="memo-cancel"]');await p.waitForTimeout(200);
+  await p.click('[data-act="memo-cancel"]');await p.waitForTimeout(450);
   // 2) 길게 누르기 메뉴
   await press(p,'[data-act="memo-tap"][data-mid="m2"]');
   T('길게 누르면 메뉴에 📋 복사 (고치기 · 삭제와 함께)',await p.evaluate(()=>{const m=document.querySelector('#pop');return !!m.querySelector('[data-act="mm-copy"]')&&!!m.querySelector('[data-act="mm-edit"]')&&!!m.querySelector('[data-act="mm-del"]');}));

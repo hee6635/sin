@@ -6,6 +6,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.click('.mcard');await p.waitForTimeout(100).catch(()=>{});
  const r=await p.evaluate(()=>{window.__x=1;return JSON.parse(localStorage.getItem('eonjeswieo:v1')).memos});
  // 저장을 한 번 일으켜 normalize 결과 확인
+ await p.evaluate(()=>{const c=document.querySelector('[data-act="memo-cancel"]');if(c)c.click();});await p.waitForTimeout(500);   // v0.210 메모를 누르면 그 자리에서 고치기 → 취소하고 체크
  await p.evaluate(()=>document.querySelector('.mcard .mchk').click());await p.waitForTimeout(200);
  const mm=await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).memos['2026-10-14'][0]);
  console.log(JSON.stringify(mm));

@@ -2060,6 +2060,12 @@ html[data-theme="dark"] .tglow .g-hb{stroke:#fff;opacity:.07}
 .memsec .ibar input:placeholder-shown~.send,.vrbody .vcmemo-bar input:placeholder-shown~.send{color:var(--muted)!important}
 .mdtrow .xbtn{width:34px;height:34px;border-radius:50%;background:var(--surface);margin-left:8px}
 .xbtn.tplus{transform:rotate(45deg);background:var(--acc-soft)!important;color:var(--accent)!important}
+.mcard.medit{display:block;background:var(--acc-soft)!important;border-radius:14px!important;padding:10px!important;margin:4px -6px;border-bottom:0!important;cursor:default}
+.mcard.medit::before{display:none}.medbox{overflow:hidden}.merow{display:flex;gap:8px;align-items:center}
+.medin{flex:1;min-width:0;height:46px;border-radius:14px;border:0;background:var(--bg)!important;box-shadow:inset 0 0 0 2px var(--accent)!important;padding:0 14px;font-size:15.5px;color:var(--fg)}
+.medok{width:46px;height:46px;border-radius:50%;background:var(--accent);display:grid;place-items:center;flex:none}.medok svg{width:20px;height:20px;stroke:#fff;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.meacts{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}.meacts a{font-size:13px;font-weight:700;background:var(--bg);color:var(--fg)!important;border-radius:12px;padding:6px 12px;text-decoration:none!important}
+.irow.medim{opacity:.35;pointer-events:none;transition:opacity .3s}
 .flab{position:absolute;left:15px;top:50%;font-size:15.5px;color:var(--muted);pointer-events:none;opacity:0;transform:translateY(-50%);transform-origin:0 50%;transition:transform .28s cubic-bezier(.2,.9,.25,1),opacity .2s;white-space:nowrap}
 input:not(:placeholder-shown)~.flab{opacity:1;transform:translateY(-21px) scale(.68)}
 .memsec .ibar input[type=text]:not(:placeholder-shown),.vrbody .vcmemo-bar input:not(:placeholder-shown){padding-top:13px!important}
@@ -5313,8 +5319,12 @@ let pgBackNav=false;
 function openPage(html,mode){
   const pm0=pageMode;if(mode)pageMode=mode;   // v0.191 배경화면 보기는 따로 된 폰 화면(WidgetStyleActivity)으로 옮김
   const p=$('#page'),sc=p.querySelector('.pg-b')?p.querySelector('.pg-b').scrollTop:0,same=p.classList.contains('open');
+  const morph=same&&!(mode&&mode!==pm0),h0=morph?[...p.querySelectorAll('.pg-b>*')].map(e=>[e.className,e.offsetHeight]):null;
   p.innerHTML=html;p.classList.add('open');
   if(same&&!(mode&&mode!==pm0)){const b=p.querySelector('.pg-b');if(b)b.scrollTop=sc;}
+  // v0.210 같은 페이지를 다시 그릴 때 카드 높이가 바뀌면(알림 줄 · 요일 보기 · 칸 추가 …) 툭 말고 스르르 늘고 줄어듦
+  if(morph&&h0&&h0.length)try{if(!RMq()){const now=[...p.querySelectorAll('.pg-b>*')];if(now.length===h0.length&&now.every((e,i)=>e.className===h0[i][0]))now.forEach((e,i)=>{const a0=h0[i][1],a1=e.offsetHeight;if(Math.abs(a1-a0)<4)return;e.style.overflow='hidden';
+    const an=e.animate([{height:a0+'px'},{height:a1+'px'}],{duration:320,easing:'cubic-bezier(.2,.9,.25,1)'});an.onfinish=an.oncancel=()=>{e.style.overflow='';};});}}catch(e){}
   // v0.209 페이지 안에서 다른 페이지로 갈 때(같은 판에 내용만 바뀜) 툭 말고 옆에서 밀려 들어옴 · 뒤로(‹)는 반대쪽에서
   if((same&&mode&&mode!==pm0)||pgBackNav){const dir=pgBackNav?-1:1;pgBackNav=false;try{if(!RMq())[...p.children].forEach(x=>x.animate([{transform:`translateX(${dir*48}px)`,opacity:0},{transform:'none',opacity:1}],{duration:300,easing:'cubic-bezier(.2,.9,.25,1)'}));}catch(e){}}
 }
@@ -6936,8 +6946,16 @@ function doCfm(c){
     toast(`${c.name}에게 요청을 보냈어요${c.dates&&c.dates.length>1?` (${c.dates.length}일)`:''}${c.cc?' · 가족에게도 알렸어요':''}`);
   }
 }
+// v0.210 메모 그 자리에서 고치기: 펼침(줄 → 입력칸) · 접힘(입력칸 → 줄) · 끝나면 그 줄 살짝 반짝
+function medOpenFx(){const c=document.querySelector('#sheet .mcard.medit');if(!c)return;const h=c.offsetHeight;c.style.overflow='hidden';
+  const a=c.animate([{height:Math.min(h,52)+'px',backgroundColor:'rgba(0,0,0,0)'},{height:h+'px'}],{duration:320,easing:'cubic-bezier(.2,.9,.25,1)'});a.onfinish=a.oncancel=()=>{c.style.overflow='';};
+  const b=c.querySelector('.meacts');if(b)b.animate([{opacity:0,transform:'translateY(-6px)'},{opacity:1,transform:'none'}],{duration:260,delay:120,fill:'backwards'});}
+function medCloseFx(done){const c=document.querySelector('#sheet .mcard.medit');if(!c||RMq()){done();return;}c.style.overflow='hidden';c.style.pointerEvents='none';
+  const a=c.animate([{height:c.offsetHeight+'px'},{height:'52px',opacity:.6}],{duration:220,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});let ok=false;const go=()=>{if(ok)return;ok=true;done();};a.onfinish=go;setTimeout(go,260);}
+function medDoneFx(id){try{if(RMq())return;const c=id?document.querySelector(`#sheet [data-act="memo-tap"][data-mid="${id}"]`):null;if(c)c.animate([{backgroundColor:'var(--acc-soft)'},{backgroundColor:'rgba(0,0,0,0)'}],{duration:800});}catch(e){}}
 function memoCard(m,k){
   const own=m.by===role(),cls=m.shared?'fam':'my';
+  if(memoEdit===m.id)return `<div class="mcard ${cls} medit" data-mid="${m.id}"><div class="medbox"><div class="merow"><input type="text" id="memoInput" class="${cls} medin" value="${esc(memoText)}" enterkeyhint="done" aria-label="메모 고치기"><button class="medok" data-act="memo-send" aria-label="저장"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></div><div class="meacts"><a data-act="memo-copy">복사</a><a data-act="memo-cancel">취소</a></div></div></div>`;   // v0.210 그 자리에서 고치기 (아래 입력칸에 한 번 더 나오지 않음)
   const ex=m.time?` · 🕐 ${tfmt(m.time)}${m.al!==undefined&&m.al!==''?` · 🔔 ${m.al==='10'?'10분 전':'정시'}`:''}`:'';
   return `<div class="mcard ${cls} ${m.color?'cl':''} ${m.todo&&m.done?'done':''} ${memoEdit===m.id?'sel':''}" ${m.color?`style="background:${esc(m.color)} !important"`:''} data-act="memo-tap" data-mid="${m.id}" data-hold="memo">
     ${m.todo?(m.srv?`<span class="mchk ro ${m.done?'on':''}" aria-label="${m.done?'가족이 완료함':'가족 할 일'}">${m.done?'✓':''}</span>`:`<button class="mchk ${m.done?'on':''}" data-act="memo-chk" data-mid="${m.id}" aria-label="완료">${m.done?'✓':''}</button>`):''}
@@ -6954,11 +6972,11 @@ function memoSection(k){
   if(!memoEdit)memoMode=role()==='host'?'my':'fam';   // 입력칸 한 줄 메모는 항상 나만 (가족에게는 "자세히"에서)
   const fm=memoMode==='fam';
   const bar=`<div class="ibar">
-      ${memoEdit?`<div class="editing"><span>✏️ 메모 고치는 중</span><span class="ea"><a data-act="memo-copy">복사</a><a data-act="memo-cancel">취소</a></span></div>`:''}
+
       ${fm?`<div class="note ${fm?'fam':''}">${fm?'♥ 가족 모두에게 보여요 · 알림이 가요':(wlOn()?'🔒 나만 볼 수 있어요 · 색 · 시간 · 가족 · 일지는 "자세히"에서':'🔒 나만 볼 수 있어요 · 색 · 할 일 · 시간 · 가족에게는 "자세히"에서')}</div>`:''}
-      <div class="irow">
-        <input type="text" id="memoInput" class="${fm?'fam':'my'}" value="${esc(memoText)}" placeholder="${fm?'가족에게 남길 메모':'나만 보는 메모'}" enterkeyhint="send">
-        <button class="send ${fm?'fam':'my'}" data-act="memo-send" aria-label="보내기">${ICON.send}</button><span class="flab">${fm?'가족에게 남길 메모':'나만 보는 메모'}</span>
+      <div class="irow${memoEdit?' medim':''}">
+        <input type="text" ${memoEdit?'disabled':'id="memoInput"'} class="${fm?'fam':'my'}" value="${memoEdit?'':esc(memoText)}" placeholder="${fm?'가족에게 남길 메모':'나만 보는 메모'}" enterkeyhint="send">
+        <button class="send ${fm?'fam':'my'}" ${memoEdit?'disabled':'data-act="memo-send"'} aria-label="보내기">${ICON.send}</button><span class="flab">${fm?'가족에게 남길 메모':'나만 보는 메모'}</span>
       </div>
       ${role()==='guest'&&fm?`<div style="margin-top:6px">${usageHint()}</div>`:''}
       ${S.link&&fm&&famRemain()<=3?`<div class="usage-hint" style="margin-top:6px;text-align:center">무료 ${famRemN()}건 남음</div>`:''}
@@ -9993,7 +10011,7 @@ document.addEventListener('click',e=>{
     /* 날짜 메모 */
     case 'memo-tab':memoTab=t.dataset.v;openDay(sheetKey);break;
     case 'memo-mode':{const i=$('#memoInput');if(i)memoText=i.value;memoMode=t.dataset.v;openDay(sheetKey);const j=$('#memoInput');if(j)j.focus();break;}
-    case 'memo-send':afterCompose('#memoInput',memoSubmit);break;
+    case 'memo-send':if(memoEdit&&document.querySelector('.mcard.medit')){const id=memoEdit;afterCompose('#memoInput',()=>{const el=$('#memoInput');if(!el||!el.value.trim()){memoSubmit();return;}medCloseFx(()=>{memoSubmit();medDoneFx(id);});});break;}afterCompose('#memoInput',memoSubmit);break;
     case 'memo-detail':openMemoDetail(sheetKey,memoEdit);break;
     case 'memo-chk':{const rm=rmemoOf(t.dataset.mid);if(rm){const k=sheetKey,a=rm.done||[];rm.done=a.includes(k)?a.filter(x=>x!==k):[...a,k].slice(-120);if(!rm.done.length)delete rm.done;save();render();openDay(sheetKey);break;}const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);if(m){m.done=!m.done;if(!m.done)delete m.done;save();render();openDay(sheetKey);}break;}
     case 'md-back':mdDraft=null;closePage();break;
@@ -10004,15 +10022,15 @@ document.addEventListener('click',e=>{
       try{const pg=$('#page .pg-b');if(pg)pg.scrollTop=st0;if(!RMq()){const r=$('#page .mdtrow'),x=r&&r.querySelector('.xbtn'),tp=r&&r.querySelector('.tbtn'),al=r&&r.nextElementSibling;
         if(x)x.animate([{transform:'rotate(-135deg)',background:'var(--acc-soft)'},{transform:'none'}],{duration:420,easing:'cubic-bezier(.3,1.4,.5,1)'});
         if(tp)tp.animate([{opacity:0,transform:'scale(.8)'},{opacity:1,transform:'none'}],{duration:300,easing:'cubic-bezier(.3,1.4,.5,1)'});
-        if(al&&al.querySelector('.npseg')){const h=al.offsetHeight;al.style.overflow='hidden';const a=al.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:340,easing:'cubic-bezier(.2,.9,.25,1)'});a.onfinish=()=>{al.style.overflow='';};}}}catch(e){}
+        if(al&&al.querySelector('.npseg'))al.animate([{opacity:0,transform:'translateY(-8px)'},{opacity:1,transform:'none'}],{duration:300,delay:60,easing:'cubic-bezier(.2,.9,.25,1)',fill:'backwards'});}}catch(e){}
       break;}
     case 'md-notime':{mdPull();mdDraft.time='';mdDraft.al='';const pg=$('#page .pg-b'),st0=pg?pg.scrollTop:0;
       const go=()=>{renderMemoDetail();const p2=$('#page .pg-b');if(p2)p2.scrollTop=st0;};
       try{const r=t.closest('.mdtrow'),al=r&&r.nextElementSibling;if(!RMq()&&r){   // v0.209 ✕가 반대로 돌며 ＋ · 알림 줄 스르르 접힘 → 다 접힌 뒤 다시 그림
-        t.animate([{transform:'none'},{transform:'rotate(135deg)'}],{duration:300,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
+        t.animate([{transform:'none'},{transform:'rotate(135deg)'}],{duration:180,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
         const tp=r.querySelector('.tbtn');if(tp)tp.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.8)'}],{duration:220,fill:'forwards'});
-        if(al&&al.querySelector('.npseg')){al.style.overflow='hidden';al.animate([{height:al.offsetHeight+'px',opacity:1},{height:'0px',opacity:0,paddingTop:'0px',paddingBottom:'0px'}],{duration:280,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});}
-        setTimeout(go,290);break;}}catch(e){}
+        if(al&&al.querySelector('.npseg'))al.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'});
+        setTimeout(go,170);break;}}catch(e){}
       go();break;}
     case 'md-save':mdSave();break;
     case 'md-rep':mdPull();mdDraft.rrDraft=null;openRrPick();break;
@@ -10024,7 +10042,7 @@ document.addEventListener('click',e=>{
     case 'rm-skip':{const r=(S.rmemos||[]).find(x=>x.id===t.dataset.id);if(r&&sheetKey){r.skip=[...(r.skip||[]).filter(x=>x!==sheetKey),sheetKey].slice(-120);save();closePop();render();openDay(sheetKey);toast('이 날만 뺐어요');}break;}
     case 'rm-edit':closePop();openMemoDetail(sheetKey,'r:'+t.dataset.id);break;
     case 'rm-del':{if(!confirm('이 반복 메모를 그만할까요? (앞으로 안 나와요)'))break;S.rmemos=(S.rmemos||[]).filter(x=>x.id!==t.dataset.id);save();closePop();mdDraft=null;if(pageMode==='memodetail')closePage();render();if(sheetKey)openDay(sheetKey);try{pushRemindersToNative();}catch(e){}toast('반복 메모를 그만했어요');break;}
-    case 'memo-cancel':memoEdit=null;memoText='';openDay(sheetKey);break;
+    case 'memo-cancel':{const id=memoEdit;medCloseFx(()=>{memoEdit=null;memoText='';openDay(sheetKey);medDoneFx(id);});break;}
     case 'memo-copy':{   // 고치는 중인 메모 글 복사 (입력칸에 적힌 그대로, 비었으면 원래 메모)
       const i=$('#memoInput');let tx=i?i.value:memoText;
       if(!String(tx||'').trim()){const m0=memoEdit&&memosOf(sheetKey).find(x=>x.id===memoEdit);tx=m0?m0.text:'';}
@@ -10035,13 +10053,13 @@ document.addEventListener('click',e=>{
       closePop();if(m0)copyText(m0.text);break;}
     case 'memo-tap':{
       if(e.target.closest('.conv,.mchk'))break;
+      if(memoEdit&&memoEdit===t.dataset.mid)break;
       if(rmemoOf(t.dataset.mid)){openMemoDetail(sheetKey,t.dataset.mid);break;}   // 반복 메모: 자세히에서 고침
       if(String(t.dataset.mid).startsWith('s:')){toast(S.link&&S.link.role==='host'?'가족이 쓴 메모예요 · 길게 누르면 복사하거나 지울 수 있어요':'가족이 쓴 메모는 고칠 수 없어요 · 길게 누르면 복사할 수 있어요');break;}
       const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);if(!m)break;
       if(m.by!==role()){toast(role()==='host'?'가족이 쓴 메모예요 · 길게 누르면 복사하거나 지울 수 있어요':'근무자가 쓴 메모는 고칠 수 없어요 · 길게 누르면 복사할 수 있어요');break;}
       memoEdit=m.id;memoText=m.text;memoMode=m.shared?'fam':'my';openDay(sheetKey);
-      try{if(!RMq()){const ed=document.querySelector('#sheet .ibar .editing');if(ed){const h=ed.offsetHeight;ed.style.overflow='hidden';const a=ed.animate([{height:'0px',opacity:0},{height:h+'px',opacity:1}],{duration:300,easing:'cubic-bezier(.2,.9,.25,1)'});a.onfinish=()=>{ed.style.overflow='';};}   // v0.209 고치는 중 줄 스르르 · 고르는 메모 톡
-        const c=document.querySelector(`#sheet [data-act="memo-tap"][data-mid="${m.id}"]`);if(c)c.animate([{transform:'scale(.97)'},{transform:'scale(1.01)',offset:.6},{transform:'none'}],{duration:300,easing:'cubic-bezier(.2,.9,.25,1)'});}}catch(err){}
+      try{if(!RMq())medOpenFx();}catch(err){}   // v0.210 그 줄이 입력칸으로 스르르 펼쳐짐
       const i=$('#memoInput');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}
       break;}
     case 'memo-conv':{
