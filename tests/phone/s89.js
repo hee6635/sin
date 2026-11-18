@@ -17,7 +17,7 @@ const fs=require('fs');
     T('판 3개 = 12월 · 1월 · 2월',JSON.stringify(await st())==='["2026-12","2027-01","2027-02"]',JSON.stringify(await st()));
     for(let i=0;i<2;i++){await swipe(-1);await p.waitForTimeout(120);}await p.waitForTimeout(900);
     T('뒤로 2번 → 11월 · 판 10 · 11 · 12월',await ym()==='2026.11'&&JSON.stringify(await st())==='["2026-10","2026-11","2026-12"]',await ym()+JSON.stringify(await st()));
-    await p.waitForTimeout(400);
+    await p.waitForFunction(()=>{const P=[...document.querySelectorAll('#track>.panel')].filter(x=>x.firstElementChild);return P.length>=3&&P.every(x=>x.style.getPropertyValue('--stz')!=='');},null,{timeout:12000}).catch(()=>{});   // (옆 판은 뒤에서 천천히 그려서 · 바쁠 땐 늦음 → 될 때까지 기다림)
     T('옆 판도 스티커 크기 붙음 (조금 뒤 · 그려진 판)',await p.evaluate(()=>{const P=[...document.querySelectorAll('#track>.panel')].filter(x=>x.firstElementChild);return P.length>=3&&P.every(x=>x.style.getPropertyValue('--stz')!=='');}));
     await p.click('#top [data-act="next"]');await p.waitForTimeout(500);
     T('‹ › 버튼도 그대로',await ym()==='2026.12');

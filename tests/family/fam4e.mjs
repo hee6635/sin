@@ -5,7 +5,7 @@ import path from 'node:path';
 const require = createRequire(import.meta.url);
 const { chromium } = require('/opt/node22/lib/node_modules/playwright');
 const ROOT = '/home/user/sin/app/src/main/assets';
-const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript' };
+const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css' };
 const srv = http.createServer((req, res) => {
   let f = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
   if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end(); }

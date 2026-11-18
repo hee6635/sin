@@ -29,12 +29,12 @@ const {mkT}=require('./lib.js');
 
   // ── 웹 페이지 파일 (firebase/hosting)
   {const dir='/home/user/sin/firebase/hosting/',pv=fs.readFileSync(dir+'privacy.html','utf8'),dl=fs.readFileSync(dir+'delete.html','utf8'),ix=fs.readFileSync(dir+'index.html','utf8');
-   const app=fs.readFileSync('/home/user/sin/app/src/main/assets/index.html','utf8');
+   const app=fs.readFileSync('/home/user/sin/app/src/main/assets/index.html','utf8')+fs.readFileSync('/home/user/sin/app/src/main/assets/js/app.js','utf8');   // (v0.214 화면을 나눔)
    T('웹: 세 페이지 모두 한국어 · 제목 · 반응형',[pv,dl,ix].every(h=>h.includes('<html lang="ko">')&&/<title>[^<]+<\/title>/.test(h)&&h.includes('width=device-width')));
    T('웹: 바깥 스크립트 · 바깥 이미지 없음 (보안 헤더와 맞음)',[pv,dl,ix].every(h=>!/<script|src="http|<img|<iframe/i.test(h)));
    T('웹: 시행일이 앱 안 방침과 같음',pv.includes('2026년 10월 29일')&&app.includes("PRIVACY_DATE='2026년 10월 29일'"));
    T('웹: 문의 메일이 앱과 같음',pv.includes('eonjeswieo.app@gmail.com')&&dl.includes('eonjeswieo.app@gmail.com')&&app.includes("SUPPORT_MAIL='eonjeswieo.app@gmail.com'"));
-   T('웹: 삭제 안내가 앱의 실제 메뉴 이름을 가리킴',dl.includes('내 데이터 모두 지우기')&&app.includes('<span>내 데이터 모두 지우기</span>')&&dl.includes('도움 · 정보')&&app.includes("'도움 · 정보'")&&dl.includes('설정')&&!dl.includes('더 보기'));
+   T('웹: 삭제 안내가 앱의 실제 메뉴 이름을 가리킴',dl.includes('내 데이터 모두 지우기')&&app.includes("'내 데이터 모두 지우기'")&&dl.includes('도움 · 정보')&&app.includes("'도움 · 정보'")&&dl.includes('설정')&&!dl.includes('더 보기'));
    T('웹: 방침이 삭제 안내 페이지로 이어짐 · 목록 페이지가 둘 다 걸려 있음',pv.includes('href="/delete"')&&ix.includes('href="/privacy"')&&ix.includes('href="/delete"'));
    const fj=JSON.parse(fs.readFileSync('/home/user/sin/firebase/firebase.json','utf8')).hosting;
    T('hosting 설정: 사이트 eonjeswieo · hosting 폴더 · 보안 헤더',fj&&fj.site==='eonjeswieo'&&fj.public==='hosting'&&JSON.stringify(fj.headers).includes('Content-Security-Policy')&&fs.existsSync('/home/user/sin/firebase/hosting/privacy.html'));}
@@ -93,7 +93,7 @@ const {mkT}=require('./lib.js');
    const sh=await p.evaluate(()=>({open:document.getElementById('sheet').classList.contains('open'),txt:document.getElementById('sheet').innerText}));
    T('2025-10-08 날짜 창이 열리고 대체공휴일로 나옴',sh.open&&sh.txt.includes('대체공휴일'),sh.txt.slice(0,80));
    await p.evaluate(()=>document.querySelector('#sheet [data-act="close"]')?.click());await p.waitForTimeout(250);
-   let n=0;while(n++<30){const dis=await p.$eval('[data-act="prev"]',e=>e.disabled);if(dis)break;await p.click('[data-act="prev"]');await p.waitForTimeout(80);}
+   let n=0;while(n++<40){const dis=await p.$eval('[data-act="prev"]',e=>e.disabled);if(dis)break;await p.evaluate(()=>{const e=document.querySelector('[data-act="prev"]');if(e&&!e.disabled)e.click();});await p.waitForTimeout(350);}   // (달이 밀려 넘어가는 동안 기다림 · 막힌 버튼은 안 누름)
    const hdr=await p.$eval('[data-act="prev"]',e=>e.parentElement.innerText.replace(/\s+/g,' '));
    T('거꾸로 넘기면 2025년 1월에서 멈춤',(await p.$eval('[data-act="prev"]',e=>e.disabled))&&hdr.includes('2025.01'),hdr);
    const h25=await p.evaluate(()=>[...document.querySelectorAll('.track .panel:nth-child(2) .cell:not(.out)')].filter(c=>c.querySelector('.dn.hol')).length);   // (v0.87~: 스티커가 많으면 이름이 한 글자라 글자 대신 명절 칸을 셈)

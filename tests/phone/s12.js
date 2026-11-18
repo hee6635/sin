@@ -12,4 +12,4 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  const n=await p.evaluate(()=>document.querySelectorAll('.track .panel:nth-child(2) .cell[data-k="2026-09-25"] .stp>*,.track .panel:nth-child(2) .cell[data-k="2026-09-25"] .s2>*').length);
  const d=await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).stamps.defs.map(x=>[x.name,x.rep,x.dates.join()]));
  console.log(JSON.stringify(d));T('둘 다 등록되어 2개',n===2&&d.filter(x=>x[2]).length===2);
- console.log(p.errs);await b.close();})();
+ console.log(p.errs);T.sum();await b.close();})();

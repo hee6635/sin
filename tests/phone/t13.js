@@ -37,13 +37,13 @@ await p.click('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] .stz');awai
 const popTxt=await p.$eval('#pop',e=>e.innerText.replace(/\s+/g,' '));
 T_('날짜 스티커 창: 조깅 줄 + ⋯ 버튼',!!(await p.$('#pop .sdr2[data-id="s_run"] [data-act="sd-more"]')),popTxt.slice(0,160));
 
-await p.click('#pop .sdr2[data-id="s_run"] .sdn');await p.waitForTimeout(60);
+await p.click('#pop .sdr2[data-id="s_run"] .sdn');await p.waitForTimeout(760);   // (v0.181 누른 버튼만 바로 · 달력 다시 그리기와 톡은 0.7초 뒤)
 const tok=await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] [data-sid="s_run"]',e=>e.classList.contains('tok')).catch(()=>false);
 T_('완료 누르는 순간 "톡"(.tok)',tok);
 await p.waitForTimeout(600);
 T_('톡은 잠깐만(0.4초 뒤 사라짐)',!(await p.$eval('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] [data-sid="s_run"]',e=>e.classList.contains('tok')).catch(()=>false)));
 // 떼기는 조용히
-await p.click('#pop .sdr2[data-id="s_run"] .sdn');await p.waitForTimeout(60);
+await p.click('#pop .sdr2[data-id="s_run"] .sdn');await p.waitForTimeout(760);
 T_('완료 취소(떼기)는 효과 없음',!(await p.$('.track .panel:nth-child(2) .cell[data-k="2026-10-20"] .tok')));
 // ---- 이날부터 끝내기 + 되돌리기
 await p.click('#pop .sdr2[data-id="s_run"] [data-act="sd-more"]');await p.waitForTimeout(250);await p.click('#pop [data-act="sd-end"][data-id="s_run"]');await p.waitForTimeout(300);

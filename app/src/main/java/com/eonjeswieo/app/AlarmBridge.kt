@@ -329,6 +329,19 @@ class AlarmBridge(private val activity: MainActivity) {
                     .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                     .putExtra(Settings.EXTRA_CHANNEL_ID, Reminders.CHANNEL_ID)
             }
+            // v0.214 삼성 배터리 화면(그 안 "백그라운드 앱 사용 제한 › 자동 절전 예외 앱"). One UI 마다 화면 이름이 달라서 차례로 열어 보고, 다 안 되면 배터리 최적화 목록
+            "samsung_sleep" -> {
+                val tries = listOf(
+                    Intent().setClassName("com.samsung.android.lool", "com.samsung.android.sm.battery.ui.BatteryActivity"),
+                    Intent().setClassName("com.samsung.android.sm", "com.samsung.android.sm.battery.ui.BatteryActivity"),
+                    Intent("com.samsung.android.sm.ACTION_BATTERY"),
+                    Intent().setClassName("com.samsung.android.lool", "com.samsung.android.sm.ui.battery.BatteryActivity"),
+                    Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                for (t in tries) {
+                    try { t.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); context.startActivity(t); return } catch (e: Exception) { }
+                }
+                null
+            }
             else -> null
         }
         if (intent != null) {
