@@ -483,6 +483,7 @@ textarea{resize:none;min-height:84px}
 .shsec .sh-pill{display:inline-flex;align-items:center;gap:7px;padding:6px 13px 6px 7px;border-radius:18px;background:var(--surface);font-size:14.5px;font-weight:800;color:var(--fg)}
 .shsec .sh-pill .badge{opacity:1}
 .shsec .sh-pill i{font-style:normal;font-size:11px;color:var(--muted);margin-left:1px}
+.shsec .sh-pill i.shc{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--bg);color:var(--fg);margin-left:2px}.shsec .sh-pill i.shc svg{transition:transform .32s cubic-bezier(.3,1.3,.5,1)}.shsec.open .sh-pill i.shc svg{transform:rotate(180deg)}   /* v0.212 ⌄ 화살표가 펼치면 180° 돌아 ⌃ */
 .shsec .sh-pill em{font-style:normal;font-size:11px;font-weight:700;color:var(--muted)}
 .shsec .sh-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease}
 .shsec .sh-body>div{min-height:0;overflow:hidden;padding:8px 6px 4px;margin:-8px -6px -4px}
@@ -1849,7 +1850,7 @@ body:has(.mset) #top,body:has(.famv) #top,body:has(.alw) #top{background:var(--s
 .dsbody .sec-t{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);padding:6px 6px 8px;margin:0}
 .shsec .sh-hd{display:flex;align-items:center;justify-content:space-between;padding:6px 6px 8px;font-size:13px;font-weight:700;color:var(--muted)}
 .shsec .sh-hd .sh-pill{background:var(--bg);box-shadow:0 1px 3px rgba(15,23,42,.06)}
-.shsec.open .sh-pill{display:inline-flex}.shsec.open .sh-pill .shc{transform:rotate(180deg)}
+.shsec.open .sh-pill{display:inline-flex}
 .shsec .sh-card{background:var(--bg);border-radius:22px;padding:14px 10px 12px!important;margin:0!important;box-shadow:0 2px 12px rgba(15,23,42,.035)}
 .shsec:not(.open) .sh-card{padding:0!important}
 .paint-btn{display:flex;align-items:center;gap:8px;width:100%;margin-top:12px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--accent) 8%,var(--bg));color:var(--accent);text-align:left}
@@ -5288,7 +5289,16 @@ function renderAlarm(){
 }
 
 /* ================= 시트 · 페이지 · 작은 메뉴 ================= */
-function openSheet(html,full){const top=!!pageMode,was=$('#sheet').classList.contains('open');$('#sheet').classList.remove('closing');$('#sheet').innerHTML=html;$('#sheet').classList.add('open');$('#sheet').classList.toggle('full',!!full);$('#sheet').classList.toggle('top',top);$('#scrim').classList.add('open');$('#scrim').classList.toggle('top',top);try{MO.sheetOpen($('#sheet'),was);}catch(e){}}
+// v0.212 다시 그릴 때 높이 스르르: 그리기 전 칸 높이를 (종류+순번)으로 적어 두고, 그린 뒤 같은 칸은 옛 높이 → 새 높이 · 새로 생긴 칸은 0 → 높이로 펼침
+function hmSnap(root,sel){const m={},c={};root.querySelectorAll(sel).forEach(e=>{const k=e.className;c[k]=(c[k]||0)+1;m[k+'#'+c[k]]=e.offsetHeight;});return m;}
+function hmPlay(root,sel,m){try{if(RMq())return;const c={},E='cubic-bezier(.2,.9,.25,1)';root.querySelectorAll(sel).forEach(e=>{const k=e.className;c[k]=(c[k]||0)+1;const a0=m[k+'#'+c[k]],a1=e.offsetHeight;
+  if(a0==null){if(a1<4)return;e.style.overflow='hidden';const an=e.animate([{height:'0px',opacity:0,marginTop:'0px',marginBottom:'0px'},{height:a1+'px',opacity:1}],{duration:320,easing:E});an.onfinish=an.oncancel=()=>{e.style.overflow='';};return;}
+  if(Math.abs(a1-a0)<4)return;e.style.overflow='hidden';const an=e.animate([{height:a0+'px'},{height:a1+'px'}],{duration:320,easing:E});an.onfinish=an.oncancel=()=>{e.style.overflow='';};});}catch(e){}}
+function openSheet(html,full){const top=!!pageMode,was=$('#sheet').classList.contains('open');$('#sheet').classList.remove('closing');
+  // v0.212 같은 날짜 창을 다시 그릴 때(근무 바꿈 · 메모 · 스티커 …) 카드 높이가 바뀌면 툭 말고 스르르
+  const rk=sheetMode+'|'+(sheetMode==='day'?sheetKey:sheetMode==='mandy'?manDayK:sheetMode==='vcday'?rqD.k:''),sh0=$('#sheet'),same=was&&sh0.dataset.rk===rk,h0=same?hmSnap(sh0,'.dsbody>*'):null;
+  $('#sheet').innerHTML=html;$('#sheet').dataset.rk=rk;
+  if(h0)hmPlay(sh0,'.dsbody>*',h0);$('#sheet').classList.add('open');$('#sheet').classList.toggle('full',!!full);$('#sheet').classList.toggle('top',top);$('#scrim').classList.add('open');$('#scrim').classList.toggle('top',top);try{MO.sheetOpen($('#sheet'),was);}catch(e){}}
 function closeSheet(){
   const mk=sheetMode==='day'||sheetMode==='vcday'?(sheetMode==='vcday'?rqD.k:sheetKey):null;
   if(sheetKey){const m0=JSON.stringify(S.memos[sheetKey]||null);tidyMemos(sheetKey);if(JSON.stringify(S.memos[sheetKey]||null)!==m0)save();}
@@ -5319,12 +5329,11 @@ let pgBackNav=false;
 function openPage(html,mode){
   const pm0=pageMode;if(mode)pageMode=mode;   // v0.191 배경화면 보기는 따로 된 폰 화면(WidgetStyleActivity)으로 옮김
   const p=$('#page'),sc=p.querySelector('.pg-b')?p.querySelector('.pg-b').scrollTop:0,same=p.classList.contains('open');
-  const morph=same&&!(mode&&mode!==pm0),h0=morph?[...p.querySelectorAll('.pg-b>*')].map(e=>[e.className,e.offsetHeight]):null;
+  const morph=same&&!(mode&&mode!==pm0),h0=morph?hmSnap(p,'.pg-b>*'):null;
   p.innerHTML=html;p.classList.add('open');
   if(same&&!(mode&&mode!==pm0)){const b=p.querySelector('.pg-b');if(b)b.scrollTop=sc;}
   // v0.210 같은 페이지를 다시 그릴 때 카드 높이가 바뀌면(알림 줄 · 요일 보기 · 칸 추가 …) 툭 말고 스르르 늘고 줄어듦
-  if(morph&&h0&&h0.length)try{if(!RMq()){const now=[...p.querySelectorAll('.pg-b>*')];if(now.length===h0.length&&now.every((e,i)=>e.className===h0[i][0]))now.forEach((e,i)=>{const a0=h0[i][1],a1=e.offsetHeight;if(Math.abs(a1-a0)<4)return;e.style.overflow='hidden';
-    const an=e.animate([{height:a0+'px'},{height:a1+'px'}],{duration:320,easing:'cubic-bezier(.2,.9,.25,1)'});an.onfinish=an.oncancel=()=>{e.style.overflow='';};});}}catch(e){}
+  if(morph&&h0)hmPlay(p,'.pg-b>*',h0);
   // v0.209 페이지 안에서 다른 페이지로 갈 때(같은 판에 내용만 바뀜) 툭 말고 옆에서 밀려 들어옴 · 뒤로(‹)는 반대쪽에서
   if((same&&mode&&mode!==pm0)||pgBackNav){const dir=pgBackNav?-1:1;pgBackNav=false;try{if(!RMq())[...p.children].forEach(x=>x.animate([{transform:`translateX(${dir*48}px)`,opacity:0},{transform:'none',opacity:1}],{duration:300,easing:'cubic-bezier(.2,.9,.25,1)'}));}catch(e){}}
 }
@@ -6171,7 +6180,7 @@ function manDayHtml(k){
       <button class="ib" data-act="man-go" data-k="${fmt(addDays(d,1))}" aria-label="다음날">›</button></div>
     <div class="dstrip" id="dstrip">${strip}</div>
     <div class="dsbody">
-    <div class="sec shsec ${manFoldOpen()?'open':''}"><div class="sh-hd"><span>${m.kind==='shift'?'근무':'일정'}</span><button class="sh-pill" data-act="man-fold" aria-label="접기 · 펼치기">${manChipIco(m,cur,d)}${esc((manChoices(m,d).find(c=>c[0]===cur)||[,,manLabel(m,d)])[2])}<i class="shc">▾</i></button></div>
+    <div class="sec shsec ${manFoldOpen()?'open':''}"><div class="sh-hd"><span>${m.kind==='shift'?'근무':'일정'}</span><button class="sh-pill" data-act="man-fold" aria-label="접기 · 펼치기">${manChipIco(m,cur,d)}${esc((manChoices(m,d).find(c=>c[0]===cur)||[,,manLabel(m,d)])[2])}<i class="shc"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></i></button></div>
       <div class="sh-body"><div class="sh-card"><div class="tchips">${manChoices(m,d).map(c=>`<button class="tchip ${cur===c[0]?'on':''}" data-act="man-ov" data-k="${k}" data-v="${esc(c[0])}"${famUsesTypes(m)?` data-hold="mtype" data-hk="${esc(c[0])}" data-hd="${k}"`:''}>${manChipIco(m,c[0],d)}<small>${esc(c[2])}</small></button>`).join('')}</div>
         <button class="paint-btn" data-act="man-paint">${npi('paintbrush',18)}<b>여러 날 칠하기</b><i>›</i></button>${famUsesTypes(m)?`<button class="paint-btn" data-act="man-pat" style="margin-top:8px">${npi('settings',18)}<b>일정 패턴</b><i>›</i></button>`:''}</div></div></div>
     ${famDayWxHtml(m,k)}
@@ -7157,7 +7166,7 @@ function dayHtml(k){
         ${badge(x.k,'tc')}<small>${esc(x.name)}</small>${ov&&x.k===base?'<i class="orig">원래</i>':''}</button>`).join('');
     topPart=persOn(k)?'':`
       <div class="sec shsec${shiftOpenNow()?' open':''}">
-        <div class="sh-hd"><span>근무</span><button class="sh-pill" data-act="shift-tog" aria-label="근무 접기 · 펼치기">${badge(c,'sm','')}${esc(shiftLabel(c))}${ov?'<em>· 바뀜</em>':''}${otNote(k,c)}<i class="shc">▾</i></button></div>
+        <div class="sh-hd"><span>근무</span><button class="sh-pill" data-act="shift-tog" aria-label="근무 접기 · 펼치기">${badge(c,'sm','')}${esc(shiftLabel(c))}${ov?'<em>· 바뀜</em>':''}${otNote(k,c)}<i class="shc"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></i></button></div>
         <div class="sh-body"><div class="sh-card">
         <div class="tchips">${shiftBtns}${S.types.length>quick.length?'<button class="tchip add" data-act="type-more"><span class="badge tc add">＋ 더보기</span></button>':''}${otChip(k,c)}</div>
         ${ov?`<div class="hint" style="margin:6px 0 0">원래 근무: ${esc(shiftLabel(base))} · <a data-act="resetshift">되돌리기</a></div>`:''}
@@ -11666,7 +11675,7 @@ function vcDayHtml(k){
       <button class="ib" data-act="vc-go" data-k="${fmt(addDays(d,1))}" aria-label="다음날">›</button></div>
     <div class="dstrip" id="dstrip">${strip}</div>
     <div class="dsbody vrbody">
-    <div class="sec shsec vcrq ${isOpen?'open':''}"><div class="sh-hd"><span>${isOpen&&form?'근무 바꿔 달라고 하기':'근무'}</span><button class="sh-pill" ${canRq?'data-act="vc-rq"':''}>${schBadge(p.sch,sh,'sm')}${esc(ty.name)}${tag?`<small class="vct">· ${tag}</small>`:''}${canRq?'<i class="shc">▾</i>':''}</button></div>${card}</div>
+    <div class="sec shsec vcrq ${isOpen?'open':''}"><div class="sh-hd"><span>${isOpen&&form?'근무 바꿔 달라고 하기':'근무'}</span><button class="sh-pill" ${canRq?'data-act="vc-rq"':''}>${schBadge(p.sch,sh,'sm')}${esc(ty.name)}${tag?`<small class="vct">· ${tag}</small>`:''}${canRq?'<i class="shc"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></i>':''}</button></div>${card}</div>
     ${vcDayWx(p,k)}
     <div class="sec vcm memsec">${vcMemoHtml(k)}</div></div>`;
 }
@@ -12565,7 +12574,12 @@ window.__onBack=()=>{
   if(ob){if(ob.step==='start'||ob.step==='done')return false;obBack();return true;}
   if(paint){paint=null;render();return true;}
   if($('#app').classList.contains('share-mode')){shareEnd();return true;}
-  if($('#sheet').classList.contains('open')){closeSheet();return true;}
+  if($('#sheet').classList.contains('open')){
+    // v0.212 날짜 창 위에 자세히 같은 페이지가 떠 있으면 위에 있는 페이지부터 닫음 (아래 날짜 창이 먼저 꺼지던 것)
+    let top=null;try{const e=document.elementFromPoint(innerWidth/2,innerHeight/2);top=e&&e.closest&&e.closest('#page,#sheet');}catch(x){}
+    if(!(pageMode&&top&&top.id==='page')){closeSheet();return true;}
+    if(pageMode==='memodetail'){mdDraft=null;closePage();return true;}
+  }
   if(pageMode==='stampadd'&&stDraft){srBack();return true;}
   if(pageMode){closePage();return true;}
   if(tab==='colleague'){tab='set';render();return true;}
