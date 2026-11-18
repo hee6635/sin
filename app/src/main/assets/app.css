@@ -2043,3 +2043,5 @@ input:not(:placeholder-shown)~.flab{opacity:1;transform:translateY(-21px) scale(
 /* v0.223 낱말 가운데서 줄 바뀌지 않게 (아주 긴 낱말만 어쩔 수 없을 때 나눔) */
 body{word-break:keep-all;overflow-wrap:break-word}
 .fillchips .tchip{gap:8px}   /* v0.223 처음 설정: 고른 동그라미 테두리가 아래 글자에 닿지 않게 */
+/* v0.224 통계 "이번 달": 밑줄 링크 대신 연한 파란 알약 */
+.stnav .sttoday{font-size:13px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--bg));padding:6px 12px;border-radius:999px;text-decoration:none}

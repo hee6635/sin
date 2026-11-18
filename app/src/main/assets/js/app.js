@@ -6217,7 +6217,7 @@ function openStatsPage(){
   openPage(`
     ${pageHead(sub==='pay'?'월급 설정':sub==='year'?`${y}년 누적`:'근무 통계 · 수당')}
     <div class="pg-b np stpg">${M?`
-      <div class="stnav"><button class="ib" data-act="st-prev" aria-label="지난달">‹</button><b>${y}년 ${m+1}월</b><button class="ib" data-act="st-next" aria-label="다음 달">›</button>${y!==new Date().getFullYear()||m!==new Date().getMonth()?'<button class="lnk sttoday" data-act="st-today">이번 달</button>':''}</div>
+      <div class="stnav"><button class="ib" data-act="st-prev" aria-label="지난달">‹</button><b>${y}년 ${m+1}월</b><button class="ib" data-act="st-next" aria-label="다음 달">›</button>${y!==new Date().getFullYear()||m!==new Date().getMonth()?'<button class="sttoday" data-act="st-today">이번 달</button>':''}</div>
       <div class="hint keep" style="text-align:center;padding:0 16px 10px">${md2(c.from)} ~ ${md2(c.to)}${P.close?` (매달 ${P.close}일 마감)`:''}</div>
       ${daeBox(daeN,c.dw.length,c.de.length,c.dh.length,true)}
       <div class="stat-box" style="margin:10px 16px 0">${num(lvUsed,P.leaveYear?`연차 · 남은 ${Math.max(0,P.leaveYear-yUsed)}일${P.leaveFrom?` (${+P.leaveFrom.slice(0,2)}/${+P.leaveFrom.slice(3)} 기준)`:''}`:'연차/휴가','var(--stat-vac)','vac')}${dv}${num(c.edu.length,'교육','var(--stat-edu)','edu')}${dv}${num(c.req.length,'⏱ 연장','#b0661a','req')}${dv}${num(c.holWork.length,'휴일 출근','var(--sun)','hol')}</div>
