@@ -30,7 +30,7 @@ const {mkT,base}=require('./lib.js');
 
 
 
-  T('내 스티커 7칸 · ＋ 줄 없음',await p.evaluate(()=>document.querySelectorAll('#page .stgrid[data-grp="slot"] [data-act="slot-open"]').length===7&&!document.querySelector('#page .stgrid[data-grp="extra"]')));
+  T('내 스티커 10칸 · ＋ 줄 없음',await p.evaluate(()=>document.querySelectorAll('#page .stgrid[data-grp="slot"] [data-act="slot-open"]').length===10&&!document.querySelector('#page .stgrid[data-grp="extra"]')));
   await p.screenshot({path:'/tmp/s49_set.png',clip:{x:0,y:0,width:390,height:420}});
   await toCal(p);
   // ===== 날짜 창 =====

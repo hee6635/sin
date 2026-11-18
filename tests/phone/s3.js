@@ -13,7 +13,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.evaluate(()=>document.getElementById('pop').click());await p.waitForTimeout(250);
  st=await p.evaluate(()=>JSON.parse(localStorage.getItem('eonjeswieo:v1')).stamps);
  console.log(JSON.stringify(st.defs.map(d=>[d.name,d.retired?1:0])));
- T('옛 스티커 → 새 기본 9칸 + 옛것은 보관(retired)',st.v4===1&&st.defs.filter(d=>!d.retired).length===9&&st.defs.filter(d=>d.retired).length>=2);
+ T('옛 스티커 → 새 기본 10칸 + 옛것은 보관(retired)',st.v4===1&&st.defs.filter(d=>!d.retired).length===10&&st.defs.filter(d=>d.retired).length>=2);
  T('옛 기록(10/12 비타민 2번)은 그대로 남음',await p.evaluate(()=>!!document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-12"] .stp>*')));
  T('옛 스티커는 앞으로 안 깔림(10/14 비어 있음)',await p.evaluate(()=>!document.querySelector('.track .panel:nth-child(2) .cell[data-k="2026-10-14"] .stp>*')));
  T('옛 스티커 알림은 예약 안 됨',(await p.evaluate(()=>(window.__rem||[]).filter(r=>String(r.id||'').startsWith('a_')).length))===0);

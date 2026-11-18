@@ -13,7 +13,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  // ===== 설정: 기본 8개 + 빈 칸
  await p.click('#nav [data-tab="set"]');await p.waitForTimeout(250);
  await p.click('[data-act="stk-board"]');await p.waitForTimeout(350);
- T('설정: 9칸(8개 + 빈 칸), 요가 없음',await p.evaluate(()=>document.querySelectorAll('#page .stgrid[data-grp="slot"] [data-act="slot-open"]').length===9&&document.querySelectorAll('#page .stgrid .emp').length===1&&!document.querySelector('#page').innerText.includes('요가')));
+ T('설정: 10칸(8개 + 빈 칸 2), 요가 없음',await p.evaluate(()=>document.querySelectorAll('#page .stgrid[data-grp="slot"] [data-act="slot-open"]').length===10&&document.querySelectorAll('#page .stgrid .emp').length===2&&!document.querySelector('#page').innerText.includes('요가')));
  await p.screenshot({path:'b1.png'});
  // 빈 칸 채우기(설정): 직접 입력
  await p.click('#page .stgrid .emp');await p.waitForTimeout(300);
@@ -22,12 +22,12 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  T('글자는 거절(토스트) · 목록 그대로',await p.evaluate(()=>!!document.querySelector('#pop .icn-tabs')));
  await p.fill('#icnOwn','🪁');await p.click('#pop [data-act="icn-own-ok"]');await p.waitForTimeout(400);
  let s=await S();const ns=s.stamps.defs.filter(x=>!x.retired&&!x.one);
- T('빈 칸이 🪁 로 채워짐(9칸 유지 · 빈 칸 없음)',ns.length===9&&ns.some(x=>x.emoji==='🪁'&&!x.empty)&&!ns.some(x=>x.empty));
+ T('빈 칸이 🪁 로 채워짐(10칸 유지 · 빈 칸 1)',ns.length===10&&ns.some(x=>x.emoji==='🪁'&&!x.empty)&&ns.filter(x=>x.empty).length===1);
  // 비우기
  await p.click('#page [data-act="slot-open"][data-id="s_teeth"]');await p.waitForTimeout(250);
  await p.click('#pop [data-act="slot-clear"]');await p.waitForTimeout(400);
  s=await S();
- T('비우기: 양치는 retired · 같은 자리에 빈 칸',s.stamps.defs.find(x=>x.id==='s_teeth').retired&&s.stamps.defs.filter(x=>!x.retired&&!x.one&&x.empty).length===1);
+ T('비우기: 양치는 retired · 같은 자리에 빈 칸',s.stamps.defs.find(x=>x.id==='s_teeth').retired&&s.stamps.defs.filter(x=>!x.retired&&!x.one&&x.empty).length===2);
  // 끌어서 순서
  const ids0=await p.evaluate(()=>[...document.querySelectorAll('#page .stgrid[data-grp="slot"] [data-act="slot-open"]')].map(e=>e.dataset.id));
  await drag('#page .stgrid[data-grp="slot"] [data-act="slot-open"]:nth-child(1)','#page .stgrid[data-grp="slot"] [data-act="slot-open"]:nth-child(3)');
@@ -39,7 +39,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
  await p.click('#page .pg-h .bk');await p.waitForTimeout(250);
  await p.click('#nav [data-tab="cal"]');await p.waitForTimeout(300);
  await opn('2026-10-14');
- T('날짜 팝업: 칸 9개 · v0.176 ＋ 없음(글자 "하루만" 없음)',await p.evaluate(()=>document.querySelectorAll('#pop .sgrid [data-act="sp-pick"],#pop .sgrid [data-act="sp-fill"]').length===9&&!document.querySelector('#pop [data-act="sp-plus"]')&&!document.querySelector('#pop').innerText.includes('하루만')));
+ T('날짜 팝업: 칸 10개 · v0.176 ＋ 없음(글자 "하루만" 없음)',await p.evaluate(()=>document.querySelectorAll('#pop .sgrid [data-act="sp-pick"],#pop .sgrid [data-act="sp-fill"]').length===10&&!document.querySelector('#pop [data-act="sp-plus"]')&&!document.querySelector('#pop').innerText.includes('하루만')));
  await p.screenshot({path:'b2.png'});
  // 빈 칸 → 채우고 → 등록 화면
  await p.click('#pop [data-act="sp-fill"]');await p.waitForTimeout(300);

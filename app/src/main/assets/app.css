@@ -622,6 +622,7 @@ textarea{resize:none;min-height:84px}
 .srbox{padding:8px 16px 4px}.srbox input{width:100%;height:44px;border-radius:12px;padding:0 12px;font-size:16px;background:var(--surface)}
 .srbox .hseg{margin-top:8px}
 .gwarn .prow,.np .gwarn .prow{background:color-mix(in srgb,#f5b400 16%,var(--bg))}.gwarn .pl2{font-weight:800}.np .gwarn{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,#f5b400 55%,var(--bg))}.np .gwarn .pl2 small.keep{color:color-mix(in srgb,#b45309 80%,var(--fg))}
+.gwpop-t{color:color-mix(in srgb,#b45309 80%,var(--fg));font-weight:600;padding-top:0!important}.gwbtn2{background:#f5b400!important;color:#3b2a00!important;font-weight:800}
 .gwbtn{margin-left:auto;flex:none;background:#f5b400;color:#3b2a00;font-weight:800;font-size:14px;padding:8px 14px;border-radius:999px}
 .tdc-row .tdc.tdc-shift{background:conic-gradient(#5b8fc4 0 33%,#c27c5c 0 66%,#d0607a 0)}   /* "근무 색": 주간 · 야간 · 휴무 색이 섞인 동그라미 */
 .srwt{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -2017,3 +2018,22 @@ input:not(:placeholder-shown)~.flab{opacity:1;transform:translateY(-21px) scale(
 #pop .mi .mval{margin-left:auto;color:var(--muted);font-weight:600;font-size:14px}
 .ibar .editing{align-items:center}.ibar .editing a{text-decoration:none!important;color:var(--fg)!important;background:var(--surface);border-radius:14px;padding:5px 12px!important;font-weight:700;font-size:12.5px}
 .ibar .editing .ea{gap:6px!important}
+
+.myph{width:30px;height:30px;border-radius:50%;object-fit:cover;display:block}.myph.lg{width:56px;height:56px;margin:6px auto 0}
+
+/* v0.221 찾기 화면 (design/search/v1) */
+.srfield{display:flex;align-items:center;gap:10px;height:50px;padding:0 12px 0 14px;border-radius:16px;background:var(--bg);box-shadow:0 2px 12px rgba(15,23,42,.035),inset 0 0 0 1.5px transparent;transition:box-shadow .25s}
+.srfield>svg{flex:none;color:color-mix(in srgb,var(--fg) 35%,var(--bg));transition:color .25s}
+.srfield:focus-within{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent),inset 0 0 0 1.5px var(--accent)}.srfield:focus-within>svg{color:var(--accent)}
+.np .srbox .srfield input{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;box-shadow:none;padding:0;font-size:16px;border-radius:0}
+.srfield input::-webkit-search-cancel-button{display:none}
+.srx{flex:none;width:22px;height:22px;border-radius:50%;background:color-mix(in srgb,var(--fg) 22%,var(--bg));color:var(--bg);font-size:11px;font-weight:800;display:none;align-items:center;justify-content:center}.srfield.has .srx{display:flex}
+.srn:empty{display:none}
+.srcap{display:flex;justify-content:space-between;align-items:center}.srcap button{font-size:13px;font-weight:500;color:var(--muted)}
+.srchips{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px}
+.srchip{display:inline-flex;align-items:center;gap:4px;background:var(--bg);border-radius:999px;font-size:14px;color:var(--fg);box-shadow:0 1px 3px rgba(15,23,42,.05)}
+.srchip>button:first-child{display:inline-flex;align-items:center;gap:5px;padding:8px 0 8px 12px}.srchip>button:first-child svg{color:var(--muted)}.srchip .rm{padding:8px 11px 8px 4px;color:color-mix(in srgb,var(--fg) 30%,var(--bg));font-size:11px}
+.srchip.w{padding:8px 12px;gap:6px;background:color-mix(in srgb,var(--accent) 9%,var(--bg));color:var(--accent);font-weight:600}.srchip.w em{font-style:normal;font-size:12px;font-weight:500;opacity:.6}
+.srnone{display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:70px}.srnone b{font-size:16px}
+.srmag{position:relative;width:84px;height:84px;border-radius:24px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:color-mix(in srgb,var(--fg) 35%,var(--bg));box-shadow:0 2px 12px rgba(15,23,42,.035)}
+.srmag svg{transform-origin:50% 60%}.srmag i{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-style:normal;font-weight:900;display:flex;align-items:center;justify-content:center}
