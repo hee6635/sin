@@ -1,3 +1,4 @@
+/* 자동으로 만든 파일 — 고칠 때는 app/js-src/ 조각을 고치고 node scripts/build-js.mjs 로 다시 만들어요 (APK 빌드 전에 같은지 확인함) */
 (()=>{
 'use strict';
 

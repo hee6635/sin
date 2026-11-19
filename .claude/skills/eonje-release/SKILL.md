@@ -8,6 +8,11 @@ description: 언제쉬어 앱을 "만들어 / 만들고 올려" 한 뒤 올리�
 사용자가 "만들어"(만들고 올려 · 만들도 올려 포함)라고 해서 app/ 코드를 고쳤을 때, 올리기 전에 이 순서대로 한다.
 "만들어" 없이 질문 · 기획만 한 경우엔 쓰지 않는다 (CLAUDE.md: 코드는 "만들어" 때만).
 
+## 0. 화면 코드(JS) 고칠 곳 (v0.228부터)
+- `app/src/main/assets/js/app.js` 는 **자동으로 만든 파일**이다. 고칠 때는 `app/js-src/NN-이름.js` 조각을 고치고 `node scripts/build-js.mjs` 로 app.js 를 다시 만든다 (`--check` 로 같은지 확인 · APK 빌드도 이 확인을 먼저 함 → 안 맞으면 빌드 실패).
+- 조각: 00-core(도구 · 공휴일 · 저장/불러오기 · 근무 계산) · 01-calendar(화면 · 메인 달력 · 동료 · 지금 상태) · 02-stickers · 03-ui(알람 목록 · 시트/페이지/작은 창 · 아이콘 고르기) · 04-family-tab(가족 소식 · 가족 탭 · 유찬 달력) · 05-memo(포스트잇 · D-day · 근무 요청 · 날짜 메모) · 06-settings(알람 설정 · 더 보기 · 모양 조정) · 07-weather · 08-addons(부가 기능 · 통계 등) · 09-onboard(처음 설정 · 공휴일 받기) · 10-events(버튼 처리 · 입력 · 뒤로가기) · 11-family-server(공유 · 백업 · Firebase · 가족 연결/근무표/메모) · 12-worklog · 13-board-share(가족 포스트잇 · 접근성 · 시작).
+- 조각은 한 IIFE 를 나눈 것이라 각 파일만 따로는 문법 검사가 안 됨 → 만든 뒤 `node --check app/src/main/assets/js/app.js`.
+
 ## 1. 시험
 - 이번에 바뀐 동작을 확인하는 새 시험을 `tests/phone/sNN.js` 로 만든다 (다음 번호 · 맨 위 줄에 `// v0.xxx: 무엇` 주석). 모양은 가까운 s 시험을 본떠서 `mkT` · `boot` · `T(...)` · `T.sum()`.
 - 새 시험 + 바뀐 화면을 건드리는 옛 시험을 돌린다:

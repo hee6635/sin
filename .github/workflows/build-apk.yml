@@ -27,6 +27,9 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: app.js 가 js-src 조각과 같은지 확인
+        run: node scripts/build-js.mjs --check
+
       - name: 디버그 APK 만들기
         run: |
           chmod +x gradlew
