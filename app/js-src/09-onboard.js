@@ -186,7 +186,7 @@ function obApply(){
     S.holRest=!!p.hol;
     S.patternName=p.name.replace(/\s/g,'').replace(/\(.*\)/,'');
   }
-  Object.entries(ob.tm||{}).forEach(([k,v])=>{S.shiftTimes=S.shiftTimes||{};S.shiftTimes[k]=Object.assign({},S.shiftTimes[k],{start:v[0],end:v[1]});});   // 처음 설치에서 정한 근무 시간
+  {let tks=[];try{tks=obTmKeys();}catch(e){}const all={};tks.forEach(k=>{try{all[k]=obTmOf(k);}catch(e){}});Object.assign(all,ob.tm||{});Object.entries(all).forEach(([k,v])=>{if(!Array.isArray(v)||!okTime(v[0])||!okTime(v[1]))return;S.shiftTimes=S.shiftTimes||{};S.shiftTimes[k]=Object.assign({},S.shiftTimes[k],{start:v[0],end:v[1]});});}   // 처음 설치에서 보인 근무 시간: 안 고친 것(기본값)도 그대로 저장 (v0.234 화면에 보인 시간 = 진짜 시간)
   S.anchor=obAnchor();S.patOld=[];
   if(ob.entry!=='later'||!S.noPat)S.overrides={};   // 불규칙으로 날짜마다 넣어 둔 근무는 패턴을 만들어도 그대로
   S.noPat=false;S.myset=true;S.personal=false;S.pers=[];

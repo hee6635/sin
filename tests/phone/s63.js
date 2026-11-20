@@ -272,7 +272,7 @@ const ONLY=process.env.ONLY||'';
     const r=await p.evaluate(()=>{const s=window.__wg[window.__wg.length-1]||'{}';const hits=[];const walk=o=>{if(Array.isArray(o))o.forEach(walk);else if(o&&typeof o==='object'){if(o.wt)hits.push([o.t,o.wt,o.wn]);Object.values(o).forEach(walk);}};walk(JSON.parse(s));
       const out=document.querySelector('#track .panel:nth-child(2) .cell.out');const ch=out&&out.querySelector(':scope>*');
       return {hits:hits.slice(0,3),op:ch?getComputedStyle(ch).opacity:null,bg:out?getComputedStyle(out).backgroundColor:null};});
-    T('위젯 자료: 시간 정해 둔 주간 날에 wt "06:00~18:00" · wn 이름',r.hits.length>0&&r.hits.every(h=>h[0]==='주'&&h[1]==='06:00~18:00'&&!!h[2]),JSON.stringify(r.hits));
+    T('위젯 자료: 시간 정해 둔 주간 날에 wt "06:00~18:00" · wn 이름 (v0.234 야간은 기본 시간이 저장됨)',r.hits.length>0&&r.hits.some(h=>h[0]==='주')&&r.hits.every(h=>h[0]==='주'?h[1]==='06:00~18:00'&&!!h[2]:h[0]==='야'?h[1]==='19:00~07:00':true),JSON.stringify(r.hits));
     T('앞뒤 달 칸 글자 · 스티커 25%',r.op==='0.25',r.op);
     T('앞뒤 달 칸(칸 채우기)에 옅은 회색 바탕',!!r.bg&&r.bg!=='rgba(0, 0, 0, 0)',r.bg);
     T('오류 없음',p.errs.length===0,p.errs.join('|'));await p.close();

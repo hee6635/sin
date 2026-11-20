@@ -40,7 +40,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
   const st=async(T0,extra)=>{const p=await boot(b,{...base,...extra,family:fam},{T:+new Date(T0)});await p.click('#nav [data-tab="fam"]');await p.waitForTimeout(400);
     const r=await p.evaluate(()=>[...document.querySelectorAll('.now .nc')].map(c=>{const b=c.querySelector('.stt b');return b?b.textContent:'';}));const e=p.errs.slice();await p.close();return [r,e];};
   const tms={shiftTimes:{'주':{start:'07:00',end:'19:00'}}};
-  let [r,e]=await st('2026-10-14T06:00:00',{});T('시간 안 정한 근무 날: 근무 이름만 ("주간")',r[0]==='주간'&&r[1]==='주간',JSON.stringify(r));
+  let [r,e]=await st('2026-10-14T06:00:00',{});T('시간 안 정한 근무 날: v0.234 부터 기본 시간(주간 07~19)을 저장 → 시작 전이면 "출근 전"',r[0]==='출근 전'&&r[1]==='출근 전',JSON.stringify(r));
   [r,e]=await st('2026-10-14T06:00:00',tms);T('시간 정한 근무 날 시작 전: 출근 전',r[0]==='출근 전'&&r[1]==='출근 전',JSON.stringify(r));
   [r,e]=await st('2026-10-14T12:00:00',tms);T('근무 시간 안: 근무 중',r[0]==='근무 중'&&r[1]==='근무 중',JSON.stringify(r));
   [r,e]=await st('2026-10-14T21:00:00',tms);T('끝난 뒤: 퇴근 후',r[0]==='퇴근 후'&&r[1]==='퇴근 후',JSON.stringify(r));

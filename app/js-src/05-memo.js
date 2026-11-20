@@ -1124,7 +1124,7 @@ function saveType(){
   if(t.isNew)item.noGuess=true;   // 새 타입은 이름으로 주/야를 맞히지 않고 모두 같은 기본값(아침 출근)으로 시작
   if(t.isNew){
     S.types.push(item);typeDraft=null;
-    if(!t.rest&&(t.ts||t.te)){S.shiftTimes=S.shiftTimes||{};const c=(S.shiftTimes[k]=S.shiftTimes[k]||{});if(t.ts)c.start=t.ts;if(t.te)c.end=t.te;}
+    if(!t.rest&&(t.ts||t.te)){stSet(k,'start',t.ts);stSet(k,'end',t.te);}
     if(typeReturn==='day'&&sheetKey){applyShift(k);}else{save();afterType();}
     toast('근무타입을 추가했어요');return;
   }
@@ -1132,7 +1132,7 @@ function saveType(){
   if(i>=0){if(S.types[i].noGuess)item.noGuess=true;S.types[i]=item;}
   S.shiftTimes=S.shiftTimes||{};
   if(k!==t.orig&&S.shiftTimes[t.orig]){S.shiftTimes[k]=S.shiftTimes[t.orig];delete S.shiftTimes[t.orig];}   // 글자를 바꾸면 시간도 따라감
-  if(!t.rest&&(t.ts||t.te)){const c=(S.shiftTimes[k]=S.shiftTimes[k]||{});if(t.ts)c.start=t.ts;if(t.te)c.end=t.te;}
+  if(!t.rest&&(t.ts||t.te)){stSet(k,'start',t.ts);stSet(k,'end',t.te);}
   if(k!==t.orig){   // 글자를 바꾸면 패턴·변경·알람도 같이 바꿈
     S.pattern=S.pattern.map(x=>x===t.orig?k:x);
     (S.patOld||[]).forEach(o=>{o.pattern=o.pattern.map(x=>x===t.orig?k:x);});

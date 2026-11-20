@@ -509,16 +509,16 @@ document.addEventListener('click',e=>{
     /* 알람 */
     case 'aadd':draft=newAlarm();alSnd=false;openAlarmPage();break;
     case 'aedit':{if(e.target.closest('.sw'))break;const f=S.alarms.find(x=>x.id===t.dataset.id);if(f){draft=Object.assign({isNew:false},f);alSnd=false;openAlarmPage();}break;}
-    case 'dsnd-open':alSnd=!alSnd;openAlarmPage();break;
-    case 'dshift':draft.shift=t.dataset.v;openAlarmPage();break;
-    case 'doff':draft.offset=Number(t.dataset.v);openAlarmPage();break;
-    case 'dsound':draft.sound=!draft.sound;openAlarmPage();break;
-    case 'dvib':draft.vib=!draft.vib;openAlarmPage();break;
-    case 'dsilent':draft.sound=false;draft.vib=false;openAlarmPage();break;
-    case 'dwxsnd':draft.sound=t.dataset.v==='1';openAlarmPage();break;   // v0.142 날씨만 알람 소리 한 번 / 무음
-    case 'dwx':draft.wxOnly=t.dataset.v==='only';draft.wx=t.dataset.v!=='off';if(draft.wxOnly&&!wxOk((S.wx||{}).home))toast('설정 › 부가 기능 › 출퇴근 시간 · 날씨에서 집 지역을 골라 주세요');openAlarmPage();break;
-    case 'dsnmin':draft.snMin=Number(t.dataset.v);openAlarmPage();break;
-    case 'dsnmax':draft.snMax=Number(t.dataset.v);openAlarmPage();break;
+    case 'dsnd-open':if(!draft)break;alSnd=!alSnd;openAlarmPage();break;
+    case 'dshift':if(!draft)break;draft.shift=t.dataset.v;openAlarmPage();break;
+    case 'doff':if(!draft)break;draft.offset=Number(t.dataset.v);openAlarmPage();break;
+    case 'dsound':if(!draft)break;draft.sound=!draft.sound;openAlarmPage();break;
+    case 'dvib':if(!draft)break;draft.vib=!draft.vib;openAlarmPage();break;
+    case 'dsilent':if(!draft)break;draft.sound=false;draft.vib=false;openAlarmPage();break;
+    case 'dwxsnd':if(!draft)break;draft.sound=t.dataset.v==='1';openAlarmPage();break;   // v0.142 날씨만 알람 소리 한 번 / 무음
+    case 'dwx':if(!draft)break;draft.wxOnly=t.dataset.v==='only';draft.wx=t.dataset.v!=='off';if(draft.wxOnly&&!wxOk((S.wx||{}).home))toast('설정 › 부가 기능 › 출퇴근 시간 · 날씨에서 집 지역을 골라 주세요');openAlarmPage();break;
+    case 'dsnmin':if(!draft)break;draft.snMin=Number(t.dataset.v);openAlarmPage();break;
+    case 'dsnmax':if(!draft)break;draft.snMax=Number(t.dataset.v);openAlarmPage();break;
     case 'dtone':
       if(!hasBridge('pickTone')){toast('앱에서 폰 알람음 · 음악 파일을 고를 수 있어요');break;}
       if(draft&&draft.wxOnly&&ad('wx')){window.AndroidBridge.pickTone('n:'+draft.id,isFileTone(draft.tone)?'':(draft.tone||''));break;}   // v0.143 날씨만 알람 = 폰 알림음 목록 (벨소리 · 알람음 아님)
@@ -929,7 +929,7 @@ document.addEventListener('change',e=>{
     const f=S.alarms.find(x=>x.id===t.dataset.id);
     if(f){f.on=t.checked;if(f.on&&f.once)f.until=firstFire(f);save();render();}
   }else if((t.id==='tdS'||t.id==='tdE')&&t.value&&typeDraft){typeDraft[t.id==='tdS'?'ts':'te']=t.value;const nm=$('#tdName'),kk=$('#tdK');if(nm)typeDraft.name=nm.value;if(kk&&kk.value)typeDraft.k=kk.value;openTypeEdit();
-  }else if(/^pt[SE]_\d+$/.test(t.id||'')&&t.value){const ty=workTypes()[+t.id.slice(4)];if(ty){const c=((S.shiftTimes=S.shiftTimes||{})[ty.k]=S.shiftTimes[ty.k]||{});c[t.id[2]==='S'?'start':'end']=t.value;save();openPatternPage();}
+  }else if(/^pt[SE]_\d+$/.test(t.id||'')&&t.value){const ty=workTypes()[+t.id.slice(4)];if(ty){stSet(ty.k,t.id[2]==='S'?'start':'end',t.value);save();openPatternPage();}
   }else if((t.id==='otS'||t.id==='otE')&&t.value&&otKey){const d=parse(otKey),tt=timesOf(shiftOf(d)),o=(S.ot[otKey]||[tt.start,tt.end]).slice();o[t.id==='otS'?0:1]=t.value;otSet(o);
   }else if(/^obTm[SE]_\d+$/.test(t.id||'')&&t.value&&ob){const k=obTmKeys()[+t.id.slice(6)];if(k){ob.tm=ob.tm||{};const x=ob.tm[k]||obTmOf(k).slice();x[t.id[4]==='S'?0:1]=t.value;ob.tm[k]=x;renderOb();}
   }else if(t.id&&t.id.startsWith('tt_')&&pageMode==='times'){

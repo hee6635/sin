@@ -553,7 +553,7 @@ function load(){
   keepBad(j,'normalize');loadNote='partial';
   try{return salvage(JSON.parse(j));}catch(e){loadNote='parse';return defaults();}
 }
-let S=load();setTimeout(()=>{if(!ovSnap)ovSnap={...(S.overrides||{})};},0);   // v0.135 근무 기록: 처음 상태
+let S=load();setTimeout(()=>{if(!ovSnap)ovSnap={...(S.overrides||{})};try{if(fillDefTimes())save();}catch(e){}},0);   // v0.234 시간이 없는 근무에 기본 시간 저장   // v0.135 근무 기록: 처음 상태
 
 /* 안드로이드 앱이 알려주는 알람 권한 상태 (브라우저에서는 빈 목록) */
 const ISSUE_TXT={exact:'정확한 알람 권한이 필요해요',notif:'알림을 허용해야 알람이 떠요',fsi:'잠금화면에 알람 화면을 띄우는 권한이 필요해요',batt:'배터리를 "제한 없음"으로 해야 알람이 안 늦어요'};
@@ -843,6 +843,7 @@ function chLogMine(){   // 내 근무 바꾼 것 (저장할 때 전과 비교)
     ovSnap={...cur};}catch(e){}
 }
 function save(){
+  try{fillDefTimes();}catch(e){}
   chLogMine();
   S.drive.dirty=true;dataRev++;
   try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('저장 공간이 꽉 찼어요 · 안 쓰는 사진을 지워 주세요');}
@@ -1362,7 +1363,7 @@ function calPanel(y,m){
     if(!sharing)mine.filter(x=>!x.till).forEach(x=>pills.push(`<div class="pl my${pst(x)}>${linkify(firstLine(x.text))}</div>`));
     boardOnDate(k).filter(n=>!sharing||n.shared).forEach(n=>pills.push(`<div class="pl ${n.shared?'fam':'my'}">📝 ${esc(piLabel(n))}</div>`));
     ddayHits(k).forEach(x=>pills.push(`<div class="pl dd">${ico(x.emoji||'⭐')} ${esc(x.name)}</div>`));
-    {const pv=sharing?'':perPill(k,d);if(pv)pills.unshift(pv);}
+    const pvH=sharing?'':perPill(k,d);if(pvH)pills.unshift(pvH);
     // 설정 줄 수(기본 3 · 태블릿 +1). 넘치면 마지막 줄 끝에 "+n" 칩
     if(pills.length>maxLines)pills.splice(0,pills.length,...capPills(pills,maxLines));
     // 날짜 줄: 숫자 · 스티커 · 공휴일 이름. 좁은 칸에서 스티커와 겹치면 이름은 빼기 (날짜 줄 색으로 이미 보임)
@@ -1378,7 +1379,7 @@ function calPanel(y,m){
     const stRow=st0.slice(0,2),stMore=st0.slice(2);
 
     const tcc=pers||sh===''||sh===NONE_K?null:tColors(typeOf(sh)),cb=tcc?` style="--cb:${tcc.bg}"`:'';   // 칸 채우기 모양: 칸 전체를 근무 색으로 (v0.232 쉬는 근무도 색을 정했으면 · 기본 휴무는 색 없음)
-    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${pers?'pers':''} ${stMore.length?'m3':''} ${rcls}" data-act="day" data-k="${k}"${cb}>
+    cells+=`<div class="cell ${d.getMonth()===m?'':'out'}${pvH?' pvc':''} ${k===tk?'today':''} ${pers?'pers':''} ${stMore.length?'m3':''} ${rcls}" data-act="day" data-k="${k}"${cb}>
       <i class="stz" data-act="stamp-dn" data-k="${k}"></i><div class="dn ${hol?'hol':ch?'chol':''} ${cls} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1" data-f="${esc(hone)}" data-t2="${esc(hTwo)}" data-o="${esc(honeO)}">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIcon(x,0)).join('')}</span>`:''}${showHn?`<span class="hn ${shortHol(hol).length>3&&hol?'sm':''}"${hol?` data-f="${esc(hFull)}" data-t2="${esc(hTwo)}" data-o="${esc(holOne(hol))}"`:''}>${hnHtml}</span>`:''}</div>${below?`<i class="hnb" data-o="${esc(holOne(hol))}">${esc(hTwo)}</i>`:''}${stMore.length?`<div class="s2">${stMore.map(x=>stampIcon(x,0)).join('')}</div>`:''}
       <div class="bwrap">${pers?(stAll.length?`<div class="pstk n${stAll.length}">${stAll.slice(0,4).map(x=>stampIcon(x,0)).join('')}</div>`:''):bwrapHtml(d,k)}</div>
       <div class="pill-wrap${pills.length>=maxLines?' full':''}">${pills.join('')}</div>
@@ -1909,6 +1910,10 @@ function timesOf(k){
   return o;
 }
 const timesCustom=k=>Object.keys((S.shiftTimes||{})[k]||{}).length>0;
+// v0.234 시작 · 끝 중 하나만 고쳐도 둘 다 저장 (하나만 있으면 다시 켤 때 normalize 가 지워서 "정하기"로 돌아가던 것 · 날씨 출퇴근이 집만 나오던 원인)
+// v0.234 근무 패턴 화면에 보이는 기본 시간을 진짜로 저장 (사용자 결정: 화면엔 보이는데 날씨 · 위젯은 "안 정함"으로 보던 것 없앰) — 시간이 없는 근무타입만 채움
+function fillDefTimes(){if(!S.myset)return false;let n=0;S.shiftTimes=S.shiftTimes||{};(S.types||[]).forEach(t=>{if(!t||t.rest||t.k===NONE_K||timesCustom(t.k))return;try{const d=defaultTimes(t.k);if(okTime(d.start)&&okTime(d.end)){S.shiftTimes[t.k]={start:d.start,end:d.end};n++;}}catch(e){}});return n>0;}
+function stSet(k,f,v){const x=timesOf(k);S.shiftTimes=S.shiftTimes||{};const c=(S.shiftTimes[k]=S.shiftTimes[k]||{});if(!c.start)c.start=x.start;if(!c.end)c.end=x.end;if(v)c[f]=v;return c;}
 const workTypes=()=>(S.types||[]).filter(t=>!t.rest);
 const ST_DEF={commute:['🚗','출근 중'],work:['🏭','근무 중'],meal:['🍱','점심 시간'],night:['🍗','야식 시간'],brk:['☕','쉬는 시간'],back:['🚗','퇴근 중'],home:['🏠','집에 왔어요'],sleep:['😴','자는 중'],rest:['🙂','쉬는 중'],end:['🏁','근무 끝']};
 const ROW_DEF={commute:'집에서 나서기',work:'근무 시작',end:'근무 끝',home:'집 도착',sleep:'수면'};   // 근무 시간 화면 줄 이름 (바꾸면 labels[key].n)
@@ -2065,7 +2070,7 @@ function ttIconSet(i,icon,name){
   else{const b=timesOf(timesTab).breaks.map(x=>Object.assign({},x));if(b[+i]){b[+i].icon=icon;b[+i].name=name;ttSet('breaks',b);}}
 }
 function ttSet(field,val){
-  const k=timesTab,c=((S.shiftTimes=S.shiftTimes||{})[k]=S.shiftTimes[k]||{});
+  const k=timesTab,c=stSet(k);   // v0.234 시작 · 끝도 같이 저장 (식사 · 나서기만 고쳐도 다시 켤 때 안 지워지게)
   if(field==='meal'||field==='sleep')c[field]=Object.assign({},timesOf(k)[field],c[field],val);
   else c[field]=val;
   save();
@@ -5001,7 +5006,7 @@ function saveType(){
   if(t.isNew)item.noGuess=true;   // 새 타입은 이름으로 주/야를 맞히지 않고 모두 같은 기본값(아침 출근)으로 시작
   if(t.isNew){
     S.types.push(item);typeDraft=null;
-    if(!t.rest&&(t.ts||t.te)){S.shiftTimes=S.shiftTimes||{};const c=(S.shiftTimes[k]=S.shiftTimes[k]||{});if(t.ts)c.start=t.ts;if(t.te)c.end=t.te;}
+    if(!t.rest&&(t.ts||t.te)){stSet(k,'start',t.ts);stSet(k,'end',t.te);}
     if(typeReturn==='day'&&sheetKey){applyShift(k);}else{save();afterType();}
     toast('근무타입을 추가했어요');return;
   }
@@ -5009,7 +5014,7 @@ function saveType(){
   if(i>=0){if(S.types[i].noGuess)item.noGuess=true;S.types[i]=item;}
   S.shiftTimes=S.shiftTimes||{};
   if(k!==t.orig&&S.shiftTimes[t.orig]){S.shiftTimes[k]=S.shiftTimes[t.orig];delete S.shiftTimes[t.orig];}   // 글자를 바꾸면 시간도 따라감
-  if(!t.rest&&(t.ts||t.te)){const c=(S.shiftTimes[k]=S.shiftTimes[k]||{});if(t.ts)c.start=t.ts;if(t.te)c.end=t.te;}
+  if(!t.rest&&(t.ts||t.te)){stSet(k,'start',t.ts);stSet(k,'end',t.te);}
   if(k!==t.orig){   // 글자를 바꾸면 패턴·변경·알람도 같이 바꿈
     S.pattern=S.pattern.map(x=>x===t.orig?k:x);
     (S.patOld||[]).forEach(o=>{o.pattern=o.pattern.map(x=>x===t.orig?k:x);});
@@ -7152,7 +7157,7 @@ function obApply(){
     S.holRest=!!p.hol;
     S.patternName=p.name.replace(/\s/g,'').replace(/\(.*\)/,'');
   }
-  Object.entries(ob.tm||{}).forEach(([k,v])=>{S.shiftTimes=S.shiftTimes||{};S.shiftTimes[k]=Object.assign({},S.shiftTimes[k],{start:v[0],end:v[1]});});   // 처음 설치에서 정한 근무 시간
+  {let tks=[];try{tks=obTmKeys();}catch(e){}const all={};tks.forEach(k=>{try{all[k]=obTmOf(k);}catch(e){}});Object.assign(all,ob.tm||{});Object.entries(all).forEach(([k,v])=>{if(!Array.isArray(v)||!okTime(v[0])||!okTime(v[1]))return;S.shiftTimes=S.shiftTimes||{};S.shiftTimes[k]=Object.assign({},S.shiftTimes[k],{start:v[0],end:v[1]});});}   // 처음 설치에서 보인 근무 시간: 안 고친 것(기본값)도 그대로 저장 (v0.234 화면에 보인 시간 = 진짜 시간)
   S.anchor=obAnchor();S.patOld=[];
   if(ob.entry!=='later'||!S.noPat)S.overrides={};   // 불규칙으로 날짜마다 넣어 둔 근무는 패턴을 만들어도 그대로
   S.noPat=false;S.myset=true;S.personal=false;S.pers=[];
@@ -7724,16 +7729,16 @@ document.addEventListener('click',e=>{
     /* 알람 */
     case 'aadd':draft=newAlarm();alSnd=false;openAlarmPage();break;
     case 'aedit':{if(e.target.closest('.sw'))break;const f=S.alarms.find(x=>x.id===t.dataset.id);if(f){draft=Object.assign({isNew:false},f);alSnd=false;openAlarmPage();}break;}
-    case 'dsnd-open':alSnd=!alSnd;openAlarmPage();break;
-    case 'dshift':draft.shift=t.dataset.v;openAlarmPage();break;
-    case 'doff':draft.offset=Number(t.dataset.v);openAlarmPage();break;
-    case 'dsound':draft.sound=!draft.sound;openAlarmPage();break;
-    case 'dvib':draft.vib=!draft.vib;openAlarmPage();break;
-    case 'dsilent':draft.sound=false;draft.vib=false;openAlarmPage();break;
-    case 'dwxsnd':draft.sound=t.dataset.v==='1';openAlarmPage();break;   // v0.142 날씨만 알람 소리 한 번 / 무음
-    case 'dwx':draft.wxOnly=t.dataset.v==='only';draft.wx=t.dataset.v!=='off';if(draft.wxOnly&&!wxOk((S.wx||{}).home))toast('설정 › 부가 기능 › 출퇴근 시간 · 날씨에서 집 지역을 골라 주세요');openAlarmPage();break;
-    case 'dsnmin':draft.snMin=Number(t.dataset.v);openAlarmPage();break;
-    case 'dsnmax':draft.snMax=Number(t.dataset.v);openAlarmPage();break;
+    case 'dsnd-open':if(!draft)break;alSnd=!alSnd;openAlarmPage();break;
+    case 'dshift':if(!draft)break;draft.shift=t.dataset.v;openAlarmPage();break;
+    case 'doff':if(!draft)break;draft.offset=Number(t.dataset.v);openAlarmPage();break;
+    case 'dsound':if(!draft)break;draft.sound=!draft.sound;openAlarmPage();break;
+    case 'dvib':if(!draft)break;draft.vib=!draft.vib;openAlarmPage();break;
+    case 'dsilent':if(!draft)break;draft.sound=false;draft.vib=false;openAlarmPage();break;
+    case 'dwxsnd':if(!draft)break;draft.sound=t.dataset.v==='1';openAlarmPage();break;   // v0.142 날씨만 알람 소리 한 번 / 무음
+    case 'dwx':if(!draft)break;draft.wxOnly=t.dataset.v==='only';draft.wx=t.dataset.v!=='off';if(draft.wxOnly&&!wxOk((S.wx||{}).home))toast('설정 › 부가 기능 › 출퇴근 시간 · 날씨에서 집 지역을 골라 주세요');openAlarmPage();break;
+    case 'dsnmin':if(!draft)break;draft.snMin=Number(t.dataset.v);openAlarmPage();break;
+    case 'dsnmax':if(!draft)break;draft.snMax=Number(t.dataset.v);openAlarmPage();break;
     case 'dtone':
       if(!hasBridge('pickTone')){toast('앱에서 폰 알람음 · 음악 파일을 고를 수 있어요');break;}
       if(draft&&draft.wxOnly&&ad('wx')){window.AndroidBridge.pickTone('n:'+draft.id,isFileTone(draft.tone)?'':(draft.tone||''));break;}   // v0.143 날씨만 알람 = 폰 알림음 목록 (벨소리 · 알람음 아님)
@@ -8144,7 +8149,7 @@ document.addEventListener('change',e=>{
     const f=S.alarms.find(x=>x.id===t.dataset.id);
     if(f){f.on=t.checked;if(f.on&&f.once)f.until=firstFire(f);save();render();}
   }else if((t.id==='tdS'||t.id==='tdE')&&t.value&&typeDraft){typeDraft[t.id==='tdS'?'ts':'te']=t.value;const nm=$('#tdName'),kk=$('#tdK');if(nm)typeDraft.name=nm.value;if(kk&&kk.value)typeDraft.k=kk.value;openTypeEdit();
-  }else if(/^pt[SE]_\d+$/.test(t.id||'')&&t.value){const ty=workTypes()[+t.id.slice(4)];if(ty){const c=((S.shiftTimes=S.shiftTimes||{})[ty.k]=S.shiftTimes[ty.k]||{});c[t.id[2]==='S'?'start':'end']=t.value;save();openPatternPage();}
+  }else if(/^pt[SE]_\d+$/.test(t.id||'')&&t.value){const ty=workTypes()[+t.id.slice(4)];if(ty){stSet(ty.k,t.id[2]==='S'?'start':'end',t.value);save();openPatternPage();}
   }else if((t.id==='otS'||t.id==='otE')&&t.value&&otKey){const d=parse(otKey),tt=timesOf(shiftOf(d)),o=(S.ot[otKey]||[tt.start,tt.end]).slice();o[t.id==='otS'?0:1]=t.value;otSet(o);
   }else if(/^obTm[SE]_\d+$/.test(t.id||'')&&t.value&&ob){const k=obTmKeys()[+t.id.slice(6)];if(k){ob.tm=ob.tm||{};const x=ob.tm[k]||obTmOf(k).slice();x[t.id[4]==='S'?0:1]=t.value;ob.tm[k]=x;renderOb();}
   }else if(t.id&&t.id.startsWith('tt_')&&pageMode==='times'){

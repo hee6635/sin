@@ -186,7 +186,7 @@ function calPanel(y,m){
     if(!sharing)mine.filter(x=>!x.till).forEach(x=>pills.push(`<div class="pl my${pst(x)}>${linkify(firstLine(x.text))}</div>`));
     boardOnDate(k).filter(n=>!sharing||n.shared).forEach(n=>pills.push(`<div class="pl ${n.shared?'fam':'my'}">📝 ${esc(piLabel(n))}</div>`));
     ddayHits(k).forEach(x=>pills.push(`<div class="pl dd">${ico(x.emoji||'⭐')} ${esc(x.name)}</div>`));
-    {const pv=sharing?'':perPill(k,d);if(pv)pills.unshift(pv);}
+    const pvH=sharing?'':perPill(k,d);if(pvH)pills.unshift(pvH);
     // 설정 줄 수(기본 3 · 태블릿 +1). 넘치면 마지막 줄 끝에 "+n" 칩
     if(pills.length>maxLines)pills.splice(0,pills.length,...capPills(pills,maxLines));
     // 날짜 줄: 숫자 · 스티커 · 공휴일 이름. 좁은 칸에서 스티커와 겹치면 이름은 빼기 (날짜 줄 색으로 이미 보임)
@@ -202,7 +202,7 @@ function calPanel(y,m){
     const stRow=st0.slice(0,2),stMore=st0.slice(2);
 
     const tcc=pers||sh===''||sh===NONE_K?null:tColors(typeOf(sh)),cb=tcc?` style="--cb:${tcc.bg}"`:'';   // 칸 채우기 모양: 칸 전체를 근무 색으로 (v0.232 쉬는 근무도 색을 정했으면 · 기본 휴무는 색 없음)
-    cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${pers?'pers':''} ${stMore.length?'m3':''} ${rcls}" data-act="day" data-k="${k}"${cb}>
+    cells+=`<div class="cell ${d.getMonth()===m?'':'out'}${pvH?' pvc':''} ${k===tk?'today':''} ${pers?'pers':''} ${stMore.length?'m3':''} ${rcls}" data-act="day" data-k="${k}"${cb}>
       <i class="stz" data-act="stamp-dn" data-k="${k}"></i><div class="dn ${hol?'hol':ch?'chol':''} ${cls} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1" data-f="${esc(hone)}" data-t2="${esc(hTwo)}" data-o="${esc(honeO)}">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIcon(x,0)).join('')}</span>`:''}${showHn?`<span class="hn ${shortHol(hol).length>3&&hol?'sm':''}"${hol?` data-f="${esc(hFull)}" data-t2="${esc(hTwo)}" data-o="${esc(holOne(hol))}"`:''}>${hnHtml}</span>`:''}</div>${below?`<i class="hnb" data-o="${esc(holOne(hol))}">${esc(hTwo)}</i>`:''}${stMore.length?`<div class="s2">${stMore.map(x=>stampIcon(x,0)).join('')}</div>`:''}
       <div class="bwrap">${pers?(stAll.length?`<div class="pstk n${stAll.length}">${stAll.slice(0,4).map(x=>stampIcon(x,0)).join('')}</div>`:''):bwrapHtml(d,k)}</div>
       <div class="pill-wrap${pills.length>=maxLines?' full':''}">${pills.join('')}</div>
@@ -733,6 +733,10 @@ function timesOf(k){
   return o;
 }
 const timesCustom=k=>Object.keys((S.shiftTimes||{})[k]||{}).length>0;
+// v0.234 시작 · 끝 중 하나만 고쳐도 둘 다 저장 (하나만 있으면 다시 켤 때 normalize 가 지워서 "정하기"로 돌아가던 것 · 날씨 출퇴근이 집만 나오던 원인)
+// v0.234 근무 패턴 화면에 보이는 기본 시간을 진짜로 저장 (사용자 결정: 화면엔 보이는데 날씨 · 위젯은 "안 정함"으로 보던 것 없앰) — 시간이 없는 근무타입만 채움
+function fillDefTimes(){if(!S.myset)return false;let n=0;S.shiftTimes=S.shiftTimes||{};(S.types||[]).forEach(t=>{if(!t||t.rest||t.k===NONE_K||timesCustom(t.k))return;try{const d=defaultTimes(t.k);if(okTime(d.start)&&okTime(d.end)){S.shiftTimes[t.k]={start:d.start,end:d.end};n++;}}catch(e){}});return n>0;}
+function stSet(k,f,v){const x=timesOf(k);S.shiftTimes=S.shiftTimes||{};const c=(S.shiftTimes[k]=S.shiftTimes[k]||{});if(!c.start)c.start=x.start;if(!c.end)c.end=x.end;if(v)c[f]=v;return c;}
 const workTypes=()=>(S.types||[]).filter(t=>!t.rest);
 const ST_DEF={commute:['🚗','출근 중'],work:['🏭','근무 중'],meal:['🍱','점심 시간'],night:['🍗','야식 시간'],brk:['☕','쉬는 시간'],back:['🚗','퇴근 중'],home:['🏠','집에 왔어요'],sleep:['😴','자는 중'],rest:['🙂','쉬는 중'],end:['🏁','근무 끝']};
 const ROW_DEF={commute:'집에서 나서기',work:'근무 시작',end:'근무 끝',home:'집 도착',sleep:'수면'};   // 근무 시간 화면 줄 이름 (바꾸면 labels[key].n)
@@ -889,7 +893,7 @@ function ttIconSet(i,icon,name){
   else{const b=timesOf(timesTab).breaks.map(x=>Object.assign({},x));if(b[+i]){b[+i].icon=icon;b[+i].name=name;ttSet('breaks',b);}}
 }
 function ttSet(field,val){
-  const k=timesTab,c=((S.shiftTimes=S.shiftTimes||{})[k]=S.shiftTimes[k]||{});
+  const k=timesTab,c=stSet(k);   // v0.234 시작 · 끝도 같이 저장 (식사 · 나서기만 고쳐도 다시 켤 때 안 지워지게)
   if(field==='meal'||field==='sleep')c[field]=Object.assign({},timesOf(k)[field],c[field],val);
   else c[field]=val;
   save();

@@ -553,7 +553,7 @@ function load(){
   keepBad(j,'normalize');loadNote='partial';
   try{return salvage(JSON.parse(j));}catch(e){loadNote='parse';return defaults();}
 }
-let S=load();setTimeout(()=>{if(!ovSnap)ovSnap={...(S.overrides||{})};},0);   // v0.135 근무 기록: 처음 상태
+let S=load();setTimeout(()=>{if(!ovSnap)ovSnap={...(S.overrides||{})};try{if(fillDefTimes())save();}catch(e){}},0);   // v0.234 시간이 없는 근무에 기본 시간 저장   // v0.135 근무 기록: 처음 상태
 
 /* 안드로이드 앱이 알려주는 알람 권한 상태 (브라우저에서는 빈 목록) */
 const ISSUE_TXT={exact:'정확한 알람 권한이 필요해요',notif:'알림을 허용해야 알람이 떠요',fsi:'잠금화면에 알람 화면을 띄우는 권한이 필요해요',batt:'배터리를 "제한 없음"으로 해야 알람이 안 늦어요'};
@@ -843,6 +843,7 @@ function chLogMine(){   // 내 근무 바꾼 것 (저장할 때 전과 비교)
     ovSnap={...cur};}catch(e){}
 }
 function save(){
+  try{fillDefTimes();}catch(e){}
   chLogMine();
   S.drive.dirty=true;dataRev++;
   try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('저장 공간이 꽉 찼어요 · 안 쓰는 사진을 지워 주세요');}

@@ -908,7 +908,7 @@ textarea{resize:none;min-height:84px}
 .pi.r1{transform:rotate(-1.4deg)}.pi.r2{transform:rotate(1.2deg)}.pi.r3{transform:rotate(-.5deg)}.pi.r4{transform:rotate(1.8deg)}
 .pi.wide{grid-column:1/-1}
 .pi .pin{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;color:#fff;font-style:normal;box-shadow:0 2px 3px rgba(0,0,0,.3),inset 0 -2px 0 rgba(0,0,0,.15)}
-.pi .tg{position:absolute;top:5px;right:7px;font-size:10.5px;font-weight:800;opacity:.7}
+.pi .tg{position:absolute;top:5px;right:7px;font-size:10.5px;font-weight:800;opacity:.88}
 .pi.c-p .tg{color:#4b2fc0}
 .pi h5{font-size:13px;font-weight:800;margin:0 0 4px;display:flex;gap:5px;align-items:center}
 .pi h5 em{margin-left:auto;font-style:normal;font-size:10.5px;font-weight:800;background:rgba(0,0,0,.08);border-radius:8px;padding:1px 6px}
@@ -2064,9 +2064,15 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .mdpc button{width:22px;height:22px;border-radius:50%;border:0;padding:0}
 .mdpc button.on{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--fg)}
 /* v0.233 기간 띠가 칸 사이 선에서 끊기지 않게: 띠 있는 칸만 잘림 범위를 칸 선 너머까지 (칸 채우기 모양의 2px 틈 포함) */
-.cell:has(.pvl:not(.e)),.cell:has(.pvl:not(.s)){overflow:clip;overflow-clip-margin:4px}
+.cell.pvc{overflow:clip;overflow-clip-margin:4px}   /* (칸 클래스로: :has 는 밀 때마다 다시 계산해서 날짜 창 밀기가 느려짐 · s75) */
 .cell .pill-wrap:has(>.pvl){overflow-clip-margin:6px}
 .pl.pvl{width:calc(100% + 8px);margin:0 -4px}
 .pl.pvl.s{width:calc(100% + 4px);margin-left:0}
 .pl.pvl.e{width:calc(100% + 4px);margin-right:0}
 .pl.pvl.s.e{width:100%;margin:0}
+/* v0.234 다크모드: 포스트잇 제목 칸이 어두운 입력칸 바탕을 받아 제목이 안 보이던 것 → 포스트잇 위 입력칸은 늘 종이색 그대로 */
+.pi input.pi-title,.pi textarea{background:transparent!important;color:var(--pi-ink)!important;box-shadow:none!important}
+.pi input.pi-title::placeholder,.pi textarea::placeholder{color:color-mix(in srgb,var(--pi-ink) 45%,transparent)}
+.pvh .ib{color:#5a5140;background:transparent}   /* v0.234 다크모드: 포스트잇 큰 보기 ✕ 가 밝은 종이 위에서 안 보이던 것 */
+.pi .x{color:color-mix(in srgb,var(--pi-ink) 70%,transparent)}
+.pi .pdt{opacity:.7;color:color-mix(in srgb,var(--pi-ink) 70%,transparent)}
