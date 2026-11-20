@@ -142,7 +142,7 @@ function memberOff(m,d){
   return !days.includes(w)||(m.holOff!==false&&!!holName(k));
 }
 function memberCell(m,d,dot){   // dot: 이 날만 바꾼 날 표시(직접 추가한 가족 달력에서만)
-  const dt=dot&&m.ov&&m.ov[fmt(d)]?'<i class="dot"></i>':'';
+  const dt=dot&&S.ovDot!==false&&m.ov&&m.ov[fmt(d)]?'<i class="dot"></i>':'';
   if(m.kind==='sched')return schBadge(m.sch,schShift(m.sch,d),'sm');
   if(m.kind==='shift')return badge(famShift(m,d),'sm',dt);
   return manBadge(m,d,dt,'sm');   // v0.117 내 근무처럼 동그라미 (종류 글자 · 색)

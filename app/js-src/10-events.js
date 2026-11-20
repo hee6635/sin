@@ -333,6 +333,9 @@ document.addEventListener('click',e=>{
     case 'md-col':mdPull();mdDraft.color=mdDraft.color===t.dataset.v?'':t.dataset.v;renderMemoDetail();break;
     case 'md-share':mdPull();mdDraft.shared=t.dataset.v==='1';MO.flip($('#page .pg-b'),renderMemoDetail);break;
     case 'md-al':mdPull();mdDraft.al=t.dataset.v;renderMemoDetail();break;
+    case 'md-settill':{mdPull();mdDraft.till=addK(mdDraft.k,2);renderMemoDetail();break;}   // v0.232 기간: 처음엔 사흘 (고쳐서 끝 날 고름)
+    case 'md-notill':{mdPull();mdDraft.till='';renderMemoDetail();break;}
+    case 'per-open':openMemoDetail(t.dataset.k,t.dataset.id);break;
     case 'md-settime':{mdPull();mdDraft.time='09:00';const pb=$('#page');const st0=pb&&pb.querySelector('.pg-b')?pb.querySelector('.pg-b').scrollTop:0;renderMemoDetail();   // v0.209 ＋가 돌며 ✕ · 시간 톡 · 알림 줄 스르르
       try{const pg=$('#page .pg-b');if(pg)pg.scrollTop=st0;if(!RMq()){const r=$('#page .mdtrow'),x=r&&r.querySelector('.xbtn'),tp=r&&r.querySelector('.tbtn'),al=r&&r.nextElementSibling;
         if(x)x.animate([{transform:'rotate(-135deg)',background:'var(--acc-soft)'},{transform:'none'}],{duration:420,easing:'cubic-bezier(.3,1.4,.5,1)'});
@@ -951,6 +954,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='srTo'&&stDraft){stDraft.to=t.value;renderStampReg();
   }else if(t.id==='mdTodo'&&mdDraft){mdPull();mdDraft.todo=t.checked;renderMemoDetail();
   }else if(t.id==='mdTime'&&mdDraft){if(t.value)mdDraft.time=t.value;
+  }else if(t.id==='mdTill'&&mdDraft){mdPull();if(t.value&&t.value>mdDraft.k)mdDraft.till=t.value;else toast('끝 날은 시작한 날 뒤로 골라 주세요');renderMemoDetail();
   }else if(t.id==='srWknd'&&stDraft){stDraft.noWknd=t.checked;
   }else if(t.id==='srHol'&&stDraft){stDraft.noHol=t.checked;
   }else if(t.id==='srFam'&&stDraft){srPull();stDraft.fam=t.checked;renderStampReg();
@@ -977,6 +981,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='anchor'&&t.value){askAnchor(t.value);}
   else if(t.id==='shareMemo'){$('#app').classList.toggle('share-memo',t.checked);render();}
   else if(t.id==='shareStk'){shareStk=t.checked;render();}
+  else if(t.id==='ovDot'){S.ovDot=!!t.checked;save();render();widgetSync();}
   else if(t.id==='holRest'){S.holRest=t.checked;save();toast(t.checked?'공휴일 근무 칸을 휴무로 보여요':'공휴일도 패턴대로 보여요');}
   else if(t.id==='receiveFamilyMemo'){S.syncSettings.receiveFamilyMemo=t.checked;save();if(tab==='cal')render();toast(t.checked?'가족 메모를 달력에 표시해요':'가족 메모를 달력에서 숨겨요');}
   else if(t.id==='patWeek'){S.patWeek=!!t.checked;save();openPatternPage();}

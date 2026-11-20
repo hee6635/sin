@@ -473,6 +473,7 @@ function openPatternPage(){
         ${(S.patOld||[]).length?npRow('history','이전 패턴 보기 · 지우기',npVal(S.patOld.length+'개'),{tap:1,act:'pat-old-show'}):''}
         ${undoA}
         ${npRow('calendar-off','공휴일엔 쉬어요',`<label class="sw"><input type="checkbox" id="holRest" ${S.holRest?'checked':''}><i></i></label>`)}
+        ${npRow('circle-dot','바꾼 날 빨간 점',`<label class="sw"><input type="checkbox" id="ovDot" ${S.ovDot!==false?'checked':''}><i></i></label>`)}
         ${npRow('calendar-days','요일 보기',`<label class="sw"><input type="checkbox" id="patWeek" ${S.patWeek?'checked':''}><i></i></label>`)}
         ${npRow('paintbrush','달력에 칠하기',npVal(''),{tap:1,act:'paint-open'})}
         ${patLocHtml(1)}
@@ -686,7 +687,7 @@ function exportBad(){
   if(hasBridge('shareFile')){try{window.AndroidBridge.shareFile(name,raw);return;}catch(e){}}
   toast('앱에서만 보낼 수 있어요');
 }
-const BACKUP_KEYS=['stzMode','chLog','famAlias','onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','tune','calLook','todayLook','todayColor','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','togOff','famDayToo','stamps','icons','wx','ot','salary'];
+const BACKUP_KEYS=['stzMode','ovDot','chLog','famAlias','onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','tune','calLook','todayLook','todayColor','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','togOff','famDayToo','stamps','icons','wx','ot','salary'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});if(S.wlog&&S.wlog.backup)data.wlog=S.wlog;try{const h=wxHist();if(Object.keys(h).length)data.wxh=h;}catch(e){}return data;}   // v0.127 지난 날 날씨 기록도   // 업무 일지는 "백업에 넣기"를 켠 사람만
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);

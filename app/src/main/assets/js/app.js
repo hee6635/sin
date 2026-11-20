@@ -470,7 +470,7 @@ function normalize(o){
   for(const [k,v] of Object.entries(s.memos||{})){
     if(!okDate(k))continue;
     const list=Array.isArray(v)?v:typeof v==='string'?[{text:v,shared:false}]:[{text:(v&&v.text)||'',shared:!!(v&&v.shared)}];
-    const clean=list.filter(x=>x&&x.text).map(x=>({id:x.id||uid(),text:String(x.text),shared:!!x.shared,by:x.by||'host',t:x.t||Date.now(),...(x.notify?{notify:true}:{}),...(Array.isArray(x.to)&&x.to.length?{to:x.to.filter(u=>typeof u==='string').slice(0,12)}:{}),...(/^#[0-9a-f]{6}$/i.test(x.color||'')?{color:x.color}:{}),...(x.todo?{todo:true}:{}),...(x.todo&&x.done?{done:true}:{}),...(/^\d{1,2}:\d\d$/.test(x.time||'')?{time:x.time,...(x.al==='0'||x.al==='10'?{al:x.al}:{})}:{})}));   // 메모 색 · 할 일 · 시간 · 알림은 내 폰에만 (다시 켜도 남게)
+    const clean=list.filter(x=>x&&x.text).map(x=>({id:x.id||uid(),text:String(x.text),shared:!!x.shared,by:x.by||'host',t:x.t||Date.now(),...(okDate(x.till)&&x.till>k&&!x.shared?{till:x.till}:{}),...(x.notify?{notify:true}:{}),...(Array.isArray(x.to)&&x.to.length?{to:x.to.filter(u=>typeof u==='string').slice(0,12)}:{}),...(/^#[0-9a-f]{6}$/i.test(x.color||'')?{color:x.color}:{}),...(x.todo?{todo:true}:{}),...(x.todo&&x.done?{done:true}:{}),...(/^\d{1,2}:\d\d$/.test(x.time||'')?{time:x.time,...(x.al==='0'||x.al==='10'?{al:x.al}:{})}:{})}));   // 메모 색 · 할 일 · 시간 · 알림은 내 폰에만 (다시 켜도 남게)
     if(clean.length)mm[k]=clean;
   }
   // 예전 "가족 메모"(게스트가 쓴 것)는 가족 메모로 합침
@@ -685,7 +685,7 @@ function widgetJson(){
     });
     const rq0=rqRing((S.requests||[]).filter(r=>r.date===k&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r)).slice(3),   // 요청 링 (한 달 위젯 · 칸 채우기 모양): ask · hold · ok · no — 달력과 같은 기준(답한 요청은 3일 뒤 사라짐)
       nfm=vm.filter(x=>x.shared&&x.text.trim()).length,   // 메모 줄 맨 앞 nfm 개가 가족 메모(♥) — 위젯이 연보라 칸으로 그림
-      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',...((c||rest)?{tn:String(typeOf(sh).name||sh).slice(0,5)}:{}),bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · '),s:wlSecTexts(k)}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
+      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&S.ovDot!==false&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',...((c||rest)?{tn:String(typeOf(sh).name||sh).slice(0,5)}:{}),bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · '),s:wlSecTexts(k)}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
     if(i<-6||i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({...base,far:i<-6?2:1,stk:stampsOn(k).slice(0,4).map(x=>{const o=mapStk(x);delete o.id;delete o.b;return o;}),ms:ml.slice(0,3).map(x=>String(x||'').slice(0,40)),...(mld.some(i=>i<3)?{msd:mld.filter(i=>i<3)}:{}),
       ...(fm.length?{fm}:{}),...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 먼 날(지난 날 · 2주 뒤부터): 큰 창에는 스티커 · 메모를 안 싣고 앱에서 보게 함
     const sa=stampsOn(k).slice(0,12).map(mapStk);
@@ -1201,8 +1201,9 @@ function memoLines(){
   const avail=ch-dnH-bw-shift;
   const want=3;   // 메모는 어디서든(폰 · 태블릿 · 개인 캘린더) 최대 3줄 — 칸이 낮으면 들어가는 만큼만
   const minLh=tab?14:12,capLh=tab?24:20,capFs=tab?14:12.5;
-  let n=want;while(n>1&&(avail-(n-1))/n<minLh)n--;
-  const per=(avail-(n-1))/n,lh=Math.max(minLh,Math.min(capLh,Math.floor(per)));
+  const minN=tab?2:1;   // v0.232 태블릿 · 폴드 안쪽 화면은 칸이 낮아도 메모 2줄 (줄을 조금 낮춰서)
+  let n=want;while(n>minN&&(avail-(n-1))/n<minLh)n--;
+  const per=(avail-(n-1))/n,lh=Math.max(n>1&&per<minLh?11:minLh,Math.min(capLh,Math.floor(per)));
   const TN=tuneApp(),fs=Math.min(capFs,Math.max(9,Math.round(lh*0.6*2)/2))*TN.memo;
   const r=document.documentElement.style;r.setProperty('--plh',lh+'px');const ph=Math.max(lh,Math.min(Math.round(lh*1.15),Math.floor(per)))*TN.pill;r.setProperty('--plhf',ph+'px');r.setProperty('--plf',fs+'px');r.setProperty('--plmax',(ph+1)+'px');
   return n;
@@ -1311,9 +1312,17 @@ function bwrapHtml(d,k,pop){
   const tc=tColors(typeOf(sh));
   const band=tc&&!isRest(sh)&&(ps===sh||ns===sh)?`<i class="band ${ps===sh?'jl':''} ${ns===sh?'jr':''}" style="--tb:${tc.bg}"></i>`:'';
   const holTag=S.holRest&&hol&&isRest(sh)&&ov==null?holTagName(k,hol):'';
-  return `${band}${holTag?`<span class="badge r two holtag ${pop?'pop':''}">${esc(holTag)}</span>`:badge(sh,pop?'pop':'',ov?'<i class="dot"></i>':'')}`;
+  return `${band}${holTag?`<span class="badge r two holtag ${pop?'pop':''}">${esc(holTag)}</span>`:badge(sh,pop?'pop':'',ov&&S.ovDot!==false?'<i class="dot"></i>':'')}`;
 }
 // 메모가 줄 수(mx)보다 많으면: 보이는 줄은 그대로 두고 마지막 줄 끝에 작은 회색 "+n" (n = 더 있는 메모 수 · 10개 이상은 9+) — 위젯 칸과 같은 표시. 글자가 잘리면 끝에 작은 점 세 개(plFit)
+// v0.232 기간 메모(m.till): 칸 메모 첫 줄 자리에 이어지는 띠 (시안 design/period/v5) · 시작 · 끝 날 진한 막대 · 이름은 시작 날과 주 첫날
+let perRev=-1,perList=[];
+function perAll(){if(perRev===dataRev)return perList;perRev=dataRev;perList=[];Object.keys(S.memos||{}).forEach(k0=>(S.memos[k0]||[]).forEach(m=>{if(m&&m.till&&m.till>k0&&!m.shared)perList.push({k0,m});}));perList.sort((a,b)=>a.k0<b.k0?-1:a.k0>b.k0?1:0);return perList;}
+const perOn=k=>perAll().filter(p=>p.k0<=k&&k<=p.m.till);
+const PER_COL={'#fff1c4':'#f2c037','#ffd9e4':'#ee7d9f','#ffe0c7':'#f08a3c','#d6f5df':'#4fb874','#d2f1ef':'#3fb0a6','#d9ecff':'#5b97ec','#e8eaee':'#8d95a1'};
+const perCol=c=>PER_COL[c]||c||'#f08a3c';
+function perPill(k,d){const p=perOn(k)[0];if(!p)return '';const L=leadOf(d),s=k===p.k0||L===0,x=k===p.m.till,e=x||L===6;
+  return `<div class="pl pvl${s?' s':''}${e?' e':''}${k===p.k0?' b':''}${x?' x':''}" style="--pc:${perCol(p.m.color)}">${s?esc(firstLine(p.m.text)):'&nbsp;'}</div>`;}
 function capPills(pl,mx){
   if(pl.length<=mx)return pl;
   const n=pl.length-mx,out=pl.slice(0,mx),s=out[mx-1],i=s.indexOf('>');
@@ -1341,9 +1350,10 @@ function calPanel(y,m){
     const pst=x=>`${x.done?' done':''}" ${x.color?`style="--mc:${esc(x.color)}"`:''}`;
     if(!sharing&&wlHas(k))pills.push(`<div class="pl wl">📋 ${esc(wlName())}</div>`);   // 업무 일지: 메모 맨 위 · 메모와 같은 높이 · 공유 그림엔 안 나옴
     fam.forEach(x=>pills.push(`<div class="pl fam${pst(x)}>${linkify(firstLine(x.text))}</div>`));
-    if(!sharing)mine.forEach(x=>pills.push(`<div class="pl my${pst(x)}>${linkify(firstLine(x.text))}</div>`));
+    if(!sharing)mine.filter(x=>!x.till).forEach(x=>pills.push(`<div class="pl my${pst(x)}>${linkify(firstLine(x.text))}</div>`));
     boardOnDate(k).filter(n=>!sharing||n.shared).forEach(n=>pills.push(`<div class="pl ${n.shared?'fam':'my'}">📝 ${esc(piLabel(n))}</div>`));
     ddayHits(k).forEach(x=>pills.push(`<div class="pl dd">${ico(x.emoji||'⭐')} ${esc(x.name)}</div>`));
+    {const pv=sharing?'':perPill(k,d);if(pv)pills.unshift(pv);}
     // 설정 줄 수(기본 3 · 태블릿 +1). 넘치면 마지막 줄 끝에 "+n" 칩
     if(pills.length>maxLines)pills.splice(0,pills.length,...capPills(pills,maxLines));
     // 날짜 줄: 숫자 · 스티커 · 공휴일 이름. 좁은 칸에서 스티커와 겹치면 이름은 빼기 (날짜 줄 색으로 이미 보임)
@@ -1358,7 +1368,7 @@ function calPanel(y,m){
     const showHn=!!hnHtml&&!holTag&&(hol?!st0.length:(!narrow||!st0.length||st0.length<2));
     const stRow=st0.slice(0,2),stMore=st0.slice(2);
 
-    const tcc=pers||sh===''||sh===NONE_K?null:tColors(typeOf(sh)),cb=tcc&&!isRest(sh)?` style="--cb:${tcc.bg}"`:'';   // 칸 채우기 모양: 칸 전체를 근무 색으로
+    const tcc=pers||sh===''||sh===NONE_K?null:tColors(typeOf(sh)),cb=tcc?` style="--cb:${tcc.bg}"`:'';   // 칸 채우기 모양: 칸 전체를 근무 색으로 (v0.232 쉬는 근무도 색을 정했으면 · 기본 휴무는 색 없음)
     cells+=`<div class="cell ${d.getMonth()===m?'':'out'} ${k===tk?'today':''} ${pers?'pers':''} ${stMore.length?'m3':''} ${rcls}" data-act="day" data-k="${k}"${cb}>
       <i class="stz" data-act="stamp-dn" data-k="${k}"></i><div class="dn ${hol?'hol':ch?'chol':''} ${cls} ${hone?'h1r':''}"><span class="num">${d.getDate()}</span>${hone?`<span class="h1" data-f="${esc(hone)}" data-t2="${esc(hTwo)}" data-o="${esc(honeO)}">${esc(hone)}</span>`:''}${stRow.length?`<span class="stp">${stRow.map(x=>stampIcon(x,0)).join('')}</span>`:''}${showHn?`<span class="hn ${shortHol(hol).length>3&&hol?'sm':''}"${hol?` data-f="${esc(hFull)}" data-t2="${esc(hTwo)}" data-o="${esc(holOne(hol))}"`:''}>${hnHtml}</span>`:''}</div>${below?`<i class="hnb" data-o="${esc(holOne(hol))}">${esc(hTwo)}</i>`:''}${stMore.length?`<div class="s2">${stMore.map(x=>stampIcon(x,0)).join('')}</div>`:''}
       <div class="bwrap">${pers?(stAll.length?`<div class="pstk n${stAll.length}">${stAll.slice(0,4).map(x=>stampIcon(x,0)).join('')}</div>`:''):bwrapHtml(d,k)}</div>
@@ -3335,7 +3345,7 @@ function memberOff(m,d){
   return !days.includes(w)||(m.holOff!==false&&!!holName(k));
 }
 function memberCell(m,d,dot){   // dot: 이 날만 바꾼 날 표시(직접 추가한 가족 달력에서만)
-  const dt=dot&&m.ov&&m.ov[fmt(d)]?'<i class="dot"></i>':'';
+  const dt=dot&&S.ovDot!==false&&m.ov&&m.ov[fmt(d)]?'<i class="dot"></i>':'';
   if(m.kind==='sched')return schBadge(m.sch,schShift(m.sch,d),'sm');
   if(m.kind==='shift')return badge(famShift(m,d),'sm',dt);
   return manBadge(m,d,dt,'sm');   // v0.117 내 근무처럼 동그라미 (종류 글자 · 색)
@@ -4446,7 +4456,7 @@ function medDoneFx(id){try{if(RMq())return;const c=id?document.querySelector(`#s
 function memoCard(m,k){
   const own=m.by===role(),cls=m.shared?'fam':'my';
   if(memoEdit===m.id)return `<div class="mcard ${cls} medit" data-mid="${m.id}"><div class="medbox"><div class="merow"><input type="text" id="memoInput" class="${cls} medin" value="${esc(memoText)}" enterkeyhint="done" aria-label="메모 고치기"><button class="medok" data-act="memo-send" aria-label="저장"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></div><div class="meacts"><a data-act="memo-copy">복사</a><a data-act="memo-cancel">취소</a></div></div></div>`;   // v0.210 그 자리에서 고치기 (아래 입력칸에 한 번 더 나오지 않음)
-  const ex=m.time?` · 🕐 ${tfmt(m.time)}${m.al!==undefined&&m.al!==''?` · 🔔 ${m.al==='10'?'10분 전':'정시'}`:''}`:'';
+  const ex=(m.till?` · ~ ${md(m.till)}`:'')+(m.time?` · 🕐 ${tfmt(m.time)}${m.al!==undefined&&m.al!==''?` · 🔔 ${m.al==='10'?'10분 전':'정시'}`:''}`:'');
   return `<div class="mcard ${cls} ${m.color?'cl':''} ${m.todo&&m.done?'done':''} ${memoEdit===m.id?'sel':''}" ${m.color?`style="background:${esc(m.color)} !important"`:''} data-act="memo-tap" data-mid="${m.id}" data-hold="memo">
     ${m.todo?(m.srv?`<span class="mchk ro ${m.done?'on':''}" aria-label="${m.done?'가족이 완료함':'가족 할 일'}">${m.done?'✓':''}</span>`:`<button class="mchk ${m.done?'on':''}" data-act="memo-chk" data-mid="${m.id}" aria-label="완료">${m.done?'✓':''}</button>`):''}
     <div class="mt2"><span class="tx">${linkify(m.text,{click:true,fam:!!(m.shared&&m.by!==role())})}</span><div class="meta">${m.rep?'🔁 반복 · ':''}${m.shared?(isSolo()?'♥ 가족 메모':`<span class="who ${own?'me':''}">${esc(whoName(m.by))}</span>`)+' · ':(isSolo()?'':'나만 · ')}${rel(m.t)}${ex}</div></div>
@@ -4456,7 +4466,7 @@ function memoCard(m,k){
 function memoSection(k){
   const vm=visibleMemos(k),fam=vm.filter(x=>x.shared),mine=vm.filter(x=>!x.shared);
   const tabs='';
-  let body=(wlHas(k)?wlRowHtml(k):'')+fam.map(m=>memoCard(m,k)).join('')+mine.map(m=>memoCard(m,k)).join('');
+  let body=(wlHas(k)?wlRowHtml(k):'')+perOn(k).filter(p=>p.k0!==k).map(p=>`<div class="mcard my per" data-act="per-open" data-k="${p.k0}" data-id="${esc(p.m.id)}" style="--pc:${perCol(p.m.color)}"><div class="mt2"><span class="tx">${esc(firstLine(p.m.text))}</span><div class="meta">기간 · ${md(p.k0)} ~ ${md(p.m.till)}</div></div></div>`).join('')+fam.map(m=>memoCard(m,k)).join('')+mine.map(m=>memoCard(m,k)).join('');
   body+=boardOnDate(k).map(n=>`<div class="mcard ${n.shared?'fam':'my'}" data-act="open-board"><div class="mt2">📝 ${esc(piLabel(n))}<div class="meta">${cur.m+1}월 포스트잇 · 누르면 열려요</div></div></div>`).join('');
   // v0.155 빈 날 안내 글 없음 (입력칸만)
   if(!memoEdit)memoMode=role()==='host'?'my':'fam';   // 입력칸 한 줄 메모는 항상 나만 (가족에게는 "자세히"에서)
@@ -4476,12 +4486,12 @@ function memoSection(k){
 /* ---- 메모 자세히 (전체 화면): 색 · 할 일 · 시간/알림 · 나만/가족에게 ---- */
 const MEMO_COL=['#fff1c4','#ffd9e4','#ffe0c7','#d6f5df','#d2f1ef','#d9ecff','#e8eaee'];   // 연보라는 가족 메모 색과 닮아서 뺌 (이미 칠한 메모는 그대로)
 let mdDraft=null;
-const mdApply=(m,x)=>{['color','todo','done','time','al'].forEach(p=>{if(x[p]===undefined)delete m[p];else m[p]=x[p];});};
+const mdApply=(m,x)=>{['color','todo','done','time','al','till'].forEach(p=>{if(x[p]===undefined)delete m[p];else m[p]=x[p];});};
 function mdPull(){const e=$('#mdText');if(e&&mdDraft)mdDraft.text=e.value;}
 function openMemoDetail(k,id){
   const rm=rmemoOf(id);if(rm){mdDraft={k,id:'',rep:rm.id,text:rm.text,color:rm.color||'',todo:!!rm.todo,done:false,time:rm.time||'',al:rm.al||'',shared:false,rr:{md:rm.md,sh:(rm.sh||[]).slice(),miss:rm.miss||'skip'}};renderMemoDetail();return;}
   const m=id?memosOf(k).find(x=>x.id===id):null,i=$('#memoInput');
-  mdDraft={k,id:m?m.id:'',text:m?m.text:(i?i.value:memoText)||'',color:m?(m.color||''):(S.lastMemoColor||''),todo:!!(m&&m.todo),done:!!(m&&m.done),time:(m&&m.time)||'',al:(m&&m.al)||'',shared:m?!!m.shared:role()!=='host'};
+  mdDraft={k,id:m?m.id:'',text:m?m.text:(i?i.value:memoText)||'',color:m?(m.color||''):(S.lastMemoColor||''),todo:!!(m&&m.todo),done:!!(m&&m.done),time:(m&&m.time)||'',al:(m&&m.al)||'',till:(m&&m.till)||'',shared:m?!!m.shared:role()!=='host'};
   renderMemoDetail();
 }
 function renderMemoDetail(){   // v0.158 새 모양 (시안 design/remain): 글 카드(메모 색) · 색 카드 · 줄 카드 · 나만/가족에게 C3
@@ -4490,13 +4500,14 @@ function renderMemoDetail(){   // v0.158 새 모양 (시안 design/remain): 글 
     <div class="pg-b np mdpg">
     <div class="pg-cap">${d.rep?'반복 메모':`${day.getMonth()+1}월 ${day.getDate()}일 (${DOW[day.getDay()]})`}</div>
     ${host&&!d.rr?`<div class="pg-sec pad mdshare"><div class="npseg"><button class="${d.shared?'':'on'}" data-act="md-share" data-v="0">나만</button><button class="${d.shared?'on':''}" data-act="md-share" data-v="1">가족에게${d.shared&&S.link?` <em class="mdleft">${famRemN()}건 남음</em>`:''}</button></div></div>`:''}
-    <div class="pg-sec pad"><textarea id="mdText" class="mdtx" placeholder="메모를 입력하세요" style="background:${d.shared?'var(--fam-bg)':(d.color||'var(--surface)')}">${esc(d.text)}</textarea>
+    <div class="pg-sec pad"><textarea id="mdText" class="mdtx" placeholder="메모를 입력하세요" style="background:${d.shared?'var(--fam-bg)':(d.color||'var(--surface)')};color:${!d.shared&&d.color?'#2a2418':'var(--fg)'}">${esc(d.text)}</textarea>
     <div class="lnkrow" id="mdLinks">${hasLink(d.text)?linkParts(d.text).filter(x=>x.u).map(x=>`<a class="lnk" data-act="lnk" data-u="${esc(linkUrl(x.u))}">🔗 링크</a>`).join(' '):''}</div></div>
     ${d.shared?'':`<div class="pg-sec pad mdcol">${MEMO_COL.map(c=>`<button class="${d.color===c?'on':''}" style="background:${c}" data-act="md-col" data-v="${c}" aria-label="색"></button>`).join('')}</div>`}
     <div class="pg-sec">
       ${npRow('check','할 일',`<label class="sw"><input type="checkbox" id="mdTodo" ${d.todo?'checked':''}><i></i></label>`)}
       ${npRow('clock','시간',d.time?`${tpick('mdTime',d.time)}<button class="xbtn" data-act="md-notime" aria-label="시간 없애기">${npi('x',16)}</button>`:`<button class="xbtn tplus" data-act="md-settime" aria-label="시간 정하기">${npi('x',16)}</button>`,d.time?{cls:'mdtrow'}:{tap:1,act:'md-settime',cls:'mdtrow'})}
       ${d.time?npRow('bell','알림',`<div class="npseg sm">${[['','없음'],['0','정시'],['10','10분 전']].map(([v,l])=>`<button class="${d.al===v?'on':''}" data-act="md-al" data-v="${v}">${l}</button>`).join('')}</div>`):''}
+      ${host&&!d.shared&&!d.rr&&!d.rep?npRow('calendar-days','기간',d.till?`<span class="mdtill">~</span>${tpick('mdTill',d.till,'','date')}<button class="xbtn" data-act="md-notill" aria-label="기간 없애기">${npi('x',16)}</button>`:`<button class="xbtn tplus" data-act="md-settill" aria-label="기간 정하기">${npi('x',16)}</button>`,d.till?{cls:'mdtrow'}:{tap:1,act:'md-settill',cls:'mdtrow'}):''}
       ${host&&!d.shared&&!d.wl?npRow('repeat','반복',npVal(d.rr?esc(rrText(d.rr)):'안 함'),{tap:1,act:'md-rep'}):''}
     </div>
     ${d.rep?`<div class="pg-sec">${npRow('trash-2','반복 그만하기','',{tap:1,act:'rm-del',cls:'danger-row',attrs:` data-id="${esc(d.rep)}"`})}</div>`:''}
@@ -4512,7 +4523,7 @@ function mdSave(){
     Object.assign(r,{text,md:d.rr.md,sh:(d.rr.sh||[]).slice(),miss:d.rr.miss==='next'?'next':'skip'});['color','todo','time','al'].forEach(p=>{const v=p==='al'?(d.time&&d.al!==''?d.al:undefined):p==='todo'?(d.todo||undefined):(d[p]||undefined);if(v===undefined)delete r[p];else r[p]=v;});
     S.lastMemoColor=d.color||'';save();mdDraft=null;memoText='';memoEdit=null;closePage();memoFinish(d.k,`🔁 반복 메모 · ${rrText(r)}`);try{pushRemindersToNative();}catch(e){}return;
   }
-  const x={color:(!d.shared&&d.color)||undefined,todo:d.todo||undefined,done:(d.todo&&d.done)||undefined,time:d.time||undefined,al:(d.time&&d.al!=='')?d.al:undefined};
+  const x={till:(!d.shared&&!d.rr&&d.till&&d.till>d.k)?d.till:undefined,color:(!d.shared&&d.color)||undefined,todo:d.todo||undefined,done:(d.todo&&d.done)||undefined,time:d.time||undefined,al:(d.time&&d.al!=='')?d.al:undefined};
   const k=d.k,fam=d.shared,srv=!!S.link,isGuest=role()==='guest';
   const m=d.id?memosOf(k).find(y=>y.id===d.id):null;
   if(m){
@@ -6521,6 +6532,7 @@ function openPatternPage(){
         ${(S.patOld||[]).length?npRow('history','이전 패턴 보기 · 지우기',npVal(S.patOld.length+'개'),{tap:1,act:'pat-old-show'}):''}
         ${undoA}
         ${npRow('calendar-off','공휴일엔 쉬어요',`<label class="sw"><input type="checkbox" id="holRest" ${S.holRest?'checked':''}><i></i></label>`)}
+        ${npRow('circle-dot','바꾼 날 빨간 점',`<label class="sw"><input type="checkbox" id="ovDot" ${S.ovDot!==false?'checked':''}><i></i></label>`)}
         ${npRow('calendar-days','요일 보기',`<label class="sw"><input type="checkbox" id="patWeek" ${S.patWeek?'checked':''}><i></i></label>`)}
         ${npRow('paintbrush','달력에 칠하기',npVal(''),{tap:1,act:'paint-open'})}
         ${patLocHtml(1)}
@@ -6734,7 +6746,7 @@ function exportBad(){
   if(hasBridge('shareFile')){try{window.AndroidBridge.shareFile(name,raw);return;}catch(e){}}
   toast('앱에서만 보낼 수 있어요');
 }
-const BACKUP_KEYS=['stzMode','chLog','famAlias','onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','tune','calLook','todayLook','todayColor','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','togOff','famDayToo','stamps','icons','wx','ot','salary'];
+const BACKUP_KEYS=['stzMode','ovDot','chLog','famAlias','onboarded','myset','noPat','addons','pattern','anchor','patOld','overrides','memos','alarms','tune','calLook','todayLook','todayColor','requests','board','syncSettings','pay','myTeam','teamOffsets','teamStyle','teamNames','holRest','shareMemo','patternName','types','ddays','companyHols','compHolAsHoliday','memoColors','fontScale','theme','bg','showBand','personal','pers','widget','weekStart','memoLines','quickN','patWeek','myEmo','famWk','seenVer','lastMemoColor','shiftTimes','status','family','famCheer','togOff','famDayToo','stamps','icons','wx','ot','salary'];
 function backupData(){const data={app:'eonjeswieo',ver:4,at:new Date().toISOString()};BACKUP_KEYS.forEach(k=>{data[k]=S[k];});if(S.wlog&&S.wlog.backup)data.wlog=S.wlog;try{const h=wxHist();if(Object.keys(h).length)data.wxh=h;}catch(e){}return data;}   // v0.127 지난 날 날씨 기록도   // 업무 일지는 "백업에 넣기"를 켠 사람만
 function backupMeta(){
   let mc=0;Object.values(S.memos).forEach(l=>mc+=l.length);
@@ -7523,6 +7535,9 @@ document.addEventListener('click',e=>{
     case 'md-col':mdPull();mdDraft.color=mdDraft.color===t.dataset.v?'':t.dataset.v;renderMemoDetail();break;
     case 'md-share':mdPull();mdDraft.shared=t.dataset.v==='1';MO.flip($('#page .pg-b'),renderMemoDetail);break;
     case 'md-al':mdPull();mdDraft.al=t.dataset.v;renderMemoDetail();break;
+    case 'md-settill':{mdPull();mdDraft.till=addK(mdDraft.k,2);renderMemoDetail();break;}   // v0.232 기간: 처음엔 사흘 (고쳐서 끝 날 고름)
+    case 'md-notill':{mdPull();mdDraft.till='';renderMemoDetail();break;}
+    case 'per-open':openMemoDetail(t.dataset.k,t.dataset.id);break;
     case 'md-settime':{mdPull();mdDraft.time='09:00';const pb=$('#page');const st0=pb&&pb.querySelector('.pg-b')?pb.querySelector('.pg-b').scrollTop:0;renderMemoDetail();   // v0.209 ＋가 돌며 ✕ · 시간 톡 · 알림 줄 스르르
       try{const pg=$('#page .pg-b');if(pg)pg.scrollTop=st0;if(!RMq()){const r=$('#page .mdtrow'),x=r&&r.querySelector('.xbtn'),tp=r&&r.querySelector('.tbtn'),al=r&&r.nextElementSibling;
         if(x)x.animate([{transform:'rotate(-135deg)',background:'var(--acc-soft)'},{transform:'none'}],{duration:420,easing:'cubic-bezier(.3,1.4,.5,1)'});
@@ -8141,6 +8156,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='srTo'&&stDraft){stDraft.to=t.value;renderStampReg();
   }else if(t.id==='mdTodo'&&mdDraft){mdPull();mdDraft.todo=t.checked;renderMemoDetail();
   }else if(t.id==='mdTime'&&mdDraft){if(t.value)mdDraft.time=t.value;
+  }else if(t.id==='mdTill'&&mdDraft){mdPull();if(t.value&&t.value>mdDraft.k)mdDraft.till=t.value;else toast('끝 날은 시작한 날 뒤로 골라 주세요');renderMemoDetail();
   }else if(t.id==='srWknd'&&stDraft){stDraft.noWknd=t.checked;
   }else if(t.id==='srHol'&&stDraft){stDraft.noHol=t.checked;
   }else if(t.id==='srFam'&&stDraft){srPull();stDraft.fam=t.checked;renderStampReg();
@@ -8167,6 +8183,7 @@ document.addEventListener('change',e=>{
   }else if(t.id==='anchor'&&t.value){askAnchor(t.value);}
   else if(t.id==='shareMemo'){$('#app').classList.toggle('share-memo',t.checked);render();}
   else if(t.id==='shareStk'){shareStk=t.checked;render();}
+  else if(t.id==='ovDot'){S.ovDot=!!t.checked;save();render();widgetSync();}
   else if(t.id==='holRest'){S.holRest=t.checked;save();toast(t.checked?'공휴일 근무 칸을 휴무로 보여요':'공휴일도 패턴대로 보여요');}
   else if(t.id==='receiveFamilyMemo'){S.syncSettings.receiveFamilyMemo=t.checked;save();if(tab==='cal')render();toast(t.checked?'가족 메모를 달력에 표시해요':'가족 메모를 달력에서 숨겨요');}
   else if(t.id==='patWeek'){S.patWeek=!!t.checked;save();openPatternPage();}

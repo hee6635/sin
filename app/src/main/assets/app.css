@@ -2049,3 +2049,13 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .wlchips button.own{display:inline-flex;align-items:center;gap:5px}
 .np .famsec .me.host{color:#b45309;background:color-mix(in srgb,#f5b400 18%,var(--bg))}   /* v0.227 방장 표시 */
 .np .plan-on .pl2{color:var(--accent);font-weight:800}.np .plan-on .npi{background:var(--acc-soft);color:var(--accent)}   /* v0.231 이용 상태 */
+/* v0.232 기간 메모 띠 (design/period/v5): 메모 첫 줄 자리 · 메모보다 진하게 · 높이 3/4 · 시작/끝 진한 막대 · 칸 사이 이어지게 */
+.cell .pill-wrap:has(>.pvl){overflow:clip;overflow-clip-margin:4px}
+.pl.pvl{width:calc(100% + 6px);margin:0 -3px;flex:0 0 auto!important;height:calc(var(--plhf,14px)*.78)!important;max-height:calc(var(--plhf,14px)*.78)!important;min-height:0!important;line-height:calc(var(--plhf,14px)*.78);border:0;border-radius:0;padding:0 0 0 5px;background:color-mix(in srgb,var(--pc) 55%,var(--bg));color:color-mix(in srgb,var(--pc) 25%,#1c1712);font-size:max(9px,calc(var(--plf,9px)*.92));font-weight:800;text-overflow:clip;overflow:visible;position:relative;z-index:1}
+:root[data-theme="dark"] .pl.pvl{background:color-mix(in srgb,var(--pc) 45%,var(--bg));color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pl.pvl{background:color-mix(in srgb,var(--pc) 45%,var(--bg));color:#fff}}
+.pl.pvl.s{width:calc(100% + 3px);margin-left:0;border-radius:4px 0 0 4px;box-shadow:inset 3px 0 0 var(--pc)}
+.pl.pvl.e{width:calc(100% + 3px);margin-right:0;border-radius:0 4px 4px 0}
+.pl.pvl.s.e{width:100%;margin:0;border-radius:4px}
+.pl.pvl.x{box-shadow:inset -3px 0 0 var(--pc)}.pl.pvl.s.x{box-shadow:inset 3px 0 0 var(--pc),inset -3px 0 0 var(--pc)}
+.mcard.per{box-shadow:inset 3px 0 0 var(--pc)}.mcard.per .tx{font-weight:700}
