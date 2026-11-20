@@ -807,3 +807,10 @@
 - APK 빌드(.github/workflows/build-apk.yml)가 `node scripts/build-js.mjs --check` 를 먼저 돌림 → app.js 를 직접 고치거나 다시 안 만들면 빌드 실패.
 - 왜 `<script>` 여러 개로 안 했나: 지금 코드는 한 IIFE 안에서 함수 끌어올림(hoisting)에 기대고, 켤 때 바로 도는 줄이 뒤쪽 함수를 부름 → 파일을 따로 읽으면 "아직 없는 함수" 오류 · 전역 이름 충돌 위험. 이어 붙이기는 폰에서 도는 코드가 완전히 같음.
 - 시험: 폰 99 · 옛 데이터 · 처음 설치 · functions 시험 통과 (s78 · s89 는 동시에 돌릴 때만 가끔 실패, 따로 돌리면 통과).
+
+## v0.229 관리자: 준 사람 목록 · 빼기 · 무제한 · 광고 없음
+- bonus/{uid} = {n, vip, noAds, name, code, at} (name · code 는 목록용). 다 비면(n 0 · 스위치 둘 다 끔) 문서를 지워 목록에서 빠짐. bonusLog 에 n 음수(빼기) · what("무제한 켬" 등).
+- 관리자 화면: 찾기 · 모두에게 · **준 사람** 목록 → 누르면 고른 사람(받은 것 표시) · 건수 [빼기][주기] · 무제한 · 광고 없음 스위치 (무제한 켜면 광고 없음도 켜짐).
+- 앱: famBx.vip 이면 한도 없음(famRemain 9999) · 남은 건수 대신 "무제한" (famRemTxt). famBx.noAds 는 광고 붙일 때 쓸 값.
+- 규칙: vipOf(uid) 면 sent 한도 없음 · bonus 키 늘림 · 관리자 delete · bonusLog n -1000000~10000 · what. 규칙 시험 125 통과 · 새 가족 시험 tests/family/fam17e.mjs (관리자 계정은 에뮬레이터 batchCreate + 가짜 구글 로그인).
+- **배포 필요: Cloud Shell `deploy --only firestore:rules`** (안 하면 관리자 화면에서 스위치 · 빼기가 "권한" 오류).

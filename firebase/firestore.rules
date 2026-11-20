@@ -12,6 +12,8 @@ service cloud.firestore {
       || (request.auth.token.get('email_verified', false) == true
       && hashing.sha256(request.auth.token.get('email', '')).toHexString().lower() == adminHash())); }
     function bonusOf(id) { return exists(/databases/$(database)/documents/bonus/$(id)) ? get(/databases/$(database)/documents/bonus/$(id)).data.get('n', 0) : 0; }
+    // v0.229 관리자가 켜 준 "무제한" (가족 메시지 한도 없음)
+    function vipOf(id) { return exists(/databases/$(database)/documents/bonus/$(id)) && get(/databases/$(database)/documents/bonus/$(id)).data.get('vip', false) == true; }
     function memberPath(hid, uid) {
       return /databases/$(database)/documents/households/$(hid)/members/$(uid);
     }
@@ -164,7 +166,7 @@ service cloud.firestore {
         allow update: if signedIn() && request.auth.uid == uid
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sent'])
           && request.resource.data.sent == resource.data.get('sent', 0) + 1
-          && request.resource.data.sent <= 10 + resource.data.get('bonus', 0) + bonusOf(uid) + bonusOf('_all');   // v0.150 + 관리자가 준 건수 (개인 · 모두)
+          && (vipOf(uid) || request.resource.data.sent <= 10 + resource.data.get('bonus', 0) + bonusOf(uid) + bonusOf('_all'));   // v0.150 + 관리자가 준 건수 (개인 · 모두) · v0.229 무제한이면 한도 없음
 
         // 나가기(가족 본인) · 내보내기(호스트): 같은 묶음에서 가족 수가 하나 줄어야 함.
         // 호스트 문서는 가족방을 없앨 때만 지울 수 있음 (그때는 가족 수를 맞출 필요 없음)
@@ -457,15 +459,20 @@ service cloud.firestore {
     match /bonus/{id} {
       allow read: if isAdmin() || (signedIn() && (id == request.auth.uid || id == '_all'));
       allow create, update: if isAdmin()
-        && request.resource.data.keys().hasOnly(['n', 'at'])
+        && request.resource.data.keys().hasOnly(['n', 'at', 'vip', 'noAds', 'name', 'code'])   // v0.229 무제한 · 광고 없음 · 목록용 이름/번호
         && request.resource.data.n is int && request.resource.data.n >= 0 && request.resource.data.n <= 1000000
+        && request.resource.data.get('vip', false) is bool && request.resource.data.get('noAds', false) is bool
+        && request.resource.data.get('name', '') is string && request.resource.data.get('name', '').size() <= 12
+        && request.resource.data.get('code', '') is string && request.resource.data.get('code', '').size() <= 12
         && request.resource.data.at == request.time;
+      allow delete: if isAdmin();
     }
     match /bonusLog/{id} {
       allow read: if isAdmin();
       allow create: if isAdmin()
-        && request.resource.data.keys().hasOnly(['to', 'name', 'code', 'n', 'at'])
-        && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 10000
+        && request.resource.data.keys().hasOnly(['to', 'name', 'code', 'n', 'at', 'what'])
+        && request.resource.data.n is int && request.resource.data.n >= -1000000 && request.resource.data.n <= 10000   // v0.229 빼기는 음수
+        && request.resource.data.get('what', '') is string && request.resource.data.get('what', '').size() <= 20
         && request.resource.data.at == request.time;
     }
 

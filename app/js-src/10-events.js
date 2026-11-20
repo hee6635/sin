@@ -753,7 +753,10 @@ document.addEventListener('click',e=>{
     case 'adm-find':adm.q=($('#admQ')||{}).value||'';openAdmPage();break;
     case 'adm-pick':adm.sel=(adm.codes||[]).find(c=>c.code===t.dataset.c)||null;openAdmPage();break;
     case 'adm-clear':adm.sel=null;openAdmPage();break;
-    case 'adm-give':admGive();break;
+    case 'adm-give':admGive(false);break;
+    case 'adm-sub':admGive(true);break;
+    case 'adm-all':adm.sel={uid:'_all',name:'',code:''};openAdmPage();break;
+    case 'adm-who':{const g=(adm.given||[]).find(x=>x.uid===t.dataset.u);if(g){adm.sel={uid:g.uid,name:g.name,code:g.code};openAdmPage();}break;}
     case 'more-wipe':wipeAll();break;
     case 'font':S.fontScale=Number(t.dataset.v);save();applyFont();render();lookRefresh();break;
     case 'thememode':S.theme=t.dataset.v;save();applyTheme();render();lookRefresh();break;
@@ -978,6 +981,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='receiveFamilyMemo'){S.syncSettings.receiveFamilyMemo=t.checked;save();if(tab==='cal')render();toast(t.checked?'가족 메모를 달력에 표시해요':'가족 메모를 달력에서 숨겨요');}
   else if(t.id==='patWeek'){S.patWeek=!!t.checked;save();openPatternPage();}
   else if(t.id==='wlsName'){save();openWlSet();}
+  else if(t.id==='admVip'||t.id==='admNoAds'){admToggle(t.id==='admVip'?'vip':'noAds',t.checked);}
   else if(t.id==='patternName'){S.patternName=t.value.trim().slice(0,20);save();toast('근무 이름을 저장했어요');}
   else if(t.id==='payFixed'||t.id==='payOt'||t.id==='payNt'){S.salary[{payFixed:'fixed',payOt:'ot',payNt:'nt'}[t.id]]=Math.max(0,Math.round(Number(t.value)||0));save();openStatsPage();}
   else if(t.id==='payClose'){S.salary.close=Math.max(0,Math.min(28,Math.round(Number(t.value)||0)));save();openStatsPage();}

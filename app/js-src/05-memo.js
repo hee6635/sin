@@ -210,7 +210,7 @@ function renderPiEd(focus){
     <div class="pi-tools">
       ${piEd.isNew?`<div class="hseg"><button class="${isList?'on':''}" data-act="pi-type" data-v="list">☑ 할 일</button><button class="${isList?'':'on'}" data-act="pi-type" data-v="note">📝 메모</button></div>`:''}
       ${own&&!famView()?`<div class="hseg"><button class="${n.shared?'':'on'}" data-act="pi-share" data-v="0">🔒 나만</button><button class="${n.shared?'on fam':''}" data-act="pi-share" data-v="1">♥ 가족</button></div>`:''}
-      ${own&&n.shared&&S.link&&!n.srv&&(piEd.isNew||n.cnt)?`<div class="usage-hint" style="width:100%;text-align:center">무료 ${famRemN()}건 남음 · 가족 포스트잇은 새로 붙일 때만 1건</div>`:''}
+      ${own&&n.shared&&S.link&&!n.srv&&(piEd.isNew||n.cnt)?`<div class="usage-hint" style="width:100%;text-align:center">${famRemTxt()} · 가족 포스트잇은 새로 붙일 때만 1건</div>`:''}
       ${own&&!n.shared?`<div class="pi-cols">${PI_COL.map(c=>`<button class="c-${c} ${n.color===c?'on':''}" data-act="pi-color" data-v="${c}" aria-label="색"></button>`).join('')}</div>`:''}
       ${own?`<button class="pi-tb ${n.repeat?'on':''}" data-act="pi-repeat">🔁 매달 반복</button>`:''}
       ${!piEd.isNew&&piDone(n)?'<button class="pi-tb" data-act="pi-tear">📤 떼기</button>':''}
@@ -528,7 +528,7 @@ function openCfm(c){
 const cfmToHtml=(c,others)=>others.length>1?`<div class="hint cfm-h" style="margin-top:8px">받는 사람</div><div class="chips left" style="margin-top:4px">${others.map(m=>`<button class="${c.to.includes(m.uid)?'on':''}" data-act="cfm-to" data-u="${esc(m.uid)}">${esc(m.name)}</button>`).join('')}</div>`:'';
 function renderCfm(){
   const c=cfm;if(!c)return;
-  const others=famOthers(),names=others.map(m=>m.name).join(' · ')||'가족',rem=`<div class="cfm-rem">무료 ${famRemN()}건 남음 (처음 ${FAM_FREE}건까지 무료)</div>`;
+  const others=famOthers(),names=others.map(m=>m.name).join(' · ')||'가족',rem=`<div class="cfm-rem">${famBx.vip?'무제한':`${famRemTxt()} (처음 ${FAM_FREE}건까지 무료)`}</div>`;
   let head='',body='',ok='보내기';
   if(c.type==='memo'){
     head='♥ 가족 메모<b>가족에게 보낼까요?</b>';
@@ -611,7 +611,7 @@ function memoSection(k){
         <button class="send ${fm?'fam':'my'}" ${memoEdit?'disabled':'data-act="memo-send"'} aria-label="보내기">${ICON.send}</button><span class="flab">${fm?'가족에게 남길 메모':isSolo()?'메모':'나만 보는 메모'}</span>
       </div>
       ${role()==='guest'&&fm?`<div style="margin-top:6px">${usageHint()}</div>`:''}
-      ${S.link&&fm&&famRemain()<=3?`<div class="usage-hint" style="margin-top:6px;text-align:center">무료 ${famRemN()}건 남음</div>`:''}
+      ${S.link&&fm&&famRemain()<=3?`<div class="usage-hint" style="margin-top:6px;text-align:center">${famRemTxt()}</div>`:''}
     </div>`;
   return `<div class="sec memsec"><div class="sec-t">메모<button class="mdet2 mplus" data-act="memo-detail" aria-label="자세히 쓰기"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v9M7.5 12h9"/></svg></button></div>${tabs}${body}${bar}</div>`;   // v0.155 입력칸도 메모 카드 안 · 자세히는 제목 줄 오른쪽
 }

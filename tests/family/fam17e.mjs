@@ -1,0 +1,95 @@
+// v0.229 관리자: 준 사람 목록 · 주기 · 빼기 · 무제한/광고 없음 스위치 · 다 비면 목록에서 빠짐 (에뮬레이터)
+import { createRequire } from 'node:module';
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+const require = createRequire(import.meta.url);
+const { chromium } = require('/opt/node22/lib/node_modules/playwright');
+const ROOT = '/home/user/sin/app/src/main/assets';
+const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css' };
+http.createServer((req, res) => {
+  let f = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
+  if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end(); }
+  res.writeHead(200, { 'content-type': mime[path.extname(f)] || 'application/octet-stream' });
+  if (f.endsWith('.html')) return res.end(fs.readFileSync(f, 'utf8').replace(/(connect-src[^;]*)/, '$1 http://127.0.0.1:9099 http://127.0.0.1:8080'));   // 보안 잠금(CSP)을 켠 채로 시험
+  fs.createReadStream(f).pipe(res);
+}).listen(8214, '127.0.0.1');
+const log = (...a) => console.log(...a);
+const EMU = { apiKey: 'fake-key', authDomain: 'demo-eonjeswieo.firebaseapp.com', projectId: 'demo-eonjeswieo', appId: '1:1:web:1', emulator: { auth: 'http://127.0.0.1:9099', firestore: ['127.0.0.1', 8080] } };
+const b = await chromium.launch(); const errs = [];
+let okN = 0, ngN = 0;
+const check = (name, cond, extra = '') => { if (cond) { okN++; log('  ✓', name); } else { ngN++; log('  ✕', name, extra, errs.length ? '| ERR: ' + errs.slice(-2).join(' // ').slice(0, 500) : ''); } };
+const T = Date.now();   // 서버 시각과 맞춤(초대 코드 만료 규칙)
+const FAKE_G = JSON.stringify({ sub: 'g-test-1', email: 'g1@example.com', email_verified: true });
+async function phone(name, state, opts = {}) {
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  await ctx.route('**/firebase/config.js', r => r.fulfill({ contentType: 'text/javascript', body: 'window.FIREBASE_CONFIG=' + JSON.stringify(EMU) }));
+  const p = await ctx.newPage(); p.ctx = ctx; p.dlg = []; p.ans = [];
+  p.on('pageerror', e => errs.push(name + ': ' + e.stack));
+  p.on('dialog', d => { p.dlg.push(d.message()); const a = p.ans.length ? p.ans.shift() : true; return a ? d.accept() : d.dismiss(); });
+  await p.exposeFunction('goOffline', async (v) => { await ctx.setOffline(!!v); });
+  await p.addInitScript(([st, T, nm, g, fake]) => { const D = Date; globalThis.Date = class extends D { constructor(...a) { super(...(a.length ? a : [T])); } static now() { return T; } };
+    if (st && !localStorage.getItem('eonjeswieo:v1')) localStorage.setItem('eonjeswieo:v1', JSON.stringify(st));
+    window.AndroidBridge = { status: () => '', setAlarms() {}, setReminders() {}, shareText: (t, m) => { window.__shared = m; }, fcmToken: () => 'tok-' + nm + '-' + 'x'.repeat(30), notifEnabled: () => true };
+    if (g) { window.AndroidBridge.googleAvailable = () => true;
+      window.AndroidBridge.googleSignIn = req => { window.__greq = (window.__greq || []).concat(req); setTimeout(() => window.__onGoogle(window.__gmode === 'cancel' && req === 'reauth' ? { req, error: 'cancel' } : { req, idToken: fake, email: 'g1@example.com' }), 60); }; } }, [state, T, name, !!opts.google, JSON.stringify({ sub: opts.gsub || 'g-test-1', email: (opts.gsub || 'g-test-1') + '@example.com', email_verified: true })]);
+  await p.addInitScript(() => { setInterval(() => { const b = document.querySelector('#pop.open [data-act="stkshare-no"]'); if (b) b.click(); }, 300); });
+  await p.addInitScript(() => { document.addEventListener('DOMContentLoaded', () => { const st = document.createElement('style'); st.textContent = '#tutx{display:none!important}'; document.head.appendChild(st); }); });   // 처음 안내 말풍선이 클릭을 막지 않게   // 가족 스티커 묻는 창이 시험을 가로막지 않게
+  await p.goto('http://127.0.0.1:8214/index.html'); await p.waitForTimeout(700);
+  return p;
+}
+const S = p => p.evaluate(() => JSON.parse(localStorage.getItem('eonjeswieo:v1')));
+const wait = async (p, fn, ms = 15000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { try { if (await fn()) return true; } catch (e) {} await p.waitForTimeout(250); } return false; };
+const base = (anchor, team, extra = {}) => ({ addonNote: 'done', addons: { comp: false, cheer: false, together: false, colleague: false, stats: false, status: false }, onboarded: true, anchor, myTeam: team, patternName: '4조2교대', overrides: {}, ...extra });
+const DB = 'http://127.0.0.1:8080/v1/projects/demo-eonjeswieo/databases/(default)/documents/';
+const restRead = async (path_) => (await fetch(DB + path_, { headers: { Authorization: 'Bearer owner' } })).json();
+const openLink = async (P) => { await P.click('#nav [data-tab="set"]'); await P.click('[data-act="link-open"]'); await P.waitForTimeout(1500); };
+const closePops = P => P.evaluate(() => { const p = document.getElementById('pop'); if (p.classList.contains('open')) { p.className = ''; p.innerHTML = ''; } });
+const mkCode = async (H, who) => { await closePops(H); await H.click('#page [data-act="link-invite"]'); await H.waitForTimeout(300);
+  if (await H.$('#invHost')) await H.fill('#invHost', '아빠'); await H.fill('#invName', who);
+  await H.click('#pop [data-act="inv-make"]'); await H.waitForSelector('.codebig', { timeout: 15000 });
+  const c = (await H.$eval('.codebig', e => e.textContent)).replace('-', ''); await closePops(H); await H.waitForTimeout(800); return c; };
+const join = async (P, code, name) => { await openLink(P); await P.click('#page [data-act="link-join"]'); await P.fill('#joinCode', code); await P.click('#pop [data-act="join-check"]'); await P.waitForSelector('#joinName', { timeout: 15000 });
+  await P.fill('#joinName', name); await P.click('#pop [data-act="join-go"]'); await wait(P, async () => (await S(P)).link, 20000); return P.evaluate(() => window.__fbx.uid); };
+const ADM = '9vkojbnlGperMklw7aYbqcPhr1E2';
+const r = await fetch('http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/projects/demo-eonjeswieo/accounts:batchCreate', { method: 'POST', headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' }, body: JSON.stringify({ users: [{ localId: ADM, email: 'adm@example.com', emailVerified: true, providerUserInfo: [{ providerId: 'google.com', rawId: 'g-admin', email: 'adm@example.com' }] }] }) });
+log('관리자 계정 만들기', r.status);
+const H = await phone('host', base('2026-10-02', 1));
+await openLink(H);
+const code = await mkCode(H, '딸');
+const K = await phone('kid', base('2026-10-06', 2));
+const kUid = await join(K, code, '딸');
+check('딸 참여', !!kUid);
+await wait(H, async () => true, 2500);
+// 아빠 폰을 관리자 계정으로 (구글 로그인 흉내)
+await H.evaluate(async () => { const A = window.FB.auth; await A.signInWithCredential(window.__fbx.auth, A.GoogleAuthProvider.credential(JSON.stringify({ sub: 'g-admin', email: 'adm@example.com', email_verified: true }))); });
+check('관리자 계정으로 바뀜', (await H.evaluate(() => window.__fbx.auth.currentUser.uid)) === ADM);
+const adm = async () => { await H.evaluate(() => { const b = document.createElement('button'); b.dataset.act = 'adm-open'; document.body.appendChild(b); b.click(); b.remove(); }); await wait(H, async () => !(await H.$eval('#page', e => e.innerText)).includes('불러오는 중'), 15000); };
+await adm();
+const pageTxt = () => H.$eval('#page', e => e.innerText);
+check('관리자 화면: 준 사람 0', (await pageTxt()).includes('아직 없어요'));
+await H.fill('#admQ', '딸'); await H.click('#page [data-act="adm-find"]'); await H.waitForTimeout(400);
+await H.click('#page [data-act="adm-pick"]'); await H.waitForTimeout(400);
+await H.fill('#admN', '5'); await H.click('#page [data-act="adm-give"]');
+const bonus = async () => (await restRead(`bonus/${kUid}`)).fields || null;
+check('5건 줌 → 서버 bonus n=5 · 이름 남음', await wait(H, async () => (await bonus())?.n?.integerValue === '5'), JSON.stringify(await bonus()));
+check('이름/번호 저장', (await bonus())?.name?.stringValue === '딸');
+await H.waitForTimeout(600);
+await H.click('#admVip'); 
+check('무제한 켬 → vip · 광고 없음도 같이', await wait(H, async () => { const b = await bonus(); return b?.vip?.booleanValue === true && b?.noAds?.booleanValue === true; }), JSON.stringify(await bonus()));
+await H.waitForTimeout(600);
+await H.fill('#admN', '3'); await H.click('#page [data-act="adm-sub"]');
+check('3건 빼기 → n=2', await wait(H, async () => (await bonus())?.n?.integerValue === '2'), JSON.stringify(await bonus()));
+await H.waitForTimeout(600);
+await H.click('#page [data-act="adm-clear"]'); await H.waitForTimeout(500);
+check('준 사람 목록에 딸 (+2건 · 무제한 · 광고 없음)', /딸[\s\S]*\+2건 · 무제한 · 광고 없음/.test(await pageTxt()), (await pageTxt()).slice(0, 300));
+await H.click('#page [data-act="adm-who"]'); await H.waitForTimeout(500);
+await H.click('#admVip'); await H.waitForTimeout(1500); await H.click('#admNoAds'); await H.waitForTimeout(1500);
+await H.fill('#admN', '2'); await H.click('#page [data-act="adm-sub"]');
+check('다 없애면 bonus 문서가 지워짐(목록에서 빠짐)', await wait(H, async () => !(await bonus())), JSON.stringify(await bonus()));
+await H.waitForTimeout(800);
+const logs = ((await restRead('bonusLog?pageSize=50')).documents || []).map(d => (d.fields.what?.stringValue || '') + ':' + d.fields.n?.integerValue);
+check('기록: +5 · 무제한 켬 · -3 · 무제한 끔 · 광고 없음 끔 · -2', ['5', '0', '-3', '-2'].every(n => logs.some(l => l.endsWith(':' + n))) && logs.some(l => l.startsWith('무제한 켬')), logs.join(' | '));
+check('오류 없음', !errs.length, errs.slice(0, 3).join(' // '));
+log(`\n${okN} 통과 ${ngN} 실패`);
+process.exit(ngN ? 1 : 0);

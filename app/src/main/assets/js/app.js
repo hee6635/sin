@@ -4068,7 +4068,7 @@ function renderPiEd(focus){
     <div class="pi-tools">
       ${piEd.isNew?`<div class="hseg"><button class="${isList?'on':''}" data-act="pi-type" data-v="list">☑ 할 일</button><button class="${isList?'':'on'}" data-act="pi-type" data-v="note">📝 메모</button></div>`:''}
       ${own&&!famView()?`<div class="hseg"><button class="${n.shared?'':'on'}" data-act="pi-share" data-v="0">🔒 나만</button><button class="${n.shared?'on fam':''}" data-act="pi-share" data-v="1">♥ 가족</button></div>`:''}
-      ${own&&n.shared&&S.link&&!n.srv&&(piEd.isNew||n.cnt)?`<div class="usage-hint" style="width:100%;text-align:center">무료 ${famRemN()}건 남음 · 가족 포스트잇은 새로 붙일 때만 1건</div>`:''}
+      ${own&&n.shared&&S.link&&!n.srv&&(piEd.isNew||n.cnt)?`<div class="usage-hint" style="width:100%;text-align:center">${famRemTxt()} · 가족 포스트잇은 새로 붙일 때만 1건</div>`:''}
       ${own&&!n.shared?`<div class="pi-cols">${PI_COL.map(c=>`<button class="c-${c} ${n.color===c?'on':''}" data-act="pi-color" data-v="${c}" aria-label="색"></button>`).join('')}</div>`:''}
       ${own?`<button class="pi-tb ${n.repeat?'on':''}" data-act="pi-repeat">🔁 매달 반복</button>`:''}
       ${!piEd.isNew&&piDone(n)?'<button class="pi-tb" data-act="pi-tear">📤 떼기</button>':''}
@@ -4386,7 +4386,7 @@ function openCfm(c){
 const cfmToHtml=(c,others)=>others.length>1?`<div class="hint cfm-h" style="margin-top:8px">받는 사람</div><div class="chips left" style="margin-top:4px">${others.map(m=>`<button class="${c.to.includes(m.uid)?'on':''}" data-act="cfm-to" data-u="${esc(m.uid)}">${esc(m.name)}</button>`).join('')}</div>`:'';
 function renderCfm(){
   const c=cfm;if(!c)return;
-  const others=famOthers(),names=others.map(m=>m.name).join(' · ')||'가족',rem=`<div class="cfm-rem">무료 ${famRemN()}건 남음 (처음 ${FAM_FREE}건까지 무료)</div>`;
+  const others=famOthers(),names=others.map(m=>m.name).join(' · ')||'가족',rem=`<div class="cfm-rem">${famBx.vip?'무제한':`${famRemTxt()} (처음 ${FAM_FREE}건까지 무료)`}</div>`;
   let head='',body='',ok='보내기';
   if(c.type==='memo'){
     head='♥ 가족 메모<b>가족에게 보낼까요?</b>';
@@ -4469,7 +4469,7 @@ function memoSection(k){
         <button class="send ${fm?'fam':'my'}" ${memoEdit?'disabled':'data-act="memo-send"'} aria-label="보내기">${ICON.send}</button><span class="flab">${fm?'가족에게 남길 메모':isSolo()?'메모':'나만 보는 메모'}</span>
       </div>
       ${role()==='guest'&&fm?`<div style="margin-top:6px">${usageHint()}</div>`:''}
-      ${S.link&&fm&&famRemain()<=3?`<div class="usage-hint" style="margin-top:6px;text-align:center">무료 ${famRemN()}건 남음</div>`:''}
+      ${S.link&&fm&&famRemain()<=3?`<div class="usage-hint" style="margin-top:6px;text-align:center">${famRemTxt()}</div>`:''}
     </div>`;
   return `<div class="sec memsec"><div class="sec-t">메모<button class="mdet2 mplus" data-act="memo-detail" aria-label="자세히 쓰기"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v9M7.5 12h9"/></svg></button></div>${tabs}${body}${bar}</div>`;   // v0.155 입력칸도 메모 카드 안 · 자세히는 제목 줄 오른쪽
 }
@@ -7941,7 +7941,10 @@ document.addEventListener('click',e=>{
     case 'adm-find':adm.q=($('#admQ')||{}).value||'';openAdmPage();break;
     case 'adm-pick':adm.sel=(adm.codes||[]).find(c=>c.code===t.dataset.c)||null;openAdmPage();break;
     case 'adm-clear':adm.sel=null;openAdmPage();break;
-    case 'adm-give':admGive();break;
+    case 'adm-give':admGive(false);break;
+    case 'adm-sub':admGive(true);break;
+    case 'adm-all':adm.sel={uid:'_all',name:'',code:''};openAdmPage();break;
+    case 'adm-who':{const g=(adm.given||[]).find(x=>x.uid===t.dataset.u);if(g){adm.sel={uid:g.uid,name:g.name,code:g.code};openAdmPage();}break;}
     case 'more-wipe':wipeAll();break;
     case 'font':S.fontScale=Number(t.dataset.v);save();applyFont();render();lookRefresh();break;
     case 'thememode':S.theme=t.dataset.v;save();applyTheme();render();lookRefresh();break;
@@ -8166,6 +8169,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='receiveFamilyMemo'){S.syncSettings.receiveFamilyMemo=t.checked;save();if(tab==='cal')render();toast(t.checked?'가족 메모를 달력에 표시해요':'가족 메모를 달력에서 숨겨요');}
   else if(t.id==='patWeek'){S.patWeek=!!t.checked;save();openPatternPage();}
   else if(t.id==='wlsName'){save();openWlSet();}
+  else if(t.id==='admVip'||t.id==='admNoAds'){admToggle(t.id==='admVip'?'vip':'noAds',t.checked);}
   else if(t.id==='patternName'){S.patternName=t.value.trim().slice(0,20);save();toast('근무 이름을 저장했어요');}
   else if(t.id==='payFixed'||t.id==='payOt'||t.id==='payNt'){S.salary[{payFixed:'fixed',payOt:'ot',payNt:'nt'}[t.id]]=Math.max(0,Math.round(Number(t.value)||0));save();openStatsPage();}
   else if(t.id==='payClose'){S.salary.close=Math.max(0,Math.min(28,Math.round(Number(t.value)||0)));save();openStatsPage();}
@@ -8899,12 +8903,13 @@ async function famRegCode(){   // codes/{번호} = {uid, 이름, 가족방, 마�
   await F.setDoc(F.doc(db,'codes',code),{uid,name:String(S.link.name||'').slice(0,12),hid:String(S.link.hid).slice(0,128),at:F.serverTimestamp()});
   famCodeKey=key;
 }
-let famBx={me:0,all:0};
+let famBx={me:0,all:0,vip:false,noAds:false};
 async function famBonusLoad(){   // 관리자가 준 무료 건수: bonus/{내 uid} · bonus/_all (모두에게)
   if(!S.link||!fbCfg())return;
   const {F,db}=await famReady();if(!S.link)return;
-  const g=async id=>{try{const d=await F.getDoc(F.doc(db,'bonus',id));return d.exists()?Math.max(0,Math.round(+d.data().n)||0):0;}catch(e){return 0;}};
-  famBx={me:await g(S.link.uid),all:await g('_all')};
+  const g=async id=>{try{const d=await F.getDoc(F.doc(db,'bonus',id));return d.exists()?d.data():{};}catch(e){return {};}};
+  const me=await g(S.link.uid),all=await g('_all'),nn=v=>Math.max(0,Math.round(+v.n)||0);
+  famBx={me:nn(me),all:nn(all),vip:me.vip===true,noAds:me.noAds===true||me.vip===true};   // v0.229 무제한 · 광고 없음 (광고는 아직 없음 · 붙일 때 이 값으로 숨김)
 }
 let admOk=null,adm=null;
 async function admCheck(){   // 관리자 계정만 bonusLog 를 읽을 수 있음 → 읽히면 관리자 (앱에 메일 주소를 넣지 않음)
@@ -8915,9 +8920,10 @@ async function admCheck(){   // 관리자 계정만 bonusLog 를 읽을 수 있�
 const admDay=t=>{try{const d=t&&t.toDate?t.toDate():null;return d?`${d.getMonth()+1}/${d.getDate()}`:'';}catch(e){return '';}};
 async function admLoad(){
   const {F,db}=await famReady();
-  const [cs,ls]=await Promise.all([F.getDocs(F.collection(db,'codes')),F.getDocs(F.query(F.collection(db,'bonusLog'),F.orderBy('at','desc'),F.limit(20)))]);
+  const [cs,ls,bs]=await Promise.all([F.getDocs(F.collection(db,'codes')),F.getDocs(F.query(F.collection(db,'bonusLog'),F.orderBy('at','desc'),F.limit(20))),F.getDocs(F.collection(db,'bonus'))]);
   adm.codes=cs.docs.map(d=>Object.assign({code:d.id},d.data()));
   adm.log=ls.docs.map(d=>d.data());
+  adm.given=bs.docs.map(d=>{const v=d.data(),c=adm.codes.find(x=>x.uid===d.id);return {uid:d.id,n:Math.max(0,Math.round(+v.n)||0),vip:v.vip===true,noAds:v.noAds===true,name:v.name||(c&&c.name)||'',code:v.code||(c&&c.code)||''};});
 }
 function admFind(){
   const q=String(adm.q||'').trim();if(!q||!adm.codes)return [];
@@ -8928,34 +8934,55 @@ function admRowHtml(c){
   const fam=adm.codes.filter(x=>x.hid&&x.hid===c.hid&&x.uid!==c.uid).map(x=>x.name||'?');
   return `<div class="prow tap" data-act="adm-pick" data-c="${esc(c.code)}"><div class="pl2">${esc(c.name||'?')} · ${esc(c.code)}<small class="keep">${[fam.length?esc(fam.join(' · ')):'가족 없음',admDay(c.at)].filter(Boolean).join(' · ')}</small></div></div>`;
 }
+// v0.229 관리자: 준 사람 목록(무료 건수 · 무제한 · 광고 없음) · 눌러서 주기/빼기 · 스위치
+const admTags=g=>[g.n?`+${g.n}건`:'',g.vip?'무제한':'',g.noAds?'광고 없음':''].filter(Boolean).join(' · ');
+const admCur=()=>adm.sel&&(adm.given||[]).find(g=>g.uid===adm.sel.uid)||{n:0,vip:false,noAds:false};
 function openAdmPage(){
-  if(!adm)adm={q:'',sel:null,codes:null,log:null,busy:false};
+  if(!adm)adm={q:'',sel:null,codes:null,log:null,given:null,busy:false};
   pageBack=openInfoPage;
-  const res=adm.sel?[]:admFind();
+  const res=adm.sel?[]:admFind(),all=adm.sel&&adm.sel.uid==='_all',cur=admCur();
+  const given=(adm.given||[]).filter(g=>g.uid!=='_all'&&(g.n||g.vip||g.noAds)),allG=(adm.given||[]).find(g=>g.uid==='_all');
+  const sw=(id,on)=>`<label class="sw"><input type="checkbox" id="${id}" ${on?'checked':''}><i></i></label>`;
   openPage(`${pageHead('관리자')}<div class="pg-b np">
-    <div class="pg-cap">받는 사람</div>
-    <div class="pg-sec">${adm.sel?`<div class="prow"><div class="pl2">${esc(adm.sel.name||'?')} · ${esc(adm.sel.code)}</div><button class="xbtn" data-act="adm-clear" aria-label="다시 고르기">✕</button></div>`
-      :`<div class="prow"><input type="text" id="admQ" class="inl" style="flex:1;text-align:left" placeholder="번호 또는 이름" value="${esc(adm.q)}" enterkeyhint="search"><button class="tbtn" data-act="adm-find">찾기</button></div>${adm.codes===null?'':res.map(admRowHtml).join('')||(adm.q?'<div class="prow"><div class="pl2">찾은 게 없어요</div></div>':'')}`}
-      <div class="prow"><div class="pl2">모두에게</div><label class="sw"><input type="checkbox" id="admAll"><i></i></label></div>
-    </div>
-    <div class="pg-cap">건수</div>
-    <div class="pg-sec"><div class="prow"><input type="number" id="admN" class="inl" inputmode="numeric" min="1" max="10000" placeholder="0" style="flex:1;text-align:left"><button class="btn" data-act="adm-give" style="margin-left:10px">주기</button></div></div>
+    ${adm.sel?`<div class="pg-cap">고른 사람</div>
+    <div class="pg-sec"><div class="prow"><div class="pl2">${all?'모두에게':`${esc(adm.sel.name||'?')} · ${esc(adm.sel.code||'')}`}<small class="keep">${admTags(cur)||'받은 것 없음'}</small></div><button class="xbtn" data-act="adm-clear" aria-label="다시 고르기">✕</button></div>
+      <div class="prow"><input type="number" id="admN" class="inl" inputmode="numeric" min="1" max="10000" placeholder="건수" style="flex:1;text-align:left"><button class="tbtn" data-act="adm-sub" style="margin-left:8px">빼기</button><button class="btn" data-act="adm-give" style="margin-left:8px">주기</button></div>
+      ${all?'':`<div class="prow"><div class="pl2">무제한</div>${sw('admVip',cur.vip)}</div><div class="prow"><div class="pl2">광고 없음</div>${sw('admNoAds',cur.noAds||cur.vip)}</div>`}
+    </div>`:`<div class="pg-cap">받는 사람 찾기</div>
+    <div class="pg-sec"><div class="prow"><input type="text" id="admQ" class="inl" style="flex:1;text-align:left" placeholder="번호 또는 이름" value="${esc(adm.q)}" enterkeyhint="search"><button class="tbtn" data-act="adm-find">찾기</button></div>${adm.codes===null?'':res.map(admRowHtml).join('')||(adm.q?'<div class="prow"><div class="pl2">찾은 게 없어요</div></div>':'')}
+      <div class="prow tap" data-act="adm-all"><div class="pl2">모두에게${allG&&allG.n?`<small class="keep">+${allG.n}건</small>`:''}</div><span class="muted">›</span></div></div>
+    <div class="pg-cap">준 사람 <span class="cnt2">${given.length}</span></div>
+    <div class="pg-sec">${adm.given===null?'<div class="prow"><div class="pl2">불러오는 중…</div></div>':given.length?given.map(g=>`<div class="prow tap" data-act="adm-who" data-u="${esc(g.uid)}"><div class="pl2">${esc(g.name||'?')}${g.code?` · ${esc(g.code)}`:''}<small class="keep">${admTags(g)}</small></div><span class="muted">›</span></div>`).join(''):'<div class="prow"><div class="pl2">아직 없어요</div></div>'}</div>`}
     <div class="pg-cap">최근 기록</div>
-    <div class="pg-sec">${adm.log===null?'<div class="prow"><div class="pl2">불러오는 중…</div></div>':adm.log.length?adm.log.map(l=>`<div class="prow"><div class="pl2">+${+l.n||0} · ${l.to==='_all'?'모두':`${esc(l.name||'?')} · ${esc(l.code||'')}`}</div><div class="pv npv">${admDay(l.at)}</div></div>`).join(''):'<div class="prow"><div class="pl2">아직 기록이 없어요</div></div>'}</div>
+    <div class="pg-sec">${adm.log===null?'<div class="prow"><div class="pl2">불러오는 중…</div></div>':adm.log.length?adm.log.map(l=>`<div class="prow"><div class="pl2">${l.what?esc(l.what):`${+l.n>0?'+':''}${+l.n||0}건`} · ${l.to==='_all'?'모두':`${esc(l.name||'?')} · ${esc(l.code||'')}`}</div><div class="pv npv">${admDay(l.at)}</div></div>`).join(''):'<div class="prow"><div class="pl2">아직 기록이 없어요</div></div>'}</div>
   </div>`,'adm');
-  if(adm.codes===null&&!adm.busy){adm.busy=true;admLoad().then(()=>{adm.busy=false;if(pageMode==='adm')openAdmPage();}).catch(e=>{adm.busy=false;adm.log=[];toast(famErr(e));if(pageMode==='adm')openAdmPage();});}
+  if(adm.codes===null&&!adm.busy){adm.busy=true;admLoad().then(()=>{adm.busy=false;if(pageMode==='adm')openAdmPage();}).catch(e=>{adm.busy=false;adm.log=[];adm.given=[];toast(famErr(e));if(pageMode==='adm')openAdmPage();});}
 }
-async function admGive(){
-  const n=Math.round(+($('#admN')||{}).value||0),all=!!($('#admAll')||{}).checked;
-  if(!(n>0&&n<=10000)){toast('건수를 넣어 주세요');return;}
-  if(!all&&!adm.sel){toast('받는 사람을 골라 주세요');return;}
-  if(!confirm(`${all?'모두':`${adm.sel.name||'?'} (${adm.sel.code})`}에게 무료 ${n}건을 줄까요?`))return;
+// 바꾸기 한 번: bonus/{uid} 를 새 값으로 (다 비면 지움 → 목록에서 빠짐) + 기록
+async function admApply(next,logN,what,msg){
+  const sel=adm.sel;if(!sel)return;
   try{
-    const {F,db}=await famReady(),id=all?'_all':adm.sel.uid,b=F.writeBatch(db);
-    b.set(F.doc(db,'bonus',id),{n:F.increment(n),at:F.serverTimestamp()},{merge:true});
-    b.set(F.doc(F.collection(db,'bonusLog')),{to:id,name:all?'':String(adm.sel.name||'').slice(0,12),code:all?'':adm.sel.code,n,at:F.serverTimestamp()});
-    await b.commit();toast(`${n}건 줬어요`);adm.sel=all?adm.sel:null;adm.q='';adm.codes=null;adm.log=null;openAdmPage();
-  }catch(e){toast(famErr(e));}
+    const {F,db}=await famReady(),id=sel.uid,b=F.writeBatch(db),ref=F.doc(db,'bonus',id);
+    const keep=next.n>0||next.vip||next.noAds||id==='_all';
+    if(keep)b.set(ref,{n:next.n,vip:!!next.vip,noAds:!!next.noAds,name:String(sel.name||'').slice(0,12),code:String(sel.code||'').slice(0,12),at:F.serverTimestamp()});else b.delete(ref);
+    b.set(F.doc(F.collection(db,'bonusLog')),{to:id,name:id==='_all'?'':String(sel.name||'').slice(0,12),code:id==='_all'?'':String(sel.code||'').slice(0,12),n:logN,...(what?{what}:{}),at:F.serverTimestamp()});
+    await b.commit();toast(msg);
+    const g=(adm.given||[]).find(x=>x.uid===id);if(g)Object.assign(g,next);else (adm.given=adm.given||[]).push({uid:id,name:sel.name||'',code:sel.code||'',...next});
+    adm.log=null;adm.codes=null;openAdmPage();
+  }catch(e){toast(famErr(e));openAdmPage();}
+}
+async function admGive(sub){
+  const n=Math.round(+($('#admN')||{}).value||0);
+  if(!(n>0&&n<=10000)){toast('건수를 넣어 주세요');return;}
+  if(!adm.sel){toast('받는 사람을 골라 주세요');return;}
+  const cur=admCur(),who=adm.sel.uid==='_all'?'모두':`${adm.sel.name||'?'} (${adm.sel.code||''})`;
+  if(sub){const k=Math.min(n,cur.n);if(!k){toast('뺄 건수가 없어요');return;}if(!confirm(`${who}에게서 ${k}건을 뺄까요?`))return;admApply({...cur,n:cur.n-k},-k,'',`${k}건 뺐어요`);return;}
+  if(!confirm(`${who}에게 무료 ${n}건을 줄까요?`))return;
+  admApply({...cur,n:cur.n+n},n,'',`${n}건 줬어요`);
+}
+function admToggle(key,on){
+  const cur=admCur(),next={...cur,[key]:on};if(key==='vip'&&on)next.noAds=true;
+  admApply(next,0,`${key==='vip'?'무제한':'광고 없음'} ${on?'켬':'끔'}`,`${key==='vip'?'무제한':'광고 없음'}을 ${on?'켰어요':'껐어요'}`);
 }
 function googleRow(){
   if(!googleOn())return '';
@@ -9093,7 +9120,7 @@ function vcMemoHtml(k){
   }).join('');
   return `<div class="sec-t vcmt">가족 메모</div>${list}
     <div class="vcmemo-bar"><input type="text" id="vcmemo" maxlength="200" placeholder="가족에게 남길 메모" enterkeyhint="send"><button class="send fam" data-act="vc-memo-send" data-k="${k}" aria-label="보내기">${ICON.send}</button><span class="flab">가족에게 남길 메모</span></div>
-    ${famRemain()<=3?`<div class="usage-hint" style="margin-top:4px">무료 ${famRemN()}건 남음 · 가족 모두에게 보이고 알림이 가요</div>`:''}`;
+    ${famRemain()<=3?`<div class="usage-hint" style="margin-top:4px">${famRemTxt()} · 가족 모두에게 보이고 알림이 가요</div>`:''}`;
 }
 function vcGrid(p){
   const sch=p.sch,y=vcY,m=vcM,first=new Date(y,m,1),lead=leadOf(first),days=new Date(y,m+1,0).getDate(),rows=Math.ceil((lead+days)/7),start=addDays(first,-lead),tk=fmt(new Date());
@@ -9182,7 +9209,7 @@ function vcDayHtml(k){
         ${want!==sh?`<div class="vrask"><b>${esc(ty.name)} → ${tn(want)}</b>${ro(want)} 바꿔 달라고 할게요</div>`:''}
         <textarea id="rqm2" placeholder="한마디 (예: 아이 학예회라 같이 가자)" maxlength="60"></textarea>
         <button class="paint-btn" data-act="vc-multi-from" data-k="${k}">${npi('calendar-days',18)}<b>여러 날 고르기</b><i>›</i></button>
-        <button class="btn vrsend" data-act="vc-send">요청 보내기<small> · ${famRemN()}건 남음</small></button>`;
+        <button class="btn vrsend" data-act="vc-send">요청 보내기<small> · ${famBx.vip?'무제한':famRemN()+'건 남음'}</small></button>`;
   const card=!isOpen?'':`<div class="sh-card vrcard">${mine.map(stCard).join('')}${form}</div>`;
   return `<div class="dtop"><button data-act="close">‹ ${esc(p.name)} 달력</button></div>
     <div class="dfh"><button class="ib" data-act="vc-go" data-k="${fmt(addDays(d,-1))}" aria-label="전날">‹</button>
@@ -9372,7 +9399,8 @@ function vcMove(n){   // v0.209 ‹ › · 회색 다른 달 칸: 손으로 넘�
  * 서버에서 받은 것을 같이 보여줘요 (S.requests 에 srv:true 로 복사본, 가족 메모는 visibleMemos 에 합침). */
 const FAM_FREE=10;
 const famRemN=()=>{const n=famRemain();return n>99?'99+':n;};   // v0.196 100건 넘으면 99+건
-const famRemain=()=>{const m=(S.fam2&&S.fam2.me)||{};return Math.max(0,FAM_FREE+(+m.bonus||0)+famBx.me+famBx.all-(+m.sent||0));};   // v0.150 + 관리자가 준 건수
+const famRemTxt=()=>famBx.vip?'무제한':`무료 ${famRemN()}건 남음`;   // v0.229 무제한이면 건수 대신
+const famRemain=()=>{if(famBx.vip)return 9999;const m=(S.fam2&&S.fam2.me)||{};return Math.max(0,FAM_FREE+(+m.bonus||0)+famBx.me+famBx.all-(+m.sent||0));};   // v0.150 + 관리자가 준 건수
 const iga=w=>{const c=String(w).slice(-1).charCodeAt(0);return c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28!==0?'이':'가';};
 const famOthers=()=>{const me=S.link&&S.link.uid;return ((S.fam2&&S.fam2.members)||[]).filter(m=>m.uid!==me).map(m=>({...m,name:famAka(m.uid,m.name)}));};
 // v0.127 내 폰에서 부를 이름 (상대 폰 · 서버 이름은 그대로)

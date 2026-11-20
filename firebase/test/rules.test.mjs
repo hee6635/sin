@@ -899,6 +899,26 @@ await t('무료 건수: 관리자만 주기 · 본인 · 모두 문서만 읽기
   await assertSucceeds(getDoc(doc(db('g1'), 'bonus', '_all')));
   await assertFails(getDoc(doc(db('g2'), 'bonus', 'g1')));
 });
+await t('v0.229 관리자: 무제한 · 광고 없음 · 이름/번호 · 빼기(음수 기록) · 지우기', async () => {
+  await assertSucceeds(setDoc(doc(adb(), 'bonus', 'g1'), { n: 5, vip: true, noAds: true, name: '아내', code: 'ABCDEF', at: serverTimestamp() }, { merge: true }));
+  await assertFails(setDoc(doc(adb(), 'bonus', 'g1'), { n: 5, vip: 'yes', at: serverTimestamp() }, { merge: true }));
+  await assertFails(setDoc(doc(adb(), 'bonus', 'g1'), { n: -1, at: serverTimestamp() }, { merge: true }));
+  await assertFails(setDoc(doc(adb(), 'bonus', 'g1'), { n: 1, what: 'x', at: serverTimestamp() }, { merge: true }));
+  await assertSucceeds(setDoc(doc(adb(), 'bonusLog', 'l9'), { to: 'g1', name: '아내', code: 'ABC-DEF', n: -3, what: '빼기', at: serverTimestamp() }));
+  await assertSucceeds(setDoc(doc(adb(), 'bonusLog', 'l10'), { to: 'g1', name: '아내', code: 'ABC-DEF', n: 0, what: '무제한 켬', at: serverTimestamp() }));
+  await assertFails(setDoc(doc(db('g1'), 'bonus', 'g1'), { n: 5, vip: true, at: serverTimestamp() }));
+  await assertFails(deleteDoc(doc(db('g1'), 'bonus', 'g1')));
+  await assertSucceeds(deleteDoc(doc(adb(), 'bonus', 'g1')));
+});
+await t('v0.229 무제한(vip)이면 보낸 횟수 한도 없음 · 끄면 다시 한도', async () => {
+  await env.clearFirestore(); await seedFamily(1); await seedGuest('g1');
+  const M = doc(db('g1'), 'households', H, 'members', 'g1');
+  await env.withSecurityRulesDisabled(async (c) => { await updateDoc(doc(c.firestore(), 'households', H, 'members', 'g1'), { sent: 10 }); await setDoc(doc(c.firestore(), 'bonus', 'g1'), { n: 0, vip: true }); });
+  await assertSucceeds(updateDoc(M, { sent: 11 }));
+  await assertSucceeds(updateDoc(M, { sent: 12 }));
+  await env.withSecurityRulesDisabled(async (c) => setDoc(doc(c.firestore(), 'bonus', 'g1'), { n: 0, vip: false }));
+  await assertFails(updateDoc(M, { sent: 13 }));
+});
 await t('보낸 횟수 한도 = 10 + 개인 건수 + 모두 건수', async () => {
   await env.clearFirestore(); await seedFamily(1); await seedGuest('g1');
   const M = doc(db('g1'), 'households', H, 'members', 'g1');
