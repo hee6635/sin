@@ -154,8 +154,18 @@ const PER_COL={'#fff1c4':'#f2c037','#ffd9e4':'#ee7d9f','#ffe0c7':'#f08a3c','#d6f
 const perCol=c=>PER_COL[c]||c||'#f08a3c';
 const perMc=m=>m.shared?(m.pc||m.color?perCol(m.pc||m.color):'var(--fam)'):perCol(m.color);   // 띠 색: 가족 메모는 고른 색(pc) · 없으면 가족 색
 const perName=m=>(m.shared?'♥ ':'')+firstLine(m.text);
-function perPill(k,d){const p=perOn(k)[0];if(!p)return '';const L=leadOf(d),s=k===p.k0||L===0,x=k===p.m.till,e=x||L===6;
-  return `<div class="pl pvl${s?' s':''}${e?' e':''}${k===p.k0?' b':''}${x?' x':''}" style="--pc:${perMc(p.m)}">${s?esc(perName(p.m)):'&nbsp;'}</div>`;}
+// v0.236 겹치는 기간 띠: 주마다 줄(lane) 배정 — 먼저 시작한 띠가 위 · 한 주 안에서는 자기 줄을 지킴 (시안 design/period/v6-A2) · 2줄까지
+function perLanes(ks){const on=perAll().filter(p=>p.k0<=ks[ks.length-1]&&p.m.till>=ks[0]),lanes=[],at=new Map();
+  on.forEach(p=>{let L=0;while(lanes[L]&&lanes[L].some(q=>q.k0<=p.m.till&&p.k0<=q.m.till))L++;if(L>1)return;(lanes[L]=lanes[L]||[]).push(p);at.set(p,L);});
+  return {n:lanes.length,slot:k=>{const r=Array(lanes.length).fill(null);on.forEach(p=>{const L=at.get(p);if(L!=null&&p.k0<=k&&k<=p.m.till)r[L]=p;});return r;}};}
+function perPill(p,k,d){const L=leadOf(d),s=k===p.k0||L===0,x=k===p.m.till,e=x||L===6;   // 이름은 처음 시작한 날만 (사용자 v0.236)
+  return `<div class="pl pvl${s?' s':''}${e?' e':''}${k===p.k0?' b':''}${x?' x':''}" style="--pc:${perMc(p.m)}">${k===p.k0?esc(perName(p.m)):'&nbsp;'}</div>`;}
+// 띠 자리(slots: 띠 · 빈자리 null) + 다른 줄(others): 메모는 띠 아래가 기본 · 아래 자리가 모자랄 때만 위쪽 빈자리로 (사용자 v0.236) · 뒤쪽 빈자리는 없앰
+function laneArrange(slots,others,cap){
+  const sl=slots.slice();while(sl.length&&sl[sl.length-1]==null)sl.pop();
+  const rest=others.slice();let need=sl.length+rest.length-cap;
+  for(let i=0;i<sl.length&&need>0&&rest.length;i++)if(sl[i]==null){sl[i]={memo:rest.shift()};need--;}
+  return {slots:sl,rest};}
 function capPills(pl,mx){
   if(pl.length<=mx)return pl;
   const n=pl.length-mx,out=pl.slice(0,mx),s=out[mx-1],i=s.indexOf('>');
@@ -173,7 +183,9 @@ function calPanel(y,m){
   const start=addDays(first,-lead),tk=fmt(new Date());
   let cells='';
   const maxLines=lastLines=memoLines(),narrow=innerWidth<600;
+  let wl0=null;
   for(let i=0;i<rows*7;i++){
+    if(i%7===0)wl0=sharing?null:perLanes(Array.from({length:7},(_,j)=>fmt(addDays(start,i+j))));
     const d=addDays(start,i),k=fmt(d),sh=shiftOf(d),hol0=holName(k),hol=hol0||(ad('comp')?offHolName(k):''),chI=null,ch='',ov=S.overrides[k],dow=d.getDay();   // 회사 휴무일도 공휴일과 같은 모양(빨강)
     const cls=hol||dow===0?'sun':dow===6?'sat':'';
     const vm=visibleMemos(k),fam=vm.filter(x=>x.shared),mine=vm.filter(x=>!x.shared);
@@ -186,7 +198,8 @@ function calPanel(y,m){
     if(!sharing)mine.filter(x=>!x.till).forEach(x=>pills.push(`<div class="pl my${pst(x)}>${linkify(firstLine(x.text))}</div>`));
     boardOnDate(k).filter(n=>!sharing||n.shared).forEach(n=>pills.push(`<div class="pl ${n.shared?'fam':'my'}">📝 ${esc(piLabel(n))}</div>`));
     ddayHits(k).forEach(x=>pills.push(`<div class="pl dd">${ico(x.emoji||'⭐')} ${esc(x.name)}</div>`));
-    const pvH=sharing?'':perPill(k,d);if(pvH)pills.unshift(pvH);
+    let pvH=false;
+    if(wl0&&wl0.n){const ar=laneArrange(wl0.slot(k),pills,maxLines);if(ar.slots.length){pvH=ar.slots.some(x=>x&&x.m);pills.splice(0,pills.length,...ar.slots.map(x=>x==null?'<div class="pl pvl pve">&nbsp;</div>':x.memo!=null?x.memo:perPill(x,k,d)),...ar.rest);while(pills.length<maxLines)pills.push('<div class="pl pvl pve">&nbsp;</div>');}}   // 줄 수를 채워 칸마다 줄 높이가 같게 (띠가 계단 없이 이어짐)
     // 설정 줄 수(기본 3 · 태블릿 +1). 넘치면 마지막 줄 끝에 "+n" 칩
     if(pills.length>maxLines)pills.splice(0,pills.length,...capPills(pills,maxLines));
     // 날짜 줄: 숫자 · 스티커 · 공휴일 이름. 좁은 칸에서 스티커와 겹치면 이름은 빼기 (날짜 줄 색으로 이미 보임)

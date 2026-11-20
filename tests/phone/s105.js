@@ -16,7 +16,7 @@ const fam2=memos=>({members,scheds:{},memos,reqIn:{},reqOut:{},me:{sent:0,bonus:
   // 위젯 데이터
   const j=await p.evaluate(()=>{let o='';window.AndroidBridge.setWidgetData=x=>{o=x;};__wx.pushWidgetNow();return JSON.parse(o);});
   const w14=j.days.find(x=>x.k==='2026-10-14'),w15=j.days.find(x=>x.k==='2026-10-15'),w21=j.days.find(x=>x.k==='2026-10-21');
-  T('위젯: 시작 날 띠(s · b) 이름 · 가운데 날은 빈 줄 · 끝 날 x',w14.pv&&w14.pv.s&&w14.pv.b&&w14.ms[0]==='대수리'&&w15.pv&&!w15.pv.s&&w15.ms[0]===' '&&w21.pv.x===1,JSON.stringify([w14.pv,w14.ms,w15.pv,w15.ms,w21.pv]));
+  T('위젯: 시작 날 띠(s · b) 이름 · 가운데 날은 빈 줄 · 끝 날 x',w14.pl&&w14.pl[0].s&&w14.pl[0].b&&w14.ms[0]==='대수리'&&w14.mk==='p'&&w15.pl&&!w15.pl[0].s&&w15.ms[0]===' '&&w21.pl[0].x===1,JSON.stringify([w14.pl,w14.ms,w15.pl,w15.ms,w21.pl]));
   T('위젯 날짜 창: 가운데 날에도 기간 한 줄',(w15.mi||[]).some(x=>/대수리 · 10\/14 ~ 10\/21/.test(x.t)),JSON.stringify(w15.mi));
   // 나만 → 가족으로 바꾸면 띠 그대로 · 메모 색이 띠 색으로
   await p.evaluate(()=>__wx.openDay('2026-10-14'));await p.waitForTimeout(500);

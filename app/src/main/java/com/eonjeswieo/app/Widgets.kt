@@ -363,6 +363,46 @@ object WidgetRenderer {
         }
     }
 
+    /** v0.236 기간 띠 줄 순서: mk(줄 종류 w p e f m o) · pl(띠 자리) → 보여 줄 순서(-1 = 빈자리). 메모는 띠 아래가 기본, 줄 수(cap)가 모자랄 때만 위쪽 빈자리로 (앱 달력 laneArrange 와 같음) */
+    internal class LineOrder(val idx: IntArray, val kind: String, val pv: Array<JSONObject?>)
+    internal fun lineOrder(d: JSONObject?, n: Int, cap: Int): LineOrder? {
+        if (d == null) return null
+        val mk = d.optString("mk", "")
+        val pl = d.optJSONArray("pl")
+        if (mk.isEmpty() || pl == null) return null
+        val pvAt = arrayOfNulls<JSONObject>(n)
+        var j = 0
+        for (i in 0 until Math.min(n, mk.length)) {
+            val c = mk[i]
+            if (c == 'p' || c == 'e') {
+                if (c == 'p') pvAt[i] = pl.optJSONObject(j)
+                j++
+            }
+        }
+        val others = ArrayList<Int>()
+        for (i in 0 until n) {
+            val c = if (i < mk.length) mk[i] else 'm'
+            if (c != 'w' && c != 'p' && c != 'e') others.add(i)
+        }
+        var need = n - cap
+        val disp = ArrayList<Int>()
+        for (i in 0 until n) {
+            val c = if (i < mk.length) mk[i] else 'm'
+            if (c == 'w' || c == 'p') {
+                disp.add(i)
+            } else if (c == 'e') {
+                if (need > 0 && others.isNotEmpty()) {
+                    disp.add(others.removeAt(0))
+                    need--
+                } else {
+                    disp.add(-1)
+                }
+            }
+        }
+        disp.addAll(others)
+        return LineOrder(disp.toIntArray(), mk, pvAt)
+    }
+
     internal fun parseColor(s: String, fallback: Int): Int =
         try {
             if (s.isEmpty()) fallback else Color.parseColor(s)
@@ -732,23 +772,29 @@ object WidgetRenderer {
 
         // 메모 (맨 아래부터 쌓음, 줄 수는 줄 전체가 함께 정함)
         val memos = memoList(d)
-        val shown = Math.min(memos.size, row.memoLines)
-        val more = memos.size - shown   // 칸에 다 못 보이는 메모 수 (있으면 마지막 줄 끝에 "+n" 칩)
-        val memoTop = y0 + row.memoTop(if (d.optJSONObject("pv") != null) Math.max(shown, row.memoLines) else shown)   // v0.235 기간 띠 칸은 맨 위 자리부터 (옆 칸 띠와 같은 높이)
+        val lo = lineOrder(d, memos.size, row.memoLines)   // v0.236 기간 띠 줄 · 빈자리 (겹치면 두 줄)
+        val total = lo?.idx?.size ?: memos.size
+        val shown = Math.min(total, row.memoLines)
+        val more = total - shown   // 칸에 다 못 보이는 메모 수 (있으면 마지막 줄 끝에 "+n" 칩)
+        val memoTop = y0 + row.memoTop(if (lo != null) Math.max(shown, row.memoLines) else shown)   // 기간 띠 칸은 맨 위 자리부터 (옆 칸 띠와 같은 높이)
         val wlOff = if (d.optInt("wl", 0) == 1 && memos.isNotEmpty()) 1 else 0   // 업무 일지 줄(맨 위 · 표시만)
         val dn = doneLines(d)
         for (i0 in 0 until shown) {
-            val i = i0   // 업무 일지는 칸이 작아도 늘 맨 위 (사용자)
+            val i = if (lo != null) lo.idx[i0] else i0   // 업무 일지는 칸이 작아도 늘 맨 위 (사용자)
+            if (i < 0) continue   // 빈자리 (다른 줄의 띠 자리)
             val py = memoTop + i0 * (row.pillH + row.pillGap)
-            val pvD = d.optJSONObject("pv")
-            if (pvD != null && i == wlOff) {   // v0.233 기간 띠
+            val pvD = lo?.pv?.getOrNull(i)
+            if (pvD != null) {   // 기간 띠
                 drawPeriod(cv, pvD, memos[i], x0, x0 + cw, pad, py, row.pillH, pal === DARK, pal.bg, Math.min(row.pillH * 0.72f, cw * 0.2f), dens)
                 if (more > 0 && i0 == shown - 1) drawMoreChip(cv, more, x0 + cw - pad - row.pillH * 0.12f, py, row.pillH, pal, Math.min(row.pillH * 0.72f, cw * 0.2f))
                 continue
             }
+            val kd = lo?.kind?.getOrNull(i)
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
-            pp.color = if (i < wlOff) (if (pal === DARK) 0xFF2C2A48.toInt() else 0xFFEFECFB.toInt())
-                else if (i - wlOff - (if (pvD != null) 1 else 0) in 0 until d.optInt("nf", 0)) (if (pal === DARK) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill   // 가족 메모는 연보라 칸 (한 달 위젯과 같음)
+            val isWl = if (kd != null) kd == 'w' else i < wlOff
+            val isFam = if (kd != null) kd == 'f' else i - wlOff in 0 until d.optInt("nf", 0)
+            pp.color = if (isWl) (if (pal === DARK) 0xFF2C2A48.toInt() else 0xFFEFECFB.toInt())
+                else if (isFam) (if (pal === DARK) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill   // 가족 메모는 연보라 칸 (한 달 위젯과 같음)
             cv.drawRoundRect(RectF(x0 + pad, py, x0 + cw - pad, py + row.pillH), Math.min(4f * dens, row.pillH * 0.3f), Math.min(4f * dens, row.pillH * 0.3f), pp)   // v0.150 모서리 4dp (앱 .pl)
             paint.typeface = WFont.reg
             paint.textAlign = Paint.Align.LEFT

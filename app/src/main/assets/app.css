@@ -2050,14 +2050,7 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .np .famsec .me.host{color:#b45309;background:color-mix(in srgb,#f5b400 18%,var(--bg))}   /* v0.227 방장 표시 */
 .np .plan-on .pl2{color:var(--accent);font-weight:800}.np .plan-on .npi{background:var(--acc-soft);color:var(--accent)}   /* v0.231 이용 상태 */
 /* v0.232 기간 메모 띠 (design/period/v5): 메모 첫 줄 자리 · 메모보다 진하게 · 높이 3/4 · 시작/끝 진한 막대 · 칸 사이 이어지게 */
-.cell .pill-wrap:has(>.pvl){overflow:clip;overflow-clip-margin:4px}
-.pl.pvl{width:calc(100% + 6px);margin:0 -3px;flex:0 0 auto!important;height:calc(var(--plhf,14px)*.78)!important;max-height:calc(var(--plhf,14px)*.78)!important;min-height:0!important;line-height:calc(var(--plhf,14px)*.78);border:0;border-radius:0;padding:0 0 0 5px;background:color-mix(in srgb,var(--pc) 55%,var(--bg));color:color-mix(in srgb,var(--pc) 25%,#1c1712);font-size:max(9px,calc(var(--plf,9px)*.92));font-weight:800;text-overflow:clip;overflow:visible;position:relative;z-index:1}
-:root[data-theme="dark"] .pl.pvl{background:color-mix(in srgb,var(--pc) 45%,var(--bg));color:#fff}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pl.pvl{background:color-mix(in srgb,var(--pc) 45%,var(--bg));color:#fff}}
-.pl.pvl.s{width:calc(100% + 3px);margin-left:0;border-radius:4px 0 0 4px;box-shadow:inset 3px 0 0 var(--pc)}
-.pl.pvl.e{width:calc(100% + 3px);margin-right:0;border-radius:0 4px 4px 0}
-.pl.pvl.s.e{width:100%;margin:0;border-radius:4px}
-.pl.pvl.x{box-shadow:inset -3px 0 0 var(--pc)}.pl.pvl.s.x{box-shadow:inset 3px 0 0 var(--pc),inset -3px 0 0 var(--pc)}
+.cell.pvc .pill-wrap{overflow:clip;overflow-clip-margin:6px}
 .mcard.per{box-shadow:inset 3px 0 0 var(--pc)}.mcard.per .tx{font-weight:700}
 /* v0.233 가족 메모 띠 색 고르기 (기간 띠가 있을 때만) */
 .mdpc{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
@@ -2065,14 +2058,20 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .mdpc button.on{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--fg)}
 /* v0.233 기간 띠가 칸 사이 선에서 끊기지 않게: 띠 있는 칸만 잘림 범위를 칸 선 너머까지 (칸 채우기 모양의 2px 틈 포함) */
 .cell.pvc{overflow:clip;overflow-clip-margin:4px}   /* (칸 클래스로: :has 는 밀 때마다 다시 계산해서 날짜 창 밀기가 느려짐 · s75) */
-.cell .pill-wrap:has(>.pvl){overflow-clip-margin:6px}
-.pl.pvl{width:calc(100% + 8px);margin:0 -4px}
-.pl.pvl.s{width:calc(100% + 4px);margin-left:0}
-.pl.pvl.e{width:calc(100% + 4px);margin-right:0}
-.pl.pvl.s.e{width:100%;margin:0}
 /* v0.234 다크모드: 포스트잇 제목 칸이 어두운 입력칸 바탕을 받아 제목이 안 보이던 것 → 포스트잇 위 입력칸은 늘 종이색 그대로 */
 .pi input.pi-title,.pi textarea{background:transparent!important;color:var(--pi-ink)!important;box-shadow:none!important}
 .pi input.pi-title::placeholder,.pi textarea::placeholder{color:color-mix(in srgb,var(--pi-ink) 45%,transparent)}
 .pvh .ib{color:#5a5140;background:transparent}   /* v0.234 다크모드: 포스트잇 큰 보기 ✕ 가 밝은 종이 위에서 안 보이던 것 */
 .pi .x{color:color-mix(in srgb,var(--pi-ink) 70%,transparent)}
 .pi .pdt{opacity:.7;color:color-mix(in srgb,var(--pi-ink) 70%,transparent)}
+
+/* v0.236 기간 띠: 메모 줄과 같은 높이의 자리(겹칠 때 두 줄 · 옆 칸과 높이가 같아야 이어짐) · 색 띠는 그 안에 3/4 높이로 (::before) */
+.pl.pvl{display:block;gap:0;max-height:var(--plmax,14px);width:calc(100% + 8px);margin:0 -4px;border:0;border-radius:0;padding:0 0 0 6px;background:none;color:color-mix(in srgb,var(--pc) 25%,#1c1712);font-size:max(9px,calc(var(--plf,9px)*.92));font-weight:800;text-overflow:clip;overflow:visible;position:relative;z-index:1;--pvs:none}
+.pl.pvl::before{content:"";position:absolute;left:0;right:0;top:11%;bottom:11%;background:color-mix(in srgb,var(--pc) 55%,var(--bg));border-radius:inherit;box-shadow:var(--pvs);z-index:-1}
+:root[data-theme="dark"] .pl.pvl{color:#fff}:root[data-theme="dark"] .pl.pvl::before{background:color-mix(in srgb,var(--pc) 45%,var(--bg))}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pl.pvl{color:#fff}:root:not([data-theme="light"]) .pl.pvl::before{background:color-mix(in srgb,var(--pc) 45%,var(--bg))}}
+.pl.pvl.s{width:calc(100% + 4px);margin-left:0;border-radius:4px 0 0 4px}
+.pl.pvl.e{width:calc(100% + 4px);margin-right:0;border-radius:0 4px 4px 0}
+.pl.pvl.s.e{width:100%;margin:0;border-radius:4px}
+.pl.pvl.b{--pvs:inset 3px 0 0 var(--pc);padding-left:7px}.pl.pvl.x{--pvs:inset -3px 0 0 var(--pc)}.pl.pvl.b.x{--pvs:inset 3px 0 0 var(--pc),inset -3px 0 0 var(--pc)}
+.pl.pvl.pve{visibility:hidden}

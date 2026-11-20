@@ -1242,30 +1242,34 @@ object MonthRenderer {
         }
 
         // 메모: 줄 수만큼 (맨 아래부터 쌓음) · 더 있으면 마지막 줄 끝에 "+n" 칩 · 가족 달력의 메모는 연보라 칸
-        val shown = Math.min(f.memos.size, plan.lines[r])
-        val more = f.memos.size - shown
+        val lo = if (!family) WidgetRenderer.lineOrder(f.day, f.memos.size, plan.lines[r]) else null   // v0.236 기간 띠 줄 · 빈자리 (겹치면 두 줄)
+        val total = lo?.idx?.size ?: f.memos.size
+        val shown = Math.min(total, plan.lines[r])
+        val more = total - shown
         statMemoHid += Math.max(0, more)
         val mGap = plan.pillGap + tn.memoG * plan.pillH * 0.25f
-        // v0.235 기간 띠가 있는 칸은 메모를 줄의 맨 위 자리부터 (아래부터 쌓으면 칸마다 메모 수가 달라 띠 높이가 어긋나 이어지지 않음)
-        val posN = if (!family && f.day?.optJSONObject("pv") != null) Math.max(shown, plan.lines[r]) else shown
+        // 기간 띠가 있는 칸은 메모를 줄의 맨 위 자리부터 (아래부터 쌓으면 칸마다 메모 수가 달라 띠 높이가 어긋나 이어지지 않음)
+        val posN = if (lo != null) Math.max(shown, plan.lines[r]) else shown
         val memoTop0 = y0 + plan.memoTop(posN) + (plan.pillGap - mGap) * Math.max(0, posN - 1)   // 줄 간격을 바꿔도 아래 끝은 그대로
         val memoLow = Math.max(memoTop0, y0 + rowH - (posN * plan.pillH + Math.max(0, posN - 1) * mGap))   // 아래로 내려도 칸 아래 끝까지만 (다음 줄 날짜를 안 덮게)
         val memoTop = Math.min(memoTop0 + tn.memoY * rowH * 0.06f, memoLow)   // 위치(위 − · 아래 +)
         val wlOff = if (!family && f.day != null && f.day.optInt("wl", 0) == 1 && f.memos.isNotEmpty()) 1 else 0   // 업무 일지 줄(맨 위 · 표시만)
         val dn = if (family) emptySet() else WidgetRenderer.doneLines(f.day)   // 완료한 할 일 줄
         for (k in 0 until shown) {
-            val mi = k   // 업무 일지는 칸이 작아도 늘 맨 위 (사용자)
+            val mi = if (lo != null) lo.idx[k] else k   // 업무 일지는 칸이 작아도 늘 맨 위 (사용자)
+            if (mi < 0) continue   // 빈자리 (다른 줄의 띠 자리)
             val py = memoTop + k * (plan.pillH + mGap)
-            val pvD = if (!family) f.day?.optJSONObject("pv") else null
-            if (pvD != null && mi == wlOff) {   // v0.233 기간 띠 (앱 달력과 같은 모양)
+            val pvD = lo?.pv?.getOrNull(mi)
+            if (pvD != null) {   // 기간 띠 (앱 달력과 같은 모양)
                 val ts = Math.min(Math.min(plan.pillH * 0.77f, cw * 0.215f) * tn.memo, plan.pillH * 0.95f)
                 WidgetRenderer.drawPeriod(cv, pvD, f.memos[mi], x0, x0 + cw, pad, py, plan.pillH, night, pal.bg, ts, u)
                 if (more > 0 && k == shown - 1) WidgetRenderer.drawMoreChip(cv, more, x0 + cw - pad - plan.pillH * 0.12f, py, plan.pillH, pal, ts)
                 continue
             }
+            val kd = lo?.kind?.getOrNull(mi)
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
-            val isWl = mi < wlOff
-            val isFam = family || (mi >= wlOff && mi - wlOff - (if (pvD != null) 1 else 0) in 0 until f.nf)
+            val isWl = if (kd != null) kd == 'w' else mi < wlOff
+            val isFam = family || (if (kd != null) kd == 'f' else mi >= wlOff && mi - wlOff < f.nf)
             pp.color = if (isWl) (if (night) 0xFF2C2A48.toInt() else 0xFFEFECFB.toInt()) else if (isFam) (if (night) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill
             cv.drawRoundRect(RectF(x0 + pad, py, x0 + cw - pad, py + plan.pillH), Math.min(4f * u, plan.pillH * 0.3f), Math.min(4f * u, plan.pillH * 0.3f), pp)   // v0.150 모서리 4dp (앱 .pl)
             var barW = 0f
