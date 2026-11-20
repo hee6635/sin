@@ -26,9 +26,9 @@ const fam2=memos=>({members,scheds:{},memos,reqIn:{},reqOut:{},me:{sent:0,bonus:
   await p.evaluate(()=>{const b=document.createElement('button');b.dataset.act='per-open';b.dataset.k='2026-10-14';b.dataset.id='a1';document.body.appendChild(b);b.click();b.remove();});await p.waitForTimeout(500);
   T('나만 메모 자세히: "기간 띠" 줄',await p.evaluate(()=>/기간 띠/.test(document.querySelector('#page').innerText)));
   await p.click('#page [data-act="md-share"][data-v="1"]');await p.waitForTimeout(500);
-  const sh=await p.evaluate(()=>({till:!!document.querySelector('#page #mdTill'),pc:!!document.querySelector('#page .mdpc'),on:(document.querySelector('#page .mdpc button.on')||{}).dataset?.v}));
-  T('가족으로 바꿔도 기간 그대로 · 띠 색 줄 나옴 · 메모 색이 띠 색으로',sh.till&&sh.pc&&sh.on==='#ffe0c7',JSON.stringify(sh));
-  await p.click('#page .mdpc [data-v="#d6f5df"]');await p.waitForTimeout(300);
+  const sh=await p.evaluate(()=>({till:!!document.querySelector('#page #mdTill'),pc:!!document.querySelector('#page .mdcol [data-act="md-pc"]'),on:(document.querySelector('#page .mdcol button.on')||{}).dataset?.v,above:(()=>{const c=document.querySelector('#page .mdcol'),t=document.querySelector('#page #mdTodo');return !!c&&!!t&&c.getBoundingClientRect().top<t.getBoundingClientRect().top;})()}));
+  T('가족으로 바꿔도 기간 그대로 · 띠 색 줄(할 일 위 큰 동그라미) · 메모 색이 띠 색으로',sh.till&&sh.pc&&sh.on==='#ffe0c7'&&sh.above,JSON.stringify(sh));
+  await p.click('#page .mdcol [data-act="md-pc"][data-v="#d6f5df"]');await p.waitForTimeout(300);
   await p.click('#page [data-act="md-save"]');await p.waitForTimeout(700);
   const m1=await p.evaluate(()=>__wx.S.memos['2026-10-14'].find(x=>x.id==='a1'));
   T('저장: 가족 메모 · 기간 · 띠 색',m1.shared&&m1.till==='2026-10-21'&&m1.pc==='#d6f5df',JSON.stringify(m1));

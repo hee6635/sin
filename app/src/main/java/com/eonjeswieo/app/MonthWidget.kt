@@ -1246,8 +1246,10 @@ object MonthRenderer {
         val more = f.memos.size - shown
         statMemoHid += Math.max(0, more)
         val mGap = plan.pillGap + tn.memoG * plan.pillH * 0.25f
-        val memoTop0 = y0 + plan.memoTop(shown) + (plan.pillGap - mGap) * Math.max(0, shown - 1)   // 줄 간격을 바꿔도 아래 끝은 그대로
-        val memoLow = Math.max(memoTop0, y0 + rowH - (shown * plan.pillH + Math.max(0, shown - 1) * mGap))   // 아래로 내려도 칸 아래 끝까지만 (다음 줄 날짜를 안 덮게)
+        // v0.235 기간 띠가 있는 칸은 메모를 줄의 맨 위 자리부터 (아래부터 쌓으면 칸마다 메모 수가 달라 띠 높이가 어긋나 이어지지 않음)
+        val posN = if (!family && f.day?.optJSONObject("pv") != null) Math.max(shown, plan.lines[r]) else shown
+        val memoTop0 = y0 + plan.memoTop(posN) + (plan.pillGap - mGap) * Math.max(0, posN - 1)   // 줄 간격을 바꿔도 아래 끝은 그대로
+        val memoLow = Math.max(memoTop0, y0 + rowH - (posN * plan.pillH + Math.max(0, posN - 1) * mGap))   // 아래로 내려도 칸 아래 끝까지만 (다음 줄 날짜를 안 덮게)
         val memoTop = Math.min(memoTop0 + tn.memoY * rowH * 0.06f, memoLow)   // 위치(위 − · 아래 +)
         val wlOff = if (!family && f.day != null && f.day.optInt("wl", 0) == 1 && f.memos.isNotEmpty()) 1 else 0   // 업무 일지 줄(맨 위 · 표시만)
         val dn = if (family) emptySet() else WidgetRenderer.doneLines(f.day)   // 완료한 할 일 줄

@@ -734,7 +734,7 @@ object WidgetRenderer {
         val memos = memoList(d)
         val shown = Math.min(memos.size, row.memoLines)
         val more = memos.size - shown   // 칸에 다 못 보이는 메모 수 (있으면 마지막 줄 끝에 "+n" 칩)
-        val memoTop = y0 + row.memoTop(shown)
+        val memoTop = y0 + row.memoTop(if (d.optJSONObject("pv") != null) Math.max(shown, row.memoLines) else shown)   // v0.235 기간 띠 칸은 맨 위 자리부터 (옆 칸 띠와 같은 높이)
         val wlOff = if (d.optInt("wl", 0) == 1 && memos.isNotEmpty()) 1 else 0   // 업무 일지 줄(맨 위 · 표시만)
         val dn = doneLines(d)
         for (i0 in 0 until shown) {

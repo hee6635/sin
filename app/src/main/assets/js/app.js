@@ -4516,13 +4516,12 @@ function renderMemoDetail(){   // v0.158 새 모양 (시안 design/remain): 글 
     ${host&&!d.rr?`<div class="pg-sec pad mdshare"><div class="npseg"><button class="${d.shared?'':'on'}" data-act="md-share" data-v="0">나만</button><button class="${d.shared?'on':''}" data-act="md-share" data-v="1">가족에게${d.shared&&S.link?` <em class="mdleft">${famRemN()}건 남음</em>`:''}</button></div></div>`:''}
     <div class="pg-sec pad"><textarea id="mdText" class="mdtx" placeholder="메모를 입력하세요" style="background:${d.shared?'var(--fam-bg)':(d.color||'var(--surface)')};color:${!d.shared&&d.color?'#2a2418':'var(--fg)'}">${esc(d.text)}</textarea>
     <div class="lnkrow" id="mdLinks">${hasLink(d.text)?linkParts(d.text).filter(x=>x.u).map(x=>`<a class="lnk" data-act="lnk" data-u="${esc(linkUrl(x.u))}">🔗 링크</a>`).join(' '):''}</div></div>
-    ${d.shared?'':`<div class="pg-sec pad mdcol">${MEMO_COL.map(c=>`<button class="${d.color===c?'on':''}" style="background:${c}" data-act="md-col" data-v="${c}" aria-label="색"></button>`).join('')}</div>`}
+    ${d.shared?(d.till?`<div class="pg-sec pad mdcol"><button class="${d.pc?'':'on'}" style="background:color-mix(in srgb,var(--fam) 38%,#fff)" data-act="md-pc" data-v="" aria-label="가족 색"></button>${MEMO_COL.map(c=>`<button class="${d.pc===c?'on':''}" style="background:${c}" data-act="md-pc" data-v="${c}" aria-label="띠 색"></button>`).join('')}</div>`:''):`<div class="pg-sec pad mdcol">${MEMO_COL.map(c=>`<button class="${d.color===c?'on':''}" style="background:${c}" data-act="md-col" data-v="${c}" aria-label="색"></button>`).join('')}</div>`}
     <div class="pg-sec">
       ${npRow('check','할 일',`<label class="sw"><input type="checkbox" id="mdTodo" ${d.todo?'checked':''}><i></i></label>`)}
       ${npRow('clock','시간',d.time?`${tpick('mdTime',d.time)}<button class="xbtn" data-act="md-notime" aria-label="시간 없애기">${npi('x',16)}</button>`:`<button class="xbtn tplus" data-act="md-settime" aria-label="시간 정하기">${npi('x',16)}</button>`,d.time?{cls:'mdtrow'}:{tap:1,act:'md-settime',cls:'mdtrow'})}
       ${d.time?npRow('bell','알림',`<div class="npseg sm">${[['','없음'],['0','정시'],['10','10분 전']].map(([v,l])=>`<button class="${d.al===v?'on':''}" data-act="md-al" data-v="${v}">${l}</button>`).join('')}</div>`):''}
       ${(host||d.shared)&&!d.rr&&!d.rep?npRow('calendar-days','기간 띠',d.till?`<span class="mdtill">~</span>${tpick('mdTill',d.till,'','date')}<button class="xbtn" data-act="md-notill" aria-label="기간 없애기">${npi('x',16)}</button>`:`<button class="xbtn tplus" data-act="md-settill" aria-label="기간 정하기">${npi('x',16)}</button>`,d.till?{cls:'mdtrow'}:{tap:1,act:'md-settill',cls:'mdtrow'}):''}
-      ${d.shared&&d.till?npRow('palette','띠 색',`<div class="mdpc"><button class="${d.pc?'':'on'}" style="background:var(--fam)" data-act="md-pc" data-v="" aria-label="가족 색"></button>${MEMO_COL.map(c=>`<button class="${d.pc===c?'on':''}" style="background:${perCol(c)}" data-act="md-pc" data-v="${c}" aria-label="띠 색"></button>`).join('')}</div>`):''}
       ${host&&!d.shared&&!d.wl?npRow('repeat','반복',npVal(d.rr?esc(rrText(d.rr)):'안 함'),{tap:1,act:'md-rep'}):''}
     </div>
     ${d.rep?`<div class="pg-sec">${npRow('trash-2','반복 그만하기','',{tap:1,act:'rm-del',cls:'danger-row',attrs:` data-id="${esc(d.rep)}"`})}</div>`:''}
@@ -7553,8 +7552,19 @@ document.addEventListener('click',e=>{
     case 'md-col':mdPull();mdDraft.color=mdDraft.color===t.dataset.v?'':t.dataset.v;renderMemoDetail();break;
     case 'md-share':mdPull();mdDraft.shared=t.dataset.v==='1';if(mdDraft.shared&&!mdDraft.pc&&mdDraft.color)mdDraft.pc=mdDraft.color;MO.flip($('#page .pg-b'),renderMemoDetail);break;
     case 'md-al':mdPull();mdDraft.al=t.dataset.v;renderMemoDetail();break;
-    case 'md-settill':{mdPull();mdDraft.till=addK(mdDraft.k,2);renderMemoDetail();break;}   // v0.232 기간: 처음엔 사흘 (고쳐서 끝 날 고름)
-    case 'md-notill':{mdPull();mdDraft.till='';renderMemoDetail();break;}
+    case 'md-settill':{mdPull();mdDraft.till=addK(mdDraft.k,2);const pg0=$('#page .pg-b'),st0=pg0?pg0.scrollTop:0;if(mdDraft.shared)MO.flip(pg0,renderMemoDetail);else renderMemoDetail();   // 가족 메모: 띠 색 줄이 나만 메모 색 줄처럼 생김   // v0.232 기간: 처음엔 사흘 (고쳐서 끝 날 고름) · v0.235 시간 줄처럼 ＋가 돌며 ✕ · 날짜 톡 · 띠 색 줄 스르르
+      try{const pg=$('#page .pg-b');if(pg)pg.scrollTop=st0;if(!RMq()){const tb=$('#mdTill'),r=tb&&tb.closest('.mdtrow'),x=r&&r.querySelector('.xbtn'),tp=r&&r.querySelector('.tbtn'),tl=r&&r.querySelector('.mdtill');
+        if(x)x.animate([{transform:'rotate(-135deg)',background:'var(--acc-soft)'},{transform:'none'}],{duration:420,easing:'cubic-bezier(.3,1.4,.5,1)'});
+        [tl,tp].forEach((e,i)=>{if(e)e.animate([{opacity:0,transform:'scale(.8)'},{opacity:1,transform:'none'}],{duration:300,delay:i*40,easing:'cubic-bezier(.3,1.4,.5,1)',fill:'backwards'});});
+}}catch(e){}
+      break;}
+    case 'md-notill':{mdPull();mdDraft.till='';const pg=$('#page .pg-b'),st0=pg?pg.scrollTop:0;
+      const go=()=>{if(mdDraft.shared)MO.flip($('#page .pg-b'),renderMemoDetail);else renderMemoDetail();const p2=$('#page .pg-b');if(p2)p2.scrollTop=st0;};
+      try{const r=t.closest('.mdtrow');if(!RMq()&&r){   // v0.235 ✕가 반대로 돌며 ＋ · 날짜 · 띠 색 줄 접힘 → 다 접힌 뒤 다시 그림
+        t.animate([{transform:'none'},{transform:'rotate(135deg)'}],{duration:180,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
+        [r.querySelector('.tbtn'),r.querySelector('.mdtill')].forEach(e=>{if(e)e.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.8)'}],{duration:220,fill:'forwards'});});
+        setTimeout(go,170);break;}}catch(e){}
+      go();break;}
     case 'per-open':if(t.dataset.srv)openDay(t.dataset.k);else openMemoDetail(t.dataset.k,t.dataset.id);break;
     case 'md-pc':mdPull();mdDraft.pc=t.dataset.v||'';renderMemoDetail();break;   // v0.233 가족 메모 띠 색
     case 'md-settime':{mdPull();mdDraft.time='09:00';const pb=$('#page');const st0=pb&&pb.querySelector('.pg-b')?pb.querySelector('.pg-b').scrollTop:0;renderMemoDetail();   // v0.209 ＋가 돌며 ✕ · 시간 톡 · 알림 줄 스르르

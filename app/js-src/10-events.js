@@ -333,8 +333,19 @@ document.addEventListener('click',e=>{
     case 'md-col':mdPull();mdDraft.color=mdDraft.color===t.dataset.v?'':t.dataset.v;renderMemoDetail();break;
     case 'md-share':mdPull();mdDraft.shared=t.dataset.v==='1';if(mdDraft.shared&&!mdDraft.pc&&mdDraft.color)mdDraft.pc=mdDraft.color;MO.flip($('#page .pg-b'),renderMemoDetail);break;
     case 'md-al':mdPull();mdDraft.al=t.dataset.v;renderMemoDetail();break;
-    case 'md-settill':{mdPull();mdDraft.till=addK(mdDraft.k,2);renderMemoDetail();break;}   // v0.232 기간: 처음엔 사흘 (고쳐서 끝 날 고름)
-    case 'md-notill':{mdPull();mdDraft.till='';renderMemoDetail();break;}
+    case 'md-settill':{mdPull();mdDraft.till=addK(mdDraft.k,2);const pg0=$('#page .pg-b'),st0=pg0?pg0.scrollTop:0;if(mdDraft.shared)MO.flip(pg0,renderMemoDetail);else renderMemoDetail();   // 가족 메모: 띠 색 줄이 나만 메모 색 줄처럼 생김   // v0.232 기간: 처음엔 사흘 (고쳐서 끝 날 고름) · v0.235 시간 줄처럼 ＋가 돌며 ✕ · 날짜 톡 · 띠 색 줄 스르르
+      try{const pg=$('#page .pg-b');if(pg)pg.scrollTop=st0;if(!RMq()){const tb=$('#mdTill'),r=tb&&tb.closest('.mdtrow'),x=r&&r.querySelector('.xbtn'),tp=r&&r.querySelector('.tbtn'),tl=r&&r.querySelector('.mdtill');
+        if(x)x.animate([{transform:'rotate(-135deg)',background:'var(--acc-soft)'},{transform:'none'}],{duration:420,easing:'cubic-bezier(.3,1.4,.5,1)'});
+        [tl,tp].forEach((e,i)=>{if(e)e.animate([{opacity:0,transform:'scale(.8)'},{opacity:1,transform:'none'}],{duration:300,delay:i*40,easing:'cubic-bezier(.3,1.4,.5,1)',fill:'backwards'});});
+}}catch(e){}
+      break;}
+    case 'md-notill':{mdPull();mdDraft.till='';const pg=$('#page .pg-b'),st0=pg?pg.scrollTop:0;
+      const go=()=>{if(mdDraft.shared)MO.flip($('#page .pg-b'),renderMemoDetail);else renderMemoDetail();const p2=$('#page .pg-b');if(p2)p2.scrollTop=st0;};
+      try{const r=t.closest('.mdtrow');if(!RMq()&&r){   // v0.235 ✕가 반대로 돌며 ＋ · 날짜 · 띠 색 줄 접힘 → 다 접힌 뒤 다시 그림
+        t.animate([{transform:'none'},{transform:'rotate(135deg)'}],{duration:180,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
+        [r.querySelector('.tbtn'),r.querySelector('.mdtill')].forEach(e=>{if(e)e.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.8)'}],{duration:220,fill:'forwards'});});
+        setTimeout(go,170);break;}}catch(e){}
+      go();break;}
     case 'per-open':if(t.dataset.srv)openDay(t.dataset.k);else openMemoDetail(t.dataset.k,t.dataset.id);break;
     case 'md-pc':mdPull();mdDraft.pc=t.dataset.v||'';renderMemoDetail();break;   // v0.233 가족 메모 띠 색
     case 'md-settime':{mdPull();mdDraft.time='09:00';const pb=$('#page');const st0=pb&&pb.querySelector('.pg-b')?pb.querySelector('.pg-b').scrollTop:0;renderMemoDetail();   // v0.209 ＋가 돌며 ✕ · 시간 톡 · 알림 줄 스르르
