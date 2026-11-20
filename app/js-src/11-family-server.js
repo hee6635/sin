@@ -1130,7 +1130,7 @@ async function famSyncMemos(){
   if(!S.link||!fbCfg()||!S.link.uid)return;
   const uid=S.link.uid,hid=S.link.hid,want={},others=famOthers().map(x=>x.uid);
   const toOf=m=>{const l=Array.isArray(m.to)&&m.to.length?m.to.filter(u=>others.includes(u)):others;return [...new Set([uid,...(l.length?l:others)])].sort();};
-  Object.keys(S.memos||{}).forEach(k=>(S.memos[k]||[]).forEach(m=>{if(m.shared&&m.by===role()&&String(m.text||'').trim())want[uid+'_'+m.id]={date:k,text:String(m.text).slice(0,200),nt:!!m.notify,mid:m.id,t:+m.t||0,td:!!m.todo,dn:!!(m.todo&&m.done),tm:/^\d\d:\d\d$/.test(m.time||'')?m.time:'',al:/^\d\d:\d\d$/.test(m.time||'')&&(m.al==='0'||m.al==='10')?m.al:'',to:toOf(m)};}));
+  Object.keys(S.memos||{}).forEach(k=>(S.memos[k]||[]).forEach(m=>{if(m.shared&&m.by===role()&&String(m.text||'').trim())want[uid+'_'+m.id]={date:k,text:String(m.text).slice(0,200),nt:!!m.notify,mid:m.id,t:+m.t||0,td:!!m.todo,dn:!!(m.todo&&m.done),tm:/^\d\d:\d\d$/.test(m.time||'')?m.time:'',al:/^\d\d:\d\d$/.test(m.time||'')&&(m.al==='0'||m.al==='10')?m.al:'',to:toOf(m),tl:m.till&&m.till>k?m.till:'',pc:m.till?(m.pc||m.color||''):''};}));
   const have={};Object.entries(S.fam2.memos||{}).forEach(([id,v])=>{if(v.by===uid)have[id]=v;});
   const {F,db}=await famReady();
   // v0.96 가족방에 들어오고 10분 안: 들어오기 전에 쓴 메모 옮기기 — 지난 날짜(가족 모두에게 보낸 것)는 한 문서로 묶고, 오늘 · 앞으로는 하나씩(무료 횟수 대신 moved)
@@ -1163,15 +1163,16 @@ async function famSyncMemos(){
       if(!mv&&remain<=0){famMemoWarn(id,'무료 횟수를 다 써서 가족 메모를 올리지 못했어요');continue;}if(mv)movedN++;else remain--;
       famBusyMemo[id]=1;
       const b=F.writeBatch(db);
-      b.set(ref,{by:uid,byName:S.link.name,date:w.date,text:w.text,to:w.to,createdAt:F.serverTimestamp(),updatedAt:F.serverTimestamp(),...(w.tm?{time:w.tm,...(w.al!==''?{al:w.al}:{})}:{}),...(mv?{moved:true}:{}),...(w.td?{todo:true,done:w.dn}:{})});   // 할 일 · 완료: 가족 폰엔 보기만
+      b.set(ref,{by:uid,byName:S.link.name,date:w.date,text:w.text,to:w.to,createdAt:F.serverTimestamp(),updatedAt:F.serverTimestamp(),...(w.tm?{time:w.tm,...(w.al!==''?{al:w.al}:{})}:{}),...(mv?{moved:true}:{}),...(w.td?{todo:true,done:w.dn}:{}),...(w.tl?{till:w.tl,...(w.pc?{pc:w.pc}:{})}:{})});   // 할 일 · 완료: 가족 폰엔 보기만 · v0.233 기간 띠
       b.update(famMember(F,db,hid,uid),mv?{moved:F.increment(1)}:{sent:F.increment(1)});
       b.commit().catch(e=>famMemoWarn(id,famMemoErr(e))).finally(()=>{delete famBusyMemo[id];});
-    }else if(h.text!==w.text||h.date!==w.date||(h.time||'')!==w.tm||(h.al||'')!==w.al||JSON.stringify([...(h.to||[])].sort())!==JSON.stringify(w.to)||!!h.todo!==w.td||!!h.done!==w.dn){
+    }else if(h.text!==w.text||h.date!==w.date||(h.time||'')!==w.tm||(h.al||'')!==w.al||JSON.stringify([...(h.to||[])].sort())!==JSON.stringify(w.to)||!!h.todo!==w.td||!!h.done!==w.dn||(h.till||'')!==w.tl||(h.pc||'')!==w.pc){
       famBusyMemo[id]=1;
       const patch={date:w.date,text:w.text,updatedAt:F.serverTimestamp()};
       if(JSON.stringify([...(h.to||[])].sort())!==JSON.stringify(w.to))patch.to=w.to;   // 받는 사람이 바뀌었거나, 옛 메모(to 없음)를 채움
       if((h.time||'')!==w.tm||(h.al||'')!==w.al){patch.time=w.tm?w.tm:F.deleteField();patch.al=w.al!==''?w.al:F.deleteField();}   // 시간 알림(색 · 할 일은 안 올림)
       if(!!h.todo!==w.td||!!h.done!==w.dn){patch.todo=w.td?true:F.deleteField();patch.done=w.td?w.dn:F.deleteField();}   // 할 일 · 완료 체크 (알림 없음)
+      if((h.till||'')!==w.tl||(h.pc||'')!==w.pc){patch.till=w.tl||F.deleteField();patch.pc=w.tl&&w.pc?w.pc:F.deleteField();}   // v0.233 기간 띠 · 띠 색
       if(w.nt)patch.rev=(+h.rev||0)+1;   // 고쳤다고 알리기를 고른 수정
       F.updateDoc(ref,patch).then(()=>{if(w.nt)famClearNotify(w.mid);}).catch(e=>famMemoWarn(id,famMemoErr(e))).finally(()=>{delete famBusyMemo[id];});
     }

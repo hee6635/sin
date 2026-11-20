@@ -143,13 +143,19 @@ function bwrapHtml(d,k,pop){
 }
 // 메모가 줄 수(mx)보다 많으면: 보이는 줄은 그대로 두고 마지막 줄 끝에 작은 회색 "+n" (n = 더 있는 메모 수 · 10개 이상은 9+) — 위젯 칸과 같은 표시. 글자가 잘리면 끝에 작은 점 세 개(plFit)
 // v0.232 기간 메모(m.till): 칸 메모 첫 줄 자리에 이어지는 띠 (시안 design/period/v5) · 시작 · 끝 날 진한 막대 · 이름은 시작 날과 주 첫날
-let perRev=-1,perList=[];
-function perAll(){if(perRev===dataRev)return perList;perRev=dataRev;perList=[];Object.keys(S.memos||{}).forEach(k0=>(S.memos[k0]||[]).forEach(m=>{if(m&&m.till&&m.till>k0&&!m.shared)perList.push({k0,m});}));perList.sort((a,b)=>a.k0<b.k0?-1:a.k0>b.k0?1:0);return perList;}
+// v0.233 가족 메모도 기간 띠 (♥ · 기본 가족 색, pc 로 띠 색 고름) · 받은 가족 메모(서버)도
+let perRev=-1,perFm=null,perList=[];
+function perAll(){const fm=S.link&&S.fam2&&S.syncSettings.receiveFamilyMemo!==false?S.fam2.memos:null;if(perRev===dataRev&&perFm===fm)return perList;perRev=dataRev;perFm=fm;perList=[];const r=role();
+  Object.keys(S.memos||{}).forEach(k0=>(S.memos[k0]||[]).forEach(m=>{if(m&&m.till&&m.till>k0&&String(m.text||'').trim()&&(m.by===r||(m.shared&&S.syncSettings.receiveFamilyMemo!==false)))perList.push({k0,m});}));
+  if(fm)Object.entries(fm).forEach(([id,v])=>{if(v.till&&v.till>v.date&&v.by!==S.link.uid)perList.push({k0:v.date,m:{id:'s:'+id,sid:id,text:v.text,shared:true,srv:true,by:'u:'+v.by,till:v.till,pc:v.pc||''}});});
+  perList.sort((a,b)=>a.k0<b.k0?-1:a.k0>b.k0?1:0);return perList;}
 const perOn=k=>perAll().filter(p=>p.k0<=k&&k<=p.m.till);
 const PER_COL={'#fff1c4':'#f2c037','#ffd9e4':'#ee7d9f','#ffe0c7':'#f08a3c','#d6f5df':'#4fb874','#d2f1ef':'#3fb0a6','#d9ecff':'#5b97ec','#e8eaee':'#8d95a1'};
 const perCol=c=>PER_COL[c]||c||'#f08a3c';
+const perMc=m=>m.shared?(m.pc||m.color?perCol(m.pc||m.color):'var(--fam)'):perCol(m.color);   // 띠 색: 가족 메모는 고른 색(pc) · 없으면 가족 색
+const perName=m=>(m.shared?'♥ ':'')+firstLine(m.text);
 function perPill(k,d){const p=perOn(k)[0];if(!p)return '';const L=leadOf(d),s=k===p.k0||L===0,x=k===p.m.till,e=x||L===6;
-  return `<div class="pl pvl${s?' s':''}${e?' e':''}${k===p.k0?' b':''}${x?' x':''}" style="--pc:${perCol(p.m.color)}">${s?esc(firstLine(p.m.text)):'&nbsp;'}</div>`;}
+  return `<div class="pl pvl${s?' s':''}${e?' e':''}${k===p.k0?' b':''}${x?' x':''}" style="--pc:${perMc(p.m)}">${s?esc(perName(p.m)):'&nbsp;'}</div>`;}
 function capPills(pl,mx){
   if(pl.length<=mx)return pl;
   const n=pl.length-mx,out=pl.slice(0,mx),s=out[mx-1],i=s.indexOf('>');
@@ -176,7 +182,7 @@ function calPanel(y,m){
     // 가족 · 나만은 색으로 구분 (♥ · 🔒 는 아래 설명 줄에 한 번만)
     const pst=x=>`${x.done?' done':''}" ${x.color?`style="--mc:${esc(x.color)}"`:''}`;
     if(!sharing&&wlHas(k))pills.push(`<div class="pl wl">📋 ${esc(wlName())}</div>`);   // 업무 일지: 메모 맨 위 · 메모와 같은 높이 · 공유 그림엔 안 나옴
-    fam.forEach(x=>pills.push(`<div class="pl fam${pst(x)}>${linkify(firstLine(x.text))}</div>`));
+    fam.filter(x=>!x.till).forEach(x=>pills.push(`<div class="pl fam${pst(x)}>${linkify(firstLine(x.text))}</div>`));
     if(!sharing)mine.filter(x=>!x.till).forEach(x=>pills.push(`<div class="pl my${pst(x)}>${linkify(firstLine(x.text))}</div>`));
     boardOnDate(k).filter(n=>!sharing||n.shared).forEach(n=>pills.push(`<div class="pl ${n.shared?'fam':'my'}">📝 ${esc(piLabel(n))}</div>`));
     ddayHits(k).forEach(x=>pills.push(`<div class="pl dd">${ico(x.emoji||'⭐')} ${esc(x.name)}</div>`));

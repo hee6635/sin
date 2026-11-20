@@ -870,6 +870,19 @@ await t('쓴 사람: 할 일 · 완료를 올리고 바꿈 · 가족은 못 바�
   await assertFails(sendMemo('g1', 'td2', memo({ todo: 1 }), 1));
 });
 
+await G('v0.233 가족 메모 기간 띠');
+await t('끝 날 · 띠 색을 올리고 바꿈 · 이상한 값 막힘', async () => {
+  await fresh3();
+  const m0 = memo();
+  await assertSucceeds(sendMemo('g1', 'pd1', memo({ till: '2099-12-31', pc: '#d9ecff' })));
+  await assertSucceeds(updateDoc(doc(db('g1'), 'households', H, 'memos', 'pd1'), { till: '2099-12-31', pc: '#ffe0c7', updatedAt: serverTimestamp() }));
+  await assertSucceeds(updateDoc(doc(db('g1'), 'households', H, 'memos', 'pd1'), { till: deleteField(), pc: deleteField(), updatedAt: serverTimestamp() }));
+  await assertFails(sendMemo('g1', 'pd2', memo({ till: m0.date }), 1));
+  await assertFails(sendMemo('g1', 'pd3', memo({ till: '2099-12-31', pc: 'red' }), 1));
+  await assertFails(sendMemo('g1', 'pd4', memo({ pc: '#d9ecff' }), 1));
+  await assertFails(sendMemo('g1', 'pd5', memo({ till: 20991231 }), 1));
+});
+
 await G('v0.150 관리자: 내 번호 · 무료 건수');
 const adb = () => (dbs['__adm'] ||= env.authenticatedContext('adm1', { email: ADM, email_verified: true }).firestore());
 const fakeAdb = () => (dbs['__fake'] ||= env.authenticatedContext('fk1', { email: ADM, email_verified: false }).firestore());

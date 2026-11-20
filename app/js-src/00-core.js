@@ -63,7 +63,7 @@ function famCleanMember(m,id){
 function famCleanMemo(v,t){
   if(!isObj(v)||!okDate(v.date)||!okId(v.by))return null;
   return {by:v.by,byName:cutTxt(v.byName,12)||'가족',date:v.date,text:cutMulti(v.text,200),to:Array.isArray(v.to)?v.to.filter(okId).slice(0,12):null,
-    rev:Math.max(0,Math.min(1e6,Math.round(+v.rev)||0)),time:/^\d\d:\d\d$/.test(v.time||'')?v.time:'',al:(v.al==='0'||v.al==='10')?v.al:'',t:+t||+v.t||Date.now(),...(v.moved===true?{moved:true}:{}),...(v.todo===true?{todo:true,done:v.done===true}:{})};
+    rev:Math.max(0,Math.min(1e6,Math.round(+v.rev)||0)),time:/^\d\d:\d\d$/.test(v.time||'')?v.time:'',al:(v.al==='0'||v.al==='10')?v.al:'',t:+t||+v.t||Date.now(),...(v.moved===true?{moved:true}:{}),...(v.todo===true?{todo:true,done:v.done===true}:{}),...(okDate(v.till)&&v.till>v.date?{till:v.till,...(/^#[0-9a-f]{6}$/i.test(v.pc||'')?{pc:v.pc}:{})}:{})};
 }
 function famCleanReq(v,t,u){
   if(!isObj(v)||!okDate(v.date))return null;
@@ -470,7 +470,7 @@ function normalize(o){
   for(const [k,v] of Object.entries(s.memos||{})){
     if(!okDate(k))continue;
     const list=Array.isArray(v)?v:typeof v==='string'?[{text:v,shared:false}]:[{text:(v&&v.text)||'',shared:!!(v&&v.shared)}];
-    const clean=list.filter(x=>x&&x.text).map(x=>({id:x.id||uid(),text:String(x.text),shared:!!x.shared,by:x.by||'host',t:x.t||Date.now(),...(okDate(x.till)&&x.till>k&&!x.shared?{till:x.till}:{}),...(x.notify?{notify:true}:{}),...(Array.isArray(x.to)&&x.to.length?{to:x.to.filter(u=>typeof u==='string').slice(0,12)}:{}),...(/^#[0-9a-f]{6}$/i.test(x.color||'')?{color:x.color}:{}),...(x.todo?{todo:true}:{}),...(x.todo&&x.done?{done:true}:{}),...(/^\d{1,2}:\d\d$/.test(x.time||'')?{time:x.time,...(x.al==='0'||x.al==='10'?{al:x.al}:{})}:{})}));   // 메모 색 · 할 일 · 시간 · 알림은 내 폰에만 (다시 켜도 남게)
+    const clean=list.filter(x=>x&&x.text).map(x=>({id:x.id||uid(),text:String(x.text),shared:!!x.shared,by:x.by||'host',t:x.t||Date.now(),...(okDate(x.till)&&x.till>k?{till:x.till,...(x.shared&&/^#[0-9a-f]{6}$/i.test(x.pc||'')?{pc:x.pc}:{})}:{}),...(x.notify?{notify:true}:{}),...(Array.isArray(x.to)&&x.to.length?{to:x.to.filter(u=>typeof u==='string').slice(0,12)}:{}),...(/^#[0-9a-f]{6}$/i.test(x.color||'')?{color:x.color}:{}),...(x.todo?{todo:true}:{}),...(x.todo&&x.done?{done:true}:{}),...(/^\d{1,2}:\d\d$/.test(x.time||'')?{time:x.time,...(x.al==='0'||x.al==='10'?{al:x.al}:{})}:{})}));   // 메모 색 · 할 일 · 시간 · 알림은 내 폰에만 (다시 켜도 남게)
     if(clean.length)mm[k]=clean;
   }
   // 예전 "가족 메모"(게스트가 쓴 것)는 가족 메모로 합침
@@ -653,7 +653,9 @@ function widgetJson(){
     const vm=visibleMemos(k),m1=vm.find(x=>x.shared)||vm[0],bd=boardOnDate(k)[0],dd=ddayHits(k)[0];
     const wm=t=>linkParts(firstLine(t)).map(q=>q.u?'\u0001'+linkUrl(q.u)+'\u0003링크\u0002':q.t).join('');   // 주소는 앱처럼 "링크"(위젯이 파랗게 그림)
     const ml=[],wl1=wlHas(k);if(wl1)ml.push('📋 '+wlName());   // 업무 일지: 메모 맨 위 한 줄(표시만 · 글은 안 보냄) → 위젯은 wl:1 로 첫 줄을 연보라로
-    const mld=[];vm.filter(x=>x.shared).concat(vm.filter(x=>!x.shared)).forEach(x=>{if(x.todo&&x.done)mld.push(ml.length);ml.push(wm(x.text));});   // mld: 완료한 할 일 줄 번호 → 위젯이 줄 긋고 흐리게boardOnDate(k).forEach(n=>ml.push(wm(piLabel(n))));ddayHits(k).forEach(x=>ml.push(x.name));
+    // v0.233 기간 띠: 업무 일지 다음 줄 (pv: 색 · s 왼쪽 끝 · e 오른쪽 끝 · b 진짜 시작 · x 진짜 끝) · 띠로 보이는 메모는 메모 줄에서 뺌
+    let pv=null,pv0=null;{const p0=pers?null:perOn(k)[0];if(p0){const L=leadOf(d),pc=perMc(p0.m);pv={c:cssHex(pc)||'#f08a3c',...(k===p0.k0||L===0?{s:1}:{}),...(p0.m.till===k||L===6?{e:1}:{}),...(k===p0.k0?{b:1}:{}),...(p0.m.till===k?{x:1}:{})};ml.push(pv.s?perName(p0.m).slice(0,40):' ');pv0=p0;}}
+    const mld=[];vm.filter(x=>x.shared&&!x.till).concat(vm.filter(x=>!x.shared&&!x.till)).forEach(x=>{if(x.todo&&x.done)mld.push(ml.length);ml.push(wm(x.text));});   // mld: 완료한 할 일 줄 번호 → 위젯이 줄 긋고 흐리게boardOnDate(k).forEach(n=>ml.push(wm(piLabel(n))));ddayHits(k).forEach(x=>ml.push(x.name));
     const fm=vm.filter(x=>x.shared).slice(0,3).map(x=>wm(x.text).slice(0,40));   // 가족 메모(♥): 가족 달력(보기만)에도 보이는 것 — 한 달 위젯에서 다른 사람 달력을 볼 때 씀
     people.forEach((p,j)=>{
       const m=fam[j];let key='',col=null;
@@ -684,8 +686,8 @@ function widgetJson(){
       }catch(e){}}
     });
     const rq0=rqRing((S.requests||[]).filter(r=>r.date===k&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r)).slice(3),   // 요청 링 (한 달 위젯 · 칸 채우기 모양): ask · hold · ok · no — 달력과 같은 기준(답한 요청은 3일 뒤 사라짐)
-      nfm=vm.filter(x=>x.shared&&x.text.trim()).length,   // 메모 줄 맨 앞 nfm 개가 가족 메모(♥) — 위젯이 연보라 칸으로 그림
-      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&S.ovDot!==false&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',...((c||rest)?{tn:String(typeOf(sh).name||sh).slice(0,5)}:{}),bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · '),s:wlSecTexts(k)}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
+      nfm=vm.filter(x=>x.shared&&!x.till&&x.text.trim()).length,   // 메모 줄 맨 앞 nfm 개가 가족 메모(♥) — 위젯이 연보라 칸으로 그림
+      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&S.ovDot!==false&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',...((c||rest)?{tn:String(typeOf(sh).name||sh).slice(0,5)}:{}),bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(pv?{pv}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · '),s:wlSecTexts(k)}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
     if(i<-6||i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({...base,far:i<-6?2:1,stk:stampsOn(k).slice(0,4).map(x=>{const o=mapStk(x);delete o.id;delete o.b;return o;}),ms:ml.slice(0,3).map(x=>String(x||'').slice(0,40)),...(mld.some(i=>i<3)?{msd:mld.filter(i=>i<3)}:{}),
       ...(fm.length?{fm}:{}),...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 먼 날(지난 날 · 2주 뒤부터): 큰 창에는 스티커 · 메모를 안 싣고 앱에서 보게 함
     const sa=stampsOn(k).slice(0,12).map(mapStk);
@@ -694,6 +696,7 @@ function widgetJson(){
     const mi=[];   // 위젯 창에서 크게 보여줄 메모 · 할 일 (r: m=메모 할 일(체크) · l=포스트잇 체크 줄 · t=글만 / tm=시간 · c=색)
     const MI=40;
     vm.forEach(x=>{if(mi.length>=MI)return;const it={r:x.todo&&(!x.shared||x.by===role())?'m':'t',id:String(x.id),t:wm(x.text).slice(0,160),d:!!(x.todo&&x.done)};if(x.time)it.tm=tfmt(x.time);const cc=x.color?cssHex(x.color):'';if(cc)it.c=cc;if(x.shared){it.f=1;if(x.by!==role())it.o=1;}mi.push(it);});
+    if(pv0&&pv0.k0!==k)mi.unshift({r:'t',t:(firstLine(pv0.m.text)+` · ${md(pv0.k0)} ~ ${md(pv0.m.till)}`).slice(0,160),d:false,...(pv0.m.shared?{f:1,...(pv0.m.by!==role()?{o:1}:{})}:{})});   // v0.233 기간 띠 가운데 날: 위젯 날짜 창에도 한 줄
     boardOnDate(k).forEach(n=>{if(n.type==='list'){if(mi.length<MI)mi.push({r:'t',t:('☑ '+(n.title||'할 일')).slice(0,60),d:false});(n.lines||[]).slice(0,12).forEach(l=>{if(mi.length<MI)mi.push({r:'l',pid:String(n.id),lid:String(l.id),t:wm(l.text).slice(0,120),d:!!l.done});});}else if(mi.length<MI)mi.push({r:'t',t:wm(n.text).slice(0,160),d:false});});
     const chn=compHol(k);
     days.push({...base,...(i===0||i===1?wxWidget(d):{}),stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40)),...(mld.some(i=>i<4)?{msd:mld.filter(i=>i<4)}:{}),sa,mi,

@@ -457,7 +457,7 @@ class WidgetDayActivity : Activity() {
                     val dn = WidgetRenderer.doneLines(day)
                     for (i in 0 until ms.length()) {
                         val t = ms.optString(i, "")
-                        if (t.isNotEmpty()) content.addView(memoRow(JSONObject().put("r", "t").put("t", t).put("d", i in dn), pal))
+                        if (t.isNotBlank()) content.addView(memoRow(JSONObject().put("r", "t").put("t", t).put("d", i in dn), pal))
                     }
                 }
 

@@ -63,7 +63,7 @@ function famCleanMember(m,id){
 function famCleanMemo(v,t){
   if(!isObj(v)||!okDate(v.date)||!okId(v.by))return null;
   return {by:v.by,byName:cutTxt(v.byName,12)||'가족',date:v.date,text:cutMulti(v.text,200),to:Array.isArray(v.to)?v.to.filter(okId).slice(0,12):null,
-    rev:Math.max(0,Math.min(1e6,Math.round(+v.rev)||0)),time:/^\d\d:\d\d$/.test(v.time||'')?v.time:'',al:(v.al==='0'||v.al==='10')?v.al:'',t:+t||+v.t||Date.now(),...(v.moved===true?{moved:true}:{}),...(v.todo===true?{todo:true,done:v.done===true}:{})};
+    rev:Math.max(0,Math.min(1e6,Math.round(+v.rev)||0)),time:/^\d\d:\d\d$/.test(v.time||'')?v.time:'',al:(v.al==='0'||v.al==='10')?v.al:'',t:+t||+v.t||Date.now(),...(v.moved===true?{moved:true}:{}),...(v.todo===true?{todo:true,done:v.done===true}:{}),...(okDate(v.till)&&v.till>v.date?{till:v.till,...(/^#[0-9a-f]{6}$/i.test(v.pc||'')?{pc:v.pc}:{})}:{})};
 }
 function famCleanReq(v,t,u){
   if(!isObj(v)||!okDate(v.date))return null;
@@ -470,7 +470,7 @@ function normalize(o){
   for(const [k,v] of Object.entries(s.memos||{})){
     if(!okDate(k))continue;
     const list=Array.isArray(v)?v:typeof v==='string'?[{text:v,shared:false}]:[{text:(v&&v.text)||'',shared:!!(v&&v.shared)}];
-    const clean=list.filter(x=>x&&x.text).map(x=>({id:x.id||uid(),text:String(x.text),shared:!!x.shared,by:x.by||'host',t:x.t||Date.now(),...(okDate(x.till)&&x.till>k&&!x.shared?{till:x.till}:{}),...(x.notify?{notify:true}:{}),...(Array.isArray(x.to)&&x.to.length?{to:x.to.filter(u=>typeof u==='string').slice(0,12)}:{}),...(/^#[0-9a-f]{6}$/i.test(x.color||'')?{color:x.color}:{}),...(x.todo?{todo:true}:{}),...(x.todo&&x.done?{done:true}:{}),...(/^\d{1,2}:\d\d$/.test(x.time||'')?{time:x.time,...(x.al==='0'||x.al==='10'?{al:x.al}:{})}:{})}));   // 메모 색 · 할 일 · 시간 · 알림은 내 폰에만 (다시 켜도 남게)
+    const clean=list.filter(x=>x&&x.text).map(x=>({id:x.id||uid(),text:String(x.text),shared:!!x.shared,by:x.by||'host',t:x.t||Date.now(),...(okDate(x.till)&&x.till>k?{till:x.till,...(x.shared&&/^#[0-9a-f]{6}$/i.test(x.pc||'')?{pc:x.pc}:{})}:{}),...(x.notify?{notify:true}:{}),...(Array.isArray(x.to)&&x.to.length?{to:x.to.filter(u=>typeof u==='string').slice(0,12)}:{}),...(/^#[0-9a-f]{6}$/i.test(x.color||'')?{color:x.color}:{}),...(x.todo?{todo:true}:{}),...(x.todo&&x.done?{done:true}:{}),...(/^\d{1,2}:\d\d$/.test(x.time||'')?{time:x.time,...(x.al==='0'||x.al==='10'?{al:x.al}:{})}:{})}));   // 메모 색 · 할 일 · 시간 · 알림은 내 폰에만 (다시 켜도 남게)
     if(clean.length)mm[k]=clean;
   }
   // 예전 "가족 메모"(게스트가 쓴 것)는 가족 메모로 합침
@@ -653,7 +653,9 @@ function widgetJson(){
     const vm=visibleMemos(k),m1=vm.find(x=>x.shared)||vm[0],bd=boardOnDate(k)[0],dd=ddayHits(k)[0];
     const wm=t=>linkParts(firstLine(t)).map(q=>q.u?'\u0001'+linkUrl(q.u)+'\u0003링크\u0002':q.t).join('');   // 주소는 앱처럼 "링크"(위젯이 파랗게 그림)
     const ml=[],wl1=wlHas(k);if(wl1)ml.push('📋 '+wlName());   // 업무 일지: 메모 맨 위 한 줄(표시만 · 글은 안 보냄) → 위젯은 wl:1 로 첫 줄을 연보라로
-    const mld=[];vm.filter(x=>x.shared).concat(vm.filter(x=>!x.shared)).forEach(x=>{if(x.todo&&x.done)mld.push(ml.length);ml.push(wm(x.text));});   // mld: 완료한 할 일 줄 번호 → 위젯이 줄 긋고 흐리게boardOnDate(k).forEach(n=>ml.push(wm(piLabel(n))));ddayHits(k).forEach(x=>ml.push(x.name));
+    // v0.233 기간 띠: 업무 일지 다음 줄 (pv: 색 · s 왼쪽 끝 · e 오른쪽 끝 · b 진짜 시작 · x 진짜 끝) · 띠로 보이는 메모는 메모 줄에서 뺌
+    let pv=null,pv0=null;{const p0=pers?null:perOn(k)[0];if(p0){const L=leadOf(d),pc=perMc(p0.m);pv={c:cssHex(pc)||'#f08a3c',...(k===p0.k0||L===0?{s:1}:{}),...(p0.m.till===k||L===6?{e:1}:{}),...(k===p0.k0?{b:1}:{}),...(p0.m.till===k?{x:1}:{})};ml.push(pv.s?perName(p0.m).slice(0,40):' ');pv0=p0;}}
+    const mld=[];vm.filter(x=>x.shared&&!x.till).concat(vm.filter(x=>!x.shared&&!x.till)).forEach(x=>{if(x.todo&&x.done)mld.push(ml.length);ml.push(wm(x.text));});   // mld: 완료한 할 일 줄 번호 → 위젯이 줄 긋고 흐리게boardOnDate(k).forEach(n=>ml.push(wm(piLabel(n))));ddayHits(k).forEach(x=>ml.push(x.name));
     const fm=vm.filter(x=>x.shared).slice(0,3).map(x=>wm(x.text).slice(0,40));   // 가족 메모(♥): 가족 달력(보기만)에도 보이는 것 — 한 달 위젯에서 다른 사람 달력을 볼 때 씀
     people.forEach((p,j)=>{
       const m=fam[j];let key='',col=null;
@@ -684,8 +686,8 @@ function widgetJson(){
       }catch(e){}}
     });
     const rq0=rqRing((S.requests||[]).filter(r=>r.date===k&&(!r.srv||r.dir==='in')).map(r=>r.st==='applied'?{...r,st:'accepted'}:r)).slice(3),   // 요청 링 (한 달 위젯 · 칸 채우기 모양): ask · hold · ok · no — 달력과 같은 기준(답한 요청은 3일 뒤 사라짐)
-      nfm=vm.filter(x=>x.shared&&x.text.trim()).length,   // 메모 줄 맨 앞 nfm 개가 가족 메모(♥) — 위젯이 연보라 칸으로 그림
-      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&S.ovDot!==false&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',...((c||rest)?{tn:String(typeOf(sh).name||sh).slice(0,5)}:{}),bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · '),s:wlSecTexts(k)}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
+      nfm=vm.filter(x=>x.shared&&!x.till&&x.text.trim()).length,   // 메모 줄 맨 앞 nfm 개가 가족 메모(♥) — 위젯이 연보라 칸으로 그림
+      base={k,w:d.getDay(),m:d.getMonth()+1,d:d.getDate(),ov:!pers&&S.ovDot!==false&&!!(S.overrides&&S.overrides[k]),hol:hol||'',...holPair(hol),t:(c||rest)?sh:'',...((c||rest)?{tn:String(typeOf(sh).name||sh).slice(0,5)}:{}),bg:c?cssHex(c.bg):'',fg:c?cssHex(c.fg):'',...(rq0?{rq:rq0}:{}),...(nfm?{nf:Math.min(nfm,4)}:{}),...(pv?{pv}:{}),...(wl1?{wl:1,wlr:{n:wlName(),c:wlCounts(k).map(([sc,n])=>`${sc.n} ${n}`).join(' · '),s:wlSecTexts(k)}}:{}),...(c&&!rest&&timesCustom(sh)?{wt:`${timesOf(sh).start}~${timesOf(sh).end}`,wn:shiftLabel(sh)}:{})};   // wt · wn: 근무 시간을 정해 둔 근무 날 — 위젯 날짜 창에 "주간 06:00~18:00"
     if(i<-6||i>=14){const chf=compHol(k),anf=ddayHits(k);days.push({...base,far:i<-6?2:1,stk:stampsOn(k).slice(0,4).map(x=>{const o=mapStk(x);delete o.id;delete o.b;return o;}),ms:ml.slice(0,3).map(x=>String(x||'').slice(0,40)),...(mld.some(i=>i<3)?{msd:mld.filter(i=>i<3)}:{}),
       ...(fm.length?{fm}:{}),...(chf?{ch:String(chf).slice(0,30)}:{}),...(anf.length?{an:anf.slice(0,4).map(x=>(icoTxt(x.emoji||'⭐','⭐')+' '+x.name).slice(0,36))}:{})});continue;}   // 먼 날(지난 날 · 2주 뒤부터): 큰 창에는 스티커 · 메모를 안 싣고 앱에서 보게 함
     const sa=stampsOn(k).slice(0,12).map(mapStk);
@@ -694,6 +696,7 @@ function widgetJson(){
     const mi=[];   // 위젯 창에서 크게 보여줄 메모 · 할 일 (r: m=메모 할 일(체크) · l=포스트잇 체크 줄 · t=글만 / tm=시간 · c=색)
     const MI=40;
     vm.forEach(x=>{if(mi.length>=MI)return;const it={r:x.todo&&(!x.shared||x.by===role())?'m':'t',id:String(x.id),t:wm(x.text).slice(0,160),d:!!(x.todo&&x.done)};if(x.time)it.tm=tfmt(x.time);const cc=x.color?cssHex(x.color):'';if(cc)it.c=cc;if(x.shared){it.f=1;if(x.by!==role())it.o=1;}mi.push(it);});
+    if(pv0&&pv0.k0!==k)mi.unshift({r:'t',t:(firstLine(pv0.m.text)+` · ${md(pv0.k0)} ~ ${md(pv0.m.till)}`).slice(0,160),d:false,...(pv0.m.shared?{f:1,...(pv0.m.by!==role()?{o:1}:{})}:{})});   // v0.233 기간 띠 가운데 날: 위젯 날짜 창에도 한 줄
     boardOnDate(k).forEach(n=>{if(n.type==='list'){if(mi.length<MI)mi.push({r:'t',t:('☑ '+(n.title||'할 일')).slice(0,60),d:false});(n.lines||[]).slice(0,12).forEach(l=>{if(mi.length<MI)mi.push({r:'l',pid:String(n.id),lid:String(l.id),t:wm(l.text).slice(0,120),d:!!l.done});});}else if(mi.length<MI)mi.push({r:'t',t:wm(n.text).slice(0,160),d:false});});
     const chn=compHol(k);
     days.push({...base,...(i===0||i===1?wxWidget(d):{}),stk,memo:String(memo||'').slice(0,40),ms:ml.slice(0,4).map(x=>String(x||'').slice(0,40)),...(mld.some(i=>i<4)?{msd:mld.filter(i=>i<4)}:{}),sa,mi,
@@ -1316,13 +1319,19 @@ function bwrapHtml(d,k,pop){
 }
 // 메모가 줄 수(mx)보다 많으면: 보이는 줄은 그대로 두고 마지막 줄 끝에 작은 회색 "+n" (n = 더 있는 메모 수 · 10개 이상은 9+) — 위젯 칸과 같은 표시. 글자가 잘리면 끝에 작은 점 세 개(plFit)
 // v0.232 기간 메모(m.till): 칸 메모 첫 줄 자리에 이어지는 띠 (시안 design/period/v5) · 시작 · 끝 날 진한 막대 · 이름은 시작 날과 주 첫날
-let perRev=-1,perList=[];
-function perAll(){if(perRev===dataRev)return perList;perRev=dataRev;perList=[];Object.keys(S.memos||{}).forEach(k0=>(S.memos[k0]||[]).forEach(m=>{if(m&&m.till&&m.till>k0&&!m.shared)perList.push({k0,m});}));perList.sort((a,b)=>a.k0<b.k0?-1:a.k0>b.k0?1:0);return perList;}
+// v0.233 가족 메모도 기간 띠 (♥ · 기본 가족 색, pc 로 띠 색 고름) · 받은 가족 메모(서버)도
+let perRev=-1,perFm=null,perList=[];
+function perAll(){const fm=S.link&&S.fam2&&S.syncSettings.receiveFamilyMemo!==false?S.fam2.memos:null;if(perRev===dataRev&&perFm===fm)return perList;perRev=dataRev;perFm=fm;perList=[];const r=role();
+  Object.keys(S.memos||{}).forEach(k0=>(S.memos[k0]||[]).forEach(m=>{if(m&&m.till&&m.till>k0&&String(m.text||'').trim()&&(m.by===r||(m.shared&&S.syncSettings.receiveFamilyMemo!==false)))perList.push({k0,m});}));
+  if(fm)Object.entries(fm).forEach(([id,v])=>{if(v.till&&v.till>v.date&&v.by!==S.link.uid)perList.push({k0:v.date,m:{id:'s:'+id,sid:id,text:v.text,shared:true,srv:true,by:'u:'+v.by,till:v.till,pc:v.pc||''}});});
+  perList.sort((a,b)=>a.k0<b.k0?-1:a.k0>b.k0?1:0);return perList;}
 const perOn=k=>perAll().filter(p=>p.k0<=k&&k<=p.m.till);
 const PER_COL={'#fff1c4':'#f2c037','#ffd9e4':'#ee7d9f','#ffe0c7':'#f08a3c','#d6f5df':'#4fb874','#d2f1ef':'#3fb0a6','#d9ecff':'#5b97ec','#e8eaee':'#8d95a1'};
 const perCol=c=>PER_COL[c]||c||'#f08a3c';
+const perMc=m=>m.shared?(m.pc||m.color?perCol(m.pc||m.color):'var(--fam)'):perCol(m.color);   // 띠 색: 가족 메모는 고른 색(pc) · 없으면 가족 색
+const perName=m=>(m.shared?'♥ ':'')+firstLine(m.text);
 function perPill(k,d){const p=perOn(k)[0];if(!p)return '';const L=leadOf(d),s=k===p.k0||L===0,x=k===p.m.till,e=x||L===6;
-  return `<div class="pl pvl${s?' s':''}${e?' e':''}${k===p.k0?' b':''}${x?' x':''}" style="--pc:${perCol(p.m.color)}">${s?esc(firstLine(p.m.text)):'&nbsp;'}</div>`;}
+  return `<div class="pl pvl${s?' s':''}${e?' e':''}${k===p.k0?' b':''}${x?' x':''}" style="--pc:${perMc(p.m)}">${s?esc(perName(p.m)):'&nbsp;'}</div>`;}
 function capPills(pl,mx){
   if(pl.length<=mx)return pl;
   const n=pl.length-mx,out=pl.slice(0,mx),s=out[mx-1],i=s.indexOf('>');
@@ -1349,7 +1358,7 @@ function calPanel(y,m){
     // 가족 · 나만은 색으로 구분 (♥ · 🔒 는 아래 설명 줄에 한 번만)
     const pst=x=>`${x.done?' done':''}" ${x.color?`style="--mc:${esc(x.color)}"`:''}`;
     if(!sharing&&wlHas(k))pills.push(`<div class="pl wl">📋 ${esc(wlName())}</div>`);   // 업무 일지: 메모 맨 위 · 메모와 같은 높이 · 공유 그림엔 안 나옴
-    fam.forEach(x=>pills.push(`<div class="pl fam${pst(x)}>${linkify(firstLine(x.text))}</div>`));
+    fam.filter(x=>!x.till).forEach(x=>pills.push(`<div class="pl fam${pst(x)}>${linkify(firstLine(x.text))}</div>`));
     if(!sharing)mine.filter(x=>!x.till).forEach(x=>pills.push(`<div class="pl my${pst(x)}>${linkify(firstLine(x.text))}</div>`));
     boardOnDate(k).filter(n=>!sharing||n.shared).forEach(n=>pills.push(`<div class="pl ${n.shared?'fam':'my'}">📝 ${esc(piLabel(n))}</div>`));
     ddayHits(k).forEach(x=>pills.push(`<div class="pl dd">${ico(x.emoji||'⭐')} ${esc(x.name)}</div>`));
@@ -4466,7 +4475,7 @@ function memoCard(m,k){
 function memoSection(k){
   const vm=visibleMemos(k),fam=vm.filter(x=>x.shared),mine=vm.filter(x=>!x.shared);
   const tabs='';
-  let body=(wlHas(k)?wlRowHtml(k):'')+perOn(k).filter(p=>p.k0!==k).map(p=>`<div class="mcard my per" data-act="per-open" data-k="${p.k0}" data-id="${esc(p.m.id)}" style="--pc:${perCol(p.m.color)}"><div class="mt2"><span class="tx">${esc(firstLine(p.m.text))}</span><div class="meta">기간 · ${md(p.k0)} ~ ${md(p.m.till)}</div></div></div>`).join('')+fam.map(m=>memoCard(m,k)).join('')+mine.map(m=>memoCard(m,k)).join('');
+  let body=(wlHas(k)?wlRowHtml(k):'')+perOn(k).filter(p=>p.k0!==k).map(p=>`<div class="mcard ${p.m.shared?'fam':'my'} per" data-act="per-open" data-k="${p.k0}" data-id="${esc(p.m.id)}"${p.m.srv?' data-srv="1"':''} style="--pc:${perMc(p.m)}"><div class="mt2"><span class="tx">${esc(perName(p.m))}</span><div class="meta">기간 · ${md(p.k0)} ~ ${md(p.m.till)}</div></div></div>`).join('')+fam.map(m=>memoCard(m,k)).join('')+mine.map(m=>memoCard(m,k)).join('');
   body+=boardOnDate(k).map(n=>`<div class="mcard ${n.shared?'fam':'my'}" data-act="open-board"><div class="mt2">📝 ${esc(piLabel(n))}<div class="meta">${cur.m+1}월 포스트잇 · 누르면 열려요</div></div></div>`).join('');
   // v0.155 빈 날 안내 글 없음 (입력칸만)
   if(!memoEdit)memoMode=role()==='host'?'my':'fam';   // 입력칸 한 줄 메모는 항상 나만 (가족에게는 "자세히"에서)
@@ -4486,12 +4495,12 @@ function memoSection(k){
 /* ---- 메모 자세히 (전체 화면): 색 · 할 일 · 시간/알림 · 나만/가족에게 ---- */
 const MEMO_COL=['#fff1c4','#ffd9e4','#ffe0c7','#d6f5df','#d2f1ef','#d9ecff','#e8eaee'];   // 연보라는 가족 메모 색과 닮아서 뺌 (이미 칠한 메모는 그대로)
 let mdDraft=null;
-const mdApply=(m,x)=>{['color','todo','done','time','al','till'].forEach(p=>{if(x[p]===undefined)delete m[p];else m[p]=x[p];});};
+const mdApply=(m,x)=>{['color','todo','done','time','al','till','pc'].forEach(p=>{if(x[p]===undefined)delete m[p];else m[p]=x[p];});};
 function mdPull(){const e=$('#mdText');if(e&&mdDraft)mdDraft.text=e.value;}
 function openMemoDetail(k,id){
   const rm=rmemoOf(id);if(rm){mdDraft={k,id:'',rep:rm.id,text:rm.text,color:rm.color||'',todo:!!rm.todo,done:false,time:rm.time||'',al:rm.al||'',shared:false,rr:{md:rm.md,sh:(rm.sh||[]).slice(),miss:rm.miss||'skip'}};renderMemoDetail();return;}
   const m=id?memosOf(k).find(x=>x.id===id):null,i=$('#memoInput');
-  mdDraft={k,id:m?m.id:'',text:m?m.text:(i?i.value:memoText)||'',color:m?(m.color||''):(S.lastMemoColor||''),todo:!!(m&&m.todo),done:!!(m&&m.done),time:(m&&m.time)||'',al:(m&&m.al)||'',till:(m&&m.till)||'',shared:m?!!m.shared:role()!=='host'};
+  mdDraft={k,id:m?m.id:'',text:m?m.text:(i?i.value:memoText)||'',color:m?(m.color||''):(S.lastMemoColor||''),todo:!!(m&&m.todo),done:!!(m&&m.done),time:(m&&m.time)||'',al:(m&&m.al)||'',till:(m&&m.till)||'',pc:(m&&(m.pc||(m.shared&&m.till&&m.color)))||'',shared:m?!!m.shared:role()!=='host'};
   renderMemoDetail();
 }
 function renderMemoDetail(){   // v0.158 새 모양 (시안 design/remain): 글 카드(메모 색) · 색 카드 · 줄 카드 · 나만/가족에게 C3
@@ -4507,7 +4516,8 @@ function renderMemoDetail(){   // v0.158 새 모양 (시안 design/remain): 글 
       ${npRow('check','할 일',`<label class="sw"><input type="checkbox" id="mdTodo" ${d.todo?'checked':''}><i></i></label>`)}
       ${npRow('clock','시간',d.time?`${tpick('mdTime',d.time)}<button class="xbtn" data-act="md-notime" aria-label="시간 없애기">${npi('x',16)}</button>`:`<button class="xbtn tplus" data-act="md-settime" aria-label="시간 정하기">${npi('x',16)}</button>`,d.time?{cls:'mdtrow'}:{tap:1,act:'md-settime',cls:'mdtrow'})}
       ${d.time?npRow('bell','알림',`<div class="npseg sm">${[['','없음'],['0','정시'],['10','10분 전']].map(([v,l])=>`<button class="${d.al===v?'on':''}" data-act="md-al" data-v="${v}">${l}</button>`).join('')}</div>`):''}
-      ${host&&!d.shared&&!d.rr&&!d.rep?npRow('calendar-days','기간',d.till?`<span class="mdtill">~</span>${tpick('mdTill',d.till,'','date')}<button class="xbtn" data-act="md-notill" aria-label="기간 없애기">${npi('x',16)}</button>`:`<button class="xbtn tplus" data-act="md-settill" aria-label="기간 정하기">${npi('x',16)}</button>`,d.till?{cls:'mdtrow'}:{tap:1,act:'md-settill',cls:'mdtrow'}):''}
+      ${(host||d.shared)&&!d.rr&&!d.rep?npRow('calendar-days','기간 띠',d.till?`<span class="mdtill">~</span>${tpick('mdTill',d.till,'','date')}<button class="xbtn" data-act="md-notill" aria-label="기간 없애기">${npi('x',16)}</button>`:`<button class="xbtn tplus" data-act="md-settill" aria-label="기간 정하기">${npi('x',16)}</button>`,d.till?{cls:'mdtrow'}:{tap:1,act:'md-settill',cls:'mdtrow'}):''}
+      ${d.shared&&d.till?npRow('palette','띠 색',`<div class="mdpc"><button class="${d.pc?'':'on'}" style="background:var(--fam)" data-act="md-pc" data-v="" aria-label="가족 색"></button>${MEMO_COL.map(c=>`<button class="${d.pc===c?'on':''}" style="background:${perCol(c)}" data-act="md-pc" data-v="${c}" aria-label="띠 색"></button>`).join('')}</div>`):''}
       ${host&&!d.shared&&!d.wl?npRow('repeat','반복',npVal(d.rr?esc(rrText(d.rr)):'안 함'),{tap:1,act:'md-rep'}):''}
     </div>
     ${d.rep?`<div class="pg-sec">${npRow('trash-2','반복 그만하기','',{tap:1,act:'rm-del',cls:'danger-row',attrs:` data-id="${esc(d.rep)}"`})}</div>`:''}
@@ -4523,7 +4533,8 @@ function mdSave(){
     Object.assign(r,{text,md:d.rr.md,sh:(d.rr.sh||[]).slice(),miss:d.rr.miss==='next'?'next':'skip'});['color','todo','time','al'].forEach(p=>{const v=p==='al'?(d.time&&d.al!==''?d.al:undefined):p==='todo'?(d.todo||undefined):(d[p]||undefined);if(v===undefined)delete r[p];else r[p]=v;});
     S.lastMemoColor=d.color||'';save();mdDraft=null;memoText='';memoEdit=null;closePage();memoFinish(d.k,`🔁 반복 메모 · ${rrText(r)}`);try{pushRemindersToNative();}catch(e){}return;
   }
-  const x={till:(!d.shared&&!d.rr&&d.till&&d.till>d.k)?d.till:undefined,color:(!d.shared&&d.color)||undefined,todo:d.todo||undefined,done:(d.todo&&d.done)||undefined,time:d.time||undefined,al:(d.time&&d.al!=='')?d.al:undefined};
+  const tl=(!d.rr&&d.till&&d.till>d.k)?d.till:undefined;
+  const x={till:tl,pc:(d.shared&&tl&&d.pc)||undefined,color:(!d.shared&&d.color)||undefined,todo:d.todo||undefined,done:(d.todo&&d.done)||undefined,time:d.time||undefined,al:(d.time&&d.al!=='')?d.al:undefined};
   const k=d.k,fam=d.shared,srv=!!S.link,isGuest=role()==='guest';
   const m=d.id?memosOf(k).find(y=>y.id===d.id):null;
   if(m){
@@ -4561,8 +4572,9 @@ function compMenu(id){const x=(S.companyHols||[]).find(y=>y.id===id);if(!x)retur
 let mmMove=null;
 function mmMoveTo(nk){const mv=mmMove;mmMove=null;if(!mv)return;const k=mv.k;if(!nk||nk===k)return;
   const m=memosOf(k).find(x=>x.id===mv.mid);if(!m)return;
+  const tl0=m.till;if(tl0)m.till=addK(tl0,Math.round((parse(nk)-parse(k))/864e5));   // v0.233 기간 띠는 끝 날도 같이 옮김
   S.memos[k]=memosOf(k).filter(x=>x!==m);tidyMemos(k);(S.memos[nk]=S.memos[nk]||[]).push(m);save();render();if(sheetKey===k&&sheetMode==='day')openDay(k);
-  toastUndo(`${md(nk)}로 옮겼어요`,()=>{S.memos[nk]=memosOf(nk).filter(x=>x!==m);tidyMemos(nk);(S.memos[k]=S.memos[k]||[]).push(m);save();render();if(sheetKey===k&&sheetMode==='day')openDay(k);});}
+  toastUndo(`${md(nk)}로 옮겼어요`,()=>{if(tl0)m.till=tl0;S.memos[nk]=memosOf(nk).filter(x=>x!==m);tidyMemos(nk);(S.memos[k]=S.memos[k]||[]).push(m);save();render();if(sheetKey===k&&sheetMode==='day')openDay(k);});}
 function openMemoMenu(mid){
   const rm=rmemoOf(mid);
   if(rm){openPop(`<div class="mh">반복 메모<b>${esc(firstLine(rm.text).slice(0,24))}</b></div><div class="hint" style="padding:6px 16px 0">${esc(rrText(rm))}</div>
@@ -4587,6 +4599,7 @@ function openMemoMenu(mid){
   openPop(`<div class="mh">${m.shared?'♥ 가족 메모':'🔒 나만 보는 메모'}<b>${esc(firstLine(m.text))}</b></div>
     ${own?`<button class="mi" data-act="mm-edit" data-mid="${mid}">✏️ 고치기</button>`:''}
     ${copyBtn}
+    ${own&&m.till?`<button class="mi" data-act="mm-edit" data-mid="${mid}">🗓 기간 띠<span class="mval">${md(k)} ~ ${md(m.till)} ›</span></button>`:''}
     ${own?`<button class="mi" data-act="mm-movepick" data-mid="${mid}">📅 날짜 옮기기<span class="mval">${md(k)} ›</span></button>`:''}
     ${own?(m.shared?`<button class="mi" data-act="mm-my" data-mid="${mid}">🔒 나만 보기로 바꾸기</button>`:`<button class="mi f" data-act="mm-fam" data-mid="${mid}">♥ 가족 메모로 바꾸기</button>`):''}
     <button class="mi d" data-act="mm-del" data-mid="${mid}">🗑 삭제</button>
@@ -7533,11 +7546,12 @@ document.addEventListener('click',e=>{
     case 'memo-chk':{const rm=rmemoOf(t.dataset.mid);if(rm){const k=sheetKey,a=rm.done||[];rm.done=a.includes(k)?a.filter(x=>x!==k):[...a,k].slice(-120);if(!rm.done.length)delete rm.done;save();render();openDay(sheetKey);break;}const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);if(m){m.done=!m.done;if(!m.done)delete m.done;save();render();openDay(sheetKey);}break;}
     case 'md-back':mdDraft=null;closePage();break;
     case 'md-col':mdPull();mdDraft.color=mdDraft.color===t.dataset.v?'':t.dataset.v;renderMemoDetail();break;
-    case 'md-share':mdPull();mdDraft.shared=t.dataset.v==='1';MO.flip($('#page .pg-b'),renderMemoDetail);break;
+    case 'md-share':mdPull();mdDraft.shared=t.dataset.v==='1';if(mdDraft.shared&&!mdDraft.pc&&mdDraft.color)mdDraft.pc=mdDraft.color;MO.flip($('#page .pg-b'),renderMemoDetail);break;
     case 'md-al':mdPull();mdDraft.al=t.dataset.v;renderMemoDetail();break;
     case 'md-settill':{mdPull();mdDraft.till=addK(mdDraft.k,2);renderMemoDetail();break;}   // v0.232 기간: 처음엔 사흘 (고쳐서 끝 날 고름)
     case 'md-notill':{mdPull();mdDraft.till='';renderMemoDetail();break;}
-    case 'per-open':openMemoDetail(t.dataset.k,t.dataset.id);break;
+    case 'per-open':if(t.dataset.srv)openDay(t.dataset.k);else openMemoDetail(t.dataset.k,t.dataset.id);break;
+    case 'md-pc':mdPull();mdDraft.pc=t.dataset.v||'';renderMemoDetail();break;   // v0.233 가족 메모 띠 색
     case 'md-settime':{mdPull();mdDraft.time='09:00';const pb=$('#page');const st0=pb&&pb.querySelector('.pg-b')?pb.querySelector('.pg-b').scrollTop:0;renderMemoDetail();   // v0.209 ＋가 돌며 ✕ · 시간 톡 · 알림 줄 스르르
       try{const pg=$('#page .pg-b');if(pg)pg.scrollTop=st0;if(!RMq()){const r=$('#page .mdtrow'),x=r&&r.querySelector('.xbtn'),tp=r&&r.querySelector('.tbtn'),al=r&&r.nextElementSibling;
         if(x)x.animate([{transform:'rotate(-135deg)',background:'var(--acc-soft)'},{transform:'none'}],{duration:420,easing:'cubic-bezier(.3,1.4,.5,1)'});
@@ -7578,6 +7592,7 @@ document.addEventListener('click',e=>{
       if(String(t.dataset.mid).startsWith('s:')){toast(S.link&&S.link.role==='host'?'가족이 쓴 메모예요 · 길게 누르면 복사하거나 지울 수 있어요':'가족이 쓴 메모는 고칠 수 없어요 · 길게 누르면 복사할 수 있어요');break;}
       const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);if(!m)break;
       if(m.by!==role()){toast(role()==='host'?'가족이 쓴 메모예요 · 길게 누르면 복사하거나 지울 수 있어요':'근무자가 쓴 메모는 고칠 수 없어요 · 길게 누르면 복사할 수 있어요');break;}
+      if(m.till){openMemoDetail(sheetKey,m.id);break;}   // v0.233 기간 띠 메모는 자세히에서 (기간도 같이 고침)
       memoEdit=m.id;memoText=m.text;memoMode=m.shared?'fam':'my';openDay(sheetKey);
       try{if(!RMq())medOpenFx();}catch(err){}   // v0.210 그 줄이 입력칸으로 스르르 펼쳐짐
       const i=$('#memoInput');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}
@@ -7596,6 +7611,7 @@ document.addEventListener('click',e=>{
       save();render();openDay(sheetKey);toast(m.shared?'♥ 가족 메모로 바꿨어요':'🔒 나만 보기로 바꿨어요');break;}
     case 'mm-edit':{
       const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);closePop();if(!m)break;
+      if(m.till){openMemoDetail(sheetKey,m.id);break;}   // v0.233 기간 띠 메모는 자세히에서
       memoEdit=m.id;memoText=m.text;memoMode=m.shared?'fam':'my';openDay(sheetKey);
       const i=$('#memoInput');if(i)i.focus();break;}
     case 'mm-movepick':{   // v0.198 날짜 옮기기: 날짜를 고르면 바로 옮김 (되돌리기)
@@ -9456,7 +9472,7 @@ async function famSyncMemos(){
   if(!S.link||!fbCfg()||!S.link.uid)return;
   const uid=S.link.uid,hid=S.link.hid,want={},others=famOthers().map(x=>x.uid);
   const toOf=m=>{const l=Array.isArray(m.to)&&m.to.length?m.to.filter(u=>others.includes(u)):others;return [...new Set([uid,...(l.length?l:others)])].sort();};
-  Object.keys(S.memos||{}).forEach(k=>(S.memos[k]||[]).forEach(m=>{if(m.shared&&m.by===role()&&String(m.text||'').trim())want[uid+'_'+m.id]={date:k,text:String(m.text).slice(0,200),nt:!!m.notify,mid:m.id,t:+m.t||0,td:!!m.todo,dn:!!(m.todo&&m.done),tm:/^\d\d:\d\d$/.test(m.time||'')?m.time:'',al:/^\d\d:\d\d$/.test(m.time||'')&&(m.al==='0'||m.al==='10')?m.al:'',to:toOf(m)};}));
+  Object.keys(S.memos||{}).forEach(k=>(S.memos[k]||[]).forEach(m=>{if(m.shared&&m.by===role()&&String(m.text||'').trim())want[uid+'_'+m.id]={date:k,text:String(m.text).slice(0,200),nt:!!m.notify,mid:m.id,t:+m.t||0,td:!!m.todo,dn:!!(m.todo&&m.done),tm:/^\d\d:\d\d$/.test(m.time||'')?m.time:'',al:/^\d\d:\d\d$/.test(m.time||'')&&(m.al==='0'||m.al==='10')?m.al:'',to:toOf(m),tl:m.till&&m.till>k?m.till:'',pc:m.till?(m.pc||m.color||''):''};}));
   const have={};Object.entries(S.fam2.memos||{}).forEach(([id,v])=>{if(v.by===uid)have[id]=v;});
   const {F,db}=await famReady();
   // v0.96 가족방에 들어오고 10분 안: 들어오기 전에 쓴 메모 옮기기 — 지난 날짜(가족 모두에게 보낸 것)는 한 문서로 묶고, 오늘 · 앞으로는 하나씩(무료 횟수 대신 moved)
@@ -9489,15 +9505,16 @@ async function famSyncMemos(){
       if(!mv&&remain<=0){famMemoWarn(id,'무료 횟수를 다 써서 가족 메모를 올리지 못했어요');continue;}if(mv)movedN++;else remain--;
       famBusyMemo[id]=1;
       const b=F.writeBatch(db);
-      b.set(ref,{by:uid,byName:S.link.name,date:w.date,text:w.text,to:w.to,createdAt:F.serverTimestamp(),updatedAt:F.serverTimestamp(),...(w.tm?{time:w.tm,...(w.al!==''?{al:w.al}:{})}:{}),...(mv?{moved:true}:{}),...(w.td?{todo:true,done:w.dn}:{})});   // 할 일 · 완료: 가족 폰엔 보기만
+      b.set(ref,{by:uid,byName:S.link.name,date:w.date,text:w.text,to:w.to,createdAt:F.serverTimestamp(),updatedAt:F.serverTimestamp(),...(w.tm?{time:w.tm,...(w.al!==''?{al:w.al}:{})}:{}),...(mv?{moved:true}:{}),...(w.td?{todo:true,done:w.dn}:{}),...(w.tl?{till:w.tl,...(w.pc?{pc:w.pc}:{})}:{})});   // 할 일 · 완료: 가족 폰엔 보기만 · v0.233 기간 띠
       b.update(famMember(F,db,hid,uid),mv?{moved:F.increment(1)}:{sent:F.increment(1)});
       b.commit().catch(e=>famMemoWarn(id,famMemoErr(e))).finally(()=>{delete famBusyMemo[id];});
-    }else if(h.text!==w.text||h.date!==w.date||(h.time||'')!==w.tm||(h.al||'')!==w.al||JSON.stringify([...(h.to||[])].sort())!==JSON.stringify(w.to)||!!h.todo!==w.td||!!h.done!==w.dn){
+    }else if(h.text!==w.text||h.date!==w.date||(h.time||'')!==w.tm||(h.al||'')!==w.al||JSON.stringify([...(h.to||[])].sort())!==JSON.stringify(w.to)||!!h.todo!==w.td||!!h.done!==w.dn||(h.till||'')!==w.tl||(h.pc||'')!==w.pc){
       famBusyMemo[id]=1;
       const patch={date:w.date,text:w.text,updatedAt:F.serverTimestamp()};
       if(JSON.stringify([...(h.to||[])].sort())!==JSON.stringify(w.to))patch.to=w.to;   // 받는 사람이 바뀌었거나, 옛 메모(to 없음)를 채움
       if((h.time||'')!==w.tm||(h.al||'')!==w.al){patch.time=w.tm?w.tm:F.deleteField();patch.al=w.al!==''?w.al:F.deleteField();}   // 시간 알림(색 · 할 일은 안 올림)
       if(!!h.todo!==w.td||!!h.done!==w.dn){patch.todo=w.td?true:F.deleteField();patch.done=w.td?w.dn:F.deleteField();}   // 할 일 · 완료 체크 (알림 없음)
+      if((h.till||'')!==w.tl||(h.pc||'')!==w.pc){patch.till=w.tl||F.deleteField();patch.pc=w.tl&&w.pc?w.pc:F.deleteField();}   // v0.233 기간 띠 · 띠 색
       if(w.nt)patch.rev=(+h.rev||0)+1;   // 고쳤다고 알리기를 고른 수정
       F.updateDoc(ref,patch).then(()=>{if(w.nt)famClearNotify(w.mid);}).catch(e=>famMemoWarn(id,famMemoErr(e))).finally(()=>{delete famBusyMemo[id];});
     }
@@ -9833,7 +9850,7 @@ function famOnMemos(snap){
 function famRemoteMemos(k){
   const L=S.link;if(!L||!S.fam2)return [];
   const out=Object.entries(S.fam2.memos||{}).filter(([id,v])=>v.date===k&&v.by!==L.uid)
-    .map(([id,v])=>({id:'s:'+id,sid:id,text:v.text,shared:true,by:'u:'+v.by,t:v.t,srv:true,time:v.time||'',al:v.al||'',...(v.todo?{todo:true,done:!!v.done}:{})}));   // 할 일 · 완료: 보기만
+    .map(([id,v])=>({id:'s:'+id,sid:id,text:v.text,shared:true,by:'u:'+v.by,t:v.t,srv:true,time:v.time||'',al:v.al||'',...(v.todo?{todo:true,done:!!v.done}:{}),...(v.till?{till:v.till,pc:v.pc||''}:{})}));   // 할 일 · 완료: 보기만
   Object.entries(S.fam2.arch||{}).forEach(([aid,a])=>{if(a.by===L.uid)return;a.items.forEach((x,i)=>{if(x.d===k)out.push({id:'a:'+aid+':'+i,text:x.t,shared:true,by:'u:'+a.by,t:0,srv:true,arch:true,time:x.tm||'',al:''});});});   // 옮겨 온 옛 메모 (보기만)
   return out;
 }

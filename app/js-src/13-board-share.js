@@ -168,7 +168,7 @@ function famOnMemos(snap){
 function famRemoteMemos(k){
   const L=S.link;if(!L||!S.fam2)return [];
   const out=Object.entries(S.fam2.memos||{}).filter(([id,v])=>v.date===k&&v.by!==L.uid)
-    .map(([id,v])=>({id:'s:'+id,sid:id,text:v.text,shared:true,by:'u:'+v.by,t:v.t,srv:true,time:v.time||'',al:v.al||'',...(v.todo?{todo:true,done:!!v.done}:{})}));   // 할 일 · 완료: 보기만
+    .map(([id,v])=>({id:'s:'+id,sid:id,text:v.text,shared:true,by:'u:'+v.by,t:v.t,srv:true,time:v.time||'',al:v.al||'',...(v.todo?{todo:true,done:!!v.done}:{}),...(v.till?{till:v.till,pc:v.pc||''}:{})}));   // 할 일 · 완료: 보기만
   Object.entries(S.fam2.arch||{}).forEach(([aid,a])=>{if(a.by===L.uid)return;a.items.forEach((x,i)=>{if(x.d===k)out.push({id:'a:'+aid+':'+i,text:x.t,shared:true,by:'u:'+a.by,t:0,srv:true,arch:true,time:x.tm||'',al:''});});});   // 옮겨 온 옛 메모 (보기만)
   return out;
 }

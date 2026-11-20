@@ -331,11 +331,12 @@ document.addEventListener('click',e=>{
     case 'memo-chk':{const rm=rmemoOf(t.dataset.mid);if(rm){const k=sheetKey,a=rm.done||[];rm.done=a.includes(k)?a.filter(x=>x!==k):[...a,k].slice(-120);if(!rm.done.length)delete rm.done;save();render();openDay(sheetKey);break;}const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);if(m){m.done=!m.done;if(!m.done)delete m.done;save();render();openDay(sheetKey);}break;}
     case 'md-back':mdDraft=null;closePage();break;
     case 'md-col':mdPull();mdDraft.color=mdDraft.color===t.dataset.v?'':t.dataset.v;renderMemoDetail();break;
-    case 'md-share':mdPull();mdDraft.shared=t.dataset.v==='1';MO.flip($('#page .pg-b'),renderMemoDetail);break;
+    case 'md-share':mdPull();mdDraft.shared=t.dataset.v==='1';if(mdDraft.shared&&!mdDraft.pc&&mdDraft.color)mdDraft.pc=mdDraft.color;MO.flip($('#page .pg-b'),renderMemoDetail);break;
     case 'md-al':mdPull();mdDraft.al=t.dataset.v;renderMemoDetail();break;
     case 'md-settill':{mdPull();mdDraft.till=addK(mdDraft.k,2);renderMemoDetail();break;}   // v0.232 기간: 처음엔 사흘 (고쳐서 끝 날 고름)
     case 'md-notill':{mdPull();mdDraft.till='';renderMemoDetail();break;}
-    case 'per-open':openMemoDetail(t.dataset.k,t.dataset.id);break;
+    case 'per-open':if(t.dataset.srv)openDay(t.dataset.k);else openMemoDetail(t.dataset.k,t.dataset.id);break;
+    case 'md-pc':mdPull();mdDraft.pc=t.dataset.v||'';renderMemoDetail();break;   // v0.233 가족 메모 띠 색
     case 'md-settime':{mdPull();mdDraft.time='09:00';const pb=$('#page');const st0=pb&&pb.querySelector('.pg-b')?pb.querySelector('.pg-b').scrollTop:0;renderMemoDetail();   // v0.209 ＋가 돌며 ✕ · 시간 톡 · 알림 줄 스르르
       try{const pg=$('#page .pg-b');if(pg)pg.scrollTop=st0;if(!RMq()){const r=$('#page .mdtrow'),x=r&&r.querySelector('.xbtn'),tp=r&&r.querySelector('.tbtn'),al=r&&r.nextElementSibling;
         if(x)x.animate([{transform:'rotate(-135deg)',background:'var(--acc-soft)'},{transform:'none'}],{duration:420,easing:'cubic-bezier(.3,1.4,.5,1)'});
@@ -376,6 +377,7 @@ document.addEventListener('click',e=>{
       if(String(t.dataset.mid).startsWith('s:')){toast(S.link&&S.link.role==='host'?'가족이 쓴 메모예요 · 길게 누르면 복사하거나 지울 수 있어요':'가족이 쓴 메모는 고칠 수 없어요 · 길게 누르면 복사할 수 있어요');break;}
       const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);if(!m)break;
       if(m.by!==role()){toast(role()==='host'?'가족이 쓴 메모예요 · 길게 누르면 복사하거나 지울 수 있어요':'근무자가 쓴 메모는 고칠 수 없어요 · 길게 누르면 복사할 수 있어요');break;}
+      if(m.till){openMemoDetail(sheetKey,m.id);break;}   // v0.233 기간 띠 메모는 자세히에서 (기간도 같이 고침)
       memoEdit=m.id;memoText=m.text;memoMode=m.shared?'fam':'my';openDay(sheetKey);
       try{if(!RMq())medOpenFx();}catch(err){}   // v0.210 그 줄이 입력칸으로 스르르 펼쳐짐
       const i=$('#memoInput');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}
@@ -394,6 +396,7 @@ document.addEventListener('click',e=>{
       save();render();openDay(sheetKey);toast(m.shared?'♥ 가족 메모로 바꿨어요':'🔒 나만 보기로 바꿨어요');break;}
     case 'mm-edit':{
       const m=memosOf(sheetKey).find(x=>x.id===t.dataset.mid);closePop();if(!m)break;
+      if(m.till){openMemoDetail(sheetKey,m.id);break;}   // v0.233 기간 띠 메모는 자세히에서
       memoEdit=m.id;memoText=m.text;memoMode=m.shared?'fam':'my';openDay(sheetKey);
       const i=$('#memoInput');if(i)i.focus();break;}
     case 'mm-movepick':{   // v0.198 날짜 옮기기: 날짜를 고르면 바로 옮김 (되돌리기)

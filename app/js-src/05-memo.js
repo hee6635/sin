@@ -598,7 +598,7 @@ function memoCard(m,k){
 function memoSection(k){
   const vm=visibleMemos(k),fam=vm.filter(x=>x.shared),mine=vm.filter(x=>!x.shared);
   const tabs='';
-  let body=(wlHas(k)?wlRowHtml(k):'')+perOn(k).filter(p=>p.k0!==k).map(p=>`<div class="mcard my per" data-act="per-open" data-k="${p.k0}" data-id="${esc(p.m.id)}" style="--pc:${perCol(p.m.color)}"><div class="mt2"><span class="tx">${esc(firstLine(p.m.text))}</span><div class="meta">기간 · ${md(p.k0)} ~ ${md(p.m.till)}</div></div></div>`).join('')+fam.map(m=>memoCard(m,k)).join('')+mine.map(m=>memoCard(m,k)).join('');
+  let body=(wlHas(k)?wlRowHtml(k):'')+perOn(k).filter(p=>p.k0!==k).map(p=>`<div class="mcard ${p.m.shared?'fam':'my'} per" data-act="per-open" data-k="${p.k0}" data-id="${esc(p.m.id)}"${p.m.srv?' data-srv="1"':''} style="--pc:${perMc(p.m)}"><div class="mt2"><span class="tx">${esc(perName(p.m))}</span><div class="meta">기간 · ${md(p.k0)} ~ ${md(p.m.till)}</div></div></div>`).join('')+fam.map(m=>memoCard(m,k)).join('')+mine.map(m=>memoCard(m,k)).join('');
   body+=boardOnDate(k).map(n=>`<div class="mcard ${n.shared?'fam':'my'}" data-act="open-board"><div class="mt2">📝 ${esc(piLabel(n))}<div class="meta">${cur.m+1}월 포스트잇 · 누르면 열려요</div></div></div>`).join('');
   // v0.155 빈 날 안내 글 없음 (입력칸만)
   if(!memoEdit)memoMode=role()==='host'?'my':'fam';   // 입력칸 한 줄 메모는 항상 나만 (가족에게는 "자세히"에서)
@@ -618,12 +618,12 @@ function memoSection(k){
 /* ---- 메모 자세히 (전체 화면): 색 · 할 일 · 시간/알림 · 나만/가족에게 ---- */
 const MEMO_COL=['#fff1c4','#ffd9e4','#ffe0c7','#d6f5df','#d2f1ef','#d9ecff','#e8eaee'];   // 연보라는 가족 메모 색과 닮아서 뺌 (이미 칠한 메모는 그대로)
 let mdDraft=null;
-const mdApply=(m,x)=>{['color','todo','done','time','al','till'].forEach(p=>{if(x[p]===undefined)delete m[p];else m[p]=x[p];});};
+const mdApply=(m,x)=>{['color','todo','done','time','al','till','pc'].forEach(p=>{if(x[p]===undefined)delete m[p];else m[p]=x[p];});};
 function mdPull(){const e=$('#mdText');if(e&&mdDraft)mdDraft.text=e.value;}
 function openMemoDetail(k,id){
   const rm=rmemoOf(id);if(rm){mdDraft={k,id:'',rep:rm.id,text:rm.text,color:rm.color||'',todo:!!rm.todo,done:false,time:rm.time||'',al:rm.al||'',shared:false,rr:{md:rm.md,sh:(rm.sh||[]).slice(),miss:rm.miss||'skip'}};renderMemoDetail();return;}
   const m=id?memosOf(k).find(x=>x.id===id):null,i=$('#memoInput');
-  mdDraft={k,id:m?m.id:'',text:m?m.text:(i?i.value:memoText)||'',color:m?(m.color||''):(S.lastMemoColor||''),todo:!!(m&&m.todo),done:!!(m&&m.done),time:(m&&m.time)||'',al:(m&&m.al)||'',till:(m&&m.till)||'',shared:m?!!m.shared:role()!=='host'};
+  mdDraft={k,id:m?m.id:'',text:m?m.text:(i?i.value:memoText)||'',color:m?(m.color||''):(S.lastMemoColor||''),todo:!!(m&&m.todo),done:!!(m&&m.done),time:(m&&m.time)||'',al:(m&&m.al)||'',till:(m&&m.till)||'',pc:(m&&(m.pc||(m.shared&&m.till&&m.color)))||'',shared:m?!!m.shared:role()!=='host'};
   renderMemoDetail();
 }
 function renderMemoDetail(){   // v0.158 새 모양 (시안 design/remain): 글 카드(메모 색) · 색 카드 · 줄 카드 · 나만/가족에게 C3
@@ -639,7 +639,8 @@ function renderMemoDetail(){   // v0.158 새 모양 (시안 design/remain): 글 
       ${npRow('check','할 일',`<label class="sw"><input type="checkbox" id="mdTodo" ${d.todo?'checked':''}><i></i></label>`)}
       ${npRow('clock','시간',d.time?`${tpick('mdTime',d.time)}<button class="xbtn" data-act="md-notime" aria-label="시간 없애기">${npi('x',16)}</button>`:`<button class="xbtn tplus" data-act="md-settime" aria-label="시간 정하기">${npi('x',16)}</button>`,d.time?{cls:'mdtrow'}:{tap:1,act:'md-settime',cls:'mdtrow'})}
       ${d.time?npRow('bell','알림',`<div class="npseg sm">${[['','없음'],['0','정시'],['10','10분 전']].map(([v,l])=>`<button class="${d.al===v?'on':''}" data-act="md-al" data-v="${v}">${l}</button>`).join('')}</div>`):''}
-      ${host&&!d.shared&&!d.rr&&!d.rep?npRow('calendar-days','기간',d.till?`<span class="mdtill">~</span>${tpick('mdTill',d.till,'','date')}<button class="xbtn" data-act="md-notill" aria-label="기간 없애기">${npi('x',16)}</button>`:`<button class="xbtn tplus" data-act="md-settill" aria-label="기간 정하기">${npi('x',16)}</button>`,d.till?{cls:'mdtrow'}:{tap:1,act:'md-settill',cls:'mdtrow'}):''}
+      ${(host||d.shared)&&!d.rr&&!d.rep?npRow('calendar-days','기간 띠',d.till?`<span class="mdtill">~</span>${tpick('mdTill',d.till,'','date')}<button class="xbtn" data-act="md-notill" aria-label="기간 없애기">${npi('x',16)}</button>`:`<button class="xbtn tplus" data-act="md-settill" aria-label="기간 정하기">${npi('x',16)}</button>`,d.till?{cls:'mdtrow'}:{tap:1,act:'md-settill',cls:'mdtrow'}):''}
+      ${d.shared&&d.till?npRow('palette','띠 색',`<div class="mdpc"><button class="${d.pc?'':'on'}" style="background:var(--fam)" data-act="md-pc" data-v="" aria-label="가족 색"></button>${MEMO_COL.map(c=>`<button class="${d.pc===c?'on':''}" style="background:${perCol(c)}" data-act="md-pc" data-v="${c}" aria-label="띠 색"></button>`).join('')}</div>`):''}
       ${host&&!d.shared&&!d.wl?npRow('repeat','반복',npVal(d.rr?esc(rrText(d.rr)):'안 함'),{tap:1,act:'md-rep'}):''}
     </div>
     ${d.rep?`<div class="pg-sec">${npRow('trash-2','반복 그만하기','',{tap:1,act:'rm-del',cls:'danger-row',attrs:` data-id="${esc(d.rep)}"`})}</div>`:''}
@@ -655,7 +656,8 @@ function mdSave(){
     Object.assign(r,{text,md:d.rr.md,sh:(d.rr.sh||[]).slice(),miss:d.rr.miss==='next'?'next':'skip'});['color','todo','time','al'].forEach(p=>{const v=p==='al'?(d.time&&d.al!==''?d.al:undefined):p==='todo'?(d.todo||undefined):(d[p]||undefined);if(v===undefined)delete r[p];else r[p]=v;});
     S.lastMemoColor=d.color||'';save();mdDraft=null;memoText='';memoEdit=null;closePage();memoFinish(d.k,`🔁 반복 메모 · ${rrText(r)}`);try{pushRemindersToNative();}catch(e){}return;
   }
-  const x={till:(!d.shared&&!d.rr&&d.till&&d.till>d.k)?d.till:undefined,color:(!d.shared&&d.color)||undefined,todo:d.todo||undefined,done:(d.todo&&d.done)||undefined,time:d.time||undefined,al:(d.time&&d.al!=='')?d.al:undefined};
+  const tl=(!d.rr&&d.till&&d.till>d.k)?d.till:undefined;
+  const x={till:tl,pc:(d.shared&&tl&&d.pc)||undefined,color:(!d.shared&&d.color)||undefined,todo:d.todo||undefined,done:(d.todo&&d.done)||undefined,time:d.time||undefined,al:(d.time&&d.al!=='')?d.al:undefined};
   const k=d.k,fam=d.shared,srv=!!S.link,isGuest=role()==='guest';
   const m=d.id?memosOf(k).find(y=>y.id===d.id):null;
   if(m){
@@ -693,8 +695,9 @@ function compMenu(id){const x=(S.companyHols||[]).find(y=>y.id===id);if(!x)retur
 let mmMove=null;
 function mmMoveTo(nk){const mv=mmMove;mmMove=null;if(!mv)return;const k=mv.k;if(!nk||nk===k)return;
   const m=memosOf(k).find(x=>x.id===mv.mid);if(!m)return;
+  const tl0=m.till;if(tl0)m.till=addK(tl0,Math.round((parse(nk)-parse(k))/864e5));   // v0.233 기간 띠는 끝 날도 같이 옮김
   S.memos[k]=memosOf(k).filter(x=>x!==m);tidyMemos(k);(S.memos[nk]=S.memos[nk]||[]).push(m);save();render();if(sheetKey===k&&sheetMode==='day')openDay(k);
-  toastUndo(`${md(nk)}로 옮겼어요`,()=>{S.memos[nk]=memosOf(nk).filter(x=>x!==m);tidyMemos(nk);(S.memos[k]=S.memos[k]||[]).push(m);save();render();if(sheetKey===k&&sheetMode==='day')openDay(k);});}
+  toastUndo(`${md(nk)}로 옮겼어요`,()=>{if(tl0)m.till=tl0;S.memos[nk]=memosOf(nk).filter(x=>x!==m);tidyMemos(nk);(S.memos[k]=S.memos[k]||[]).push(m);save();render();if(sheetKey===k&&sheetMode==='day')openDay(k);});}
 function openMemoMenu(mid){
   const rm=rmemoOf(mid);
   if(rm){openPop(`<div class="mh">반복 메모<b>${esc(firstLine(rm.text).slice(0,24))}</b></div><div class="hint" style="padding:6px 16px 0">${esc(rrText(rm))}</div>
@@ -719,6 +722,7 @@ function openMemoMenu(mid){
   openPop(`<div class="mh">${m.shared?'♥ 가족 메모':'🔒 나만 보는 메모'}<b>${esc(firstLine(m.text))}</b></div>
     ${own?`<button class="mi" data-act="mm-edit" data-mid="${mid}">✏️ 고치기</button>`:''}
     ${copyBtn}
+    ${own&&m.till?`<button class="mi" data-act="mm-edit" data-mid="${mid}">🗓 기간 띠<span class="mval">${md(k)} ~ ${md(m.till)} ›</span></button>`:''}
     ${own?`<button class="mi" data-act="mm-movepick" data-mid="${mid}">📅 날짜 옮기기<span class="mval">${md(k)} ›</span></button>`:''}
     ${own?(m.shared?`<button class="mi" data-act="mm-my" data-mid="${mid}">🔒 나만 보기로 바꾸기</button>`:`<button class="mi f" data-act="mm-fam" data-mid="${mid}">♥ 가족 메모로 바꾸기</button>`):''}
     <button class="mi d" data-act="mm-del" data-mid="${mid}">🗑 삭제</button>

@@ -323,6 +323,46 @@ object WidgetRenderer {
     internal fun dateKey(cal: Calendar): String =
         String.format("%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
 
+    /** v0.233 기간 띠 (앱 달력 .pl.pvl 과 같은 모양): 칸 양옆 끝까지 이어지는 색 띠 · 높이는 메모 줄의 3/4 · 진짜 시작 · 끝 날엔 진한 세로 막대 · 이름은 왼쪽 끝 날만 */
+    internal fun mixColor(a: Int, b: Int, t: Float): Int {
+        val r = (Color.red(a) * t + Color.red(b) * (1 - t)).toInt()
+        val g = (Color.green(a) * t + Color.green(b) * (1 - t)).toInt()
+        val bl = (Color.blue(a) * t + Color.blue(b) * (1 - t)).toInt()
+        return Color.rgb(r, g, bl)
+    }
+    internal fun drawPeriod(cv: Canvas, pv: JSONObject, name: String, cx0: Float, cx1: Float, pad: Float, py: Float, h: Float, night: Boolean, bg: Int, textSize: Float, u: Float) {
+        val pc = parseColor(pv.optString("c", ""), 0xFFF08A3C.toInt())
+        val s = pv.optInt("s", 0) == 1
+        val e = pv.optInt("e", 0) == 1
+        val top = py + h * 0.11f
+        val bot = py + h * 0.89f
+        val l = if (s) cx0 + pad else cx0
+        val r = if (e) cx1 - pad else cx1
+        val rad = Math.min(4f * u, (bot - top) * 0.35f)
+        val bp = Paint(Paint.ANTI_ALIAS_FLAG)
+        bp.color = mixColor(pc, bg, if (night) 0.45f else 0.55f)
+        val path = Path()
+        path.addRoundRect(RectF(l, top, r, bot), floatArrayOf(if (s) rad else 0f, if (s) rad else 0f, if (e) rad else 0f, if (e) rad else 0f, if (e) rad else 0f, if (e) rad else 0f, if (s) rad else 0f, if (s) rad else 0f), Path.Direction.CW)
+        cv.save()
+        cv.clipPath(path)
+        cv.drawRect(RectF(l, top, r, bot), bp)
+        val cap = Math.max(2f, 3f * u * 0.75f)
+        bp.color = pc
+        if (pv.optInt("b", 0) == 1) cv.drawRect(RectF(l, top, l + cap, bot), bp)
+        if (pv.optInt("x", 0) == 1) cv.drawRect(RectF(r - cap, top, r, bot), bp)
+        cv.restore()
+        if (s && name.isNotBlank()) {
+            val tp = TextPaint(Paint.ANTI_ALIAS_FLAG)
+            tp.typeface = WFont.bold
+            tp.textAlign = Paint.Align.LEFT
+            tp.color = if (night) Color.WHITE else mixColor(pc, 0xFF1C1712.toInt(), 0.25f)
+            tp.textSize = Math.min(textSize * 0.92f, (bot - top) * 0.92f)
+            val tx = l + (if (pv.optInt("b", 0) == 1) cap else 0f) + 3f * u
+            val avail = (if (e) r else cx1) - tx - 2f * u
+            if (avail > tp.textSize) cv.drawText(TextUtils.ellipsize(name, tp, avail, TextUtils.TruncateAt.END).toString(), tx, (top + bot) / 2f + tp.textSize * 0.36f, tp)
+        }
+    }
+
     internal fun parseColor(s: String, fallback: Int): Int =
         try {
             if (s.isEmpty()) fallback else Color.parseColor(s)
@@ -700,9 +740,15 @@ object WidgetRenderer {
         for (i0 in 0 until shown) {
             val i = i0   // 업무 일지는 칸이 작아도 늘 맨 위 (사용자)
             val py = memoTop + i0 * (row.pillH + row.pillGap)
+            val pvD = d.optJSONObject("pv")
+            if (pvD != null && i == wlOff) {   // v0.233 기간 띠
+                drawPeriod(cv, pvD, memos[i], x0, x0 + cw, pad, py, row.pillH, pal === DARK, pal.bg, Math.min(row.pillH * 0.72f, cw * 0.2f), dens)
+                if (more > 0 && i0 == shown - 1) drawMoreChip(cv, more, x0 + cw - pad - row.pillH * 0.12f, py, row.pillH, pal, Math.min(row.pillH * 0.72f, cw * 0.2f))
+                continue
+            }
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
             pp.color = if (i < wlOff) (if (pal === DARK) 0xFF2C2A48.toInt() else 0xFFEFECFB.toInt())
-                else if (i - wlOff < d.optInt("nf", 0)) (if (pal === DARK) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill   // 가족 메모는 연보라 칸 (한 달 위젯과 같음)
+                else if (i - wlOff - (if (pvD != null) 1 else 0) in 0 until d.optInt("nf", 0)) (if (pal === DARK) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill   // 가족 메모는 연보라 칸 (한 달 위젯과 같음)
             cv.drawRoundRect(RectF(x0 + pad, py, x0 + cw - pad, py + row.pillH), Math.min(4f * dens, row.pillH * 0.3f), Math.min(4f * dens, row.pillH * 0.3f), pp)   // v0.150 모서리 4dp (앱 .pl)
             paint.typeface = WFont.reg
             paint.textAlign = Paint.Align.LEFT

@@ -1254,9 +1254,16 @@ object MonthRenderer {
         for (k in 0 until shown) {
             val mi = k   // 업무 일지는 칸이 작아도 늘 맨 위 (사용자)
             val py = memoTop + k * (plan.pillH + mGap)
+            val pvD = if (!family) f.day?.optJSONObject("pv") else null
+            if (pvD != null && mi == wlOff) {   // v0.233 기간 띠 (앱 달력과 같은 모양)
+                val ts = Math.min(Math.min(plan.pillH * 0.77f, cw * 0.215f) * tn.memo, plan.pillH * 0.95f)
+                WidgetRenderer.drawPeriod(cv, pvD, f.memos[mi], x0, x0 + cw, pad, py, plan.pillH, night, pal.bg, ts, u)
+                if (more > 0 && k == shown - 1) WidgetRenderer.drawMoreChip(cv, more, x0 + cw - pad - plan.pillH * 0.12f, py, plan.pillH, pal, ts)
+                continue
+            }
             val pp = Paint(Paint.ANTI_ALIAS_FLAG)
             val isWl = mi < wlOff
-            val isFam = family || (mi >= wlOff && mi - wlOff < f.nf)
+            val isFam = family || (mi >= wlOff && mi - wlOff - (if (pvD != null) 1 else 0) in 0 until f.nf)
             pp.color = if (isWl) (if (night) 0xFF2C2A48.toInt() else 0xFFEFECFB.toInt()) else if (isFam) (if (night) 0xFF3A3360.toInt() else 0xFFEDE8FF.toInt()) else pal.pill
             cv.drawRoundRect(RectF(x0 + pad, py, x0 + cw - pad, py + plan.pillH), Math.min(4f * u, plan.pillH * 0.3f), Math.min(4f * u, plan.pillH * 0.3f), pp)   // v0.150 모서리 4dp (앱 .pl)
             var barW = 0f
