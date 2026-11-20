@@ -5755,6 +5755,7 @@ function wxHrHtml(hr){
   return `<div class="wxhr"><div class="wxhs" data-i0="${hr.i0}">${grp.map(g=>`<div class="sg ${g.ac?'act':hr.seg?(g.w?'work':'home'):''}"><div class="hl">${lbl(g)}</div><div class="hh">${g.l.map(chip).join('')}</div></div>`).join('')}</div></div>`;
 }
 function wxHrScroll(root){try{const s=root?root.querySelector('.wxhs'):document.querySelector('#pop .wxhs');if(!s)return;{const W=s.clientWidth;if(W>0){const n=Math.floor(W/46);const w=Math.max(40,Math.min(54,W/(n+0.5)-2));s.style.setProperty('--hcw',w.toFixed(1)+'px');}}   // v0.127 오른쪽 끝 칸이 반쯤 걸쳐 보이게 (더 밀 수 있다는 느낌)
+const nw=s.querySelector('.hc.hn');if(nw){const r=nw.getBoundingClientRect(),sr=s.getBoundingClientRect();s.scrollLeft=Math.max(0,r.left-sr.left+s.scrollLeft-(s.clientWidth-r.width)/2);return;}   /* v0.230 오늘이면 "지금" 칸이 가운데 */
 const c=s.querySelector(`.hc[data-i="${s.dataset.i0}"]`);if(c)s.scrollLeft=Math.max(0,c.getBoundingClientRect().left-s.getBoundingClientRect().left+s.scrollLeft-4);}catch(e){}}
 function wxOpenPop(html){openPop(html);requestAnimationFrame(()=>wxHrScroll());if(/class="wxweb"/.test(html)){hintBump('wxweb');save();}}
 // 시간별 줄 자료 (나 / 가족): 근무 날 = 집 · 직장 구간, 쉬는 날 = 집

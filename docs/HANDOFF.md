@@ -814,3 +814,6 @@
 - 앱: famBx.vip 이면 한도 없음(famRemain 9999) · 남은 건수 대신 "무제한" (famRemTxt). famBx.noAds 는 광고 붙일 때 쓸 값.
 - 규칙: vipOf(uid) 면 sent 한도 없음 · bonus 키 늘림 · 관리자 delete · bonusLog n -1000000~10000 · what. 규칙 시험 125 통과 · 새 가족 시험 tests/family/fam17e.mjs (관리자 계정은 에뮬레이터 batchCreate + 가짜 구글 로그인).
 - **배포 필요: Cloud Shell `deploy --only firestore:rules`** (안 하면 관리자 화면에서 스위치 · 빼기가 "권한" 오류).
+
+## v0.230 날씨 시간별 줄: "지금" 칸 가운데
+- wxHrScroll: .hc.hn 이 있으면 가운데로 (뒤 칸이 모자라면 끝까지) · 없으면 예전처럼 i0 왼쪽. 시험 s74 고침.
