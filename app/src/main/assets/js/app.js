@@ -5315,7 +5315,8 @@ function openNotifPage(){
 // 설정 › 도움 · 정보
 function openInfoPage(){   // v0.146 새 모양
   openPage(`${pageHead('도움 · 정보')}<div class="pg-b np">
-    <div class="pg-sec" style="margin-top:8px">
+    ${famBx.vip?`<div class="pg-sec plan-on" style="margin-top:8px">${npRow('sparkles','무제한 이용 중','')}</div>`:''}
+    <div class="pg-sec" style="margin-top:${famBx.vip?12:8}px">
       ${npRow('clock','알람이 잘 울리게',npVal(''),{tap:1,act:'info-perm'})}   <!-- v0.215 다 켜져 있어도 들어갈 수 있게 (삼성 자동 절전 예외 앱 바로가기) -->
       ${npRow('file-text','문의하기 · 오류 신고',npVal(''),{tap:1,act:'more-mail'})}
       ${npRow('calendar-days','사용 통계 · 오류 보고',`<label class="sw"><input type="checkbox" id="statsOn" ${S.stats!==false?'checked':''}><i></i></label>`)}
@@ -8910,7 +8911,7 @@ async function famBonusLoad(){   // 관리자가 준 무료 건수: bonus/{내 u
   const {F,db}=await famReady();if(!S.link)return;
   const g=async id=>{try{const d=await F.getDoc(F.doc(db,'bonus',id));return d.exists()?d.data():{};}catch(e){return {};}};
   const me=await g(S.link.uid),all=await g('_all'),nn=v=>Math.max(0,Math.round(+v.n)||0);
-  famBx={me:nn(me),all:nn(all),vip:me.vip===true,noAds:me.noAds===true||me.vip===true};   // v0.229 무제한 · 광고 없음 (광고는 아직 없음 · 붙일 때 이 값으로 숨김)
+  famBx={me:nn(me),all:nn(all),vip:me.vip===true,noAds:me.noAds===true||me.vip===true};if(pageMode==='info')openInfoPage();   // v0.229 무제한 · 광고 없음 (광고는 아직 없음 · 붙일 때 이 값으로 숨김)
 }
 let admOk=null,adm=null;
 async function admCheck(){   // 관리자 계정만 bonusLog 를 읽을 수 있음 → 읽히면 관리자 (앱에 메일 주소를 넣지 않음)

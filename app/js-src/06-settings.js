@@ -273,7 +273,8 @@ function openNotifPage(){
 // 설정 › 도움 · 정보
 function openInfoPage(){   // v0.146 새 모양
   openPage(`${pageHead('도움 · 정보')}<div class="pg-b np">
-    <div class="pg-sec" style="margin-top:8px">
+    ${famBx.vip?`<div class="pg-sec plan-on" style="margin-top:8px">${npRow('sparkles','무제한 이용 중','')}</div>`:''}
+    <div class="pg-sec" style="margin-top:${famBx.vip?12:8}px">
       ${npRow('clock','알람이 잘 울리게',npVal(''),{tap:1,act:'info-perm'})}   <!-- v0.215 다 켜져 있어도 들어갈 수 있게 (삼성 자동 절전 예외 앱 바로가기) -->
       ${npRow('file-text','문의하기 · 오류 신고',npVal(''),{tap:1,act:'more-mail'})}
       ${npRow('calendar-days','사용 통계 · 오류 보고',`<label class="sw"><input type="checkbox" id="statsOn" ${S.stats!==false?'checked':''}><i></i></label>`)}

@@ -602,7 +602,7 @@ async function famBonusLoad(){   // 관리자가 준 무료 건수: bonus/{내 u
   const {F,db}=await famReady();if(!S.link)return;
   const g=async id=>{try{const d=await F.getDoc(F.doc(db,'bonus',id));return d.exists()?d.data():{};}catch(e){return {};}};
   const me=await g(S.link.uid),all=await g('_all'),nn=v=>Math.max(0,Math.round(+v.n)||0);
-  famBx={me:nn(me),all:nn(all),vip:me.vip===true,noAds:me.noAds===true||me.vip===true};   // v0.229 무제한 · 광고 없음 (광고는 아직 없음 · 붙일 때 이 값으로 숨김)
+  famBx={me:nn(me),all:nn(all),vip:me.vip===true,noAds:me.noAds===true||me.vip===true};if(pageMode==='info')openInfoPage();   // v0.229 무제한 · 광고 없음 (광고는 아직 없음 · 붙일 때 이 값으로 숨김)
 }
 let admOk=null,adm=null;
 async function admCheck(){   // 관리자 계정만 bonusLog 를 읽을 수 있음 → 읽히면 관리자 (앱에 메일 주소를 넣지 않음)
