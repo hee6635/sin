@@ -7,6 +7,7 @@ const colDots=(cur,act,id)=>`<div class="cdots">${STK_COL.map(c=>`<button class=
 // 하루 한도(4개)가 찼을 때
 function stampFull(){toast('스티커는 하루 4개까지예요');}
 // 창을 닫지 않고 다시 그리기 (스티커가 다 사라졌으면 닫기)
+function sdRefreshIcons(k){const tp=document.createElement('div');tp.innerHTML=stampDayHtml(k);document.querySelectorAll('#pop .sdr2').forEach(r=>{const n=tp.querySelector(`.sdr2[data-id="${CSS.escape(r.dataset.id)}"]`);if(!n){stampReopen(k);return;}const a=r.querySelector('.sdi'),b=n.querySelector('.sdi');if(a&&b&&a.innerHTML!==b.innerHTML)a.innerHTML=b.innerHTML;const sa=r.querySelector('.sdcnt'),sb=n.querySelector('.sdcnt');if(sa&&sb&&sa.textContent!==sb.textContent)sa.textContent=sb.textContent;r.classList.toggle('done',n.classList.contains('done'));});}
 function stampReopen(k){if(stampsOn(k).length)openStampDay(k);else closePop();}
 const STAMP_CAT=[
  ['운동 · 건강',[['🏃','달리기'],['👟','조깅'],['💪','운동'],['🌿','요가'],['🚴','자전거'],['🏊','수영'],['🚶','걷기'],['🏋️','헬스'],['⚽','축구'],['🏀','농구'],['🎾','테니스'],['🏸','배드민턴'],['⛰️','등산'],['🤸','스트레칭'],['🥊','복싱'],['🧗','클라이밍'],['🌡️','체온'],['⚖️','몸무게'],['🩸','혈압'],['🤧','감기'],['💤','낮잠']]],

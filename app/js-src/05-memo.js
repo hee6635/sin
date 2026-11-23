@@ -652,7 +652,7 @@ function mdSave(){
   if(d.rr&&!d.shared){   // 🔁 반복 메모
     S.rmemos=Array.isArray(S.rmemos)?S.rmemos:[];let r=d.rep&&S.rmemos.find(x=>x.id===d.rep);
     if(!r){r={id:uid(),from:d.k.slice(0,8)+'01',t:Date.now()};S.rmemos.push(r);if(d.id){S.memos[d.k]=memosOf(d.k).filter(y=>y.id!==d.id);tidyMemos(d.k);}}
-    Object.assign(r,{text,md:d.rr.md,sh:(d.rr.sh||[]).slice(),miss:d.rr.miss==='next'?'next':'skip'});['color','todo','time','al'].forEach(p=>{const v=p==='al'?(d.time&&d.al!==''?d.al:undefined):p==='todo'?(d.todo||undefined):(d[p]||undefined);if(v===undefined)delete r[p];else r[p]=v;});
+    Object.assign(r,{text,md:d.rr.md,sh:(d.rr.sh||[]).slice(),miss:d.rr.miss==='next'||d.rr.miss==='prev'?d.rr.miss:'skip'});['color','todo','time','al'].forEach(p=>{const v=p==='al'?(d.time&&d.al!==''?d.al:undefined):p==='todo'?(d.todo||undefined):(d[p]||undefined);if(v===undefined)delete r[p];else r[p]=v;});
     S.lastMemoColor=d.color||'';save();mdDraft=null;memoText='';memoEdit=null;closePage();memoFinish(d.k,`🔁 반복 메모 · ${rrText(r)}`);try{pushRemindersToNative();}catch(e){}return;
   }
   const tl=(!d.rr&&d.till&&d.till>d.k)?d.till:undefined;
@@ -679,9 +679,9 @@ function openRrPick(){
   const b=(v,l)=>`<button class="${r.md===v?'on':''}" data-act="rr-md" data-v="${v}">${l}</button>`;
   openPop(`<div class="mh">반복<b>매달 언제?</b></div>
     <div class="mi" style="display:block"><div class="rrg">${Array.from({length:28},(_,i)=>b(i+1,i+1)).join('')}</div><div class="rrg rrl">${b(-1,'말일')}${b(-2,'말일 하루 전')}${b(-3,'말일 이틀 전')}</div></div>
-    <div class="mi" style="display:block"><div class="pl2" style="margin-bottom:6px">근무 조건</div><div class="chips"><button class="${!r.sh.length?'on':''}" data-act="rr-sh" data-v="">상관없이</button>${S.types.filter(t=>t.k!==NONE_K&&!t.rest).map(t=>`<button class="${r.sh.includes(t.k)?'on':''}" data-act="rr-sh" data-v="${esc(t.k)}">${badge(t.k,'sm')} ${esc(t.name)}</button>`).join('')}</div>
-      ${r.sh.length?`<div class="hseg" style="margin-top:10px"><button class="${r.miss!=='next'?'on':''}" data-act="rr-miss" data-v="skip">그 날 아니면 건너뛰기</button><button class="${r.miss==='next'?'on':''}" data-act="rr-miss" data-v="next">다음 그 근무 날로</button></div>`:''}</div>
-    <div class="hint" style="padding:4px 16px 8px">${esc(rrText(r))}</div>
+    <div class="mi" style="display:block"><div class="pl2" style="margin-bottom:6px">근무 조건</div><div class="chips rrsh"><button class="${!r.sh.length?'on':''}" data-act="rr-sh" data-v="">상관없이</button>${S.types.filter(t=>t.k!==NONE_K&&!t.rest).map(t=>`<button class="${r.sh.includes(t.k)?'on':''}" data-act="rr-sh" data-v="${esc(t.k)}">${badge(t.k,'sm')}<span class="rrn">${esc(t.name)}</span></button>`).join('')}</div>
+      ${r.sh.length?`<div class="pl2 rrmh">그날이 ${r.sh.length>2?'고른 근무가':esc(rrShTxt(r.sh))+(((rrShTxt(r.sh).slice(-1).charCodeAt(0)-0xAC00)%28)?'이':'가')} 아니면</div><div class="hseg rrmiss">${[['skip','건너뛰기'],['prev','앞당기기'],['next','미루기']].map(([v,l])=>`<button class="${(r.miss||'skip')===v?'on':''}" data-act="rr-miss" data-v="${v}">${l}</button>`).join('')}</div>`:''}</div>
+    <div class="hint rrsum" style="padding:4px 16px 8px">${esc(rrText(r))}</div>
     <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="rr-off">반복 안 함</button><button class="btn grow" data-act="rr-ok">확인</button></div>`);
 }
 function compMenu(id){const x=(S.companyHols||[]).find(y=>y.id===id);if(!x)return;

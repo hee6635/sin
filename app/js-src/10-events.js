@@ -673,7 +673,7 @@ document.addEventListener('click',e=>{
       stampSet(s.id,k,v);save();
       {const row=t.closest('.sdr2'),bar=row&&row.querySelector('.sdbar');   // v0.181 부드럽게: 누른 버튼만 바로 바꾸고, 창 · 달력은 움직임이 끝난 뒤 다시 그림
         if(bar){row.classList.toggle('done',v>=N);const c=row.querySelector('.sdcnt');if(c&&N>1)c.textContent=`${v}/${N}`;sdBarSet(bar,v,N);
-          clearTimeout(sdLaterT);sdLaterT=setTimeout(()=>{render();if($('#pop').classList.contains('open')&&document.querySelector('#pop .sdr2'))stampReopen(k);if(v>n)stkPop(k,s.id);},700);}
+          clearTimeout(sdLaterT);sdLaterT=setTimeout(()=>{render();if($('#pop').classList.contains('open')&&document.querySelector('#pop .sdr2'))sdRefreshIcons(k);if(v>n)stkPop(k,s.id);},700);}   // v0.237 창을 다시 열지 않음 (다시 열면 창이 하얗게 번쩍임) · 그림(약 · 안 한 표시)만 바꿈
         else{render();stampReopen(k);if(v>n)stkPop(k,s.id);}}
       const se=s.kind==='pill'?'💊':icoTxt(s.emoji,'✔'),msg=v===0?`${se} ${s.name} 취소했어요`:s.kind==='pill'?(v>=N?`💊 ${s.name} 오늘 다 먹었어요`:`💊 ${s.name} ${v}/${N} 먹음`):(N>1&&v<N?`${se} ${s.name} ${v}/${N}`:`${se} ${s.name} 완료`);
       toastUndo(msg,()=>{stampSet(s.id,k,n);save();render();if($('#pop').classList.contains('open'))stampReopen(k);});break;}

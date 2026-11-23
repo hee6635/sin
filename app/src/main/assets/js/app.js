@@ -524,7 +524,7 @@ function normalize(o){
     if(!m.sdefs&&m.stk&&typeof m.stk==='object'&&Object.keys(m.stk).length)m.sdefs=manSdefsInit(m,(s.stamps&&Array.isArray(s.stamps.defs))?s.stamps.defs:[]);
   });}catch(e){}
   try{const okT=v=>typeof v==='string'&&/^\d{1,2}:\d\d$/.test(v);(s.stamps.defs||[]).forEach(x=>{if(x&&x.act!==undefined&&!(isObj(x.act)&&okT(x.act.s)&&okT(x.act.e)))delete x.act;else if(x&&x.act){x.act={s:x.act.s,e:x.act.e,r:typeof x.act.r==='string'?x.act.r.slice(0,12):'',since:okDate(x.act.since)?x.act.since:''};}});if(s.stamps.actDone!==undefined&&!isObj(s.stamps.actDone))delete s.stamps.actDone;}catch(e){}   // v0.114 스티커 활동
-  try{const okT=v=>typeof v==='string'&&/^\d{1,2}:\d\d$/.test(v);s.rmemos=Array.isArray(s.rmemos)?s.rmemos.filter(r=>r&&typeof r.id==='string'&&typeof r.text==='string'&&r.text.trim()&&Number.isInteger(r.md)&&r.md>=-3&&r.md<=28&&r.md!==0).slice(0,100).map(r=>{const o={id:r.id.slice(0,20),text:String(r.text).slice(0,2000),md:r.md,sh:Array.isArray(r.sh)?r.sh.filter(x=>typeof x==='string').slice(0,20):[],miss:r.miss==='next'?'next':'skip',from:okDate(r.from)?r.from:'',t:+r.t||0};if(typeof r.color==='string'&&/^#[0-9a-f]{6}$/i.test(r.color))o.color=r.color;if(r.todo)o.todo=true;if(okT(r.time)){o.time=r.time;if(r.al==='0'||r.al==='10')o.al=r.al;}['done','skip'].forEach(f=>{if(Array.isArray(r[f]))o[f]=r[f].filter(okDate).slice(-120);});return o;}):[];}catch(e){s.rmemos=[];}   // v0.118 반복 메모
+  try{const okT=v=>typeof v==='string'&&/^\d{1,2}:\d\d$/.test(v);s.rmemos=Array.isArray(s.rmemos)?s.rmemos.filter(r=>r&&typeof r.id==='string'&&typeof r.text==='string'&&r.text.trim()&&Number.isInteger(r.md)&&r.md>=-3&&r.md<=28&&r.md!==0).slice(0,100).map(r=>{const o={id:r.id.slice(0,20),text:String(r.text).slice(0,2000),md:r.md,sh:Array.isArray(r.sh)?r.sh.filter(x=>typeof x==='string').slice(0,20):[],miss:r.miss==='next'||r.miss==='prev'?r.miss:'skip',from:okDate(r.from)?r.from:'',t:+r.t||0};if(typeof r.color==='string'&&/^#[0-9a-f]{6}$/i.test(r.color))o.color=r.color;if(r.todo)o.todo=true;if(okT(r.time)){o.time=r.time;if(r.al==='0'||r.al==='10')o.al=r.al;}['done','skip'].forEach(f=>{if(Array.isArray(r[f]))o[f]=r[f].filter(okDate).slice(-120);});return o;}):[];}catch(e){s.rmemos=[];}   // v0.118 반복 메모
   if(o&&o.onboarded===undefined&&o.pattern)s.onboarded=true;   // 예전 사용자는 처음 설정 건너뜀
   s.piOrder=(()=>{const o2=isObj(s.piOrder)?s.piOrder:{},r={};Object.keys(o2).filter(k=>/^\d{4}-\d\d$/.test(k)&&Array.isArray(o2[k])).slice(-24).forEach(k=>{r[k]=o2[k].filter(x=>typeof x==='string').slice(0,200);});return r;})();   // v0.158 포스트잇 순서
   return s;
@@ -1086,17 +1086,20 @@ const other=()=>role()==='host'?'guest':'host';
 /* 지금 보는 사람이 볼 수 있는 메모: 가족 메모 + 내가 쓴 나만 메모 */
 /* ---- v0.118 반복 메모 (S.rmemos): 매달 n일 · 말일 · 말일 하루 · 이틀 전 + 근무 조건 (그 날 아니면 건너뛰기 / 다음 그 근무 날로) · 미리 만들지 않고 계산 ---- */
 const rrDay=md=>md>0?`${md}일`:md===-1?'말일':md===-2?'말일 하루 전':'말일 이틀 전';
-const rrText=r=>`매달 ${rrDay(r.md)}${(r.sh||[]).length?` · ${r.sh.map(k=>shiftLabel(k)).join('·')}인 날만 · ${r.miss==='next'?'아니면 다음 근무 날로':'아니면 건너뛰기'}`:''}`;
+// v0.237 근무 이름은 2개까지 쓰고 나머지는 "외 n" (설명문이 길어져 창이 깨지지 않게)
+const rrShTxt=sh=>{const n=(sh||[]).map(k=>shiftLabel(k));return n.length>2?`${n.slice(0,2).join('·')} 외 ${n.length-2}개`:n.join('·');};
+const rrShDay=sh=>(sh||[]).length>2?'그 근무':rrShTxt(sh);   // "바로 앞 ○○ 날에" 자리: 3개 이상이면 "그 근무"
+const rrText=r=>`매달 ${rrDay(r.md)}${(r.sh||[]).length?` · ${rrShTxt(r.sh)}인 날만 · ${r.miss==='next'?`아니면 바로 뒤 ${rrShDay(r.sh)} 날에`:r.miss==='prev'?`아니면 바로 앞 ${rrShDay(r.sh)} 날에`:'아니면 그달은 건너뛰어요'}`:''}`;
 function rmTarget(r,y,mo){
   const last=new Date(y,mo+1,0).getDate();let d=new Date(y,mo,r.md>0?Math.min(r.md,last):last+(r.md+1));
-  if((r.sh||[]).length){let n=0;while(persOn(fmt(d))||!r.sh.includes(shiftOf(d))){if(r.miss!=='next'||n>=31)return '';d=addDays(d,1);n++;}}
+  if((r.sh||[]).length){let n=0;const st=r.miss==='prev'?-1:1;while(persOn(fmt(d))||!r.sh.includes(shiftOf(d))){if((r.miss!=='next'&&r.miss!=='prev')||n>=31)return '';d=addDays(d,st);n++;}}   // v0.237 앞당기기(prev) · 미루기(next)
   return fmt(d);
 }
 function rmemoOn(k){
   if(role()!=='host'||!Array.isArray(S.rmemos)||!S.rmemos.length)return [];
   const d=parse(k),out=[];
   S.rmemos.forEach(r=>{if(r.from&&k<r.from)return;if((r.skip||[]).includes(k))return;
-    for(const off of [0,-1]){const x=new Date(d.getFullYear(),d.getMonth()+off,1);if(rmTarget(r,x.getFullYear(),x.getMonth())===k){out.push({id:'r:'+r.id,rep:r.id,text:r.text,color:r.color,todo:r.todo,done:(r.done||[]).includes(k)||undefined,time:r.time,al:r.al,by:role(),shared:false,t:r.t||0});break;}}});
+    for(const off of [0,-1,1]){const x=new Date(d.getFullYear(),d.getMonth()+off,1);if(rmTarget(r,x.getFullYear(),x.getMonth())===k){out.push({id:'r:'+r.id,rep:r.id,text:r.text,color:r.color,todo:r.todo,done:(r.done||[]).includes(k)||undefined,time:r.time,al:r.al,by:role(),shared:false,t:r.t||0});break;}}});
   return out;
 }
 const rmemoOf=mid=>String(mid||'').startsWith('r:')?(S.rmemos||[]).find(r=>r.id===String(mid).slice(2)):null;
@@ -2159,6 +2162,7 @@ const colDots=(cur,act,id)=>`<div class="cdots">${STK_COL.map(c=>`<button class=
 // 하루 한도(4개)가 찼을 때
 function stampFull(){toast('스티커는 하루 4개까지예요');}
 // 창을 닫지 않고 다시 그리기 (스티커가 다 사라졌으면 닫기)
+function sdRefreshIcons(k){const tp=document.createElement('div');tp.innerHTML=stampDayHtml(k);document.querySelectorAll('#pop .sdr2').forEach(r=>{const n=tp.querySelector(`.sdr2[data-id="${CSS.escape(r.dataset.id)}"]`);if(!n){stampReopen(k);return;}const a=r.querySelector('.sdi'),b=n.querySelector('.sdi');if(a&&b&&a.innerHTML!==b.innerHTML)a.innerHTML=b.innerHTML;const sa=r.querySelector('.sdcnt'),sb=n.querySelector('.sdcnt');if(sa&&sb&&sa.textContent!==sb.textContent)sa.textContent=sb.textContent;r.classList.toggle('done',n.classList.contains('done'));});}
 function stampReopen(k){if(stampsOn(k).length)openStampDay(k);else closePop();}
 const STAMP_CAT=[
  ['운동 · 건강',[['🏃','달리기'],['👟','조깅'],['💪','운동'],['🌿','요가'],['🚴','자전거'],['🏊','수영'],['🚶','걷기'],['🏋️','헬스'],['⚽','축구'],['🏀','농구'],['🎾','테니스'],['🏸','배드민턴'],['⛰️','등산'],['🤸','스트레칭'],['🥊','복싱'],['🧗','클라이밍'],['🌡️','체온'],['⚖️','몸무게'],['🩸','혈압'],['🤧','감기'],['💤','낮잠']]],
@@ -4551,7 +4555,7 @@ function mdSave(){
   if(d.rr&&!d.shared){   // 🔁 반복 메모
     S.rmemos=Array.isArray(S.rmemos)?S.rmemos:[];let r=d.rep&&S.rmemos.find(x=>x.id===d.rep);
     if(!r){r={id:uid(),from:d.k.slice(0,8)+'01',t:Date.now()};S.rmemos.push(r);if(d.id){S.memos[d.k]=memosOf(d.k).filter(y=>y.id!==d.id);tidyMemos(d.k);}}
-    Object.assign(r,{text,md:d.rr.md,sh:(d.rr.sh||[]).slice(),miss:d.rr.miss==='next'?'next':'skip'});['color','todo','time','al'].forEach(p=>{const v=p==='al'?(d.time&&d.al!==''?d.al:undefined):p==='todo'?(d.todo||undefined):(d[p]||undefined);if(v===undefined)delete r[p];else r[p]=v;});
+    Object.assign(r,{text,md:d.rr.md,sh:(d.rr.sh||[]).slice(),miss:d.rr.miss==='next'||d.rr.miss==='prev'?d.rr.miss:'skip'});['color','todo','time','al'].forEach(p=>{const v=p==='al'?(d.time&&d.al!==''?d.al:undefined):p==='todo'?(d.todo||undefined):(d[p]||undefined);if(v===undefined)delete r[p];else r[p]=v;});
     S.lastMemoColor=d.color||'';save();mdDraft=null;memoText='';memoEdit=null;closePage();memoFinish(d.k,`🔁 반복 메모 · ${rrText(r)}`);try{pushRemindersToNative();}catch(e){}return;
   }
   const tl=(!d.rr&&d.till&&d.till>d.k)?d.till:undefined;
@@ -4578,9 +4582,9 @@ function openRrPick(){
   const b=(v,l)=>`<button class="${r.md===v?'on':''}" data-act="rr-md" data-v="${v}">${l}</button>`;
   openPop(`<div class="mh">반복<b>매달 언제?</b></div>
     <div class="mi" style="display:block"><div class="rrg">${Array.from({length:28},(_,i)=>b(i+1,i+1)).join('')}</div><div class="rrg rrl">${b(-1,'말일')}${b(-2,'말일 하루 전')}${b(-3,'말일 이틀 전')}</div></div>
-    <div class="mi" style="display:block"><div class="pl2" style="margin-bottom:6px">근무 조건</div><div class="chips"><button class="${!r.sh.length?'on':''}" data-act="rr-sh" data-v="">상관없이</button>${S.types.filter(t=>t.k!==NONE_K&&!t.rest).map(t=>`<button class="${r.sh.includes(t.k)?'on':''}" data-act="rr-sh" data-v="${esc(t.k)}">${badge(t.k,'sm')} ${esc(t.name)}</button>`).join('')}</div>
-      ${r.sh.length?`<div class="hseg" style="margin-top:10px"><button class="${r.miss!=='next'?'on':''}" data-act="rr-miss" data-v="skip">그 날 아니면 건너뛰기</button><button class="${r.miss==='next'?'on':''}" data-act="rr-miss" data-v="next">다음 그 근무 날로</button></div>`:''}</div>
-    <div class="hint" style="padding:4px 16px 8px">${esc(rrText(r))}</div>
+    <div class="mi" style="display:block"><div class="pl2" style="margin-bottom:6px">근무 조건</div><div class="chips rrsh"><button class="${!r.sh.length?'on':''}" data-act="rr-sh" data-v="">상관없이</button>${S.types.filter(t=>t.k!==NONE_K&&!t.rest).map(t=>`<button class="${r.sh.includes(t.k)?'on':''}" data-act="rr-sh" data-v="${esc(t.k)}">${badge(t.k,'sm')}<span class="rrn">${esc(t.name)}</span></button>`).join('')}</div>
+      ${r.sh.length?`<div class="pl2 rrmh">그날이 ${r.sh.length>2?'고른 근무가':esc(rrShTxt(r.sh))+(((rrShTxt(r.sh).slice(-1).charCodeAt(0)-0xAC00)%28)?'이':'가')} 아니면</div><div class="hseg rrmiss">${[['skip','건너뛰기'],['prev','앞당기기'],['next','미루기']].map(([v,l])=>`<button class="${(r.miss||'skip')===v?'on':''}" data-act="rr-miss" data-v="${v}">${l}</button>`).join('')}</div>`:''}</div>
+    <div class="hint rrsum" style="padding:4px 16px 8px">${esc(rrText(r))}</div>
     <div class="mi" style="gap:8px"><button class="btn ghost grow" data-act="rr-off">반복 안 함</button><button class="btn grow" data-act="rr-ok">확인</button></div>`);
 }
 function compMenu(id){const x=(S.companyHols||[]).find(y=>y.id===id);if(!x)return;
@@ -7909,7 +7913,7 @@ document.addEventListener('click',e=>{
       stampSet(s.id,k,v);save();
       {const row=t.closest('.sdr2'),bar=row&&row.querySelector('.sdbar');   // v0.181 부드럽게: 누른 버튼만 바로 바꾸고, 창 · 달력은 움직임이 끝난 뒤 다시 그림
         if(bar){row.classList.toggle('done',v>=N);const c=row.querySelector('.sdcnt');if(c&&N>1)c.textContent=`${v}/${N}`;sdBarSet(bar,v,N);
-          clearTimeout(sdLaterT);sdLaterT=setTimeout(()=>{render();if($('#pop').classList.contains('open')&&document.querySelector('#pop .sdr2'))stampReopen(k);if(v>n)stkPop(k,s.id);},700);}
+          clearTimeout(sdLaterT);sdLaterT=setTimeout(()=>{render();if($('#pop').classList.contains('open')&&document.querySelector('#pop .sdr2'))sdRefreshIcons(k);if(v>n)stkPop(k,s.id);},700);}   // v0.237 창을 다시 열지 않음 (다시 열면 창이 하얗게 번쩍임) · 그림(약 · 안 한 표시)만 바꿈
         else{render();stampReopen(k);if(v>n)stkPop(k,s.id);}}
       const se=s.kind==='pill'?'💊':icoTxt(s.emoji,'✔'),msg=v===0?`${se} ${s.name} 취소했어요`:s.kind==='pill'?(v>=N?`💊 ${s.name} 오늘 다 먹었어요`:`💊 ${s.name} ${v}/${N} 먹음`):(N>1&&v<N?`${se} ${s.name} ${v}/${N}`:`${se} ${s.name} 완료`);
       toastUndo(msg,()=>{stampSet(s.id,k,n);save();render();if($('#pop').classList.contains('open'))stampReopen(k);});break;}

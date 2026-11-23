@@ -2075,3 +2075,11 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .pl.pvl.s.e{width:100%;margin:0;border-radius:4px}
 .pl.pvl.b{--pvs:inset 3px 0 0 var(--pc);padding-left:7px}.pl.pvl.x{--pvs:inset -3px 0 0 var(--pc)}.pl.pvl.b.x{--pvs:inset 3px 0 0 var(--pc),inset -3px 0 0 var(--pc)}
 .pl.pvl.pve{visibility:hidden}
+/* v0.237 반복 메모 근무 조건: 한 줄 칩 [배지 이름] (배지가 타원 밖으로 삐져나오던 것) · 아니면 3가지 · 설명문은 두 줄까지 */
+.chips.rrsh{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start}
+.chips.rrsh button{display:inline-flex;align-items:center;gap:6px;flex-direction:row;height:34px;padding:0 12px;white-space:nowrap;line-height:1}
+.chips.rrsh button .badge{flex:none;margin:0 0 0 -7px}
+.chips.rrsh button .rrn{display:inline}
+.rrmh{margin:12px 0 6px}
+.hseg.rrmiss button{flex:1 1 0;min-width:0;white-space:nowrap}
+.rrsum{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4}

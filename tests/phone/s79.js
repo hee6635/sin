@@ -11,7 +11,7 @@ const {chromium,boot,mkT,base}=require('./lib.js');
     await tap(p,'#pop [data-act="rr-md"][data-v="1"]');await p.waitForTimeout(200);
     await tap(p,'#pop [data-act="rr-sh"][data-v="주"]');await p.waitForTimeout(200);
     await tap(p,'#pop [data-act="rr-miss"][data-v="next"]');await p.waitForTimeout(200);
-    T('반복 고르기: 매달 1일 · 주간인 날만 · 아니면 다음 근무 날로',await p.evaluate(()=>/매달 1일 · 주간인 날만 · 아니면 다음 근무 날로/.test(document.querySelector('#pop').innerText)));
+    T('반복 고르기: 매달 1일 · 주간인 날만 · 아니면 바로 뒤 주간 날에 (v0.237 문구)',await p.evaluate(()=>/매달 1일 · 주간인 날만 · 아니면 바로 뒤 주간 날에/.test(document.querySelector('#pop').innerText)));
     await tap(p,'#pop [data-act="rr-ok"]');await p.waitForTimeout(300);
     T('가족에게 칸은 숨김 (반복은 나만)',await p.evaluate(()=>!document.querySelector('#page [data-act="md-share"]')));
     await tap(p,'#page [data-act="md-save"]');await p.waitForTimeout(400);

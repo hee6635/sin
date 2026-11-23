@@ -524,7 +524,7 @@ function normalize(o){
     if(!m.sdefs&&m.stk&&typeof m.stk==='object'&&Object.keys(m.stk).length)m.sdefs=manSdefsInit(m,(s.stamps&&Array.isArray(s.stamps.defs))?s.stamps.defs:[]);
   });}catch(e){}
   try{const okT=v=>typeof v==='string'&&/^\d{1,2}:\d\d$/.test(v);(s.stamps.defs||[]).forEach(x=>{if(x&&x.act!==undefined&&!(isObj(x.act)&&okT(x.act.s)&&okT(x.act.e)))delete x.act;else if(x&&x.act){x.act={s:x.act.s,e:x.act.e,r:typeof x.act.r==='string'?x.act.r.slice(0,12):'',since:okDate(x.act.since)?x.act.since:''};}});if(s.stamps.actDone!==undefined&&!isObj(s.stamps.actDone))delete s.stamps.actDone;}catch(e){}   // v0.114 스티커 활동
-  try{const okT=v=>typeof v==='string'&&/^\d{1,2}:\d\d$/.test(v);s.rmemos=Array.isArray(s.rmemos)?s.rmemos.filter(r=>r&&typeof r.id==='string'&&typeof r.text==='string'&&r.text.trim()&&Number.isInteger(r.md)&&r.md>=-3&&r.md<=28&&r.md!==0).slice(0,100).map(r=>{const o={id:r.id.slice(0,20),text:String(r.text).slice(0,2000),md:r.md,sh:Array.isArray(r.sh)?r.sh.filter(x=>typeof x==='string').slice(0,20):[],miss:r.miss==='next'?'next':'skip',from:okDate(r.from)?r.from:'',t:+r.t||0};if(typeof r.color==='string'&&/^#[0-9a-f]{6}$/i.test(r.color))o.color=r.color;if(r.todo)o.todo=true;if(okT(r.time)){o.time=r.time;if(r.al==='0'||r.al==='10')o.al=r.al;}['done','skip'].forEach(f=>{if(Array.isArray(r[f]))o[f]=r[f].filter(okDate).slice(-120);});return o;}):[];}catch(e){s.rmemos=[];}   // v0.118 반복 메모
+  try{const okT=v=>typeof v==='string'&&/^\d{1,2}:\d\d$/.test(v);s.rmemos=Array.isArray(s.rmemos)?s.rmemos.filter(r=>r&&typeof r.id==='string'&&typeof r.text==='string'&&r.text.trim()&&Number.isInteger(r.md)&&r.md>=-3&&r.md<=28&&r.md!==0).slice(0,100).map(r=>{const o={id:r.id.slice(0,20),text:String(r.text).slice(0,2000),md:r.md,sh:Array.isArray(r.sh)?r.sh.filter(x=>typeof x==='string').slice(0,20):[],miss:r.miss==='next'||r.miss==='prev'?r.miss:'skip',from:okDate(r.from)?r.from:'',t:+r.t||0};if(typeof r.color==='string'&&/^#[0-9a-f]{6}$/i.test(r.color))o.color=r.color;if(r.todo)o.todo=true;if(okT(r.time)){o.time=r.time;if(r.al==='0'||r.al==='10')o.al=r.al;}['done','skip'].forEach(f=>{if(Array.isArray(r[f]))o[f]=r[f].filter(okDate).slice(-120);});return o;}):[];}catch(e){s.rmemos=[];}   // v0.118 반복 메모
   if(o&&o.onboarded===undefined&&o.pattern)s.onboarded=true;   // 예전 사용자는 처음 설정 건너뜀
   s.piOrder=(()=>{const o2=isObj(s.piOrder)?s.piOrder:{},r={};Object.keys(o2).filter(k=>/^\d{4}-\d\d$/.test(k)&&Array.isArray(o2[k])).slice(-24).forEach(k=>{r[k]=o2[k].filter(x=>typeof x==='string').slice(0,200);});return r;})();   // v0.158 포스트잇 순서
   return s;
@@ -1086,17 +1086,20 @@ const other=()=>role()==='host'?'guest':'host';
 /* 지금 보는 사람이 볼 수 있는 메모: 가족 메모 + 내가 쓴 나만 메모 */
 /* ---- v0.118 반복 메모 (S.rmemos): 매달 n일 · 말일 · 말일 하루 · 이틀 전 + 근무 조건 (그 날 아니면 건너뛰기 / 다음 그 근무 날로) · 미리 만들지 않고 계산 ---- */
 const rrDay=md=>md>0?`${md}일`:md===-1?'말일':md===-2?'말일 하루 전':'말일 이틀 전';
-const rrText=r=>`매달 ${rrDay(r.md)}${(r.sh||[]).length?` · ${r.sh.map(k=>shiftLabel(k)).join('·')}인 날만 · ${r.miss==='next'?'아니면 다음 근무 날로':'아니면 건너뛰기'}`:''}`;
+// v0.237 근무 이름은 2개까지 쓰고 나머지는 "외 n" (설명문이 길어져 창이 깨지지 않게)
+const rrShTxt=sh=>{const n=(sh||[]).map(k=>shiftLabel(k));return n.length>2?`${n.slice(0,2).join('·')} 외 ${n.length-2}개`:n.join('·');};
+const rrShDay=sh=>(sh||[]).length>2?'그 근무':rrShTxt(sh);   // "바로 앞 ○○ 날에" 자리: 3개 이상이면 "그 근무"
+const rrText=r=>`매달 ${rrDay(r.md)}${(r.sh||[]).length?` · ${rrShTxt(r.sh)}인 날만 · ${r.miss==='next'?`아니면 바로 뒤 ${rrShDay(r.sh)} 날에`:r.miss==='prev'?`아니면 바로 앞 ${rrShDay(r.sh)} 날에`:'아니면 그달은 건너뛰어요'}`:''}`;
 function rmTarget(r,y,mo){
   const last=new Date(y,mo+1,0).getDate();let d=new Date(y,mo,r.md>0?Math.min(r.md,last):last+(r.md+1));
-  if((r.sh||[]).length){let n=0;while(persOn(fmt(d))||!r.sh.includes(shiftOf(d))){if(r.miss!=='next'||n>=31)return '';d=addDays(d,1);n++;}}
+  if((r.sh||[]).length){let n=0;const st=r.miss==='prev'?-1:1;while(persOn(fmt(d))||!r.sh.includes(shiftOf(d))){if((r.miss!=='next'&&r.miss!=='prev')||n>=31)return '';d=addDays(d,st);n++;}}   // v0.237 앞당기기(prev) · 미루기(next)
   return fmt(d);
 }
 function rmemoOn(k){
   if(role()!=='host'||!Array.isArray(S.rmemos)||!S.rmemos.length)return [];
   const d=parse(k),out=[];
   S.rmemos.forEach(r=>{if(r.from&&k<r.from)return;if((r.skip||[]).includes(k))return;
-    for(const off of [0,-1]){const x=new Date(d.getFullYear(),d.getMonth()+off,1);if(rmTarget(r,x.getFullYear(),x.getMonth())===k){out.push({id:'r:'+r.id,rep:r.id,text:r.text,color:r.color,todo:r.todo,done:(r.done||[]).includes(k)||undefined,time:r.time,al:r.al,by:role(),shared:false,t:r.t||0});break;}}});
+    for(const off of [0,-1,1]){const x=new Date(d.getFullYear(),d.getMonth()+off,1);if(rmTarget(r,x.getFullYear(),x.getMonth())===k){out.push({id:'r:'+r.id,rep:r.id,text:r.text,color:r.color,todo:r.todo,done:(r.done||[]).includes(k)||undefined,time:r.time,al:r.al,by:role(),shared:false,t:r.t||0});break;}}});
   return out;
 }
 const rmemoOf=mid=>String(mid||'').startsWith('r:')?(S.rmemos||[]).find(r=>r.id===String(mid).slice(2)):null;
