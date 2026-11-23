@@ -165,6 +165,9 @@
             android:name=".MonthNavReceiver"
             android:exported="false" />
         <receiver
+            android:name=".SmallWhoReceiver"
+            android:exported="false" />
+        <receiver
             android:name=".WidgetTickReceiver"
             android:exported="false" />
 

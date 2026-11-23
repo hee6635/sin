@@ -863,3 +863,10 @@
 - 반복 메모 "매달 언제?": 근무 조건 칩 한 줄 `.chips.rrsh` ([배지 이름] · 배지 span 에 display 를 덮지 않게 이름은 `.rrn`) · 제목 "그날이 ○○이/가 아니면"(3개 이상 "고른 근무가") · 버튼 3개 건너뛰기(skip) · 앞당기기(prev 새로) · 미루기(next) · 설명문 `rrText` 가 고른 것에 맞춰 · 근무 이름 3개 이상은 `rrShTxt` "주간·야간 외 n개" · 설명문 두 줄까지(-webkit-line-clamp).
 - `rmTarget`: prev 는 하루씩 뒤로 · `rmemoOn` 이 다음 달 몫(+1)도 봄(앞당겨져 이번 달로 들어온 것). normalize · mdSave 가 prev 를 남김.
 - 시험: s108(스티커 창 같은 창 유지) · s109(앞당기기 · 달 넘김 · 화면 · 저장) · s79 문구 바꿈.
+
+## v0.238 (덧붙임) 작은 위젯 사람 바꾸기 · 가족 달력 쉬는 근무 색
+- 1칸 · 2칸 · 7일 위젯 이름 칩 (시안 design/widget-person/v2): 1칸 · 2칸 = 첫 칸 날짜 바로 뒤(스티커 자리 앞까지 · 모자라면 색 점만) · 7일 = 요일 줄 왼쪽 끝(첫 요일 글자는 칩 옆으로). 가족(people)이 없으면 없음.
+- `SmallWhoReceiver`(manifest 등록) → `MonthRenderer.nextWho` (한 달 위젯과 같은 MonthState.who · 위젯 id 마다) → `WidgetRenderer.update`. 누르는 자리 = widget_view.xml `zone_who` 위쪽 22% 띠(2칸은 왼쪽 zwho_a 만).
+- `WidgetRenderer.personData(data, p)`: 날마다 그 사람 근무(s · t 색) · 공유 스티커(k) · 가족 메모(fm)만으로 days 를 바꿔 같은 그리기 사용. 남의 것을 볼 때 위젯 테두리를 그 사람 색으로(chipCol). 날짜 창(WidgetDayActivity)에 who 를 넘김.
+- 가족 달력(vcGrid): 쉬는 근무도 색을 정했으면 칸 채우기 (v0.232 에 내 달력만 바꿨던 것).
+- 시험: s110 · s37 · s63 · old · 코틀린 확인. 위젯 그림은 폰에서 확인 필요.

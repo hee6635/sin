@@ -47,4 +47,24 @@
         <FrameLayout android:id="@+id/zw5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
         <FrameLayout android:id="@+id/zw6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
     </LinearLayout>
+
+    <!-- v0.238 이름 칩 자리 (위쪽 띠 · 가족이 있을 때만): 누르면 다음 사람. 2칸은 왼쪽(zwho_a)만 누름 -->
+    <LinearLayout
+        android:id="@+id/zone_who"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:weightSum="100"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="22"
+            android:orientation="horizontal">
+
+            <FrameLayout android:id="@+id/zwho_a" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <FrameLayout android:id="@+id/zwho_b" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+        </LinearLayout>
+    </LinearLayout>
 </FrameLayout>

@@ -221,6 +221,19 @@ class WidgetTickReceiver : BroadcastReceiver() {
     }
 }
 
+/** v0.238 1칸 · 2칸 · 7일 위젯의 이름 칩: 누르면 다음 사람 (나 → 가족 → … → 나) · 한 달 위젯과 같은 기억 자리(MonthState.who) */
+class SmallWhoReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        if (id == AppWidgetManager.INVALID_APPWIDGET_ID) return
+        try {
+            MonthRenderer.nextWho(context, id)
+            WidgetRenderer.update(context, AppWidgetManager.getInstance(context), id, intent.getIntExtra("count", 1))
+        } catch (e: Exception) {
+        }
+    }
+}
+
 class TodayWidget1Provider : AppWidgetProvider() {
     override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
         for (id in ids) WidgetRenderer.update(context, mgr, id, 1)
@@ -443,14 +456,24 @@ object WidgetRenderer {
             val w = size[0]
             val h = size[1]
             val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-            draw(ctx, Canvas(bmp), w.toFloat(), h.toFloat(), count)
+            val data0 = WidgetStore.load(ctx)
+            val ppl = MonthRenderer.people(data0)
+            val want = MonthState.who(ctx, id)
+            val person = if (want.isEmpty()) null else ppl.firstOrNull { MonthRenderer.personKey(it) == want }   // v0.238 그 사람이 없어졌으면 나
+            val who = if (person != null) MonthRenderer.personKey(person) else ""
+            chipNm = if (ppl.isEmpty()) null else if (person == null) "나" else person.optString("n", "가족")
+            chipCol = if (person == null) 0 else parseColor(person.optString("c", ""), 0xFF8A919A.toInt())
+            try {
+                val data = if (person != null && data0 != null) personData(data0, person) else data0
+                drawWith(Canvas(bmp), data, palette(ctx, data0), w.toFloat(), h.toFloat(), count, "")
+            } finally { chipNm = null; chipCol = 0 }
             val rv = RemoteViews(ctx.packageName, R.layout.widget_view)
             rv.setImageViewBitmap(R.id.widget_img, bmp)
             // 누르면 그 날짜의 큰 창: 1칸은 오늘, 2칸은 왼쪽 = 오늘 · 오른쪽 = 내일
             val tomCal = Calendar.getInstance()
             tomCal.add(Calendar.DAY_OF_YEAR, 1)
             fun dayPi(k: String, half: Int): PendingIntent {
-                val it = Intent(ctx, WidgetDayActivity::class.java).putExtra("k", k)
+                val it = Intent(ctx, WidgetDayActivity::class.java).putExtra("k", k).putExtra("who", who)
                 it.data = Uri.parse("eonjeswieo://widget/" + id + "/" + half)
                 return PendingIntent.getActivity(
                     ctx, id * 10 + half, it,
@@ -473,6 +496,17 @@ object WidgetRenderer {
                 } else {
                     rv.setViewVisibility(R.id.zone_b, View.GONE)
                 }
+            }
+            // v0.238 이름 칩 자리(위쪽 띠): 누르면 다음 사람 · 가족이 없으면 없음 · 2칸은 왼쪽 칸만
+            if (ppl.isNotEmpty()) {
+                val wi = Intent(ctx, SmallWhoReceiver::class.java).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id).putExtra("count", count)
+                wi.data = Uri.parse("eonjeswieo://who/" + id)
+                val wpi = PendingIntent.getBroadcast(ctx, id * 10 + 9, wi, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                rv.setViewVisibility(R.id.zone_who, View.VISIBLE)
+                rv.setOnClickPendingIntent(R.id.zwho_a, wpi)
+                if (count != 2) rv.setOnClickPendingIntent(R.id.zwho_b, wpi)
+            } else {
+                rv.setViewVisibility(R.id.zone_who, View.GONE)
             }
             mgr.updateAppWidget(id, rv)
         } catch (e: Exception) {
@@ -531,6 +565,70 @@ object WidgetRenderer {
     @Volatile private var alphaF = 1f
     @Volatile private var tomText = ""   // v0.161 1칸 위젯: 근무 이름 아래 "내일 ○○"
 
+    @Volatile private var chipNm: String? = null   // v0.238 이름 칩 (가족이 없으면 null)
+    @Volatile private var chipCol = 0   // 0 = 나 (글자색) · 아니면 그 사람 색 (위젯 테두리도)
+
+    /** v0.238 가족 근무표로 바꿔 볼 때: 날마다 그 사람 근무(s · t) · 그 사람이 공유한 스티커(k) · 가족 메모(fm)만 (내 메모 · 업무 일지 · 기간 띠는 안 보임) — 한 달 위젯과 같은 규칙 */
+    internal fun personData(data: JSONObject, p: JSONObject): JSONObject {
+        val out = JSONObject(data.toString())
+        val days = data.optJSONArray("days") ?: return out
+        val sArr = p.optJSONArray("s")
+        val tMap = p.optJSONObject("t")
+        val kMap = p.optJSONObject("k")
+        val nd = JSONArray()
+        for (i in 0 until days.length()) {
+            val d = days.optJSONObject(i) ?: continue
+            val k = d.optString("k", "")
+            val o = JSONObject()
+            for (f in arrayOf("k", "w", "m", "d", "hol", "h1", "h2", "far")) if (d.has(f)) o.put(f, d.get(f))
+            val t = sArr?.optString(i, "") ?: ""
+            if (t.isNotEmpty()) {
+                o.put("t", t)
+                val leg = tMap?.optJSONArray(t)
+                if (leg != null && leg.length() >= 2) { o.put("bg", leg.optString(0, "")); o.put("fg", leg.optString(1, "")) }
+            }
+            val st = kMap?.optJSONArray(k)
+            if (st != null) o.put("stk", st)
+            val fm = d.optJSONArray("fm")
+            if (fm != null && fm.length() > 0) { o.put("ms", fm); o.put("nf", fm.length()) }
+            nd.put(o)
+        }
+        out.put("days", nd)
+        return out
+    }
+
+    /** 이름 칩 그리기: ● 이름 (자리가 모자라면 ● 만) — 그린 오른쪽 끝을 돌려줌 */
+    private fun drawWhoChip(cv: Canvas, x: Float, cy: Float, maxR: Float, size: Float, pal: Pal): Float {
+        val nm = chipNm ?: return x
+        val tp = TextPaint(Paint.ANTI_ALIAS_FLAG)
+        tp.typeface = WFont.bold
+        tp.textSize = size
+        val dotR = size * 0.32f
+        val padX = size * 0.5f
+        val tw = tp.measureText(nm)
+        val full = padX + dotR * 2 + size * 0.3f + tw + padX
+        val hgt = size * 1.55f
+        val dot = if (chipCol != 0) chipCol else pal.fg
+        val dp = Paint(Paint.ANTI_ALIAS_FLAG)
+        if (x + full <= maxR) {
+            val bp = Paint(Paint.ANTI_ALIAS_FLAG)
+            bp.color = if (pal === DARK) 0x33FFFFFF else 0xD9FFFFFF.toInt()
+            cv.drawRoundRect(RectF(x, cy - hgt / 2, x + full, cy + hgt / 2), hgt / 2, hgt / 2, bp)
+            dp.color = dot
+            cv.drawCircle(x + padX + dotR, cy, dotR, dp)
+            tp.color = pal.fg
+            tp.textAlign = Paint.Align.LEFT
+            cv.drawText(nm, x + padX + dotR * 2 + size * 0.3f, cy + size * 0.36f, tp)
+            return x + full
+        }
+        if (x + dotR * 2 + 2f * dens <= maxR) {   // 자리가 모자라면 색 점만
+            dp.color = dot
+            cv.drawCircle(x + dotR + 1f * dens, cy, dotR * 1.1f, dp)
+            return x + dotR * 2 + 2f * dens
+        }
+        return x
+    }
+
     private fun draw(ctx: Context, cv: Canvas, w: Float, h: Float, count: Int) {
         val data = WidgetStore.load(ctx)
         drawWith(cv, data, palette(ctx, data), w, h, count, "")   // v0.161 2칸 아래 "다음 알람" 줄 뺌 (사용자)
@@ -543,6 +641,14 @@ object WidgetRenderer {
         bgPaint.color = (pal.bg and 0x00FFFFFF) or (alpha shl 24)
         val r = Math.min(w, h) * 0.12f
         cv.drawRoundRect(RectF(0f, 0f, w, h), r, r, bgPaint)
+        if (chipCol != 0) {   // v0.238 가족 근무표를 볼 때: 위젯 테두리를 그 사람 색으로
+            val rp = Paint(Paint.ANTI_ALIAS_FLAG)
+            rp.style = Paint.Style.STROKE
+            rp.strokeWidth = 2.5f * dens
+            rp.color = chipCol
+            val hs = rp.strokeWidth / 2
+            cv.drawRoundRect(RectF(hs, hs, w - hs, h - hs), r, r, rp)
+        }
 
         val icons = data?.optJSONObject("ic")
         fill = data?.optString("look", "fill") != "circle"   // 칸 채우기(기본) · 동그라미 — 한 달 위젯 · 앱 달력과 같은 설정
@@ -601,10 +707,16 @@ object WidgetRenderer {
         paint.textAlign = Paint.Align.CENTER
         paint.typeface = WFont.bold
         paint.textSize = head.text
+        var x0Label = 0f   // v0.238 이름 칩: 요일 줄 왼쪽 끝 · 첫 요일 글자는 칩 옆으로 비킴
+        if (chipNm != null) {
+            val lw = paint.measureText(DOW[order[0]])
+            val r = drawWhoChip(cv, 1.5f * dens, hh * 0.5f, cw - lw - 3f * dens, Math.min(hh * 0.62f, 11f * dens), pal)
+            x0Label = r + 2.5f * dens + lw / 2
+        }
         for (i in 0 until 7) {
             val wd = order[i]
             paint.color = if (wd == 0) pal.sun else if (wd == 6) pal.sat else pal.sub
-            cv.drawText(DOW[wd], cw * i + cw / 2, hh * 0.78f, paint)
+            cv.drawText(DOW[wd], if (i == 0) Math.max(cw / 2, x0Label) else cw * i + cw / 2, hh * 0.78f, paint)
         }
         val todayKey = dateKey(Calendar.getInstance())
         val days = ArrayList<JSONObject?>()
@@ -759,6 +871,10 @@ object WidgetRenderer {
         paint.textSize = row.dateSize
         while (paint.measureText(dateText) > availDate && paint.textSize > row.dateSize * 0.6f) paint.textSize = paint.textSize * 0.92f
         cv.drawText(TextUtils.ellipsize(dateText, paint, availDate, TextUtils.TruncateAt.END).toString(), x0 + pad, y0 + row.dateBase, paint)
+        if (!compact && chipNm != null && x0 < 1f) {   // v0.238 1칸 · 2칸: 이름 칩은 첫 칸 날짜 바로 뒤 (스티커 자리 앞까지 · 모자라면 ● 만)
+            val dw = paint.measureText(dateText)
+            drawWhoChip(cv, x0 + pad + dw + 4f * dens, y0 + row.dateBase - row.dateSize * 0.36f, x0 + cw - pad - (if (n1 > 0) w1 + sg else 0f) - 2f * dens, Math.min(row.dateSize * 0.6f, 12f * dens), pal)
+        }
         if (hol.isNotEmpty() && row.holChars > 0) {   // 공휴일 · 명절: 날짜 숫자 아래 빨간 두 글자 (앱 달력과 같은 줄임말 · 7일 위젯 · 2칸 · 1칸 모두). 자리가 모자라는 크기는 한 글자 · 글자 크기와 글자 수는 WidgetLayout 이 칸 크기로 정함
             val short = d.optString(if (row.holChars >= 2) "h2" else "h1", "")
             val label = (if (short.isNotEmpty()) short else hol).take(row.holChars)   // (h2 · h1 이 없는 옛 위젯 데이터는 이름 앞 글자)
