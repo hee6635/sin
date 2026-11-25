@@ -746,3 +746,9 @@
 - MainActivity.showWallpaper: 켤 때 window.setFormat(TRANSLUCENT) (불투명 형식이면 매번 안 지워서 지나간 화면이 겹쳐 남음) · 끌 때 OPAQUE · 켠 뒤 invalidate.
 - wpShow: 화면이 다 들어온 뒤(0.26초) 켬 · 끌 땐 바로.
 - 미리보기: MonthRenderer.preview 밀도 2배까지만(그림 작게) · wgPrev 는 밀고 있는 동안 0.15초에 한 번(throttle) + 끝난 뒤 한 번.
+
+## v0.217 알람 안정성 보강 (덧붙임)
+- 예약 실패: AlarmScheduler.scheduleNext 가 SecurityException 이면 `schedFailAt` 저장(성공하면 지움 · `lastSched` = 같은 예약을 기록에 반복 안 남기게) → `AlarmScheduler.schedFailAt()` → `AlarmBridge.status()` 에 "sched" → 알람 탭 배너(ISSUE_TXT.sched) · `openSettings("sched")` = 정확한 알람 화면(12 미만 · 없으면 앱 정보)
+- MainActivity.onResume: scheduleNext → rescheduleAll · BootReceiver 에 SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED 추가 (권한 켜면 앱 안 열어도 다시 예약)
+- AlarmService 소리: toneChain(고른 벨소리 → 기본 알람음 → 기본 벨소리, 같은 주소 1번) · playFrom = prepareAsync + 3초 제한(PREPARE_MS) · 재생 중 오류도 다음 단계 · 다 실패하면 진동 강제 · 알람 볼륨(STREAM_ALARM) 0 이면 진동 강제 · `gen` 회차로 늦게 온 콜백 무시
+- AlarmLog.kt: 잠금 전 저장소 `alarm_log` 최근 200줄 (예약 · 예약 실패 · 다시 예약(이유) · 울림(예정 · +초) · 보조 알림 · 재생 실패 · 대신 재생 · 볼륨 0 · 끄기 · 다시 울림 · 자동 정지) · `AlarmBridge.alarmLog()` / `clearAlarmLog()` · 개발자 메뉴(openFirebasePage) "알람 기록" + 복사(alog-copy) — 브라우저엔 칸 없음 · 시험 s105

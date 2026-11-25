@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
@@ -34,6 +35,7 @@ class AlarmService : Service() {
         private const val AUTO_STOP_MS = 3 * 60 * 1000L
         private const val RAMP_MS = 30_000L      // 점점 커지는 소리: 30초 동안
         private const val BACKUP_CHANNEL = "eonjeswieo_alarm_backup"
+        private const val PREPARE_MS = 3_000L    // v0.217 벨소리 준비가 이보다 오래 걸리면(클라우드 파일 등) 다음 소리로
 
         private fun ringIntent(ctx: Context, r: Ring): Intent {
             val i = Intent(ctx, AlarmActivity::class.java)
@@ -89,7 +91,10 @@ class AlarmService : Service() {
     private var player: MediaPlayer? = null
     private var vibrator: Vibrator? = null
     private val handler = Handler(Looper.getMainLooper())
-    private val autoStop = Runnable { stopAlarm() }
+    private val autoStop = Runnable {
+        AlarmLog.add(this, "자동 정지 (3분) id=${cur?.id ?: "?"}")
+        stopAlarm()
+    }
     private var rampStart = 0L
     private var target = 1f
 
@@ -110,9 +115,16 @@ class AlarmService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_STOP -> { stopAlarm(); return START_NOT_STICKY }
+            ACTION_STOP -> {
+                AlarmLog.add(this, "끄기 id=${cur?.id ?: "?"}")
+                stopAlarm()
+                return START_NOT_STICKY
+            }
             ACTION_SNOOZE -> {
-                cur?.let { AlarmScheduler.snooze(this, it) }
+                cur?.let {
+                    AlarmLog.add(this, "다시 울림 ${it.snMin}분 뒤 (${it.snCount + 1}번째) id=${it.id}")
+                    AlarmScheduler.snooze(this, it)
+                }
                 stopAlarm()
                 return START_NOT_STICKY
             }
@@ -187,42 +199,119 @@ class AlarmService : Service() {
         }
     }
 
-    private fun toneUri(r: Ring): Uri? {
-        if (r.tone.isNotEmpty()) try { return Uri.parse(r.tone) } catch (e: Exception) {}
-        return RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+    /**
+     * v0.217 울릴 소리 차례: 고른 벨소리 → 기본 알람음 → 기본 벨소리. (같은 주소는 한 번만)
+     * 다 실패하면 진동을 꺼 둔 알람이라도 진동을 켠다 — 소리도 진동도 없이 지나가지 않게.
+     */
+    private fun toneChain(r: Ring): List<Pair<String, Uri>> {
+        val out = ArrayList<Pair<String, Uri>>()
+        fun add(name: String, u: Uri?) {
+            if (u != null && out.none { it.second == u }) out.add(name to u)
+        }
+        if (r.tone.isNotEmpty()) try { add("고른 벨소리", Uri.parse(r.tone)) } catch (e: Exception) {}
+        try { add("기본 알람음", RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)) } catch (e: Exception) {}
+        try { add("기본 벨소리", RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)) } catch (e: Exception) {}
+        return out
     }
+
+    private val attrs: AudioAttributes = AudioAttributes.Builder()
+        .setUsage(AudioAttributes.USAGE_ALARM)          // 무음 · 진동 모드에서도 알람 소리로 남
+        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+        .build()
+
+    /** 소리 시도 회차 — 끄거나 새로 울리면 올라가서, 늦게 도착한 준비 완료 · 오류 · 시간 초과를 무시하게 함 */
+    private var gen = 0
+    /** 지금 준비 중인 재생기 (3초 안에 준비 안 되면 버리고 다음 소리로) */
+    private var pending: MediaPlayer? = null
+    private var prepTimeout: Runnable? = null
 
     private fun startSoundAndVibration(r: Ring) {
         stopSound()
+        val g = ++gen
+        var forceVib = false
         if (r.sound && r.vol > 0) {
             target = r.vol / 100f
-            val attrs = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ALARM)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build()
-            fun play(uri: Uri?): Boolean = try {
-                val mp = MediaPlayer()
-                mp.setAudioAttributes(attrs)
-                mp.setDataSource(this, uri!!)
-                mp.isLooping = true
-                mp.prepare()
-                val v = if (r.ramp) target * 0.05f else target
-                mp.setVolume(v, v)
-                mp.start()
-                player = mp
-                true
+            // 재생은 되는데 안 들리는 경우: 폰 알람 볼륨 0 → 오류가 안 나서 다음 소리로 못 넘어가므로 진동을 켬
+            try {
+                val am = getSystemService(AudioManager::class.java)
+                if (am != null && am.getStreamVolume(AudioManager.STREAM_ALARM) == 0) {
+                    AlarmLog.add(this, "알람 볼륨 0 → 진동 켬")
+                    forceVib = true
+                }
             } catch (e: Exception) {
-                false
             }
-            // 고른 알람음이 지워졌으면 기본 알람음으로
-            if (!play(toneUri(r))) play(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
-            if (r.ramp && player != null) {
-                rampStart = System.currentTimeMillis()
-                handler.post(rampStep)
-            }
+            playFrom(r, toneChain(r), 0, g)
         }
-        if (r.vib) try {
+        if (r.vib || forceVib) startVibration()
+    }
+
+    /** chain[i] 를 재생해 보고, 실패 · 시간 초과면 chain[i+1] 로 */
+    private fun playFrom(r: Ring, chain: List<Pair<String, Uri>>, i: Int, g: Int) {
+        if (g != gen) return
+        if (i >= chain.size) {
+            AlarmLog.add(this, "소리 모두 실패 → 진동")
+            startVibration()
+            return
+        }
+        val (name, uri) = chain[i]
+        val mp = MediaPlayer()
+        pending = mp
+        fun fail(why: String) {
+            if (g != gen || pending !== mp) return
+            prepTimeout?.let { handler.removeCallbacks(it) }
+            pending = null
+            try { mp.release() } catch (e: Exception) {}
+            AlarmLog.add(this, "재생 실패: $name ($why)")
+            playFrom(r, chain, i + 1, g)
+        }
+        try {
+            mp.setAudioAttributes(attrs)
+            mp.setDataSource(this, uri)
+            mp.isLooping = true
+            mp.setOnPreparedListener {
+                if (g != gen || pending !== mp) {
+                    try { mp.release() } catch (e: Exception) {}
+                    return@setOnPreparedListener
+                }
+                prepTimeout?.let { handler.removeCallbacks(it) }
+                pending = null
+                try {
+                    val v = if (r.ramp) target * 0.05f else target
+                    mp.setVolume(v, v)
+                    mp.start()
+                    player = mp
+                    if (i > 0) AlarmLog.add(this, "대신 재생: $name")
+                    if (r.ramp) {
+                        rampStart = System.currentTimeMillis()
+                        handler.post(rampStep)
+                    }
+                } catch (e: Exception) {
+                    pending = mp
+                    fail("시작 ${e.javaClass.simpleName}")
+                }
+            }
+            mp.setOnErrorListener { _, what, extra ->
+                if (player === mp) {
+                    // 울리던 중 오류 → 다음 소리로
+                    player = null
+                    handler.removeCallbacks(rampStep)
+                    pending = mp
+                }
+                fail("오류 $what/$extra")
+                true
+            }
+            val t = Runnable { fail("준비 3초 넘음") }
+            prepTimeout = t
+            handler.postDelayed(t, PREPARE_MS)
+            mp.prepareAsync()
+        } catch (e: Exception) {
+            fail(e.javaClass.simpleName)
+        }
+    }
+
+    private fun startVibration() {
+        if (vibrator != null) return
+        try {
             val v = getSystemService(Vibrator::class.java)
             v?.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 800, 600), 0))
             vibrator = v
@@ -231,7 +320,15 @@ class AlarmService : Service() {
     }
 
     private fun stopSound() {
+        gen++
         handler.removeCallbacks(rampStep)
+        prepTimeout?.let { handler.removeCallbacks(it) }
+        prepTimeout = null
+        try {
+            pending?.release()
+        } catch (e: Exception) {
+        }
+        pending = null
         try {
             player?.stop()
         } catch (e: Exception) {

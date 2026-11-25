@@ -10,14 +10,19 @@ class AlarmReceiver : BroadcastReceiver() {
         val at = intent.getLongExtra(AlarmScheduler.EXTRA_AT, 0L)
         if (at == 0L) return
 
+        val now = System.currentTimeMillis()
         val due = AlarmScheduler.peekDue(context, at)
         if (due.isEmpty()) {
+            AlarmLog.add(context, "깨움 (이미 처리됨) 예정 ${AlarmLog.hm(at)}")
             AlarmScheduler.consumeDue(context, at)   // 이미 처리된 알람: 목록을 정리하고 다음 알람만 예약
             return
         }
 
         PreAlarmReceiver.cancel(context)   // v0.142 5분 전 알림은 알람이 울리면 사라짐
         val ring = AlarmScheduler.merge(due, at)
+        // v0.217 예정보다 몇 초 늦게 울렸는지 — 제조사 절전 때문에 늦는지 바로 보이게
+        val late = (now - at) / 1000
+        AlarmLog.add(context, "울림 id=${ring.id} 예정 ${AlarmLog.hm(at)} (${if (late >= 0) "+" else ""}${late}초)")
         var started = false
         try {
             val svc = Intent(context, AlarmService::class.java)
@@ -28,7 +33,10 @@ class AlarmReceiver : BroadcastReceiver() {
         } catch (e: Exception) {
             // 시스템이 서비스를 못 띄우게 막은 경우 → 아래에서 소리 나는 알림이라도 띄움
         }
-        if (!started) AlarmService.fallbackNotify(context, ring)
+        if (!started) {
+            AlarmLog.add(context, "알람 서비스 못 띄움 → 보조 알림")
+            AlarmService.fallbackNotify(context, ring)
+        }
 
         // 울렸으니 목록에서 지우고 다음 알람 예약. (서비스를 띄운 뒤에 해서, 띄우다 실패해도 알람이 말없이 사라지지 않게)
         AlarmScheduler.consumeDue(context, at)

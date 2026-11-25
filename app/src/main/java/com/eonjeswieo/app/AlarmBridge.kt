@@ -300,8 +300,18 @@ class AlarmBridge(private val activity: MainActivity) {
 
         val pm = context.getSystemService(PowerManager::class.java)
         if (pm != null && !pm.isIgnoringBatteryOptimizations(context.packageName)) missing.add("batt")
+
+        // v0.217 권한은 켜져 보여도 실제 예약이 막힌 경우 (scheduleNext 의 SecurityException) — 예약에 성공하면 저절로 지워짐
+        if (AlarmScheduler.schedFailAt(context) != 0L) missing.add("sched")
         return missing.joinToString(",")
     }
+
+    /** v0.217 알람 기록 (개발자 메뉴에서 복사) — 오래된 줄이 위 */
+    @JavascriptInterface
+    fun alarmLog(): String = AlarmLog.read(context)
+
+    @JavascriptInterface
+    fun clearAlarmLog() = AlarmLog.clear(context)
 
     /** 해당 항목의 설정 화면 열기 */
     @JavascriptInterface
@@ -310,6 +320,10 @@ class AlarmBridge(private val activity: MainActivity) {
         val intent: Intent? = when (kind) {
             "exact" ->
                 if (Build.VERSION.SDK_INT >= 31) Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, pkg) else null
+            // v0.217 예약 실패: 정확한 알람 화면 (안드로이드 12 미만이면 앱 정보)
+            "sched" ->
+                if (Build.VERSION.SDK_INT >= 31) Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, pkg)
+                else Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkg)
             "notif" ->
                 Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                     .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
@@ -349,6 +363,10 @@ class AlarmBridge(private val activity: MainActivity) {
             try {
                 context.startActivity(intent)
             } catch (e: Exception) {
+                if (kind == "sched" || kind == "exact") try {   // 정확한 알람 화면이 없는 기기: 앱 정보
+                    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                } catch (e2: Exception) {
+                }
                 if (kind == "remind_sound") try {   // 채널 화면이 없는 기기: 앱 알림 화면으로
                     context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 } catch (e2: Exception) {

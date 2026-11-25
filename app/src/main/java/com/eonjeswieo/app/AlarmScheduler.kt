@@ -73,6 +73,8 @@ object AlarmScheduler {
     private const val REQ_NEXT = 4242
     private const val REQ_TAIL = 4243
     private const val REQ_PRE = 4244
+    private const val KEY_LAST = "lastSched"     // v0.217 마지막으로 예약한 시각 (같은 예약을 기록에 반복해 남기지 않게)
+    private const val KEY_FAIL = "schedFailAt"   // v0.217 정확한 알람 권한이 없어 예약에 실패한 시각 (성공하면 지움)
     private const val KEY_SKIP = "skips"      // v0.142 5분 전 알림에서 "이번만 끄기" 한 알람 (앱이 다음에 열릴 때 가져감)
     private var migrated = false
 
@@ -140,6 +142,13 @@ object AlarmScheduler {
         } catch (e: Exception) {
             // 예약하지 못해도 알람 자체는 그대로
         }
+    }
+
+    /** v0.217 예약에 실패한 시각 (0 = 실패 없음) — 앱 화면 알람 탭 배너에 씀 */
+    fun schedFailAt(ctx: Context): Long = try {
+        prefs(ctx).getLong(KEY_FAIL, 0L)
+    } catch (e: Exception) {
+        0L
     }
 
     /** 폰을 다시 켠 뒤 · 앱을 업데이트한 뒤: 다음 알람과 "끊기기 전 알림"을 다시 건다 */
@@ -213,15 +222,25 @@ object AlarmScheduler {
         val next = readList(ctx).firstOrNull { it.at > now + 1000 }
         if (next == null) {
             am.cancel(pending(ctx, 0L))
+            prefs(ctx).edit().remove(KEY_FAIL).apply()
             return
         }
         val show = PendingIntent.getActivity(
             ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE
         )
+        val p = prefs(ctx)
+        val prevAt = p.getLong(KEY_LAST, 0L)
+        val hadFail = p.getLong(KEY_FAIL, 0L) != 0L
         try {
             am.setAlarmClock(AlarmManager.AlarmClockInfo(next.at, show), pending(ctx, next.at))
+            if (hadFail || prevAt != next.at) {
+                p.edit().remove(KEY_FAIL).putLong(KEY_LAST, next.at).apply()
+                AlarmLog.add(ctx, "예약 ${AlarmLog.stamp(next.at)} id=${next.id}" + if (hadFail) " (실패 뒤 복구)" else "")
+            }
         } catch (e: SecurityException) {
-            // 정확한 알람 권한이 없는 상태 → 앱 화면의 안내 배너에서 설정을 열 수 있다
+            // 정확한 알람 권한이 없는 상태 → 앱 화면 알람 탭 배너("알람 예약에 실패했어요 · 설정 열기")
+            if (!hadFail) AlarmLog.add(ctx, "예약 실패 ${AlarmLog.stamp(next.at)} id=${next.id} (정확한 알람 권한 없음)")
+            p.edit().putLong(KEY_FAIL, System.currentTimeMillis()).remove(KEY_LAST).apply()
         }
         schedulePre(ctx)
     }

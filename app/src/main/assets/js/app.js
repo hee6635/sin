@@ -553,10 +553,12 @@ function load(){
 let S=load();setTimeout(()=>{if(!ovSnap)ovSnap={...(S.overrides||{})};},0);   // v0.135 근무 기록: 처음 상태
 
 /* 안드로이드 앱이 알려주는 알람 권한 상태 (브라우저에서는 빈 목록) */
-const ISSUE_TXT={exact:'정확한 알람 권한이 필요해요',notif:'알림을 허용해야 알람이 떠요',fsi:'잠금화면에 알람 화면을 띄우는 권한이 필요해요',batt:'배터리를 "제한 없음"으로 해야 알람이 안 늦어요'};
+const ISSUE_TXT={sched:'알람 예약에 실패했어요',exact:'정확한 알람 권한이 필요해요',notif:'알림을 허용해야 알람이 떠요',fsi:'잠금화면에 알람 화면을 띄우는 권한이 필요해요',batt:'배터리를 "제한 없음"으로 해야 알람이 안 늦어요'};
 const PERM_KEYS=['notif','exact','fsi','batt'],PERM_NAME={notif:'알림 허용',exact:'정확한 시간에 알람',fsi:'잠금화면에 알람 화면',batt:'배터리 제한 없음'};
 const PERM_ICON={notif:'bell',exact:'clock',fsi:'smartphone',batt:'battery'};
 const SAMSUNG_TIP='삼성: 설정 › 배터리 › 백그라운드 사용 제한 › 절전 예외 앱에도 언제쉬어를 넣어 주세요';
+/* v0.217 폰의 알람 기록 (예약 · 울림 · 재생 실패 · 끄기 · 다시 울림) — 개발자 메뉴에서만 */
+function alarmLogText(){try{if(window.AndroidBridge&&typeof window.AndroidBridge.alarmLog==='function')return String(window.AndroidBridge.alarmLog()||'');}catch(e){}return null;}
 function nativeIssues(){
   try{
     if(window.AndroidBridge&&typeof window.AndroidBridge.status==='function'){
@@ -7231,6 +7233,7 @@ document.addEventListener('click',e=>{
     case 'lnk-go':closePop();lnkGo(t.dataset.u);break;
     case 'lnk-open2':closePop();lnkOpen(t.dataset.u,!!t.dataset.fam);break;
     case 'pf-copy':copyText(pfText()||'(기록 없음)');break;
+    case 'alog-copy':copyText(alarmLogText()||'(기록 없음)');break;
     case 'lnk-copy':closePop();lnkCopy(t.dataset.u);break;
     /* 시간 · 날짜 고르기 */
     case 'tpk':openTpk(t.dataset.id,t.dataset.type);break;
@@ -8368,6 +8371,7 @@ function openFirebasePage(){
     ${pageHead('Firebase 연결 시험')}
     <div class="pg-b">
       <div class="pg-sec" style="padding:12px 14px"><div style="display:flex;align-items:center;justify-content:space-between"><b>시작 기록 (켠 뒤 12초 · ms)</b><button class="btn ghost" style="padding:6px 14px;min-height:0" data-act="pf-copy">복사</button></div><div style="font:12px/1.5 monospace;white-space:pre-wrap;margin-top:6px;max-height:60vh;overflow:auto">${esc(pfText()||'(기록 없음)')}</div></div>
+      ${alarmLogText()!==null?`<div class="pg-sec" style="padding:12px 14px"><div style="display:flex;align-items:center;justify-content:space-between"><b>알람 기록</b><button class="btn ghost" style="padding:6px 14px;min-height:0" data-act="alog-copy">복사</button></div><div class="alog" style="font:12px/1.5 monospace;white-space:pre-wrap;margin-top:6px;max-height:40vh;overflow:auto">${esc(alarmLogText()||'(기록 없음)')}</div></div>`:''}
       <div class="pg-sec">
         ${row('설정 파일','firebase/config.js',f.cfg?'있음':'없음',f.cfg?'var(--today)':'var(--muted)')}
         ${row('로그인 (익명)','',f.uid?esc(f.uid.slice(0,8))+'…':'아직',ok?'var(--today)':'')}

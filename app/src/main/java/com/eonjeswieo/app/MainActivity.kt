@@ -606,8 +606,11 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         webView.onResume()
-        // 설정 화면에서 권한을 바꾸고 돌아왔을 수 있으니 알람 예약을 다시 확인하고 화면을 새로 고침
-        AlarmScheduler.scheduleNext(this)
+        // 설정 화면에서 권한을 바꾸고 돌아왔을 수 있으니 알람 예약을 다시 걸고(성공하면 예약 실패 기록이 지워져 배너도 사라짐) 화면을 새로 고침
+        try {
+            AlarmScheduler.rescheduleAll(this)
+        } catch (e: Exception) {
+        }
         webView.evaluateJavascript("window.__refresh&&window.__refresh()", null)
     }
 
