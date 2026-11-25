@@ -2836,3 +2836,17 @@
 
 ## ✅ v0.214
 - 알람이 잘 울리게 › 삼성 줄: 삼성 폰에서만 보이기 · 누르면 삼성 "백그라운드 앱 사용 제한" 화면 바로 열기(안 되면 배터리 설정) · 문구 "자동 절전 예외 앱에 언제쉬어 넣기" (사용자 폰 화면 확인: 설정 › 배터리 › 백그라운드 앱 사용 제한 › 자동 절전 예외 앱)
+
+## 다음 · 알람 안정성 보강 (2026-11-25 계획 · "만들어" 대기)
+- 1순위 예약 실패 표시 (기존 status() · 알람 탭 배너 재사용, 새 화면 요소 없음)
+  - scheduleNext: SecurityException → schedFailAt 저장 · 예약 성공하면 지움 → status()에 "sched" · ISSUE_TXT "알람 예약에 실패했어요" · openSettings("sched") = 정확한 알람 설정(없으면 앱 정보)
+  - MainActivity.onResume: scheduleNext → rescheduleAll (돌아오면 바로 다시 예약 → 성공 시 배너 사라짐)
+  - BootReceiver 에 android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED 추가 (앱 안 열어도 복구)
+- 2순위 소리 폴백 (AlarmService)
+  - 고른 벨소리 → 기본 알람음 → 기본 벨소리 → 다 실패면 진동 강제
+  - 재생 중 오류(setOnErrorListener)도 다음 단계로
+  - prepareAsync + 3초 제한, 넘으면 다음 단계 (늦게 준비돼도 release)
+  - 알람 볼륨(STREAM_ALARM) 0 → 기록 + 진동 강제 (USAGE_ALARM 은 이미 씀)
+- 3순위 알람 기록 (개발자 메뉴에서만 보임)
+  - AlarmLog.kt: 최근 200줄 · 잠금 전 저장소 · 예약 / 예약 실패 / 다시 예약(이유) / 울림(예정 시각 · +몇 초 늦음) / 보조 알림 / 재생 실패 단계 / 볼륨 0 / 끄기 / 스누즈 / 3분 자동 정지
+  - AlarmBridge.alarmLog() · 개발자 메뉴에 "알람 기록" + 복사 버튼
