@@ -346,6 +346,7 @@ document.addEventListener('click',e=>{
         [r.querySelector('.tbtn'),r.querySelector('.mdtill')].forEach(e=>{if(e)e.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.8)'}],{duration:220,fill:'forwards'});});
         setTimeout(go,170);break;}}catch(e){}
       go();break;}
+    case 'tg-mv':tgMove(+t.dataset.v);break;   // v0.240 같이 쉬는 날 달 넘기기
     case 'per-open':if(t.dataset.srv)openDay(t.dataset.k);else openMemoDetail(t.dataset.k,t.dataset.id);break;
     case 'md-pc':mdPull();mdDraft.pc=t.dataset.v||'';renderMemoDetail();break;   // v0.233 가족 메모 띠 색
     case 'md-settime':{mdPull();mdDraft.time='09:00';const pb=$('#page');const st0=pb&&pb.querySelector('.pg-b')?pb.querySelector('.pg-b').scrollTop:0;renderMemoDetail();   // v0.209 ＋가 돌며 ✕ · 시간 톡 · 알림 줄 스르르

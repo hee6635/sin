@@ -213,6 +213,33 @@ const deepHex=h=>{try{const n=parseInt(String(h).slice(1),16);const f=x=>Math.ro
 function cheerList(){return (Array.isArray(S.famCheer)&&S.famCheer.length?S.famCheer:CHEER_DEF);}
 // 가족 동그라미: 사진이 있으면 사진, 없으면 첫 글자 + 색
 function famAv(m,i){const src=isPhoto(m.photo)&&(S.icons||{})[m.photo.slice(1)];return `<i style="background:${m.color||FAM_COL[i%6]}">${src?`<img src="${src}" alt="">`:esc((m.name||'?').slice(0,1))}</i>`;}
+// v0.240 같이 쉬는 날: 달 넘기기 (‹ › · 좌우로 밀기 · 다른 달이면 "이번 달") — 시안 design/review26/7-together-next-month (B)
+let tgOff=0;
+function tgSecHtml(){
+  const t0=new Date(),today=new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()),first=new Date(t0.getFullYear(),t0.getMonth()+tgOff,1),end=new Date(first.getFullYear(),first.getMonth()+1,0),chips=[];
+  for(let d=tgOff?new Date(first):new Date(today);d<=end;d=addDays(d,1)){const g=togetherOn(d);if(g)chips.push([d,g]);}
+  const ch=chips.map(([d,g])=>`<button class="tg-chip ${g}" data-act="fam-day" data-k="${fmt(d)}">${d.getDate()}(${DOW[d.getDay()]})<small>${g==='all'?'종일':'낮'}</small>${wxChipIcon(d)}</button>`).join('');
+  const mo=first.getMonth()+1;
+  return `<div class="fsec tghd"><span>${tgOff?`${mo}월 같이 쉬는 날`:`${mo}월에 남은 같이 쉬는 날`}</span>${tgOff?`<button class="tgnow" data-act="tg-mv" data-v="0">이번 달</button>`:''}<span class="tgnav"><button data-act="tg-mv" data-v="-1" ${tgOff<=0?'disabled':''} aria-label="앞 달">‹</button><button data-act="tg-mv" data-v="1" ${tgOff>=11?'disabled':''} aria-label="다음 달">›</button></span></div>${ch?`<div class="tg-row">${ch}</div>`:`<div class="mempty">${tgOff?'이 달엔 같이 쉬는 날이 없어요':'이번 달엔 남은 날이 없어요'}</div>`}`;
+}
+function tgMove(v,fromX){const n=v===0?0:Math.max(0,Math.min(11,tgOff+v));const b=$('#tgbox');
+  const back=()=>{const r=b&&b.querySelector('.tg-row,.mempty');if(r&&fromX)r.animate([{transform:`translateX(${fromX}px)`},{transform:'none'}],{duration:220,easing:'cubic-bezier(.2,.9,.25,1)'});};
+  if(n===tgOff||!b){back();return;}
+  const dir=n>tgOff?1:-1;
+  const swap=()=>{tgOff=n;b.innerHTML=tgSecHtml();if(RMq())return;const r=b.querySelector('.tg-row,.mempty');if(r)r.animate([{transform:`translateX(${dir*Math.min(120,b.clientWidth*.35)}px)`,opacity:0},{transform:'none',opacity:1}],{duration:260,easing:'cubic-bezier(.2,.9,.25,1)'});const h=b.querySelector('.tghd>span');if(h)h.animate([{opacity:.3},{opacity:1}],{duration:220});};
+  const r0=b.querySelector('.tg-row,.mempty');
+  if(RMq()||!r0){swap();return;}
+  const a=r0.animate([{transform:`translateX(${fromX||0}px)`,opacity:1},{transform:`translateX(${-dir*Math.min(120,b.clientWidth*.35)}px)`,opacity:0}],{duration:140,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'});
+  a.onfinish=swap;}
+{let sx=0,sy=0,on=false,drag=false,row=null;   // 좌우로 밀기: 손가락을 따라 칩 줄이 움직이고 → 놓으면 다음 달이 밀려 들어옴 (조금만 밀면 제자리로)
+  document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('#tgbox');if(!b){on=false;return;}on=true;drag=false;sx=e.clientX;sy=e.clientY;row=b.querySelector('.tg-row,.mempty');},true);
+  document.addEventListener('pointermove',e=>{if(!on||!row)return;const dx=e.clientX-sx,dy=e.clientY-sy;if(!drag){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.3)drag=true;else if(Math.abs(dy)>12){on=false;return;}else return;}
+    const edge=(dx>0&&tgOff<=0)||(dx<0&&tgOff>=11);row.style.transform=`translateX(${edge?dx*.25:dx*.85}px)`;},true);
+  const end=e=>{if(!on)return;on=false;const dx=e.clientX-sx,dy=e.clientY-sy,cur=row?parseFloat((row.style.transform.match(/-?[\d.]+/)||[0])[0])||0:0;if(row)row.style.transform='';
+    if(drag&&Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)*1.3){tgMove(dx<0?1:-1,cur);const kill=ev=>{ev.stopPropagation();ev.preventDefault();};document.addEventListener('click',kill,{capture:true,once:true});setTimeout(()=>document.removeEventListener('click',kill,true),350);}
+    else if(drag&&row&&cur)row.animate([{transform:`translateX(${cur}px)`},{transform:'none'}],{duration:220,easing:'cubic-bezier(.2,.9,.25,1)'});
+    drag=false;row=null;};
+  document.addEventListener('pointerup',end,true);document.addEventListener('pointercancel',end,true);}
 function renderFamily(){
   const isHost=role()==='host',fam=(S.family||[]).concat(famPeers()),now=Date.now(),t0=new Date();
   const st=myStatus(now);   // v0.106: "내 상태" 부가 기능 없앰 → 근무 시간이 있으면 늘 "근무 중 · 몇 시 끝" + 막대
@@ -272,9 +299,9 @@ function renderFamily(){
       <div class="fgw"><div class="fgn">${namesHtml}</div><div class="fgs" id="fgs" data-m="${wkMode}"><div class="fgin" style="--n:${nShow}">${head}${rowsHtml}</div></div></div>
       
       ${fam.length&&ad('together')?`<div class="flg"><span><b style="background:#ffd966"></b>다 같이 쉼</span>${S.famDayToo!==false?'<span><b style="background:#fff0bf"></b>낮엔 같이 (야간 전)</span>':''}</div>`
-        :fam.length?'':`${!S.link||S.link.role==='host'?`<button class="paint-btn finv" data-act="link-invite">${npi('user-plus',18)}<b>가족 초대하기</b><i>›</i></button>`:''}<button class="fempty" data-act="fam-add">${!S.link||S.link.role==='host'?'내 폰에만 적어 두기':'👪 가족 추가하기'} ›</button>`}   // v0.239 두 폰 연결(초대)을 앞에 · 직접 입력은 아래 작게 (시안 design/review26/1-family-invite-v2)
+        :fam.length?'':`${!S.link||S.link.role==='host'?`<button class="paint-btn finv" data-act="link-invite">${npi('user-plus',18)}<b>가족 초대하기</b><i>›</i></button>`:''}<button class="fempty" data-act="fam-add">${!S.link||S.link.role==='host'?'내 폰에만 적어 두기':'👪 가족 추가하기'} ›</button>`}
     </div>
-    ${fam.length&&ad('together')?`<div class="fsec">${t0.getMonth()+1}월에 남은 같이 쉬는 날</div>${chipHtml?`<div class="tg-row">${chipHtml}</div>`:'<div class="mempty">이번 달엔 남은 날이 없어요</div>'}`:''}
+    ${fam.length&&ad('together')?`<div class="tgbox" id="tgbox">${tgSecHtml()}</div>`:''}
     ${reqHtml}
   </div>`;
 }

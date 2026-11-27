@@ -10,6 +10,7 @@ const fam2=()=>({members,scheds:{},memos:{},reqIn:{},reqOut:{},me:{sent:0,bonus:
    T('가족 초대하기가 앞 · 내 폰에만 적어 두기는 아래',r.inv==='link-invite'&&/가족 초대하기/.test(r.invT)&&r.man==='fam-add'&&/내 폰에만 적어 두기/.test(r.manT)&&r.order,JSON.stringify(r));
    await p.click('.ftt .paint-btn.finv');await p.waitForTimeout(400);
    T('누르면 초대 코드 만들기 창',await p.evaluate(()=>/초대 코드/.test(document.querySelector('#pop').innerText)));
+   T('v0.240 화면에 코드 주석 글자가 안 나옴',!/\/\/ ?v0\./.test(await p.evaluate(()=>document.body.innerText)));
    T('오류 없음 (가족 탭)',p.errs.length===0,p.errs.join('|'));await p.close();}
   // 2. 튜토리얼과 안내 창이 겹치지 않음
   {const p=await boot(b,{...base,addonNote:'old',hints:{}},{coach:true});await p.waitForTimeout(2500);

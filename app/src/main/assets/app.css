@@ -1027,8 +1027,8 @@ textarea{resize:none;min-height:84px}
 .fghint{padding:6px 2px 0;text-align:center}
 .fh.all,.fc.all{background:#ffe9a8}
 /* v0.135 같이 쉬는 날: 네모 덩어리 대신 날마다 둥근 기둥 (사이에 틈 · 위아래 둥글게) */
-.fh.all,.fc.all,.fc.day{background-clip:padding-box;border-left:2px solid transparent;border-right:2px solid transparent}
-.fh.all{border-radius:14px 14px 0 0}.fc.all.lst,.fc.day.lst{border-radius:0 0 14px 14px}.fh.day,.fc.day{background:#fff5d6}
+.fh.all,.fc.all,.fh.day,.fc.day{background-clip:padding-box;border-left:2px solid transparent;border-right:2px solid transparent}
+.fh.all,.fh.day{border-radius:14px 14px 0 0}.fc.all.lst,.fc.day.lst{border-radius:0 0 14px 14px}.fh.day,.fc.day{background:#fff5d6}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .fh.all,:root:not([data-theme="light"]) .fc.all{background:#5c4a12}:root:not([data-theme="light"]) .fh.day,:root:not([data-theme="light"]) .fc.day{background:#3b331a}}
 :root[data-theme="dark"] .fh.all,:root[data-theme="dark"] .fc.all{background:#5c4a12}:root[data-theme="dark"] .fh.day,:root[data-theme="dark"] .fc.day{background:#3b331a}
 .fn{display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden}
@@ -2086,3 +2086,10 @@ body{word-break:keep-all;overflow-wrap:break-word}
 /* v0.239 가족 탭 빈 화면: 가족 초대하기(연한 파란 줄) · 아래 점선 "내 폰에만 적어 두기" */
 .ftt .paint-btn.finv{margin-top:10px}
 .ftt .paint-btn.finv+.fempty{text-align:center;margin-top:8px}
+/* v0.240 같이 쉬는 날 달 넘기기 */
+.tgbox{touch-action:pan-y;overflow:hidden}
+.fsec.tghd{display:flex;align-items:center;gap:6px}
+.fsec.tghd .tgnav{margin-left:auto;display:flex}
+.fsec.tghd .tgnav button{width:32px;height:28px;font-size:20px;line-height:1;color:var(--muted);background:none;border:0}
+.fsec.tghd .tgnav button[disabled]{opacity:.3}
+.fsec.tghd .tgnow{font-size:12px;font-weight:800;color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--bg));border:0;border-radius:10px;padding:3px 9px}
