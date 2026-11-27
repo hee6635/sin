@@ -126,7 +126,8 @@ function toastUndo(msg,fn){
 // 약 기록 보존: 먹음 표시를 하는 순간 그날 기록에 그때의 색 · 횟수 · 모양을 같이 저장 → 나중에 약 설정을 바꿔도 이미 표시한 날은 그대로
 const stSnap=(k,id)=>((S.stamps.snap||{})[k]||{})[id];
 const stView=(s,k)=>{const sn=s.kind==='pill'&&k?stSnap(k,s.id):null;return {N:sn?sn.t:stDayN(s,k),col:sn?sn.c:s.color,shape:sn?sn.h:(s.shape||'caps')};};
-function stampSet(id,k,v){
+function stampSet(id,k,v){if(v>0&&S.link&&!S.link.stkAsked)setTimeout(()=>{try{stkAskCheck();}catch(e){}},1500);   // v0.239 처음 붙인 뒤 (창이 열려 있으면 가족 소식이 올 때 다시)
+
   const lg=S.stamps.log[k]||(S.stamps.log[k]={}),sp=S.stamps.snap||(S.stamps.snap={});
   if(v>0){lg[id]=v;const d=S.stamps.defs.find(x=>x.id===id);if(d&&d.kind==='pill'&&!((sp[k]||{})[id]))(sp[k]=sp[k]||{})[id]={c:d.color,t:stDayN(d,k),h:d.shape||'caps'};}
   else{delete lg[id];if(sp[k]){delete sp[k][id];if(!Object.keys(sp[k]).length)delete sp[k];}}
@@ -292,7 +293,6 @@ function renderStampReg(){
     <div class="pg-b srpg np">
     <div class="sr-hd"><span class="si">${pill?pillSvg(d.times,Math.ceil(d.times/2),34,d.color,d.shape):ico(d.emoji)}</span><div class="srn">${om?`<input type="text" id="srName" value="${esc(d.name)}" maxlength="12" placeholder="이름">`:`<b>${esc(d.name||(pill?'약':'새 스티커'))}</b>`}<small>${day.getMonth()+1}월 ${day.getDate()}일 (${DOW[day.getDay()]})</small></div></div>
     ${pill?`<div class="pg-sec" style="margin-top:12px"><div class="prow"><div class="pl2">색</div>${colDots(d.color,'sr-col')}</div></div>`:''}
-    ${d.edit&&d.back==='day'?`<div class="hint keep" style="margin:0;padding:12px 22px 0">반복 · 기간을 고치면 ${day.getMonth()+1}월 ${day.getDate()}일부터 적용돼요 (이전 날은 그대로)</div>`:''}
     <div class="pg-cap">하루 몇 번</div>
     <div class="pg-sec pad"><div class="npseg">${[1,2,3].map(n=>`<button class="${d.times===n?'on':''}" data-act="sr-times" data-v="${n}">${n}번</button>`).join('')}</div></div>
     <div class="pg-cap">반복</div>
@@ -426,7 +426,7 @@ function stampRegSave(){
   const back=d.back;stDraft=null;save();if(back==='stamps'){render();openStampPage();}else{closePage();if(back==='day')stampReopen(k);}
   const ic=s.kind==='pill'?'💊':icoTxt(s.emoji,'✔');
   if(d.rep!=='once'){const c=stClashScan(s,d.edit?k:(s.from||k),s.to);if(c.dup.length||c.hid.length||c.mv.length){stClashAsk(s,c,snap);return;}}   // v0.136 같은 그림 겹침 · 4개 넘음 → 버튼 3개
-  toast(d.edit?`${ic} ${s.name} 고쳤어요 · ${stampRule(s)}`:d.rep==='once'?`${ic} ${s.name} 이날 등록했어요${s.ats&&s.ats.length?' · 시각에 알림이 울려요':''}`:`${ic} ${s.name} · ${stampRule(s)}`);
+  toast(d.edit?(d.back==='day'&&d.rep!=='once'?`${ic} ${s.name} · ${parse(k).getMonth()+1}월 ${parse(k).getDate()}일부터 바뀌었어요`:`${ic} ${s.name} 고쳤어요 · ${stampRule(s)}`):d.rep==='once'?`${ic} ${s.name} 이날 등록했어요${s.ats&&s.ats.length?' · 시각에 알림이 울려요':''}`:`${ic} ${s.name} · ${stampRule(s)}`);
 }
 // 반복 스티커가 깔리는 날 중 하루 한도(2개 · 설정 4개) 때문에 가려지는 날 수 (앞으로 200일 안)
 function stampHidden(s,from,to){

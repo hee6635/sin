@@ -870,3 +870,11 @@
 - `WidgetRenderer.personData(data, p)`: 날마다 그 사람 근무(s · t 색) · 공유 스티커(k) · 가족 메모(fm)만으로 days 를 바꿔 같은 그리기 사용. 남의 것을 볼 때 위젯 테두리를 그 사람 색으로(chipCol). 날짜 창(WidgetDayActivity)에 who 를 넘김.
 - 가족 달력(vcGrid): 쉬는 근무도 색을 정했으면 칸 채우기 (v0.232 에 내 달력만 바꿨던 것).
 - 시험: s110 · s37 · s63 · old · 코틀린 확인. 위젯 그림은 폰에서 확인 필요.
+
+## v0.239 (덧붙임) 검토 묶음
+- 가족 탭 빈 화면(04-family-tab.js): 연결 전 · 방장이면 `paint-btn finv`(link-invite · "가족 초대하기") 앞 + `fempty`(fam-add · "내 폰에만 적어 두기") 아래 (시안 design/review26/1-family-invite-v2). NPI 에 user-plus.
+- 안내 겹침: `addonNotice` 가 튜토리얼(coachOn · #tutx) 중이면 미룸 → `coachEnd` 가 0.5초 뒤 다시 부름.
+- 스티커 공유 질문(`stkAskCheck`): 스티커를 한 번도 안 쓴 사람(stUsed 없음)은 묻지 않고 stkAsked 도 안 남김 → `stampSet`(붙일 때) · 가족 소식 새로 그리기 때 다시 확인.
+- 회색 설명문: 알람 빈 화면 아래 줄 뺌 · 스티커 편집 위 "반복 · 기간을 고치면 …부터 적용돼요" 뺌 → 저장 알림 "○월 ○일부터 바뀌었어요".
+- 근무 요청 화면은 그대로(사용자 결정) · 학원 · 동아리 팁은 이미 있음.
+- 시험: s111(9) · s50 기대값 바꿈 · s33 s55 s88 s97 s65 s45 s49 s104 s108 s37 s53 s110 · old.

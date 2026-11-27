@@ -2281,7 +2281,8 @@ function toastUndo(msg,fn){
 // 약 기록 보존: 먹음 표시를 하는 순간 그날 기록에 그때의 색 · 횟수 · 모양을 같이 저장 → 나중에 약 설정을 바꿔도 이미 표시한 날은 그대로
 const stSnap=(k,id)=>((S.stamps.snap||{})[k]||{})[id];
 const stView=(s,k)=>{const sn=s.kind==='pill'&&k?stSnap(k,s.id):null;return {N:sn?sn.t:stDayN(s,k),col:sn?sn.c:s.color,shape:sn?sn.h:(s.shape||'caps')};};
-function stampSet(id,k,v){
+function stampSet(id,k,v){if(v>0&&S.link&&!S.link.stkAsked)setTimeout(()=>{try{stkAskCheck();}catch(e){}},1500);   // v0.239 처음 붙인 뒤 (창이 열려 있으면 가족 소식이 올 때 다시)
+
   const lg=S.stamps.log[k]||(S.stamps.log[k]={}),sp=S.stamps.snap||(S.stamps.snap={});
   if(v>0){lg[id]=v;const d=S.stamps.defs.find(x=>x.id===id);if(d&&d.kind==='pill'&&!((sp[k]||{})[id]))(sp[k]=sp[k]||{})[id]={c:d.color,t:stDayN(d,k),h:d.shape||'caps'};}
   else{delete lg[id];if(sp[k]){delete sp[k][id];if(!Object.keys(sp[k]).length)delete sp[k];}}
@@ -2447,7 +2448,6 @@ function renderStampReg(){
     <div class="pg-b srpg np">
     <div class="sr-hd"><span class="si">${pill?pillSvg(d.times,Math.ceil(d.times/2),34,d.color,d.shape):ico(d.emoji)}</span><div class="srn">${om?`<input type="text" id="srName" value="${esc(d.name)}" maxlength="12" placeholder="이름">`:`<b>${esc(d.name||(pill?'약':'새 스티커'))}</b>`}<small>${day.getMonth()+1}월 ${day.getDate()}일 (${DOW[day.getDay()]})</small></div></div>
     ${pill?`<div class="pg-sec" style="margin-top:12px"><div class="prow"><div class="pl2">색</div>${colDots(d.color,'sr-col')}</div></div>`:''}
-    ${d.edit&&d.back==='day'?`<div class="hint keep" style="margin:0;padding:12px 22px 0">반복 · 기간을 고치면 ${day.getMonth()+1}월 ${day.getDate()}일부터 적용돼요 (이전 날은 그대로)</div>`:''}
     <div class="pg-cap">하루 몇 번</div>
     <div class="pg-sec pad"><div class="npseg">${[1,2,3].map(n=>`<button class="${d.times===n?'on':''}" data-act="sr-times" data-v="${n}">${n}번</button>`).join('')}</div></div>
     <div class="pg-cap">반복</div>
@@ -2581,7 +2581,7 @@ function stampRegSave(){
   const back=d.back;stDraft=null;save();if(back==='stamps'){render();openStampPage();}else{closePage();if(back==='day')stampReopen(k);}
   const ic=s.kind==='pill'?'💊':icoTxt(s.emoji,'✔');
   if(d.rep!=='once'){const c=stClashScan(s,d.edit?k:(s.from||k),s.to);if(c.dup.length||c.hid.length||c.mv.length){stClashAsk(s,c,snap);return;}}   // v0.136 같은 그림 겹침 · 4개 넘음 → 버튼 3개
-  toast(d.edit?`${ic} ${s.name} 고쳤어요 · ${stampRule(s)}`:d.rep==='once'?`${ic} ${s.name} 이날 등록했어요${s.ats&&s.ats.length?' · 시각에 알림이 울려요':''}`:`${ic} ${s.name} · ${stampRule(s)}`);
+  toast(d.edit?(d.back==='day'&&d.rep!=='once'?`${ic} ${s.name} · ${parse(k).getMonth()+1}월 ${parse(k).getDate()}일부터 바뀌었어요`:`${ic} ${s.name} 고쳤어요 · ${stampRule(s)}`):d.rep==='once'?`${ic} ${s.name} 이날 등록했어요${s.ats&&s.ats.length?' · 시각에 알림이 울려요':''}`:`${ic} ${s.name} · ${stampRule(s)}`);
 }
 // 반복 스티커가 깔리는 날 중 하루 한도(2개 · 설정 4개) 때문에 가려지는 날 수 (앞으로 200일 안)
 function stampHidden(s,from,to){
@@ -2741,7 +2741,7 @@ function renderAlarm(){
   const sched=buildSchedule(60),n=sched.find(x=>!x.a.wxOnly);
   const nextFire={};
   sched.forEach(x=>{if(!(x.a.id in nextFire))nextFire[x.a.id]=x.at.getTime();});
-  const nextHtml=S.alarms.length?'':`<div class="next alempty"><div class="big">알람이 없어요</div><div class="sub muted">오른쪽 위 + 로 근무에 맞춘 알람을 추가해보세요</div></div>`;
+  const nextHtml=S.alarms.length?'':`<div class="next alempty"><div class="big">알람이 없어요</div></div>`;
   const now0=Date.now();
   const order=[...S.alarms].sort((x,y)=>(nextFire[x.id]??8.64e15)-(nextFire[y.id]??8.64e15));
   // 근무 색(달력과 같은 색): 주간 하늘 · 야간 살구 … / 매일 · 색 없는 근무는 null
@@ -2897,6 +2897,7 @@ Object.assign(NPI,{   // v0.151 옛 화면 새 모양에 쓰는 선 아이콘 (l
   'settings':'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   'x':'<path d="M18 6 6 18M6 6l12 12"/>',
   'check':'<path d="M20 6 9 17l-5-5"/>',
+  'user-plus':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
   'sliders':'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
   'chart-line':'<path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>',
   'gift':'<path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
@@ -3510,7 +3511,7 @@ function renderFamily(){
       <div class="fgw"><div class="fgn">${namesHtml}</div><div class="fgs" id="fgs" data-m="${wkMode}"><div class="fgin" style="--n:${nShow}">${head}${rowsHtml}</div></div></div>
       
       ${fam.length&&ad('together')?`<div class="flg"><span><b style="background:#ffd966"></b>다 같이 쉼</span>${S.famDayToo!==false?'<span><b style="background:#fff0bf"></b>낮엔 같이 (야간 전)</span>':''}</div>`
-        :fam.length?'':`<button class="fempty" data-act="fam-add">👪 가족 추가하기${ad('together')?' · 같이 쉬는 날도 찾아요':''} ›</button>`}
+        :fam.length?'':`${!S.link||S.link.role==='host'?`<button class="paint-btn finv" data-act="link-invite">${npi('user-plus',18)}<b>가족 초대하기</b><i>›</i></button>`:''}<button class="fempty" data-act="fam-add">${!S.link||S.link.role==='host'?'내 폰에만 적어 두기':'👪 가족 추가하기'} ›</button>`}   // v0.239 두 폰 연결(초대)을 앞에 · 직접 입력은 아래 작게 (시안 design/review26/1-family-invite-v2)
     </div>
     ${fam.length&&ad('together')?`<div class="fsec">${t0.getMonth()+1}월에 남은 같이 쉬는 날</div>${chipHtml?`<div class="tg-row">${chipHtml}</div>`:'<div class="mempty">이번 달엔 남은 날이 없어요</div>'}`:''}
     ${reqHtml}
@@ -5304,7 +5305,7 @@ function coachCheck(){
     coachShow(c.k,st,0);return;
   }
 }
-function coachEnd(k){const d=document.getElementById('tutx');if(d)d.remove();coachOn=false;S.hints=S.hints||{};S.hints[k]=1;save();}
+function coachEnd(k){const d=document.getElementById('tutx');if(d)d.remove();coachOn=false;S.hints=S.hints||{};S.hints[k]=1;save();setTimeout(()=>{try{addonNotice();}catch(e){}},500);}   // v0.239 미뤄 둔 "일부 기능이 옮겨졌어요" 는 튜토리얼이 끝난 뒤에
 function coachShow(k,st,i){
   coachOn=true;const s=st[i];let d=document.getElementById('tutx');if(d)d.remove();
   if(!s||!document.body.contains(s.el)){coachEnd(k);return;}
@@ -6162,6 +6163,7 @@ function applyStats(){try{if(window.AndroidBridge&&window.AndroidBridge.setStats
 function stkAskCheck(){
   const L=S.link;if(!L||L.stkAsked)return;
   if(L.stk){L.stkAsked=1;famSaveLocal();return;}
+  if(!((S.stamps&&S.stamps.defs)||[]).some(s=>s&&!s.empty&&stUsed(s)))return;   // v0.239 스티커를 한 번도 안 붙인 사람에겐 묻지 않음 (처음 붙인 뒤에 물음)
   if(!famOthers().length||!S.onboarded||ob||pageMode||$('#pop').classList.contains('open')||$('#sheet').classList.contains('open'))return;
   L.stkAsked=1;famSaveLocal();
   openPop(`<div class="mh">가족이 생겼어요<b>내 스티커를 가족에게 보여 줄까요?</b></div>
@@ -6179,7 +6181,7 @@ function introNotice(){
     <div class="mi"><button class="btn grow" data-act="pop-close">확인</button></div>`);
 }
 function addonNotice(){
-  if(!S.onboarded||ob||S.addonNote==='done'||pageMode||$('#pop').classList.contains('open')||$('#sheet').classList.contains('open'))return;
+  if(!S.onboarded||ob||S.addonNote==='done'||pageMode||coachOn||document.getElementById('tutx')||$('#pop').classList.contains('open')||$('#sheet').classList.contains('open'))return;
   const old=S.addonNote==='old';
   S.addonNote='done';save();
   openPop(`<div class="mh">${old?'일부 기능이 옮겨졌어요':'알아 두면 좋아요'}<b>설정 › 부가 기능</b></div>

@@ -4,7 +4,7 @@ function renderAlarm(){
   const sched=buildSchedule(60),n=sched.find(x=>!x.a.wxOnly);
   const nextFire={};
   sched.forEach(x=>{if(!(x.a.id in nextFire))nextFire[x.a.id]=x.at.getTime();});
-  const nextHtml=S.alarms.length?'':`<div class="next alempty"><div class="big">알람이 없어요</div><div class="sub muted">오른쪽 위 + 로 근무에 맞춘 알람을 추가해보세요</div></div>`;
+  const nextHtml=S.alarms.length?'':`<div class="next alempty"><div class="big">알람이 없어요</div></div>`;
   const now0=Date.now();
   const order=[...S.alarms].sort((x,y)=>(nextFire[x.id]??8.64e15)-(nextFire[y.id]??8.64e15));
   // 근무 색(달력과 같은 색): 주간 하늘 · 야간 살구 … / 매일 · 색 없는 근무는 null
@@ -160,6 +160,7 @@ Object.assign(NPI,{   // v0.151 옛 화면 새 모양에 쓰는 선 아이콘 (l
   'settings':'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   'x':'<path d="M18 6 6 18M6 6l12 12"/>',
   'check':'<path d="M20 6 9 17l-5-5"/>',
+  'user-plus':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
   'sliders':'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
   'chart-line':'<path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>',
   'gift':'<path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',

@@ -213,7 +213,7 @@ function coachCheck(){
     coachShow(c.k,st,0);return;
   }
 }
-function coachEnd(k){const d=document.getElementById('tutx');if(d)d.remove();coachOn=false;S.hints=S.hints||{};S.hints[k]=1;save();}
+function coachEnd(k){const d=document.getElementById('tutx');if(d)d.remove();coachOn=false;S.hints=S.hints||{};S.hints[k]=1;save();setTimeout(()=>{try{addonNotice();}catch(e){}},500);}   // v0.239 미뤄 둔 "일부 기능이 옮겨졌어요" 는 튜토리얼이 끝난 뒤에
 function coachShow(k,st,i){
   coachOn=true;const s=st[i];let d=document.getElementById('tutx');if(d)d.remove();
   if(!s||!document.body.contains(s.el)){coachEnd(k);return;}

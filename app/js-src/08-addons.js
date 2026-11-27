@@ -65,6 +65,7 @@ function applyStats(){try{if(window.AndroidBridge&&window.AndroidBridge.setStats
 function stkAskCheck(){
   const L=S.link;if(!L||L.stkAsked)return;
   if(L.stk){L.stkAsked=1;famSaveLocal();return;}
+  if(!((S.stamps&&S.stamps.defs)||[]).some(s=>s&&!s.empty&&stUsed(s)))return;   // v0.239 스티커를 한 번도 안 붙인 사람에겐 묻지 않음 (처음 붙인 뒤에 물음)
   if(!famOthers().length||!S.onboarded||ob||pageMode||$('#pop').classList.contains('open')||$('#sheet').classList.contains('open'))return;
   L.stkAsked=1;famSaveLocal();
   openPop(`<div class="mh">가족이 생겼어요<b>내 스티커를 가족에게 보여 줄까요?</b></div>
@@ -82,7 +83,7 @@ function introNotice(){
     <div class="mi"><button class="btn grow" data-act="pop-close">확인</button></div>`);
 }
 function addonNotice(){
-  if(!S.onboarded||ob||S.addonNote==='done'||pageMode||$('#pop').classList.contains('open')||$('#sheet').classList.contains('open'))return;
+  if(!S.onboarded||ob||S.addonNote==='done'||pageMode||coachOn||document.getElementById('tutx')||$('#pop').classList.contains('open')||$('#sheet').classList.contains('open'))return;
   const old=S.addonNote==='old';
   S.addonNote='done';save();
   openPop(`<div class="mh">${old?'일부 기능이 옮겨졌어요':'알아 두면 좋아요'}<b>설정 › 부가 기능</b></div>

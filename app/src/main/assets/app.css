@@ -2083,3 +2083,6 @@ body{word-break:keep-all;overflow-wrap:break-word}
 .rrmh{margin:12px 0 6px}
 .hseg.rrmiss button{flex:1 1 0;min-width:0;white-space:nowrap}
 .rrsum{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4}
+/* v0.239 가족 탭 빈 화면: 가족 초대하기(연한 파란 줄) · 아래 점선 "내 폰에만 적어 두기" */
+.ftt .paint-btn.finv{margin-top:10px}
+.ftt .paint-btn.finv+.fempty{text-align:center;margin-top:8px}

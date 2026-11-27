@@ -272,7 +272,7 @@ function renderFamily(){
       <div class="fgw"><div class="fgn">${namesHtml}</div><div class="fgs" id="fgs" data-m="${wkMode}"><div class="fgin" style="--n:${nShow}">${head}${rowsHtml}</div></div></div>
       
       ${fam.length&&ad('together')?`<div class="flg"><span><b style="background:#ffd966"></b>다 같이 쉼</span>${S.famDayToo!==false?'<span><b style="background:#fff0bf"></b>낮엔 같이 (야간 전)</span>':''}</div>`
-        :fam.length?'':`<button class="fempty" data-act="fam-add">👪 가족 추가하기${ad('together')?' · 같이 쉬는 날도 찾아요':''} ›</button>`}
+        :fam.length?'':`${!S.link||S.link.role==='host'?`<button class="paint-btn finv" data-act="link-invite">${npi('user-plus',18)}<b>가족 초대하기</b><i>›</i></button>`:''}<button class="fempty" data-act="fam-add">${!S.link||S.link.role==='host'?'내 폰에만 적어 두기':'👪 가족 추가하기'} ›</button>`}   // v0.239 두 폰 연결(초대)을 앞에 · 직접 입력은 아래 작게 (시안 design/review26/1-family-invite-v2)
     </div>
     ${fam.length&&ad('together')?`<div class="fsec">${t0.getMonth()+1}월에 남은 같이 쉬는 날</div>${chipHtml?`<div class="tg-row">${chipHtml}</div>`:'<div class="mempty">이번 달엔 남은 날이 없어요</div>'}`:''}
     ${reqHtml}
